@@ -1,0 +1,190 @@
+#  Canonical enforcement configuration.
+#
+#  Copy the [tool.*] tables into a consuming project's pyproject.toml. Every stanza
+#  names the discipline rules it enforces, so a rule can be traced to its mechanism
+#  and back. Rule ids are stable; grep discipline/INDEX.md for one.
+#
+#  Posture is the hardest setting that can be sustained. Each relaxation below is
+#  individually justified; an unjustified ignore is a defect, not a preference.
+
+# ---------------------------------------------------------------------------- ruff
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"           # law/DEP; floor decided in discipline/meta/OPEN.md
+preview = true
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# Everything, then subtract with a reason. Enables the rules the discipline names:
+# BLE001 broad-except (DIAG-008, ERR-008), E722 bare-except (DIAG-008),
+# S110 try-except-pass (DIAG-008), S101 assert (DIAG-009, ERR-012),
+# G004/G010 eager log formatting (DIAG-012, DIAG-015),
+# TRY300/TRY301 try-body scope (ERR-009), C901 complexity (ARCH-016),
+# PGH003 blanket type-ignore (TYPE-003).
+select = ["ALL"]
+
+ignore = [
+    # NOTE: docstring presence was previously relaxed here, on the grounds that a
+    # blanket requirement produces ceremonial docstrings. That decision is
+    # REVERSED -- see discipline/meta/OPEN.md OPEN-007. law/DOC now requires a
+    # documentation comment on every element, and answers the ceremony objection
+    # with DOC-009 (say the contract, not the name) rather than with an exemption.
+    # D100 and D104 are therefore NOT ignored.
+    #
+    # Conflicts with the formatter; the formatter wins.
+    "missing-trailing-comma", "single-line-implicit-string-concatenation",
+    # Mutually exclusive pydocstyle pairs; one of each must go. Keeping
+    # blank-line-before-class and multi-line-summary-first-line.
+    "incorrect-blank-line-before-class", "multi-line-summary-second-line",
+    # These demand a Google-style `Returns:` / `Yields:` / `Raises:` section, which
+    # full-featured Doxygen cannot read. The discipline uses @return / @throws
+    # instead, and completeness is checked by the engine itself via
+    # WARN_NO_PARAMDOC + WARN_IF_INCOMPLETE_DOC -- a stricter test than these rules,
+    # because it also catches a documented parameter that does not exist. Leaving
+    # both on would make the two mechanisms contradict each other in CI.
+    "docstring-missing-returns", "docstring-missing-yields",
+    "docstring-missing-exception",
+    # `Any` is banned outright in the domain by TYPE-002 via mypy, which can see
+    # implicit Any that a linter cannot. Duplicate reporting here adds noise only.
+    "any-type",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests assert; that is their job. S101 stays on everywhere else, which is what
+# DIAG-009 and ERR-012 actually require.
+# DOC-001 applies to tests too: a test module states its oracle (TEST-004) and a
+# test states the behaviour it pins. Only the assert and magic-value relaxations
+# survive here.
+"tests/**/*.py" = ["assert", "magic-value-comparison"]
+"enforce/fitness/*.py" = ["assert"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"       # ARCH-001: layer edges must be visible in the import
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10                # ARCH-016
+
+[tool.ruff.lint.pydocstyle]
+# DELIBERATELY no convention. A convention makes the linter demand Google- or
+# NumPy-style section headings, which full-featured Doxygen cannot read without an
+# input filter (fact/doxygen). Parameter and return completeness is checked by the
+# engine itself via WARN_NO_PARAMDOC, which is the mechanism that tests the actual
+# requirement rather than a proxy for it.
+
+[tool.ruff.format]
+docstring-code-format = true
+
+# ---------------------------------------------------------------------------- mypy
+
+[tool.mypy]
+python_version = "3.11"
+strict = true                      # TYPE-001
+
+# Beyond strict. Each of these is off by default and each closes a hole the
+# discipline depends on being closed.
+disallow_any_explicit = true       # TYPE-002
+disallow_any_decorated = true      # TYPE-002: a decorator must not launder a type
+disallow_any_unimported = true     # TYPE-002: an untyped stub is an Any factory
+warn_unreachable = true            # ERR-002: unreachable code often means a union
+                                   #          member was already narrowed away
+extra_checks = true
+strict_bytes = true
+strict_equality = true             # TYPE-013
+warn_redundant_casts = true        # TYPE-003
+warn_unused_ignores = true         # TYPE-003
+enable_error_code = [
+    "redundant-expr",
+    "truthy-bool",
+    "truthy-iterable",
+    "ignore-without-code",         # TYPE-003: an ignore must name what it suppresses
+    "possibly-undefined",
+    "unused-awaitable",
+    "explicit-override",
+    "mutable-override",
+    "comparison-overlap",
+]
+show_error_codes = true
+pretty = true
+
+[[tool.mypy.overrides]]
+# The domain is the layer whose errors must be trustworthy, so it gets no relief.
+module = "*.domain.*"
+disallow_any_expr = true           # TYPE-002, at its strictest
+
+# --------------------------------------------------------------------------- pyright
+
+[tool.pyright]
+typeCheckingMode = "strict"        # TYPE-001: a second, differently-inferring oracle
+pythonVersion = "3.11"
+include = ["src"]
+reportUnknownMemberType = "error"
+reportUnknownArgumentType = "error"
+reportUnknownVariableType = "error"
+reportUnknownParameterType = "error"
+reportMissingTypeStubs = "error"
+reportImplicitOverride = "error"
+reportUnnecessaryTypeIgnoreComment = "error"   # TYPE-003
+
+# --------------------------------------------------------------------------- pytest
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "enforce/fitness"]
+addopts = [
+    "--strict-markers",            # fact/py-testing: an unregistered marker selects
+    "--strict-config",             #   nothing and the suite passes by running none
+    "--import-mode=importlib",
+    "-ra",
+]
+markers = [
+    "unit: pure domain, no external resource (TEST-001)",
+    "contract: one port, run against every adapter (TEST-005)",
+    "integration: one real external technology",
+    "fault: faulty adapters driven by fault schedules (TEST-009)",
+    "property: generated inputs (TEST-007)",
+    "fitness: architectural constraints (ARCH-*, TEST-002)",
+]
+# TEST-017: order dependence and ambient network are hidden inputs. Both fail closed.
+# TEST-003: the per-test budget is a proxy for the architecture, not for speed.
+timeout = 5
+timeout_method = "thread"
+filterwarnings = ["error"]
+
+# ------------------------------------------------------------------------- coverage
+
+[tool.coverage.run]
+branch = true                      # line coverage alone cannot see an untaken branch
+source = ["src"]
+
+[tool.coverage.report]
+# Deliberately no fail_under. fact/py-testing records why: a numeric target is easy
+# to reach with low-quality tests, and TEST-002 gates on artifact coverage while
+# TEST-013 gates on mutation score. Those discriminate; a percentage does not.
+show_missing = true
+skip_covered = true
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@overload",
+]
+
+# ------------------------------------------------------------------------ doxygen
+#
+# law/DOC is enforced by three mechanisms, each covering what the others cannot:
+#   ruff D1xx                 docstring presence (module, class, callable)
+#   checks/doc_coverage.py    the elements with no docstring slot -- module
+#                             constants, class attributes, dataclass fields,
+#                             enum members -- which no linter sees
+#   doxygen enforce/Doxyfile  parseability, and parameter/return completeness
+#
+# The first two run in the ordinary gate and need no Doxygen installed, which is
+# what DOC-003 requires: the comments are in the code whether or not documentation
+# is ever generated.
+
+# -------------------------------------------------------------------------- mutmut
+
+[tool.mutmut]
+# TEST-013. Scoped to the domain: it is the layer whose logic the suite must be
+# shown to discriminate, and the layer where a surviving mutant is cheapest to fix.
+paths_to_mutate = ["src/*/domain/"]
+tests_dir = "tests/unit/"

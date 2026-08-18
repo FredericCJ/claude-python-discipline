@@ -1,0 +1,73 @@
+# Learning database parameters.
+#
+# These are the dials a calibration pass turns. Change them here, then record a
+# `calibrate` event saying what moved and why — an untraced parameter change is
+# indistinguishable from drift, and calibration that is not written down cannot
+# be reviewed.
+#
+#     python tools/learn.py calibrate --set retrieval.max_learnings=8 --why "..."
+#
+# Defaults are deliberately loose. The database starts empty, so an aggressive
+# filter would hide the little that exists; the first calibration pass is
+# expected to tighten them against real numbers rather than guesses.
+
+[retrieval]
+# How many learnings a single retrieval may return, and the floor a learning's
+# effective confidence must clear to be offered at all.
+max_learnings = 8
+min_confidence = 0.15
+# Ceiling on what retrieval costs. A budget that competes with the reading plan
+# defeats the point: learnings supplement the discipline, they do not replace it.
+budget_tokens = 800
+# Show refuted and superseded entries? Off by default; they stay in the log for
+# audit, not for advice.
+include_retired = false
+
+[confidence]
+# Where a new learning starts, by kind. `observed` evidence begins higher than
+# `told`, which begins higher than `inferred`, because the three are not equally
+# good reasons to believe something.
+base_observed = 0.50
+base_told = 0.40
+base_inferred = 0.25
+# Movement per recorded outcome. Asymmetric on purpose: one contradiction is
+# stronger evidence against a claim than one success is for it.
+helped_delta = 0.10
+noise_delta = -0.15
+ceiling = 0.95
+floor = 0.05
+
+[decay]
+# Half-life in days, per kind. A learning not seen or re-verified for this long
+# is worth half as much. Diagnostics rot fastest — they are tied to a tool's
+# exact message; a project constraint rots slowest.
+diagnostic = 90
+constraint = 365
+procedure = 180
+rule-application = 270
+defect = 365
+
+[promotion]
+# A candidate becomes active once it has this much independent evidence. Both
+# must hold: three outcomes inside one session are one observation repeated.
+min_evidence = 2
+min_sessions = 2
+# A learning carrying a verification command that passes is promoted on less
+# evidence, because the check is the evidence.
+min_evidence_verified = 1
+
+[write]
+# The closed taxonomy. Calibration may narrow this list; adding to it is a
+# schema change, not a parameter change.
+kinds_enabled = ["diagnostic", "constraint", "procedure", "rule-application", "defect"]
+# A learning must say what to do, not only what is true. Both fields required.
+require_action = true
+# A learning must name at least one trigger, or nothing will ever retrieve it.
+require_trigger = true
+# Refuse to record material that looks like a credential. See DIAG-014.
+redact_secrets = true
+
+[size]
+# When the active set passes this, the next calibration pass must triage rather
+# than accumulate. A database nobody prunes becomes a database nobody reads.
+max_active = 200

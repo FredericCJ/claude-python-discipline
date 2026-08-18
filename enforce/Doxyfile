@@ -1,0 +1,70 @@
+# Canonical Doxygen configuration — the mechanism behind law/DOC.
+#
+#     doxygen enforce/Doxyfile
+#
+# Exits non-zero on any undocumented element, any documented callable with an
+# undocumented parameter or return, and any malformed command. Copy into a
+# consuming project and change INPUT and PROJECT_NAME; nothing else needs editing.
+#
+# Every non-default setting below is load-bearing and was verified by execution
+# against Doxygen 1.10.0. See discipline/fact/doxygen.md for the measurements.
+
+PROJECT_NAME           = "project"
+OUTPUT_DIRECTORY       = build/doc
+INPUT                  = src
+FILE_PATTERNS          = *.py
+RECURSIVE              = YES
+EXCLUDE_PATTERNS       = */__pycache__/* */.venv/* */build/*
+
+# Python's structure is closer to Java's than to C's; the manual recommends this.
+OPTIMIZE_OUTPUT_JAVA   = YES
+
+# DOC-005. Left at its default (YES) a docstring is rendered as preformatted text
+# and every @param in it becomes literal characters. Nothing warns. The failure is
+# silent, so the setting belongs here rather than in an author's memory.
+PYTHON_DOCSTRING       = NO
+
+# DOC-001. EXTRACT_ALL = YES would automatically disable WARN_IF_UNDOCUMENTED --
+# turning it on to "see everything" silently switches off the check that matters.
+EXTRACT_ALL            = NO
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = YES
+HIDE_UNDOC_MEMBERS     = NO
+HIDE_UNDOC_CLASSES     = NO
+
+# ------------------------------------------------------------------- the gate
+
+# DOC-001: an undocumented member is reported.
+WARN_IF_UNDOCUMENTED   = YES
+# DOC-007: a documented callable whose parameters or return are undocumented.
+WARN_NO_PARAMDOC       = YES
+# DOC-007: a parameter documented that does not exist, or documented twice.
+WARN_IF_DOC_ERROR      = YES
+WARN_IF_INCOMPLETE_DOC = YES
+# DOC-010: report everything, then exit non-zero.
+WARN_AS_ERROR          = FAIL_ON_WARNINGS
+QUIET                  = YES
+
+# DOC-011. Load-bearing, and counter-intuitive: with output generation disabled,
+# Doxygen reports fully documented functions as undocumented. Measured on one
+# probe tree -- no generator: false positives; XML only: 7 errors, all spurious;
+# HTML on: 1 error, the genuine one. A check run therefore still generates HTML.
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+GENERATE_XML           = NO
+
+# DOC-012. The rendered tree is a build product, not a committed artefact: the
+# reviewable thing is the comment in the source. Keep this path gitignored.
+HTML_OUTPUT            = html
+
+# --------------------------------------------------------------- presentation
+
+JAVADOC_AUTOBRIEF      = YES
+QT_AUTOBRIEF           = NO
+MARKDOWN_SUPPORT       = YES
+AUTOLINK_SUPPORT       = YES
+SORT_MEMBER_DOCS       = NO
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+ALPHABETICAL_INDEX     = YES

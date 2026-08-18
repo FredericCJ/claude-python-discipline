@@ -1,0 +1,4814 @@
+generated_by: tools/extract_sources.py
+note: Mechanical first pass. Module assignment, mechanism choice and deduplication are judgment and are
+  recorded in meta/PROVENANCE.md.
+sections:
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: Software Engineering Style Guidelines
+  line: 1
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 2
+  heading: 1. Purpose and Engineering Philosophy
+  line: 3
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 2. Separation of Core and Presentation
+  line: 25
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 3. Compiled Core
+  line: 76
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 4. Contracts Are First-Class Engineering Artifacts
+  line: 106
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 5. Public Contracts and Private Representations
+  line: 146
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 6. Hexagonal Modular Architecture
+  line: 187
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 7. Functional Core, Imperative Shell
+  line: 236
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 8. Make Effects Explicit
+  line: 294
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 9. Commands Over Raw Mutation
+  line: 326
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 10. Prefer Explicit State Transitions
+  line: 380
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 11. Strong Typing as a Design Tool
+  line: 406
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 12. Explicit Error Semantics
+  line: 442
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 13. Expected Failure Versus Contract Violation
+  line: 481
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 14. Testing Is an Architectural Activity
+  line: 520
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 15. Unit Tests
+  line: 550
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 16. Integration Tests
+  line: 569
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 17. Port Contract Tests
+  line: 591
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 18. Deliberately Broken Components
+  line: 614
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 19. Fault Propagation and Containment
+  line: 642
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 20. Architectural Mutation Testing
+  line: 672
+  candidates: 1
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 21. Fault Models
+  line: 718
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 3
+  heading: Explicit failure
+  line: 724
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 3
+  heading: Omission
+  line: 732
+  candidates: 1
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 3
+  heading: Timing failure
+  line: 740
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 3
+  heading: Value corruption
+  line: 748
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 3
+  heading: State inconsistency
+  line: 757
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 3
+  heading: Stale state
+  line: 766
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 3
+  heading: Duplication
+  line: 770
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 3
+  heading: Reordering
+  line: 774
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 3
+  heading: Partial effect
+  line: 778
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 3
+  heading: Protocol violation
+  line: 782
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 22. Fault Schedules as Data
+  line: 790
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 23. Mutation Testing
+  line: 826
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 24. MC/DC
+  line: 848
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 25. Fuzzing
+  line: 872
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 26. Property-Based Testing
+  line: 905
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 27. Test Real Failure Modes Too
+  line: 935
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 28. Persistence Ownership
+  line: 961
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 29. Transactions and Partial Failure
+  line: 987
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 30. Protocol Design for Automation
+  line: 1018
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 31. Agentic Use Does Not Relax Validation
+  line: 1046
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 32. Observability
+  line: 1073
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 33. Dependency Policy
+  line: 1095
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 34. Avoid Framework-Dominated Domain Models
+  line: 1129
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 35. Prefer Explicit Mapping Over Hidden Magic
+  line: 1161
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 36. Replaceability Should Be Real
+  line: 1188
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 37. Keep the Domain Independent of Test Doubles
+  line: 1215
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 38. Version Contracts Deliberately
+  line: 1232
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 39. Test the Delivered Boundaries
+  line: 1249
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 40. Prefer Determinism
+  line: 1277
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 41. Concurrency Requires Explicit Semantics
+  line: 1297
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 42. Failures Should Be Observable but Contained
+  line: 1316
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 43. Simplicity Is Still a Requirement
+  line: 1338
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 44. Decision Heuristic
+  line: 1358
+  candidates: 0
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  level: 1
+  heading: 45. Summary
+  line: 1380
+  candidates: 0
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 1
+  heading: Software Engineering Doctrine — UBEATS v2
+  line: 1
+  candidates: 0
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 0. What this document is and is not
+  line: 19
+  candidates: 2
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 1. Purpose and engineering philosophy
+  line: 52
+  candidates: 0
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 2. Separation of core and clients
+  line: 98
+  candidates: 5
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: '3. The Python core: the one deliberate departure'
+  line: 158
+  candidates: 0
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 3
+  heading: 3.1 The tension, stated plainly
+  line: 160
+  candidates: 0
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 3
+  heading: 3.2 What a compiled core would have bought, and does not exist here
+  line: 174
+  candidates: 0
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 3
+  heading: 3.3 What is not lost
+  line: 198
+  candidates: 0
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 3
+  heading: 3.4 The binding compensations
+  line: 210
+  candidates: 13
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 3
+  heading: 3.5 What is honestly not recovered
+  line: 287
+  candidates: 0
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 4. Contracts are first-class engineering artifacts
+  line: 308
+  candidates: 2
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 5. Public commands, private representations
+  line: 352
+  candidates: 9
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 6. Hexagonal modular architecture
+  line: 444
+  candidates: 5
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 7. Functional core, imperative shell — and the placement test
+  line: 506
+  candidates: 2
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 3
+  heading: 7.1 The placement test
+  line: 549
+  candidates: 2
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 8. Make effects explicit
+  line: 580
+  candidates: 4
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 9. Commands over raw mutation — the plan/apply model
+  line: 603
+  candidates: 4
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 10. Prefer explicit state transitions
+  line: 667
+  candidates: 3
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 11. Strong typing as a design tool
+  line: 697
+  candidates: 7
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 12. Explicit error semantics
+  line: 733
+  candidates: 3
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 13. Expected failure versus contract violation
+  line: 775
+  candidates: 2
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 14. Testing is an architectural activity
+  line: 793
+  candidates: 1
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 15. Unit tests
+  line: 810
+  candidates: 3
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 16. Integration tests
+  line: 829
+  candidates: 1
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 17. Port contract tests
+  line: 842
+  candidates: 2
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 18. Deliberately broken components — the faulty adapter family
+  line: 872
+  candidates: 2
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 19. Fault propagation and containment
+  line: 902
+  candidates: 1
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 20. Architectural mutation testing
+  line: 922
+  candidates: 3
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 21. Fault models
+  line: 943
+  candidates: 2
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 22. Fault schedules as data
+  line: 973
+  candidates: 2
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 23. Mutation testing
+  line: 998
+  candidates: 2
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 24. MC/DC
+  line: 1024
+  candidates: 3
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 25. Fuzzing
+  line: 1041
+  candidates: 3
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 26. Property-based testing
+  line: 1067
+  candidates: 2
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 27. Test real failure modes too
+  line: 1095
+  candidates: 2
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 28. Persistence ownership
+  line: 1119
+  candidates: 3
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 29. Transactions and partial failure on a filesystem without transactions
+  line: 1153
+  candidates: 0
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 3
+  heading: 29.1 What Windows actually gives
+  line: 1161
+  candidates: 0
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 3
+  heading: 29.2 What the plan/apply pipeline builds on top of that
+  line: 1176
+  candidates: 4
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 3
+  heading: 29.3 What is explicitly NOT guaranteed, and must be stated as such
+  line: 1223
+  candidates: 2
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 30. Protocol design for automation
+  line: 1253
+  candidates: 3
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 31. Agentic use does not relax validation
+  line: 1270
+  candidates: 2
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 32. Observability
+  line: 1288
+  candidates: 3
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 33. Dependency policy
+  line: 1305
+  candidates: 2
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 34. Avoid framework-dominated domain models
+  line: 1333
+  candidates: 2
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 35. Prefer explicit mapping over hidden magic
+  line: 1357
+  candidates: 2
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 36. Replaceability should be real
+  line: 1372
+  candidates: 2
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 37. Keep the domain independent of test doubles
+  line: 1389
+  candidates: 2
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 38. Version contracts deliberately
+  line: 1404
+  candidates: 4
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 39. Test the delivered boundaries
+  line: 1431
+  candidates: 1
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 40. Prefer determinism
+  line: 1458
+  candidates: 2
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 41. Concurrency requires explicit semantics
+  line: 1475
+  candidates: 4
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 42. Failures should be observable but contained
+  line: 1504
+  candidates: 3
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 43. Simplicity is still a requirement
+  line: 1529
+  candidates: 3
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 44. Rules for generated artefacts
+  line: 1548
+  candidates: 14
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 45. Decision heuristic
+  line: 1608
+  candidates: 1
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 46. How this doctrine is enforced
+  line: 1657
+  candidates: 2
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 3
+  heading: 46.1 The two rules this project already learned the hard way
+  line: 1694
+  candidates: 2
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: 47. Summary
+  line: 1713
+  candidates: 3
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: Appendix A — Architecture Decision Record template
+  line: 1764
+  candidates: 1
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  level: 2
+  heading: Appendix B — Revision log
+  line: 1840
+  candidates: 2
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 1
+  heading: TESTING.md — Binding Testing Doctrine for UBEATS v2
+  line: 1
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 2
+  heading: 0. The one sentence that explains this whole document
+  line: 25
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 2
+  heading: 1. The layers
+  line: 35
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 1.1 The table
+  line: 37
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 1.2 Why the pyramid inverts
+  line: 54
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 1.3 What belongs in each layer
+  line: 87
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 2
+  heading: 2. Port contract suites
+  line: 134
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 2.1 What it is
+  line: 140
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 2.2 How to write one
+  line: 160
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 2.3 What belongs in a contract test, and what does not
+  line: 325
+  candidates: 3
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 2.4 The worthless-fake rule
+  line: 356
+  candidates: 2
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 2
+  heading: 3. Deliberately defective adapters, driven by fault schedules as data
+  line: 380
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 3.1 Why data, not bespoke mock classes
+  line: 382
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 3.2 The schedule format
+  line: 391
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 3.3 Worked example
+  line: 483
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 3.4 Fault category catalogue, mapped to this system
+  line: 514
+  candidates: 4
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 2
+  heading: 4. Fault propagation testing
+  line: 551
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 4.1 The pattern
+  line: 553
+  candidates: 4
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 4.2 Worked example
+  line: 582
+  candidates: 2
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 2
+  heading: 5. Interruption testing for the plan/apply model
+  line: 624
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 5.1 The invariant
+  line: 626
+  candidates: 2
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 5.2 The harness
+  line: 657
+  candidates: 2
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 5.3 External effects have no journal, and are tested differently
+  line: 715
+  candidates: 4
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 5.4 The boundary between the two phases
+  line: 735
+  candidates: 1
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 2
+  heading: 6. Property-based testing
+  line: 798
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 6.1 Why, and the tool
+  line: 800
+  candidates: 1
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 6.2 Binding properties (minimum set — extend freely, never shrink)
+  line: 809
+  candidates: 6
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 2
+  heading: 7. Mutation testing
+  line: 920
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 7.1 Where it is mandatory
+  line: 922
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 7.2 Tool — open decision
+  line: 944
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 7.3 Disposition of surviving mutants
+  line: 954
+  candidates: 3
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 7.4 MC/DC for compound gate decisions
+  line: 974
+  candidates: 3
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 2
+  heading: 8. Golden tests on generated Typst source
+  line: 1026
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 8.1 Keeping them meaningful
+  line: 1028
+  candidates: 1
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 8.2 Reviewing a golden diff
+  line: 1052
+  candidates: 2
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 8.3 Preventing "just regenerate the goldens"
+  line: 1068
+  candidates: 5
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 2
+  heading: 9. Two anti-patterns the predecessor suffered, as binding rules
+  line: 1112
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 9.1 No vacuous checks
+  line: 1114
+  candidates: 4
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 9.2 No silent test weakening
+  line: 1181
+  candidates: 11
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 2
+  heading: 10. Architectural fitness tests
+  line: 1229
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 10.1 The mandatory list
+  line: 1231
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 10.2 An unenforced budget is a wish — and a wall-clock total is a flaky one
+  line: 1283
+  candidates: 2
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 10.3 Worked fitness test examples
+  line: 1329
+  candidates: 1
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 2
+  heading: 11. Test naming, organization, and determinism
+  line: 1399
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 11.1 Layout and naming
+  line: 1401
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 11.2 Determinism controls
+  line: 1424
+  candidates: 4
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 11.3 Seeds and regression persistence
+  line: 1458
+  candidates: 2
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 2
+  heading: 12. What CI runs, and when
+  line: 1484
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 12.1 Per-commit (local pre-commit hook and/or pre-push; fast loop)
+  line: 1486
+  candidates: 1
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 12.2 Pre-landing (PR merge gate; blocking; target well under the sum of
+  line: 1501
+  candidates: 2
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 12.3 Nightly / scheduled (does not block an individual landing; blocks
+  line: 1529
+  candidates: 1
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 3
+  heading: 12.4 Summary — what blocks a landing
+  line: 1558
+  candidates: 0
+- source: TD
+  path: sources/doctrine/TESTING.md
+  level: 2
+  heading: Appendix — Revision log
+  line: 1579
+  candidates: 1
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  level: 1
+  heading: The Cheapest-Able Doctrine
+  line: 1
+  candidates: 0
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  level: 2
+  heading: 1. The rule
+  line: 9
+  candidates: 0
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  level: 2
+  heading: 2. Why this is a doctrine and not a preference
+  line: 28
+  candidates: 0
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  level: 2
+  heading: 3. Capability tiers
+  line: 44
+  candidates: 0
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  level: 3
+  heading: 3.1 Tier definitions
+  line: 51
+  candidates: 0
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  level: 3
+  heading: 3.2 Mapping table — maintained by the operating organization
+  line: 59
+  candidates: 1
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  level: 2
+  heading: 4. Effort tiers
+  line: 82
+  candidates: 0
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  level: 2
+  heading: 5. Automatic classification
+  line: 107
+  candidates: 0
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  level: 3
+  heading: 5.1 The signals
+  line: 112
+  candidates: 0
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  level: 3
+  heading: 5.2 The mapping
+  line: 131
+  candidates: 1
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  level: 3
+  heading: 5.3 Mandatory overrides
+  line: 159
+  candidates: 8
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  level: 3
+  heading: 5.4 Worked examples
+  line: 207
+  candidates: 0
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  level: 2
+  heading: 6. Coordinator obligations
+  line: 261
+  candidates: 8
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  level: 2
+  heading: 6b. Capability is a separate axis from tier
+  line: 283
+  candidates: 3
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  level: 2
+  heading: 7. Anti-patterns
+  line: 322
+  candidates: 1
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  level: 2
+  heading: 8. Recording and audit
+  line: 336
+  candidates: 0
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  level: 2
+  heading: 9. Relationship to the other doctrines
+  line: 363
+  candidates: 1
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  level: 2
+  heading: 10. Summary card
+  line: 375
+  candidates: 0
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  level: 2
+  heading: Appendix — Revision log
+  line: 400
+  candidates: 1
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 1
+  heading: Software Architecture Manifest — Default (Domain-Agnostic)
+  line: 1
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 2
+  heading: Purpose
+  line: 3
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 2
+  heading: 1. Vocabulary
+  line: 15
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 2
+  heading: 2. The Paradigm Menu
+  line: 48
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: Structured / procedural
+  line: 54
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: Modular
+  line: 63
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: Object-oriented
+  line: 72
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: Functional
+  line: 84
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: Contract-based / design-by-contract
+  line: 95
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: Event-driven
+  line: 105
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: Actor / message-passing
+  line: 116
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: Dataflow / pipeline
+  line: 126
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: Type-driven / declarative
+  line: 135
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 2
+  heading: 3. Cross-Cutting Concerns
+  line: 148
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: 3.1 Coupling and cohesion
+  line: 150
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: 3.2 State and ownership
+  line: 162
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: 3.3 Error handling
+  line: 176
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: 3.4 Concurrency
+  line: 194
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: 3.5 Interfaces and contracts
+  line: 211
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: 3.6 Observability
+  line: 227
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 2
+  heading: 4. Testability Patterns
+  line: 242
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: 4.1 The test pyramid, in architectural terms
+  line: 244
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: 4.2 Seams
+  line: 256
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: 4.3 Test doubles
+  line: 269
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: 4.4 Determinism
+  line: 279
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 2
+  heading: 5. Debuggability Patterns
+  line: 291
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: 5.1 Fault isolation topology
+  line: 296
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: 5.2 Observable boundaries
+  line: 308
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: 5.3 Error propagation discipline
+  line: 321
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 3
+  heading: 5.4 State transition tracing
+  line: 332
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 2
+  heading: 6. Refactoring Patterns
+  line: 341
+  candidates: 0
+- source: AR
+  path: sources/manifests/architecture_manifest_default.md
+  level: 2
+  heading: 7. Common Tradeoff Axes
+  line: 371
+  candidates: 0
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 1
+  heading: Error-Tracing & Exception-Handling Contract — Ground-Truth Manifest
+  line: 1
+  candidates: 1
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: 1. Purpose and scope
+  line: 9
+  candidates: 0
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: 2. Guiding principles (PEP 20)
+  line: 13
+  candidates: 1
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: 3. Two propagation channels
+  line: 17
+  candidates: 1
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: '4. Typed result objects: `EmitOk | EmitError`'
+  line: 26
+  candidates: 3
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: 5. `assert_never` / `Never` exhaustiveness
+  line: 38
+  candidates: 1
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: 6. The functional-core / imperative-shell boundary — where conversion happens
+  line: 42
+  candidates: 0
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: '7. Raised exceptions: when they are the right channel'
+  line: 52
+  candidates: 0
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: '8. Exception chaining: `raise X from Y`, `__cause__` vs `__context__`'
+  line: 56
+  candidates: 0
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: 9. `from None` — use sparingly
+  line: 65
+  candidates: 0
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: 10. Re-raise vs wrap vs explicit-suppress
+  line: 69
+  candidates: 1
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: 11. Custom exception hierarchy
+  line: 77
+  candidates: 1
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: 12. Catch narrowly; `else` / `finally`; never bare `except`
+  line: 87
+  candidates: 0
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: 13. EAFP over LBYL (with the TOCTOU caveat)
+  line: 95
+  candidates: 0
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: 14. Assertions — what they are FOR and NOT for
+  line: 102
+  candidates: 0
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: 15. Boundary validation & "parse, don't validate"
+  line: 111
+  candidates: 0
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: 16. Descriptive messages — anatomy & structured attributes
+  line: 117
+  candidates: 5
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: 17. Errors as a documented, version-stable public contract (reusability)
+  line: 129
+  candidates: 0
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: 18. ExceptionGroup / `except*` (PEP 654, 3.11+)
+  line: 133
+  candidates: 0
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: 19. Notes & tracebacks (PEP 678, 3.11+)
+  line: 144
+  candidates: 0
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: 20. Observability & logging — error-side obligations only
+  line: 154
+  candidates: 0
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: 21. Version matrix and minimum target
+  line: 163
+  candidates: 3
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: 22. Anti-patterns checklist
+  line: 187
+  candidates: 1
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: 23. Decision flowchart
+  line: 202
+  candidates: 0
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 2
+  heading: Sources
+  line: 234
+  candidates: 3
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  level: 3
+  heading: Sibling manifests (cross-referenced, not duplicated)
+  line: 250
+  candidates: 1
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  level: 1
+  heading: Logging & Observability — Ground-Truth Manifest
+  line: 1
+  candidates: 0
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  level: 2
+  heading: 1. Scope and the three goals
+  line: 21
+  candidates: 0
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  level: 2
+  heading: '2. The severity model: FIVE emittable levels'
+  line: 40
+  candidates: 0
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  level: 3
+  heading: 2a. NOTSET (0) is a SENTINEL, not a sixth severity — explicit correction
+  line: 64
+  candidates: 1
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  level: 3
+  heading: 2b. Decision table — which level, and print vs `warnings.warn` vs `logging`
+  line: 84
+  candidates: 0
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  level: 2
+  heading: '3. Architecture: Logger, Handler, Formatter, Filter'
+  line: 105
+  candidates: 0
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  level: 3
+  heading: 3a. Logger hierarchy, `getLogger(__name__)`, effective level, propagation
+  line: 129
+  candidates: 1
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  level: 2
+  heading: 4. Reusable-component / library discipline (goal3 — the load-bearing part)
+  line: 158
+  candidates: 0
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  level: 2
+  heading: 5. Application-side configuration (the consumer)
+  line: 200
+  candidates: 0
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  level: 2
+  heading: 6. Goals mapping (severity + architecture → the three goals)
+  line: 224
+  candidates: 1
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  level: 2
+  heading: 7. Structured & contextual logging
+  line: 255
+  candidates: 0
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  level: 2
+  heading: 8. Correlation / trace IDs
+  line: 289
+  candidates: 0
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  level: 2
+  heading: '9. Performance: lazy `%`-style args and `isEnabledFor`'
+  line: 312
+  candidates: 0
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  level: 2
+  heading: '10. Exceptions: log ONCE at the handling boundary'
+  line: 334
+  candidates: 0
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  level: 2
+  heading: '11. Security: never log secrets or PII'
+  line: 361
+  candidates: 2
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  level: 2
+  heading: 12. Strict-typing notes
+  line: 373
+  candidates: 0
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  level: 2
+  heading: 13. Checklists
+  line: 389
+  candidates: 0
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  level: 3
+  heading: Library / reusable-component author checklist
+  line: 391
+  candidates: 10
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  level: 3
+  heading: Application / consumer author checklist
+  line: 403
+  candidates: 8
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  level: 2
+  heading: Open questions
+  line: 415
+  candidates: 7
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  level: 2
+  heading: Sources
+  line: 436
+  candidates: 1
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  level: 1
+  heading: Python Typing & Contract-Enforcement — Ground-Truth Manifest
+  line: 1
+  candidates: 0
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  level: 2
+  heading: TL;DR
+  line: 7
+  candidates: 2
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  level: 2
+  heading: Key Findings
+  line: 15
+  candidates: 7
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  level: 2
+  heading: Details
+  line: 27
+  candidates: 0
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  level: 3
+  heading: 1. Static type checkers and "strict" modes
+  line: 29
+  candidates: 1
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  level: 3
+  heading: 2. The typing vocabulary for contracts
+  line: 43
+  candidates: 1
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  level: 3
+  heading: 3. Explicit conversion and cast discipline
+  line: 60
+  candidates: 1
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  level: 3
+  heading: 4. What the type system CANNOT express
+  line: 69
+  candidates: 1
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  level: 3
+  heading: 5. Runtime contract-enforcement landscape
+  line: 81
+  candidates: 2
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  level: 3
+  heading: 6. Immutability and purity signalling
+  line: 90
+  candidates: 0
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  level: 3
+  heading: 7. Contract documentation conventions
+  line: 98
+  candidates: 0
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  level: 3
+  heading: 8. Open questions and version caveats
+  line: 111
+  candidates: 1
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  level: 2
+  heading: Recommendations
+  line: 128
+  candidates: 0
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  level: 2
+  heading: Caveats
+  line: 142
+  candidates: 1
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  level: 2
+  heading: Sources
+  line: 152
+  candidates: 0
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  level: 1
+  heading: Python Testing & Verification — Ground-Truth Manifest
+  line: 1
+  candidates: 0
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  level: 2
+  heading: TL;DR
+  line: 5
+  candidates: 1
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  level: 2
+  heading: Key Findings
+  line: 10
+  candidates: 0
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  level: 2
+  heading: Details
+  line: 17
+  candidates: 0
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  level: 3
+  heading: 1. Test framework landscape
+  line: 19
+  candidates: 0
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  level: 3
+  heading: 2. The unit–integration boundary (definitional)
+  line: 34
+  candidates: 0
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  level: 3
+  heading: 3. Test doubles, precisely
+  line: 43
+  candidates: 1
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  level: 3
+  heading: 4. Property-based testing (Hypothesis)
+  line: 62
+  candidates: 0
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  level: 3
+  heading: 5. Specifying obligations vs. writing tests
+  line: 77
+  candidates: 4
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  level: 3
+  heading: 6. Integration-test strategy primitives
+  line: 89
+  candidates: 0
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  level: 3
+  heading: 7. Testability design patterns (verification-relevant facts)
+  line: 106
+  candidates: 0
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  level: 3
+  heading: 8. Open questions and version caveats
+  line: 114
+  candidates: 0
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  level: 2
+  heading: Recommendations
+  line: 125
+  candidates: 6
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  level: 2
+  heading: Caveats
+  line: 133
+  candidates: 0
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  level: 2
+  heading: Sources (accessed 2026-06-16)
+  line: 138
+  candidates: 0
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  level: 1
+  heading: Software Specification Discipline — Manifest
+  line: 1
+  candidates: 0
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  level: 2
+  heading: A. The implementation-agnostic specification boundary
+  line: 11
+  candidates: 5
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  level: 2
+  heading: B. The requirements cascade (roles, altitudes, feedback)
+  line: 32
+  candidates: 6
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  level: 2
+  heading: C. Reusability as a first-class objective
+  line: 57
+  candidates: 5
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  level: 2
+  heading: D. Requirements elicitation discipline
+  line: 81
+  candidates: 6
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  level: 2
+  heading: E. Requirements writing discipline
+  line: 103
+  candidates: 5
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  level: 2
+  heading: F. Testability reasoning framework (judgment half)
+  line: 124
+  candidates: 6
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  level: 2
+  heading: G. Spec output and traceability discipline
+  line: 150
+  candidates: 5
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  level: 1
+  heading: Claude Code Agent Teams — Ground-Truth Manifest
+  line: 1
+  candidates: 0
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  level: 2
+  heading: 1. Scope and provenance
+  line: 30
+  candidates: 0
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  level: 2
+  heading: 2. Enablement
+  line: 46
+  candidates: 1
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  level: 2
+  heading: 3. Subagents vs agent teams — decision rule and side-by-side
+  line: 72
+  candidates: 0
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  level: 2
+  heading: 4. Team architecture and on-disk state
+  line: 100
+  candidates: 1
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  level: 2
+  heading: 5. Bootstrap and lifecycle
+  line: 132
+  candidates: 0
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  level: 2
+  heading: 6. Coordination tools — current surface and the documented drift
+  line: 151
+  candidates: 0
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  level: 2
+  heading: 7. Communication model
+  line: 187
+  candidates: 0
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  level: 2
+  heading: 8. Permissions
+  line: 201
+  candidates: 0
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  level: 2
+  heading: 9. Reusing subagent definitions as teammates — the load-bearing bridge
+  line: 217
+  candidates: 4
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  level: 2
+  heading: 10. Subagent frontmatter reference (`.claude/agents/<kebab>.md`)
+  line: 247
+  candidates: 0
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  level: 2
+  heading: 11. Slash-command / skill frontmatter reference
+  line: 285
+  candidates: 0
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  level: 2
+  heading: 12. Display and control
+  line: 310
+  candidates: 0
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  level: 2
+  heading: 13. Token economics
+  line: 329
+  candidates: 0
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  level: 2
+  heading: 14. Quality-gate hooks
+  line: 347
+  candidates: 0
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  level: 2
+  heading: 15. Limitations and risks
+  line: 363
+  candidates: 0
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  level: 2
+  heading: 16. Open questions and version caveats
+  line: 380
+  candidates: 0
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  level: 2
+  heading: Sources
+  line: 407
+  candidates: 0
+candidates:
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  section: 20. Architectural Mutation Testing
+  line: 714
+  kind: prohibition
+  text: This form of architectural mutation testing is useful for detecting assumptions that were never
+    included in the formal interaction contract.
+  force_hint: unclassified
+- source: SG
+  path: sources/Software Engineering Style Guidelines.md
+  section: Omission
+  line: 734
+  kind: prohibition
+  text: Expected output or activity never occurs.
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 0. What this document is and is not
+  line: 40
+  kind: tagged
+  text: '- **[BINDING]** — violating it is a defect. It has a stated enforcement'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 0. What this document is and is not
+  line: 43
+  kind: tagged
+  text: '- **[ADVISORY]** — a strong default that may be departed from with a stated'
+  force_hint: ADVISORY
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 2. Separation of core and clients
+  line: 126
+  kind: tagged
+  text: 'Concretely, **[BINDING]** no client may:'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 2. Separation of core and clients
+  line: 138
+  kind: prohibition
+  text: result (the `suggestion` field of `InvalidCommand`, §12), never apply it
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 2. Separation of core and clients
+  line: 144
+  kind: prohibition
+  text: merely tolerated for a "trivial scalar correction." An editor is never
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 2. Separation of core and clients
+  line: 152
+  kind: tagged
+  text: permit for GUI-level validation. **[ADVISORY]** Such duplication must be
+  force_hint: ADVISORY
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 2. Separation of core and clients
+  line: 153
+  kind: prohibition
+  text: demonstrably harmless if wrong — it must never be the only check performed
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 3.4 The binding compensations
+  line: 216
+  kind: tagged
+  text: 1. **[BINDING] `mypy --strict` on the entire package, a CI build gate.**
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 3.4 The binding compensations
+  line: 222
+  kind: tagged
+  text: 2. **[BINDING] Domain types are immutable.** Every type in `ubeats/domain/`
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 3.4 The binding compensations
+  line: 229
+  kind: tagged
+  text: 3. **[BINDING] Distinct types for distinct concepts.** `SectionId`,
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 3.4 The binding compensations
+  line: 233
+  kind: rfc2119
+  text: '`Slug`, `DocumentId`; `ARCHITECTURE.md` §2.1) MUST be a **frozen wrapper'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 3.4 The binding compensations
+  line: 235
+  kind: prohibition
+  text: never a bare `NewType`. A `NewType` alias has no validating constructor —
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 3.4 The binding compensations
+  line: 239
+  kind: prohibition
+  text: 'space): it is a `StrEnum`, never a `Literal["en", "ja"]`, because a'
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 3.4 The binding compensations
+  line: 240
+  kind: prohibition
+  text: '`Literal` has no validating constructor either. In all cases: never a bare'
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 3.4 The binding compensations
+  line: 246
+  kind: tagged
+  text: 4. **[BINDING] Closed sets are enumerations.** `LifecycleStage`,
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 3.4 The binding compensations
+  line: 250
+  kind: prohibition
+  text: dataclasses where the variants carry different data), never a free string
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 3.4 The binding compensations
+  line: 255
+  kind: tagged
+  text: 5. **[BINDING] Validating constructors at every boundary.** Any value
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 3.4 The binding compensations
+  line: 258
+  kind: prohibition
+  text: that returns `Result[T, DomainError]` (§12) — never `cast()`, never a bare
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 3.4 The binding compensations
+  line: 265
+  kind: tagged
+  text: 6. **[BINDING] A single hash-locked environment.** Dependencies are pinned by
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 3.4 The binding compensations
+  line: 273
+  kind: tagged
+  text: 7. **[BINDING] Mutation testing on domain rules as a substitute for
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 4. Contracts are first-class engineering artifacts
+  line: 315
+  kind: tagged
+  text: '**[BINDING]** A contract for a command or a port must specify, wherever'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 4. Contracts are first-class engineering artifacts
+  line: 323
+  kind: tagged
+  text: '**[BINDING]** The implementation is not the contract. A consumer — including'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 5. Public commands, private representations
+  line: 373
+  kind: tagged
+  text: '**[BINDING]** Clients interact with **command-managed** files through'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 5. Public commands, private representations
+  line: 395
+  kind: tagged
+  text: 1. **Command-managed files (`outline.toml`, `generated/**`).** **[BINDING]**
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 5. Public commands, private representations
+  line: 396
+  kind: rfc2119
+  text: MUST NOT be hand-edited as a substitute for issuing a command.
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 5. Public commands, private representations
+  line: 406
+  kind: numbered-rule
+  text: 2. **Authored data files (`document.toml`, `terminology.toml`).**
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 5. Public commands, private representations
+  line: 407
+  kind: tagged
+  text: '**[BINDING]** These are a genuine authoring surface, not a "model file"'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 5. Public commands, private representations
+  line: 416
+  kind: tagged
+  text: --amend` defers correctness to the next `git status`. **[ADVISORY]**
+  force_hint: ADVISORY
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 5. Public commands, private representations
+  line: 422
+  kind: prohibition
+  text: specific, named operation — but a hand-edit is never rejected merely for
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 5. Public commands, private representations
+  line: 425
+  kind: tagged
+  text: 3. **Authored prose (`prose/**/*.typ`).** **[BINDING]** The same authored
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 5. Public commands, private representations
+  line: 437
+  kind: prohibition
+  text: clients were never depending on it — they were depending on the command
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 6. Hexagonal modular architecture
+  line: 462
+  kind: tagged
+  text: '**[BINDING]** Dependencies point inward: `ubeats/domain/` imports nothing'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 6. Hexagonal modular architecture
+  line: 466
+  kind: tagged
+  text: '**[BINDING]** A port is justified — and may be merged — only when it buys at'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 6. Hexagonal modular architecture
+  line: 481
+  kind: tagged
+  text: '**[BINDING]** JSON/TOML serialization, string formatting, pure path'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 6. Hexagonal modular architecture
+  line: 486
+  kind: tagged
+  text: '**[BINDING] Carve-out: why `ProseScannerPort` is a port and not "just'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 6. Hexagonal modular architecture
+  line: 500
+  kind: prohibition
+  text: a project-owned constant. Purity was never the only criterion for port
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 7. Functional core, imperative shell — and the placement test
+  line: 508
+  kind: prohibition
+  text: '`ubeats/domain/` takes values and returns values. It never touches a'
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 7. Functional core, imperative shell — and the placement test
+  line: 529
+  kind: prohibition
+  text: validating constructor or a gate reading `ProseFacts` (ADR-0001) — never
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 7.1 The placement test
+  line: 559
+  kind: rfc2119
+  text: '`ubeats/app/` or `ubeats/shell/`, and it MUST NOT contain a business rule'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 7.1 The placement test
+  line: 563
+  kind: tagged
+  text: '**[BINDING]** Applying this test is not optional for new code; it is checked'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 8. Make effects explicit
+  line: 582
+  kind: tagged
+  text: '**[BINDING]** A domain function''s signature must not hide an external'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 8. Make effects explicit
+  line: 584
+  kind: prohibition
+  text: '(never ambient reads) anywhere they influence domain logic include: the'
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 8. Make effects explicit
+  line: 586
+  kind: prohibition
+  text: document)`, never `datetime.now()` called inside `ubeats/domain/`);
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 8. Make effects explicit
+  line: 591
+  kind: prohibition
+  text: supplied by the caller — never a bare `uuid4()` call buried inside a domain
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 9. Commands over raw mutation — the plan/apply model
+  line: 607
+  kind: prohibition
+  text: '`PROPOSAL.md` §10.1), never as ad hoc field mutation. A command expresses'
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 9. Commands over raw mutation — the plan/apply model
+  line: 643
+  kind: tagged
+  text: '**[BINDING]** Every command that mutates persisted state MUST be implemented'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 9. Commands over raw mutation — the plan/apply model
+  line: 650
+  kind: tagged
+  text: '**[BINDING]** `--dry-run` on any consequential command is not a separate code'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 9. Commands over raw mutation — the plan/apply model
+  line: 657
+  kind: tagged
+  text: '**[ADVISORY]** For a command whose plan can be large or consequential'
+  force_hint: ADVISORY
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 10. Prefer explicit state transitions
+  line: 680
+  kind: tagged
+  text: '**[BINDING]** An illegal transition (e.g. removing the draft marker below'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 10. Prefer explicit state transitions
+  line: 688
+  kind: tagged
+  text: '**[BINDING]** Where a lifecycle rule exists, it must be represented in the'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 10. Prefer explicit state transitions
+  line: 692
+  kind: prohibition
+  text: 5) — never left as an unconstrained field trusted to be consistent by
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 11. Strong typing as a design tool
+  line: 703
+  kind: tagged
+  text: '**[BINDING]** `SectionId`, `LocaleTag`, `DocumentVersion`, `SchemaVersion`,'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 11. Strong typing as a design tool
+  line: 712
+  kind: prohibition
+  text: dataclasses with a `parse()` constructor, never `NewType` — a `NewType` has
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 11. Strong typing as a design tool
+  line: 716
+  kind: tagged
+  text: '**[BINDING]** A domain concept with a known closed set of values — document'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 11. Strong typing as a design tool
+  line: 720
+  kind: prohibition
+  text: tagged union, never a string compared with `==` scattered across the
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 11. Strong typing as a design tool
+  line: 721
+  kind: prohibition
+  text: codebase, and never a `Literal` (which, like `NewType`, has no validating
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 11. Strong typing as a design tool
+  line: 724
+  kind: tagged
+  text: '**[ADVISORY]** Type sophistication must remain proportional to benefit. A'
+  force_hint: ADVISORY
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 11. Strong typing as a design tool
+  line: 726
+  kind: prohibition
+  text: harder for a newcomer to read, in service of a substitution that is never
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 12. Explicit error semantics
+  line: 736
+  kind: prohibition
+  text: never raises an exception for an expected condition; it returns
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 12. Explicit error semantics
+  line: 756
+  kind: tagged
+  text: '**[BINDING]** `ubeats/domain/` may only ever produce a `DomainError`. Only'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 12. Explicit error semantics
+  line: 761
+  kind: tagged
+  text: '**[BINDING]** A new failure category is added to the enumeration at its'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 13. Expected failure versus contract violation
+  line: 777
+  kind: tagged
+  text: '**[BINDING]** `ContractViolation` (§12) is reserved specifically for the case'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 13. Expected failure versus contract violation
+  line: 782
+  kind: prohibition
+  text: and the two must never be collapsed into the same handling path.
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 14. Testing is an architectural activity
+  line: 802
+  kind: tagged
+  text: '**[BINDING]** Testing is not primarily a demonstration that nominal examples'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 15. Unit tests
+  line: 812
+  kind: tagged
+  text: '**[BINDING]** `ubeats/domain/` must be substantially testable with no'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 15. Unit tests
+  line: 820
+  kind: tagged
+  text: '**[BINDING]** Unit tests assert domain invariants (*"a plan for a rejected'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 15. Unit tests
+  line: 821
+  kind: prohibition
+  text: command never contains an effect"*), not merely mirror the implementation's
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 16. Integration tests
+  line: 831
+  kind: tagged
+  text: '**[BINDING]** Integration tests exercise real technology: `ubeats/domain/` ↔'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 17. Port contract tests
+  line: 844
+  kind: tagged
+  text: '**[BINDING]** Every port in `ubeats/ports/` has one contract test suite,'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 17. Port contract tests
+  line: 863
+  kind: tagged
+  text: parametrized suite. **[BINDING]** If the fake and the real adapter can
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 18. Deliberately broken components — the faulty adapter family
+  line: 874
+  kind: tagged
+  text: '**[BINDING]** Every port — unconditionally, with no "meaningful failure'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 18. Deliberately broken components — the faulty adapter family
+  line: 893
+  kind: tagged
+  text: '**[BINDING]** These are not test doubles used once and discarded; they are'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 19. Fault propagation and containment
+  line: 904
+  kind: tagged
+  text: '**[BINDING]** For every pairing of a faulty adapter feeding a healthy'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 20. Architectural mutation testing
+  line: 924
+  kind: tagged
+  text: '**[BINDING]** In addition to code-level mutation testing (§23), boundary'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 20. Architectural mutation testing
+  line: 935
+  kind: prohibition
+  text: that was never written into a contract (§4) and is currently protected only
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 20. Architectural mutation testing
+  line: 937
+  kind: tagged
+  text: '**[ADVISORY]** New ports should have at least one architectural mutation'
+  force_hint: ADVISORY
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 21. Fault models
+  line: 950
+  kind: prohibition
+  text: '- **omission** — an expected write never happens; a hook never fires;'
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 21. Fault models
+  line: 966
+  kind: tagged
+  text: '**[BINDING]** `FileSystemPort` and `TypstPort` — the two ports on the'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 22. Fault schedules as data
+  line: 975
+  kind: tagged
+  text: '**[BINDING]** Faults injected by `ubeats/adapters/faulty/` are configured as'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 22. Fault schedules as data
+  line: 991
+  kind: tagged
+  text: tests (§26), and fuzzing campaigns (§25). **[BINDING]** A property-based test
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 23. Mutation testing
+  line: 1000
+  kind: tagged
+  text: '**[BINDING]** Mutation testing runs against `ubeats/domain/rules/`,'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 23. Mutation testing
+  line: 1009
+  kind: tagged
+  text: '**[BINDING]** A surviving mutant is investigated, not merely tallied. Each'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 24. MC/DC
+  line: 1026
+  kind: tagged
+  text: '**[BINDING]** Modified condition/decision coverage is applied to compound'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 24. MC/DC
+  line: 1030
+  kind: prohibition
+  text: coverage can be satisfied while one of those four conditions never
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 24. MC/DC
+  line: 1034
+  kind: tagged
+  text: '**[ADVISORY]** MC/DC complements mutation testing and semantic'
+  force_hint: ADVISORY
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 25. Fuzzing
+  line: 1043
+  kind: tagged
+  text: '**[BINDING]** Every interface that parses externally-influenced or'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 25. Fuzzing
+  line: 1049
+  kind: tagged
+  text: '**[BINDING]** Fuzzing targets the following properties, not merely the'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 25. Fuzzing
+  line: 1060
+  kind: tagged
+  text: '**[ADVISORY]** Prefer fuzzing at the level of the parsed, typed'
+  force_hint: ADVISORY
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 26. Property-based testing
+  line: 1069
+  kind: tagged
+  text: '**[BINDING]** The following properties (already listed as binding in'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 26. Property-based testing
+  line: 1088
+  kind: tagged
+  text: '**[ADVISORY]** New domain features should be accompanied by at least one new'
+  force_hint: ADVISORY
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 27. Test real failure modes too
+  line: 1097
+  kind: tagged
+  text: '**[BINDING]** Faulty adapters (§18) make faults deterministic and'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 27. Test real failure modes too
+  line: 1112
+  kind: tagged
+  text: '**[BINDING]** Where a real-infrastructure test discovers a fault mode the'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 28. Persistence ownership
+  line: 1121
+  kind: tagged
+  text: '**[BINDING]** Command-managed persistence (`outline.toml`, `generated/**`)'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 28. Persistence ownership
+  line: 1135
+  kind: prohibition
+  text: for `outline.toml` and `generated/**` — never
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 28. Persistence ownership
+  line: 1148
+  kind: prohibition
+  text: that it is re-validated at the *next* load, never trusted on the strength of
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 29.2 What the plan/apply pipeline builds on top of that
+  line: 1185
+  kind: tagged
+  text: constructs the following, and **[BINDING]** no command may claim a stronger
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 29.2 What the plan/apply pipeline builds on top of that
+  line: 1205
+  kind: tagged
+  text: '**[BINDING]** For every command whose plan can contain more than one effect,'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 29.2 What the plan/apply pipeline builds on top of that
+  line: 1217
+  kind: prohibition
+  text: 'states: the full pre-plan state, or the full post-plan state — **never** a'
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 29.2 What the plan/apply pipeline builds on top of that
+  line: 1218
+  kind: prohibition
+  text: mix, and never silently. Where the current implementation cannot yet
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 29.3 What is explicitly NOT guaranteed, and must be stated as such
+  line: 1225
+  kind: tagged
+  text: '**[BINDING]** The following limits are real and must never be papered over'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 29.3 What is explicitly NOT guaranteed, and must be stated as such
+  line: 1244
+  kind: tagged
+  text: '**[BINDING]** Every port and command contract (§4) that involves multi-effect'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 30. Protocol design for automation
+  line: 1255
+  kind: tagged
+  text: '**[BINDING]** Every `ubeats` command supports `--json` and emits the'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 30. Protocol design for automation
+  line: 1264
+  kind: tagged
+  text: '**[BINDING]** Every consequential command supports `--dry-run`, which is the'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 30. Protocol design for automation
+  line: 1265
+  kind: prohibition
+  text: plan-construction half of §9's pipeline with the apply half skipped — never a
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 31. Agentic use does not relax validation
+  line: 1272
+  kind: tagged
+  text: '**[BINDING]** An automated agent is an ordinary client (§2). It receives no'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 31. Agentic use does not relax validation
+  line: 1278
+  kind: tagged
+  text: '**[BINDING]** The architecture assumes an agent can send a malformed request,'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 32. Observability
+  line: 1290
+  kind: tagged
+  text: '**[BINDING]** A rejected or failed command''s result must carry enough'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 32. Observability
+  line: 1298
+  kind: tagged
+  text: '**[ADVISORY]** Logs remain useful for diagnosis and post-mortem analysis, and'
+  force_hint: ADVISORY
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 32. Observability
+  line: 1300
+  kind: prohibition
+  text: never be required to parse a log to learn something the structured result
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 33. Dependency policy
+  line: 1307
+  kind: tagged
+  text: '**[ADVISORY]** Use mature, well-maintained third-party libraries rather than'
+  force_hint: ADVISORY
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 33. Dependency policy
+  line: 1321
+  kind: tagged
+  text: '**[BINDING]** `ubeats/domain/` may depend only on the Python standard'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 34. Avoid framework-dominated domain models
+  line: 1335
+  kind: tagged
+  text: '**[BINDING]** `Document`, `SectionNode`, and the other domain types (§7 of'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 34. Avoid framework-dominated domain models
+  line: 1349
+  kind: tagged
+  text: '**[ADVISORY]** This costs more explicit code than passing one library object'
+  force_hint: ADVISORY
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 35. Prefer explicit mapping over hidden magic
+  line: 1359
+  kind: tagged
+  text: '**[ADVISORY]** Code generation, decorators, and light reflection are not'
+  force_hint: ADVISORY
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 35. Prefer explicit mapping over hidden magic
+  line: 1362
+  kind: tagged
+  text: Python's data model. **[BINDING]** Wherever such a mechanism is used inside
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 36. Replaceability should be real
+  line: 1374
+  kind: tagged
+  text: '**[BINDING]** For every port, `PROPOSAL.md`''s three-adapter requirement (§8:'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 36. Replaceability should be real
+  line: 1381
+  kind: tagged
+  text: '**[BINDING]** If wiring a fake or faulty adapter in place of the real one for'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 37. Keep the domain independent of test doubles
+  line: 1391
+  kind: tagged
+  text: '**[BINDING]** `ubeats/domain/` and `ubeats/app/` must contain no'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 37. Keep the domain independent of test doubles
+  line: 1394
+  kind: prohibition
+  text: behind a port (§36), never from a runtime branch inside production code that
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 38. Version contracts deliberately
+  line: 1406
+  kind: tagged
+  text: '**[BINDING]** The CLI''s JSON envelope carries an explicit schema identifier'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 38. Version contracts deliberately
+  line: 1414
+  kind: prohibition
+  text: after migration or fail with `UnsupportedSchema`, never silently
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 38. Version contracts deliberately
+  line: 1422
+  kind: prohibition
+  text: should never discover an incompatibility by having its request silently
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 38. Version contracts deliberately
+  line: 1425
+  kind: tagged
+  text: '**[ADVISORY]** Prefer additive, optional fields over breaking changes'
+  force_hint: ADVISORY
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 39. Test the delivered boundaries
+  line: 1433
+  kind: tagged
+  text: '**[BINDING]** Library-level (unit, property, contract) tests are necessary'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 40. Prefer determinism
+  line: 1460
+  kind: tagged
+  text: '**[BINDING]** Sources of nondeterminism are controlled wherever they could'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 40. Prefer determinism
+  line: 1467
+  kind: tagged
+  text: '**[BINDING]** A failing property-based or fuzz-generated test case must be'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 41. Concurrency requires explicit semantics
+  line: 1477
+  kind: tagged
+  text: '**[BINDING]** UBEATS v2''s default concurrency policy is **single-writer**:'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 41. Concurrency requires explicit semantics
+  line: 1489
+  kind: tagged
+  text: '**[BINDING]** Any component introducing concurrency beyond this default'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 41. Concurrency requires explicit semantics
+  line: 1493
+  kind: prohibition
+  text: behavior; and stale-state handling. Concurrency is never introduced merely
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 41. Concurrency requires explicit semantics
+  line: 1497
+  kind: tagged
+  text: '**[ADVISORY]** Concurrency-specific bugs (lock contention, stale-lock'
+  force_hint: ADVISORY
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 42. Failures should be observable but contained
+  line: 1506
+  kind: tagged
+  text: '**[BINDING]** The intended shape of every failure is:'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 42. Failures should be observable but contained
+  line: 1520
+  kind: tagged
+  text: '**[BINDING]** An unhandled Python exception escaping `ubeats/domain/` or'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 42. Failures should be observable but contained
+  line: 1524
+  kind: prohibition
+  text: through the normal result envelope (§30), never allowed to print a bare
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 43. Simplicity is still a requirement
+  line: 1531
+  kind: tagged
+  text: '**[BINDING]** None of the rigor in this document licenses needless'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 43. Simplicity is still a requirement
+  line: 1539
+  kind: tagged
+  text: '**[ADVISORY]** When reviewing a change, ask whether removing a layer of'
+  force_hint: ADVISORY
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 43. Simplicity is still a requirement
+  line: 1544
+  kind: prohibition
+  text: ceremony, not architecture, and should be removed or never added.
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 44. Rules for generated artefacts
+  line: 1556
+  kind: tagged
+  text: '**[BINDING]** Everything under `generated/**` is a build artifact of the pure'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 44. Rules for generated artefacts
+  line: 1557
+  kind: prohibition
+  text: function `render(doc, facts) -> RenderedTree`. It is never hand-edited (§5).
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 44. Rules for generated artefacts
+  line: 1560
+  kind: numbered-rule
+  text: 1. **Provenance header.** Every generated file begins with a machine-readable
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 44. Rules for generated artefacts
+  line: 1564
+  kind: tagged
+  text: '**[BINDING]** The header MUST NOT include a wall-clock timestamp or any'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 44. Rules for generated artefacts
+  line: 1569
+  kind: numbered-rule
+  text: 2. **Hash manifest.** A manifest (committed alongside the generated tree,
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 44. Rules for generated artefacts
+  line: 1572
+  kind: tagged
+  text: regeneration. **[BINDING]** `ubeats verify` recomputes this manifest and
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 44. Rules for generated artefacts
+  line: 1578
+  kind: tagged
+  text: 3. **Idempotence and byte-stability.** **[BINDING]** Regenerating from an
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 44. Rules for generated artefacts
+  line: 1579
+  kind: rfc2119
+  text: unchanged model MUST produce byte-identical output, every time, on every
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 44. Rules for generated artefacts
+  line: 1586
+  kind: numbered-rule
+  text: 4. **Committed for review, gated by regeneration, not by trust.**
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 44. Rules for generated artefacts
+  line: 1587
+  kind: tagged
+  text: '**[ADVISORY]** Generated Typst source SHOULD be committed to version'
+  force_hint: ADVISORY
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 44. Rules for generated artefacts
+  line: 1590
+  kind: tagged
+  text: '**[BINDING]** Regardless of whether it is committed, the generated tree''s'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 44. Rules for generated artefacts
+  line: 1591
+  kind: prohibition
+  text: correctness is never established by "it's in the diff and looks right" —
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 44. Rules for generated artefacts
+  line: 1594
+  kind: tagged
+  text: 5. **CI enforcement.** **[BINDING]** CI runs a regenerate-and-compare step
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 44. Rules for generated artefacts
+  line: 1601
+  kind: tagged
+  text: '**[BINDING]** This section''s rules apply, without modification, to any future'
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 45. Decision heuristic
+  line: 1638
+  kind: prohibition
+  text: because the effect was never separated out?
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 46. How this doctrine is enforced
+  line: 1670
+  kind: prohibition
+  text: '| 3 | Identifiers are distinct types, never bare `str`/`int` | §3.4-3, §11 | Review checklist
+    + `mypy --strict` catches many cases |'
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 46. How this doctrine is enforced
+  line: 1682
+  kind: prohibition
+  text: '| 15 | Mutating commands implement `plan()` then `apply()`, never combined | §9 | Fitness test
+    (shared command-dispatch path) + review checklist |'
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 46.1 The two rules this project already learned the hard way
+  line: 1699
+  kind: tagged
+  text: 1. **[BINDING] No check may pass vacuously.** Every automated check —
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 46.1 The two rules this project already learned the hard way
+  line: 1705
+  kind: tagged
+  text: 2. **[BINDING] A test that changes shape must justify its new shape.** Any
+  force_hint: BINDING
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 47. Summary
+  line: 1745
+  kind: prohibition
+  text: build destructive operations as validate-then-plan-then-apply, never as
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 47. Summary
+  line: 1755
+  kind: prohibition
+  text: satisfy them; a filesystem interruption during a plan's commit never leaves
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: 47. Summary
+  line: 1758
+  kind: prohibition
+  text: regenerated and never silently diverges from the model that produced it; and
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: Appendix A — Architecture Decision Record template
+  line: 1769
+  kind: prohibition
+  text: (`ADR-0001`, `ADR-0002`, …), never renumbered or deleted once merged
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: Appendix B — Revision log
+  line: 1845
+  kind: prohibition
+  text: '| 2 | Propagated ADR-0001 and ADR-0002 (`render` is total and locale-from-model, §7; `DomainError`
+    replaces `Rejection` throughout, §9; `FileEffect`/`ExternalEffect` split with no separate `rationale`
+    field, §9, §29); scoped §29''s pre/post-state guarantee to the file phase and made lock contention
+    exit 1 (§41, decided pending ADR-0004, no longer an open question); resolved the `document.toml`/`te…'
+  force_hint: unclassified
+- source: SE
+  path: sources/doctrine/SOFTWARE-ENGINEERING.md
+  section: Appendix B — Revision log
+  line: 1847
+  kind: prohibition
+  text: '| 4 | §6: added `ProseScannerPort` as the ninth port to the inventory (ADR-0001 — this document
+    had never been updated past the original eight-port list) and added a binding carve-out explaining
+    why a lexical scanner is a port rather than the "serialization" the same section excludes: it is containment
+    of external change (Typst''s evolving surface syntax), not purity, that decides the case, per AD…'
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 2.3 What belongs in a contract test, and what does not
+  line: 331
+  kind: prohibition
+  text: missing path, not "some exception," and never `DomainError`'s `NotFound`,
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 2.3 What belongs in a contract test, and what does not
+  line: 337
+  kind: prohibition
+  text: never observed half-written);
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 2.3 What belongs in a contract test, and what does not
+  line: 352
+  kind: prohibition
+  text: '`tests/integration/` or as an adapter-only test — never in the shared'
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 2.4 The worthless-fake rule
+  line: 372
+  kind: rfc2119
+  text: '**Enforcement:** every port listed in `PROPOSAL.md` §8 MUST have exactly one'
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 2.4 The worthless-fake rule
+  line: 373
+  kind: rfc2119
+  text: contract suite, and that suite MUST be instantiated against its real, fake,
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 3.4 Fault category catalogue, mapped to this system
+  line: 516
+  kind: rfc2119
+  text: Fault injection MUST be organized around these ten categories (adapted from
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 3.4 Fault category catalogue, mapped to this system
+  line: 527
+  kind: prohibition
+  text: '| **Omission** | `write_atomic` reports success but the byte range is never flushed | `compile`
+    exits 0 but emits no PDF | `read_metadata` returns success with an empty field set | `tag` reports
+    success but no tag exists afterward | `translate` returns success with zero segments translated |
+    `scan` succeeds but **misses a construct that is actually present** — a `#todo` inside a form the
+    lexical …'
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 3.4 Fault category catalogue, mapped to this system
+  line: 529
+  kind: prohibition
+  text: '| **Value corruption** | `read_bytes(A)` returns bytes belonging to `B` (path-mixing bug) | `query`
+    returns JSON describing a *different* document than the one just compiled | metadata reports title/keywords
+    from a previous build | `status` lists files that were never touched this session | a segment comes
+    back translated into the wrong target locale | `scan` **reports a construct that is not act…'
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 3.4 Fault category catalogue, mapped to this system
+  line: 535
+  kind: prohibition
+  text: '| **Protocol violation** | — | `query` returns malformed JSON, or JSON that does not match the
+    published schema | metadata scan returns a shape `PdfInspectorPort` never promises | a hook script
+    writes to stdout in a way the parser cannot frame | model reports a locale pair the port has no contract
+    for | `scan` **fails to classify a construct** and reports a `ConstructKind` outside the closed enum…'
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 4.1 The pattern
+  line: 571
+  kind: numbered-rule
+  text: 1. **Detects and rejects** — the healthy consumer returns a `DomainError` or
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 4.1 The pattern
+  line: 574
+  kind: numbered-rule
+  text: 2. **Detects and contains** — the healthy consumer recognizes the fault,
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 4.1 The pattern
+  line: 577
+  kind: numbered-rule
+  text: 3. **Propagates an explicit error unchanged** — acceptable if the consumer
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 4.1 The pattern
+  line: 579
+  kind: numbered-rule
+  text: 4. **Silently corrupts** — **never acceptable**. Any test that finds this is
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 4.2 Worked example
+  line: 613
+  kind: prohibition
+  text: must never be used outside `tests/fault/`.
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 4.2 Worked example
+  line: 616
+  kind: rfc2119
+  text: violation" and "Value corruption" rows MUST have at least one test in this
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 5.1 The invariant
+  line: 652
+  kind: rfc2119
+  text: This MUST be tested at **every** file-effect boundary of **every** plan shape
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 5.1 The invariant
+  line: 653
+  kind: rfc2119
+  text: the domain can produce, not sampled, and MUST test both halves of the
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 5.2 The harness
+  line: 708
+  kind: rfc2119
+  text: This test MUST run once per `FileEffect` variant (`WriteFile`, `MoveFile`,
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 5.2 The harness
+  line: 711
+  kind: prohibition
+  text: '`build`, `translate refresh`, etc.) — a use case that never exercised its own'
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 5.3 External effects have no journal, and are tested differently
+  line: 722
+  kind: rfc2119
+  text: the second, MUST be shown — by a dedicated test, not the harness above — to
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 5.3 External effects have no journal, and are tested differently
+  line: 724
+  kind: prohibition
+  text: whole as `is_reversible = False` from the moment it was constructed, never
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 5.3 External effects have no journal, and are tested differently
+  line: 728
+  kind: rfc2119
+  text: 'a matter of the author remembering: the fitness suite MUST assert, for every'
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 5.3 External effects have no journal, and are tested differently
+  line: 732
+  kind: rfc2119
+  text: test of §5.4 also exists for it; MUST fail if a new use case adds plan
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 5.4 The boundary between the two phases
+  line: 792
+  kind: rfc2119
+  text: This test MUST exist for every registered `Plan`-shape fixture whose
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 6.1 Why, and the tool
+  line: 805
+  kind: rfc2119
+  text: example is automatically shrunk to a minimal reproduction, and MUST be
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 6.2 Binding properties (minimum set — extend freely, never shrink)
+  line: 811
+  kind: rfc2119
+  text: Each property below MUST exist as an executable hypothesis test before P1
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 6.2 Binding properties (minimum set — extend freely, never shrink)
+  line: 843
+  kind: rfc2119
+  text: '`Plan` (already stated in `PROPOSAL.md` §12.3). This MUST hold across'
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 6.2 Binding properties (minimum set — extend freely, never shrink)
+  line: 864
+  kind: prohibition
+  text: '`RenderedTree` (never an exception, and never a `Result` — §7 of'
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 6.2 Binding properties (minimum set — extend freely, never shrink)
+  line: 886
+  kind: prohibition
+  text: does not explicitly change them — moving sections around must never
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 6.2 Binding properties (minimum set — extend freely, never shrink)
+  line: 915
+  kind: rfc2119
+  text: Failing examples discovered by any of the above MUST be persisted per §11.3
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 6.2 Binding properties (minimum set — extend freely, never shrink)
+  line: 916
+  kind: prohibition
+  text: — never left to hypothesis's local example database alone.
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 7.3 Disposition of surviving mutants
+  line: 957
+  kind: rfc2119
+  text: 'surviving mutant on a mandatory module, the author MUST record one of:'
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 7.3 Disposition of surviving mutants
+  line: 967
+  kind: rfc2119
+  text: '**Enforcement:** a suppression (mutant marked equivalent or accepted) MUST be'
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 7.3 Disposition of surviving mutants
+  line: 970
+  kind: rfc2119
+  text: skip comment with no rationale. A PR that increases the ledger MUST justify
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 7.4 MC/DC for compound gate decisions
+  line: 992
+  kind: prohibition
+  text: facts about the model — `no_placeholders` reads `facts.markers`, never
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 7.4 MC/DC for compound gate decisions
+  line: 1019
+  kind: rfc2119
+  text: MC/DC MUST be applied to every compound decision in `domain/rules/` gates
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 7.4 MC/DC for compound gate decisions
+  line: 1021
+  kind: prohibition
+  text: It complements, and never substitutes for, the property and mutation
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 8.1 Keeping them meaningful
+  line: 1033
+  kind: rfc2119
+  text: goldens nobody can explain the purpose of. Both MUST be prevented
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 8.2 Reviewing a golden diff
+  line: 1054
+  kind: rfc2119
+  text: A reviewer of a golden diff MUST be able to answer, from the diff and the
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 8.2 Reviewing a golden diff
+  line: 1066
+  kind: rfc2119
+  text: PR MUST be treated as suspicious by default — see §8.3.
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 8.3 Preventing "just regenerate the goldens"
+  line: 1078
+  kind: numbered-rule
+  text: 1. **Regeneration requires a reason.** The regeneration script MUST require
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 8.3 Preventing "just regenerate the goldens"
+  line: 1079
+  kind: rfc2119
+  text: '`--reason "<text>"`, and MUST write that text into the fixture''s'
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 8.3 Preventing "just regenerate the goldens"
+  line: 1083
+  kind: numbered-rule
+  text: 2. **CI blocks unexplained golden changes.** A PR that changes files under
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 8.3 Preventing "just regenerate the goldens"
+  line: 1084
+  kind: rfc2119
+  text: '`tests/golden/render/**/*.typ` MUST also change at least one of:'
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 8.3 Preventing "just regenerate the goldens"
+  line: 1092
+  kind: rfc2119
+  text: fixtures at once, the PR description MUST name the shared change and the
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 9.1 No vacuous checks
+  line: 1123
+  kind: rfc2119
+  text: script, an `ubeats verify` finding category — MUST have a companion test
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 9.1 No vacuous checks
+  line: 1126
+  kind: rfc2119
+  text: matches" MUST additionally have a companion test that first demonstrates the
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 9.1 No vacuous checks
+  line: 1129
+  kind: prohibition
+  text: guarded condition. A check that has never been observed to fail has not
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 9.1 No vacuous checks
+  line: 1164
+  kind: rfc2119
+  text: The third test is the load-bearing one and MUST be present for **any** check
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 9.2 No silent test weakening
+  line: 1190
+  kind: rfc2119
+  text: MUST state, in the PR description, whether test coverage was **preserved**,
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 9.2 No silent test weakening
+  line: 1193
+  kind: prohibition
+  text: ADR-00NN") — it may never be the unstated side effect of making a test pass
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 9.2 No silent test weakening
+  line: 1194
+  kind: rfc2119
+  text: again. Mutation testing on the affected module (§7) MUST be re-run and MUST
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 9.2 No silent test weakening
+  line: 1201
+  kind: checklist
+  text: Does this diff change an assertion's operator or strength (e.g. `==`
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 9.2 No silent test weakening
+  line: 1205
+  kind: checklist
+  text: Does this diff change fixture data in a way that removes a case
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 9.2 No silent test weakening
+  line: 1208
+  kind: checklist
+  text: Does this diff delete a test? If so, is there a replacement covering
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 9.2 No silent test weakening
+  line: 1211
+  kind: checklist
+  text: Does this diff comment out, `xfail`, or `skip` a previously-enforced
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 9.2 No silent test weakening
+  line: 1213
+  kind: checklist
+  text: Does the PR description explicitly state "coverage preserved" /
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 9.2 No silent test weakening
+  line: 1215
+  kind: rfc2119
+  text: with no such statement MUST be sent back, not approved on the assumption
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 9.2 No silent test weakening
+  line: 1217
+  kind: checklist
+  text: If coverage is claimed reduced-with-justification, was mutation
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 9.2 No silent test weakening
+  line: 1220
+  kind: checklist
+  text: If this diff touches a *check* (as opposed to a domain test), does
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 10.2 An unenforced budget is a wish — and a wall-clock total is a flaky one
+  line: 1306
+  kind: numbered-rule
+  text: 1. **A per-test timeout is the enforced gate.** Every test under
+  force_hint: unclassified
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 10.2 An unenforced budget is a wish — and a wall-clock total is a flaky one
+  line: 1307
+  kind: rfc2119
+  text: '`tests/unit/` MUST complete within **200 ms**, checked per test (e.g. a'
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 10.3 Worked fitness test examples
+  line: 1391
+  kind: rfc2119
+  text: The second and third examples MUST themselves have a proof-of-failure
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 11.2 Determinism controls
+  line: 1435
+  kind: rfc2119
+  text: open a socket, including to `localhost`. This MUST be enforced, not
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 11.2 Determinism controls
+  line: 1442
+  kind: rfc2119
+  text: '- **No ordering dependence.** Tests MUST NOT rely on execution order or'
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 11.2 Determinism controls
+  line: 1448
+  kind: rfc2119
+  text: logged seeds. A CI run's seed MUST be printed in its output and MUST be
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 11.2 Determinism controls
+  line: 1453
+  kind: rfc2119
+  text: golden test or a serialization round-trip test observes MUST NOT contain
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 11.3 Seeds and regression persistence
+  line: 1464
+  kind: rfc2119
+  text: '**The counterexample MUST be promoted into the test file as an explicit'
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 11.3 Seeds and regression persistence
+  line: 1477
+  kind: rfc2119
+  text: 'campaign (§3, §6): a schedule that broke an invariant MUST be committed as a'
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 12.1 Per-commit (local pre-commit hook and/or pre-push; fast loop)
+  line: 1495
+  kind: rfc2119
+  text: This loop MUST stay fast enough that a contributor runs it before every
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 12.2 Pre-landing (PR merge gate; blocking; target well under the sum of
+  line: 1524
+  kind: rfc2119
+  text: '**This gate blocks merge.** All of the above MUST be green, `mypy --strict`'
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 12.2 Pre-landing (PR merge gate; blocking; target well under the sum of
+  line: 1525
+  kind: rfc2119
+  text: MUST be green, and the §9.2 checklist MUST be explicitly completed for any
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: 12.3 Nightly / scheduled (does not block an individual landing; blocks
+  line: 1551
+  kind: rfc2119
+  text: '**A nightly failure MUST be triaged the same day it is observed** and'
+  force_hint: BINDING
+- source: TD
+  path: sources/doctrine/TESTING.md
+  section: Appendix — Revision log
+  line: 1586
+  kind: prohibition
+  text: '| 4 | Propagated the ADR-0001 "prose facts, not `Document`" decision into the three places revision
+    2 claimed but did not actually fix: §7.4''s publication-gate signature is now `publication_gate(doc,
+    facts)` with `no_placeholders(facts)` (MC/DC table re-verified valid — the four-condition shape is
+    unchanged); §6 property 14 now holds `facts` constant alongside `doc` across repeated gate evaluatio…'
+  force_hint: unclassified
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 3.2 Mapping table — maintained by the operating organization
+  line: 76
+  kind: rfc2119
+  text: '**This table MUST be reviewed whenever available models change.** A tier is a'
+  force_hint: BINDING
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 5.2 The mapping
+  line: 151
+  kind: rfc2119
+  text: consequence that follows directly and MUST be respected by anyone comparing
+  force_hint: BINDING
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 5.3 Mandatory overrides
+  line: 165
+  kind: numbered-rule
+  text: 2. **Adversarial verification of a landing** — the pre-landing gate. Its tier
+  force_hint: unclassified
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 5.3 Mandatory overrides
+  line: 166
+  kind: prohibition
+  text: follows the risk of the change under test, never the budget of the change
+  force_hint: unclassified
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 5.3 Mandatory overrides
+  line: 169
+  kind: numbered-rule
+  text: '4. **Security or supply-chain** work: artifact pinning, hash verification,'
+  force_hint: unclassified
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 5.3 Mandatory overrides
+  line: 171
+  kind: numbered-rule
+  text: 5. **Arbitration** between conflicting specialist positions.
+  force_hint: unclassified
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 5.3 Mandatory overrides
+  line: 172
+  kind: numbered-rule
+  text: 6. **Root-cause analysis** of a defect that escaped a gate.
+  force_hint: unclassified
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 5.3 Mandatory overrides
+  line: 176
+  kind: numbered-rule
+  text: 7. **Any single signal scored 3** forces a minimum of **T1 / E1** — a
+  force_hint: unclassified
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 5.3 Mandatory overrides
+  line: 181
+  kind: numbered-rule
+  text: 8. **`D = 3` (a mistake would ship silently)** forces a minimum of **E2**
+  force_hint: unclassified
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 5.3 Mandatory overrides
+  line: 197
+  kind: rfc2119
+  text: reaches for the permit below MUST first check it against rules 1–8; if
+  force_hint: BINDING
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 6. Coordinator obligations
+  line: 263
+  kind: numbered-rule
+  text: 1. **Classify before dispatching.** Score the seven signals. Record the score.
+  force_hint: unclassified
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 6. Coordinator obligations
+  line: 264
+  kind: numbered-rule
+  text: 2. **Sharpen the contract before raising the tier.** A workload that scores
+  force_hint: unclassified
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 6. Coordinator obligations
+  line: 268
+  kind: numbered-rule
+  text: 3. **Split before you upgrade.** Prefer decomposing into a large mechanical part
+  force_hint: unclassified
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 6. Coordinator obligations
+  line: 271
+  kind: numbered-rule
+  text: 4. **Fix shared contracts yourself, first.** Where several workloads depend on
+  force_hint: unclassified
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 6. Coordinator obligations
+  line: 274
+  kind: numbered-rule
+  text: 5. **Dispatch independent workloads together**, not serially.
+  force_hint: unclassified
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 6. Coordinator obligations
+  line: 275
+  kind: numbered-rule
+  text: 6. **Never discount the gate.** See override 2.
+  force_hint: unclassified
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 6. Coordinator obligations
+  line: 276
+  kind: numbered-rule
+  text: 7. **Record the classification** — see §8.
+  force_hint: unclassified
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 6. Coordinator obligations
+  line: 277
+  kind: numbered-rule
+  text: 8. **Own misclassification.** If work comes back wrong because the tier was too
+  force_hint: unclassified
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 6b. Capability is a separate axis from tier
+  line: 296
+  kind: numbered-rule
+  text: 1. **Check capability before dispatching**, not after. "Does this lane hold the
+  force_hint: unclassified
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 6b. Capability is a separate axis from tier
+  line: 301
+  kind: numbered-rule
+  text: 3. **A restriction is not lifted by an instruction.** A dispatch message cannot
+  force_hint: unclassified
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 6b. Capability is a separate axis from tier
+  line: 306
+  kind: numbered-rule
+  text: 4. **Misrouting is the coordinator's defect**, exactly as misclassification is
+  force_hint: unclassified
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 7. Anti-patterns
+  line: 326
+  kind: prohibition
+  text: '| "Use the strongest tier, it is safer" | Pays a constant factor on every trivial edit; hides
+    the fact that the contract was never written down | Score it; sharpen the contract |'
+  force_hint: unclassified
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: 9. Relationship to the other doctrines
+  line: 366
+  kind: prohibition
+  text: is an ordinary client. Cheapest-able governs **who does the work**; it never
+  force_hint: unclassified
+- source: CA
+  path: sources/doctrine/CHEAPEST-ABLE.md
+  section: Appendix — Revision log
+  line: 407
+  kind: prohibition
+  text: '| 4 | Finished propagating signal G (added in revision 2, §5.1) into the rest of the workflow
+    it never reached: §6 obligation 1 now says "seven signals," not "six"; §8''s recording template now
+    shows a `G?` slot. Added §5.3 rule 9: the escalation rules (1–8) explicitly win over the T0/E0 mechanical-substitution
+    permit when both could apply to the same workload — the observed data-loss incident (`P…'
+  force_hint: unclassified
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  section: Error-Tracing & Exception-Handling Contract — Ground-Truth Manifest
+  line: 5
+  kind: prohibition
+  text: Sibling manifests are referenced, not repeated. Architecture paradigms, the functional-core/imperative-shell
+    rationale, and reusability theory live in `architecture_manifest_default.md` and `software_spec_discipline_manifest.md`.
+    Type-system facts (unions, `Never`, narrowing) live in `python_typing_contract_manifest.md`. Test-tooling
+    facts live in `python_testing_tooling_manifest.md`. **Logging a…
+  force_hint: unclassified
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  section: 2. Guiding principles (PEP 20)
+  line: 15
+  kind: prohibition
+  text: '**ESTABLISHED.** The Zen of Python anchors the error stance verbatim: **"Errors should never
+    pass silently. Unless explicitly silenced."**, **"Explicit is better than implicit."**, and **"In
+    the face of ambiguity, refuse the temptation to guess."** (https://peps.python.org/pep-0020/). Operationalized:
+    never catch-and-ignore; if you suppress, suppress explicitly and narrowly (§10). Beyond PEP 20, …'
+  force_hint: unclassified
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  section: 3. Two propagation channels
+  line: 21
+  kind: prohibition
+  text: '- **In-band typed value** — a discriminated union return such as `EmitOk | EmitError`. A static
+    checker verifies the caller handles every arm: after narrowing all members away, the residual type
+    is `Never`, and a final `assert_never(x)` typechecks only when no member remains. "Who handles which
+    failure" becomes a **checked** part of the public contract, not tribal knowledge.'
+  force_hint: unclassified
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  section: '4. Typed result objects: `EmitOk | EmitError`'
+  line: 30
+  kind: prohibition
+  text: '- **Statically checkable exhaustiveness.** Branch on each member (if/elif or `match`); after
+    narrowing all members the residual type is `Never`; the final `assert_never(arg)` typechecks only
+    when nothing is left.'
+  force_hint: unclassified
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  section: '4. Typed result objects: `EmitOk | EmitError`'
+  line: 31
+  kind: prohibition
+  text: '- **Add-a-variant breaks the build.** Adding a new error variant to the union makes `arg` non-`Never`
+    at every non-exhaustive consumer, so the checker flags **every** call site that fails to handle it
+    — exactly the property wanted for "errors as part of the public contract."'
+  force_hint: unclassified
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  section: '4. Typed result objects: `EmitOk | EmitError`'
+  line: 32
+  kind: prohibition
+  text: '- **`Never` / `assert_never` baseline:** added in **Python 3.11**; `NoReturn` (equivalent semantics)
+    since 3.6.2 (§18). `Never` is the bottom type — the empty set of values (https://typing.python.org/en/latest/spec/special-types.html).'
+  force_hint: unclassified
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  section: 5. `assert_never` / `Never` exhaustiveness
+  line: 40
+  kind: prohibition
+  text: '**ESTABLISHED.** `assert_never(arg)` is the canonical exhaustiveness mechanism (https://docs.python.org/3/library/typing.html#typing.assert_never).
+    A **missed case** leaves `arg` with a non-`Never` static type, so the checker emits an error; **at
+    runtime** a reached `assert_never` raises `AssertionError`. Canonical pattern: branch on each union
+    member, and in the final `case _:` / `else` call `as…'
+  force_hint: unclassified
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  section: 10. Re-raise vs wrap vs explicit-suppress
+  line: 75
+  kind: prohibition
+  text: '- **Explicitly suppress** — and *only* explicitly, per PEP 20 *"Unless explicitly silenced"*
+    — with `contextlib.suppress(SpecificError)`, narrowly scoped to the specific exception, with a comment
+    or log explaining why. Never catch-and-ignore (§19).'
+  force_hint: unclassified
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  section: 11. Custom exception hierarchy
+  line: 81
+  kind: prohibition
+  text: '- **Root at `Exception`, never `BaseException`.** *"Programmers are encouraged to derive new
+    exceptions from the `Exception` class or one of its subclasses, and not from `BaseException`."* `BaseException`
+    also covers `SystemExit`/`KeyboardInterrupt`/`GeneratorExit`, which must not be swallowed (§12).'
+  force_hint: unclassified
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  section: 16. Descriptive messages — anatomy & structured attributes
+  line: 121
+  kind: numbered-rule
+  text: 1. **Operation context** — what was being attempted.
+  force_hint: unclassified
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  section: 16. Descriptive messages — anatomy & structured attributes
+  line: 122
+  kind: numbered-rule
+  text: 2. **Expected vs actual** — what was required against what was found.
+  force_hint: unclassified
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  section: 16. Descriptive messages — anatomy & structured attributes
+  line: 123
+  kind: numbered-rule
+  text: 3. **Offending identifier/value** — the specific input/id at fault.
+  force_hint: unclassified
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  section: 16. Descriptive messages — anatomy & structured attributes
+  line: 124
+  kind: numbered-rule
+  text: 4. **Remediation hint** — what the caller can do about it.
+  force_hint: unclassified
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  section: 16. Descriptive messages — anatomy & structured attributes
+  line: 125
+  kind: numbered-rule
+  text: 5. **Stable error code** — a namespaced, machine-greppable code (ideally as an attribute, not
+    embedded in prose).
+  force_hint: unclassified
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  section: 21. Version matrix and minimum target
+  line: 169
+  kind: prohibition
+  text: '| `Never` (bottom type), `assert_never` | **3.11** | `typing_extensions` |'
+  force_hint: unclassified
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  section: 21. Version matrix and minimum target
+  line: 170
+  kind: prohibition
+  text: '| `NoReturn` (≈ `Never` semantics) | 3.6.2 | stdlib |'
+  force_hint: unclassified
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  section: 21. Version matrix and minimum target
+  line: 175
+  kind: prohibition
+  text: '**Recommendation (OPEN — team must pin):** assume a **3.11+ minimum** so `ExceptionGroup`, `except*`,
+    `add_note`, `assert_never`, and `Never` are native; otherwise adopt the `exceptiongroup` + `typing_extensions`
+    backports and gate on them.'
+  force_hint: unclassified
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  section: 22. Anti-patterns checklist
+  line: 193
+  kind: prohibition
+  text: '- **Swallow-and-continue** (catch and ignore) — violates PEP 20 *"never pass silently"* (§2,
+    §10).'
+  force_hint: unclassified
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  section: Sources
+  line: 236
+  kind: prohibition
+  text: '- Python `typing` — `assert_never`, `Never`, `NoReturn` — https://docs.python.org/3/library/typing.html
+    and https://docs.python.org/3/library/typing.html#typing.assert_never . Accessed 17 Jun 2026.'
+  force_hint: unclassified
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  section: Sources
+  line: 237
+  kind: prohibition
+  text: '- Python typing spec — special types (`Never` = bottom type, empty set of values, added 3.11)
+    — https://typing.python.org/en/latest/spec/special-types.html . Accessed 17 Jun 2026.'
+  force_hint: unclassified
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  section: Sources
+  line: 242
+  kind: prohibition
+  text: '- PEP 20 — The Zen of Python ("Errors should never pass silently. Unless explicitly silenced.";
+    "Explicit is better than implicit.") — https://peps.python.org/pep-0020/ . Accessed 17 Jun 2026.'
+  force_hint: unclassified
+- source: ET
+  path: sources/manifests/error_tracing_contract_manifest.md
+  section: Sibling manifests (cross-referenced, not duplicated)
+  line: 253
+  kind: prohibition
+  text: '- `python_typing_contract_manifest.md` — union/narrowing/`Never`/frozen-dataclass type-system
+    facts.'
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: 2a. NOTSET (0) is a SENTINEL, not a sixth severity — explicit correction
+  line: 71
+  kind: prohibition
+  text: (https://docs.python.org/3/library/logging.html). **You never write `logger.log(logging.NOTSET,
+    ...)`
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: 3a. Logger hierarchy, `getLogger(__name__)`, effective level, propagation
+  line: 131
+  kind: prohibition
+  text: '**ESTABLISHED — singletons via `getLogger`.** "Loggers should NEVER be instantiated directly,
+    but'
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: 6. Goals mapping (severity + architecture → the three goals)
+  line: 247
+  kind: prohibition
+  text: and never configures root/`basicConfig`, the consuming application owns all routing, levels, and
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: '11. Security: never log secrets or PII'
+  line: 363
+  kind: prohibition
+  text: '**OPEN / best-practice (NOT in python.org logging docs).** Never log credentials, tokens, PII,
+    or full'
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: '11. Security: never log secrets or PII'
+  line: 366
+  kind: prohibition
+  text: '**redaction in a Filter or structlog processor**, or by simply never placing secrets in the message
+    or'
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Library / reusable-component author checklist
+  line: 392
+  kind: checklist
+  text: '`logger = logging.getLogger(__name__)` at module top — never instantiate `Logger` directly. (ESTABLISHED)'
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Library / reusable-component author checklist
+  line: 393
+  kind: checklist
+  text: '**Never** log to the root logger. (ESTABLISHED)'
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Library / reusable-component author checklist
+  line: 394
+  kind: checklist
+  text: '**Never** call `basicConfig` or otherwise configure root. (ESTABLISHED)'
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Library / reusable-component author checklist
+  line: 395
+  kind: checklist
+  text: Add **no handlers** except a single `logging.NullHandler()` on the **top-level package** logger.
+    (ESTABLISHED)
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Library / reusable-component author checklist
+  line: 396
+  kind: checklist
+  text: No logging side-effects at import beyond `getLogger(__name__)` and the top-level `NullHandler`.
+    (best-practice / OPEN-wording)
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Library / reusable-component author checklist
+  line: 397
+  kind: checklist
+  text: Emit DEBUG/INFO at seams with descriptive context (goal1); leave WARNING/ERROR/CRITICAL for genuine
+    operational events (goal2). (ESTABLISHED)
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Library / reusable-component author checklist
+  line: 398
+  kind: checklist
+  text: Use lazy `%`-style args; guard expensive args with `isEnabledFor`; do not use f-strings in hot
+    paths. (ESTABLISHED)
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Library / reusable-component author checklist
+  line: 399
+  kind: checklist
+  text: Log exceptions **once**, at the handling boundary, with `logger.exception()`; let them propagate
+    carrying context elsewhere (cross-ref `error_tracing_contract_manifest.md`). (OPEN/best-practice)
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Library / reusable-component author checklist
+  line: 400
+  kind: checklist
+  text: Never put secrets/PII into messages or `extra`. (OPEN/best-practice; OWASP)
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Library / reusable-component author checklist
+  line: 401
+  kind: checklist
+  text: Do **not** call `structlog.configure()` in component code. (OPEN/project-policy)
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Application / consumer author checklist
+  line: 404
+  kind: checklist
+  text: Configure logging **once at startup** (prefer `dictConfig` for any multi-handler setup; `basicConfig`
+    for the trivial case). (ESTABLISHED)
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Application / consumer author checklist
+  line: 405
+  kind: checklist
+  text: Attach handlers to the **root** logger and let propagation route component records. (ESTABLISHED)
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Application / consumer author checklist
+  line: 406
+  kind: checklist
+  text: Set the root/logger level to the **lowest** severity you want to capture; fan out via **per-handler
+    levels** (e.g. console INFO, file/JSON DEBUG). (ESTABLISHED)
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Application / consumer author checklist
+  line: 407
+  kind: checklist
+  text: Choose console vs file/JSON handlers; add a JSON formatter (stdlib or `structlog.ProcessorFormatter`)
+    for goal2 machine consumption. (ESTABLISHED)
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Application / consumer author checklist
+  line: 408
+  kind: checklist
+  text: Inject correlation/trace IDs via a `contextvars` Filter or `structlog.contextvars` (`clear`/`bind`/`merge_contextvars`);
+    adopt OpenTelemetry only if distributed. (ESTABLISHED mechanism; transport is OPEN/project-policy)
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Application / consumer author checklist
+  line: 409
+  kind: checklist
+  text: Add a redaction Filter/processor for secrets/PII. (OPEN/best-practice; OWASP)
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Application / consumer author checklist
+  line: 410
+  kind: checklist
+  text: Freeze version-gated APIs (`encoding=`, `exc_info` instance, `stacklevel=`) against the supported
+    Python range. (VERSION-DEPENDENT)
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Application / consumer author checklist
+  line: 411
+  kind: checklist
+  text: Agree a lint exception so `%`-style lazy-logging args are not auto-rewritten to f-strings. (VERSION-DEPENDENT)
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Open questions
+  line: 417
+  kind: numbered-rule
+  text: 1. **structlog/JSON mandate for goal2?** Mandate structlog/JSON, or keep stdlib-only as the baseline
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Open questions
+  line: 418
+  kind: prohibition
+  text: with structlog optional? structlog gives no library-vs-app guidance, so "components never call
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Open questions
+  line: 420
+  kind: numbered-rule
+  text: 2. **Where is the "handling boundary"?** The log-once rule (§10) needs the boundary pinned to
+    this
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Open questions
+  line: 423
+  kind: numbered-rule
+  text: 3. **Correlation-ID transport in scope?** stdlib `contextvars` filter, `structlog.contextvars`,
+    or full
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Open questions
+  line: 425
+  kind: numbered-rule
+  text: 4. **Secret-redaction mechanism + field lists.** Filter vs processor; which keys allow/deny. "Never
+    log
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Open questions
+  line: 427
+  kind: numbered-rule
+  text: 5. **Exact target Python version(s).** Affects `lastResort` fallback, `exc_info`-accepts-instance
+    (3.5+),
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Open questions
+  line: 430
+  kind: numbered-rule
+  text: 6. **Strict-typing tooling stance on `%`-style lazy args.** mypy/pyright/ruff may flag them vs
+    the
+  force_hint: unclassified
+- source: LO
+  path: sources/manifests/logging_observability_manifest.md
+  section: Sources
+  line: 458
+  kind: prohibition
+  text: '- OWASP Logging guidance — referenced as the authoritative source for "never log secrets/PII"
+    (not'
+  force_hint: unclassified
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  section: TL;DR
+  line: 9
+  kind: prohibition
+  text: '- **"Strict static typing" is not a single, portable meaning.** `mypy --strict` and pyright `strict`
+    enable *different, version-specific* rule sets and use *different inference algorithms*, so a contract
+    spec must name the checker, pin its version, and commit the exact enabled-rule set to version control
+    — never just say "strict."'
+  force_hint: unclassified
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  section: TL;DR
+  line: 10
+  kind: rfc2119
+  text: '- **The type system cannot express value ranges, cross-field invariants, ordering/temporal constraints,
+    units, or stateful protocols.** These MUST become boundary validation (pydantic) and/or runtime contracts
+    (icontract/deal/`__post_init__`) and be documented in docstrings — never assumed to be carried by
+    annotations. `typing.cast` has zero runtime effect, `Final`/`Protocol`/`Annotated` constrai…'
+  force_hint: BINDING
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  section: Key Findings
+  line: 17
+  kind: numbered-rule
+  text: 1. **mypy `--strict` (mypy 1.19 / unchanged through 2.x) enables a documented but mutable set
+    of 15 flags**, and explicitly does NOT forbid all `Any`. mypy also *skips unannotated function bodies
+    entirely* by default — its single biggest divergence from pyright.
+  force_hint: unclassified
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  section: Key Findings
+  line: 18
+  kind: numbered-rule
+  text: 2. **pyright has four modes** (`off`/`basic`/`standard`/`strict`; CLI default `standard`, Pylance
+    default `off`). Its `strict`-only `reportUnknown*` family flags implicit `Any` from untyped code and
+    has no direct mypy equivalent.
+  force_hint: unclassified
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  section: Key Findings
+  line: 19
+  kind: numbered-rule
+  text: 3. **A codebase clean under `mypy --strict` is frequently NOT clean under `pyright --strict`**
+    — they diverge by design; there is no authoritative cross-conformance mapping.
+  force_hint: unclassified
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  section: Key Findings
+  line: 20
+  kind: numbered-rule
+  text: 4. **`typing.cast` returns its second argument unchanged with no check or coercion** — an unchecked
+    promise the checker trusts blindly.
+  force_hint: unclassified
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  section: Key Findings
+  line: 21
+  kind: numbered-rule
+  text: 5. **pydantic v2 is a ground-up rewrite** with a Rust core and renamed APIs (`@validator`→`@field_validator`,
+    `Config`→`model_config`, `.dict()`→`.model_dump()`).
+  force_hint: unclassified
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  section: Key Findings
+  line: 22
+  kind: numbered-rule
+  text: 6. **`assert` is removed from bytecode under `-O`/`PYTHONOPTIMIZE`** and must never be used for
+    validation, auth, or input checks.
+  force_hint: unclassified
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  section: Key Findings
+  line: 23
+  kind: numbered-rule
+  text: 7. **`frozen=True` dataclasses give shallow, bypassable immutability**; the type system cannot
+    express deep immutability or purity at all.
+  force_hint: unclassified
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  section: 1. Static type checkers and "strict" modes
+  line: 31
+  kind: prohibition
+  text: '**mypy `--strict` — what it enables (VERSION-DEPENDENT; mypy 1.19, Nov 2025).** mypy''s own docs
+    warn: "the exact list of flags enabled by running `--strict` may change over time." As of mypy 1.19
+    (`mypy --help`), `--strict` turns on this exact set: `--warn-unused-configs`, `--disallow-any-generics`,
+    `--disallow-subclassing-any`, `--disallow-untyped-calls`, `--disallow-untyped-defs`, `--disallow-i…'
+  force_hint: unclassified
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  section: 2. The typing vocabulary for contracts
+  line: 58
+  kind: prohibition
+  text: '- **`Never` and `NoReturn` (`typing`). VERSION-DEPENDENT.** `NoReturn` (PEP 484; added 3.6.2)
+    annotates functions that never return normally. `Never` (added in Python 3.11 with NO dedicated PEP)
+    is the explicit spelling of the bottom type (uninhabited). Checkers treat the two equivalently. NOTE:
+    the task''s reference to "PEP 661" is incorrect — PEP 661 is "Sentinel Values" (accepted for 3.15)
+    and …'
+  force_hint: unclassified
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  section: 3. Explicit conversion and cast discipline
+  line: 67
+  kind: prohibition
+  text: '- **When a cast is genuinely unavoidable, and how to confine it (decision).** A cast is legitimate
+    only when the human knows something the checker provably cannot — e.g., narrowing an `object`/`Any`
+    from a deserializer where a runtime `isinstance` check just preceded it, or working around a missing/incorrect
+    third-party stub. Confine it: (1) put the `cast` on the smallest possible expression imme…'
+  force_hint: unclassified
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  section: 4. What the type system CANNOT express
+  line: 71
+  kind: rfc2119
+  text: The Python type system is (broadly) about the *shape* and *identity* of values, not their runtime
+    *values* or *history*. The following are out of scope for static checkers and MUST become runtime
+    contracts or boundary validation — never silently dropped (principle).
+  force_hint: BINDING
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  section: 5. Runtime contract-enforcement landscape
+  line: 86
+  kind: rfc2119
+  text: '- **Plain `assert` statements. ESTABLISHED — with a critical caveat.** `assert cond, msg` is
+    the cheapest runtime check, but Python''s `-O` (and `-OO`) flag, or `PYTHONOPTIMIZE`, sets `__debug__=False`
+    and STRIPS all `assert` statements from the compiled bytecode. Therefore `assert` MUST NEVER be used
+    for data validation, input sanitization, authorization, or any check that must run in production.…'
+  force_hint: BINDING
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  section: 5. Runtime contract-enforcement landscape
+  line: 88
+  kind: prohibition
+  text: '**Decision — boundary vs core placement.** Parse/validate untrusted data ONCE at the boundary
+    (pydantic or explicit validation), producing trusted typed objects; then rely on types + targeted
+    contracts/asserts internally. This is the "parse, don''t validate" discipline: never re-validate trusted
+    core data in hot paths, and never lose a boundary invariant by assuming the type system carries it.'
+  force_hint: unclassified
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  section: 8. Open questions and version caveats
+  line: 117
+  kind: prohibition
+  text: '- `assert_type`, `reveal_type` (runtime), and `Never` all entered `typing` in Python 3.11.'
+  force_hint: unclassified
+- source: TY
+  path: sources/manifests/python_typing_contract_manifest.md
+  section: Caveats
+  line: 145
+  kind: prohibition
+  text: '- **The task contained two factual errors, corrected here:** `assert_type` is NOT introduced
+    by PEP 675 (PEP 675 is `LiteralString`; `assert_type` has no dedicated PEP and landed in Python 3.11);
+    and `Never` is NOT tied to PEP 661 (PEP 661 is "Sentinel Values"; `Never` has no PEP and landed in
+    3.11).'
+  force_hint: unclassified
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  section: TL;DR
+  line: 7
+  kind: prohibition
+  text: '- Specify obligations as observable contracts at seams (Feathers), partition inputs (equivalence
+    classes + boundary values), cover error paths, and prefer fakes implementing the real contract over
+    mocks; use coverage.py 7.x as a diagnostic for untested code, never as a target — ESTABLISHED.'
+  force_hint: unclassified
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  section: 3. Test doubles, precisely
+  line: 46
+  kind: prohibition
+  text: '- **Dummy** — objects passed around but never actually used; usually just fill parameter lists.'
+  force_hint: unclassified
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  section: 5. Specifying obligations vs. writing tests
+  line: 80
+  kind: numbered-rule
+  text: '1. **Observable contract under test** — the externally visible behavior at a named seam: return
+    value, raised exception, or observable state/effect. (Do not specify internal calls unless the contract
+    is the interaction itself.)'
+  force_hint: unclassified
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  section: 5. Specifying obligations vs. writing tests
+  line: 81
+  kind: numbered-rule
+  text: 2. **Input partitioning** — divide the input domain into **equivalence classes** (sets expected
+    to be handled identically) and pick representatives; apply **boundary-value analysis** at the edges
+    of each class (min, min±1, max, max±1, empty, zero, overflow).
+  force_hint: unclassified
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  section: 5. Specifying obligations vs. writing tests
+  line: 82
+  kind: numbered-rule
+  text: 3. **Expected observable** — the asserted result for each partition/boundary, stated as a checkable
+    predicate.
+  force_hint: unclassified
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  section: 5. Specifying obligations vs. writing tests
+  line: 83
+  kind: numbered-rule
+  text: '4. **Error-path coverage** — obligations for invalid inputs and failure modes: which exception
+    type, which message/contract, which cleanup/rollback must occur.'
+  force_hint: unclassified
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  section: Recommendations
+  line: 126
+  kind: numbered-rule
+  text: '1. **Baseline now (stage 1).** Pin pytest 9.1.x, coverage.py 7.14.x, Hypothesis 6.155.x on Python
+    3.14.x; put config in `pyproject.toml` (`[tool.pytest.ini_options]` or the new `[tool.pytest]` TOML
+    table); register all custom markers and enable `--strict-markers`. Benchmark to revisit: when Python
+    3.15 reaches stable (final 3.15.0) or pytest issues another major (10.x), re-validate.'
+  force_hint: unclassified
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  section: Recommendations
+  line: 127
+  kind: numbered-rule
+  text: '2. **Specify obligations, not tests (stage 2).** For each component, document: the seam, the
+    observable contract, equivalence classes + boundary values, expected observables, and explicit error-path
+    obligations. Require that every obligation maps to at least one assertion; forbid assertion-free tests.'
+  force_hint: unclassified
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  section: Recommendations
+  line: 128
+  kind: numbered-rule
+  text: '3. **Choose doubles deliberately (stage 3).** Default to fakes implementing the contract; when
+    mocking, require `autospec=True` or `spec_set=True`. Write one contract test suite run against both
+    the fake and the real implementation. Threshold to change: if mock-heavy tests break on refactors
+    without behavior changes, migrate those collaborators to fakes or Protocol-typed seams.'
+  force_hint: unclassified
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  section: Recommendations
+  line: 129
+  kind: numbered-rule
+  text: 4. **Add property-based tests for the core (stage 4).** Apply Hypothesis to pure functions/parsers/serializers
+    (round-trip, invariant, oracle, metamorphic) and `RuleBasedStateMachine` to stateful components; keep
+    example-based tests for side-effectful shells.
+  force_hint: unclassified
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  section: Recommendations
+  line: 130
+  kind: numbered-rule
+  text: 5. **Use coverage as a flashlight (ongoing).** Run coverage to locate untested branches and error
+    paths; do NOT set a numeric gate as the goal. If a percentage gate is mandated externally, pair it
+    with a ban on assertion-free tests and review the *missing* lines, treating upper-80s/90s as a smell-check
+    range, not a target.
+  force_hint: unclassified
+- source: TT
+  path: sources/manifests/python_testing_tooling_manifest.md
+  section: Recommendations
+  line: 131
+  kind: numbered-rule
+  text: 6. **Architect for isolation (ongoing).** Adopt functional-core/imperative-shell and constructor/Protocol-typed
+    DI so most logic is unit-testable without doubles and the integration layer stays small.
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: A. The implementation-agnostic specification boundary
+  line: 13
+  kind: numbered-rule
+  text: A1. **Specify the contract, not the computation.** A specification states inputs, outputs,
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: A. The implementation-agnostic specification boundary
+  line: 18
+  kind: numbered-rule
+  text: A2. **Type-level scaffolding is allowed; bodies are not.** A typed signature, a Protocol, a
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: A. The implementation-agnostic specification boundary
+  line: 21
+  kind: prohibition
+  text: disambiguate a contract, it is a signature or a type, never an implementation.
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: A. The implementation-agnostic specification boundary
+  line: 23
+  kind: numbered-rule
+  text: A3. **Implementation-agnostic is not Python-agnostic.** The spec targets Python and may rely on
+    the
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: A. The implementation-agnostic specification boundary
+  line: 28
+  kind: numbered-rule
+  text: A4. **Test obligations, not test code.** A unit-test design names the observable contract under
+    test,
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: B. The requirements cascade (roles, altitudes, feedback)
+  line: 34
+  kind: numbered-rule
+  text: B1. **Three altitudes, one direction of flow, two directions of pressure.** Needs → system
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: B. The requirements cascade (roles, altitudes, feedback)
+  line: 38
+  kind: numbered-rule
+  text: B2. **Falsification before acceptance.** No downstream role accepts an upstream artifact until
+    it has
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: B. The requirements cascade (roles, altitudes, feedback)
+  line: 45
+  kind: numbered-rule
+  text: B3. **Allocation completeness is an invariant.** Every system requirement allocates to at least
+    one
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: B. The requirements cascade (roles, altitudes, feedback)
+  line: 49
+  kind: numbered-rule
+  text: B4. **Requirements are solution-free.** Keep typing, coupling, purity, and other global quality
+    rules
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: B. The requirements cascade (roles, altitudes, feedback)
+  line: 51
+  kind: prohibition
+  text: architectural-decision requirements with rationale, never buried inside a functional requirement.
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: B. The requirements cascade (roles, altitudes, feedback)
+  line: 53
+  kind: numbered-rule
+  text: B5. **Adaptive depth.** Scale ceremony to reuse ambition, not to line count. Size the problem
+    first;
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: C. Reusability as a first-class objective
+  line: 59
+  kind: numbered-rule
+  text: 'C1. **Two targets.** ATOMIC reusability: a unit is liftable and reusable with no caller knowledge
+    of'
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: C. Reusability as a first-class objective
+  line: 63
+  kind: numbered-rule
+  text: C2. **Reusability is earned by boundaries and contracts, not asserted.** It is bought with clean
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: C. Reusability as a first-class objective
+  line: 68
+  kind: numbered-rule
+  text: C3. **The dependency surface is the reuse tax — minimize and declare it.** Every dependency a
+    unit
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: C. Reusability as a first-class objective
+  line: 73
+  kind: numbered-rule
+  text: C4. **Resist speculative reusability (YAGNI).** Do not add parameters, abstraction layers, or
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: C. Reusability as a first-class objective
+  line: 78
+  kind: numbered-rule
+  text: C5. **Demonstrate, don't claim.** Each unit asserted reusable carries, in the output, its standalone
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: D. Requirements elicitation discipline
+  line: 83
+  kind: numbered-rule
+  text: D1. **Stated needs are the evidence.** Profile what the user actually states before specifying.
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: D. Requirements elicitation discipline
+  line: 87
+  kind: numbered-rule
+  text: 'D2. **Epistemic tagging is mandatory.** Tag every claim and requirement: STATED (from the user),'
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: D. Requirements elicitation discipline
+  line: 89
+  kind: prohibition
+  text: revisitable), ARCHITECTURAL-DECISION, UNRESOLVED. Never let an inference masquerade as a stated
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: D. Requirements elicitation discipline
+  line: 92
+  kind: numbered-rule
+  text: D3. **Specify for what will arrive, not only what is stated.** Infer likely future inputs and
+    growth
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: D. Requirements elicitation discipline
+  line: 96
+  kind: numbered-rule
+  text: 'D4. **Triage explicitly: included / deferred / rejected, each with a reason.** Deferred = leave
+    room,'
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: D. Requirements elicitation discipline
+  line: 100
+  kind: numbered-rule
+  text: D5. **One clarifying question at a time, only when it changes the design.** Otherwise decide,
+    tag
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: E. Requirements writing discipline
+  line: 105
+  kind: numbered-rule
+  text: E1. **Atomic, numbered, individually verifiable.** One requirement = one testable claim. If it
+    needs
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: E. Requirements writing discipline
+  line: 108
+  kind: numbered-rule
+  text: E2. **Each requirement is tagged (per D2) and traces to a verification.** Every requirement maps
+    to a
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: E. Requirements writing discipline
+  line: 111
+  kind: numbered-rule
+  text: E3. **Use a disciplined syntax for behavioral requirements.** EARS patterns (ubiquitous /
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: E. Requirements writing discipline
+  line: 118
+  kind: numbered-rule
+  text: E4. **Separate functional, non-functional, and architectural-decision requirements.** Do not bury
+    an
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: E. Requirements writing discipline
+  line: 121
+  kind: numbered-rule
+  text: E5. **State the negative space.** Record what is explicitly out of scope and what is deferred,
+    with
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: F. Testability reasoning framework (judgment half)
+  line: 126
+  kind: numbered-rule
+  text: F1. **Pure core, imperative shell.** Push logic into pure functions; isolate side effects (I/O,
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: F. Testability reasoning framework (judgment half)
+  line: 131
+  kind: numbered-rule
+  text: F2. **Dependency inversion at every side-effect boundary.** A component declares what it needs
+    from
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: F. Testability reasoning framework (judgment half)
+  line: 135
+  kind: numbered-rule
+  text: F3. **Observable contracts over hidden state.** Prefer return values that carry diagnostic context
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: F. Testability reasoning framework (judgment half)
+  line: 139
+  kind: numbered-rule
+  text: F4. **Fakes over mocks-on-mocks.** Prefer a simple fake implementing the real contract to a tower
+    of
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: F. Testability reasoning framework (judgment half)
+  line: 142
+  kind: numbered-rule
+  text: F5. **Integration-test strategy is owned at architecture altitude and reflected down.** The architect
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: F. Testability reasoning framework (judgment half)
+  line: 146
+  kind: numbered-rule
+  text: F6. **Property-based testing for pure functions and invariants.** Where a pure function has an
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: G. Spec output and traceability discipline
+  line: 152
+  kind: numbered-rule
+  text: G1. **One traceable spine.** SR-n (system requirement) → component → design spec → verification.
+    The
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: G. Spec output and traceability discipline
+  line: 156
+  kind: numbered-rule
+  text: G2. **Contracts are signature-level and complete.** A design spec gives the typed contract,
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: G. Spec output and traceability discipline
+  line: 160
+  kind: numbered-rule
+  text: 'G3. **The reusability ledger is a required artifact** (per C5): each reusable unit with its standalone'
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: G. Spec output and traceability discipline
+  line: 163
+  kind: numbered-rule
+  text: G4. **Record contested decisions, do not erase dissent.** A decision log captures each contested
+  force_hint: unclassified
+- source: SP
+  path: sources/manifests/software_spec_discipline_manifest.md
+  section: G. Spec output and traceability discipline
+  line: 167
+  kind: numbered-rule
+  text: G5. **Open items split into ASSUMED (proceeding on defaults) and NEEDS-INPUT (awaiting the user).**
+  force_hint: unclassified
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  section: 2. Enablement
+  line: 58
+  kind: rfc2119
+  text: fully confirmable on the public web. A deployable kit MUST ship this `env` block (or instruct
+    the user
+  force_hint: BINDING
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  section: 4. Team architecture and on-disk state
+  line: 115
+  kind: prohibition
+  text: '- **Task list:** `~/.claude/tasks/{team-name}/` — **persists** locally and is **never uploaded**,
+    so a'
+  force_hint: unclassified
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  section: 9. Reusing subagent definitions as teammates — the load-bearing bridge
+  line: 223
+  kind: numbered-rule
+  text: 1. **The teammate honors the definition's `tools` allowlist and `model`.**
+  force_hint: unclassified
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  section: 9. Reusing subagent definitions as teammates — the load-bearing bridge
+  line: 224
+  kind: numbered-rule
+  text: 2. **The definition's body is APPENDED** to the teammate's system prompt as additional instructions
+    —
+  force_hint: unclassified
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  section: 9. Reusing subagent definitions as teammates — the load-bearing bridge
+  line: 226
+  kind: numbered-rule
+  text: 3. **Team coordination tools (`SendMessage`, the task tools) are ALWAYS available** to a teammate
+    even
+  force_hint: unclassified
+- source: AT
+  path: sources/manifests/claude_code_agent_teams_manifest.md
+  section: 9. Reusing subagent definitions as teammates — the load-bearing bridge
+  line: 228
+  kind: numbered-rule
+  text: 4. **The `skills` and `mcpServers` frontmatter fields are NOT applied on the teammate path.**
+    Teammates
+  force_hint: unclassified

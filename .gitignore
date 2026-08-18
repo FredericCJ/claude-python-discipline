@@ -1,0 +1,17 @@
+.pytest_cache/
+__pycache__/
+*.pyc
+.hypothesis/
+.mutmut-cache
+
+# The learning database is a query index rebuilt from learning/ledger.jsonl,
+# which is the durable record. Committing a binary that changes every session
+# would bloat history and make review impossible; the ledger diffs cleanly.
+learning/learning.db
+learning/learning.db-wal
+learning/learning.db-shm
+
+# DOC-012: the rendered documentation tree is a build product. The reviewable
+# artefact is the comment in the source; a large tree in every diff is how
+# reviewers learn to wave generated output through.
+build/doc/

@@ -1,0 +1,182 @@
+# Declared edges — the relations that cannot be computed from the corpus text.
+#
+# Everything derivable (contains, requires, grounds_on, cites, enforced_by,
+# defines, triggered_by, derives_from) is computed by tools/build_graph.py and
+# MUST NOT appear here. This file holds only what a human or agent had to decide:
+# which layer a rule governs, which rules pull against each other, what order
+# they apply in, and which recorded decision explains a rule's shape.
+#
+# Validated by tools/validate.py (V093: unknown id, V090: dangling endpoint).
+# Rule bodies stay at four lines; the relational layer lives here instead.
+
+version: 1
+
+# --------------------------------------------------------------- applies_to
+# rule -> layer. Only the discriminating cases: a rule that governs every layer
+# equally is left undeclared, because an edge that is always true carries no
+# information and would make `nav applies` useless.
+applies_to:
+  domain:
+    - ARCH-002   # imports nothing that can perform I/O
+    - ARCH-006   # total or returns a typed result
+    - ARCH-013   # no framework or transport types
+    - ARCH-015   # metaprogramming leaves the four questions answerable
+    - TYPE-002   # no Any
+    - TYPE-004   # distinct concepts are distinct types
+    - TYPE-005   # constrained types are parsing wrappers
+    - TYPE-006   # closed sets are enumerations
+    - TYPE-007   # frozen and slotted
+    - TYPE-008   # read-only collections in signatures
+    - TYPE-014   # immutability declared, not relied on
+    - ERR-004    # produces only DomainError
+    - EFCT-001   # performs no effect
+    - DEP-001    # standard library only
+    - TEST-001   # unit layer touches nothing external
+  app:
+    - ERR-004
+    - EFCT-001
+  adapters:
+    - ARCH-003   # no adapter imports another adapter
+    - ARCH-004   # each foreign dependency in exactly one module
+    - ARCH-007   # every port is a Protocol with a contract
+    - ARCH-008   # real, fake and faulty
+    - ARCH-009   # one contract suite against every adapter
+    - ARCH-010   # a port names its justification
+    - ERR-004    # produces only InfrastructureError
+    - DEP-002    # judged by architectural position
+    - DEP-003    # owns its dependency's failure modes
+    - TEST-005   # contract suite is the oracle
+    - TEST-010   # fault catalogue per port
+  shell:
+    - ARCH-011   # single composition root
+    - ERR-003    # the channel-conversion seam
+    - ERR-015    # nothing unhandled escapes
+    - EFCT-007   # multi-effect apply is journalled
+    - API-005    # structured output
+    - API-006    # human output renders the same object
+    - API-007    # exit status is contract
+    - DIAG-001   # the escaping envelope
+    - DIAG-013   # correlation identifier established
+
+# ------------------------------------------------------------- tensions_with
+# Real pulls in opposite directions. Recorded so an agent meets both sides at
+# once instead of applying one rule and discovering the other in review.
+# Symmetric in meaning; the builder adds the reverse edge.
+tensions_with:
+  - pair: [ARCH-017, ARCH-007]
+    note: >-
+      Prefer the direct call, but every boundary the core crosses is a port.
+      The closed justification list in ARCH-010 is where the line is drawn.
+  - pair: [TYPE-015, TYPE-004]
+    note: >-
+      Type sophistication stays proportionate, yet every concept gets its own
+      type. Proportionate means to the defect prevented, not to the count.
+  - pair: [DIAG-016, DIAG-012]
+    note: >-
+      Log every state transition, but never pay for a message the level will
+      discard. Transitions are logged at debug with deferred arguments.
+  - pair: [DEP-004, ARCH-004]
+    note: >-
+      Do not reimplement a solved problem, yet every foreign dependency is
+      coupling. Taking the library is right; taking it into one adapter is how.
+  - pair: [API-014, API-011]
+    note: >-
+      Prefer additive change, but adding a variant to a published union is
+      breaking. Additive in shape is not additive in meaning.
+  - pair: [DOC-012, DEP-011]
+    note: >-
+      Generated artefacts are committed so a change is reviewable, but the
+      rendered documentation tree is not. The reviewable artefact here is the
+      comment in the source; a large tree in every diff trains reviewers to wave
+      generated output through, which is the very failure DEP-011 guards against.
+  - pair: [DOC-001, DOC-013]
+    note: >-
+      Document every element, yet prefer one sentence that earns its place. The
+      resolution is DOC-009: say the contract, never restate the identifier.
+  - pair: [FLOW-013, TEST-002]
+    note: >-
+      Scale ceremony to reuse ambition, yet every layer must be populated.
+      The compression is allowed only when it is stated.
+  - pair: [ERR-007, ERR-006]
+    note: >-
+      Define an exception only when a caller must distinguish it, but the
+      hierarchy must stay narrow and rooted. Reuse a built-in when in doubt.
+  - pair: [EFCT-016, EFCT-013]
+    note: >-
+      Prefer the sequential design, but document concurrency fully when it is
+      genuinely required. The tension is where "required" is decided.
+
+# ----------------------------------------------------------------- precedes
+# Ordering. The artifact each step produces is what the next step is checked
+# against, so skipping one does not save it.
+precedes:
+  - [FLOW-001, FLOW-002]   # contract before test obligations
+  - [FLOW-002, FLOW-010]   # obligations before the behaviour arrives
+  - [FLOW-003, FLOW-009]   # decision recorded before the gates are run
+  - [FLOW-009, FLOW-011]   # gates pass, then the diagnosis is inspected
+  - [FLOW-011, FLOW-012]   # inspect, then report
+  - [EFCT-005, EFCT-006]   # plan exists before a dry run can truncate it
+  - [EFCT-010, EFCT-011]   # the table exists before a transition can be refused
+  - [ARCH-007, ARCH-008]   # the port exists before its adapters
+  - [ARCH-008, ARCH-009]   # the adapters exist before the shared suite
+  - [TEST-004, TEST-013]   # the oracle is declared before mutation judges it
+
+# -------------------------------------------------------------- resolved_by
+# rule -> decision. Why the rule has the shape it has, when that shape was
+# contested between the source documents or chosen during the merge.
+resolved_by:
+  DOC-001:  [OPEN-007]
+  DOC-002:  [OPEN-007]
+  DOC-004:  [OPEN-007]
+  DOC-005:  [OPEN-007]
+  DOC-007:  [OPEN-007]
+  DOC-011:  [OPEN-007]
+  DOC-012:  [OPEN-007]
+  ERR-001:  [CONF-003]
+  ERR-004:  [CONF-002]
+  ERR-006:  [CONF-002]
+  DIAG-006: [CONF-004]
+  ARCH-008: [CONF-007]
+  ARCH-009: [CONF-008]
+  ARCH-010: [CONF-010]
+  ARCH-015: [CONF-014]
+  TYPE-005: [CONF-015]
+  TYPE-006: [CONF-015]
+  TEST-006: [CONF-018]
+  TEST-009: [CONF-009]
+  TEST-013: [CONF-023, OPEN-003]
+  TEST-017: [CONF-020, OPEN-004]
+  TEST-018: [CONF-016]
+  TEST-019: [CONF-024]
+  EFCT-008: [CONF-012]
+  EFCT-012: [CONF-013]
+  API-004:  [CONF-013]
+  API-014:  [CONF-011]
+  DIAG-011: [CONF-028]
+  DIAG-012: [CONF-030]
+  TYPE-001: [OPEN-005]
+  ERR-011:  [OPEN-002]
+  ERR-010:  [OPEN-001]
+  DEP-005:  [OPEN-001]
+
+# --------------------------------------------------------------- blocked_by
+# rule -> decision. The rule cannot be binding until the decision is taken.
+blocked_by:
+  ALLOC-010: [OPEN-006]
+
+# ---------------------------------------------------------------- artifacts
+# Named things a rule points at that are not corpus documents. Declared here
+# because a path in prose is not a reliable reference.
+artifacts:
+  enforce/pyproject.toml:
+    label: Canonical tool configuration
+    rules: [TYPE-001, TYPE-002, TYPE-003, ARCH-016, DIAG-008, DIAG-012, TEST-003, TEST-017]
+  enforce/importlinter.toml:
+    label: Architecture contracts
+    rules: [ARCH-001, ARCH-002, ARCH-003, ARCH-004, EFCT-001, EFCT-012, DEP-001, API-004]
+  enforce/Doxyfile:
+    label: Documentation engine configuration
+    rules: [DOC-005, DOC-007, DOC-010, DOC-011]
+  enforce/schema/diagnostic.schema.json:
+    label: Diagnostic envelope schema
+    rules: [DIAG-001, DIAG-002, DIAG-003]

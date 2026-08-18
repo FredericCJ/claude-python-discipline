@@ -1,0 +1,3150 @@
+{
+  "generated_by": "tools/build_index.py",
+  "modules": [
+    {
+      "id": "fact/py-errors",
+      "kind": "fact",
+      "title": "Python Error and Exception Mechanics",
+      "tokens": 1441,
+      "load_when": [
+        "raise from",
+        "__cause__",
+        "__context__",
+        "add_note",
+        "ExceptionGroup",
+        "except star",
+        "suppress",
+        "traceback"
+      ],
+      "requires": [],
+      "grounds_on": [],
+      "verified": "2026-08-18",
+      "decay": "years",
+      "path": "discipline/fact/py-errors.md"
+    },
+    {
+      "id": "fact/py-logging",
+      "kind": "fact",
+      "title": "Python Logging Mechanics",
+      "tokens": 1506,
+      "load_when": [
+        "log level",
+        "getLogger",
+        "basicConfig",
+        "NullHandler",
+        "handler",
+        "formatter",
+        "propagate",
+        "structlog",
+        "contextvars"
+      ],
+      "requires": [],
+      "grounds_on": [],
+      "verified": "2026-08-18",
+      "decay": "years",
+      "path": "discipline/fact/py-logging.md"
+    },
+    {
+      "id": "fact/py-testing",
+      "kind": "fact",
+      "title": "Python Testing Tooling",
+      "tokens": 1423,
+      "load_when": [
+        "pytest version",
+        "fixture scope",
+        "hypothesis",
+        "coverage tool",
+        "mutation tool",
+        "pytest plugin",
+        "markers"
+      ],
+      "requires": [],
+      "grounds_on": [],
+      "verified": "2026-08-18",
+      "decay": "quarters",
+      "path": "discipline/fact/py-testing.md"
+    },
+    {
+      "id": "fact/py-typing",
+      "kind": "fact",
+      "title": "Python Typing and Checkers",
+      "tokens": 1546,
+      "load_when": [
+        "mypy flags",
+        "pyright config",
+        "strict mode",
+        "Protocol",
+        "TypedDict",
+        "PEP 695",
+        "cast",
+        "runtime_checkable"
+      ],
+      "requires": [],
+      "grounds_on": [],
+      "verified": "2026-08-18",
+      "decay": "quarters",
+      "path": "discipline/fact/py-typing.md"
+    },
+    {
+      "id": "frame/architecture",
+      "kind": "frame",
+      "title": "Architectural Vocabulary and Paradigms",
+      "tokens": 2188,
+      "load_when": [
+        "which paradigm",
+        "tradeoff",
+        "refactoring",
+        "legacy code",
+        "coupling",
+        "cohesion",
+        "seam",
+        "design options"
+      ],
+      "requires": [],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/frame/architecture.md"
+    },
+    {
+      "id": "frame/spec",
+      "kind": "frame",
+      "title": "Specification Discipline",
+      "tokens": 1865,
+      "load_when": [
+        "write a spec",
+        "requirements",
+        "elicitation",
+        "design document",
+        "traceability",
+        "reusability",
+        "what should this component do"
+      ],
+      "requires": [],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/frame/spec.md"
+    },
+    {
+      "id": "law/API",
+      "kind": "law",
+      "title": "Contracts and Public Surface",
+      "tokens": 2064,
+      "load_when": [
+        "public API",
+        "contract",
+        "versioning",
+        "breaking change",
+        "CLI",
+        "JSON output",
+        "exit code",
+        "schema version",
+        "migration"
+      ],
+      "requires": [
+        "law/ARCH",
+        "law/ERR"
+      ],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/law/API.md"
+    },
+    {
+      "id": "law/ARCH",
+      "kind": "law",
+      "title": "Architecture and Coupling",
+      "tokens": 2454,
+      "load_when": [
+        "new module",
+        "package layout",
+        "port",
+        "adapter",
+        "hexagonal",
+        "dependency injection",
+        "where does this code go",
+        "import error",
+        "circular import"
+      ],
+      "requires": [],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/law/ARCH.md"
+    },
+    {
+      "id": "law/DEP",
+      "kind": "law",
+      "title": "Dependencies and Generated Artefacts",
+      "tokens": 1539,
+      "load_when": [
+        "add a dependency",
+        "third party library",
+        "lockfile",
+        "environment",
+        "code generation",
+        "generated file",
+        "vendoring"
+      ],
+      "requires": [
+        "law/ARCH"
+      ],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/law/DEP.md"
+    },
+    {
+      "id": "law/DIAG",
+      "kind": "law",
+      "title": "Diagnostics and Traceability",
+      "tokens": 2478,
+      "load_when": [
+        "exception",
+        "traceback",
+        "logging",
+        "error message",
+        "error code",
+        "correlation id",
+        "add_note",
+        "raise from",
+        "what went wrong"
+      ],
+      "requires": [
+        "law/ARCH"
+      ],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/law/DIAG.md"
+    },
+    {
+      "id": "law/EFCT",
+      "kind": "law",
+      "title": "Effects, State and Time",
+      "tokens": 2233,
+      "load_when": [
+        "write a file",
+        "mutation",
+        "state machine",
+        "transaction",
+        "rollback",
+        "dry run",
+        "concurrency",
+        "lock",
+        "clock",
+        "random",
+        "delete"
+      ],
+      "requires": [
+        "law/ARCH"
+      ],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/law/EFCT.md"
+    },
+    {
+      "id": "law/ERR",
+      "kind": "law",
+      "title": "Error Semantics",
+      "tokens": 2432,
+      "load_when": [
+        "raise",
+        "except",
+        "Result",
+        "error type",
+        "exception hierarchy",
+        "validation",
+        "parse",
+        "assert_never",
+        "ExceptionGroup"
+      ],
+      "requires": [
+        "law/ARCH"
+      ],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/law/ERR.md"
+    },
+    {
+      "id": "law/FLOW",
+      "kind": "law",
+      "title": "How a Change Is Made",
+      "tokens": 1985,
+      "load_when": [
+        "definition of done",
+        "before i commit",
+        "what should i do first",
+        "ADR",
+        "decision record",
+        "review",
+        "is this finished"
+      ],
+      "requires": [
+        "law/TEST"
+      ],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/law/FLOW.md"
+    },
+    {
+      "id": "law/TEST",
+      "kind": "law",
+      "title": "Systematic Testing and Oracles",
+      "tokens": 2752,
+      "load_when": [
+        "write a test",
+        "pytest",
+        "fixture",
+        "hypothesis",
+        "property test",
+        "mutation",
+        "MC/DC",
+        "fault injection",
+        "contract suite",
+        "golden file",
+        "flaky"
+      ],
+      "requires": [
+        "law/ARCH",
+        "law/ERR"
+      ],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/law/TEST.md"
+    },
+    {
+      "id": "law/TYPE",
+      "kind": "law",
+      "title": "Typing and Contracts",
+      "tokens": 2045,
+      "load_when": [
+        "type hint",
+        "mypy",
+        "pyright",
+        "Protocol",
+        "generic",
+        "dataclass",
+        "NewType",
+        "Enum",
+        "Any",
+        "cast",
+        "type error"
+      ],
+      "requires": [
+        "law/ARCH"
+      ],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/law/TYPE.md"
+    },
+    {
+      "id": "meta/CONFLICTS",
+      "kind": "meta",
+      "title": "Conflict Ledger",
+      "tokens": 3204,
+      "load_when": [
+        "contradiction",
+        "which source wins",
+        "why was this decided",
+        "precedence"
+      ],
+      "requires": [],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/meta/CONFLICTS.md"
+    },
+    {
+      "id": "meta/GLOSSARY",
+      "kind": "meta",
+      "title": "Glossary",
+      "tokens": 1280,
+      "load_when": [
+        "terminology",
+        "what does this mean",
+        "define",
+        "ambiguous term"
+      ],
+      "requires": [],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/meta/GLOSSARY.md"
+    },
+    {
+      "id": "meta/KERNEL",
+      "kind": "meta",
+      "title": "Discipline Kernel",
+      "tokens": 1532,
+      "load_when": [
+        "python",
+        "discipline",
+        "how should i",
+        "what are the rules"
+      ],
+      "requires": [],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/KERNEL.md"
+    },
+    {
+      "id": "meta/OPEN",
+      "kind": "meta",
+      "title": "Open Decisions",
+      "tokens": 971,
+      "load_when": [
+        "open question",
+        "undecided",
+        "which tool",
+        "pin a version"
+      ],
+      "requires": [],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/meta/OPEN.md"
+    },
+    {
+      "id": "meta/PROVENANCE",
+      "kind": "meta",
+      "title": "Source Provenance",
+      "tokens": 1187,
+      "load_when": [
+        "where did this come from",
+        "was anything lost",
+        "source document"
+      ],
+      "requires": [],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/meta/PROVENANCE.md"
+    },
+    {
+      "id": "meta/SCHEMA",
+      "kind": "meta",
+      "title": "Document Format Specification",
+      "tokens": 2648,
+      "load_when": [
+        "authoring a rule",
+        "new module",
+        "front-matter",
+        "rule id",
+        "validate"
+      ],
+      "requires": [],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/meta/SCHEMA.md"
+    },
+    {
+      "id": "ops/ALLOC",
+      "kind": "ops",
+      "title": "Workload Allocation",
+      "tokens": 2050,
+      "load_when": [
+        "dispatch a subagent",
+        "which model",
+        "how much effort",
+        "delegate",
+        "escalate",
+        "sub-agent"
+      ],
+      "requires": [],
+      "grounds_on": [],
+      "verified": "2026-08-18",
+      "decay": "months",
+      "path": "discipline/ops/ALLOC.md"
+    },
+    {
+      "id": "ops/teams",
+      "kind": "ops",
+      "title": "Agent Team Mechanics",
+      "tokens": 1384,
+      "load_when": [
+        "agent team",
+        "teammate",
+        "subagent definition",
+        "spawn an agent",
+        "task list",
+        "slash command",
+        "skill frontmatter",
+        "quality gate hook"
+      ],
+      "requires": [],
+      "grounds_on": [],
+      "verified": "2026-06-17",
+      "decay": "months",
+      "path": "discipline/ops/teams.md"
+    }
+  ],
+  "rules": [
+    {
+      "id": "ALLOC-001",
+      "module": "ops/ALLOC",
+      "title": "Refer to the tier, never to a model",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:no_model_names"
+      ],
+      "statement": "Project documents and dispatch records MUST name the tier. Naming a specific model breaks when models change.",
+      "why": "A tier is a role; the model filling it is an implementation detail, and the same push-coupling-to-the-edge reasoning applies to procurement as to libraries.",
+      "check": "`python -m checks.no_model_names`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/ops/ALLOC.md",
+      "line": 56
+    },
+    {
+      "id": "ALLOC-002",
+      "module": "ops/ALLOC",
+      "title": "Score before dispatching, and record the score",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:dispatch_recorded"
+      ],
+      "statement": "A dispatch MUST carry its seven signal scores, the resulting allocation, any override applied, and a one-line rationale where the allocation departs from the score.",
+      "why": "An unrecorded allocation cannot be audited after a failure, which is the only moment the classification's quality can actually be assessed.",
+      "check": "`python -m checks.dispatch_recorded`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/ops/ALLOC.md",
+      "line": 89
+    },
+    {
+      "id": "ALLOC-003",
+      "module": "ops/ALLOC",
+      "title": "Named categories force escalation regardless of score",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:dispatch_recorded"
+      ],
+      "statement": "These MUST be dispatched at T2/E1 or above: changing a published contract; the adversarial verification before a change lands; designing an irreversible or destructive operation; anything touching security or the supply chain; arbitration between conflicting positions; root-cause analysis after a defect escaped.",
+      "why": "Each is a case where the cost of a confident wrong answer is not bounded by the size of the change.",
+      "check": "`python -m checks.dispatch_recorded`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/ops/ALLOC.md",
+      "line": 96
+    },
+    {
+      "id": "ALLOC-004",
+      "module": "ops/ALLOC",
+      "title": "A single signal at 3 raises the floor",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:dispatch_recorded"
+      ],
+      "statement": "Any signal scored 3 forces at least T1/E1. A signal D of 3 — a mistake would ship silently — forces E2 regardless of tier.",
+      "why": "A workload cannot be dispatched cheaply because its *sum* is low if one dimension is individually at the top of its scale.",
+      "check": "`python -m checks.dispatch_recorded`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/ops/ALLOC.md",
+      "line": 105
+    },
+    {
+      "id": "ALLOC-005",
+      "module": "ops/ALLOC",
+      "title": "Escalation rules beat the mechanical permit",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:dispatch_recorded"
+      ],
+      "statement": "A mechanical substitution with an explicit stop condition may run at T0/E0 — but where an escalation rule also applies, the escalation wins.",
+      "why": "This is not hypothetical. The recorded incident that destroyed 8,023 files began as exactly this shape: a mechanical directory-cleanup instruction, dispatched without regard for its blast radius.",
+      "check": "`python -m checks.dispatch_recorded`",
+      "no_mechanism": null,
+      "see": [
+        "law/EFCT"
+      ],
+      "superseded_by": null,
+      "path": "discipline/ops/ALLOC.md",
+      "line": 112
+    },
+    {
+      "id": "ALLOC-006",
+      "module": "ops/ALLOC",
+      "title": "Sharpen the contract before raising the tier",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:dispatch_recorded"
+      ],
+      "statement": "Where signal B is high, the coordinator MUST first attempt to complete the specification, and re-score, before escalating.",
+      "why": "This is the doctrine's central lever: sharpening the contract lowers the tier, it is nearly always cheaper than escalating, and it produces a reusable artifact.",
+      "check": "`python -m checks.dispatch_recorded`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/ops/ALLOC.md",
+      "line": 125
+    },
+    {
+      "id": "ALLOC-007",
+      "module": "ops/ALLOC",
+      "title": "Split before upgrading",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:dispatch_recorded"
+      ],
+      "statement": "Prefer decomposing a workload into a large mechanical part and a small reasoning part over running the whole at a high tier.",
+      "why": "Two cheap agents with a clear contract between them usually beat one expensive agent, and the contract survives the task.",
+      "check": "`python -m checks.dispatch_recorded`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/ops/ALLOC.md",
+      "line": 132
+    },
+    {
+      "id": "ALLOC-008",
+      "module": "ops/ALLOC",
+      "title": "A restriction is not lifted by an instruction",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:dispatch_recorded"
+      ],
+      "statement": "A dispatch message cannot grant a capability the receiving agent does not hold, and that agent MUST NOT achieve the effect by other means — writing files through a shell when it holds no editing tool, for example.",
+      "why": "The cost of refusing is one wasted dispatch. The cost of circumventing is that every verdict the agent ever issued becomes open to question. That asymmetry is why this rule is absolute.",
+      "check": "`python -m checks.dispatch_recorded`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/ops/ALLOC.md",
+      "line": 139
+    },
+    {
+      "id": "ALLOC-009",
+      "module": "ops/ALLOC",
+      "title": "Misclassification belongs to the coordinator",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:dispatch_recorded"
+      ],
+      "statement": "When returned work is inadequate, the coordinator MUST re-score and record which of four defect kinds it was: misclassification, specification defect, execution defect, or capability mismatch.",
+      "why": "The distribution over those four tells the organization whether it is under-tiering, under-specifying, or genuinely at a tier's limit — three problems with three different remedies.",
+      "check": "`python -m checks.dispatch_recorded`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/ops/ALLOC.md",
+      "line": 148
+    },
+    {
+      "id": "ALLOC-010",
+      "module": "ops/ALLOC",
+      "title": "The gate's tier follows the risk under test",
+      "force": "OPEN",
+      "mechanisms": [],
+      "statement": "A verification workload is scored on the risk of the code it examines, not on how routine the act of verifying sounds.",
+      "why": "Writing a fault-injection suite for a destructive operation is open-reasoning work even though \"writing tests\" sounds mechanical.",
+      "check": null,
+      "no_mechanism": null,
+      "see": [
+        "meta/OPEN"
+      ],
+      "superseded_by": null,
+      "path": "discipline/ops/ALLOC.md",
+      "line": 157
+    },
+    {
+      "id": "API-001",
+      "module": "law/API",
+      "title": "A contract states more than a signature",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_contract_documented"
+      ],
+      "statement": "Every published operation MUST state its inputs, its results, its error variants, its idempotency, its ordering constraints, its concurrency behaviour and its versioning.",
+      "why": "These are precisely the questions a failing call raises; leaving them to the implementation means answering them by experiment.",
+      "check": "`pytest enforce/fitness/test_api.py::test_contract_documented`",
+      "no_mechanism": null,
+      "see": [
+        "law/ARCH"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/API.md",
+      "line": 35
+    },
+    {
+      "id": "API-002",
+      "module": "law/API",
+      "title": "The implementation is not the contract",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_contract_documented"
+      ],
+      "statement": "Behaviour a consumer observes but the contract does not promise MUST NOT be relied upon, and MUST NOT be treated as a breaking change when it changes.",
+      "why": "Otherwise every incidental detail becomes frozen by accident, and the contract stops describing the system.",
+      "check": "`pytest enforce/fitness/test_api.py::test_contract_documented`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/API.md",
+      "line": 43
+    },
+    {
+      "id": "API-003",
+      "module": "law/API",
+      "title": "Public operations speak the domain, not the store",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:single_wiring_point"
+      ],
+      "statement": "The published surface MUST expose domain-level operations. Generic record manipulation and query primitives MUST NOT be exposed.",
+      "why": "A generic write surface lets a client construct states the domain rules forbid, and the resulting corruption is attributed to the domain that never permitted it.",
+      "check": "`python -m checks.single_wiring_point`",
+      "no_mechanism": null,
+      "see": [
+        "law/EFCT"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/API.md",
+      "line": 50
+    },
+    {
+      "id": "API-004",
+      "module": "law/API",
+      "title": "The persistent representation is private",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:import-linter"
+      ],
+      "statement": "Storage layout, indexes, internal identifiers and file formats MUST be implementation detail. Where a file is deliberately hand-editable, that is a declared authoring surface whose next load re-runs full validation.",
+      "why": "A sanctioned authoring surface with full revalidation is a different entry, not a weaker path; an unsanctioned one is a second writer with no owner.",
+      "check": "`lint-imports` contract `storage-has-one-owner`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/API.md",
+      "line": 58
+    },
+    {
+      "id": "API-005",
+      "module": "law/API",
+      "title": "Structured output is the primary interface",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_structured_output"
+      ],
+      "statement": "Every command MUST be able to emit a machine-readable result carrying a schema identifier, the outcome, the data, and any errors as structured values.",
+      "why": "Human text is a rendering; an agent parsing prose is an agent that breaks when the prose improves.",
+      "check": "`pytest enforce/fitness/test_api.py::test_structured_output`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/API.md",
+      "line": 70
+    },
+    {
+      "id": "API-006",
+      "module": "law/API",
+      "title": "Human output renders the same result object",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_structured_output"
+      ],
+      "statement": "The text presentation MUST be a view over the structured result, never a separate computation.",
+      "why": "Two renderings of one outcome diverge, and the divergence is discovered by a user reading one while an agent acts on the other.",
+      "check": "`pytest enforce/fitness/test_api.py::test_structured_output`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/API.md",
+      "line": 77
+    },
+    {
+      "id": "API-007",
+      "module": "law/API",
+      "title": "Exit status is part of the contract",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_exit_codes"
+      ],
+      "statement": "Each defined exit status MUST correspond to a stated outcome class, and MUST be documented and tested.",
+      "why": "It is the only signal available to a caller that reads nothing else, and the first thing a script branches on.",
+      "check": "`pytest enforce/fitness/test_api.py::test_exit_codes`",
+      "no_mechanism": null,
+      "see": [
+        "law/ERR"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/API.md",
+      "line": 84
+    },
+    {
+      "id": "API-008",
+      "module": "law/API",
+      "title": "The surface is self-describing",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_structured_output"
+      ],
+      "statement": "The published surface MUST offer a machine-readable description of its own operations, arguments and error codes.",
+      "why": "A client that can enumerate the contract can adapt to it; one that cannot must hard-code assumptions that silently rot.",
+      "check": "`pytest enforce/fitness/test_api.py::test_structured_output`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/API.md",
+      "line": 92
+    },
+    {
+      "id": "API-009",
+      "module": "law/API",
+      "title": "Automation gets no relaxed validation",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_agent_parity"
+      ],
+      "statement": "A request from an agent, a hook or a script MUST be validated identically to one from a person. No privileged path, no skipped checks, no direct store access.",
+      "why": "The value of a validated core is that every producer of bad state hits the same wall; one exception makes the guarantee conditional and therefore useless to reason from.",
+      "check": "`pytest enforce/fitness/test_api.py::test_agent_parity`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/API.md",
+      "line": 99
+    },
+    {
+      "id": "API-010",
+      "module": "law/API",
+      "title": "Every published payload carries a schema version",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_schema_versioned"
+      ],
+      "statement": "Structured results and persisted formats MUST carry an explicit version identifier.",
+      "why": "Without it, a consumer cannot tell an old producer from a broken one, and both present as malformed input.",
+      "check": "`pytest enforce/fitness/test_api.py::test_schema_versioned`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/API.md",
+      "line": 113
+    },
+    {
+      "id": "API-011",
+      "module": "law/API",
+      "title": "Error codes and result variants are versioned surface",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_codes_are_stable"
+      ],
+      "statement": "Renaming an error code, removing one, or adding a variant to a published result union is a breaking change.",
+      "why": "These are what an automated consumer branches on, so they are load-bearing in exactly the way a function name is.",
+      "check": "`pytest enforce/fitness/test_diagnostics.py::test_codes_are_stable`",
+      "no_mechanism": null,
+      "see": [
+        "law/DIAG"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/API.md",
+      "line": 119
+    },
+    {
+      "id": "API-012",
+      "module": "law/API",
+      "title": "A format change ships with a migration and its test",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_migrations"
+      ],
+      "statement": "Changing a persisted format MUST include a migration and a test that runs it against a fixture of the previous version.",
+      "why": "A migration nobody has run against real prior data is a plan, not a migration.",
+      "check": "`pytest enforce/fitness/test_api.py::test_migrations`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/API.md",
+      "line": 127
+    },
+    {
+      "id": "API-013",
+      "module": "law/API",
+      "title": "Compatibility is not inherited from parser tolerance",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_schema_versioned"
+      ],
+      "statement": "Compatibility MUST rest on a stated policy, never on a parser happening to accept an older shape.",
+      "why": "Accidental tolerance disappears in a dependency upgrade nobody connected to it.",
+      "check": "`pytest enforce/fitness/test_api.py::test_schema_versioned`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/API.md",
+      "line": 133
+    },
+    {
+      "id": "API-014",
+      "module": "law/API",
+      "title": "Prefer additive change",
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "statement": "Extend the surface with new fields and new operations rather than repurposing existing ones.",
+      "why": "A field that quietly changes meaning breaks consumers that still typecheck, which is the failure mode with the worst diagnostic signal of all.",
+      "check": null,
+      "no_mechanism": "Whether a change is genuinely additive in meaning, rather than only in shape, is a semantic judgment; [API-011] mechanizes the cases that can be detected.",
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/API.md",
+      "line": 139
+    },
+    {
+      "id": "API-015",
+      "module": "law/API",
+      "title": "The delivered artifact is what gets tested",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_delivered_boundary"
+      ],
+      "statement": "End-to-end tests MUST exercise the installed entry point as a separate process, asserting its structured output and exit status.",
+      "why": "Testing the imported function verifies the library; the contract that ships is the process boundary, and only running it tests packaging, arguments and exit paths.",
+      "check": "`pytest enforce/fitness/test_api.py::test_delivered_boundary`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/API.md",
+      "line": 147
+    },
+    {
+      "id": "ARCH-001",
+      "module": "law/ARCH",
+      "title": "Dependencies point inward only",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:import-linter"
+      ],
+      "statement": "Each layer MUST import only from layers beneath it: `shell` to `adapters` to `app` to `domain`. `domain` imports nothing from the others.",
+      "why": "An inward-only graph is what lets a stack trace's deepest frame name the layer that owns the fault.",
+      "check": "`lint-imports` contract `layers`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 43
+    },
+    {
+      "id": "ARCH-002",
+      "module": "law/ARCH",
+      "title": "The domain imports nothing that can perform I/O",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:import-linter",
+        "check:domain_purity"
+      ],
+      "statement": "Modules under `domain/` MUST NOT import any I/O-capable module — filesystem, network, subprocess, environment, wall clock or process-global randomness — directly or transitively.",
+      "why": "A pure domain means a domain-layer failure is a logic defect, never an environment one; that inference is what makes the layer field worth recording.",
+      "check": "`lint-imports` contract `domain-is-pure` · `python -m checks.domain_purity`",
+      "no_mechanism": null,
+      "see": [
+        "ARCH-006",
+        "law/DIAG"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 50
+    },
+    {
+      "id": "ARCH-003",
+      "module": "law/ARCH",
+      "title": "No adapter imports another adapter",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:import-linter"
+      ],
+      "statement": "Adapter modules MUST be independent of one another. Composition happens in `shell`, never between adapters.",
+      "why": "Independent adapters mean a misbehaving one cannot contaminate a healthy one, which is the property the fault tests exist to demonstrate.",
+      "check": "`lint-imports` contract `adapters-are-independent`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 59
+    },
+    {
+      "id": "ARCH-004",
+      "module": "law/ARCH",
+      "title": "Each foreign dependency is imported in exactly one module",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:import-linter"
+      ],
+      "statement": "A third-party or system-level dependency MUST appear in the import graph of exactly one adapter module.",
+      "why": "This is what \"push coupling to the very edge\" means operationally: a library reachable from two places has two possible blast radii and no single owner.",
+      "check": "`lint-imports` contract `foreign-deps-are-cornered`",
+      "no_mechanism": null,
+      "see": [
+        "ARCH-010"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 66
+    },
+    {
+      "id": "ARCH-005",
+      "module": "law/ARCH",
+      "title": "Effects are named in the signature",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:explicit_effects"
+      ],
+      "statement": "A function that performs an effect MUST receive the port that performs it as a parameter. Reaching for a clock, a random source, an environment variable or a filesystem inside a function body is prohibited.",
+      "why": "An effect passed in can be substituted, and therefore faulted on demand; an effect reached for cannot, and its failure mode is untestable.",
+      "check": "`python -m checks.explicit_effects`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 74
+    },
+    {
+      "id": "ARCH-006",
+      "module": "law/ARCH",
+      "title": "Domain functions are total or return a typed result",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:mypy"
+      ],
+      "statement": "A domain function MUST either be total for its argument types, or return a discriminated result union whose error arm the caller is forced to handle.",
+      "why": "Exhaustiveness is checkable; a docstring promise is not.",
+      "check": "`mypy --strict` with exhaustiveness on the result union",
+      "no_mechanism": null,
+      "see": [
+        "law/ERR"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 82
+    },
+    {
+      "id": "ARCH-007",
+      "module": "law/ARCH",
+      "title": "Every port is a Protocol with a published contract",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_every_port_is_a_protocol"
+      ],
+      "statement": "A boundary the core crosses MUST be expressed as a `Protocol` under `ports/`, with its inputs, outputs, error modes, ordering constraints and idempotency stated.",
+      "why": "The contract is the oracle every adapter is tested against; without it there is nothing for a fake to be faithful to.",
+      "check": "`pytest enforce/fitness/test_ports.py::test_every_port_is_a_protocol`",
+      "no_mechanism": null,
+      "see": [
+        "ARCH-008",
+        "law/TEST"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 93
+    },
+    {
+      "id": "ARCH-008",
+      "module": "law/ARCH",
+      "title": "Every port has a real, a fake and a faulty adapter",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_port_triad"
+      ],
+      "statement": "Unconditionally, with no \"if it has meaningful failure modes\" qualifier.",
+      "why": "The port judged to have no failure mode is the one whose failure is discovered in production. Swappability is proved by three implementations, not asserted by one.",
+      "check": "`pytest enforce/fitness/test_ports.py::test_port_triad`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 101
+    },
+    {
+      "id": "ARCH-009",
+      "module": "law/ARCH",
+      "title": "One contract suite runs against every adapter",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_contract_suite_per_adapter"
+      ],
+      "statement": "The port's suite MUST run against the real adapter, the fake, and the faulty adapter in healthy mode, unchanged.",
+      "why": "A fake that can drift from its real counterpart without a test failing is worthless, and every unit test standing on it is worth as little.",
+      "check": "`pytest enforce/fitness/test_ports.py::test_contract_suite_per_adapter`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 107
+    },
+    {
+      "id": "ARCH-010",
+      "module": "law/ARCH",
+      "title": "A port earns its place from a stated justification",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_port_justification"
+      ],
+      "statement": "Every port MUST name, in its module docstring, which of these it claims: replacing the implementation without touching the core; testing the core against a fake; a named behavioural contract; controlling a specific effect; fault injection; observing an interaction; isolating the core from an unstable external technology; supporting more than one real adapter.",
+      "why": "Without a closed list, \"port\" degrades into wrapping standard-library calls, and the boundary stops meaning anything.",
+      "check": "`pytest enforce/fitness/test_ports.py::test_port_justification`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 114
+    },
+    {
+      "id": "ARCH-011",
+      "module": "law/ARCH",
+      "title": "Adapters are selected at one composition root",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:single_wiring_point"
+      ],
+      "statement": "Concrete adapters MUST be chosen in a single wiring module in `shell`. No other module may name a concrete adapter class.",
+      "why": "Replaceability that requires edits in several places is not replaceability; the single root is what makes substitution in a test identical to substitution in production.",
+      "check": "`python -m checks.single_wiring_point`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 128
+    },
+    {
+      "id": "ARCH-012",
+      "module": "law/ARCH",
+      "title": "No test-mode branch in production code",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:no_test_branches"
+      ],
+      "statement": "Production modules MUST NOT contain conditionals keyed on a test environment variable, a test flag, or the identity of the caller.",
+      "why": "Testability comes from the seam, not from the code knowing it is being tested — and a branch that only runs under test is a branch nothing verifies in production.",
+      "check": "`python -m checks.no_test_branches`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 139
+    },
+    {
+      "id": "ARCH-013",
+      "module": "law/ARCH",
+      "title": "Framework and transport types stay out of the domain",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:domain_purity"
+      ],
+      "statement": "Domain signatures MUST NOT mention an argument parser namespace, an ORM model, a request object, a serialization node, or any other type owned by a framework.",
+      "why": "A domain modelled in a framework's types is coupled to it at every call site, and the framework's failures become indistinguishable from the domain's.",
+      "check": "`python -m checks.domain_purity`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 146
+    },
+    {
+      "id": "ARCH-014",
+      "module": "law/ARCH",
+      "title": "Translation between representations is explicit",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:domain_purity"
+      ],
+      "statement": "Wire and storage representations MUST be converted to domain types by a named function at the boundary, never by attribute-name coincidence or automatic mapping.",
+      "why": "An explicit mapping fails in one identifiable place with both values in hand; an implicit one fails somewhere downstream with neither.",
+      "check": "`python -m checks.domain_purity`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 153
+    },
+    {
+      "id": "ARCH-015",
+      "module": "law/ARCH",
+      "title": "Metaprogramming leaves the four questions answerable",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:no_magic_in_domain"
+      ],
+      "statement": "Inside the domain, it MUST remain possible to answer by reading the code — not by running it — what runs, when, what state it changes, and what happens when it fails.",
+      "why": "A mechanism that requires a debugger to trace defeats every diagnostic guarantee downstream of it.",
+      "check": "`python -m checks.no_magic_in_domain`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 160
+    },
+    {
+      "id": "ARCH-016",
+      "module": "law/ARCH",
+      "title": "Module complexity stays within budget",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:ruff:C901"
+      ],
+      "statement": "No function may exceed the configured cyclomatic complexity budget.",
+      "why": "A budget nobody measures is a wish; the source corpus watched a suite degrade for exactly that reason.",
+      "check": "`ruff check` (rule `C901`)",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 167
+    },
+    {
+      "id": "ARCH-017",
+      "module": "law/ARCH",
+      "title": "Prefer the direct call to the abstraction",
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "statement": "An abstraction SHOULD be introduced when it creates a boundary for specification, substitution, observation or containment — not for symmetry.",
+      "why": "Layers added without a stated purpose are indistinguishable from layers added by habit, and each one lengthens every trace.",
+      "check": null,
+      "no_mechanism": "Whether a boundary is *meaningful* is a design judgment; the closed justification list in [ARCH-010] mechanizes the part of it that can be.",
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 173
+    },
+    {
+      "id": "DEP-001",
+      "module": "law/DEP",
+      "title": "The domain depends on the standard library only",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:import-linter"
+      ],
+      "statement": "Domain modules MUST NOT import a third-party package. Third-party code is reachable only from adapters.",
+      "why": "A domain failure that can originate in a vendor's code is a domain failure that localizes nothing, and the layer field stops meaning what it claims.",
+      "check": "`lint-imports` contract `domain-is-pure`",
+      "no_mechanism": null,
+      "see": [
+        "law/ARCH"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/DEP.md",
+      "line": 30
+    },
+    {
+      "id": "DEP-002",
+      "module": "law/DEP",
+      "title": "A dependency is judged by its architectural position",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_dependency_position"
+      ],
+      "statement": "A dependency confined behind one adapter is cheap; one whose types appear across the codebase is expensive regardless of its quality. Every dependency MUST be recorded with the adapter that owns it.",
+      "why": "Replaceability is a function of position, not of the library's merits, and the position is the only part that can be checked.",
+      "check": "`pytest enforce/fitness/test_deps.py::test_dependency_position`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DEP.md",
+      "line": 38
+    },
+    {
+      "id": "DEP-003",
+      "module": "law/DEP",
+      "title": "An adapter owns its dependency's failure modes",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_fault_catalogue"
+      ],
+      "statement": "The adapter owning a dependency MUST state which faults it can produce and translate them into the infrastructure error family.",
+      "why": "An untranslated vendor exception crossing a layer boundary carries the vendor's vocabulary into a diagnosis written in ours.",
+      "check": "`pytest enforce/fitness/test_faults.py::test_fault_catalogue`",
+      "no_mechanism": null,
+      "see": [
+        "law/ERR"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/DEP.md",
+      "line": 46
+    },
+    {
+      "id": "DEP-004",
+      "module": "law/DEP",
+      "title": "Do not reimplement a solved, specified problem",
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "statement": "Parsers, cryptography, date arithmetic and schema validation SHOULD use an established implementation rather than a local one.",
+      "why": "A local reimplementation carries defects nobody else has already found, and no shared vocabulary for describing them when they surface.",
+      "check": null,
+      "no_mechanism": "Recognizing that a hand-rolled routine reimplements a standard is a judgment about intent that no check can make from the code.",
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DEP.md",
+      "line": 54
+    },
+    {
+      "id": "DEP-005",
+      "module": "law/DEP",
+      "title": "The environment is locked by content hash",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_environment_locked"
+      ],
+      "statement": "Every dependency MUST be pinned by content hash in a lockfile committed to the repository.",
+      "why": "A build that resolves differently on two machines produces failures that cannot be reproduced, and reproduction is the first step of diagnosis.",
+      "check": "`pytest enforce/fitness/test_deps.py::test_environment_locked`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DEP.md",
+      "line": 66
+    },
+    {
+      "id": "DEP-006",
+      "module": "law/DEP",
+      "title": "A command verifies the environment matches the lock",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_environment_locked"
+      ],
+      "statement": "The project MUST provide a check that reports drift between the installed environment and the lockfile, and it MUST run before the test suite in continuous integration.",
+      "why": "Drift discovered by a mysterious test failure costs far more than drift reported as drift.",
+      "check": "`pytest enforce/fitness/test_deps.py::test_environment_locked`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DEP.md",
+      "line": 72
+    },
+    {
+      "id": "DEP-007",
+      "module": "law/DEP",
+      "title": "Generated files carry a provenance header",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:generated_provenance"
+      ],
+      "statement": "Every generated file MUST begin with a header naming the generator, its version, a digest of the model it was produced from, and a do-not-edit marker.",
+      "why": "Without provenance an agent cannot tell an artefact it may regenerate from a source it must not overwrite, and will eventually destroy one of them.",
+      "check": "`python -m checks.generated_provenance`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DEP.md",
+      "line": 86
+    },
+    {
+      "id": "DEP-008",
+      "module": "law/DEP",
+      "title": "Generated output contains no timestamp",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:generated_provenance"
+      ],
+      "statement": "Provenance headers MUST NOT include a wall-clock time.",
+      "why": "A timestamp makes every regeneration a diff, which trains reviewers to ignore generated diffs, which is how a real change gets waved through.",
+      "check": "`python -m checks.generated_provenance`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DEP.md",
+      "line": 93
+    },
+    {
+      "id": "DEP-009",
+      "module": "law/DEP",
+      "title": "Regeneration is idempotent and byte-stable",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_regeneration_stable"
+      ],
+      "statement": "Regenerating from an unchanged model MUST produce byte-identical output, on every machine.",
+      "why": "Byte-stability is what makes a regenerate-and-compare gate able to distinguish a real divergence from noise.",
+      "check": "`pytest enforce/fitness/test_generated.py::test_regeneration_stable`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DEP.md",
+      "line": 99
+    },
+    {
+      "id": "DEP-010",
+      "module": "law/DEP",
+      "title": "Drift between model and output fails the build",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_regeneration_stable"
+      ],
+      "statement": "Continuous integration MUST regenerate every generated artefact and fail if the result differs from what is committed.",
+      "why": "Committed output that silently diverges from its model is a lie that every subsequent reader inherits.",
+      "check": "`pytest enforce/fitness/test_generated.py::test_regeneration_stable`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DEP.md",
+      "line": 105
+    },
+    {
+      "id": "DEP-011",
+      "module": "law/DEP",
+      "title": "Generated output is committed",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_regeneration_stable"
+      ],
+      "statement": "Generated artefacts MUST be committed to the repository rather than produced only at build time.",
+      "why": "A change that is invisible in review is a change nobody reviewed; committing the output is what makes the generator's behaviour auditable.",
+      "check": "`pytest enforce/fitness/test_generated.py::test_regeneration_stable`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DEP.md",
+      "line": 112
+    },
+    {
+      "id": "DIAG-001",
+      "module": "law/DIAG",
+      "title": "Every escaping error produces a valid envelope",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_envelope_conforms"
+      ],
+      "statement": "An error reaching a process boundary MUST serialize to a record conforming to the published schema, on every exit path.",
+      "why": "A schema-valid envelope is what makes automated repair possible at all; prose on stderr is not parseable and not actionable.",
+      "check": "`pytest enforce/fitness/test_diagnostics.py::test_envelope_conforms`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DIAG.md",
+      "line": 53
+    },
+    {
+      "id": "DIAG-002",
+      "module": "law/DIAG",
+      "title": "Every custom exception carries a stable code",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:exception_has_code"
+      ],
+      "statement": "Exception and result-error types MUST define a namespaced `code` class attribute. The code is never embedded only in the message text.",
+      "why": "A greppable code survives message rewording and translation; a sentence does not, and every consumer matching on prose breaks silently when the prose improves.",
+      "check": "`python -m checks.exception_has_code`",
+      "no_mechanism": null,
+      "see": [
+        "law/API"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/DIAG.md",
+      "line": 60
+    },
+    {
+      "id": "DIAG-003",
+      "module": "law/DIAG",
+      "title": "Error detail is carried in attributes, not interpolated away",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:exception_has_code"
+      ],
+      "statement": "The offending value, the expected predicate and what was actually seen MUST be structured attributes on the error. The message renders them; it is not where they live.",
+      "why": "An agent can compare `expected` to `actual`; it cannot reliably parse them back out of a formatted sentence.",
+      "check": "`python -m checks.exception_has_code`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DIAG.md",
+      "line": 68
+    },
+    {
+      "id": "DIAG-004",
+      "module": "law/DIAG",
+      "title": "A code is a public contract",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_codes_are_stable"
+      ],
+      "statement": "Renaming or removing an error code, or adding a variant to a result union, is a breaking change and MUST be versioned as one.",
+      "why": "Automated diagnosis is only worth building against a surface that holds still across releases.",
+      "check": "`pytest enforce/fitness/test_diagnostics.py::test_codes_are_stable`",
+      "no_mechanism": null,
+      "see": [
+        "law/API"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/DIAG.md",
+      "line": 75
+    },
+    {
+      "id": "DIAG-005",
+      "module": "law/DIAG",
+      "title": "Every cross-layer re-raise uses explicit chaining",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:raise_from"
+      ],
+      "statement": "When an exception is translated at a layer boundary, the new exception MUST be raised `from` the original.",
+      "why": "The chain is the localization: without it, the outermost frame is all that survives and the true origin is gone.",
+      "check": "`python -m checks.raise_from`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DIAG.md",
+      "line": 87
+    },
+    {
+      "id": "DIAG-006",
+      "module": "law/DIAG",
+      "title": "Context is accreted with notes, not by re-wrapping",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:raise_from"
+      ],
+      "statement": "To add context while propagating, attach a note to the live exception. Wrapping an error solely to append information is prohibited.",
+      "why": "Re-wrapping buries the type a caller matches on one level deeper each time; notes add context without changing what the error *is*.",
+      "check": "`python -m checks.raise_from`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DIAG.md",
+      "line": 94
+    },
+    {
+      "id": "DIAG-007",
+      "module": "law/DIAG",
+      "title": "Suppressing the cause requires a stated reason",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:raise_from"
+      ],
+      "statement": "Raising `from None` MUST carry an adjacent comment giving the reason the underlying cause is not useful to a reader.",
+      "why": "Cause suppression is occasionally right and usually an accident; requiring the sentence separates the two.",
+      "check": "`python -m checks.raise_from`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DIAG.md",
+      "line": 105
+    },
+    {
+      "id": "DIAG-008",
+      "module": "law/DIAG",
+      "title": "Exceptions are never silently swallowed",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:ruff:BLE001",
+        "check:raise_from"
+      ],
+      "statement": "Bare `except`, catching broad exception base classes, and catching-then-passing are prohibited. Deliberate suppression uses a narrow, explicit suppression context with a comment.",
+      "why": "A swallowed exception is the one failure mode no diagnostic machinery can recover from; nothing is emitted to analyse.",
+      "check": "`ruff check` (rules `E722`, `BLE001`, `S110`) · `python -m checks.raise_from`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DIAG.md",
+      "line": 112
+    },
+    {
+      "id": "DIAG-009",
+      "module": "law/DIAG",
+      "title": "Assertions are not validation",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:assert_usage"
+      ],
+      "statement": "`assert` MUST be used only for internal invariants that cannot be false unless the program is wrong. Any check that must run in production — boundary input, authorization, resource state — MUST NOT be an assertion.",
+      "why": "Assertions vanish under optimized bytecode, so a validation written as one is a check that silently ceases to exist in the environment that needed it.",
+      "check": "`python -m checks.assert_usage` · `ruff check` (rule `S101` outside tests)",
+      "no_mechanism": null,
+      "see": [
+        "law/ERR"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/DIAG.md",
+      "line": 120
+    },
+    {
+      "id": "DIAG-010",
+      "module": "law/DIAG",
+      "title": "Each exception is logged once, at its handling boundary",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:log_once"
+      ],
+      "statement": "`logger.exception` MUST be called only from inside a handler that is not re-raising, and an error MUST NOT be logged twice on one path.",
+      "why": "Duplicate stack traces for one fault make an agent count two failures where there was one, and the second copy is always the less informative.",
+      "check": "`python -m checks.log_once`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DIAG.md",
+      "line": 136
+    },
+    {
+      "id": "DIAG-011",
+      "module": "law/DIAG",
+      "title": "Library code configures no logging",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:library_logging"
+      ],
+      "statement": "Reusable modules MUST obtain a module-level logger by name and attach nothing but a null handler at the package root. Configuring handlers, formatters or levels is the consuming application's prerogative.",
+      "why": "A component that drags its logging policy into every host is not reusable, and reusability is what keeps coupling at the edge.",
+      "check": "`python -m checks.library_logging`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DIAG.md",
+      "line": 143
+    },
+    {
+      "id": "DIAG-012",
+      "module": "law/DIAG",
+      "title": "Log arguments are deferred, never pre-formatted",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:ruff:G004"
+      ],
+      "statement": "Log calls MUST pass format arguments to the logger rather than building the string at the call site.",
+      "why": "An eagerly built message is paid for at every level, including the levels that discard it, which is how debug logging gets deleted instead of disabled.",
+      "check": "`ruff check` (rules `G004`, `G010`)",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DIAG.md",
+      "line": 151
+    },
+    {
+      "id": "DIAG-013",
+      "module": "law/DIAG",
+      "title": "A correlation identifier ties a failure to its trace",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_correlation_propagates"
+      ],
+      "statement": "Every entry point MUST establish a correlation identifier in context-local state, and every log record and envelope MUST carry it.",
+      "why": "It is what turns scattered lines into one reconstructable story, which is the difference between reading a trace and searching a file.",
+      "check": "`pytest enforce/fitness/test_diagnostics.py::test_correlation_propagates`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DIAG.md",
+      "line": 158
+    },
+    {
+      "id": "DIAG-014",
+      "module": "law/DIAG",
+      "title": "Secrets and personal data never reach a log or an envelope",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:redaction"
+      ],
+      "statement": "Credentials, tokens and personal data MUST be redacted before they are logged or placed in the `value` field.",
+      "why": "The envelope is designed to be read widely and machine-processed, which is exactly what makes an unredacted value in it expensive.",
+      "check": "`python -m checks.redaction`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DIAG.md",
+      "line": 165
+    },
+    {
+      "id": "DIAG-015",
+      "module": "law/DIAG",
+      "title": "Structured fields, not sentences",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:ruff:G004",
+        "check:log_once"
+      ],
+      "statement": "Log records MUST attach their variables as structured fields rather than interpolating them into prose.",
+      "why": "Unstructured logs do not survive being queried, and a diagnosis nobody can query is one nobody will find.",
+      "check": "`ruff check` · `python -m checks.log_once`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DIAG.md",
+      "line": 172
+    },
+    {
+      "id": "DIAG-016",
+      "module": "law/DIAG",
+      "title": "State transitions are observable",
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "statement": "Components with a non-trivial state machine SHOULD log each transition, with the previous state, the next state and the trigger.",
+      "why": "A transition log turns \"it ended in the wrong state\" into a specific illegal step, which is the difference between a bug report and a diagnosis.",
+      "check": null,
+      "no_mechanism": "Which machines are \"non-trivial\" cannot be decided statically; the transition legality rules are enforced separately in [law/EFCT].",
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DIAG.md",
+      "line": 179
+    },
+    {
+      "id": "EFCT-001",
+      "module": "law/EFCT",
+      "title": "Effects are performed only in shell and adapters",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:import-linter"
+      ],
+      "statement": "Domain and app code MUST NOT perform an effect. They compute a description of one.",
+      "why": "A pure core means a domain test needs no environment and a domain failure implicates no environment.",
+      "check": "`lint-imports` contract `domain-is-pure`",
+      "no_mechanism": null,
+      "see": [
+        "law/ARCH"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/EFCT.md",
+      "line": 37
+    },
+    {
+      "id": "EFCT-002",
+      "module": "law/EFCT",
+      "title": "Time, randomness and environment enter through ports",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:explicit_effects"
+      ],
+      "statement": "The wall clock, random sources, environment variables and process identity MUST be reached only through an injected port.",
+      "why": "Each is a hidden input that makes a result irreproducible, and an irreproducible failure cannot be replayed for diagnosis.",
+      "check": "`python -m checks.explicit_effects`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/EFCT.md",
+      "line": 44
+    },
+    {
+      "id": "EFCT-003",
+      "module": "law/EFCT",
+      "title": "Determinism is the default",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_determinism"
+      ],
+      "statement": "Given the same inputs and the same fault schedule, a run MUST produce the same outputs and the same sequence of effects. Deliberate nondeterminism is injected, documented and seedable.",
+      "why": "Reproduction is the first step of every diagnosis; a failure that cannot be reproduced can only be guessed at.",
+      "check": "`pytest enforce/fitness/test_determinism.py`",
+      "no_mechanism": null,
+      "see": [
+        "law/TEST"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/EFCT.md",
+      "line": 51
+    },
+    {
+      "id": "EFCT-004",
+      "module": "law/EFCT",
+      "title": "Mutating operations are commands, not raw writes",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:plan_apply"
+      ],
+      "statement": "A change to persistent state MUST be expressed as a named command carrying its intent, not as a direct write performed wherever it was computed.",
+      "why": "A named command is a thing that can be validated, logged, replayed and refused; a scattered write is none of those.",
+      "check": "`python -m checks.plan_apply`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/EFCT.md",
+      "line": 64
+    },
+    {
+      "id": "EFCT-005",
+      "module": "law/EFCT",
+      "title": "Destructive operations plan before they apply",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:plan_apply"
+      ],
+      "statement": "An operation that deletes or overwrites MUST compute a complete plan of its effects, and apply it only as a separate step. Computing and performing in one pass is prohibited.",
+      "why": "A recorded incident in the source corpus is exactly this shape: a cleanup routine that computed and performed deletion in one pass destroyed 8,023 files under three fault conditions while reporting success. The plan is what makes the difference between a preview and an apology.",
+      "check": "`python -m checks.plan_apply`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/EFCT.md",
+      "line": 71
+    },
+    {
+      "id": "EFCT-006",
+      "module": "law/EFCT",
+      "title": "A dry run is the pipeline truncated, never a second path",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_dry_run_matches_apply"
+      ],
+      "statement": "Preview mode MUST produce the plan and stop. It MUST NOT be implemented as separate code that predicts what the real path would do.",
+      "why": "Two code paths diverge, and the preview that diverges is worse than no preview because it is trusted.",
+      "check": "`pytest enforce/fitness/test_effects.py::test_dry_run_matches_apply`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/EFCT.md",
+      "line": 80
+    },
+    {
+      "id": "EFCT-007",
+      "module": "law/EFCT",
+      "title": "A multi-effect apply is journalled",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_interruption_recovers"
+      ],
+      "statement": "Where the substrate offers no all-or-nothing guarantee across effects, the apply step MUST write a journal that lets an interrupted run be detected and completed or rolled back.",
+      "why": "Filesystems give no cross-file transaction; without a journal an interruption leaves a state nothing can classify, which is undiagnosable by construction.",
+      "check": "`pytest enforce/fitness/test_effects.py::test_interruption_recovers`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/EFCT.md",
+      "line": 87
+    },
+    {
+      "id": "EFCT-008",
+      "module": "law/EFCT",
+      "title": "Atomicity claims are qualified",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:atomicity_qualified"
+      ],
+      "statement": "A contract MUST state which guarantee it offers — single-file-rename atomic, journal-recoverable, or transactionally atomic — and against what. The bare word is a documentation defect.",
+      "why": "Two source documents used it in incompatible senses; a reader who assumes the strong sense builds on a guarantee that was never offered.",
+      "check": "`python -m checks.atomicity_qualified`",
+      "no_mechanism": null,
+      "see": [
+        "meta/GLOSSARY"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/EFCT.md",
+      "line": 94
+    },
+    {
+      "id": "EFCT-009",
+      "module": "law/EFCT",
+      "title": "What is not guaranteed is stated",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_interruption_recovers"
+      ],
+      "statement": "A contract offering partial guarantees MUST name what it does not guarantee — cross-process isolation during a commit window, the indivisibility of the journal write itself, ordering under concurrent readers.",
+      "why": "An unstated non-guarantee is discovered as a bug, and attributed to the wrong component every time.",
+      "check": "`pytest enforce/fitness/test_effects.py::test_interruption_recovers`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/EFCT.md",
+      "line": 103
+    },
+    {
+      "id": "EFCT-010",
+      "module": "law/EFCT",
+      "title": "State transitions are explicit and closed",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:plan_apply"
+      ],
+      "statement": "A lifecycle MUST be a declared set of states with a declared transition table. Any state change goes through it.",
+      "why": "A closed table makes an illegal transition a checkable event with two named states, rather than an object quietly in the wrong condition.",
+      "check": "`python -m checks.plan_apply`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/EFCT.md",
+      "line": 115
+    },
+    {
+      "id": "EFCT-011",
+      "module": "law/EFCT",
+      "title": "Illegal transitions are refused before any effect",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:plan_apply"
+      ],
+      "statement": "A transition not in the table MUST be rejected during validation, with the source and target states in the error, and MUST NOT be partially performed.",
+      "why": "Refusing before the first effect is what keeps the failure cheap and the state interpretable.",
+      "check": "`python -m checks.plan_apply`",
+      "no_mechanism": null,
+      "see": [
+        "law/ERR"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/EFCT.md",
+      "line": 122
+    },
+    {
+      "id": "EFCT-012",
+      "module": "law/EFCT",
+      "title": "Persistent state has exactly one owning path",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:import-linter"
+      ],
+      "statement": "Each persistent artifact MUST be written through one owning module. Clients, hooks and agents go through the command surface, never directly to storage.",
+      "why": "Two writers make every corruption a question of which one did it; one writer makes it an answer.",
+      "check": "`lint-imports` contract `storage-has-one-owner`",
+      "no_mechanism": null,
+      "see": [
+        "law/API"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/EFCT.md",
+      "line": 130
+    },
+    {
+      "id": "EFCT-013",
+      "module": "law/EFCT",
+      "title": "Concurrency is introduced only with stated semantics",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_concurrency_documented"
+      ],
+      "statement": "Any concurrent component MUST document its ownership, ordering, cancellation, shutdown and stale-state behaviour before it is written.",
+      "why": "Undocumented concurrency produces failures whose reproduction depends on timing — the class of defect a diagnostic record is least able to capture after the fact.",
+      "check": "`pytest enforce/fitness/test_concurrency.py::test_concurrency_documented`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/EFCT.md",
+      "line": 142
+    },
+    {
+      "id": "EFCT-014",
+      "module": "law/EFCT",
+      "title": "Shared mutable state is guarded by a stated lock order",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_concurrency_documented"
+      ],
+      "statement": "Where locks are necessary, the acquisition order MUST be part of the design and written down.",
+      "why": "Locks without a documented order are a recurring source of deadlocks that take weeks to find, and a deadlock emits nothing to diagnose.",
+      "check": "`pytest enforce/fitness/test_concurrency.py::test_concurrency_documented`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/EFCT.md",
+      "line": 149
+    },
+    {
+      "id": "EFCT-015",
+      "module": "law/EFCT",
+      "title": "Writer exclusion is enforced; contention is a result",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_single_writer"
+      ],
+      "statement": "Where a single writer is required, exclusion MUST be enforced by a lock with defined stale recovery, and losing the race MUST surface as a typed conflict result, not a crash.",
+      "why": "A contended write that raises reads as a defect; one that returns a conflict reads as the expected outcome it is.",
+      "check": "`pytest enforce/fitness/test_concurrency.py::test_single_writer`",
+      "no_mechanism": null,
+      "see": [
+        "law/ERR"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/EFCT.md",
+      "line": 156
+    },
+    {
+      "id": "EFCT-016",
+      "module": "law/EFCT",
+      "title": "Prefer the sequential design",
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "statement": "Concurrency SHOULD be introduced to meet a stated requirement, not because a task looks parallelizable.",
+      "why": "Every concurrent path multiplies the interleavings a fault schedule must cover to keep the failure space diagnosable.",
+      "check": null,
+      "no_mechanism": "Whether a requirement genuinely demands concurrency cannot be read off the code; [EFCT-013] mechanizes the obligation to document it once it is introduced.",
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/EFCT.md",
+      "line": 164
+    },
+    {
+      "id": "ERR-001",
+      "module": "law/ERR",
+      "title": "Exactly two propagation channels exist",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:error_channels"
+      ],
+      "statement": "Expected, recoverable outcomes that belong to a function's contract MUST be returned as a discriminated result union. Genuinely exceptional, unrecoverable-at-this-layer or programmer-error conditions MUST be raised. No third channel — no error return codes, no sentinel values, no out-parameters.",
+      "why": "The typed channel is the one a checker can force a caller to handle; putting a contract outcome on the raised channel silently makes handling optional.",
+      "check": "`python -m checks.error_channels`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/ERR.md",
+      "line": 36
+    },
+    {
+      "id": "ERR-002",
+      "module": "law/ERR",
+      "title": "Result unions are exhaustively handled",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:mypy",
+        "auto:pyright"
+      ],
+      "statement": "Every result union MUST be narrowed to `Never` at each consumer, with a final `assert_never` that fails to typecheck if any member remains unhandled.",
+      "why": "This is what makes adding an error variant break the build rather than leak through an untested branch — the single most valuable static guarantee in the discipline.",
+      "check": "`mypy --strict` · `pyright --strict`",
+      "no_mechanism": null,
+      "see": [
+        "ERR-005",
+        "law/TYPE"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/ERR.md",
+      "line": 45
+    },
+    {
+      "id": "ERR-003",
+      "module": "law/ERR",
+      "title": "Conversion between channels happens at one named seam",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:error_channels"
+      ],
+      "statement": "The module and direction at which raised infrastructure failures become typed domain results MUST be named explicitly in the shell layer, and conversion MUST NOT occur anywhere else.",
+      "why": "A seam left implicit is a seam no one can test, and the source corpus left this decision deferred between two documents until neither made it.",
+      "check": "`python -m checks.error_channels`",
+      "no_mechanism": null,
+      "see": [
+        "law/ARCH"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/ERR.md",
+      "line": 53
+    },
+    {
+      "id": "ERR-004",
+      "module": "law/ERR",
+      "title": "A layer produces only its own error family",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:error_channels"
+      ],
+      "statement": "Domain and app code MUST NOT construct or return an infrastructure error. Adapters MUST NOT construct a domain error.",
+      "why": "Layer ownership is what makes the envelope's `layer` field derivable from the error's type alone, rather than guessed from a traceback.",
+      "check": "`python -m checks.error_channels`",
+      "no_mechanism": null,
+      "see": [
+        "law/DIAG"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/ERR.md",
+      "line": 86
+    },
+    {
+      "id": "ERR-005",
+      "module": "law/ERR",
+      "title": "A new variant is declared at its definition site",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:mypy"
+      ],
+      "statement": "Adding an error variant MUST mean adding it to the union's declaration, so every exhaustiveness check fails until each consumer is updated.",
+      "why": "A variant introduced by returning an undeclared type is invisible to every caller and to the checker.",
+      "check": "`mypy --strict`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/ERR.md",
+      "line": 94
+    },
+    {
+      "id": "ERR-006",
+      "module": "law/ERR",
+      "title": "Exceptions form one narrow hierarchy under a package base",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:exception_shape"
+      ],
+      "statement": "Custom exceptions MUST derive from a single package-level base which itself derives from `Exception`, never from `BaseException`. Names end in `Error`. Multiple inheritance among exception types is prohibited.",
+      "why": "One base gives a consumer a single, reliable catch for \"this library failed\"; a flat set of unrelated types gives them no safe boundary at all.",
+      "check": "`python -m checks.exception_shape`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/ERR.md",
+      "line": 101
+    },
+    {
+      "id": "ERR-007",
+      "module": "law/ERR",
+      "title": "Define an exception only when a caller must distinguish it",
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "statement": "Define a custom exception when callers need to branch on it programmatically, or when it crosses a published boundary. Otherwise reuse a built-in.",
+      "why": "A hierarchy with a type per call site is as unusable as one with no types.",
+      "check": null,
+      "no_mechanism": "Whether a caller *needs* to distinguish an outcome is a contract judgment; [ERR-006] mechanizes the shape, not the decision to create one.",
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/ERR.md",
+      "line": 109
+    },
+    {
+      "id": "ERR-008",
+      "module": "law/ERR",
+      "title": "Catch narrowly",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:ruff:BLE001"
+      ],
+      "statement": "`except` clauses MUST name the specific exception types they handle. Broad base classes are caught only at a top-level boundary that converts to an envelope and exits.",
+      "why": "A broad catch converts an unrelated defect into the handled path, and the real fault is never reported.",
+      "check": "`ruff check` (rules `E722`, `BLE001`)",
+      "no_mechanism": null,
+      "see": [
+        "law/DIAG"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/ERR.md",
+      "line": 120
+    },
+    {
+      "id": "ERR-009",
+      "module": "law/ERR",
+      "title": "The `try` body holds only what can fail",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:ruff:TRY300"
+      ],
+      "statement": "Code that cannot raise the caught exception MUST move to an `else` clause; cleanup that must always run MUST use `finally`.",
+      "why": "A wide `try` body silently extends a handler's reach over statements it was never written for.",
+      "check": "`ruff check` (rules `TRY300`, `TRY301`)",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/ERR.md",
+      "line": 128
+    },
+    {
+      "id": "ERR-010",
+      "module": "law/ERR",
+      "title": "Grouped failures propagate as a group",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:exception_shape"
+      ],
+      "statement": "Concurrent or batched operations that can fail independently MUST raise an exception group and be handled with `except*`, rather than collapsing to the first failure.",
+      "why": "Reporting one of five failures gives an agent one fifth of the diagnosis and no indication that the rest exist.",
+      "check": "`python -m checks.exception_shape`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/ERR.md",
+      "line": 135
+    },
+    {
+      "id": "ERR-011",
+      "module": "law/ERR",
+      "title": "Parse at the boundary; do not validate in the interior",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:boundary_parsing"
+      ],
+      "statement": "External data MUST be converted to a domain type by a validating constructor at the boundary, which returns a result. Interior code receives types that cannot be invalid.",
+      "why": "Validation repeated in the interior is validation that can be forgotten in one place; parsing once makes the invalid state unrepresentable thereafter.",
+      "check": "`python -m checks.boundary_parsing`",
+      "no_mechanism": null,
+      "see": [
+        "law/TYPE"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/ERR.md",
+      "line": 146
+    },
+    {
+      "id": "ERR-012",
+      "module": "law/ERR",
+      "title": "Boundary validation survives optimized bytecode",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:assert_usage"
+      ],
+      "statement": "Boundary checks MUST be ordinary statements or a validating library, never assertions.",
+      "why": "Assertions are stripped under optimization, so a boundary guarded by one is unguarded in exactly the deployment that removed it.",
+      "check": "`python -m checks.assert_usage`",
+      "no_mechanism": null,
+      "see": [
+        "law/DIAG"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/ERR.md",
+      "line": 154
+    },
+    {
+      "id": "ERR-013",
+      "module": "law/ERR",
+      "title": "Try the operation rather than pre-checking the world",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:boundary_parsing"
+      ],
+      "statement": "Where a pre-check and the operation it guards can disagree — filesystem existence, permissions, resource availability — the operation MUST be attempted and its failure handled, rather than guarded by a prior check.",
+      "why": "Between the check and the use, the world changes; the guarded form has a race the direct form does not.",
+      "check": "`python -m checks.boundary_parsing`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/ERR.md",
+      "line": 161
+    },
+    {
+      "id": "ERR-014",
+      "module": "law/ERR",
+      "title": "Expected failure and contract violation are distinguished",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:error_channels"
+      ],
+      "statement": "A refusal the contract anticipates MUST be a typed result. A response that breaks the contract — a store that accepts a value and returns a different one — MUST raise.",
+      "why": "They demand opposite reactions: one is handled, the other means a component is lying and nothing downstream of it can be trusted.",
+      "check": "`python -m checks.error_channels`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/ERR.md",
+      "line": 173
+    },
+    {
+      "id": "ERR-015",
+      "module": "law/ERR",
+      "title": "No unhandled exception reaches the process boundary",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_no_unhandled_escape"
+      ],
+      "statement": "Every entry point MUST convert an escaping exception into a diagnostic envelope and a defined exit status.",
+      "why": "An interpreter traceback on stderr is the one failure output that carries no code, no layer and no remediation.",
+      "check": "`pytest enforce/fitness/test_diagnostics.py::test_no_unhandled_escape`",
+      "no_mechanism": null,
+      "see": [
+        "law/DIAG",
+        "law/API"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/ERR.md",
+      "line": 180
+    },
+    {
+      "id": "ERR-016",
+      "module": "law/ERR",
+      "title": "A fault is contained at the boundary that detected it",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_fault_containment"
+      ],
+      "statement": "A failing component MUST be detected, converted and either rejected or degraded, leaving neighbouring components in a healthy state.",
+      "why": "Containment is what makes the layer attribution meaningful; without it a fault's first observable symptom is somewhere else entirely.",
+      "check": "`pytest enforce/fitness/test_faults.py::test_fault_containment`",
+      "no_mechanism": null,
+      "see": [
+        "law/TEST"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/ERR.md",
+      "line": 188
+    },
+    {
+      "id": "FLOW-001",
+      "module": "law/FLOW",
+      "title": "The contract is written before the implementation",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_contract_documented"
+      ],
+      "statement": "Before a component is written, its inputs, outputs, invariants, error modes and ordering constraints MUST be stated. The specification owns what and how well; the implementer owns how.",
+      "why": "A contract written afterwards describes what was built, so it can never disagree with it, and can therefore never catch anything.",
+      "check": "`pytest enforce/fitness/test_api.py::test_contract_documented`",
+      "no_mechanism": null,
+      "see": [
+        "law/API",
+        "frame/spec"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/FLOW.md",
+      "line": 32
+    },
+    {
+      "id": "FLOW-002",
+      "module": "law/FLOW",
+      "title": "Test obligations are named before tests are written",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:oracle_declared"
+      ],
+      "statement": "An obligation MUST name the observable contract under test, the input partitions and boundary values, the expected observable, and the error paths. It does not contain assertions.",
+      "why": "Obligations written after the tests are a summary of the tests, and the gap they were meant to expose closes silently.",
+      "check": "`python -m checks.oracle_declared`",
+      "no_mechanism": null,
+      "see": [
+        "law/TEST"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/FLOW.md",
+      "line": 41
+    },
+    {
+      "id": "FLOW-003",
+      "module": "law/FLOW",
+      "title": "A structural decision is recorded before it is relied upon",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_decisions_recorded"
+      ],
+      "statement": "Introducing a port, a new layer, a concurrency model or a persisted format MUST be recorded as a numbered decision stating context, decision, justification, alternatives considered, consequences and enforcement.",
+      "why": "The alternatives and the reason are exactly what a later agent needs and cannot reconstruct from the code, which shows only the option that won.",
+      "check": "`pytest enforce/fitness/test_decisions.py::test_decisions_recorded`",
+      "no_mechanism": null,
+      "see": [
+        "law/ARCH"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/FLOW.md",
+      "line": 50
+    },
+    {
+      "id": "FLOW-004",
+      "module": "law/FLOW",
+      "title": "Decision records are appended, never rewritten",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_decisions_recorded"
+      ],
+      "statement": "Records MUST be numbered sequentially and never renumbered or deleted. A superseded decision is marked superseded and kept.",
+      "why": "A deleted decision takes its reasoning with it, and the next agent re-derives and re-litigates it.",
+      "check": "`pytest enforce/fitness/test_decisions.py::test_decisions_recorded`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/FLOW.md",
+      "line": 59
+    },
+    {
+      "id": "FLOW-005",
+      "module": "law/FLOW",
+      "title": "Overruled objections are recorded, not discarded",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_decisions_recorded"
+      ],
+      "statement": "Where a decision was contested, the objection and its resolution MUST be recorded.",
+      "why": "When the decision later proves wrong, the recorded objection is usually the fastest available description of why — the cheapest future-debugging asset there is.",
+      "check": "`pytest enforce/fitness/test_decisions.py::test_decisions_recorded`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/FLOW.md",
+      "line": 66
+    },
+    {
+      "id": "FLOW-006",
+      "module": "law/FLOW",
+      "title": "A rule without a mechanism is not binding",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_binding_rules_have_mechanisms"
+      ],
+      "statement": "A rule tagged binding MUST name a runnable mechanism. One that cannot is advisory, with a written statement of why no mechanism exists.",
+      "why": "This is the axiom the whole discipline rests on. A binding rule nothing checks degrades to the same failure mode as a verification that passes vacuously.",
+      "check": "`pytest enforce/fitness/test_meta.py::test_binding_rules_have_mechanisms`",
+      "no_mechanism": null,
+      "see": [
+        "meta/SCHEMA"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/FLOW.md",
+      "line": 76
+    },
+    {
+      "id": "FLOW-007",
+      "module": "law/FLOW",
+      "title": "No check may pass vacuously",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_checks_can_fail"
+      ],
+      "statement": "Every check MUST have a companion test proving it fails when its condition is violated. A check whose success signal is empty output MUST first be shown able to produce a failing one, in the environment it runs in.",
+      "why": "A check never observed to fail has not been shown to check anything, and its silence is indistinguishable from correctness.",
+      "check": "`pytest enforce/fitness/test_meta.py::test_checks_can_fail`",
+      "no_mechanism": null,
+      "see": [
+        "law/TEST"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/FLOW.md",
+      "line": 84
+    },
+    {
+      "id": "FLOW-008",
+      "module": "law/FLOW",
+      "title": "Deviations from an advisory rule are recorded in the change",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:deviation_recorded"
+      ],
+      "statement": "Departing from an advisory rule MUST be justified in the commit message or the decision record, citing the rule identifier.",
+      "why": "An unrecorded departure is indistinguishable from an oversight, and the next reader restores the rule and breaks whatever the departure was for.",
+      "check": "`python -m checks.deviation_recorded`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/FLOW.md",
+      "line": 93
+    },
+    {
+      "id": "FLOW-009",
+      "module": "law/FLOW",
+      "title": "The gates pass before a change is offered",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_gate_suite_defined"
+      ],
+      "statement": "Formatting, linting, both type checkers, import contracts, the custom checks, and the unit, contract, integration and fault suites MUST all pass. Property suites run on the seeds recorded for the touched modules, and the mutation gate runs on touched core modules.",
+      "why": "A gate run after the change is offered is a gate that reviews someone else's time instead of the author's.",
+      "check": "`pytest enforce/fitness/test_meta.py::test_gate_suite_defined`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/FLOW.md",
+      "line": 107
+    },
+    {
+      "id": "FLOW-010",
+      "module": "law/FLOW",
+      "title": "New behaviour arrives with its obligations discharged",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_layers_populated"
+      ],
+      "statement": "A new component arrives with its contract, its unit tests, and — if it is a port — its three adapters, its contract suite and its fault suite. A new invariant arrives with its property test.",
+      "why": "The suite is complete at every commit or at none; \"tests to follow\" is where they stop following.",
+      "check": "`pytest enforce/fitness/test_layers.py::test_layers_populated`",
+      "no_mechanism": null,
+      "see": [
+        "law/ARCH"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/FLOW.md",
+      "line": 115
+    },
+    {
+      "id": "FLOW-011",
+      "module": "law/FLOW",
+      "title": "The diagnosis is checked, not assumed",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_envelope_conforms"
+      ],
+      "statement": "For a change touching an error path, the resulting envelope MUST be inspected: its code, layer, expected and actual values, and remediation must be enough to locate and fix the fault without reading the source.",
+      "why": "This is the Prime Directive's acceptance test, and the only step at which the discipline's actual purpose is verified rather than approximated.",
+      "check": "`pytest enforce/fitness/test_diagnostics.py::test_envelope_conforms`",
+      "no_mechanism": null,
+      "see": [
+        "law/DIAG"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/FLOW.md",
+      "line": 124
+    },
+    {
+      "id": "FLOW-012",
+      "module": "law/FLOW",
+      "title": "Report what happened, including what did not",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:deviation_recorded"
+      ],
+      "statement": "A change description MUST state what was verified, what was skipped and why, and any rule deviation with its identifier. A failing test is reported as failing.",
+      "why": "An agent inherits the previous agent's report as fact; a report that rounds a partial result up to a complete one poisons every decision built on it.",
+      "check": "`python -m checks.deviation_recorded`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/FLOW.md",
+      "line": 133
+    },
+    {
+      "id": "FLOW-013",
+      "module": "law/FLOW",
+      "title": "Scale ceremony to reuse ambition, not to line count",
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "statement": "For a genuinely single-use script, the cascade SHOULD be compressed — and the compression stated.",
+      "why": "Full ceremony applied indiscriminately trains people to route around it, which costs more than the ceremony saved.",
+      "check": null,
+      "no_mechanism": "Reuse ambition is an intention about the future that no check can read from the present code.",
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/FLOW.md",
+      "line": 140
+    },
+    {
+      "id": "TEAMS-001",
+      "module": "ops/teams",
+      "title": "A dispatch states the contract, not the intention",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:dispatch_recorded"
+      ],
+      "statement": "Work handed to a teammate MUST carry its inputs, its expected observable output, its acceptance criterion and its stop condition.",
+      "why": "\"Able\" is judged against the workload as handed over, not as it exists in the coordinator's head; an under-specified dispatch produces confident, wrong work.",
+      "check": "`python -m checks.dispatch_recorded`",
+      "no_mechanism": null,
+      "see": [
+        "ops/ALLOC"
+      ],
+      "superseded_by": null,
+      "path": "discipline/ops/teams.md",
+      "line": 69
+    },
+    {
+      "id": "TEAMS-002",
+      "module": "ops/teams",
+      "title": "A restriction is never lifted by an instruction",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:dispatch_recorded"
+      ],
+      "statement": "An agent MUST NOT achieve an effect its granted tools exclude by routing around them, and a dispatch MUST NOT purport to grant a capability the receiving agent does not hold.",
+      "why": "The cost of refusing is one wasted dispatch; the cost of circumventing is that every verdict that agent ever issued becomes questionable.",
+      "check": "`python -m checks.dispatch_recorded`",
+      "no_mechanism": null,
+      "see": [
+        "ops/ALLOC"
+      ],
+      "superseded_by": null,
+      "path": "discipline/ops/teams.md",
+      "line": 77
+    },
+    {
+      "id": "TEAMS-003",
+      "module": "ops/teams",
+      "title": "Verification runs as a gate, not as a request",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_gate_suite_defined"
+      ],
+      "statement": "Where the tooling offers a completion hook, the verification obligation MUST be enforced there — a task cannot be marked done while its gate fails.",
+      "why": "This is what turns a soft norm into a hard one, and it is the only place the discipline's own axiom can be applied to agent coordination itself.",
+      "check": "`pytest enforce/fitness/test_meta.py::test_gate_suite_defined`",
+      "no_mechanism": null,
+      "see": [
+        "law/FLOW"
+      ],
+      "superseded_by": null,
+      "path": "discipline/ops/teams.md",
+      "line": 85
+    },
+    {
+      "id": "TEST-001",
+      "module": "law/TEST",
+      "title": "Unit tests touch no external resource",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_unit_layer_is_pure"
+      ],
+      "statement": "Tests in the unit layer MUST NOT import filesystem, network, subprocess, clock or environment modules, nor any adapter.",
+      "why": "A unit failure that can be caused by the environment is a unit failure that localizes nothing.",
+      "check": "`pytest enforce/fitness/test_layers.py::test_unit_layer_is_pure`",
+      "no_mechanism": null,
+      "see": [
+        "law/ARCH"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/TEST.md",
+      "line": 46
+    },
+    {
+      "id": "TEST-002",
+      "module": "law/TEST",
+      "title": "Each test layer exists and is populated",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_layers_populated"
+      ],
+      "statement": "Every port MUST have a contract suite and a fault suite; every domain module MUST have unit tests and, where it states an invariant, a property suite.",
+      "why": "An untested seam is not visibly untested — it looks exactly like a tested one until it fails.",
+      "check": "`pytest enforce/fitness/test_layers.py::test_layers_populated`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TEST.md",
+      "line": 54
+    },
+    {
+      "id": "TEST-003",
+      "module": "law/TEST",
+      "title": "Per-test time is budgeted and enforced",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:pytest-timeout"
+      ],
+      "statement": "Unit tests MUST complete within the configured per-test budget.",
+      "why": "The budget is a proxy for the architecture: a unit test that got slow did so by acquiring a dependency it was not supposed to have.",
+      "check": "`pytest --timeout` as configured in `enforce/pyproject.toml`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TEST.md",
+      "line": 61
+    },
+    {
+      "id": "TEST-004",
+      "module": "law/TEST",
+      "title": "Every test module declares its oracle",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:oracle_declared"
+      ],
+      "statement": "A test module MUST name, in its docstring, which oracle its assertions rest on: contract, property, differential, golden, or example.",
+      "why": "An undeclared oracle is almost always \"whatever the implementation did when I wrote this\", which locks in the defect instead of detecting it.",
+      "check": "`python -m checks.oracle_declared`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TEST.md",
+      "line": 75
+    },
+    {
+      "id": "TEST-005",
+      "module": "law/TEST",
+      "title": "One contract suite runs against every adapter",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_contract_suite_per_adapter"
+      ],
+      "statement": "The port's contract is the oracle for all of its adapters, and the same suite runs against real, fake, and faulty-in-healthy-mode without modification.",
+      "why": "This is the strongest oracle available: it tests against the published promise rather than against an implementation.",
+      "check": "`pytest enforce/fitness/test_ports.py::test_contract_suite_per_adapter`",
+      "no_mechanism": null,
+      "see": [
+        "law/ARCH"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/TEST.md",
+      "line": 82
+    },
+    {
+      "id": "TEST-006",
+      "module": "law/TEST",
+      "title": "A fake that can drift from the real adapter is worthless",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_contract_suite_per_adapter"
+      ],
+      "statement": "Any behaviour a fake exhibits that the real adapter does not MUST be caught by the shared contract suite.",
+      "why": "Every unit test standing on a drifting fake is worth exactly as little as the fake, and none of them will say so.",
+      "check": "`pytest enforce/fitness/test_ports.py::test_contract_suite_per_adapter`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TEST.md",
+      "line": 90
+    },
+    {
+      "id": "TEST-007",
+      "module": "law/TEST",
+      "title": "Stated invariants have property suites",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_layers_populated"
+      ],
+      "statement": "Round-trip, idempotence, involution, ordering and closure properties MUST be expressed as generated-input property tests, not as hand-picked examples.",
+      "why": "A property is a claim about all inputs; three examples test three inputs and imply the rest.",
+      "check": "`pytest enforce/fitness/test_layers.py::test_layers_populated`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TEST.md",
+      "line": 97
+    },
+    {
+      "id": "TEST-008",
+      "module": "law/TEST",
+      "title": "Golden files are reviewed, never merely regenerated",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_goldens_reviewed"
+      ],
+      "statement": "A change to a golden artifact MUST be accompanied by the source change that justifies it. Regenerating goldens to make a suite pass is prohibited.",
+      "why": "\"Just regenerate\" converts an oracle into a recording of the current behaviour, which is the same as deleting it.",
+      "check": "`pytest enforce/fitness/test_goldens.py::test_goldens_reviewed`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TEST.md",
+      "line": 104
+    },
+    {
+      "id": "TEST-009",
+      "module": "law/TEST",
+      "title": "Fault injection is data, not bespoke classes",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_fault_schedules_are_data"
+      ],
+      "statement": "A fault MUST be expressed as a schedule — port, operation, occurrence, fault kind — that can be serialized, replayed and shrunk. Hand-written single-purpose failing classes are prohibited.",
+      "why": "A schedule that survives as data is a failing case an agent can replay verbatim; a bespoke class is a one-off that has to be re-derived.",
+      "check": "`pytest enforce/fitness/test_faults.py::test_fault_schedules_are_data`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TEST.md",
+      "line": 115
+    },
+    {
+      "id": "TEST-010",
+      "module": "law/TEST",
+      "title": "The fault catalogue is covered per port",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_fault_catalogue"
+      ],
+      "statement": "Each port MUST be exercised against the fault categories that apply to it: explicit failure, omission, timing, value corruption, state inconsistency, stale state, duplication, reordering, partial effect, and protocol violation.",
+      "why": "Faults found in production are drawn from this list; a category never injected is a category first observed live.",
+      "check": "`pytest enforce/fitness/test_faults.py::test_fault_catalogue`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TEST.md",
+      "line": 123
+    },
+    {
+      "id": "TEST-011",
+      "module": "law/TEST",
+      "title": "Propagation and containment are tested, not assumed",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_fault_containment"
+      ],
+      "statement": "For a chain of components, tests MUST assert what a downstream component does when an upstream one misbehaves, and that a healthy neighbour is unaffected.",
+      "why": "The interesting behaviour is never the direct failure; it is what the next component does with it.",
+      "check": "`pytest enforce/fitness/test_faults.py::test_fault_containment`",
+      "no_mechanism": null,
+      "see": [
+        "law/ERR"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/TEST.md",
+      "line": 131
+    },
+    {
+      "id": "TEST-012",
+      "module": "law/TEST",
+      "title": "Interruption is tested at every effect boundary",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_interruption_recovers"
+      ],
+      "statement": "A multi-effect apply MUST be tested for interruption before, between and after each effect, asserting that recovery reaches a defined state.",
+      "why": "The failure that destroyed 8,023 files in the source corpus happened in exactly this window, and reported success while doing it.",
+      "check": "`pytest enforce/fitness/test_effects.py::test_interruption_recovers`",
+      "no_mechanism": null,
+      "see": [
+        "law/EFCT"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/TEST.md",
+      "line": 139
+    },
+    {
+      "id": "TEST-013",
+      "module": "law/TEST",
+      "title": "Mutation score is gated on the core",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:mutmut"
+      ],
+      "statement": "Seeded defects in domain modules MUST be detected at or above the configured score. Surviving mutants are dispositioned in a ledger, never ignored.",
+      "why": "This is the only check that tests the tests; line execution cannot distinguish \"this ran\" from \"this was verified\".",
+      "check": "the configured mutation run and its score gate",
+      "no_mechanism": null,
+      "see": [
+        "TEST-004"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/TEST.md",
+      "line": 151
+    },
+    {
+      "id": "TEST-014",
+      "module": "law/TEST",
+      "title": "Compound decisions are decomposed and tabulated",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:compound_gate"
+      ],
+      "statement": "A gate decision combining conditions MUST either be decomposed into named predicates, or be accompanied by a parametrized truth-table test covering each condition's independent effect on the outcome.",
+      "why": "No mainstream tool measures `modified condition/decision coverage` for this language, so the requirement is met by construction instead of by measurement.",
+      "check": "`python -m checks.compound_gate`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TEST.md",
+      "line": 159
+    },
+    {
+      "id": "TEST-015",
+      "module": "law/TEST",
+      "title": "Every check has a proof-of-failure companion",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_checks_can_fail"
+      ],
+      "statement": "Every gate, fitness test and custom check MUST have a companion test demonstrating it fails when the condition it guards is violated.",
+      "why": "A check whose passing signal is empty output has not been shown to check anything, and silent vacuity is indistinguishable from success.",
+      "check": "`pytest enforce/fitness/test_meta.py::test_checks_can_fail`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TEST.md",
+      "line": 167
+    },
+    {
+      "id": "TEST-016",
+      "module": "law/TEST",
+      "title": "A test that weakens must say so",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:test_weakening"
+      ],
+      "statement": "A change that loosens an assertion, widens a caught type, or narrows a generator MUST state in the change whether the previous discrimination is preserved.",
+      "why": "Suites do not collapse in one commit; they are weakened one reasonable-looking edit at a time, and nothing objects unless something is watching.",
+      "check": "`python -m checks.test_weakening`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TEST.md",
+      "line": 174
+    },
+    {
+      "id": "TEST-017",
+      "module": "law/TEST",
+      "title": "Tests are order-independent and network-isolated",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:pytest-randomly",
+        "auto:pytest-socket"
+      ],
+      "statement": "The suite MUST pass under randomized ordering, and network access MUST be blocked by default.",
+      "why": "Order dependence and ambient network access are both hidden inputs, and both produce failures that reproduce only sometimes.",
+      "check": "`pytest` with the configured plugins",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TEST.md",
+      "line": 185
+    },
+    {
+      "id": "TEST-018",
+      "module": "law/TEST",
+      "title": "A flaky failure is a defect in the harness",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_seeds_recorded"
+      ],
+      "statement": "An unreproducible failure MUST be investigated at the priority of a domain defect. Reruns MUST NOT be used to dismiss one. Failing generated cases are recorded as fixtures.",
+      "why": "Rerunning until green discards the one observation that had diagnostic value.",
+      "check": "`pytest enforce/fitness/test_determinism.py::test_seeds_recorded`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TEST.md",
+      "line": 192
+    },
+    {
+      "id": "TEST-019",
+      "module": "law/TEST",
+      "title": "Test names state the behaviour",
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "statement": "A test name SHOULD say what must hold, not restate the implementation or number a case.",
+      "why": "The name is what an agent reads first in a failure report, and often all it gets.",
+      "check": null,
+      "no_mechanism": "Whether a name describes behaviour or mechanism is a reading judgment; a pattern check would accept any sufficiently long name.",
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TEST.md",
+      "line": 198
+    },
+    {
+      "id": "TYPE-001",
+      "module": "law/TYPE",
+      "title": "Two checkers, both strict, both pinned",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:mypy",
+        "auto:pyright"
+      ],
+      "statement": "The package MUST pass both configured checkers in their strict configurations, with the enabled rule set committed to version control.",
+      "why": "The two infer differently, so agreement between them is a differential oracle; \"strict\" alone names no portable rule set and guarantees nothing.",
+      "check": "`mypy --strict src/` · `pyright src/`",
+      "no_mechanism": null,
+      "see": [
+        "law/TEST"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/TYPE.md",
+      "line": 38
+    },
+    {
+      "id": "TYPE-002",
+      "module": "law/TYPE",
+      "title": "The domain carries no `Any`",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:mypy",
+        "check:domain_purity"
+      ],
+      "statement": "Domain modules MUST NOT use `Any`, explicit or implicit — including via untyped third-party stubs and unannotated function bodies.",
+      "why": "`Any` silently disables every downstream guarantee on the values that flow through it, so the layer whose errors must be trustworthy is the layer it cannot enter.",
+      "check": "`mypy --strict --disallow-any-explicit src/domain` · `python -m checks.domain_purity`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TYPE.md",
+      "line": 46
+    },
+    {
+      "id": "TYPE-003",
+      "module": "law/TYPE",
+      "title": "Escape hatches are narrow, justified and counted",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:mypy",
+        "auto:ruff:PGH003"
+      ],
+      "statement": "Every `cast`, `type: ignore` and explicit `Any` MUST name the specific rule it suppresses and carry a comment giving the reason. Redundant casts and unused ignores fail the build.",
+      "why": "A `cast` is an unchecked assertion the checker trusts blindly; a wrong one propagates a lie until something unrelated crashes, which is the hardest failure to trace.",
+      "check": "`mypy --warn-redundant-casts --warn-unused-ignores` · `ruff check` (rule `PGH003`)",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TYPE.md",
+      "line": 53
+    },
+    {
+      "id": "TYPE-004",
+      "module": "law/TYPE",
+      "title": "Distinct concepts are distinct types",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:domain_purity"
+      ],
+      "statement": "Identifiers and domain scalars MUST NOT be interchangeable primitives. Each concept gets its own type.",
+      "why": "Passing an argument in the wrong position is the defect class this eliminates outright rather than testing for.",
+      "check": "`python -m checks.domain_purity`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TYPE.md",
+      "line": 64
+    },
+    {
+      "id": "TYPE-005",
+      "module": "law/TYPE",
+      "title": "A constrained type is a wrapper with a parsing constructor",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:boundary_parsing"
+      ],
+      "statement": "A type carrying a well-formedness rule MUST be a frozen wrapper whose constructor validates and returns a result. `NewType` is prohibited for constrained values.",
+      "why": "`NewType` has no constructor and validates nothing, so it renames a primitive without excluding a single invalid value.",
+      "check": "`python -m checks.boundary_parsing`",
+      "no_mechanism": null,
+      "see": [
+        "law/ERR"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/TYPE.md",
+      "line": 71
+    },
+    {
+      "id": "TYPE-006",
+      "module": "law/TYPE",
+      "title": "Closed sets are enumerations",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:mypy",
+        "check:domain_purity"
+      ],
+      "statement": "A value drawn from a fixed set MUST be an enumeration, not a string literal union.",
+      "why": "An enumeration has one definition site that exhaustiveness checking follows; a literal union repeated at each use has as many definitions as usages.",
+      "check": "`mypy --strict` · `python -m checks.domain_purity`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TYPE.md",
+      "line": 79
+    },
+    {
+      "id": "TYPE-007",
+      "module": "law/TYPE",
+      "title": "Domain values are frozen and slotted",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:domain_purity"
+      ],
+      "statement": "Domain value types MUST be immutable dataclasses with slots.",
+      "why": "A value that cannot be mutated after construction cannot drift between validation and use, which is what lets an error name the value it was given.",
+      "check": "`python -m checks.domain_purity`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TYPE.md",
+      "line": 85
+    },
+    {
+      "id": "TYPE-008",
+      "module": "law/TYPE",
+      "title": "Signatures take read-only collection types",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:domain_purity"
+      ],
+      "statement": "Function signatures MUST declare immutable or read-only collection types for parameters the callee does not own.",
+      "why": "A mutable collection in a signature is an undeclared output channel, and the caller learns about it only when its own data changes underneath it.",
+      "check": "`python -m checks.domain_purity`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TYPE.md",
+      "line": 91
+    },
+    {
+      "id": "TYPE-009",
+      "module": "law/TYPE",
+      "title": "Ports are structural protocols",
+      "force": "BINDING",
+      "mechanisms": [
+        "fitness:test_every_port_is_a_protocol"
+      ],
+      "statement": "A port MUST be declared as a `Protocol`, so an adapter conforms by shape rather than by inheriting from the core.",
+      "why": "Nominal inheritance would make every adapter import the core, reversing the dependency direction the architecture depends on.",
+      "check": "`pytest enforce/fitness/test_ports.py::test_every_port_is_a_protocol`",
+      "no_mechanism": null,
+      "see": [
+        "law/ARCH"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/TYPE.md",
+      "line": 102
+    },
+    {
+      "id": "TYPE-010",
+      "module": "law/TYPE",
+      "title": "Runtime protocol checks are not contract checks",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:boundary_parsing"
+      ],
+      "statement": "A runtime-checkable protocol MUST NOT be used as evidence that an object satisfies a contract; it confirms member existence only, never signature or behaviour.",
+      "why": "An object that passes the runtime check and violates the contract produces a failure attributed to the wrong component.",
+      "check": "`python -m checks.boundary_parsing`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TYPE.md",
+      "line": 110
+    },
+    {
+      "id": "TYPE-011",
+      "module": "law/TYPE",
+      "title": "What the checker cannot enforce is enforced at runtime",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:boundary_parsing"
+      ],
+      "statement": "Value ranges, cross-field invariants, ordering and temporal constraints, units, and stateful protocols MUST be enforced by boundary parsing or an explicit runtime contract, and stated in the docstring. They MUST NOT be assumed carried by an annotation.",
+      "why": "Any claim that strict typing guarantees correctness is false, and a contract that relies on it fails without ever having been checked.",
+      "check": "`python -m checks.boundary_parsing`",
+      "no_mechanism": null,
+      "see": [
+        "TYPE-005",
+        "law/ERR"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/TYPE.md",
+      "line": 117
+    },
+    {
+      "id": "TYPE-012",
+      "module": "law/TYPE",
+      "title": "Signature or docstring, by who can enforce it",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:boundary_parsing"
+      ],
+      "statement": "If a checker can enforce a constraint, it MUST be in the signature. If only a human or a runtime check can, it MUST be in the docstring and backed by a runtime check where it matters.",
+      "why": "A constraint in prose that a checker could have carried is a guarantee downgraded to a hope for no reason.",
+      "check": "`python -m checks.boundary_parsing`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TYPE.md",
+      "line": 126
+    },
+    {
+      "id": "TYPE-013",
+      "module": "law/TYPE",
+      "title": "Conversions are explicit",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:mypy"
+      ],
+      "statement": "Numeric and string conversions MUST be written explicitly; implicit coercion and cross-type equality comparisons fail the build.",
+      "why": "A silent coercion is a value changing identity with no site to attribute it to.",
+      "check": "`mypy --strict-equality`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TYPE.md",
+      "line": 134
+    },
+    {
+      "id": "TYPE-014",
+      "module": "law/TYPE",
+      "title": "Immutability is declared, and not mistaken for a guarantee",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:domain_purity"
+      ],
+      "statement": "Frozen dataclasses, read-only mappings and final declarations MUST be used to signal intent; code MUST NOT rely on them being unbypassable.",
+      "why": "The freeze is shallow and can be circumvented; treating it as a hard guarantee produces an invariant nothing actually maintains.",
+      "check": "`python -m checks.domain_purity`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TYPE.md",
+      "line": 140
+    },
+    {
+      "id": "TYPE-015",
+      "module": "law/TYPE",
+      "title": "Type sophistication stays proportionate",
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "statement": "Type-level machinery SHOULD be introduced when it removes a class of defect, not to demonstrate that it can be.",
+      "why": "A signature only a specialist can read moves the comprehension cost onto every future reader, including the agent trying to repair it.",
+      "check": null,
+      "no_mechanism": "\"Proportionate\" is a judgment about the defect being prevented, which no check can weigh against the reading cost it imposes.",
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/TYPE.md",
+      "line": 147
+    }
+  ]
+}

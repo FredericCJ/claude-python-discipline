@@ -1,0 +1,45 @@
+#  Lint configuration for THIS repository's own tooling.
+#
+#  Not the template. The canonical configuration a consuming project copies is
+#  enforce/pyproject.toml, and it targets a src/ + tests/ layout. This repository
+#  is a documentation corpus with a tools/ + enforce/ layout instead, so the same
+#  posture needs different path scoping.
+#
+#  Every relaxation below names why it applies here and not to a real project.
+#  An unjustified ignore is a defect (ARCH-017 reasoning, applied to ourselves).
+
+extend = "enforce/pyproject.toml"
+src = ["tools", "enforce"]
+
+[lint]
+extend-ignore = [
+    # These modules ARE command-line tools; stdout is their output contract, not a
+    # debugging leftover. In a real project the equivalent code lives in shell/ and
+    # prints through a presenter (API-006).
+    "T201",
+    # Copyright headers are a repository policy this one does not have.
+    "CPY001",
+    # tools/ and enforce/checks/ are run both as scripts and as importable modules;
+    # a package marker would break the script path.
+    "INP001",
+    # DOC201/DOC402 are now ignored in the canonical config too, for a better
+    # reason than the one recorded here originally: they demand Google-style
+    # sections that Doxygen cannot read (law/DOC, fact/doxygen). Kept here only
+    # until every file in this repository is migrated to @return.
+    "DOC201", "DOC402",
+]
+
+[lint.flake8-tidy-imports]
+# The canonical config bans relative imports so layer edges are visible in the
+# import statement (ARCH-001). enforce/checks/ is a flat toolkit with no layers,
+# and `from . import Check` is the correct expression of "same package".
+ban-relative-imports = "parents"
+
+[lint.per-file-ignores]
+# The template scopes these to tests/**; this repository keeps its proof-of-failure
+# suites beside the code they prove, so the same exemption needs a different path.
+# S101 stays on everywhere else, which is what DIAG-009 and ERR-012 require.
+"**/test_*.py" = ["S101", "PLR2004", "D103", "ANN", "SLF001"]
+# The check framework re-exports for its subclasses; RUF067 fires on any non-empty
+# package init.
+"enforce/checks/__init__.py" = ["RUF067"]
