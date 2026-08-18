@@ -10,14 +10,30 @@ means nothing.
 
 from __future__ import annotations
 
+import ast
 import datetime as dt
-from collections.abc import Iterable, Sequence
+import json
+from collections.abc import Iterable, Iterator, Sequence
 from pathlib import Path
 from textwrap import dedent
 
 import pytest
 
-from validate import Layout, Severity, run
+import nav
+from discipline_core import REPO_ROOT, Enforcement, enforcement_of, mechanism_is_implemented
+from validate import (
+    Layout,
+    Severity,
+    V080Baseline,
+    check_v080_ratchet,
+    load_documents,
+    load_v080_baseline,
+    run,
+    write_v080_baseline,
+)
+from validate import (
+    main as validate_main,
+)
 
 ## A rule that passes every check, so each test can break exactly one thing and
 ## attribute the finding to that one thing.
@@ -388,6 +404,323 @@ def test_v070_bare_use_of_a_banned_term(tmp_path: Path) -> None:
     )
     module(tmp_path, body=CONFORMANT_RULE + "\nThe suite must keep coverage high.\n")
     assert "V070" in codes(run_on(tmp_path))
+
+
+# ------------------------------------------------- enforcement status is visible
+
+
+def mechanism_resolvers() -> Iterator[tuple[str, str]]:
+    """Every function in the repository that decides whether a mechanism is built.
+
+    Recognised by shape rather than by name, so a copy reintroduced under a fresh
+    name is still found: the implementation is the one function that joins
+    `enforce/checks` and searches `fitness` for a definition. Test modules are
+    skipped, this detector's own body being one of the shapes it looks for.
+
+    @return each such function as its POSIX-relative file and its name
+    """
+    for directory in ("tools", "enforce"):
+        for path in sorted((REPO_ROOT / directory).rglob("*.py")):
+            if path.stem.startswith("test_"):
+                continue
+            try:
+                tree = ast.parse(path.read_text(encoding="utf-8"))
+            except (OSError, SyntaxError):  # pragma: no cover - not a corpus defect
+                continue
+            for node in ast.walk(tree):
+                if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    continue
+                source = ast.get_source_segment(
+                    path.read_text(encoding="utf-8"), node
+                ) or ""
+                if '"checks"' in source and '"fitness"' in source and "exists()" in source:
+                    yield path.relative_to(REPO_ROOT).as_posix(), node.name
+
+
+def test_the_mechanism_check_has_exactly_one_implementation() -> None:
+    """Two copies would drift, and the artifacts would then disagree while both looked right.
+
+    `validate.py` reports the absent case as V080 and `build_index.py` derives every
+    rule's published status from it. A second copy is not a style complaint: it is
+    two answers to "is this rule enforced", one of which is wrong and neither of
+    which announces itself.
+    """
+    found = sorted(mechanism_resolvers())
+    assert found == [("tools/discipline_core.py", "mechanism_is_implemented")], found
+
+
+def corpus(root: Path, *, built: Sequence[str] = ()) -> Path:
+    """Lay down just enough tree for the mechanism resolver to answer against.
+
+    @param root the throwaway root
+    @param built the `check:` targets to create modules for, so a tag naming one
+        resolves and a tag naming anything else does not
+    @return the same root, for use as the resolution root
+    """
+    checks = root / "enforce" / "checks"
+    checks.mkdir(parents=True, exist_ok=True)
+    for name in built:
+        (checks / f"{name}.py").write_text("", encoding="utf-8")
+    return root
+
+
+@pytest.mark.parametrize(
+    ("mechanisms", "expected"),
+    [
+        ((), Enforcement.UNMECHANIZED),
+        (("check:present",), Enforcement.MECHANIZED),
+        (("check:absent",), Enforcement.UNBUILT),
+        (("check:present", "check:absent"), Enforcement.UNBUILT),
+        (("review",), Enforcement.REVIEW),
+        (("auto:ruff:D100",), Enforcement.EXTERNAL),
+        (("check:present", "review"), Enforcement.EXTERNAL),
+    ],
+)
+def test_every_status_is_reachable(
+    tmp_path: Path, mechanisms: tuple[str, ...], expected: Enforcement
+) -> None:
+    """Each value in the vocabulary is produced by some real mechanism set.
+
+    A status nothing can produce is a status that means nothing, and the pairs here
+    are the ones the classification must never confuse -- in particular an empty
+    set, which reads as "every mechanism resolved" to anyone who forgets that a
+    universal over nothing is true.
+    """
+    root = corpus(tmp_path, built=["present"])
+    assert enforcement_of(mechanisms, root) is expected
+
+
+def test_review_only_is_never_counted_as_enforced(tmp_path: Path) -> None:
+    """A person deciding a rule is not a gate deciding it.
+
+    This is the one classification the corpus's own axiom turns on: counting
+    judgment as mechanical enforcement is exactly the overstatement the status
+    field was added to remove.
+    """
+    root = corpus(tmp_path)
+    assert enforcement_of(("review",), root).is_mechanical is False
+    assert Enforcement.UNBUILT.is_mechanical is False
+    assert Enforcement.UNMECHANIZED.is_mechanical is False
+    assert Enforcement.MECHANIZED.is_mechanical is True
+
+
+def test_an_unverifiable_mechanism_is_none_not_false(tmp_path: Path) -> None:
+    """`auto:` and `review` are undecidable here, and undecided is not absent.
+
+    Flattening them to False would report every externally checked rule as unbuilt
+    and bury the 106 that really are.
+    """
+    root = corpus(tmp_path, built=["present"])
+    assert mechanism_is_implemented("auto:mypy", root) is None
+    assert mechanism_is_implemented("review", root) is None
+    assert mechanism_is_implemented("check:present", root) is True
+    assert mechanism_is_implemented("check:absent", root) is False
+
+
+def test_rules_json_publishes_a_status_for_every_rule() -> None:
+    """The generated contract carries the field its consumers are told to read."""
+    path = REPO_ROOT / "discipline" / "rules.json"
+    if not path.exists():
+        pytest.skip("discipline/rules.json not built; run tools/build_index.py")
+    rules = json.loads(path.read_text(encoding="utf-8"))["rules"]
+    vocabulary = {str(value) for value in Enforcement}
+    unknown = {r["id"]: r.get("enforcement") for r in rules
+               if r.get("enforcement") not in vocabulary}
+    assert unknown == {}, unknown
+    disagreeing = [
+        r["id"] for r in rules
+        if r["mechanically_enforced"] is not Enforcement(r["enforcement"]).is_mechanical
+    ]
+    assert disagreeing == [], disagreeing
+
+
+def test_index_md_carries_the_status_column() -> None:
+    """An agent grepping the index sees the measurement beside the claim."""
+    path = REPO_ROOT / "discipline" / "INDEX.md"
+    if not path.exists():
+        pytest.skip("discipline/INDEX.md not built; run tools/build_index.py")
+    text = path.read_text(encoding="utf-8")
+    assert "| Rule | Force | Status | Mechanism | Title |" in text
+    assert "`unbuilt`" in text
+
+
+def test_nav_renders_a_binding_unbuilt_rule_distinguishably() -> None:
+    """The whole point, at the surface an agent actually reads.
+
+    Two rules alike in force and unlike in whether anything decides them must not
+    render alike, or the navigator has reproduced the defect it was meant to fix.
+    """
+    enforced = {
+        "id": "ARCH-001", "label": "governed", "type": "rule", "hops": 0,
+        "reason": "governs domain/", "force": "BINDING", "enforcement": "mechanized",
+    }
+    unbuilt = {**enforced, "id": "ARCH-008", "enforcement": "unbuilt"}
+    rendered = nav.render("applies", {"path": "p.py", "rules": [enforced, unbuilt],
+                                      "modules": []})
+    assert "ARCH-008" in rendered
+    assert "[BINDING - NOT YET MECHANIZED]" in rendered
+    lines = {row.split()[0]: row for row in rendered.splitlines() if row.startswith("  ")}
+    assert lines["ARCH-001"] != lines["ARCH-008"].replace("ARCH-008", "ARCH-001")
+    assert "NOT YET MECHANIZED" not in lines["ARCH-001"]
+
+
+def test_nav_warns_on_a_binding_rule_nothing_decides() -> None:
+    """`nav rule` states the gap in a sentence, not only as a status word."""
+    path = REPO_ROOT / "discipline" / "rules.json"
+    if not path.exists():
+        pytest.skip("discipline/rules.json not built; run tools/build_index.py")
+    index = nav.enforcement_index(REPO_ROOT)
+    assert index, "rules.json carried no enforcement statuses"
+    assert nav.force_tag("BINDING", "unbuilt") == "[BINDING - NOT YET MECHANIZED]"
+    assert nav.force_tag("BINDING", "mechanized") == "[BINDING]"
+    assert nav.force_tag("BINDING", "review") == "[BINDING - REVIEW ONLY]"
+    assert not nav.force_tag(None, "unbuilt")
+
+
+# -------------------------------------------------------------- the V080 ratchet
+
+
+def test_baseline_round_trips(tmp_path: Path) -> None:
+    """What `write_v080_baseline` writes is exactly what `load_v080_baseline` reads back."""
+    path = tmp_path / "baseline.json"
+    pairs = frozenset({("ALLOC-001", "check:x"), ("ALLOC-002", "check:y")})
+    write_v080_baseline(pairs, "test fixture", path)
+    loaded = load_v080_baseline(path)
+    assert loaded == V080Baseline(count=2, pairs=pairs, why="test fixture")
+
+
+def test_a_hand_raised_count_is_refused(tmp_path: Path) -> None:
+    """Proof-of-failure: the cheapest way to switch V081 off must not work.
+
+    `count` and `pairs` are two statements of one fact, and only `count`
+    decides whether V081 fires. Editing it upward alone would raise the ceiling
+    for every rule at once, leave the pair list intact so the file still looks
+    like the tool's own output, and produce no finding. The load must reject
+    the disagreement instead of trusting the integer.
+
+    @param tmp_path pytest's per-test temporary directory
+    """
+    path = tmp_path / "baseline.json"
+    write_v080_baseline(frozenset({("ALLOC-001", "check:x")}), "test fixture", path)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["count"] = 9999
+    path.write_text(json.dumps(data), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="pairs"):
+        load_v080_baseline(path)
+
+
+@pytest.mark.parametrize("payload", [{"pairs": []}, {"count": 0}, {}])
+def test_a_baseline_missing_a_field_is_refused(
+    tmp_path: Path, payload: dict[str, object]
+) -> None:
+    """A half-written baseline is named as one, not raised as a KeyError.
+
+    @param tmp_path pytest's per-test temporary directory
+    @param payload a JSON body lacking one or both required fields
+    """
+    path = tmp_path / "baseline.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="not a V080 baseline"):
+        load_v080_baseline(path)
+
+
+def test_missing_baseline_file_reads_as_empty(tmp_path: Path) -> None:
+    """No baseline on disk is a ceiling of zero, not an unchecked ceiling.
+
+    A fresh clone with no baseline must fail closed on the first unbuilt
+    mechanism rather than pass by default because nothing was ever recorded.
+    """
+    assert load_v080_baseline(tmp_path / "absent.json") == V080Baseline(
+        count=0, pairs=frozenset(), why=None
+    )
+
+
+def test_v081_fires_when_the_unbuilt_count_rises(tmp_path: Path) -> None:
+    """A new rule naming a mechanism nothing has built pushes the count past the ceiling.
+
+    Proof of failure for FLOW-007/TEST-015: the ceiling starts at zero here, so
+    one unbuilt mechanism is already over it, and V081 must say so as an error.
+    """
+    module(tmp_path, body=CONFORMANT_RULE.replace("[auto:mypy]", "[check:not_yet_written]"))
+    layout = Layout(tmp_path)
+    documents, _ = load_documents(layout)
+    baseline = V080Baseline(count=0, pairs=frozenset(), why=None)
+    findings = list(check_v080_ratchet(documents, layout, baseline=baseline))
+    assert [f.code for f in findings] == ["V081"]
+    assert findings[0].severity is Severity.ERROR
+    assert "TYPE-001" in findings[0].message
+    assert "not_yet_written" in findings[0].message
+
+
+def test_v081_is_silent_when_a_new_rule_names_a_built_mechanism(tmp_path: Path) -> None:
+    """The counterargument this ratchet must answer: a new rule with a real mechanism.
+
+    A legitimate new rule paired with a real mechanism costs the count nothing
+    and must not be blocked.
+
+    `CONFORMANT_RULE` tags `[auto:mypy]`, which `mechanism_is_implemented` reports
+    as unverifiable here (None), not absent (False) -- so it never enters the
+    unbuilt set at all, and the baseline does not have to already know this rule
+    to leave it alone.
+    """
+    module(tmp_path)  # CONFORMANT_RULE, unmodified: [auto:mypy]
+    layout = Layout(tmp_path)
+    documents, _ = load_documents(layout)
+    baseline = V080Baseline(count=0, pairs=frozenset(), why=None)
+    assert list(check_v080_ratchet(documents, layout, baseline=baseline)) == []
+
+
+def test_v082_warns_without_failing_when_the_unbuilt_count_falls(tmp_path: Path) -> None:
+    """Building a mechanism the baseline still lists as missing is progress, not a defect.
+
+    Proof of failure for the other direction: V082 must fire (so the drop is on
+    the record) and must be a warning, never an error -- the acceptance case this
+    ratchet exists to keep out of everyone's way.
+    """
+    module(tmp_path)  # CONFORMANT_RULE: zero unbuilt mechanisms here
+    layout = Layout(tmp_path)
+    documents, _ = load_documents(layout)
+    baseline = V080Baseline(
+        count=3,
+        pairs=frozenset({("X-001", "check:a"), ("X-002", "check:b"), ("X-003", "check:c")}),
+        why="prior state",
+    )
+    findings = list(check_v080_ratchet(documents, layout, baseline=baseline))
+    assert [f.code for f in findings] == ["V082"]
+    assert findings[0].severity is Severity.WARN
+
+
+def test_v08x_silent_when_the_count_matches_the_baseline(tmp_path: Path) -> None:
+    """No news, no finding: an unchanged count is the ordinary, silent case."""
+    module(tmp_path, body=CONFORMANT_RULE.replace("[auto:mypy]", "[check:not_yet_written]"))
+    layout = Layout(tmp_path)
+    documents, _ = load_documents(layout)
+    baseline = V080Baseline(
+        count=1, pairs=frozenset({("TYPE-001", "check:not_yet_written")}), why="prior"
+    )
+    assert list(check_v080_ratchet(documents, layout, baseline=baseline)) == []
+
+
+def test_ratchet_ignores_a_throwaway_tree_when_no_baseline_is_injected(tmp_path: Path) -> None:
+    """Without an injected baseline, the check only ever compares the real repository.
+
+    Loading the checked-in baseline (106 real pairs) against a one-rule synthetic
+    fixture would report the fixture as having lost the other 105 -- which is what
+    `test_conformant_corpus_is_silent` would catch, since it runs through `run()`
+    exactly this way. This test pins the guard directly.
+    """
+    module(tmp_path, body=CONFORMANT_RULE.replace("[auto:mypy]", "[check:not_yet_written]"))
+    layout = Layout(tmp_path)
+    documents, _ = load_documents(layout)
+    assert list(check_v080_ratchet(documents, layout)) == []
+
+
+def test_update_baseline_requires_why(tmp_path: Path) -> None:
+    """`--update-baseline` with no `--why` refuses, in the `learn.py calibrate --set` idiom."""
+    with pytest.raises(SystemExit):
+        validate_main(["--update-baseline", "--root", str(tmp_path)])
 
 
 # --------------------------------------------------------------- the real corpus

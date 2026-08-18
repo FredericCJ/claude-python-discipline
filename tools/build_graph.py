@@ -20,7 +20,7 @@ import argparse
 import json
 import re
 import sys
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Final
 
@@ -29,12 +29,9 @@ import yaml
 from discipline_core import (
     REPO_ROOT,
     Document,
-    Force,
-    Kind,
     ParseError,
     count_tokens,
     parse_document,
-    prose_of,
 )
 from graph_model import Edge, EdgeType, Graph, Node, NodeType, Origin
 

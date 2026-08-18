@@ -384,6 +384,180 @@ def test_tests_are_exempt_from_the_style_check(tmp_path: Path) -> None:
     assert rules_fired(DocStyleCheck(), target) == set()
 
 
+# --------------------------------------------------------- style, `##` blocks
+
+
+def test_a_hash_block_with_a_restated_type_fires(tmp_path: Path) -> None:
+    """DOC-008 reaches a `##` block too: doc_coverage only proves one is present."""
+    path = write(tmp_path, '''
+        """! Module."""
+
+        ## @param retries (int) how many times to retry.
+        MAX_RETRIES = 3
+    ''')
+    assert "DOC-008" in rules_fired(DocStyleCheck(), path)
+
+
+def test_a_hash_block_without_a_restated_type_is_accepted(tmp_path: Path) -> None:
+    """A `##` block that never names a type in prose stays silent under DOC-008."""
+    path = write(tmp_path, '''
+        """! Module."""
+
+        ## How many times a transient failure is retried before giving up.
+        MAX_RETRIES = 3
+    ''')
+    assert "DOC-008" not in rules_fired(DocStyleCheck(), path)
+
+
+def test_a_hash_block_restating_the_name_fires(tmp_path: Path) -> None:
+    """DOC-009 on a `##` block: a dataclass field's comment that only repeats its name."""
+    path = write(tmp_path, '''
+        """! Module."""
+
+        from dataclasses import dataclass
+
+
+        @dataclass(frozen=True, slots=True)
+        class Outline:
+            """! A heading and its position in the document."""
+
+            ## Retry count.
+            retry_count: int = 3
+    ''')
+    assert "DOC-009" in rules_fired(DocStyleCheck(), path)
+
+
+def test_a_hash_block_that_adds_meaning_is_accepted(tmp_path: Path) -> None:
+    """The same field, documented with what the count means, stays silent under DOC-009."""
+    path = write(tmp_path, '''
+        """! Module."""
+
+        from dataclasses import dataclass
+
+
+        @dataclass(frozen=True, slots=True)
+        class Outline:
+            """! A heading and its position in the document."""
+
+            ## How many times a transient failure is retried before giving up.
+            retry_count: int = 3
+    ''')
+    assert rules_fired(DocStyleCheck(), path) == set()
+
+
+def test_a_hash_block_code_span_ending_in_a_period_fires(tmp_path: Path) -> None:
+    """DOC-010 on a `##` block: the same span Doxygen cannot parse in a docstring."""
+    path = write(tmp_path, '''
+        """! Module."""
+
+        ## The retry ceiling, written `MAX.` in the config file.
+        MAX_RETRIES = 3
+    ''')
+    assert "DOC-010" in rules_fired(DocStyleCheck(), path)
+
+
+def test_a_hash_block_ellipsis_span_is_accepted(tmp_path: Path) -> None:
+    """`...` parses in a `##` block exactly as it does in a docstring."""
+    path = write(tmp_path, '''
+        """! Module."""
+
+        ## The retry ceiling, written `MAX(...)` in the config file.
+        MAX_RETRIES = 3
+    ''')
+    assert "DOC-010" not in rules_fired(DocStyleCheck(), path)
+
+
+def test_a_multi_line_hash_block_is_checked_for_content(tmp_path: Path) -> None:
+    """Content rules reach across a `##` block's plain-`#` continuation lines."""
+    path = write(tmp_path, '''
+        """! Module."""
+
+        ## The retry ceiling, written `MAX.` in the config file --
+        # see the deployment guide for context.
+        MAX_RETRIES = 3
+    ''')
+    assert "DOC-010" in rules_fired(DocStyleCheck(), path)
+
+
+def test_a_self_describing_hash_block_with_the_trap_inside_a_span_fires(
+    tmp_path: Path,
+) -> None:
+    """The regression this extension guards.
+
+    A `##` block whose own example of the trailing-dot trap is itself written
+    inside the span it is warning about.
+    """
+    path = write(tmp_path, '''
+        """! Module."""
+
+        ## A trailing dot breaks Doxygen, e.g. a span holding `foo.` verbatim.
+        TRAP = "x"
+    ''')
+    assert "DOC-010" in rules_fired(DocStyleCheck(), path)
+
+
+def test_a_self_describing_hash_block_written_safely_is_accepted(tmp_path: Path) -> None:
+    """The same explanation stays silent when the example is kept out of a code span.
+
+    This is the form doc_style.py's own `_TRAILING_DOT_SPAN` comment actually uses.
+    """
+    path = write(tmp_path, '''
+        """! Module."""
+
+        ## A trailing dot breaks Doxygen -- e.g. a span holding foo. verbatim,
+        ## written here without backticks so this comment does not trip its own
+        ## rule.
+        TRAP = "x"
+    ''')
+    assert rules_fired(DocStyleCheck(), path) == set()
+
+
+def test_hash_block_content_is_exempt_in_tests(tmp_path: Path) -> None:
+    """The style check's `##`-block content rules skip a test path just as the rest do."""
+    target = tmp_path / "tests" / "test_thing.py"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        '"""! Tests."""\n\n## @param retries (int) how many.\nMAX_RETRIES = 3\n',
+        encoding="utf-8",
+    )
+    assert rules_fired(DocStyleCheck(), target) == set()
+
+
+def test_an_upper_case_constant_restating_its_name_fires(tmp_path: Path) -> None:
+    """DOC-009 reaches an all-capitals module constant, not only a lower-case field.
+
+    Proof-of-failure for the blind spot the `##` extension inherited: the
+    identifier is split before each capital, which turns `MAX_RETRIES` into
+    single letters and makes the subset test unsatisfiable. Upper case is the
+    convention for exactly the elements `##` blocks document, so the rule was
+    inert where it was needed most.
+
+    @param tmp_path pytest's per-test temporary directory
+    """
+    path = write(tmp_path, '''
+        """! Module."""
+
+        ## Max retries.
+        MAX_RETRIES = 3
+    ''')
+    assert "DOC-009" in rules_fired(DocStyleCheck(), path)
+
+
+def test_an_upper_case_constant_that_adds_meaning_is_accepted(tmp_path: Path) -> None:
+    """The same constant stays silent once its block says something the name does not.
+
+    @param tmp_path pytest's per-test temporary directory
+    """
+    path = write(tmp_path, '''
+        """! Module."""
+
+        ## How many times a transient failure is replayed before the call is
+        ## given up on and the error propagates to the caller.
+        MAX_RETRIES = 3
+    ''')
+    assert rules_fired(DocStyleCheck(), path) == set()
+
+
 @pytest.mark.parametrize(
     "check", [DocCoverageCheck(), DocStyleCheck()], ids=lambda c: c.name
 )

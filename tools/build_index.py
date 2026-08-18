@@ -30,11 +30,14 @@ from typing import Final
 from discipline_core import (
     REPO_ROOT,
     Document,
+    Enforcement,
     Force,
     Kind,
     ParseError,
     Rule,
     count_tokens,
+    enforcement_of,
+    mechanism_is_implemented,
     parse_document,
 )
 
@@ -151,6 +154,37 @@ def _sorted_rules(documents: Sequence[Document]) -> list[Rule]:
     )
 
 
+def statuses_for(rules: Sequence[Rule], root: Path) -> dict[str, Enforcement]:
+    """Measure every rule's enforcement status against the tree as it stands.
+
+    One pass shared by all three artifacts, so `INDEX.md`, `rules.json` and
+    `ENFORCEMENT.md` can never disagree about which rules are actually decided --
+    the disagreement being the whole reason the measurement is centralised in
+    `discipline_core` rather than reimplemented per artifact.
+
+    @param rules the corpus rules, in any order
+    @param root the repository root the mechanisms are resolved against
+    @return each rule id against its status
+    """
+    return {rule.rule_id: enforcement_of(rule.mechanisms, root) for rule in rules}
+
+
+def _status_cell(rule: Rule, status: Enforcement) -> str:
+    """Render one rule's status for a table, loud when the tag overstates it.
+
+    The vocabulary word is always present so the column stays greppable; the
+    marker is added only for the case a reader must not skim past -- a rule that
+    reads as binding and that nothing decides.
+
+    @param rule the rule the status belongs to, read for its force tag
+    @param status the measured status
+    @return the cell text
+    """
+    if rule.force is Force.BINDING and not status.is_mechanical:
+        return f"`{status}` **(!)**"
+    return f"`{status}`"
+
+
 def build_index(documents: Sequence[Document], root: Path) -> Artifact:
     """Render `discipline/INDEX.md`: a module catalogue, then one row per rule.
 
@@ -160,11 +194,21 @@ def build_index(documents: Sequence[Document], root: Path) -> Artifact:
     row has to stay scannable. Meta documents are left out of the catalogue: they
     describe the corpus rather than govern code.
 
+    Each rule row carries its measured enforcement status beside its force tag,
+    because the two are different facts and a reader given only the tag will read
+    it as a guarantee. The count of rules that are binding and not mechanised is
+    stated at the top rather than left to be summed from the tables.
+
     @param documents the parsed corpus
     @param root the repository root, fixing both the destination and the links
     @return the intended path and contents; nothing is written
     """
     rules = _sorted_rules(documents)
+    status = statuses_for(rules, root)
+    overstated = sum(
+        1 for r in rules
+        if r.force is Force.BINDING and not status[r.rule_id].is_mechanical
+    )
     by_module: defaultdict[str, list[Rule]] = defaultdict(list)
     for rule in rules:
         by_module[rule.module_id].append(rule)
@@ -184,6 +228,20 @@ def build_index(documents: Sequence[Document], root: Path) -> Artifact:
         "",
         f"{len(rules)} rules across {len(by_module)} modules. "
         "Grep this file for a rule id, then open only the module that owns it.",
+        "",
+        "**Force is a claim; Status is a measurement.** `Force` is what the rule's "
+        "heading declares. `Status` is what this tree was found to contain when the "
+        "index was built: `mechanized` -- every named mechanism was found here; "
+        "`external` -- nothing is missing but a configured tool or a reviewer settles "
+        "it; `review` -- a person decides it, and no gate will ever report it; "
+        "`unbuilt` -- a named check or fitness function does not exist; "
+        "`unmechanized` -- the rule names no mechanism at all. A row marked **(!)** "
+        "is binding and mechanically undecided: treat it as an obligation, not as "
+        "something the gate will catch for you.",
+        "",
+        f"{overstated} of {sum(1 for r in rules if r.force is Force.BINDING)} binding "
+        "rules are not mechanically decided. `enforce/ENFORCEMENT.md` names the "
+        "mechanisms still to build.",
         "",
     ]
 
@@ -205,11 +263,18 @@ def build_index(documents: Sequence[Document], root: Path) -> Artifact:
     if rules:
         lines += ["## Rules", ""]
         for module_id, module_rules in sorted(by_module.items()):
-            lines += [f"### {module_id}", "", "| Rule | Force | Mechanism | Title |", "|---|---|---|---|"]
+            lines += [
+                f"### {module_id}",
+                "",
+                "| Rule | Force | Status | Mechanism | Title |",
+                "|---|---|---|---|---|",
+            ]
             for rule in module_rules:
                 mechanisms = " ".join(f"`{m}`" for m in rule.mechanisms) or "—"
                 lines.append(
-                    f"| `{rule.rule_id}` | {rule.force} | {mechanisms} | {rule.title} |"
+                    f"| `{rule.rule_id}` | {rule.force} | "
+                    f"{_status_cell(rule, status[rule.rule_id])} | "
+                    f"{mechanisms} | {rule.title} |"
                 )
             lines.append("")
 
@@ -229,29 +294,6 @@ def _link(doc: Document, root: Path) -> str:
     return doc.path.relative_to(root / "discipline").as_posix()
 
 
-def _mechanism_missing(mechanism: str, root: Path) -> bool:
-    """Whether a mechanism tag names something that does not exist yet.
-
-    Mirrors `validate.check_mechanisms`; `auto:*` and `review` cannot be verified
-    from here and are never counted as missing.
-
-    @param mechanism the tag exactly as a rule heading writes it
-    @param root the repository root
-    @return True when the named check or fitness function has no implementation
-    """
-    kind, _, target = mechanism.partition(":")
-    if kind == "check":
-        return not (root / "enforce" / "checks" / f"{target}.py").exists()
-    if kind == "fitness":
-        return not any(
-            f"def {target}(" in path.read_text(encoding="utf-8")
-            for directory in (root / "enforce" / "fitness", root / "tools")
-            if directory.exists()
-            for path in directory.rglob("*.py")
-        )
-    return False
-
-
 def build_rules_json(documents: Sequence[Document], root: Path) -> Artifact:
     """Render `discipline/rules.json`: the same corpus, shaped for a query.
 
@@ -260,10 +302,18 @@ def build_rules_json(documents: Sequence[Document], root: Path) -> Artifact:
     question can be answered without falling back to reading the module. Each
     rule keeps its file and line, which is what makes an answer citable.
 
+    Each rule also carries `enforcement`, measured rather than declared: it says
+    whether the mechanisms the heading names were actually found in this tree.
+    `mechanisms` is what the author wrote; `enforcement` is what is there. A
+    consumer asking "is this rule enforced" must read the second, and a rule that
+    is `BINDING` with an `enforcement` other than `mechanized` or `external` is
+    binding in name only.
+
     @param documents the parsed corpus
     @param root the repository root, for the relative paths in the payload
     @return the intended path and contents; nothing is written
     """
+    status = statuses_for(_sorted_rules(documents), root)
     payload = {
         "generated_by": "tools/build_index.py",
         "modules": [
@@ -291,6 +341,8 @@ def build_rules_json(documents: Sequence[Document], root: Path) -> Artifact:
                 "title": rule.title,
                 "force": str(rule.force),
                 "mechanisms": list(rule.mechanisms),
+                "enforcement": str(status[rule.rule_id]),
+                "mechanically_enforced": status[rule.rule_id].is_mechanical,
                 "statement": rule.statement,
                 "why": rule.why,
                 "check": rule.check,
@@ -312,28 +364,32 @@ def build_rules_json(documents: Sequence[Document], root: Path) -> Artifact:
 def build_enforcement(documents: Sequence[Document], root: Path) -> Artifact:
     """Render `enforce/ENFORCEMENT.md`, where the axiom's cost is made visible.
 
-    A binding rule counts as enforced only when it names at least one mechanism
-    and every one of them is built; a rule naming none counts as unenforced, and
-    a mechanism that does not exist is listed by name in its own table instead of
-    being quietly totalled as built. The advisory section is the
-    admitted unenforceable surface, and an entry there with no stated reason is
-    printed as unjustified.
+    A binding rule counts as enforced only when some machine decides it -- every
+    named mechanism resolving to something on disk, or to a configured tool's own
+    rule. A rule naming none counts as unenforced, and so does one whose only
+    mechanism is `review`: judgment is a mechanism in the corpus's grammar but it
+    is not one that fails a gate, and counting it as enforced would overstate the
+    very number this file exists to keep honest. A mechanism that does not exist is
+    listed by name in its own table instead of being quietly totalled as built. The
+    advisory section is the admitted unenforceable surface, and an entry there with
+    no stated reason is printed as unjustified.
 
     @param documents the parsed corpus
     @param root the repository root, fixing the destination and locating mechanisms
     @return the intended path and contents; nothing is written
     """
     rules = _sorted_rules(documents)
+    status = statuses_for(rules, root)
     binding = [r for r in rules if r.force is Force.BINDING]
     advisory = [r for r in rules if r.force is Force.ADVISORY]
     open_rules = [r for r in rules if r.force is Force.OPEN]
     named = {m for r in rules for m in r.mechanisms}
-    pending = sorted(m for m in named if _mechanism_missing(m, root))
+    pending = sorted(m for m in named if mechanism_is_implemented(m, root) is False)
     built = len(named) - len(pending)
-    enforced = sum(
-        1 for r in binding if r.mechanisms and not any(m in pending for m in r.mechanisms)
-    )
+    enforced = sum(1 for r in binding if status[r.rule_id].is_mechanical)
+    overstated = [r for r in binding if not status[r.rule_id].is_mechanical]
     share = f"{enforced / len(binding):.0%}" if binding else "n/a"
+    census = Counter(str(status[r.rule_id]) for r in rules)
 
     lines = [
         GENERATED_BANNER,
@@ -344,14 +400,47 @@ def build_enforcement(documents: Sequence[Document], root: Path) -> Artifact:
         "that a rule nothing checks is not binding in practice, whatever its tag says, so "
         "this table is where that claim is either kept or exposed.",
         "",
-        f"- **{len(binding)}** binding rules; **{enforced}** have every named mechanism "
-        f"built and runnable ({share}).",
+        f"- **{len(binding)}** binding rules; **{enforced}** are decided by something "
+        f"that runs ({share}). The other **{len(overstated)}** read as binding and are "
+        "not mechanically decided.",
         f"- **{len(advisory)}** advisory rules -- the unenforceable surface, listed below with reasons.",
         f"- **{len(open_rules)}** rules blocked on an open decision.",
         f"- **{built}/{len(named)}** named mechanisms are built; **{len(pending)}** are "
         "declared but not yet implemented.",
         "",
+        "## Status census",
+        "",
+        "Measured against this tree, not declared. `discipline/rules.json` carries the "
+        "same value per rule as `enforcement`, and `discipline/INDEX.md` shows it in the "
+        "`Status` column.",
+        "",
+        "| Status | Rules | Means |",
+        "|---|---|---|",
+        f"| `mechanized` | {census['mechanized']} | every named mechanism was found here |",
+        f"| `external` | {census['external']} | nothing missing, but a configured tool or "
+        "a reviewer settles it |",
+        f"| `review` | {census['review']} | a person decides it; no gate will report it |",
+        f"| `unbuilt` | {census['unbuilt']} | a named check or fitness function does not exist |",
+        f"| `unmechanized` | {census['unmechanized']} | the rule names no mechanism at all |",
+        "",
     ]
+
+    if overstated:
+        lines += [
+            "## Binding but not mechanically decided",
+            "",
+            "These read as obligations a gate will catch, and no gate will. Until the "
+            "mechanism exists, each is enforced only by whoever remembers it.",
+            "",
+            "| Rule | Status | Mechanism | Title |",
+            "|---|---|---|---|",
+        ]
+        for rule in overstated:
+            mechanisms = " ".join(f"`{m}`" for m in rule.mechanisms) or "—"
+            lines.append(
+                f"| `{rule.rule_id}` | `{status[rule.rule_id]}` | {mechanisms} | {rule.title} |"
+            )
+        lines.append("")
 
     if pending:
         lines += [
@@ -370,11 +459,17 @@ def build_enforcement(documents: Sequence[Document], root: Path) -> Artifact:
         lines.append("")
 
     if binding:
-        lines += ["## Binding", "", "| Rule | Mechanism | Check | Title |", "|---|---|---|---|"]
+        lines += [
+            "## Binding",
+            "",
+            "| Rule | Status | Mechanism | Check | Title |",
+            "|---|---|---|---|---|",
+        ]
         for rule in binding:
             mechanisms = " ".join(f"`{m}`" for m in rule.mechanisms) or "—"
             lines.append(
-                f"| `{rule.rule_id}` | {mechanisms} | {rule.check or '—'} | {rule.title} |"
+                f"| `{rule.rule_id}` | {_status_cell(rule, status[rule.rule_id])} | "
+                f"{mechanisms} | {rule.check or '—'} | {rule.title} |"
             )
         lines.append("")
 

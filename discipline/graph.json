@@ -1455,7 +1455,7 @@
    "type": "module",
    "label": "Agent Team Mechanics",
    "path": "discipline/ops/teams.md",
-   "tokens": 1384,
+   "tokens": 2245,
    "attrs": {
     "decay": "months",
     "kind": "ops",
@@ -3054,6 +3054,39 @@
    "tokens": 40,
    "attrs": {
     "force": "BINDING",
+    "module": "ops/teams"
+   }
+  },
+  {
+   "id": "TEAMS-004",
+   "type": "rule",
+   "label": "Documentation is written in one stage, verified in another",
+   "path": "discipline/ops/teams.md:111",
+   "tokens": 47,
+   "attrs": {
+    "force": "ADVISORY",
+    "module": "ops/teams"
+   }
+  },
+  {
+   "id": "TEAMS-005",
+   "type": "rule",
+   "label": "A verifier refutes claims; it does not improve prose",
+   "path": "discipline/ops/teams.md:120",
+   "tokens": 44,
+   "attrs": {
+    "force": "ADVISORY",
+    "module": "ops/teams"
+   }
+  },
+  {
+   "id": "TEAMS-006",
+   "type": "rule",
+   "label": "Presence and truth need separate mechanisms",
+   "path": "discipline/ops/teams.md:129",
+   "tokens": 49,
+   "attrs": {
+    "force": "ADVISORY",
     "module": "ops/teams"
    }
   },
@@ -5975,6 +6008,42 @@
   },
   {
    "type": "cites",
+   "src": "TEAMS-004",
+   "dst": "TEAMS-001",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "TEAMS-004",
+   "dst": "law/DOC",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "TEAMS-005",
+   "dst": "DOC-009",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "TEAMS-005",
+   "dst": "TEAMS-001",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "TEAMS-006",
+   "dst": "DOC-013",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "TEAMS-006",
+   "dst": "law/DOC",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
    "src": "TEST-001",
    "dst": "law/ARCH",
    "origin": "derived"
@@ -7111,6 +7180,24 @@
    "type": "contains",
    "src": "ops/teams",
    "dst": "TEAMS-003",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "ops/teams",
+   "dst": "TEAMS-004",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "ops/teams",
+   "dst": "TEAMS-005",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "ops/teams",
+   "dst": "TEAMS-006",
    "origin": "derived"
   },
   {

@@ -23,13 +23,14 @@ import fnmatch
 import json
 import re
 import sys
-from collections.abc import Iterable, Sequence
-from dataclasses import asdict, dataclass
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import asdict, dataclass, replace
+from functools import lru_cache
 from pathlib import Path
 from typing import Final
 
 from build_graph import load_graph
-from discipline_core import REPO_ROOT, count_tokens
+from discipline_core import REPO_ROOT
 from graph_model import READING_EXPANSION, Edge, EdgeType, Graph, Node, NodeType
 
 ## Path segments that name an architectural layer. A path containing one is
@@ -62,9 +63,80 @@ class Hit:
     reason: str
     ## A rule's declared force; absent for nodes that carry no force.
     force: str | None = None
+    ## The measured enforcement status from `discipline/rules.json`, or None when
+    ## the node is not a rule or the index has not been built. Force is what the
+    ## rule claims; this is what was found on disk, and the two disagree often
+    ## enough that printing the first alone misleads.
+    enforcement: str | None = None
     ## Reading cost copied off the node, and zero means unmeasured rather than
     ## free: nothing here distinguishes a costless node from an uncosted one.
     tokens: int = 0
+
+
+## Enforcement statuses under which no machine reports a violation, each against
+## the words printed beside the force tag. A rule tagged `BINDING` and carrying
+## one of these reads as enforced and is not, which is the single thing this
+## navigator must never let an agent walk past. Statuses absent from this map are
+## the enforced ones and print their force tag plain.
+_UNENFORCED: Final[Mapping[str, str]] = {
+    "unbuilt": "NOT YET MECHANIZED",
+    "unmechanized": "NOTHING CHECKS IT",
+    "review": "REVIEW ONLY",
+}
+
+
+@lru_cache(maxsize=4)
+def enforcement_index(root: Path) -> Mapping[str, str]:
+    """Rule id against measured enforcement status, read from `rules.json`.
+
+    Overlaid here rather than carried in the graph: the status is a fact about the
+    working tree at build time, and `build_index.py` is what measures it. A missing
+    or unreadable index leaves every answer merely unannotated -- the navigator
+    still answers, it simply cannot say whether a rule is decided.
+
+    @param root the repository root whose generated index is read
+    @return the mapping, empty when the index is absent or malformed
+    """
+    path = root / "discipline" / "rules.json"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    rules = payload.get("rules", []) if isinstance(payload, dict) else []
+    return {
+        rule["id"]: rule["enforcement"]
+        for rule in rules
+        if isinstance(rule, dict) and "id" in rule and "enforcement" in rule
+    }
+
+
+def annotate(hits: Iterable[Hit], root: Path) -> list[Hit]:
+    """Attach each rule's measured enforcement status to the answer.
+
+    @param hits the answer records to annotate, in the order they will be shown
+    @param root the repository root whose generated index supplies the statuses
+    @return the same records in the same order, rules carrying their status
+    """
+    index = enforcement_index(root)
+    return [replace(hit, enforcement=index.get(hit.id)) for hit in hits]
+
+
+def force_tag(force: str | None, enforcement: str | None) -> str:
+    """Render a rule's obligation and whether anything actually decides it.
+
+    The unenforced case is spelled out in words rather than marked with a symbol,
+    because the reader this protects is an agent skimming output: `[BINDING]` and
+    `[BINDING - NOT YET MECHANIZED]` cannot be confused, whereas a punctuation mark
+    can be dropped without the sentence changing meaning.
+
+    @param force the declared force, or None on a node that carries none
+    @param enforcement the measured status, or None when it was not available
+    @return the bracketed tag, or the empty string when there is no force to show
+    """
+    if not force:
+        return ""
+    caveat = _UNENFORCED.get(enforcement or "")
+    return f"[{force} - {caveat}]" if caveat else f"[{force}]"
 
 
 # --------------------------------------------------------------------- seeding
@@ -260,9 +332,12 @@ def cmd_context(graph: Graph, args: argparse.Namespace) -> dict[str, object]:
             continue
         by_id[node_id] = _hit(node, hops, f"{hops} hop(s) from a seed")
 
-    rules = sorted(
-        (h for h in by_id.values() if h.type == "rule"),
-        key=lambda h: (h.hops, _force_rank(h.force), h.id),
+    rules = annotate(
+        sorted(
+            (h for h in by_id.values() if h.type == "rule"),
+            key=lambda h: (h.hops, _force_rank(h.force), h.id),
+        ),
+        Path(getattr(args, "root", REPO_ROOT)).resolve(),
     )
     modules = sorted(
         (h for h in by_id.values() if h.type == "module"), key=lambda h: (h.hops, h.id)
@@ -386,12 +461,21 @@ def cmd_rule(graph: Graph, args: argparse.Namespace) -> dict[str, object]:
     Both directions are reported: what a rule cites is half the picture, and
     what cites it is the other half.
 
+    The declared force is reported beside the measured enforcement status, and a
+    rule that binds while nothing decides it also gets a `warning` field saying so
+    in a sentence -- the force tag alone has been read as a guarantee, and it is
+    not one.
+
     @param graph the discipline graph
     @param args the parsed `rule` arguments, carrying the id to look up
     @return the node's identity and its relations, outgoing and incoming
     @throws SystemExit when the graph holds no node with that id
     """
     node = _require(graph, args.id)
+    enforcement = enforcement_index(Path(getattr(args, "root", REPO_ROOT)).resolve()).get(
+        node.id
+    )
+    caveat = _UNENFORCED.get(enforcement or "")
     out: dict[str, list[str]] = {}
     for edge in graph.out_edges(node.id):
         out.setdefault(str(edge.type), []).append(_describe(graph, edge.dst, edge))
@@ -403,6 +487,13 @@ def cmd_rule(graph: Graph, args: argparse.Namespace) -> dict[str, object]:
         "label": node.label,
         "type": str(node.type),
         "force": node.attr("force"),
+        "enforcement": enforcement,
+        "warning": (
+            f"{node.id} {force_tag(node.attr('force'), enforcement)}"
+            f" - {caveat.lower()}; nothing in the gate will report a violation"
+            if caveat and node.attr("force")
+            else None
+        ),
         "module": node.attr("module"),
         "path": node.path,
         "out": {k: sorted(v) for k, v in sorted(out.items())},
@@ -443,11 +534,15 @@ def cmd_applies(graph: Graph, args: argparse.Namespace) -> dict[str, object]:
     an agent wants the obligations rather than a reading plan. The path need not
     exist; only its shape decides the answer.
 
+    Each rule carries its measured enforcement status alongside its force, so a
+    caller reading the obligations can tell which of them anything will actually
+    catch.
+
     @param graph the discipline graph
     @param args the parsed `applies` arguments, carrying the path
     @return the path, the rules that bind it, and the modules that carry them
     """
-    hits = seeds_for_file(graph, args.path)
+    hits = annotate(seeds_for_file(graph, args.path), Path(args.root).resolve())
     return {
         "path": args.path,
         "rules": [asdict(h) for h in hits if h.type == "rule"],
@@ -638,9 +733,9 @@ def render(command: str, payload: dict[str, object]) -> str:
         suffix = f" of {total} - raise --max-rules to see the rest" if shown < total else ""
         lines.append(f"RULES ({shown}{suffix})")
         for rule in rules:  # type: ignore[union-attr]
-            force = (rule["force"] or "")[:8]
-            lines.append(f"  {rule['id']:<10} {force:<9} {rule['label']}")
-            lines.append(f"  {'':<10} {'':<9} ~ {rule['reason']}")
+            tag = force_tag(rule["force"], rule.get("enforcement"))
+            lines.append(f"  {rule['id']:<10} {tag:<32} {rule['label']}")
+            lines.append(f"  {'':<10} {'':<32} ~ {rule['reason']}")
         lines.append("")
         lines.append("READ")
         for item in payload["read"]:  # type: ignore[union-attr]
@@ -661,8 +756,8 @@ def render(command: str, payload: dict[str, object]) -> str:
         lines.append(f"{payload['path']}  ({len(rules)} rules)")
         for rule in rules:  # type: ignore[union-attr]
             lines.append(
-                f"  {rule['id']:<10} {(rule['force'] or ''):<9} {rule['label']}"
-                f"   ~ {rule['reason']}"
+                f"  {rule['id']:<10} {force_tag(rule['force'], rule.get('enforcement')):<32}"
+                f" {rule['label']}   ~ {rule['reason']}"
             )
         for module in payload["modules"]:  # type: ignore[union-attr]
             lines.append(f"  {module['id']:<20} ~ {module['reason']}")

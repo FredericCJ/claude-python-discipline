@@ -11,8 +11,8 @@ import datetime
 import re
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
-from functools import lru_cache
 from enum import StrEnum
+from functools import lru_cache
 from pathlib import Path
 from typing import Final
 
@@ -75,6 +75,114 @@ class Force(StrEnum):
     ## Blocked on an undecided question, so it can never also be binding. Obliges an
     ## entry in ``meta/OPEN.md`` naming what the open question blocks.
     OPEN = "OPEN"
+
+
+class Enforcement(StrEnum):
+    """What actually decides a rule, as against how strongly its heading is tagged.
+
+    A force tag is a claim about obligation; this is a measurement of the tree. The
+    two come apart constantly -- a rule may be tagged binding and name a mechanism
+    nobody has written yet -- and an agent that cannot see the gap will read the tag
+    as a guarantee. Computed by ``enforcement_of`` and published per rule in
+    ``discipline/rules.json``.
+
+    Tri-state at the bottom because ``mechanism_is_implemented`` is: a mechanism is
+    found, is checkable and absent, or is decided somewhere this repository cannot
+    look. The vocabulary keeps those three apart rather than flattening them to a
+    boolean that would have to lie about one of them.
+    """
+
+    ## Every named mechanism was found on disk here, and there was at least one.
+    ## This is the only status under which the corpus itself decides the rule.
+    MECHANIZED = "mechanized"
+    ## No named mechanism is missing, but at least one is settled outside this tree
+    ## -- an `auto:*` tag naming a configured tool's own rule, or a `review` tag
+    ## sitting alongside a mechanism that was found. Enforced, elsewhere.
+    EXTERNAL = "external"
+    ## Every named mechanism is `review`: a person or an agent decides it, and
+    ## nothing mechanical will ever report it. Not enforced in the machine sense.
+    REVIEW = "review"
+    ## At least one checkable mechanism names a file or function that is not there.
+    ## Paired with a binding force tag, this is the dishonest case the field exists
+    ## to surface: the rule reads as enforced and nothing decides it.
+    UNBUILT = "unbuilt"
+    ## The rule names no mechanism at all. Distinguished from ``MECHANIZED`` because
+    ## "every named mechanism resolves" is vacuously true over an empty set, and
+    ## reporting the emptiest case as the strongest one is the exact failure this
+    ## vocabulary exists to prevent. Ordinary for an advisory rule, a defect for a
+    ## binding one -- which V023 already reports.
+    UNMECHANIZED = "unmechanized"
+
+    @property
+    def is_mechanical(self) -> bool:
+        """Whether some machine, here or elsewhere, reports a violation of this rule.
+
+        False for ``REVIEW``: judgment is a mechanism in the corpus's grammar but not
+        one that fails a gate, so a review-tagged rule must never be counted as
+        enforced. False for ``UNBUILT`` and ``UNMECHANIZED``, which are the two ways
+        of having nothing behind the tag.
+
+        @return True only for the two statuses under which a tool decides the rule
+        """
+        return self in {Enforcement.MECHANIZED, Enforcement.EXTERNAL}
+
+
+def mechanism_is_implemented(mechanism: str, root: Path = REPO_ROOT) -> bool | None:
+    """Whether a mechanism tag points at something that exists.
+
+    The single implementation in the repository. ``validate.py`` reports the False
+    case as V080 and ``build_index.py`` derives every rule's ``Enforcement`` from it;
+    a second copy would drift, and the two artefacts would then disagree about which
+    rules are enforced while both looked authoritative.
+
+    A ``check:`` tag names a module under ``enforce/checks/``; a ``fitness:`` tag
+    names a function defined somewhere under ``enforce/fitness/`` or ``tools/``.
+    Anything else -- ``auto:*`` for a configured tool's own rule, ``review`` for a
+    person -- is not decidable from this tree and is reported as such rather than
+    guessed at.
+
+    @param mechanism a tag exactly as a rule heading writes it, such as
+        `check:layering` or `fitness:no_cycles`
+    @param root the tree to look in, defaulting to this repository
+    @return True when the file or function it names is present, False when the tag
+        is checkable and nothing answers it, None when it is not checkable here
+    """
+    kind, _, target = mechanism.partition(":")
+    if kind == "check":
+        return (root / "enforce" / "checks" / f"{target}.py").exists()
+    if kind == "fitness":
+        return any(
+            f"def {target}(" in path.read_text(encoding="utf-8")
+            for directory in (root / "enforce" / "fitness", root / "tools")
+            if directory.exists()
+            for path in directory.rglob("*.py")
+        )
+    return None
+
+
+def enforcement_of(mechanisms: Sequence[str], root: Path = REPO_ROOT) -> Enforcement:
+    """Classify a rule's mechanism set into one status an agent can act on.
+
+    Absence dominates: one missing mechanism makes the whole rule ``UNBUILT``,
+    whatever else it names, because a rule is only as decided as its weakest tag.
+    Below that, the emptiest reading wins over the most flattering one.
+
+    @param mechanisms the rule's tags with the force tag already removed, in the
+        order the heading wrote them
+    @param root the tree the mechanisms are resolved against
+    @return the status; never ``MECHANIZED`` for an empty set, and never a
+        mechanical status for a rule decided only by ``review``
+    """
+    if not mechanisms:
+        return Enforcement.UNMECHANIZED
+    resolved = [mechanism_is_implemented(m, root) for m in mechanisms]
+    if any(state is False for state in resolved):
+        return Enforcement.UNBUILT
+    if all(state is True for state in resolved):
+        return Enforcement.MECHANIZED
+    if all(m == "review" for m in mechanisms):
+        return Enforcement.REVIEW
+    return Enforcement.EXTERNAL
 
 
 ## The delimited YAML header, anchored at the very start of the file. A block that

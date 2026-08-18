@@ -599,7 +599,7 @@
       "id": "ops/teams",
       "kind": "ops",
       "title": "Agent Team Mechanics",
-      "tokens": 1384,
+      "tokens": 2245,
       "load_when": [
         "agent team",
         "teammate",
@@ -626,6 +626,8 @@
       "mechanisms": [
         "check:no_model_names"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Project documents and dispatch records MUST name the tier. Naming a specific model breaks when models change.",
       "why": "A tier is a role; the model filling it is an implementation detail, and the same push-coupling-to-the-edge reasoning applies to procurement as to libraries.",
       "check": "`python -m checks.no_model_names`",
@@ -643,6 +645,8 @@
       "mechanisms": [
         "check:dispatch_recorded"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A dispatch MUST carry its seven signal scores, the resulting allocation, any override applied, and a one-line rationale where the allocation departs from the score.",
       "why": "An unrecorded allocation cannot be audited after a failure, which is the only moment the classification's quality can actually be assessed.",
       "check": "`python -m checks.dispatch_recorded`",
@@ -660,6 +664,8 @@
       "mechanisms": [
         "check:dispatch_recorded"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "These MUST be dispatched at T2/E1 or above: changing a published contract; the adversarial verification before a change lands; designing an irreversible or destructive operation; anything touching security or the supply chain; arbitration between conflicting positions; root-cause analysis after a defect escaped.",
       "why": "Each is a case where the cost of a confident wrong answer is not bounded by the size of the change.",
       "check": "`python -m checks.dispatch_recorded`",
@@ -677,6 +683,8 @@
       "mechanisms": [
         "check:dispatch_recorded"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Any signal scored 3 forces at least T1/E1. A signal D of 3 — a mistake would ship silently — forces E2 regardless of tier.",
       "why": "A workload cannot be dispatched cheaply because its *sum* is low if one dimension is individually at the top of its scale.",
       "check": "`python -m checks.dispatch_recorded`",
@@ -694,6 +702,8 @@
       "mechanisms": [
         "check:dispatch_recorded"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A mechanical substitution with an explicit stop condition may run at T0/E0 — but where an escalation rule also applies, the escalation wins.",
       "why": "This is not hypothetical. The recorded incident that destroyed 8,023 files began as exactly this shape: a mechanical directory-cleanup instruction, dispatched without regard for its blast radius.",
       "check": "`python -m checks.dispatch_recorded`",
@@ -713,6 +723,8 @@
       "mechanisms": [
         "check:dispatch_recorded"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Where signal B is high, the coordinator MUST first attempt to complete the specification, and re-score, before escalating.",
       "why": "This is the doctrine's central lever: sharpening the contract lowers the tier, it is nearly always cheaper than escalating, and it produces a reusable artifact.",
       "check": "`python -m checks.dispatch_recorded`",
@@ -730,6 +742,8 @@
       "mechanisms": [
         "check:dispatch_recorded"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Prefer decomposing a workload into a large mechanical part and a small reasoning part over running the whole at a high tier.",
       "why": "Two cheap agents with a clear contract between them usually beat one expensive agent, and the contract survives the task.",
       "check": "`python -m checks.dispatch_recorded`",
@@ -747,6 +761,8 @@
       "mechanisms": [
         "check:dispatch_recorded"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A dispatch message cannot grant a capability the receiving agent does not hold, and that agent MUST NOT achieve the effect by other means — writing files through a shell when it holds no editing tool, for example.",
       "why": "The cost of refusing is one wasted dispatch. The cost of circumventing is that every verdict the agent ever issued becomes open to question. That asymmetry is why this rule is absolute.",
       "check": "`python -m checks.dispatch_recorded`",
@@ -764,6 +780,8 @@
       "mechanisms": [
         "check:dispatch_recorded"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "When returned work is inadequate, the coordinator MUST re-score and record which of four defect kinds it was: misclassification, specification defect, execution defect, or capability mismatch.",
       "why": "The distribution over those four tells the organization whether it is under-tiering, under-specifying, or genuinely at a tier's limit — three problems with three different remedies.",
       "check": "`python -m checks.dispatch_recorded`",
@@ -779,6 +797,8 @@
       "title": "The gate's tier follows the risk under test",
       "force": "OPEN",
       "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
       "statement": "A verification workload is scored on the risk of the code it examines, not on how routine the act of verifying sounds.",
       "why": "Writing a fault-injection suite for a destructive operation is open-reasoning work even though \"writing tests\" sounds mechanical.",
       "check": null,
@@ -798,6 +818,8 @@
       "mechanisms": [
         "fitness:test_contract_documented"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Every published operation MUST state its inputs, its results, its error variants, its idempotency, its ordering constraints, its concurrency behaviour and its versioning.",
       "why": "These are precisely the questions a failing call raises; leaving them to the implementation means answering them by experiment.",
       "check": "`pytest enforce/fitness/test_api.py::test_contract_documented`",
@@ -817,6 +839,8 @@
       "mechanisms": [
         "fitness:test_contract_documented"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Behaviour a consumer observes but the contract does not promise MUST NOT be relied upon, and MUST NOT be treated as a breaking change when it changes.",
       "why": "Otherwise every incidental detail becomes frozen by accident, and the contract stops describing the system.",
       "check": "`pytest enforce/fitness/test_api.py::test_contract_documented`",
@@ -834,6 +858,8 @@
       "mechanisms": [
         "check:single_wiring_point"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "The published surface MUST expose domain-level operations. Generic record manipulation and query primitives MUST NOT be exposed.",
       "why": "A generic write surface lets a client construct states the domain rules forbid, and the resulting corruption is attributed to the domain that never permitted it.",
       "check": "`python -m checks.single_wiring_point`",
@@ -853,6 +879,8 @@
       "mechanisms": [
         "auto:import-linter"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "Storage layout, indexes, internal identifiers and file formats MUST be implementation detail. Where a file is deliberately hand-editable, that is a declared authoring surface whose next load re-runs full validation.",
       "why": "A sanctioned authoring surface with full revalidation is a different entry, not a weaker path; an unsanctioned one is a second writer with no owner.",
       "check": "`lint-imports` contract `storage-has-one-owner`",
@@ -870,6 +898,8 @@
       "mechanisms": [
         "fitness:test_structured_output"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Every command MUST be able to emit a machine-readable result carrying a schema identifier, the outcome, the data, and any errors as structured values.",
       "why": "Human text is a rendering; an agent parsing prose is an agent that breaks when the prose improves.",
       "check": "`pytest enforce/fitness/test_api.py::test_structured_output`",
@@ -887,6 +917,8 @@
       "mechanisms": [
         "fitness:test_structured_output"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "The text presentation MUST be a view over the structured result, never a separate computation.",
       "why": "Two renderings of one outcome diverge, and the divergence is discovered by a user reading one while an agent acts on the other.",
       "check": "`pytest enforce/fitness/test_api.py::test_structured_output`",
@@ -904,6 +936,8 @@
       "mechanisms": [
         "fitness:test_exit_codes"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Each defined exit status MUST correspond to a stated outcome class, and MUST be documented and tested.",
       "why": "It is the only signal available to a caller that reads nothing else, and the first thing a script branches on.",
       "check": "`pytest enforce/fitness/test_api.py::test_exit_codes`",
@@ -923,6 +957,8 @@
       "mechanisms": [
         "fitness:test_structured_output"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "The published surface MUST offer a machine-readable description of its own operations, arguments and error codes.",
       "why": "A client that can enumerate the contract can adapt to it; one that cannot must hard-code assumptions that silently rot.",
       "check": "`pytest enforce/fitness/test_api.py::test_structured_output`",
@@ -940,6 +976,8 @@
       "mechanisms": [
         "fitness:test_agent_parity"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A request from an agent, a hook or a script MUST be validated identically to one from a person. No privileged path, no skipped checks, no direct store access.",
       "why": "The value of a validated core is that every producer of bad state hits the same wall; one exception makes the guarantee conditional and therefore useless to reason from.",
       "check": "`pytest enforce/fitness/test_api.py::test_agent_parity`",
@@ -957,6 +995,8 @@
       "mechanisms": [
         "fitness:test_schema_versioned"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Structured results and persisted formats MUST carry an explicit version identifier.",
       "why": "Without it, a consumer cannot tell an old producer from a broken one, and both present as malformed input.",
       "check": "`pytest enforce/fitness/test_api.py::test_schema_versioned`",
@@ -974,6 +1014,8 @@
       "mechanisms": [
         "fitness:test_codes_are_stable"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Renaming an error code, removing one, or adding a variant to a published result union is a breaking change.",
       "why": "These are what an automated consumer branches on, so they are load-bearing in exactly the way a function name is.",
       "check": "`pytest enforce/fitness/test_diagnostics.py::test_codes_are_stable`",
@@ -993,6 +1035,8 @@
       "mechanisms": [
         "fitness:test_migrations"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Changing a persisted format MUST include a migration and a test that runs it against a fixture of the previous version.",
       "why": "A migration nobody has run against real prior data is a plan, not a migration.",
       "check": "`pytest enforce/fitness/test_api.py::test_migrations`",
@@ -1010,6 +1054,8 @@
       "mechanisms": [
         "fitness:test_schema_versioned"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Compatibility MUST rest on a stated policy, never on a parser happening to accept an older shape.",
       "why": "Accidental tolerance disappears in a dependency upgrade nobody connected to it.",
       "check": "`pytest enforce/fitness/test_api.py::test_schema_versioned`",
@@ -1025,6 +1071,8 @@
       "title": "Prefer additive change",
       "force": "ADVISORY",
       "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
       "statement": "Extend the surface with new fields and new operations rather than repurposing existing ones.",
       "why": "A field that quietly changes meaning breaks consumers that still typecheck, which is the failure mode with the worst diagnostic signal of all.",
       "check": null,
@@ -1042,6 +1090,8 @@
       "mechanisms": [
         "fitness:test_delivered_boundary"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "End-to-end tests MUST exercise the installed entry point as a separate process, asserting its structured output and exit status.",
       "why": "Testing the imported function verifies the library; the contract that ships is the process boundary, and only running it tests packaging, arguments and exit paths.",
       "check": "`pytest enforce/fitness/test_api.py::test_delivered_boundary`",
@@ -1059,6 +1109,8 @@
       "mechanisms": [
         "auto:import-linter"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "Each layer MUST import only from layers beneath it: `shell` to `adapters` to `app` to `domain`. `domain` imports nothing from the others.",
       "why": "An inward-only graph is what lets a stack trace's deepest frame name the layer that owns the fault.",
       "check": "`lint-imports` contract `layers`",
@@ -1077,6 +1129,8 @@
         "auto:import-linter",
         "check:domain_purity"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "Modules under `domain/` MUST NOT import any I/O-capable module — filesystem, network, subprocess, environment, wall clock or process-global randomness — directly or transitively.",
       "why": "A pure domain means a domain-layer failure is a logic defect, never an environment one; that inference is what makes the layer field worth recording.",
       "check": "`lint-imports` contract `domain-is-pure` · `python -m checks.domain_purity`",
@@ -1097,6 +1151,8 @@
       "mechanisms": [
         "auto:import-linter"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "Adapter modules MUST be independent of one another. Composition happens in `shell`, never between adapters.",
       "why": "Independent adapters mean a misbehaving one cannot contaminate a healthy one, which is the property the fault tests exist to demonstrate.",
       "check": "`lint-imports` contract `adapters-are-independent`",
@@ -1114,6 +1170,8 @@
       "mechanisms": [
         "auto:import-linter"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "A third-party or system-level dependency MUST appear in the import graph of exactly one adapter module.",
       "why": "This is what \"push coupling to the very edge\" means operationally: a library reachable from two places has two possible blast radii and no single owner.",
       "check": "`lint-imports` contract `foreign-deps-are-cornered`",
@@ -1133,6 +1191,8 @@
       "mechanisms": [
         "check:explicit_effects"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A function that performs an effect MUST receive the port that performs it as a parameter. Reaching for a clock, a random source, an environment variable or a filesystem inside a function body is prohibited.",
       "why": "An effect passed in can be substituted, and therefore faulted on demand; an effect reached for cannot, and its failure mode is untestable.",
       "check": "`python -m checks.explicit_effects`",
@@ -1150,6 +1210,8 @@
       "mechanisms": [
         "auto:mypy"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "A domain function MUST either be total for its argument types, or return a discriminated result union whose error arm the caller is forced to handle.",
       "why": "Exhaustiveness is checkable; a docstring promise is not.",
       "check": "`mypy --strict` with exhaustiveness on the result union",
@@ -1169,6 +1231,8 @@
       "mechanisms": [
         "fitness:test_every_port_is_a_protocol"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A boundary the core crosses MUST be expressed as a `Protocol` under `ports/`, with its inputs, outputs, error modes, ordering constraints and idempotency stated.",
       "why": "The contract is the oracle every adapter is tested against; without it there is nothing for a fake to be faithful to.",
       "check": "`pytest enforce/fitness/test_ports.py::test_every_port_is_a_protocol`",
@@ -1189,6 +1253,8 @@
       "mechanisms": [
         "fitness:test_port_triad"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Unconditionally, with no \"if it has meaningful failure modes\" qualifier.",
       "why": "The port judged to have no failure mode is the one whose failure is discovered in production. Swappability is proved by three implementations, not asserted by one.",
       "check": "`pytest enforce/fitness/test_ports.py::test_port_triad`",
@@ -1206,6 +1272,8 @@
       "mechanisms": [
         "fitness:test_contract_suite_per_adapter"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "The port's suite MUST run against the real adapter, the fake, and the faulty adapter in healthy mode, unchanged.",
       "why": "A fake that can drift from its real counterpart without a test failing is worthless, and every unit test standing on it is worth as little.",
       "check": "`pytest enforce/fitness/test_ports.py::test_contract_suite_per_adapter`",
@@ -1223,6 +1291,8 @@
       "mechanisms": [
         "fitness:test_port_justification"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Every port MUST name, in its module docstring, which of these it claims: replacing the implementation without touching the core; testing the core against a fake; a named behavioural contract; controlling a specific effect; fault injection; observing an interaction; isolating the core from an unstable external technology; supporting more than one real adapter.",
       "why": "Without a closed list, \"port\" degrades into wrapping standard-library calls, and the boundary stops meaning anything.",
       "check": "`pytest enforce/fitness/test_ports.py::test_port_justification`",
@@ -1240,6 +1310,8 @@
       "mechanisms": [
         "check:single_wiring_point"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Concrete adapters MUST be chosen in a single wiring module in `shell`. No other module may name a concrete adapter class.",
       "why": "Replaceability that requires edits in several places is not replaceability; the single root is what makes substitution in a test identical to substitution in production.",
       "check": "`python -m checks.single_wiring_point`",
@@ -1257,6 +1329,8 @@
       "mechanisms": [
         "check:no_test_branches"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "Production modules MUST NOT contain conditionals keyed on a test environment variable, a test flag, or the identity of the caller.",
       "why": "Testability comes from the seam, not from the code knowing it is being tested — and a branch that only runs under test is a branch nothing verifies in production.",
       "check": "`python -m checks.no_test_branches`",
@@ -1274,6 +1348,8 @@
       "mechanisms": [
         "check:domain_purity"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "Domain signatures MUST NOT mention an argument parser namespace, an ORM model, a request object, a serialization node, or any other type owned by a framework.",
       "why": "A domain modelled in a framework's types is coupled to it at every call site, and the framework's failures become indistinguishable from the domain's.",
       "check": "`python -m checks.domain_purity`",
@@ -1291,6 +1367,8 @@
       "mechanisms": [
         "check:domain_purity"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "Wire and storage representations MUST be converted to domain types by a named function at the boundary, never by attribute-name coincidence or automatic mapping.",
       "why": "An explicit mapping fails in one identifiable place with both values in hand; an implicit one fails somewhere downstream with neither.",
       "check": "`python -m checks.domain_purity`",
@@ -1308,6 +1386,8 @@
       "mechanisms": [
         "check:no_magic_in_domain"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Inside the domain, it MUST remain possible to answer by reading the code — not by running it — what runs, when, what state it changes, and what happens when it fails.",
       "why": "A mechanism that requires a debugger to trace defeats every diagnostic guarantee downstream of it.",
       "check": "`python -m checks.no_magic_in_domain`",
@@ -1325,6 +1405,8 @@
       "mechanisms": [
         "auto:ruff:C901"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "No function may exceed the configured cyclomatic complexity budget.",
       "why": "A budget nobody measures is a wish; the source corpus watched a suite degrade for exactly that reason.",
       "check": "`ruff check` (rule `C901`)",
@@ -1340,6 +1422,8 @@
       "title": "Prefer the direct call to the abstraction",
       "force": "ADVISORY",
       "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
       "statement": "An abstraction SHOULD be introduced when it creates a boundary for specification, substitution, observation or containment — not for symmetry.",
       "why": "Layers added without a stated purpose are indistinguishable from layers added by habit, and each one lengthens every trace.",
       "check": null,
@@ -1357,6 +1441,8 @@
       "mechanisms": [
         "auto:import-linter"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "Domain modules MUST NOT import a third-party package. Third-party code is reachable only from adapters.",
       "why": "A domain failure that can originate in a vendor's code is a domain failure that localizes nothing, and the layer field stops meaning what it claims.",
       "check": "`lint-imports` contract `domain-is-pure`",
@@ -1376,6 +1462,8 @@
       "mechanisms": [
         "fitness:test_dependency_position"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A dependency confined behind one adapter is cheap; one whose types appear across the codebase is expensive regardless of its quality. Every dependency MUST be recorded with the adapter that owns it.",
       "why": "Replaceability is a function of position, not of the library's merits, and the position is the only part that can be checked.",
       "check": "`pytest enforce/fitness/test_deps.py::test_dependency_position`",
@@ -1393,6 +1481,8 @@
       "mechanisms": [
         "fitness:test_fault_catalogue"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "The adapter owning a dependency MUST state which faults it can produce and translate them into the infrastructure error family.",
       "why": "An untranslated vendor exception crossing a layer boundary carries the vendor's vocabulary into a diagnosis written in ours.",
       "check": "`pytest enforce/fitness/test_faults.py::test_fault_catalogue`",
@@ -1410,6 +1500,8 @@
       "title": "Do not reimplement a solved, specified problem",
       "force": "ADVISORY",
       "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
       "statement": "Parsers, cryptography, date arithmetic and schema validation SHOULD use an established implementation rather than a local one.",
       "why": "A local reimplementation carries defects nobody else has already found, and no shared vocabulary for describing them when they surface.",
       "check": null,
@@ -1427,6 +1519,8 @@
       "mechanisms": [
         "fitness:test_environment_locked"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Every dependency MUST be pinned by content hash in a lockfile committed to the repository.",
       "why": "A build that resolves differently on two machines produces failures that cannot be reproduced, and reproduction is the first step of diagnosis.",
       "check": "`pytest enforce/fitness/test_deps.py::test_environment_locked`",
@@ -1444,6 +1538,8 @@
       "mechanisms": [
         "fitness:test_environment_locked"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "The project MUST provide a check that reports drift between the installed environment and the lockfile, and it MUST run before the test suite in continuous integration.",
       "why": "Drift discovered by a mysterious test failure costs far more than drift reported as drift.",
       "check": "`pytest enforce/fitness/test_deps.py::test_environment_locked`",
@@ -1461,6 +1557,8 @@
       "mechanisms": [
         "check:generated_provenance"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Every generated file MUST begin with a header naming the generator, its version, a digest of the model it was produced from, and a do-not-edit marker.",
       "why": "Without provenance an agent cannot tell an artefact it may regenerate from a source it must not overwrite, and will eventually destroy one of them.",
       "check": "`python -m checks.generated_provenance`",
@@ -1478,6 +1576,8 @@
       "mechanisms": [
         "check:generated_provenance"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Provenance headers MUST NOT include a wall-clock time.",
       "why": "A timestamp makes every regeneration a diff, which trains reviewers to ignore generated diffs, which is how a real change gets waved through.",
       "check": "`python -m checks.generated_provenance`",
@@ -1495,6 +1595,8 @@
       "mechanisms": [
         "fitness:test_regeneration_stable"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Regenerating from an unchanged model MUST produce byte-identical output, on every machine.",
       "why": "Byte-stability is what makes a regenerate-and-compare gate able to distinguish a real divergence from noise.",
       "check": "`pytest enforce/fitness/test_generated.py::test_regeneration_stable`",
@@ -1512,6 +1614,8 @@
       "mechanisms": [
         "fitness:test_regeneration_stable"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Continuous integration MUST regenerate every generated artefact and fail if the result differs from what is committed.",
       "why": "Committed output that silently diverges from its model is a lie that every subsequent reader inherits.",
       "check": "`pytest enforce/fitness/test_generated.py::test_regeneration_stable`",
@@ -1529,6 +1633,8 @@
       "mechanisms": [
         "fitness:test_regeneration_stable"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Generated artefacts MUST be committed to the repository rather than produced only at build time.",
       "why": "A change that is invisible in review is a change nobody reviewed; committing the output is what makes the generator's behaviour auditable.",
       "check": "`pytest enforce/fitness/test_generated.py::test_regeneration_stable`",
@@ -1546,6 +1652,8 @@
       "mechanisms": [
         "auto:integrate"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "A repository that vendors this discipline MUST carry a pointer to it in the top-level agent configuration its sessions actually read.",
       "why": "Copying the files does not make them load. A discipline nobody is told about is one every session ignores, which costs the vendoring and returns nothing.",
       "check": "`python .agent/tools/integrate.py --check`",
@@ -1564,6 +1672,8 @@
         "auto:integrate",
         "fitness:test_an_existing_block_is_replaced_not_duplicated"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "The pointer MUST live inside the managed markers, and everything outside them MUST be left untouched by the tool. Hand-editing inside the block is prohibited; it is overwritten on the next update.",
       "why": "A clear boundary is what lets an update replace the pointer without touching the project's own configuration, and lets the project write freely without fear of losing it.",
       "check": "`python .agent/tools/integrate.py --check` · `pytest tools/test_integrate.py`",
@@ -1583,6 +1693,8 @@
       "mechanisms": [
         "fitness:test_a_dry_run_writes_nothing"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "A tool that edits files the project owns MUST be able to show its complete plan without writing, and the preview MUST be the same code path truncated rather than a second implementation that predicts it.",
       "why": "This is [EFCT-005] applied to the discipline's own installer: a preview produced by different code is a preview that can be wrong in exactly the case that matters.",
       "check": "`pytest tools/test_integrate.py::test_a_dry_run_writes_nothing`",
@@ -1602,6 +1714,8 @@
       "mechanisms": [
         "fitness:test_envelope_conforms"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "An error reaching a process boundary MUST serialize to a record conforming to the published schema, on every exit path.",
       "why": "A schema-valid envelope is what makes automated repair possible at all; prose on stderr is not parseable and not actionable.",
       "check": "`pytest enforce/fitness/test_diagnostics.py::test_envelope_conforms`",
@@ -1619,6 +1733,8 @@
       "mechanisms": [
         "check:exception_has_code"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Exception and result-error types MUST define a namespaced `code` class attribute. The code is never embedded only in the message text.",
       "why": "A greppable code survives message rewording and translation; a sentence does not, and every consumer matching on prose breaks silently when the prose improves.",
       "check": "`python -m checks.exception_has_code`",
@@ -1638,6 +1754,8 @@
       "mechanisms": [
         "check:exception_has_code"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "The offending value, the expected predicate and what was actually seen MUST be structured attributes on the error. The message renders them; it is not where they live.",
       "why": "An agent can compare `expected` to `actual`; it cannot reliably parse them back out of a formatted sentence.",
       "check": "`python -m checks.exception_has_code`",
@@ -1655,6 +1773,8 @@
       "mechanisms": [
         "fitness:test_codes_are_stable"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Renaming or removing an error code, or adding a variant to a result union, is a breaking change and MUST be versioned as one.",
       "why": "Automated diagnosis is only worth building against a surface that holds still across releases.",
       "check": "`pytest enforce/fitness/test_diagnostics.py::test_codes_are_stable`",
@@ -1674,6 +1794,8 @@
       "mechanisms": [
         "check:raise_from"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "When an exception is translated at a layer boundary, the new exception MUST be raised `from` the original.",
       "why": "The chain is the localization: without it, the outermost frame is all that survives and the true origin is gone.",
       "check": "`python -m checks.raise_from`",
@@ -1691,6 +1813,8 @@
       "mechanisms": [
         "check:raise_from"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "To add context while propagating, attach a note to the live exception. Wrapping an error solely to append information is prohibited.",
       "why": "Re-wrapping buries the type a caller matches on one level deeper each time; notes add context without changing what the error *is*.",
       "check": "`python -m checks.raise_from`",
@@ -1708,6 +1832,8 @@
       "mechanisms": [
         "check:raise_from"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "Raising `from None` MUST carry an adjacent comment giving the reason the underlying cause is not useful to a reader.",
       "why": "Cause suppression is occasionally right and usually an accident; requiring the sentence separates the two.",
       "check": "`python -m checks.raise_from`",
@@ -1726,6 +1852,8 @@
         "auto:ruff:BLE001",
         "check:raise_from"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "Bare `except`, catching broad exception base classes, and catching-then-passing are prohibited. Deliberate suppression uses a narrow, explicit suppression context with a comment.",
       "why": "A swallowed exception is the one failure mode no diagnostic machinery can recover from; nothing is emitted to analyse.",
       "check": "`ruff check` (rules `E722`, `BLE001`, `S110`) · `python -m checks.raise_from`",
@@ -1743,6 +1871,8 @@
       "mechanisms": [
         "check:assert_usage"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "`assert` MUST be used only for internal invariants that cannot be false unless the program is wrong. Any check that must run in production — boundary input, authorization, resource state — MUST NOT be an assertion.",
       "why": "Assertions vanish under optimized bytecode, so a validation written as one is a check that silently ceases to exist in the environment that needed it.",
       "check": "`python -m checks.assert_usage` · `ruff check` (rule `S101` outside tests)",
@@ -1762,6 +1892,8 @@
       "mechanisms": [
         "check:log_once"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "`logger.exception` MUST be called only from inside a handler that is not re-raising, and an error MUST NOT be logged twice on one path.",
       "why": "Duplicate stack traces for one fault make an agent count two failures where there was one, and the second copy is always the less informative.",
       "check": "`python -m checks.log_once`",
@@ -1779,6 +1911,8 @@
       "mechanisms": [
         "check:library_logging"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Reusable modules MUST obtain a module-level logger by name and attach nothing but a null handler at the package root. Configuring handlers, formatters or levels is the consuming application's prerogative.",
       "why": "A component that drags its logging policy into every host is not reusable, and reusability is what keeps coupling at the edge.",
       "check": "`python -m checks.library_logging`",
@@ -1796,6 +1930,8 @@
       "mechanisms": [
         "auto:ruff:G004"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "Log calls MUST pass format arguments to the logger rather than building the string at the call site.",
       "why": "An eagerly built message is paid for at every level, including the levels that discard it, which is how debug logging gets deleted instead of disabled.",
       "check": "`ruff check` (rules `G004`, `G010`)",
@@ -1813,6 +1949,8 @@
       "mechanisms": [
         "fitness:test_correlation_propagates"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Every entry point MUST establish a correlation identifier in context-local state, and every log record and envelope MUST carry it.",
       "why": "It is what turns scattered lines into one reconstructable story, which is the difference between reading a trace and searching a file.",
       "check": "`pytest enforce/fitness/test_diagnostics.py::test_correlation_propagates`",
@@ -1830,6 +1968,8 @@
       "mechanisms": [
         "check:redaction"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Credentials, tokens and personal data MUST be redacted before they are logged or placed in the `value` field.",
       "why": "The envelope is designed to be read widely and machine-processed, which is exactly what makes an unredacted value in it expensive.",
       "check": "`python -m checks.redaction`",
@@ -1848,6 +1988,8 @@
         "auto:ruff:G004",
         "check:log_once"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Log records MUST attach their variables as structured fields rather than interpolating them into prose.",
       "why": "Unstructured logs do not survive being queried, and a diagnosis nobody can query is one nobody will find.",
       "check": "`ruff check` · `python -m checks.log_once`",
@@ -1863,6 +2005,8 @@
       "title": "State transitions are observable",
       "force": "ADVISORY",
       "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
       "statement": "Components with a non-trivial state machine SHOULD log each transition, with the previous state, the next state and the trigger.",
       "why": "A transition log turns \"it ended in the wrong state\" into a specific illegal step, which is the difference between a bug report and a diagnosis.",
       "check": null,
@@ -1881,6 +2025,8 @@
         "auto:ruff:D100",
         "check:doc_coverage"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "Every module, package, class, function, method, magic method and initializer MUST carry a docstring. Private and internal elements are included: the rule is about the code, not about its audience.",
       "why": "An identifier is a hint; a contract is a statement. An agent that must infer intent from a name is guessing, and a wrong guess is indistinguishable from a right one.",
       "check": "`ruff check` (rules `D100`–`D107`) · `python -m checks.doc_coverage`",
@@ -1898,6 +2044,8 @@
       "mechanisms": [
         "check:doc_coverage"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "Module-level constants, class attributes, dataclass fields and enum members MUST carry a `##` comment block, since Python provides no docstring slot for them.",
       "why": "These are exactly the elements a reader most often needs and the linters cannot see; leaving them out makes \"every element\" mean \"every element with a convenient slot\".",
       "check": "`python -m checks.doc_coverage`",
@@ -1918,6 +2066,8 @@
         "auto:ruff:D100",
         "check:doc_coverage"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "The presence checks MUST run in the ordinary gate, not in a documentation job. A repository that never builds documentation is held to the same standard as one that publishes it.",
       "why": "Documentation tied to a build step is documentation that lapses the moment the build is switched off, and nobody notices until someone needs it.",
       "check": "`ruff check` and `python -m checks.doc_coverage`, both in the standard gate",
@@ -1937,6 +2087,8 @@
       "mechanisms": [
         "check:doc_style"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "An element with a docstring slot MUST be documented by its docstring, not by a preceding `##` block. `##` is reserved for the elements that have no slot.",
       "why": "A `##` block is invisible to `help()`, to editors and to every other Python tool, so documentation written there does not exist for a Python consumer.",
       "check": "`python -m checks.doc_style`",
@@ -1954,6 +2106,8 @@
       "mechanisms": [
         "auto:doxygen"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "The project's Doxyfile MUST set `PYTHON_DOCSTRING` so that special commands are interpreted.",
       "why": "Left at its default, a docstring full of `@param` renders as literal characters and nothing warns. The failure is silent, which is the worst kind.",
       "check": "`doxygen enforce/Doxyfile` with the setting in force",
@@ -1973,6 +2127,8 @@
       "mechanisms": [
         "auto:ruff:D205"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "The first line MUST be a single sentence stating what the element is or does, followed by a blank line before any further detail.",
       "why": "It is the line that appears in every index, every tooltip and every summary; an element whose first line is a continuation has no summary anywhere.",
       "check": "`ruff check` (rules `D205`, `D400`, `D415`)",
@@ -1990,6 +2146,8 @@
       "mechanisms": [
         "auto:doxygen"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "A documented callable MUST document each parameter with `@param`, its result with `@return` or `@retval`, and each exception it raises with `@throws`.",
       "why": "These are the questions a failing call raises, and the ones a signature alone cannot answer: what a parameter *means*, what the result *signifies*, when it *fails*.",
       "check": "`doxygen enforce/Doxyfile` with `WARN_NO_PARAMDOC` and `WARN_IF_INCOMPLETE_DOC`",
@@ -2007,6 +2165,8 @@
       "mechanisms": [
         "check:doc_style"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "Documentation MUST NOT repeat a parameter's or return value's type. The signature carries the type; the documentation carries the meaning.",
       "why": "A type written twice diverges once, and the copy the checker cannot see is the one that goes stale.",
       "check": "`python -m checks.doc_style`",
@@ -2026,6 +2186,8 @@
       "mechanisms": [
         "check:doc_style"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "Documentation MUST state what an element guarantees — inputs, result, invariants, error modes, ordering — and MUST NOT merely restate its name or narrate its implementation.",
       "why": "A comment that restates the name adds a second thing to keep in step and answers nothing; a comment describing the implementation is wrong after the first refactor.",
       "check": "`python -m checks.doc_style`",
@@ -2047,6 +2209,8 @@
       "mechanisms": [
         "auto:doxygen"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "Documentation MUST be complete and well formed enough that the engine reports nothing, with warnings configured as errors.",
       "why": "This is the only mechanism that checks the actual requirement rather than a proxy for it: it is the engine the comments are written for.",
       "check": "`doxygen enforce/Doxyfile` with `WARN_AS_ERROR = FAIL_ON_WARNINGS`",
@@ -2064,6 +2228,8 @@
       "mechanisms": [
         "auto:doxygen"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "The Doxyfile used for checking MUST leave HTML generation enabled.",
       "why": "With output disabled, the engine reports fully documented functions as undocumented — measured at seven false errors against one real one. A gate that fails on correct code is a gate people learn to ignore.",
       "check": "`doxygen enforce/Doxyfile` exits 0 on a conformant tree",
@@ -2083,6 +2249,8 @@
       "mechanisms": [
         "check:generated_provenance"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "The rendered documentation tree MUST NOT be committed, and MUST be reproducible from the committed source comments alone.",
       "why": "This is the one deliberate exception to committing generated artefacts. The reviewable artefact here *is* the comment in the source; committing a large rendered tree adds diff noise on every change, which is precisely how reviewers are trained to wave generated diffs through.",
       "check": "`python -m checks.generated_provenance`",
@@ -2100,6 +2268,8 @@
       "title": "Prefer one sentence that earns its place",
       "force": "ADVISORY",
       "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
       "statement": "Where an element is genuinely self-evident, the documentation SHOULD be one accurate sentence rather than a padded block.",
       "why": "The objection to universal documentation is that it produces filler. The answer is short and true, not absent.",
       "check": null,
@@ -2117,6 +2287,8 @@
       "mechanisms": [
         "auto:import-linter"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "Domain and app code MUST NOT perform an effect. They compute a description of one.",
       "why": "A pure core means a domain test needs no environment and a domain failure implicates no environment.",
       "check": "`lint-imports` contract `domain-is-pure`",
@@ -2136,6 +2308,8 @@
       "mechanisms": [
         "check:explicit_effects"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "The wall clock, random sources, environment variables and process identity MUST be reached only through an injected port.",
       "why": "Each is a hidden input that makes a result irreproducible, and an irreproducible failure cannot be replayed for diagnosis.",
       "check": "`python -m checks.explicit_effects`",
@@ -2153,6 +2327,8 @@
       "mechanisms": [
         "fitness:test_determinism"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Given the same inputs and the same fault schedule, a run MUST produce the same outputs and the same sequence of effects. Deliberate nondeterminism is injected, documented and seedable.",
       "why": "Reproduction is the first step of every diagnosis; a failure that cannot be reproduced can only be guessed at.",
       "check": "`pytest enforce/fitness/test_determinism.py`",
@@ -2172,6 +2348,8 @@
       "mechanisms": [
         "check:plan_apply"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A change to persistent state MUST be expressed as a named command carrying its intent, not as a direct write performed wherever it was computed.",
       "why": "A named command is a thing that can be validated, logged, replayed and refused; a scattered write is none of those.",
       "check": "`python -m checks.plan_apply`",
@@ -2189,6 +2367,8 @@
       "mechanisms": [
         "check:plan_apply"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "An operation that deletes or overwrites MUST compute a complete plan of its effects, and apply it only as a separate step. Computing and performing in one pass is prohibited.",
       "why": "A recorded incident in the source corpus is exactly this shape: a cleanup routine that computed and performed deletion in one pass destroyed 8,023 files under three fault conditions while reporting success. The plan is what makes the difference between a preview and an apology.",
       "check": "`python -m checks.plan_apply`",
@@ -2206,6 +2386,8 @@
       "mechanisms": [
         "fitness:test_dry_run_matches_apply"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Preview mode MUST produce the plan and stop. It MUST NOT be implemented as separate code that predicts what the real path would do.",
       "why": "Two code paths diverge, and the preview that diverges is worse than no preview because it is trusted.",
       "check": "`pytest enforce/fitness/test_effects.py::test_dry_run_matches_apply`",
@@ -2223,6 +2405,8 @@
       "mechanisms": [
         "fitness:test_interruption_recovers"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Where the substrate offers no all-or-nothing guarantee across effects, the apply step MUST write a journal that lets an interrupted run be detected and completed or rolled back.",
       "why": "Filesystems give no cross-file transaction; without a journal an interruption leaves a state nothing can classify, which is undiagnosable by construction.",
       "check": "`pytest enforce/fitness/test_effects.py::test_interruption_recovers`",
@@ -2240,6 +2424,8 @@
       "mechanisms": [
         "check:atomicity_qualified"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A contract MUST state which guarantee it offers — single-file-rename atomic, journal-recoverable, or transactionally atomic — and against what. The bare word is a documentation defect.",
       "why": "Two source documents used it in incompatible senses; a reader who assumes the strong sense builds on a guarantee that was never offered.",
       "check": "`python -m checks.atomicity_qualified`",
@@ -2259,6 +2445,8 @@
       "mechanisms": [
         "fitness:test_interruption_recovers"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A contract offering partial guarantees MUST name what it does not guarantee — cross-process isolation during a commit window, the indivisibility of the journal write itself, ordering under concurrent readers.",
       "why": "An unstated non-guarantee is discovered as a bug, and attributed to the wrong component every time.",
       "check": "`pytest enforce/fitness/test_effects.py::test_interruption_recovers`",
@@ -2276,6 +2464,8 @@
       "mechanisms": [
         "check:plan_apply"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A lifecycle MUST be a declared set of states with a declared transition table. Any state change goes through it.",
       "why": "A closed table makes an illegal transition a checkable event with two named states, rather than an object quietly in the wrong condition.",
       "check": "`python -m checks.plan_apply`",
@@ -2293,6 +2483,8 @@
       "mechanisms": [
         "check:plan_apply"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A transition not in the table MUST be rejected during validation, with the source and target states in the error, and MUST NOT be partially performed.",
       "why": "Refusing before the first effect is what keeps the failure cheap and the state interpretable.",
       "check": "`python -m checks.plan_apply`",
@@ -2312,6 +2504,8 @@
       "mechanisms": [
         "auto:import-linter"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "Each persistent artifact MUST be written through one owning module. Clients, hooks and agents go through the command surface, never directly to storage.",
       "why": "Two writers make every corruption a question of which one did it; one writer makes it an answer.",
       "check": "`lint-imports` contract `storage-has-one-owner`",
@@ -2331,6 +2525,8 @@
       "mechanisms": [
         "fitness:test_concurrency_documented"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Any concurrent component MUST document its ownership, ordering, cancellation, shutdown and stale-state behaviour before it is written.",
       "why": "Undocumented concurrency produces failures whose reproduction depends on timing — the class of defect a diagnostic record is least able to capture after the fact.",
       "check": "`pytest enforce/fitness/test_concurrency.py::test_concurrency_documented`",
@@ -2348,6 +2544,8 @@
       "mechanisms": [
         "fitness:test_concurrency_documented"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Where locks are necessary, the acquisition order MUST be part of the design and written down.",
       "why": "Locks without a documented order are a recurring source of deadlocks that take weeks to find, and a deadlock emits nothing to diagnose.",
       "check": "`pytest enforce/fitness/test_concurrency.py::test_concurrency_documented`",
@@ -2365,6 +2563,8 @@
       "mechanisms": [
         "fitness:test_single_writer"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Where a single writer is required, exclusion MUST be enforced by a lock with defined stale recovery, and losing the race MUST surface as a typed conflict result, not a crash.",
       "why": "A contended write that raises reads as a defect; one that returns a conflict reads as the expected outcome it is.",
       "check": "`pytest enforce/fitness/test_concurrency.py::test_single_writer`",
@@ -2382,6 +2582,8 @@
       "title": "Prefer the sequential design",
       "force": "ADVISORY",
       "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
       "statement": "Concurrency SHOULD be introduced to meet a stated requirement, not because a task looks parallelizable.",
       "why": "Every concurrent path multiplies the interleavings a fault schedule must cover to keep the failure space diagnosable.",
       "check": null,
@@ -2399,6 +2601,8 @@
       "mechanisms": [
         "check:error_channels"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Expected, recoverable outcomes that belong to a function's contract MUST be returned as a discriminated result union. Genuinely exceptional, unrecoverable-at-this-layer or programmer-error conditions MUST be raised. No third channel — no error return codes, no sentinel values, no out-parameters.",
       "why": "The typed channel is the one a checker can force a caller to handle; putting a contract outcome on the raised channel silently makes handling optional.",
       "check": "`python -m checks.error_channels`",
@@ -2417,6 +2621,8 @@
         "auto:mypy",
         "auto:pyright"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "Every result union MUST be narrowed to `Never` at each consumer, with a final `assert_never` that fails to typecheck if any member remains unhandled.",
       "why": "This is what makes adding an error variant break the build rather than leak through an untested branch — the single most valuable static guarantee in the discipline.",
       "check": "`mypy --strict` · `pyright --strict`",
@@ -2437,6 +2643,8 @@
       "mechanisms": [
         "check:error_channels"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "The module and direction at which raised infrastructure failures become typed domain results MUST be named explicitly in the shell layer, and conversion MUST NOT occur anywhere else.",
       "why": "A seam left implicit is a seam no one can test, and the source corpus left this decision deferred between two documents until neither made it.",
       "check": "`python -m checks.error_channels`",
@@ -2456,6 +2664,8 @@
       "mechanisms": [
         "check:error_channels"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Domain and app code MUST NOT construct or return an infrastructure error. Adapters MUST NOT construct a domain error.",
       "why": "Layer ownership is what makes the envelope's `layer` field derivable from the error's type alone, rather than guessed from a traceback.",
       "check": "`python -m checks.error_channels`",
@@ -2475,6 +2685,8 @@
       "mechanisms": [
         "auto:mypy"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "Adding an error variant MUST mean adding it to the union's declaration, so every exhaustiveness check fails until each consumer is updated.",
       "why": "A variant introduced by returning an undeclared type is invisible to every caller and to the checker.",
       "check": "`mypy --strict`",
@@ -2492,6 +2704,8 @@
       "mechanisms": [
         "check:exception_shape"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Custom exceptions MUST derive from a single package-level base which itself derives from `Exception`, never from `BaseException`. Names end in `Error`. Multiple inheritance among exception types is prohibited.",
       "why": "One base gives a consumer a single, reliable catch for \"this library failed\"; a flat set of unrelated types gives them no safe boundary at all.",
       "check": "`python -m checks.exception_shape`",
@@ -2507,6 +2721,8 @@
       "title": "Define an exception only when a caller must distinguish it",
       "force": "ADVISORY",
       "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
       "statement": "Define a custom exception when callers need to branch on it programmatically, or when it crosses a published boundary. Otherwise reuse a built-in.",
       "why": "A hierarchy with a type per call site is as unusable as one with no types.",
       "check": null,
@@ -2524,6 +2740,8 @@
       "mechanisms": [
         "auto:ruff:BLE001"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "`except` clauses MUST name the specific exception types they handle. Broad base classes are caught only at a top-level boundary that converts to an envelope and exits.",
       "why": "A broad catch converts an unrelated defect into the handled path, and the real fault is never reported.",
       "check": "`ruff check` (rules `E722`, `BLE001`)",
@@ -2543,6 +2761,8 @@
       "mechanisms": [
         "auto:ruff:TRY300"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "Code that cannot raise the caught exception MUST move to an `else` clause; cleanup that must always run MUST use `finally`.",
       "why": "A wide `try` body silently extends a handler's reach over statements it was never written for.",
       "check": "`ruff check` (rules `TRY300`, `TRY301`)",
@@ -2560,6 +2780,8 @@
       "mechanisms": [
         "check:exception_shape"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Concurrent or batched operations that can fail independently MUST raise an exception group and be handled with `except*`, rather than collapsing to the first failure.",
       "why": "Reporting one of five failures gives an agent one fifth of the diagnosis and no indication that the rest exist.",
       "check": "`python -m checks.exception_shape`",
@@ -2577,6 +2799,8 @@
       "mechanisms": [
         "check:boundary_parsing"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "External data MUST be converted to a domain type by a validating constructor at the boundary, which returns a result. Interior code receives types that cannot be invalid.",
       "why": "Validation repeated in the interior is validation that can be forgotten in one place; parsing once makes the invalid state unrepresentable thereafter.",
       "check": "`python -m checks.boundary_parsing`",
@@ -2596,6 +2820,8 @@
       "mechanisms": [
         "check:assert_usage"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "Boundary checks MUST be ordinary statements or a validating library, never assertions.",
       "why": "Assertions are stripped under optimization, so a boundary guarded by one is unguarded in exactly the deployment that removed it.",
       "check": "`python -m checks.assert_usage`",
@@ -2615,6 +2841,8 @@
       "mechanisms": [
         "check:boundary_parsing"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Where a pre-check and the operation it guards can disagree — filesystem existence, permissions, resource availability — the operation MUST be attempted and its failure handled, rather than guarded by a prior check.",
       "why": "Between the check and the use, the world changes; the guarded form has a race the direct form does not.",
       "check": "`python -m checks.boundary_parsing`",
@@ -2632,6 +2860,8 @@
       "mechanisms": [
         "check:error_channels"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A refusal the contract anticipates MUST be a typed result. A response that breaks the contract — a store that accepts a value and returns a different one — MUST raise.",
       "why": "They demand opposite reactions: one is handled, the other means a component is lying and nothing downstream of it can be trusted.",
       "check": "`python -m checks.error_channels`",
@@ -2649,6 +2879,8 @@
       "mechanisms": [
         "fitness:test_no_unhandled_escape"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Every entry point MUST convert an escaping exception into a diagnostic envelope and a defined exit status.",
       "why": "An interpreter traceback on stderr is the one failure output that carries no code, no layer and no remediation.",
       "check": "`pytest enforce/fitness/test_diagnostics.py::test_no_unhandled_escape`",
@@ -2669,6 +2901,8 @@
       "mechanisms": [
         "fitness:test_fault_containment"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A failing component MUST be detected, converted and either rejected or degraded, leaving neighbouring components in a healthy state.",
       "why": "Containment is what makes the layer attribution meaningful; without it a fault's first observable symptom is somewhere else entirely.",
       "check": "`pytest enforce/fitness/test_faults.py::test_fault_containment`",
@@ -2688,6 +2922,8 @@
       "mechanisms": [
         "fitness:test_contract_documented"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Before a component is written, its inputs, outputs, invariants, error modes and ordering constraints MUST be stated. The specification owns what and how well; the implementer owns how.",
       "why": "A contract written afterwards describes what was built, so it can never disagree with it, and can therefore never catch anything.",
       "check": "`pytest enforce/fitness/test_api.py::test_contract_documented`",
@@ -2708,6 +2944,8 @@
       "mechanisms": [
         "check:oracle_declared"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "An obligation MUST name the observable contract under test, the input partitions and boundary values, the expected observable, and the error paths. It does not contain assertions.",
       "why": "Obligations written after the tests are a summary of the tests, and the gap they were meant to expose closes silently.",
       "check": "`python -m checks.oracle_declared`",
@@ -2727,6 +2965,8 @@
       "mechanisms": [
         "fitness:test_decisions_recorded"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Introducing a port, a new layer, a concurrency model or a persisted format MUST be recorded as a numbered decision stating context, decision, justification, alternatives considered, consequences and enforcement.",
       "why": "The alternatives and the reason are exactly what a later agent needs and cannot reconstruct from the code, which shows only the option that won.",
       "check": "`pytest enforce/fitness/test_decisions.py::test_decisions_recorded`",
@@ -2746,6 +2986,8 @@
       "mechanisms": [
         "fitness:test_decisions_recorded"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Records MUST be numbered sequentially and never renumbered or deleted. A superseded decision is marked superseded and kept.",
       "why": "A deleted decision takes its reasoning with it, and the next agent re-derives and re-litigates it.",
       "check": "`pytest enforce/fitness/test_decisions.py::test_decisions_recorded`",
@@ -2763,6 +3005,8 @@
       "mechanisms": [
         "fitness:test_decisions_recorded"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Where a decision was contested, the objection and its resolution MUST be recorded.",
       "why": "When the decision later proves wrong, the recorded objection is usually the fastest available description of why — the cheapest future-debugging asset there is.",
       "check": "`pytest enforce/fitness/test_decisions.py::test_decisions_recorded`",
@@ -2780,6 +3024,8 @@
       "mechanisms": [
         "fitness:test_binding_rules_have_mechanisms"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "A rule tagged binding MUST name a runnable mechanism. One that cannot is advisory, with a written statement of why no mechanism exists.",
       "why": "This is the axiom the whole discipline rests on. A binding rule nothing checks degrades to the same failure mode as a verification that passes vacuously.",
       "check": "`pytest enforce/fitness/test_meta.py::test_binding_rules_have_mechanisms`",
@@ -2799,6 +3045,8 @@
       "mechanisms": [
         "fitness:test_checks_can_fail"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "Every check MUST have a companion test proving it fails when its condition is violated. A check whose success signal is empty output MUST first be shown able to produce a failing one, in the environment it runs in.",
       "why": "A check never observed to fail has not been shown to check anything, and its silence is indistinguishable from correctness.",
       "check": "`pytest enforce/fitness/test_meta.py::test_checks_can_fail`",
@@ -2818,6 +3066,8 @@
       "mechanisms": [
         "check:deviation_recorded"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Departing from an advisory rule MUST be justified in the commit message or the decision record, citing the rule identifier.",
       "why": "An unrecorded departure is indistinguishable from an oversight, and the next reader restores the rule and breaks whatever the departure was for.",
       "check": "`python -m checks.deviation_recorded`",
@@ -2835,6 +3085,8 @@
       "mechanisms": [
         "fitness:test_gate_suite_defined"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "Formatting, linting, both type checkers, import contracts, the custom checks, and the unit, contract, integration and fault suites MUST all pass. Property suites run on the seeds recorded for the touched modules, and the mutation gate runs on touched core modules.",
       "why": "A gate run after the change is offered is a gate that reviews someone else's time instead of the author's.",
       "check": "`pytest enforce/fitness/test_meta.py::test_gate_suite_defined`",
@@ -2852,6 +3104,8 @@
       "mechanisms": [
         "fitness:test_layers_populated"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A new component arrives with its contract, its unit tests, and — if it is a port — its three adapters, its contract suite and its fault suite. A new invariant arrives with its property test.",
       "why": "The suite is complete at every commit or at none; \"tests to follow\" is where they stop following.",
       "check": "`pytest enforce/fitness/test_layers.py::test_layers_populated`",
@@ -2871,6 +3125,8 @@
       "mechanisms": [
         "fitness:test_envelope_conforms"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "For a change touching an error path, the resulting envelope MUST be inspected: its code, layer, expected and actual values, and remediation must be enough to locate and fix the fault without reading the source.",
       "why": "This is the Prime Directive's acceptance test, and the only step at which the discipline's actual purpose is verified rather than approximated.",
       "check": "`pytest enforce/fitness/test_diagnostics.py::test_envelope_conforms`",
@@ -2890,6 +3146,8 @@
       "mechanisms": [
         "check:deviation_recorded"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A change description MUST state what was verified, what was skipped and why, and any rule deviation with its identifier. A failing test is reported as failing.",
       "why": "An agent inherits the previous agent's report as fact; a report that rounds a partial result up to a complete one poisons every decision built on it.",
       "check": "`python -m checks.deviation_recorded`",
@@ -2905,6 +3163,8 @@
       "title": "Scale ceremony to reuse ambition, not to line count",
       "force": "ADVISORY",
       "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
       "statement": "For a genuinely single-use script, the cascade SHOULD be compressed — and the compression stated.",
       "why": "Full ceremony applied indiscriminately trains people to route around it, which costs more than the ceremony saved.",
       "check": null,
@@ -2922,6 +3182,8 @@
       "mechanisms": [
         "check:session_recorded"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Before a change is offered, a session MUST record its learnings, or record that it had none. Silence and \"nothing learned\" are different states.",
       "why": "The cost of rediscovery is paid by every later agent, and it is invisible — no one ever sees the sessions that re-derived a fact already known.",
       "check": "`python -m checks.session_recorded`",
@@ -2941,6 +3203,8 @@
       "mechanisms": [
         "auto:learn"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "Every entry MUST carry one sentence of what is true, one imperative of what to do differently, and at least one trigger — a path glob, an error signature, a rule id, a command or a term.",
       "why": "A claim with no action is trivia; a claim with no trigger can never be retrieved and is therefore write-only.",
       "check": "`python tools/learn.py record` refuses all three omissions",
@@ -2959,6 +3223,8 @@
         "auto:learn",
         "fitness:test_a_credential_is_refused"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "Recording MUST refuse material that is credential-shaped, and an entry MUST describe the shape of a problem rather than the value that exposed it.",
       "why": "The ledger is designed to be read widely and machine-processed, which is exactly what makes a secret in it expensive.",
       "check": "`pytest tools/test_learn.py::test_a_credential_is_refused`",
@@ -2978,6 +3244,8 @@
       "mechanisms": [
         "check:learning_scope"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "An entry that says this repository behaves a certain way is `project`. An entry that says the discipline itself is wrong, ambiguous or missing a rule is `discipline`, and is what `harvest` exports upstream.",
       "why": "A discipline defect recorded as a project quirk is a defect that never gets fixed, only worked around in every repository separately.",
       "check": "`python -m checks.learning_scope`",
@@ -2995,6 +3263,8 @@
       "mechanisms": [
         "check:ledger_append_only"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Ledger entries MUST NOT be edited or removed. A wrong entry is corrected by appending a refutation; a replaced one by appending a supersession.",
       "why": "The record of what was believed and why it stopped being believed is the only thing that stops the same wrong conclusion being reached twice.",
       "check": "`python -m checks.ledger_append_only`",
@@ -3012,6 +3282,8 @@
       "mechanisms": [
         "fitness:test_the_database_is_reconstructible_from_the_ledger"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "The database MUST be reconstructible from the ledger exactly. A database holding events the ledger does not is answering retrievals from material nobody reviewed.",
       "why": "The moment the derived store can disagree with the record, the record stops being the record.",
       "check": "`pytest tools/test_learn.py::test_the_database_is_reconstructible_from_the_ledger`",
@@ -3031,6 +3303,8 @@
       "mechanisms": [
         "fitness:test_retrieval_is_reproducible"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "The same situation MUST yield the same learnings in the same order. Trigger matching is exact; relevance ranking is a pure function of the stored state and the date.",
       "why": "An unreproducible retrieval cannot be reviewed, and cannot be calibrated — you would never know whether a change to the parameters helped.",
       "check": "`pytest tools/test_learn.py::test_retrieval_is_reproducible`",
@@ -3050,6 +3324,8 @@
       "mechanisms": [
         "fitness:test_confidence_decays_with_time"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "An entry not seen or re-verified within its half-life MUST be offered more quietly, and MUST be marked stale when it is offered at all.",
       "why": "An old claim presented with the authority of a fresh one is worse than no claim: it is a confident wrong answer, which is the expensive failure direction.",
       "check": "`pytest tools/test_learn.py::test_confidence_decays_with_time`",
@@ -3067,6 +3343,8 @@
       "mechanisms": [
         "check:promotion_due"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Once an entry has met the evidence threshold and can be expressed as a lint rule, a contract, a configuration change or a test, the mechanism MUST be built and the entry promoted — after which it stops being offered.",
       "why": "This is the authoring axiom applied to experience. Without it the database becomes a permanent pile of things everyone is expected to remember, which is the failure mode it exists to prevent.",
       "check": "`python -m checks.promotion_due`",
@@ -3086,6 +3364,8 @@
       "mechanisms": [
         "check:learning_size"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "When the active set passes the configured ceiling, the next calibration pass MUST triage rather than accumulate.",
       "why": "A database nobody prunes becomes a database nobody reads, and an unread database costs its write time and returns nothing.",
       "check": "`python -m checks.learning_size`",
@@ -3103,6 +3383,8 @@
       "mechanisms": [
         "auto:learn"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "Changing a retrieval, promotion or decay parameter MUST append a calibration event stating what moved and why.",
       "why": "A parameter changed without a record is indistinguishable from drift, and the next pass cannot tell a deliberate tightening from an accident.",
       "check": "`python tools/learn.py calibrate --set` refuses without `--why`",
@@ -3118,6 +3400,8 @@
       "title": "Prefer the smallest true entry",
       "force": "ADVISORY",
       "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
       "statement": "An entry SHOULD record the narrowest claim that would have saved the time, rather than the general lesson it seems to suggest.",
       "why": "Broad entries match everything, cost attention on every task, and are the first to be ignored.",
       "check": null,
@@ -3135,6 +3419,8 @@
       "mechanisms": [
         "check:dispatch_recorded"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Work handed to a teammate MUST carry its inputs, its expected observable output, its acceptance criterion and its stop condition.",
       "why": "\"Able\" is judged against the workload as handed over, not as it exists in the coordinator's head; an under-specified dispatch produces confident, wrong work.",
       "check": "`python -m checks.dispatch_recorded`",
@@ -3154,6 +3440,8 @@
       "mechanisms": [
         "check:dispatch_recorded"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "An agent MUST NOT achieve an effect its granted tools exclude by routing around them, and a dispatch MUST NOT purport to grant a capability the receiving agent does not hold.",
       "why": "The cost of refusing is one wasted dispatch; the cost of circumventing is that every verdict that agent ever issued becomes questionable.",
       "check": "`python -m checks.dispatch_recorded`",
@@ -3173,6 +3461,8 @@
       "mechanisms": [
         "fitness:test_gate_suite_defined"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "Where the tooling offers a completion hook, the verification obligation MUST be enforced there — a task cannot be marked done while its gate fails.",
       "why": "This is what turns a soft norm into a hard one, and it is the only place the discipline's own axiom can be applied to agent coordination itself.",
       "check": "`pytest enforce/fitness/test_meta.py::test_gate_suite_defined`",
@@ -3185,6 +3475,66 @@
       "line": 85
     },
     {
+      "id": "TEAMS-004",
+      "module": "ops/teams",
+      "title": "Documentation is written in one stage, verified in another",
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
+      "statement": "Documentation dispatched to agents SHOULD run as two stages, the verifier a fresh agent holding no memory of having written the text and re-deriving each claim from the code.",
+      "why": "A writer re-reading its own documentation re-derives its own assumptions and so confirms them; independence is the only thing that makes the second reading evidence.",
+      "check": null,
+      "no_mechanism": "Whether a second, independent pass happened is a fact about dispatch history, not about the tree, and nothing in the repository can read it.",
+      "see": [
+        "TEAMS-001",
+        "law/DOC"
+      ],
+      "superseded_by": null,
+      "path": "discipline/ops/teams.md",
+      "line": 111
+    },
+    {
+      "id": "TEAMS-005",
+      "module": "ops/teams",
+      "title": "A verifier refutes claims; it does not improve prose",
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
+      "statement": "The verifier's task SHOULD be stated as refutation — for each claim, find the code that contradicts it — and SHOULD NOT include rewriting, tightening or restyling.",
+      "why": "An agent asked to improve documentation optimizes wording it can see; an agent asked to refute must open the code, which is the only place the error is visible.",
+      "check": null,
+      "no_mechanism": "The instruction is in a dispatch, and its effect is a judgment about whether a claim was tested rather than admired; neither is inspectable after the fact.",
+      "see": [
+        "DOC-009",
+        "TEAMS-001"
+      ],
+      "superseded_by": null,
+      "path": "discipline/ops/teams.md",
+      "line": 120
+    },
+    {
+      "id": "TEAMS-006",
+      "module": "ops/teams",
+      "title": "Presence and truth need separate mechanisms",
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
+      "statement": "Documentation completeness and documentation truth SHOULD be treated as two properties; the mechanical gate decides only the first, and a green gate SHOULD NOT be read as the second.",
+      "why": "Treating the gate as a truth oracle is what let 90 false claims ship green — and a false docstring is worse than an absent one, because an agent trusts it.",
+      "check": null,
+      "no_mechanism": "Deciding whether a sentence is true of the code it sits above is the general program-understanding problem; [DOC-001]–[DOC-011] mechanize presence and form, which is the whole of what a checker can reach.",
+      "see": [
+        "DOC-013",
+        "law/DOC"
+      ],
+      "superseded_by": null,
+      "path": "discipline/ops/teams.md",
+      "line": 129
+    },
+    {
       "id": "TEST-001",
       "module": "law/TEST",
       "title": "Unit tests touch no external resource",
@@ -3192,6 +3542,8 @@
       "mechanisms": [
         "fitness:test_unit_layer_is_pure"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Tests in the unit layer MUST NOT import filesystem, network, subprocess, clock or environment modules, nor any adapter.",
       "why": "A unit failure that can be caused by the environment is a unit failure that localizes nothing.",
       "check": "`pytest enforce/fitness/test_layers.py::test_unit_layer_is_pure`",
@@ -3211,6 +3563,8 @@
       "mechanisms": [
         "fitness:test_layers_populated"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Every port MUST have a contract suite and a fault suite; every domain module MUST have unit tests and, where it states an invariant, a property suite.",
       "why": "An untested seam is not visibly untested — it looks exactly like a tested one until it fails.",
       "check": "`pytest enforce/fitness/test_layers.py::test_layers_populated`",
@@ -3228,6 +3582,8 @@
       "mechanisms": [
         "auto:pytest-timeout"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "Unit tests MUST complete within the configured per-test budget.",
       "why": "The budget is a proxy for the architecture: a unit test that got slow did so by acquiring a dependency it was not supposed to have.",
       "check": "`pytest --timeout` as configured in `enforce/pyproject.toml`",
@@ -3245,6 +3601,8 @@
       "mechanisms": [
         "check:oracle_declared"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A test module MUST name, in its docstring, which oracle its assertions rest on: contract, property, differential, golden, or example.",
       "why": "An undeclared oracle is almost always \"whatever the implementation did when I wrote this\", which locks in the defect instead of detecting it.",
       "check": "`python -m checks.oracle_declared`",
@@ -3262,6 +3620,8 @@
       "mechanisms": [
         "fitness:test_contract_suite_per_adapter"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "The port's contract is the oracle for all of its adapters, and the same suite runs against real, fake, and faulty-in-healthy-mode without modification.",
       "why": "This is the strongest oracle available: it tests against the published promise rather than against an implementation.",
       "check": "`pytest enforce/fitness/test_ports.py::test_contract_suite_per_adapter`",
@@ -3281,6 +3641,8 @@
       "mechanisms": [
         "fitness:test_contract_suite_per_adapter"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Any behaviour a fake exhibits that the real adapter does not MUST be caught by the shared contract suite.",
       "why": "Every unit test standing on a drifting fake is worth exactly as little as the fake, and none of them will say so.",
       "check": "`pytest enforce/fitness/test_ports.py::test_contract_suite_per_adapter`",
@@ -3298,6 +3660,8 @@
       "mechanisms": [
         "fitness:test_layers_populated"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Round-trip, idempotence, involution, ordering and closure properties MUST be expressed as generated-input property tests, not as hand-picked examples.",
       "why": "A property is a claim about all inputs; three examples test three inputs and imply the rest.",
       "check": "`pytest enforce/fitness/test_layers.py::test_layers_populated`",
@@ -3315,6 +3679,8 @@
       "mechanisms": [
         "fitness:test_goldens_reviewed"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A change to a golden artifact MUST be accompanied by the source change that justifies it. Regenerating goldens to make a suite pass is prohibited.",
       "why": "\"Just regenerate\" converts an oracle into a recording of the current behaviour, which is the same as deleting it.",
       "check": "`pytest enforce/fitness/test_goldens.py::test_goldens_reviewed`",
@@ -3332,6 +3698,8 @@
       "mechanisms": [
         "fitness:test_fault_schedules_are_data"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A fault MUST be expressed as a schedule — port, operation, occurrence, fault kind — that can be serialized, replayed and shrunk. Hand-written single-purpose failing classes are prohibited.",
       "why": "A schedule that survives as data is a failing case an agent can replay verbatim; a bespoke class is a one-off that has to be re-derived.",
       "check": "`pytest enforce/fitness/test_faults.py::test_fault_schedules_are_data`",
@@ -3351,6 +3719,8 @@
       "mechanisms": [
         "fitness:test_fault_catalogue"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Each port MUST be exercised against the fault categories that apply to it: explicit failure, omission, timing, value corruption, state inconsistency, stale state, duplication, reordering, partial effect, and protocol violation.",
       "why": "Faults found in production are drawn from this list; a category never injected is a category first observed live.",
       "check": "`pytest enforce/fitness/test_faults.py::test_fault_catalogue`",
@@ -3368,6 +3738,8 @@
       "mechanisms": [
         "fitness:test_fault_containment"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "For a chain of components, tests MUST assert what a downstream component does when an upstream one misbehaves, and that a healthy neighbour is unaffected.",
       "why": "The interesting behaviour is never the direct failure; it is what the next component does with it.",
       "check": "`pytest enforce/fitness/test_faults.py::test_fault_containment`",
@@ -3387,6 +3759,8 @@
       "mechanisms": [
         "fitness:test_interruption_recovers"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A multi-effect apply MUST be tested for interruption before, between and after each effect, asserting that recovery reaches a defined state.",
       "why": "The failure that destroyed 8,023 files in the source corpus happened in exactly this window, and reported success while doing it.",
       "check": "`pytest enforce/fitness/test_effects.py::test_interruption_recovers`",
@@ -3406,6 +3780,8 @@
       "mechanisms": [
         "auto:mutmut"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "Seeded defects in domain modules MUST be detected at or above the configured score. Surviving mutants are dispositioned in a ledger, never ignored.",
       "why": "This is the only check that tests the tests; line execution cannot distinguish \"this ran\" from \"this was verified\".",
       "check": "the configured mutation run and its score gate",
@@ -3425,6 +3801,8 @@
       "mechanisms": [
         "check:compound_gate"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A gate decision combining conditions MUST either be decomposed into named predicates, or be accompanied by a parametrized truth-table test covering each condition's independent effect on the outcome.",
       "why": "No mainstream tool measures `modified condition/decision coverage` for this language, so the requirement is met by construction instead of by measurement.",
       "check": "`python -m checks.compound_gate`",
@@ -3442,6 +3820,8 @@
       "mechanisms": [
         "fitness:test_checks_can_fail"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "Every gate, fitness test and custom check MUST have a companion test demonstrating it fails when the condition it guards is violated.",
       "why": "A check whose passing signal is empty output has not been shown to check anything, and silent vacuity is indistinguishable from success.",
       "check": "`pytest enforce/fitness/test_meta.py::test_checks_can_fail`",
@@ -3459,6 +3839,8 @@
       "mechanisms": [
         "check:test_weakening"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A change that loosens an assertion, widens a caught type, or narrows a generator MUST state in the change whether the previous discrimination is preserved.",
       "why": "Suites do not collapse in one commit; they are weakened one reasonable-looking edit at a time, and nothing objects unless something is watching.",
       "check": "`python -m checks.test_weakening`",
@@ -3477,6 +3859,8 @@
         "auto:pytest-randomly",
         "auto:pytest-socket"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "The suite MUST pass under randomized ordering, and network access MUST be blocked by default.",
       "why": "Order dependence and ambient network access are both hidden inputs, and both produce failures that reproduce only sometimes.",
       "check": "`pytest` with the configured plugins",
@@ -3494,6 +3878,8 @@
       "mechanisms": [
         "fitness:test_seeds_recorded"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "An unreproducible failure MUST be investigated at the priority of a domain defect. Reruns MUST NOT be used to dismiss one. Failing generated cases are recorded as fixtures.",
       "why": "Rerunning until green discards the one observation that had diagnostic value.",
       "check": "`pytest enforce/fitness/test_determinism.py::test_seeds_recorded`",
@@ -3509,6 +3895,8 @@
       "title": "Test names state the behaviour",
       "force": "ADVISORY",
       "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
       "statement": "A test name SHOULD say what must hold, not restate the implementation or number a case.",
       "why": "The name is what an agent reads first in a failure report, and often all it gets.",
       "check": null,
@@ -3527,6 +3915,8 @@
         "auto:mypy",
         "auto:pyright"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "The package MUST pass both configured checkers in their strict configurations, with the enabled rule set committed to version control.",
       "why": "The two infer differently, so agreement between them is a differential oracle; \"strict\" alone names no portable rule set and guarantees nothing.",
       "check": "`mypy --strict src/` · `pyright src/`",
@@ -3547,6 +3937,8 @@
         "auto:mypy",
         "check:domain_purity"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "Domain modules MUST NOT use `Any`, explicit or implicit — including via untyped third-party stubs and unannotated function bodies.",
       "why": "`Any` silently disables every downstream guarantee on the values that flow through it, so the layer whose errors must be trustworthy is the layer it cannot enter.",
       "check": "`mypy --strict --disallow-any-explicit src/domain` · `python -m checks.domain_purity`",
@@ -3565,6 +3957,8 @@
         "auto:mypy",
         "auto:ruff:PGH003"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "Every `cast`, `type: ignore` and explicit `Any` MUST name the specific rule it suppresses and carry a comment giving the reason. Redundant casts and unused ignores fail the build.",
       "why": "A `cast` is an unchecked assertion the checker trusts blindly; a wrong one propagates a lie until something unrelated crashes, which is the hardest failure to trace.",
       "check": "`mypy --warn-redundant-casts --warn-unused-ignores` · `ruff check` (rule `PGH003`)",
@@ -3582,6 +3976,8 @@
       "mechanisms": [
         "check:domain_purity"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "Identifiers and domain scalars MUST NOT be interchangeable primitives. Each concept gets its own type.",
       "why": "Passing an argument in the wrong position is the defect class this eliminates outright rather than testing for.",
       "check": "`python -m checks.domain_purity`",
@@ -3599,6 +3995,8 @@
       "mechanisms": [
         "check:boundary_parsing"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A type carrying a well-formedness rule MUST be a frozen wrapper whose constructor validates and returns a result. `NewType` is prohibited for constrained values.",
       "why": "`NewType` has no constructor and validates nothing, so it renames a primitive without excluding a single invalid value.",
       "check": "`python -m checks.boundary_parsing`",
@@ -3619,6 +4017,8 @@
         "auto:mypy",
         "check:domain_purity"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "A value drawn from a fixed set MUST be an enumeration, not a string literal union.",
       "why": "An enumeration has one definition site that exhaustiveness checking follows; a literal union repeated at each use has as many definitions as usages.",
       "check": "`mypy --strict` · `python -m checks.domain_purity`",
@@ -3636,6 +4036,8 @@
       "mechanisms": [
         "check:domain_purity"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "Domain value types MUST be immutable dataclasses with slots.",
       "why": "A value that cannot be mutated after construction cannot drift between validation and use, which is what lets an error name the value it was given.",
       "check": "`python -m checks.domain_purity`",
@@ -3653,6 +4055,8 @@
       "mechanisms": [
         "check:domain_purity"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "Function signatures MUST declare immutable or read-only collection types for parameters the callee does not own.",
       "why": "A mutable collection in a signature is an undeclared output channel, and the caller learns about it only when its own data changes underneath it.",
       "check": "`python -m checks.domain_purity`",
@@ -3670,6 +4074,8 @@
       "mechanisms": [
         "fitness:test_every_port_is_a_protocol"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A port MUST be declared as a `Protocol`, so an adapter conforms by shape rather than by inheriting from the core.",
       "why": "Nominal inheritance would make every adapter import the core, reversing the dependency direction the architecture depends on.",
       "check": "`pytest enforce/fitness/test_ports.py::test_every_port_is_a_protocol`",
@@ -3689,6 +4095,8 @@
       "mechanisms": [
         "check:boundary_parsing"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A runtime-checkable protocol MUST NOT be used as evidence that an object satisfies a contract; it confirms member existence only, never signature or behaviour.",
       "why": "An object that passes the runtime check and violates the contract produces a failure attributed to the wrong component.",
       "check": "`python -m checks.boundary_parsing`",
@@ -3706,6 +4114,8 @@
       "mechanisms": [
         "check:boundary_parsing"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Value ranges, cross-field invariants, ordering and temporal constraints, units, and stateful protocols MUST be enforced by boundary parsing or an explicit runtime contract, and stated in the docstring. They MUST NOT be assumed carried by an annotation.",
       "why": "Any claim that strict typing guarantees correctness is false, and a contract that relies on it fails without ever having been checked.",
       "check": "`python -m checks.boundary_parsing`",
@@ -3726,6 +4136,8 @@
       "mechanisms": [
         "check:boundary_parsing"
       ],
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "If a checker can enforce a constraint, it MUST be in the signature. If only a human or a runtime check can, it MUST be in the docstring and backed by a runtime check where it matters.",
       "why": "A constraint in prose that a checker could have carried is a guarantee downgraded to a hope for no reason.",
       "check": "`python -m checks.boundary_parsing`",
@@ -3743,6 +4155,8 @@
       "mechanisms": [
         "auto:mypy"
       ],
+      "enforcement": "external",
+      "mechanically_enforced": true,
       "statement": "Numeric and string conversions MUST be written explicitly; implicit coercion and cross-type equality comparisons fail the build.",
       "why": "A silent coercion is a value changing identity with no site to attribute it to.",
       "check": "`mypy --strict-equality`",
@@ -3760,6 +4174,8 @@
       "mechanisms": [
         "check:domain_purity"
       ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "Frozen dataclasses, read-only mappings and final declarations MUST be used to signal intent; code MUST NOT rely on them being unbypassable.",
       "why": "The freeze is shallow and can be circumvented; treating it as a hard guarantee produces an invariant nothing actually maintains.",
       "check": "`python -m checks.domain_purity`",
@@ -3775,6 +4191,8 @@
       "title": "Type sophistication stays proportionate",
       "force": "ADVISORY",
       "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
       "statement": "Type-level machinery SHOULD be introduced when it removes a class of defect, not to demonstrate that it can be.",
       "why": "A signature only a specialist can read moves the comprehension cost onto every future reader, including the agent trying to repair it.",
       "check": null,

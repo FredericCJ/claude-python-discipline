@@ -21,7 +21,6 @@ from collections.abc import Sequence
 from pathlib import Path
 
 import learn
-from discipline_core import REPO_ROOT
 
 ## A finding needs this much evidence before it is worth an upstream proposal.
 ## Below it, one session disliked a rule; at or above it, the rule is a problem.
@@ -174,7 +173,7 @@ def render_patch(found: Sequence[dict[str, object]]) -> str:
             f"- **Why** Observed {item['evidence']} time(s) across "
             f"{item['sessions']} session(s) in a repository using this discipline.",
             check_line,
-            *( [f"- **See** {see}"] if see else [] ),
+            *([f"- **See** {see}"] if see else []),
             "```",
             "",
         ]

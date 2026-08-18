@@ -16,17 +16,17 @@ extend-ignore = [
     # These modules ARE command-line tools; stdout is their output contract, not a
     # debugging leftover. In a real project the equivalent code lives in shell/ and
     # prints through a presenter (API-006).
-    "T201",
+    "print",
     # Copyright headers are a repository policy this one does not have.
-    "CPY001",
+    "missing-copyright-notice",
     # tools/ and enforce/checks/ are run both as scripts and as importable modules;
     # a package marker would break the script path.
-    "INP001",
+    "implicit-namespace-package",
     # DOC201/DOC402 are now ignored in the canonical config too, for a better
     # reason than the one recorded here originally: they demand Google-style
     # sections that Doxygen cannot read (law/DOC, fact/doxygen). Kept here only
     # until every file in this repository is migrated to @return.
-    "DOC201", "DOC402",
+    "docstring-missing-returns", "docstring-missing-yields",
 ]
 
 [lint.flake8-tidy-imports]
@@ -39,7 +39,7 @@ ban-relative-imports = "parents"
 # The template scopes these to tests/**; this repository keeps its proof-of-failure
 # suites beside the code they prove, so the same exemption needs a different path.
 # S101 stays on everywhere else, which is what DIAG-009 and ERR-012 require.
-"**/test_*.py" = ["S101", "PLR2004", "D103", "ANN", "SLF001"]
+"**/test_*.py" = ["assert", "magic-value-comparison", "undocumented-public-function", "ANN", "private-member-access"]
 # The check framework re-exports for its subclasses; RUF067 fires on any non-empty
 # package init.
-"enforce/checks/__init__.py" = ["RUF067"]
+"enforce/checks/__init__.py" = ["non-empty-init-module"]

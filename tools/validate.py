@@ -39,6 +39,7 @@ from discipline_core import (
     count_tokens,
     find_version_literals,
     find_xrefs,
+    mechanism_is_implemented,
     parse_document,
     prose_of,
 )
@@ -46,6 +47,11 @@ from discipline_core import (
 ## The JSON Schema every corpus file's front-matter is validated against. Kept
 ## beside this file so the checker and its schema cannot be separated.
 SCHEMA_PATH: Final = Path(__file__).resolve().parent / "frontmatter.schema.json"
+
+## The committed ceiling V081/V082 ratchet against. Kept beside this file, in the
+## same idiom as `SCHEMA_PATH` and `tools/doc_baseline.json`: a checked-in record
+## the tool itself writes, moved only by an explicit rerun with a reason.
+V080_BASELINE_PATH: Final = Path(__file__).resolve().parent / "v080_baseline.json"
 
 ## How long a `verified:` date stands before V060 calls the document rotted, per
 ## `decay:` class. "none" is a sentinel large enough never to fire, so an
@@ -634,30 +640,6 @@ def check_glossary(documents: Sequence[Document], layout: Layout) -> Iterator[Fi
                 )
 
 
-def mechanism_is_implemented(mechanism: str, layout: Layout) -> bool | None:
-    """Whether a mechanism tag points at something that exists.
-
-    Returns None for mechanisms this cannot verify -- `auto:*` names a tool's own
-    rule, and `review` names a person.
-
-    @param mechanism a tag such as `check:layering` or `fitness:no_cycles`
-    @param layout the tree to look in
-    @return True when the file or function it names is present, False when the
-        tag is checkable and nothing answers it, None when it is not checkable here
-    """
-    kind, _, target = mechanism.partition(":")
-    if kind == "check":
-        return (layout.enforce / "checks" / f"{target}.py").exists()
-    if kind == "fitness":
-        return any(
-            f"def {target}(" in path.read_text(encoding="utf-8")
-            for directory in (layout.enforce / "fitness", layout.root / "tools")
-            if directory.exists()
-            for path in directory.rglob("*.py")
-        )
-    return None
-
-
 def check_mechanisms(documents: Sequence[Document], layout: Layout) -> Iterator[Finding]:
     """V080 -- a named mechanism actually exists.
 
@@ -674,7 +656,7 @@ def check_mechanisms(documents: Sequence[Document], layout: Layout) -> Iterator[
     for doc in documents:
         for rule in doc.rules:
             for mechanism in rule.mechanisms:
-                if mechanism_is_implemented(mechanism, layout) is False:
+                if mechanism_is_implemented(mechanism, layout.root) is False:
                     yield Finding(
                         code="V080",
                         severity=Severity.WARN,
@@ -683,6 +665,175 @@ def check_mechanisms(documents: Sequence[Document], layout: Layout) -> Iterator[
                         message=f"{rule.rule_id}: mechanism `{mechanism}` is not implemented",
                         remediation="Build it under enforce/, or the rule is binding in name only.",
                     )
+
+
+def unbuilt_pairs(documents: Sequence[Document], layout: Layout) -> frozenset[tuple[str, str]]:
+    """Every (rule, mechanism) pair V080 would warn about, as a comparable set.
+
+    The same test `check_mechanisms` applies, restated as a set rather than a
+    finding stream: the ratchet needs to diff two moments of the corpus against
+    each other, not render either one.
+
+    @param documents every parsed corpus file
+    @param layout the tree they were read from
+    @return each rule id paired with a mechanism tag it names that resolves to
+        nothing on disk; a rule naming two absent mechanisms contributes two pairs
+    """
+    return frozenset(
+        (rule.rule_id, mechanism)
+        for doc in documents
+        for rule in doc.rules
+        for mechanism in rule.mechanisms
+        if mechanism_is_implemented(mechanism, layout.root) is False
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class V080Baseline:
+    """The recorded ceiling V081/V082 hold the corpus to, and why it last moved."""
+
+    ## How many (rule, mechanism) pairs may be unbuilt without failing the run.
+    ## Redundant with `len(pairs)` in a well-formed file, and kept explicit only
+    ## so that a disagreement between the two is a detectable state at all;
+    ## `load_v080_baseline` is what rejects it. Raising this number alone is the
+    ## cheapest way to switch V081 off, so it must never be read on trust.
+    count: int
+    ## The exact pairs unbuilt when the baseline was last recorded, so V081 can
+    ## name which ones are new rather than only report that the count grew.
+    pairs: frozenset[tuple[str, str]]
+    ## The `--why` given for the last move, or None for a baseline no one has
+    ## moved since it was first written.
+    why: str | None
+
+
+## The ceiling before any baseline file has ever been written -- zero unbuilt
+## mechanisms tolerated -- so a corpus with no baseline on disk fails closed
+## rather than passing by default.
+_EMPTY_BASELINE: Final = V080Baseline(count=0, pairs=frozenset(), why=None)
+
+
+def load_v080_baseline(path: Path = V080_BASELINE_PATH) -> V080Baseline:
+    """Read the committed ceiling, or the empty one when nothing has been recorded yet.
+
+    The stored `count` is checked against the stored `pairs` rather than taken
+    on trust. A ratchet whose ceiling is one hand-editable integer is not a
+    ratchet: raising that integer alone silences V081 for every rule at once and
+    leaves no trace, so the two halves of the file must agree or the file is not
+    the one this module wrote.
+
+    @param path the baseline file to read, defaulting to the checked-in one
+    @return the baseline; `_EMPTY_BASELINE` when `path` does not exist
+    @throws ValueError if the file exists but is not the JSON this module writes:
+        unparsable, missing `count` or `pairs`, holding something other than
+        two-element pairs, or carrying a `count` its own `pairs` contradict
+    """
+    if not path.exists():
+        return _EMPTY_BASELINE
+    data = json.loads(path.read_text(encoding="utf-8"))
+    for key in ("count", "pairs"):
+        if key not in data:
+            missing = f"{path}: not a V080 baseline -- no `{key}` field"
+            raise ValueError(missing)
+    pairs = frozenset((rule_id, mechanism) for rule_id, mechanism in data["pairs"])
+    if data["count"] != len(pairs):
+        disagrees = (
+            f"{path}: `count` is {data['count']} but `pairs` holds {len(pairs)}; "
+            f"rewrite it with `python tools/validate.py --update-baseline "
+            f'--why "..."` rather than by hand'
+        )
+        raise ValueError(disagrees)
+    return V080Baseline(count=data["count"], pairs=pairs, why=data.get("why"))
+
+
+def write_v080_baseline(pairs: frozenset[tuple[str, str]], why: str, path: Path = V080_BASELINE_PATH) -> None:
+    """Move the ceiling to `pairs`, recording why, in the `doc_baseline.json` idiom.
+
+    @param pairs the (rule, mechanism) set the new ceiling holds the corpus to
+    @param why the reason the ceiling is moving; required, matching
+        `learn.py calibrate --set` refusing an unexplained dial turn
+    @param path where to write the baseline, defaulting to the checked-in one
+    """
+    payload = {
+        "generated_by": "tools/validate.py --update-baseline",
+        "note": (
+            "Ratchet ceiling for V081/V082. validate.py fails when the corpus's "
+            "unbuilt-mechanism count exceeds `count` below, and only warns when it "
+            "falls under it. Move this file with `python tools/validate.py "
+            '--update-baseline --why "..."`, never by hand -- the pairs must stay '
+            "exactly what the tool itself measured."
+        ),
+        "count": len(pairs),
+        "pairs": sorted(pairs),
+        "why": why,
+    }
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+
+def check_v080_ratchet(
+    documents: Sequence[Document], layout: Layout, *, baseline: V080Baseline | None = None
+) -> Iterator[Finding]:
+    """V081-V082 -- the unbuilt-mechanism count is a ratchet, not a freeze.
+
+    A rule adding a mechanism that already resolves costs the count nothing, so a
+    new binding rule with real enforcement never trips V081 -- only a rule whose
+    mechanism is *not* built does, which is the exact case the corpus's own axiom
+    (anything mechanically verifiable shall be mechanically verified) forbids
+    hiding. Force is not weighed here at all, which is what closes the obvious
+    dodge: re-tagging a rule `[ADVISORY]` while keeping its unbuilt mechanism tag
+    still contributes the pair and still trips V081. Dropping the tag as well
+    escapes this check and lands on `enforce/fitness/test_meta.py`'s
+    `test_advisory_rules_justify_themselves`, which demands a written reason no
+    mechanism could exist.
+
+    Silent when `layout.root` is not the real repository: the baseline records one
+    specific tree, and diffing a throwaway test corpus against it would report
+    every synthetic fixture as a mass regression. Call this function directly, with
+    an injected `baseline`, to test it against a fixture.
+
+    @param documents every parsed corpus file
+    @param layout the tree they were read from
+    @param baseline the ceiling to compare against; loaded from
+        `V080_BASELINE_PATH` when not given, which is every caller but a test
+    @return one V081 error when the count rose, naming the pairs that are new;
+        one V082 warning when it fell, inviting the baseline down; nothing when
+        it is unchanged
+    """
+    if baseline is None:
+        if layout.root != REPO_ROOT:
+            return
+        baseline = load_v080_baseline()
+    current = unbuilt_pairs(documents, layout)
+    if len(current) > baseline.count:
+        added = sorted(current - baseline.pairs)
+        names = ", ".join(f"{rule_id} `{mechanism}`" for rule_id, mechanism in added) or "(recount only)"
+        yield Finding(
+            code="V081",
+            severity=Severity.ERROR,
+            path=layout.rel(V080_BASELINE_PATH),
+            line=1,
+            message=(
+                f"{len(current)} unbuilt mechanism(s) exceeds the baseline of "
+                f"{baseline.count}; new: {names}"
+            ),
+            remediation=(
+                "Build the missing mechanism(s) under enforce/, or if the rule is "
+                "legitimately new and its mechanism genuinely not written yet, move "
+                'the ceiling deliberately: `python tools/validate.py '
+                '--update-baseline --why "..."`.'
+            ),
+        )
+    elif len(current) < baseline.count:
+        yield Finding(
+            code="V082",
+            severity=Severity.WARN,
+            path=layout.rel(V080_BASELINE_PATH),
+            line=1,
+            message=f"{len(current)} unbuilt mechanism(s), below the baseline of {baseline.count}",
+            remediation=(
+                'Lock in the progress: `python tools/validate.py --update-baseline '
+                '--why "..."`.'
+            ),
+        )
 
 
 def check_graph(documents: Sequence[Document], layout: Layout) -> Iterator[Finding]:
@@ -923,6 +1074,7 @@ def run(layout: Layout = DEFAULT_LAYOUT) -> list[Finding]:
     findings.extend(check_freshness(documents, layout))
     findings.extend(check_glossary(documents, layout))
     findings.extend(check_mechanisms(documents, layout))
+    findings.extend(check_v080_ratchet(documents, layout))
     findings.extend(check_graph(documents, layout))
     findings.extend(check_grounding(documents, layout))
     findings.extend(check_learning(layout))
@@ -936,9 +1088,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     prints each one rendered, then a tally by code so a run's shape is legible
     without reading every line.
 
+    `--update-baseline` moves the V081/V082 ceiling to the corpus as it stands
+    right now and exits, doing none of the other checks; it always requires
+    `--why`, the same refusal `learn.py calibrate --set` makes for an unexplained
+    dial turn, since a ceiling that can move without a recorded reason is a freeze
+    wearing a ratchet's name.
+
     @param argv command-line arguments, defaulting to those of the process
-    @return 1 if any error-severity finding was raised, 0 otherwise -- warnings
-        are printed and counted but never decide the exit code
+    @return 1 if any error-severity finding was raised, or if `--update-baseline`
+        was given without `--why`; 0 otherwise -- warnings are printed and counted
+        but never decide the exit code
     """
     # The console encoding is not ours to choose, and a tool that dies on one is
     # worse than one that renders a character imperfectly.
@@ -947,9 +1106,25 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Validate the discipline corpus.")
     parser.add_argument("--json", action="store_true", help="emit findings as JSON")
     parser.add_argument("--root", type=Path, default=REPO_ROOT, help="repository root")
+    parser.add_argument(
+        "--update-baseline", action="store_true",
+        help="move the V081/V082 ceiling to the corpus's current unbuilt-mechanism count and exit",
+    )
+    parser.add_argument("--why", help="required with --update-baseline: why the ceiling is moving")
     args = parser.parse_args(argv)
+    root = args.root.resolve()
 
-    findings = run(Layout(args.root.resolve()))
+    if args.update_baseline:
+        if not args.why:
+            parser.error("--why is required with --update-baseline; an unexplained ceiling move is drift")
+        layout = Layout(root)
+        documents, _ = load_documents(layout)
+        pairs = unbuilt_pairs(documents, layout)
+        write_v080_baseline(pairs, args.why)
+        print(f"recorded {len(pairs)} unbuilt mechanism(s) in {layout.rel(V080_BASELINE_PATH)} -- {args.why}")
+        return 0
+
+    findings = run(Layout(root))
     errors = [f for f in findings if f.severity is Severity.ERROR]
 
     if args.json:

@@ -260,5 +260,72 @@ def test_every_gate_entry_is_runnable(name: str, command: tuple[str, ...]) -> No
     )
 
 
+def test_doxygen_version_matches_recorded() -> None:
+    """Doxygen defects fixed between versions; ensure configuration does not drift.
+
+    Three defects in Doxygen's Python parser (at 1.10.0) motivated disabling
+    WARN_NO_PARAMDOC and WARN_IF_UNDOCUMENTED in enforce/Doxyfile. These
+    defects may be fixed in later versions, or new ones may appear. When
+    Doxygen is upgraded, the disabled warnings and verified: date in
+    discipline/fact/doxygen.md must be re-checked against the defects table
+    there, or they stay switched off for no remaining reason.
+
+    This test enforces that decision: it skips when Doxygen is not installed,
+    and fails when installed and the version differs from the recorded one,
+    with a message that tells the reader what to verify and update.
+    """
+    # Read the recorded version from the doxygen.md table
+    dox_fact_path = REPO_ROOT / "discipline" / "fact" / "doxygen.md"
+    dox_fact_text = dox_fact_path.read_text(encoding="utf-8")
+
+    # Parse the version from the table row:
+    # | Doxygen | 1.10.0 | VERSION-DEPENDENT |
+    recorded_version = None
+    for line in dox_fact_text.splitlines():
+        if "| Doxygen |" in line and "VERSION-DEPENDENT" in line:
+            parts = [p.strip() for p in line.split("|")]
+            if len(parts) >= 3:
+                recorded_version = parts[2]
+            break
+
+    assert recorded_version is not None, (
+        "Could not parse Doxygen version from "
+        "discipline/fact/doxygen.md; expected a line matching "
+        "'| Doxygen | <version> | VERSION-DEPENDENT |'"
+    )
+
+    # Run 'doxygen --version' and parse the output
+    try:
+        result = subprocess.run(
+            ("doxygen", "--version"),
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            cwd=REPO_ROOT, check=False, timeout=30,
+        )
+    except FileNotFoundError:
+        pytest.skip("doxygen not installed")
+
+    if result.returncode != 0:
+        pytest.skip("doxygen not installed or not in PATH")
+
+    # Extract the version from the output (e.g., "1.10.0" or "1.10.0 (some extra text)")
+    installed_version = result.stdout.strip().split()[0]
+
+    # Compare versions
+    assert installed_version == recorded_version, (
+        f"Doxygen version mismatch: discipline/fact/doxygen.md records {recorded_version!r} "
+        f"but {installed_version!r} is installed.\n\n"
+        f"Before updating the version and verified: date in discipline/fact/doxygen.md:\n"
+        f"  1. Re-run the defect verification tests against the three defects in the\n"
+        f"     'Three defects that decide who owns which rule' section of\n"
+        f"     discipline/fact/doxygen.md.\n"
+        f"  2. Re-verify the two disabled warning settings in enforce/Doxyfile:\n"
+        f"     - WARN_IF_UNDOCUMENTED (line ~47)\n"
+        f"     - WARN_NO_PARAMDOC (line ~54)\n"
+        f"  3. If the defects are fixed in {installed_version}, enable the warnings and\n"
+        f"     remove the explanatory comments.\n"
+        f"  4. Update 'verified:' and the version in discipline/fact/doxygen.md.\n"
+    )
+
+
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-q"]))

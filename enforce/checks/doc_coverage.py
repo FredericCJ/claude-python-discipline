@@ -17,7 +17,7 @@ import re
 from collections.abc import Iterator
 from pathlib import Path
 
-from . import Check, Finding, is_test_path, main
+from . import Check, Finding, main
 
 ## Names that carry no contract of their own and are documented by their owner.
 EXEMPT_NAMES = frozenset({"__all__", "__version__", "__author__", "_", "__"})

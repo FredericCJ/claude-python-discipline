@@ -8,7 +8,7 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 
 | Status | Count |
 |---|---|
-| candidate | 27 |
+| candidate | 32 |
 | superseded | 1 |
 
 ## candidate
@@ -235,6 +235,48 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `glob:enforce/checks/doc_style.py`, `rule:DOC-010`
 - **About** DOC-010
 - **Verify** `doxygen enforce/Doxyfile`
+
+### L-0029 · A ratchet whose ceiling is a hand-editable integer, not cross-checked against the evidence list beside it, is disabled by a one-character edit: setting the count to 500 against 106 real pairs made validate.py exit 0.
+
+- **Do** Derive the ceiling from the recorded evidence set, or validate the two against each other on load. A baseline that is trusted rather than checked is not a ratchet.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `glob:**/*_baseline.json`, `rule:FLOW-006`
+- **Verify** `python -m pytest tools/test_validate.py -q`
+
+### L-0030 · A provenance field that records the checked-out commit unconditionally is false for every file fingerprinted from a dirty tree, and it defeats the audit it exists to enable: 15 entries claimed a commit at which their fingerprints did not exist.
+
+- **Do** Stamp a working-tree sentinel when the file differs from the ref, and pin it with a test that replays every entry against the ref it names.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `glob:tools/doc_baseline.json`, `glob:tools/docgate.py`
+- **Verify** `python -m pytest tools/test_docgate.py -q`
+
+### L-0031 · A restates-the-name check that splits an identifier before each capital is inert on ALL-CAPS names: MAX_RETRIES becomes eleven single letters, so no summary can ever be a subset of it.
+
+- **Do** Split on underscores before splitting on case, and prove the rule fires on a constant, not only on a lowercase field. This silenced DOC-009 on exactly the elements ## blocks document.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `glob:enforce/checks/doc_style.py`, `rule:DOC-009`
+- **About** DOC-009
+- **Verify** `python -m pytest enforce/checks/test_doc_checks.py -q`
+
+### L-0032 · This repository's own gate does not pass and never has: ruff check exits 1 with 269 findings, while the fitness test that covers the gate asserts only returncode in (0,1) -- that each command starts, not that it succeeds -- so pytest stays green over a failing gate entry.
+
+- **Do** Read a green test suite as evidence that the tests pass, never that the gate passes. Either assert success per gate entry or publish the per-entry status; a gate nobody fails is a gate nobody runs.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `command:ruff check`, `rule:FLOW-009`, `term:gate`
+- **Verify** `python -m pytest enforce/fitness/test_meta.py -q`
+
+### L-0033 · Nine parallel agents each claimed complete=true and passed their own acceptance commands; an independent adversarial verifier then found three real defects, one of which was a systematically false audit field in the very artefact built to prevent laundering.
+
+- **Do** Never let the agent that built a mechanism be the one that certifies it. Budget an independent verifier per batch and give it named failure modes to hunt rather than asking it to review.
+- **Kind** procedure · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `rule:TEAMS-004`, `term:verify`
+- **About** ops/teams
+- **Verify** `python tools/learn.py status`
 
 ## superseded
 

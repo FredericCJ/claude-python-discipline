@@ -4,6 +4,7 @@
         --trigger error:"adapters are independent" --link ARCH-003
     python tools/learn.py retrieve --file src/pkg/adapters/fs.py --error "..."
     python tools/learn.py used L-0001 --outcome helped
+    python tools/learn.py verify --execute
     python tools/learn.py sync
     python tools/learn.py calibrate
 
@@ -18,6 +19,12 @@ calibration needs is a by-product of ordinary use rather than extra bookkeeping.
 
 Retrieval is deterministic: triggers either match or they do not. An
 unreproducible retrieval could not be reviewed, and could not be calibrated.
+
+`verify` replays the commands entries recorded against themselves, which is the
+one staleness signal here that needs nobody's honesty. It executes strings that
+came out of a data file, so it is deliberately awkward: nothing runs without
+`--execute`, no shell is ever involved, and only an allowlisted entry point is
+started at all.
 """
 
 from __future__ import annotations
@@ -27,12 +34,15 @@ import datetime as dt
 import fnmatch
 import json
 import re
+import shlex
+import shutil
 import sqlite3
+import subprocess
 import sys
 import tomllib
 import uuid
-from collections.abc import Iterable, Iterator, Sequence
-from dataclasses import dataclass
+from collections.abc import Iterator, Sequence
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Final
 
@@ -68,6 +78,47 @@ SECRET_PATTERNS: Final[tuple[tuple[str, str], ...]] = (
     (r"\bxox[baprs]-[A-Za-z0-9-]{10,}\b", "a Slack token"),
     (r"\b[0-9a-f]{40,}\b", "a long hex string, which may be a secret"),
     (r"(?i)[/\\](?:home|users)[/\\][A-Za-z0-9._-]+[/\\]", "an absolute home-directory path"),
+)
+
+## The executable names that mean "the interpreter". A command naming one of
+## these is run under `sys.executable` instead, so a verification cannot pick up
+## whichever interpreter happens to be first on PATH.
+PYTHON_EXECUTABLES: Final[tuple[str, ...]] = ("python", "python3", "py")
+## The only programs a verification command may start. A ledger can arrive from
+## another repository through `vendor` and `harvest`, so the entry point is
+## treated as untrusted input: anything outside this list is refused by name and
+## counted, never quietly skipped.
+VERIFY_EXECUTABLES: Final[tuple[str, ...]] = (*PYTHON_EXECUTABLES, "pytest", "ruff", "doxygen")
+## The top-level packages `python -m` may launch. Narrower than the executable
+## list because `-m` reaches anything importable, including the standard library.
+VERIFY_MODULES: Final[tuple[str, ...]] = (
+    "pytest", "ruff", "mypy", "pyright", "checks", "tools", "enforce",
+)
+## Executables run through the interpreter rather than found on PATH, mapped to
+## the module that provides them. `python -m ruff` and the `ruff` on PATH are the
+## same program, and going through the interpreter means one fewer path to trust.
+VERIFY_AS_MODULE: Final[dict[str, str]] = {"pytest": "pytest", "ruff": "ruff"}
+## Seconds a single verification command is given before it is killed. A
+## verification is a check someone expected to run in a gate; one that outlives
+## this has stopped being a check and would hang the report.
+VERIFY_TIMEOUT: Final = 120.0
+## Every outcome one verification can have, in the order the summary counts them.
+## `skipped` is what a dry run reports for a command it would have run.
+VERIFY_OUTCOMES: Final[tuple[str, ...]] = (
+    "passed", "failed", "refused", "timeout", "unavailable", "skipped",
+)
+## Terminal colour codes, stripped out of a captured stream before it is quoted
+## back. ruff emits them into a pipe even with NO_COLOR set, so removing them
+## after the fact is the only reliable move.
+_ANSI: Final = re.compile("\x1b\\[[0-9;]*m")
+## How much of a command's last output line is quoted in the report. Enough to
+## carry a failure message, short enough to keep one entry to two lines.
+_TAIL_WIDTH: Final = 150
+## What a passing verification does and does not establish, printed with every
+## report so the number is never read as more than it is.
+VERIFY_CAVEAT: Final = (
+    "A command that passes does not prove the claim -- it shows only that the "
+    "check the entry named still succeeds. This finds some staleness, not all."
 )
 
 
@@ -728,6 +779,353 @@ def session_id(explicit: str | None) -> str:
     return f"S-{stamp}-{uuid.uuid4().hex[:6]}"
 
 
+# -------------------------------------------------------------- verification
+
+
+@dataclass(frozen=True, slots=True)
+class VerifyResult:
+    """What became of one learning's verification command."""
+
+    ## The entry whose command this was, as it appears in the ledger.
+    learning_id: str
+    ## The command exactly as the ledger records it, quoted back so a refusal
+    ## names the thing that was refused rather than a normalised version of it.
+    command: str
+    ## One of `VERIFY_OUTCOMES`. Only `failed` is evidence against the claim;
+    ## `refused`, `timeout` and `unavailable` say the check could not be run,
+    ## which is a fact about this machine rather than about the entry.
+    outcome: str
+    ## What happened, in one line: the exit status and the last line of output,
+    ## or the reason the command was never started.
+    detail: str
+    ## The exit status, when the command ran far enough to have one.
+    code: int | None = None
+
+    def render(self) -> str:
+        """The terminal form, one entry to a block.
+
+        @return two lines: the verdict with the command, and the detail beneath it
+        """
+        return (
+            f"  {self.learning_id}  {self.outcome.upper():<12} {self.command}\n"
+            f"      {self.detail}"
+        )
+
+
+def verification_argv(command: str) -> list[str]:
+    """Split a recorded command into an argument vector, with no shell involved.
+
+    The vector is handed to the operating system as a list, so a recorded `&&`,
+    `|` or `$(...)` arrives at the program as a literal argument and never as
+    syntax. Splitting is POSIX-style: a recorded command is written with forward
+    slashes, and a Windows-style backslash path would lose its separators here.
+
+    @param command the command as the ledger records it
+    @return the argument vector, empty when the command is blank
+    @throws LearnError when the quoting is unbalanced, so no vector can be derived
+    """
+    try:
+        return shlex.split(command, posix=True)
+    except ValueError as exc:
+        message = f"the verification command cannot be parsed: {exc}"
+        raise LearnError(message) from exc
+
+
+def verification_refusal(argv: Sequence[str], root: Path) -> str | None:
+    """Why this command will not be run, or nothing when it is inside the allowlist.
+
+    The allowlist bounds the *entry point*, not everything a permitted entry
+    point can then be asked to do: `python tools/x.py` is admitted on the
+    strength of the script living in this repository, and what that script does
+    is the repository's own business. What it stops is a ledger naming an
+    arbitrary program, an interpreter flag that carries its own code, or any
+    argument pointing outside the tree -- the shapes a ledger arriving from
+    elsewhere would use to get something of its own executed.
+
+    The bound on arguments is not decoration. Every admitted entry point except
+    `ruff` will execute code it is handed a path to: `pytest ../next-door/test_x.py`
+    runs that file, and `doxygen ../next-door/Doxyfile` runs whatever its
+    `INPUT_FILTER` names. A harvested ledger's own repository sits exactly there,
+    one directory up, so an argument that leaves the tree is the same breach as
+    an entry point that was never on the list.
+
+    @param argv the parsed vector
+    @param root the tree the command would run in
+    @return one sentence naming what was refused, or None when the command is admitted
+    """
+    if not argv:
+        return "the command is empty"
+    if Path(argv[0]).name != argv[0]:
+        return f"the executable is path-qualified ({argv[0]!r}); only a bare name is run"
+    name = argv[0].lower().removesuffix(".exe")
+    if name not in VERIFY_EXECUTABLES:
+        return f"{argv[0]!r} is not one of: {', '.join(VERIFY_EXECUTABLES)}"
+    escape = _argument_outside_root(argv[1:], root)
+    if escape is not None:
+        return escape
+    if name not in PYTHON_EXECUTABLES:
+        return None
+    return _interpreter_refusal(list(argv[1:]), root)
+
+
+def _interpreter_refusal(rest: Sequence[str], root: Path) -> str | None:
+    """Why an admitted interpreter will not be given these arguments.
+
+    An interpreter is the one entry point on the list that will run whatever it
+    is handed, so what follows it is the allowlist's real subject: either `-m`
+    naming a package from a short list, or a script inside this repository.
+    Everything else -- `-c`, a bare `-`, an empty tail -- is a way of supplying a
+    program rather than naming one.
+
+    @param rest the arguments after the interpreter
+    @param root the tree the command would run in
+    @return one sentence naming what was refused, or None when the tail is admitted
+    """
+    if not rest:
+        return "a bare interpreter takes its program from stdin, which is not a check"
+    if rest[0] == "-m":
+        module = rest[1] if len(rest) > 1 else ""
+        if module.split(".")[0] not in VERIFY_MODULES:
+            return f"module {module!r} is not one of: {', '.join(VERIFY_MODULES)}"
+        return None
+    if not rest[0].endswith(".py"):
+        return (
+            f"{rest[0]!r} is neither -m nor a script in this repository; an "
+            f"interpreter flag such as -c carries its own program"
+        )
+    return _outside_root(rest[0], root)
+
+
+def _argument_outside_root(rest: Sequence[str], root: Path) -> str | None:
+    """Why an argument will not be passed on: it names a place outside the tree.
+
+    Only arguments that look like paths are weighed -- one carrying a separator,
+    or a bare parent-directory reference -- and the value half of a
+    `--flag=value` is weighed in place of the whole. A word with no separator is
+    left alone: it is a flag, a test id or a module name, and treating it as a
+    path would refuse ordinary commands to no purpose.
+
+    This is deliberately blunt about what a path is. A refusal here costs an
+    entry its staleness signal and says so by name; admitting an argument that
+    leaves the tree costs the repository whatever the file it points at does.
+
+    @param rest the arguments after the entry point
+    @param root the tree the command would run in
+    @return one sentence naming the first argument that escapes, or None when none does
+    """
+    for argument in rest:
+        candidate = argument
+        if candidate.startswith("-") and "=" in candidate:
+            candidate = candidate.partition("=")[2]
+        if not candidate:
+            continue
+        looks_like_path = "/" in candidate or "\\" in candidate or candidate == ".."
+        if not looks_like_path:
+            continue
+        if _outside_root(candidate, root) is not None:
+            return (
+                f"the argument {argument!r} points outside the repository; an "
+                f"admitted program will run what it is handed"
+            )
+    return None
+
+
+def _outside_root(script: str, root: Path) -> str | None:
+    """Refuse a script that does not resolve inside the tree being verified.
+
+    Existence is not required: a command naming a file that has since been
+    deleted must be allowed to run and fail, because that failure is exactly the
+    staleness this subcommand looks for.
+
+    @param script the path as it was recorded
+    @param root the tree the command would run in
+    @return one sentence when the path escapes the tree, or None when it stays inside
+    """
+    candidate = Path(script)
+    target = candidate if candidate.is_absolute() else root / candidate
+    try:
+        resolved = target.resolve()
+    except OSError:
+        return f"the script path {script!r} cannot be resolved"
+    if not resolved.is_relative_to(root.resolve()):
+        return f"the script {script!r} lies outside the repository"
+    return None
+
+
+def verification_vector(argv: Sequence[str], root: Path) -> tuple[list[str], str | None]:
+    """The vector as it will actually be started, with the executable pinned.
+
+    Interpreted commands are rewritten onto `sys.executable`, so the verification
+    runs under the interpreter this tool is running under rather than whatever
+    PATH offers. Only a program with no module form is looked up on PATH, and one
+    that resolves inside the tree being verified is refused: a repository
+    shipping its own `doxygen` beside the ledger that names it is the supply
+    chain this whole subcommand is defending against.
+
+    @param argv the admitted vector
+    @param root the tree the command would run in
+    @return the vector to start, and a refusal when the executable cannot be trusted
+    @throws LearnError when the vector is empty, which the allowlist rejects first
+    """
+    if not argv:
+        message = "an empty command has no executable"
+        raise LearnError(message)
+    name = argv[0].lower().removesuffix(".exe")
+    if name in PYTHON_EXECUTABLES:
+        return [sys.executable, *argv[1:]], None
+    if name in VERIFY_AS_MODULE:
+        return [sys.executable, "-m", VERIFY_AS_MODULE[name], *argv[1:]], None
+    found = shutil.which(argv[0])
+    if found is None:
+        return list(argv), None
+    if Path(found).resolve().is_relative_to(root.resolve()):
+        return list(argv), f"{argv[0]!r} resolves to {found}, inside the tree being verified"
+    return [found, *argv[1:]], None
+
+
+def run_verification(argv: Sequence[str], root: Path,
+                     timeout: float = VERIFY_TIMEOUT) -> tuple[str, int | None, str]:
+    """Start one admitted command and say what became of it.
+
+    Nothing the command does raises: a non-zero exit, a timeout and a missing
+    program are all results, because what is being measured is whether the check
+    still passes. Output is decoded as UTF-8 with replacement rather than by the
+    console codec, which is cp932 here and has already killed one gate mid-run by
+    raising on a character it could not encode.
+
+    @param argv the vector to start, already rewritten by `verification_vector`
+    @param root the working directory, which is the tree the ledger belongs to
+    @param timeout seconds before the command is killed
+    @return the outcome word, the exit status when there was one, and one line of detail
+    """
+    try:
+        finished = subprocess.run(  # noqa: S603 - allowlisted argv, list form, never a shell
+            list(argv), cwd=root, capture_output=True, text=True,
+            encoding="utf-8", errors="replace", timeout=timeout, check=False,
+        )
+    except subprocess.TimeoutExpired:
+        return "timeout", None, f"killed after {timeout:g}s without finishing"
+    except OSError as exc:
+        return "unavailable", None, f"could not be started: {exc.strerror or exc}"
+    if finished.returncode == 0:
+        return "passed", 0, "exit 0"
+    tail = _last_line(finished.stderr) or _last_line(finished.stdout) or "no output"
+    return "failed", finished.returncode, f"exit {finished.returncode}: {tail}"
+
+
+def _last_line(text: str) -> str:
+    """The last line worth quoting from a command's output.
+
+    Colour codes are stripped first. Tools here emit them even into a pipe and
+    even with `NO_COLOR` set, and an escape sequence in a report is noise in
+    every reader that is not a terminal.
+
+    @param text one captured stream
+    @return the final non-blank line, truncated to fit a terminal and marked when
+        it was cut, or empty when the stream carried nothing
+    """
+    lines = [_ANSI.sub("", line).strip() for line in text.splitlines()]
+    kept = [line for line in lines if line]
+    if not kept:
+        return ""
+    last = kept[-1]
+    return last if len(last) <= _TAIL_WIDTH else last[:_TAIL_WIDTH] + "..."
+
+
+def verify(store: Store, connection: sqlite3.Connection, *, execute: bool = False,
+           timeout: float = VERIFY_TIMEOUT) -> list[VerifyResult]:
+    """Replay what each live learning recorded as its own check.
+
+    This is the one staleness signal the database has that depends on nobody's
+    honesty. It is also partial, and saying so is part of the contract: a command
+    that passes shows that the check it names still succeeds, which is weaker
+    than the claim the entry makes. `doxygen enforce/Doxyfile` exiting 0 does not
+    establish anything about how the engine reads a particular annotation.
+
+    Retired entries are left alone. They are not offered to anyone, so their
+    staleness is not a fact about anything, and re-refuting a refuted entry would
+    add a ledger event that changes nothing.
+
+    @param store the tree the commands run in, which is also where the ledger lives
+    @param connection an index already folded from the ledger
+    @param execute whether to start the commands; without it every admitted
+        command is reported as `skipped` together with the vector that would have
+        been started, which is what makes dry running the default
+    @param timeout seconds each command is given before it is killed
+    @return one result per live entry carrying a verification command, ordered by id
+    """
+    rows = connection.execute(
+        "SELECT id, verification FROM learning "  # noqa: S608 - placeholders, not values
+        "WHERE verification IS NOT NULL AND verification != '' "
+        f"AND status NOT IN ({','.join('?' * len(RETIRED))}) ORDER BY id",
+        RETIRED,
+    ).fetchall()
+
+    results: list[VerifyResult] = []
+    for row in rows:
+        command = row["verification"]
+        try:
+            argv = verification_argv(command)
+        except LearnError as exc:
+            results.append(VerifyResult(row["id"], command, "refused", str(exc)))
+            continue
+        refusal = verification_refusal(argv, store.root)
+        if refusal is not None:
+            results.append(VerifyResult(row["id"], command, "refused", refusal))
+            continue
+        vector, unsafe = verification_vector(argv, store.root)
+        if unsafe is not None:
+            results.append(VerifyResult(row["id"], command, "refused", unsafe))
+            continue
+        if not execute:
+            results.append(
+                VerifyResult(row["id"], command, "skipped",
+                             f"would run: {shlex.join(vector)}")
+            )
+            continue
+        outcome, code, detail = run_verification(vector, store.root, timeout)
+        results.append(VerifyResult(row["id"], command, outcome, detail, code))
+    return results
+
+
+def refute_failures(store: Store, results: Sequence[VerifyResult],
+                    session: str) -> list[VerifyResult]:
+    """Append one refutation per command that ran and failed.
+
+    Only `failed` counts. A refusal, a timeout or a missing program says the
+    check could not be run here, which is a fact about this machine and must not
+    retire an entry. The event kind is the existing `refute`, so the fold, the
+    schema and everything reading the ledger are untouched: a verification
+    failure is a contradiction found by a machine rather than by an agent, and
+    [LEARN-005] already says a contradicted learning is refuted, never deleted.
+
+    Refuting is a one-way door -- the fold never revisits a retired entry -- which
+    is why it is behind its own flag rather than done automatically. A refutation
+    that turns out to have been an environment problem is corrected the way
+    everything here is corrected: by recording a fresh entry, not by editing.
+
+    @param store where the ledger lives
+    @param results what `verify` found
+    @param session the session the refutations are attributed to
+    @return the results a refutation was appended for
+    @throws LearnError never for a command's own behaviour; the secret guard's
+        refusal is caught per entry and reported rather than abandoning the rest
+    """
+    written: list[VerifyResult] = []
+    for result in results:
+        if result.outcome != "failed":
+            continue
+        why = (f"verification failed: `{result.command}` exited {result.code}. "
+               f"{result.detail}")
+        try:
+            append_event(store, "refute", session, {"ref": result.learning_id, "why": why})
+        except LearnError as exc:
+            print(f"  {result.learning_id}  NOT REFUTED  {exc}", file=sys.stderr)
+            continue
+        written.append(result)
+    return written
+
+
 # ------------------------------------------------------------ generated views
 
 
@@ -916,7 +1314,7 @@ def render_calibration(connection: sqlite3.Connection, config: dict[str, Any],
     lines += [
         "",
         "Change one with `python tools/learn.py calibrate --set retrieval.max_learnings=8 "
-        "--why \"...\"`, which edits `config.toml` and appends a `calibrate` event. A "
+        '--why "..."`, which edits `config.toml` and appends a `calibrate` event. A '
         "parameter changed without that event is indistinguishable from drift.",
     ]
     return "\n".join(lines).rstrip() + "\n"
@@ -1046,7 +1444,9 @@ def cmd_retrieve(store: Store, args: argparse.Namespace) -> int:
     )
     connection.close()
     if args.json:
-        print(json.dumps([c.__dict__ for c in found], indent=1, ensure_ascii=False))
+        # asdict, not __dict__: these are slotted dataclasses and have no instance
+        # dictionary at all, so reading one raises rather than returning the fields.
+        print(json.dumps([asdict(c) for c in found], indent=1, ensure_ascii=False))
         return 0
     if not found:
         print("LEARNED  nothing recorded matches this situation")
@@ -1088,6 +1488,65 @@ def cmd_outcome(store: Store, args: argparse.Namespace) -> int:
     write_views(store, connection, dt.date.today())
     connection.close()
     print(f"{kind} recorded for {args.id}")
+    return 0
+
+
+def cmd_verify(store: Store, args: argparse.Namespace) -> int:
+    """Replay the recorded verification commands and report which no longer pass.
+
+    Dry by default. Without `--execute` nothing is started: each admitted command
+    is printed as what *would* run, and each refused one is refused just the
+    same, so the security posture can be read off a run that does nothing.
+
+    Every refusal is printed twice -- in the body and again on stderr -- because
+    the case it exists for is a ledger that arrived from another repository, and
+    a refusal nobody notices is the same as no allowlist at all. `--json` is no
+    exception: stdout stays parsable, so the stderr copy of each refusal and the
+    caveat about what a pass proves are what a machine-read run gets, and neither
+    is dropped merely because nobody is watching the terminal.
+
+    @param store where the ledger lives and where the commands are run
+    @param args the parsed `verify` arguments
+    @return 0; a failing verification is the measurement, not an error in taking it
+    @throws LearnError when refutations are asked for without `--execute`, which
+        would record failures that were never observed
+    """
+    if args.refute_failures and not args.execute:
+        message = "--refute-failures needs --execute; nothing has been run to refute"
+        raise LearnError(message)
+
+    connection = sync(store)
+    results = verify(store, connection, execute=args.execute, timeout=args.timeout)
+    total = connection.execute("SELECT COUNT(*) n FROM learning").fetchone()["n"]
+    connection.close()
+
+    for result in results:
+        if result.outcome == "refused":
+            print(f"REFUSED {result.learning_id}: {result.command}\n  {result.detail}",
+                  file=sys.stderr)
+
+    if args.json:
+        print(json.dumps([asdict(r) for r in results], indent=1, ensure_ascii=False))
+        print(VERIFY_CAVEAT, file=sys.stderr)
+        return 0
+
+    mode = "ran" if args.execute else "dry run: nothing was started"
+    print(f"VERIFY ({len(results)} live command(s) across {total} learning(s); {mode})")
+    for result in results:
+        print(result.render())
+
+    tally = {outcome: sum(1 for r in results if r.outcome == outcome)
+             for outcome in VERIFY_OUTCOMES}
+    print("\n  " + ", ".join(f"{n} {name}" for name, n in tally.items() if n))
+    print(f"  {VERIFY_CAVEAT}")
+
+    if args.refute_failures:
+        written = refute_failures(store, results, session_id(args.session))
+        connection = sync(store)
+        write_views(store, connection, dt.date.today())
+        connection.close()
+        print(f"  refuted {len(written)} learning(s): "
+              f"{', '.join(r.learning_id for r in written) or 'none'}")
     return 0
 
 
@@ -1217,9 +1676,14 @@ def build_parser() -> argparse.ArgumentParser:
     """The whole command-line surface, and which half of it writes to the ledger.
 
     `record`, `used`, `refute`, `supersede`, `promote` and `session` each append
-    an event, and `calibrate` appends one when `--set` moves a dial. The other
-    three — `retrieve`, `sync` and `status` — only read and rebuild the derived
-    files; the ledger they leave exactly as they found it.
+    an event; `calibrate` appends one when `--set` moves a dial, and `verify`
+    appends one per failure when `--refute-failures` is given. The other three —
+    `retrieve`, `sync` and `status` — only read and rebuild the derived files;
+    the ledger they leave exactly as they found it.
+
+    Two flags on `verify` are opt-ins rather than conveniences: `--execute`,
+    because the commands come out of a data file, and `--refute-failures`,
+    because a refutation cannot be taken back.
 
     @return a parser that rejects an invocation naming no subcommand
     """
@@ -1265,6 +1729,14 @@ def build_parser() -> argparse.ArgumentParser:
     pro.add_argument("--mechanism", required=True)
     pro.add_argument("--note")
 
+    ver = sub.add_parser("verify", help="replay the recorded verification commands")
+    ver.add_argument("--execute", action="store_true",
+                     help="actually run them; without this nothing is started")
+    ver.add_argument("--refute-failures", action="store_true",
+                     help="with --execute, append a refutation for each command that failed")
+    ver.add_argument("--timeout", type=float, default=VERIFY_TIMEOUT, metavar="SECONDS")
+    ver.add_argument("--json", action="store_true")
+
     ses = sub.add_parser("session", help="open a session")
     ses.add_argument("--task")
     ses.add_argument("--discipline-version")
@@ -1287,7 +1759,7 @@ COMMANDS = {
     "record": cmd_record, "retrieve": cmd_retrieve, "used": cmd_outcome,
     "refute": cmd_outcome, "supersede": cmd_outcome, "promote": cmd_outcome,
     "session": cmd_session, "sync": cmd_sync, "status": cmd_status,
-    "calibrate": cmd_calibrate,
+    "calibrate": cmd_calibrate, "verify": cmd_verify,
 }
 
 

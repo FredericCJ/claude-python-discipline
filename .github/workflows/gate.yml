@@ -1,0 +1,195 @@
+# Cross-platform run of this repository's own gate.
+#
+# Every gate in this corpus had, until now, only ever run on win32 with a cp932
+# system locale -- and that produced two real, silent defects in a single session:
+# `ruff.exe` located only beside the interpreter (missed Scripts/ on this machine,
+# so the lint gate skipped itself and 766 findings went unseen), and a subprocess
+# call with no explicit encoding that raised UnicodeDecodeError under cp932 and
+# killed a gate mid-run without deciding anything. This workflow exists so a
+# platform-specific assumption like either of those fails loudly in CI instead of
+# waiting for the next person on a different OS to find it by hand.
+#
+# The gate itself is NOT redefined here. `enforce/fitness/test_meta.py::GATE` is
+# the single canonical sequence -- format and lint, rule corpus, navigation graph,
+# generated artefacts, documentation, tests -- and
+# `test_every_gate_entry_is_runnable` already proves each entry starts. The six
+# steps below are that tuple, spelled out because a workflow step needs its own
+# name and failure boundary per command; if `GATE` in test_meta.py changes, this
+# list must change with it or it has silently drifted from the thing it claims to
+# mirror.
+#
+# No step below may use `continue-on-error` or `|| true`. A tool that cannot be
+# installed on a given OS fails that job outright rather than being skipped
+# quietly -- a green run must mean the gate actually ran.
+
+name: Gate
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # An encoding difference must surface as a real failure, not as noise that
+  # looks like a tool crash. This is the exact fix for the cp932
+  # UnicodeDecodeError described above, applied at the workflow level so every
+  # step -- not just the ones a prior session happened to patch -- gets it.
+  PYTHONIOENCODING: "utf-8"
+  PYTHONUTF8: "1"
+  # Doxygen 1.10.0 is the version discipline/fact/doxygen.md's measurements were
+  # taken against; two of enforce/Doxyfile's settings (WARN_IF_UNDOCUMENTED and
+  # WARN_NO_PARAMDOC, both turned off) are consequences of defects verified
+  # specifically at this version. A different version changes what those
+  # defects are, which is exactly what
+  # test_meta.py::test_doxygen_version_matches_recorded exists to catch.
+  DOXYGEN_VERSION: "1.10.0"
+
+defaults:
+  run:
+    # Bash is available on all three hosted runners (Git Bash ships with
+    # windows-latest) and keeps every step's syntax identical across OSes,
+    # instead of splitting the doxygen-install step into a pwsh dialect for
+    # Windows alone.
+    shell: bash
+
+jobs:
+  gate:
+    name: gate (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # One OS failing must not hide what the other two found.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          # This repository runs 3.13.15 (see CLAUDE.md); ruff.toml's
+          # target-version = "py311" is a floor for consuming projects, not a
+          # ceiling on what the discipline's own tooling is verified against.
+          python-version: "3.13"
+
+      - name: Install Python gate dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          # Pinned to the versions this gate was verified against locally:
+          # ruff (lint), pytest + its plugins (timeout/randomly/socket are
+          # required by pytest.ini's addopts and markers), PyYAML and
+          # jsonschema (tools/discipline_core.py, tools/validate.py), and
+          # tiktoken (tools/discipline_core.py::count_tokens, used by
+          # tools/build_index.py). No requirements file exists yet to draw
+          # this list from; if one is added later, this step should read it
+          # instead of repeating it.
+          python -m pip install \
+            "ruff==0.16.3" \
+            "pytest==9.1.1" \
+            "pytest-randomly==4.1.0" \
+            "pytest-socket==0.8.0" \
+            "pytest-timeout==2.4.0" \
+            "PyYAML==6.0.3" \
+            "jsonschema==4.26.0" \
+            "tiktoken==0.14.0"
+
+      # --------------------------------------------------------------- doxygen
+      #
+      # Not itself a GATE entry -- it is a system install, not a pip package --
+      # but enforce/fitness/test_meta.py::test_doxygen_version_matches_recorded
+      # (run inside the "tests" gate entry) only checks the installed version
+      # against discipline/fact/doxygen.md when Doxygen is present; otherwise it
+      # skips and verifies nothing. Installing it here is what turns that test
+      # from a skip into a real assertion. Each OS gets the same pinned
+      # 1.10.0 release asset from the upstream GitHub release rather than
+      # whatever a package manager currently carries, since apt/brew track
+      # their own latest and neither guarantees this exact version.
+
+      - name: Install Doxygen (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          set -euo pipefail
+          curl -fsSL -o doxygen.tar.gz \
+            "https://github.com/doxygen/doxygen/releases/download/Release_${DOXYGEN_VERSION//./_}/doxygen-${DOXYGEN_VERSION}.linux.bin.tar.gz"
+          tar -xzf doxygen.tar.gz
+          bin_path="$(find "$PWD" -maxdepth 3 -type f -name doxygen | head -n1)"
+          if [ -z "$bin_path" ]; then
+            echo "doxygen binary not found inside the downloaded Linux archive" >&2
+            exit 1
+          fi
+          chmod +x "$bin_path"
+          dirname "$bin_path" >> "$GITHUB_PATH"
+
+      - name: Install Doxygen (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          set -euo pipefail
+          curl -fsSL -o doxygen.zip \
+            "https://github.com/doxygen/doxygen/releases/download/Release_${DOXYGEN_VERSION//./_}/doxygen-${DOXYGEN_VERSION}.windows.x64.bin.zip"
+          mkdir -p doxygen-extracted
+          # Windows' built-in tar (bsdtar) reads .zip directly; no unzip needed.
+          tar -xf doxygen.zip -C doxygen-extracted
+          bin_path="$(find doxygen-extracted -maxdepth 3 -iname 'doxygen.exe' | head -n1)"
+          if [ -z "$bin_path" ]; then
+            echo "doxygen.exe not found inside the downloaded Windows archive" >&2
+            exit 1
+          fi
+          dirname "$bin_path" >> "$GITHUB_PATH"
+
+      - name: Install Doxygen (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          set -euo pipefail
+          curl -fsSL -o doxygen.dmg \
+            "https://github.com/doxygen/doxygen/releases/download/Release_${DOXYGEN_VERSION//./_}/Doxygen-${DOXYGEN_VERSION}.dmg"
+          mount_dir="$(hdiutil attach doxygen.dmg -nobrowse | tail -1 | awk '{print $NF}')"
+          if [ -z "$mount_dir" ]; then
+            echo "could not mount Doxygen-${DOXYGEN_VERSION}.dmg" >&2
+            exit 1
+          fi
+          bin_path="$(find "$mount_dir" -type f -name doxygen -perm -u+x | head -n1)"
+          if [ -z "$bin_path" ]; then
+            echo "doxygen binary not found inside the mounted macOS disk image" >&2
+            hdiutil detach "$mount_dir" || true
+            exit 1
+          fi
+          mkdir -p "$HOME/doxygen-bin"
+          cp "$bin_path" "$HOME/doxygen-bin/doxygen"
+          chmod +x "$HOME/doxygen-bin/doxygen"
+          echo "$HOME/doxygen-bin" >> "$GITHUB_PATH"
+          hdiutil detach "$mount_dir" || true
+
+      - name: Report installed Doxygen version
+        run: doxygen --version
+
+      # ------------------------------------------------------------------ gate
+      #
+      # Six entries, in the exact order and with the exact commands of
+      # enforce/fitness/test_meta.py::GATE. Each is its own step so one
+      # failing still reports which of the six it was, and none may swallow a
+      # non-zero exit -- the workflow's default (no continue-on-error) is what
+      # makes that hold.
+
+      - name: "Gate 1/6 -- format and lint"
+        run: ruff check
+
+      - name: "Gate 2/6 -- rule corpus"
+        run: python tools/validate.py
+
+      - name: "Gate 3/6 -- navigation graph"
+        run: python tools/build_graph.py --check
+
+      - name: "Gate 4/6 -- generated artefacts"
+        run: python tools/build_index.py --check
+
+      - name: "Gate 5/6 -- documentation"
+        run: python tools/docgate.py --all
+
+      - name: "Gate 6/6 -- tests"
+        run: python -m pytest -q

