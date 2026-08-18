@@ -29,7 +29,17 @@ DEFAULT_MIN_EVIDENCE = 2
 
 
 def collect(store: learn.Store, min_evidence: int) -> list[dict[str, object]]:
-    """Discipline-scoped learnings with enough evidence to propose a change."""
+    """Discipline-scoped learnings with enough evidence to propose a change.
+
+    Superseded and refuted findings are excluded: they have already been ruled
+    on locally. A learning offering a verification command qualifies whatever
+    its count, because an executable claim can be checked rather than counted.
+
+    @param store the target repository's learning store
+    @param min_evidence how many recorded outcomes a finding needs to qualify
+    @return one mapping per qualifying learning, ordered by id; empty when the
+            target has no ledger at all
+    """
     if not store.ledger.exists():
         return []
     connection = learn.sync(store)
@@ -66,6 +76,17 @@ def collect(store: learn.Store, min_evidence: int) -> list[dict[str, object]]:
 
 
 def render_report(target: Path, found: Sequence[dict[str, object]], min_evidence: int) -> str:
+    """The reviewer's view of a harvest, with the triage question attached.
+
+    An empty harvest is spelled out rather than left blank, so it cannot be read
+    as a broken run; and each finding carries the question that decides whether
+    it belongs upstream at all.
+
+    @param target the repository the findings were read from
+    @param found the qualifying learnings
+    @param min_evidence the threshold applied, restated for the reader
+    @return Markdown text, newline-terminated
+    """
     lines = [
         "# Harvest",
         "",
@@ -118,6 +139,14 @@ def render_patch(found: Sequence[dict[str, object]]) -> str:
     Deliberately not a real diff against a file: which module a rule belongs to
     is a judgment, and guessing it would produce a patch that applies cleanly and
     is wrong. What is generated is the rule text, correctly shaped.
+
+    A finding with no verification command is proposed as `[review]` with a TODO
+    standing in for its check line, so that the one thing a harvest cannot infer
+    -- how the rule would be decided mechanically -- is visibly missing rather
+    than absent.
+
+    @param found the qualifying learnings
+    @return Markdown holding one proposed rule block per learning
     """
     lines = [
         "# Proposed rules",
@@ -153,6 +182,15 @@ def render_patch(found: Sequence[dict[str, object]]) -> str:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Print one repository's harvest, and optionally write the rule proposals.
+
+    Works against either a vendored install or a source checkout, deciding which
+    by looking for `.agent/learning`.
+
+    @param argv command-line arguments, defaulting to `sys.argv`
+    @return 0 always; finding nothing to harvest is an ordinary outcome, not a
+            failure, and must not fail a build that runs this
+    """
     # The console encoding is not ours to choose, and a tool that dies on one is
     # worse than one that renders a character imperfectly.
     if hasattr(sys.stdout, "reconfigure"):

@@ -24,46 +24,91 @@ from typing import Final
 
 
 class NodeType(StrEnum):
-    """What a node is. Node ids are unique across all types."""
+    """What a node is.
 
+    Ids are unique across every type, so an id alone names a node and no query
+    ever has to say which kind it expected.
+    """
+
+    ## A discipline file: the unit an agent opens and pays reading tokens for.
     MODULE = "module"        # law/ARCH, fact/py-typing, ...
+    ## One numbered obligation. The citable unit, and what reachability is measured over.
     RULE = "rule"            # ARCH-002
+    ## Something runnable that decides a rule, so a claim of compliance can be tested.
     MECHANISM = "mechanism"  # check:raise_from, auto:ruff:G004
+    ## A defined word. Exists so one term keeps one meaning across the corpus.
     TERM = "term"            # a glossary entry
+    ## An entry condition: what an agent notices that should send it to a module.
     TRIGGER = "trigger"      # a router keyword, a glob, an error signature
+    ## A settled or still-open judgement that explains, or suspends, an obligation.
     DECISION = "decision"    # CONF-001, OPEN-001
+    ## A superseded document, kept only so material can be traced back to it.
     SOURCE = "source"        # an archived source document
+    ## One architectural tier, so a rule can say where it bites.
     LAYER = "layer"          # domain | app | adapters | shell
+    ## A concrete file the corpus obliges or ships, as opposed to prose about one.
     ARTIFACT = "artifact"    # enforce/pyproject.toml, a schema, an example
+    ## An observation from practice. Advisory: it never enters the static graph.
     LEARNING = "learning"    # L-0001, from the learning database
 
 
 class EdgeType(StrEnum):
-    """How two nodes relate. Each type answers a question an agent asks."""
+    """How two nodes relate.
 
+    Each type exists because some agent question needs exactly it; the set is
+    deliberately closed, since an untyped relation cannot be reasoned over.
+    """
+
+    ## Ownership. The only relation by which a rule becomes findable at all.
     CONTAINS = "contains"            # module -> rule
+    ## Load order: the target must already be held. Must stay acyclic.
     REQUIRES = "requires"            # module -> module: hold this first
+    ## The verified basis a normative claim rests on, so it can be re-checked.
     GROUNDS_ON = "grounds_on"        # module/rule -> fact: the verified basis
+    ## Which module owns a word's meaning, so the definition has one home.
     DEFINES = "defines"              # module -> term
+    ## A plain reference. Weaker than requires: it implies no reading order.
     CITES = "cites"                  # rule -> rule/module
+    ## What to run to decide the rule. Its absence is what "unenforced" means.
     ENFORCED_BY = "enforced_by"      # rule -> mechanism: what do I run
+    ## Scope: where the rule bites, so it is not applied to the wrong tier.
     APPLIES_TO = "applies_to"        # rule -> layer/artifact
+    ## Replacement. The target survives for provenance but no longer binds.
     SUPERSEDES = "supersedes"        # rule -> rule
+    ## Conflict of obligations. An agent shown one must be shown the other.
     TENSIONS_WITH = "tensions_with"  # rule -> rule: what pulls against this
+    ## Sequencing between rules that are both binding but not simultaneous.
     PRECEDES = "precedes"            # rule -> rule: ordering
+    ## Where the material came from, back into the superseded documents.
     DERIVES_FROM = "derives_from"    # rule/module -> source
+    ## The judgement that settled the wording; why it reads as it does.
     RESOLVED_BY = "resolved_by"      # rule/source -> decision: why it is so
+    ## An open question that suspends the rule until it is answered.
     BLOCKED_BY = "blocked_by"        # rule -> decision: why not binding
+    ## The entry condition that should make an agent open this.
     TRIGGERED_BY = "triggered_by"    # module/rule -> trigger: how to get in
+    ## What an observation is about. Learned layer only, never persisted here.
     LEARNED_ABOUT = "learned_about"  # learning -> any
+    ## Evidence that a rule does not survive contact with practice.
     CONTRADICTS = "contradicts"      # learning -> rule
+    ## Observed together often enough to be worth loading together; weight counts it.
     CO_ACTIVATED = "co_activated"    # rule -> rule, weighted by observation
+    ## One observation supporting another, so confidence can accumulate.
     EVIDENCES = "evidences"          # learning -> learning
 
 
 class Origin(StrEnum):
+    """Where an edge came from, which decides who is allowed to rewrite it.
+
+    Kept on the edge rather than in separate graphs so that one relation
+    asserted from two origins stays visible as two records.
+    """
+
+    ## Computed from the corpus and regenerated wholesale; a hand edit is lost.
     DERIVED = "derived"
+    ## Authored by a human because no text implies it; regeneration must preserve it.
     DECLARED = "declared"
+    ## Overlaid at query time by the learning database, so the static layer stays byte-stable.
     LEARNED = "learned"
 
 
@@ -88,16 +133,36 @@ NAVIGABLE: Final[frozenset[EdgeType]] = READING_EXPANSION | frozenset({
 
 @dataclass(frozen=True, slots=True)
 class Node:
-    """One addressable thing. `id` is unique across the whole graph."""
+    """One addressable thing in the corpus.
 
+    Frozen, because a node is a fact about the corpus at build time; anything
+    that varies belongs on an edge or in the learned overlay.
+    """
+
+    ## Unique across the whole graph, whatever the type. Every edge names nodes by this.
     id: str
+    ## What `of_type` and the reachability checks select on, and what decides
+    ## which of the fields below carry anything: a layer has no file, no cost.
     type: NodeType
+    ## Human wording, and for trigger and mechanism nodes the matched text itself:
+    ## `nav` fnmatches a glob trigger, word-matches an error trigger, and splits a
+    ## mechanism on `:`. Changing one is a behaviour change, not a rename.
     label: str
+    ## The backing file, repository-relative, with `:line` appended for a rule.
+    ## None for what no file backs on its own -- layers, triggers, terms, mechanisms.
     path: str | None = None
+    ## Measured reading cost, so an expansion can be budgeted before anything is opened.
+    ## Zero means unmeasured, not free.
     tokens: int = 0
+    ## Everything else, sorted key/value pairs. A tuple so the node stays hashable.
     attrs: tuple[tuple[str, str], ...] = ()
 
     def attr(self, key: str) -> str | None:
+        """Look up one extra attribute, treating absence as a normal answer.
+
+        @param key the attribute name
+        @return the stored value, or None when this node carries no such attribute
+        """
         for name, value in self.attrs:
             if name == key:
                 return value
@@ -106,36 +171,71 @@ class Node:
 
 @dataclass(frozen=True, slots=True)
 class Edge:
-    """One directed, typed relation. Parallel edges are expected, not exceptional."""
+    """One directed, typed relation, carrying its own provenance.
 
+    A record rather than adjacency inside a node, which is what makes parallel
+    edges between the same pair expressible at all.
+    """
+
+    ## Which relation is being asserted.
     type: EdgeType
+    ## The node the relation runs from. Not required to exist; `Graph.dangling` finds those.
     src: str
+    ## The node it runs to, under the same no-existence-check rule as `src`.
     dst: str
+    ## Who asserted it, and therefore whether a rebuild may overwrite it.
     origin: Origin = Origin.DERIVED
+    ## Strength, meaningful only for observation-counted types such as `co_activated`.
+    ## The default means unweighted and is omitted from serialization.
     weight: float = 1.0
+    ## Free text for a declared edge, saying why a human asserted what no text
+    ## implies. Serialized only when set, and shown by `nav` beside the endpoint
+    ## it qualifies, so it is read by people and never matched on.
     note: str | None = None
 
     @property
     def id(self) -> str:
-        """Stable identity: type plus endpoints. Duplicates collapse; parallels do not."""
+        """Identity for de-duplication: the type and the two endpoints.
+
+        Deliberately excludes the origin, so the same relation from two origins
+        shares an id; `Graph.add_edge` appends the origin when it de-duplicates.
+
+        @return `src--type-->dst`, equal for two edges exactly when they assert
+            the same relation
+        """
         return f"{self.src}--{self.type}-->{self.dst}"
 
 
 @dataclass(slots=True)
 class Graph:
-    """A directed typed multigraph with adjacency indices built on demand."""
+    """A directed typed multigraph, with adjacency maintained as edges arrive.
 
+    Not a general graph library: it holds only the queries the discipline tools
+    ask, and every one of them is ordered, because an answer that varied between
+    runs could not be reviewed or used as a gate.
+    """
+
+    ## Keyed by node id. A second add under the same id replaces the first.
     nodes: dict[str, Node] = field(default_factory=dict)
+    ## In arrival order, which is builder order; `to_dict` sorts instead of trusting it.
     edges: list[Edge] = field(default_factory=list)
+    ## Outgoing adjacency, kept in step with `edges` by `add_edge`.
     _out: dict[str, list[Edge]] = field(default_factory=lambda: defaultdict(list))
+    ## Incoming adjacency, the mirror of `_out`.
     _in: dict[str, list[Edge]] = field(default_factory=lambda: defaultdict(list))
+    ## Edge identity plus origin, the set that makes `add_edge` idempotent.
     _seen: set[str] = field(default_factory=set)
 
     # ------------------------------------------------------------------ build
 
     def add_node(self, node: Node) -> None:
-        """Add a node. A later add with the same id wins, which lets the learned
-        layer enrich a static node without duplicating it."""
+        """Register a node, last write winning.
+
+        Replacement rather than rejection is what lets the learned layer enrich
+        a node the static build already made, instead of duplicating it.
+
+        @param node the node to hold under its own id
+        """
         self.nodes[node.id] = node
 
     def add_edge(self, edge: Edge) -> bool:
@@ -144,6 +244,9 @@ class Graph:
         Identical means same type, endpoints *and* origin -- two edges of the
         same type from different origins are both kept, because the fact that a
         relation was both declared and observed is itself information.
+
+        @param edge the relation to record; its endpoints need not exist yet
+        @return True when it was stored, False when it was already present
         """
         key = f"{edge.id}#{edge.origin}"
         if key in self._seen:
@@ -155,7 +258,14 @@ class Graph:
         return True
 
     def merge(self, other: Graph) -> None:
-        """Overlay another graph onto this one. Used for the learned layer."""
+        """Overlay another graph onto this one, this graph winning on conflict.
+
+        Asymmetric on purpose: a node already here keeps its definition, while
+        edges accumulate. That is what makes the learned overlay additive and
+        unable to rewrite what the corpus states.
+
+        @param other the graph to fold in; it is left untouched
+        """
         for node in other.nodes.values():
             self.nodes.setdefault(node.id, node)
         for edge in other.edges:
@@ -164,10 +274,23 @@ class Graph:
     # ------------------------------------------------------------------ query
 
     def out_edges(self, node_id: str, types: Iterable[EdgeType] | None = None) -> list[Edge]:
+        """Relations leaving a node, in the order they were added.
+
+        @param node_id the node to look from; an unknown id yields nothing rather than raising
+        @param types the relation types to keep, or None to keep every type
+        @return a list built for this call, so sorting or trimming it cannot
+            disturb the adjacency index behind it
+        """
         wanted = set(types) if types is not None else None
         return [e for e in self._out.get(node_id, ()) if wanted is None or e.type in wanted]
 
     def in_edges(self, node_id: str, types: Iterable[EdgeType] | None = None) -> list[Edge]:
+        """Relations arriving at a node, which is how "who depends on this" is asked.
+
+        @param node_id the node to look at; an unknown id yields nothing rather than raising
+        @param types the relation types to keep, or None to keep every type
+        @return the matching edges, in the order they were added
+        """
         wanted = set(types) if types is not None else None
         return [e for e in self._in.get(node_id, ()) if wanted is None or e.type in wanted]
 
@@ -178,7 +301,14 @@ class Graph:
         *,
         undirected: bool = False,
     ) -> list[str]:
-        """Neighbouring node ids, in stable order."""
+        """Adjacent node ids, each reported once, outgoing before incoming.
+
+        @param node_id the node to look from
+        @param types the relation types to follow, or None to follow every type
+        @param undirected also follow relations arriving at the node, not only those leaving
+        @return the ids alone; parallel relations between the same pair collapse
+            to one entry, so this counts neighbours and never edges
+        """
         found = [e.dst for e in self.out_edges(node_id, types)]
         if undirected:
             found += [e.src for e in self.in_edges(node_id, types)]
@@ -188,6 +318,13 @@ class Graph:
         return list(seen)
 
     def of_type(self, node_type: NodeType) -> list[Node]:
+        """Every node of one kind, sorted by id so two runs list them alike.
+
+        @param node_type the kind to collect, compared by identity: a plain
+            string equal to the value matches nothing and reports nothing
+        @return the matching nodes; every call rescans the whole node table, so
+            hoist it out of a loop rather than calling it per candidate
+        """
         return sorted(
             (n for n in self.nodes.values() if n.type is node_type), key=lambda n: n.id
         )
@@ -205,6 +342,12 @@ class Graph:
         Deterministic: the frontier is sorted at every level, so the same seeds
         always yield the same walk. An unreproducible expansion could not be
         calibrated or reviewed.
+
+        @param seeds the starting ids; any the graph does not hold are dropped silently
+        @param types the relation types to follow, or None to follow every type
+        @param depth how many hops out to go; the walk stops early once nothing new appears
+        @param undirected follow relations in both directions
+        @return every reached id mapped to its hop count, the seeds at zero
         """
         distance: dict[str, int] = {s: 0 for s in seeds if s in self.nodes}
         frontier = sorted(distance)
@@ -223,7 +366,18 @@ class Graph:
     def shortest_path(
         self, src: str, dst: str, *, types: Iterable[EdgeType] | None = None
     ) -> list[Edge] | None:
-        """One shortest edge path, or None. Ties break on sorted node order."""
+        """One shortest path, following relations only in their own direction.
+
+        Ties break on sorted node order, so the path shown to a reader is the
+        same one every time even where several are equally short.
+
+        @param src the id to start from
+        @param dst the id to reach
+        @param types the relation types the path may use, or None to allow every type
+        @return the edges in travel order, or None when no path exists -- which
+            includes `src == dst`, treated as unreachable rather than as an
+            empty path, and either endpoint being absent from the graph
+        """
         if src not in self.nodes or dst not in self.nodes:
             return None
         previous: dict[str, Edge] = {}
@@ -257,6 +411,15 @@ class Graph:
 
         This is the mechanical measure of navigability: a rule an agent cannot
         arrive at from the kernel is a rule that exists but cannot be found.
+
+        Direction is not honoured -- the walk is always undirected, because a
+        reader who lands on a rule has found it whichever way the link was drawn.
+
+        @param seeds the entry points an agent really starts from
+        @param node_type the kind of node whose findability is being measured
+        @param depth the hop budget, standing in for how far an agent will follow links
+        @param types the relation types an agent is assumed to follow, or None for every type
+        @return the ids that were missed, sorted; empty means the kind is fully navigable
         """
         reached = self.expand(seeds, types=types, depth=depth, undirected=True)
         return sorted(
@@ -264,13 +427,26 @@ class Graph:
         )
 
     def cycles_in(self, edge_type: EdgeType) -> list[list[str]]:
-        """Every cycle over one edge type. `requires` must be acyclic or load
-        order is undefined."""
+        """Cycles over one relation type, one per back edge of a depth-first walk.
+
+        A decision procedure for acyclicity, not an enumeration. Empty proves the
+        relation acyclic, and every list returned is a real cycle, but a node is
+        never re-entered once finished, so where cycles overlap only the first the
+        walk closes is named and the count is a lower bound. That is all
+        `requires` needs: load order is undefined the moment one cycle exists.
+
+        @param edge_type the single relation type to walk
+        @return one node-id list per cycle found, each ending on the node it began at
+        """
         found: list[list[str]] = []
         colour: dict[str, int] = {}
         stack: list[str] = []
 
         def walk(node_id: str) -> None:
+            """Descend from one node, recording every back edge as a cycle.
+
+            @param node_id the node to visit; recursion depth follows the longest chain
+            """
             colour[node_id] = 1
             stack.append(node_id)
             for edge in sorted(self.out_edges(node_id, [edge_type]), key=lambda e: e.dst):
@@ -289,11 +465,24 @@ class Graph:
         return found
 
     def dangling(self) -> list[Edge]:
-        """Edges whose endpoints do not resolve to nodes."""
+        """Edges naming an endpoint the graph does not hold.
+
+        Adding an edge never checks its endpoints, so that builders may run in
+        any order; this is the check deferred until they have all finished.
+
+        @return every unresolved edge, in the order it was added
+        """
         return [e for e in self.edges if e.src not in self.nodes or e.dst not in self.nodes]
 
     def orphans(self, node_type: NodeType) -> list[str]:
-        """Nodes of a type with no edges at all, in either direction."""
+        """Nodes of one kind that no relation touches, in either direction.
+
+        Weaker than `unreachable_from` and cheaper: it finds material that was
+        added and then never wired to anything at all.
+
+        @param node_type the kind to inspect
+        @return the isolated ids, sorted
+        """
         return sorted(
             n.id
             for n in self.of_type(node_type)
@@ -303,7 +492,14 @@ class Graph:
     # --------------------------------------------------------------- serialize
 
     def to_dict(self) -> dict[str, object]:
-        """Deterministic serialization: nodes by id, edges by a stable sort key."""
+        """A JSON-ready mapping fixed by content alone, never by build order.
+
+        Sorted throughout, and defaulted fields are omitted, so a rebuild that
+        changed nothing produces no diff and a diff always means something moved.
+
+        @return the graph as `nodes` and `edges` lists of plain values, losing
+            nothing `from_dict` needs to rebuild it
+        """
         return {
             "nodes": [
                 {
@@ -333,6 +529,17 @@ class Graph:
 
     @classmethod
     def from_dict(cls, payload: dict[str, object]) -> Graph:
+        """Rebuild a graph from what `to_dict` produced.
+
+        Strict about vocabulary and lenient about omissions: a missing optional
+        field takes its default, but an unrecognised type name is an error
+        rather than a silently dropped relation.
+
+        @param payload a mapping with `nodes` and `edges` entries, both optional
+        @return a graph holding what the payload described
+        @throws KeyError when a record leaves out a field that has no default
+        @throws ValueError when a node, edge or origin name is not one this model defines
+        """
         graph = cls()
         for raw in payload.get("nodes", []):  # type: ignore[union-attr]
             attrs = raw.get("attrs") or {}
@@ -360,10 +567,23 @@ class Graph:
         return graph
 
     def __len__(self) -> int:
+        """Size counted in nodes; edges do not contribute.
+
+        @return the node count, so a graph carrying edges and no node is falsy
+        """
         return len(self.nodes)
 
 
 def _unwind(previous: dict[str, Edge], src: str, dst: str) -> list[Edge]:
+    """Turn a search's predecessor map back into a forward path.
+
+    @param previous each node mapped to the edge that first reached it
+    @param src the node the walk started at
+    @param dst the node that was reached
+    @return the edges from `src` to `dst`, in travel order
+    @throws KeyError when the map does not in fact join the two, which would mean
+        the caller unwound a search that never reached `dst`
+    """
     path: list[Edge] = []
     cursor = dst
     while cursor != src:
@@ -374,6 +594,14 @@ def _unwind(previous: dict[str, Edge], src: str, dst: str) -> list[Edge]:
 
 
 def iter_edge_types(names: Sequence[str]) -> Iterator[EdgeType]:
-    """Parse edge-type names from a CLI, failing loudly on an unknown one."""
+    """Turn command-line words into edge types, failing loudly on an unknown one.
+
+    A misspelt type would otherwise narrow a query to nothing and read as a
+    clean, empty result, which is the worst answer a gate can give.
+
+    @param names the words as written on the command line
+    @return one edge type per name, yielded lazily
+    @throws ValueError on iteration, as soon as a word names no edge type
+    """
     for name in names:
         yield EdgeType(name)

@@ -17,15 +17,29 @@ import pytest
 
 from test_validate import CONFORMANT_RULE, codes, module, run_on, write
 
+## A fact module's version table, the smallest thing V095 will read a tool pin out of.
 FACT_TABLE = "| Tool | Version |\n|---|---|\n| mypy | 2.3.1 |\n"
 
 
 def edges_yaml(root: Path, body: str) -> Path:
+    """Place the hand-authored relations file, version header already supplied.
+
+    @param root the corpus root
+    @param body the YAML mapping, dedented before writing
+    @return the path written
+    """
     return write(root / "discipline" / "meta" / "edges.yaml", "version: 1\n" + dedent(body))
 
 
 def add_front_matter(path: Path, line: str) -> None:
-    """Insert a front-matter line ahead of `decay:`, which every module has."""
+    """Insert a front-matter line ahead of `decay:`, which every module has.
+
+    Anchoring on a key the fixture always writes avoids parsing the YAML back
+    out, and keeps the insertion inside the front-matter fence.
+
+    @param path the module to rewrite in place
+    @param line the front-matter entry to add, without a trailing newline
+    """
     text = path.read_text(encoding="utf-8")
     path.write_text(text.replace("decay: ", f"{line}\ndecay: ", 1), encoding="utf-8")
 
@@ -64,6 +78,11 @@ def test_a_rule_inside_a_module_is_always_reachable(tmp_path: Path) -> None:
 
 
 def test_v093_declared_edge_names_an_unknown_id(tmp_path: Path) -> None:
+    """A hand-authored relation is held to the same endpoints as a derived one.
+
+    Reported separately from V090 because the fix is in `edges.yaml`, not in a
+    module's prose.
+    """
     module(tmp_path)
     edges_yaml(
         tmp_path,
@@ -76,6 +95,10 @@ def test_v093_declared_edge_names_an_unknown_id(tmp_path: Path) -> None:
 
 
 def test_a_declared_edge_between_real_rules_is_accepted(tmp_path: Path) -> None:
+    """The conforming case: a true declared relation draws neither V093 nor V090.
+
+    A check that fires on correct authoring is one people learn to route around.
+    """
     module(tmp_path)
     module(tmp_path, name="ERR", title="Errors",
            body=CONFORMANT_RULE.replace("TYPE-001", "ERR-001"))
@@ -92,6 +115,7 @@ def test_a_declared_edge_between_real_rules_is_accepted(tmp_path: Path) -> None:
 
 
 def test_v094_graph_disagrees_with_the_corpus(tmp_path: Path) -> None:
+    """An empty graph beside a populated corpus is stale, and would misroute in silence."""
     module(tmp_path)
     write(tmp_path / "discipline" / "graph.json", '{"nodes": [], "edges": []}\n')
     assert "V094" in codes(run_on(tmp_path))
@@ -107,8 +131,11 @@ def test_v094_is_silent_when_no_graph_is_built(tmp_path: Path) -> None:
 
 
 def test_v095_rule_checked_by_an_ungrounded_tool(tmp_path: Path) -> None:
-    """The rule's Check runs mypy, which a fact module pins, but the law module
-    never says where that pin lives."""
+    """A tool a rule leans on must be grounded, not merely invoked.
+
+    The rule's Check runs mypy, which a fact module pins, but the law module
+    never says where that pin lives.
+    """
     module(tmp_path, kind="fact", name="pytooling", title="Tooling",
            verified="2026-06-16", body=FACT_TABLE)
     module(tmp_path)
@@ -116,6 +143,7 @@ def test_v095_rule_checked_by_an_ungrounded_tool(tmp_path: Path) -> None:
 
 
 def test_v095_clears_once_grounded(tmp_path: Path) -> None:
+    """Naming the fact module in `grounds_on` discharges the obligation entirely."""
     module(tmp_path, kind="fact", name="pytooling", title="Tooling",
            verified="2026-06-16", body=FACT_TABLE)
     add_front_matter(module(tmp_path), 'grounds_on: ["fact/pytooling"]')
@@ -123,8 +151,11 @@ def test_v095_clears_once_grounded(tmp_path: Path) -> None:
 
 
 def test_v095_stays_quiet_when_no_fact_pins_the_tool(tmp_path: Path) -> None:
-    """Narrow on purpose. Without a pin there is nothing to ground on, and
-    demanding an edge anyway would manufacture one that is not true."""
+    """Narrow on purpose.
+
+    Without a pin there is nothing to ground on, and demanding an edge anyway
+    would manufacture one that is not true.
+    """
     module(tmp_path)
     assert "V095" not in codes(run_on(tmp_path))
 

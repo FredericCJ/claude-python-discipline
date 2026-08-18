@@ -34,10 +34,30 @@ VALIDATION_WORDS = frozenset({
 
 
 class AssertUsageCheck(Check):
+    """Rejects an assertion that is really guarding the outside world.
+
+    Three signals, any one sufficient: the condition calls something that reads
+    from outside, it names a parameter of the enclosing function, or its message
+    is worded as a refusal to a user rather than a claim about the program.
+    """
+
+    ## Invoked as `python -m checks.assert_usage`.
     name = "assert_usage"
+    ## The rules this mechanism decides. Findings cite ERR-012, the boundary
+    ## half; DIAG-009 is the same prohibition seen from the diagnostics side.
     rules = ("DIAG-009", "ERR-012")
 
     def visit_module(self, tree: ast.Module, path: Path, layer: str) -> Iterator[Finding]:
+        """Yield a finding for each assertion that is load-bearing in production.
+
+        @param tree the module's syntax tree
+        @param path the file it was parsed from
+        @param layer the architectural layer, unused -- `-O` strips assertions
+            from every layer alike
+        @return one ERR-012 finding per suspect assertion, naming the evidence in
+            its message; one per enclosing function for an assertion inside a
+            nested one, see `_asserts`
+        """
         if is_test_path(path):
             return
         params = _parameters_by_function(tree)
@@ -52,6 +72,19 @@ class AssertUsageCheck(Check):
                 )
 
     def _why_suspect(self, node: ast.Assert, params: frozenset[str]) -> str | None:
+        """Decide whether an assertion is validating, and name what gave it away.
+
+        Evidence in the condition outranks evidence in the message, which is
+        read only when the condition looks clean -- what a test inspects is
+        harder to argue with than how its failure is worded. Within the
+        condition the first match in walk order wins, so the phrase names one
+        signal and not every signal present.
+
+        @param node the assertion
+        @param params the enclosing function's parameters, `self` and `cls` aside
+        @return a phrase naming the evidence, or None when it reads as a genuine
+            internal impossibility
+        """
         for sub in ast.walk(node.test):
             if isinstance(sub, ast.Call):
                 name = _call_name(sub)
@@ -67,7 +100,17 @@ class AssertUsageCheck(Check):
 
 
 def _asserts(tree: ast.Module) -> Iterator[tuple[str, ast.Assert]]:
-    """Every assertion, paired with the name of its enclosing function."""
+    """Every assertion, paired with the name of its enclosing function.
+
+    An assertion outside every function is skipped entirely, not merely judged on
+    less evidence: the parameter signal has nothing to compare against, and the
+    other two are never reached either. An assertion inside a nested function is
+    reported once per enclosing function, which over-reports rather than losing
+    it under the wrong parameter set.
+
+    @param tree the module's syntax tree
+    @return each enclosing function's name paired with an assertion inside it
+    """
     for node in ast.walk(tree):
         if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             continue
@@ -77,6 +120,16 @@ def _asserts(tree: ast.Module) -> Iterator[tuple[str, ast.Assert]]:
 
 
 def _parameters_by_function(tree: ast.Module) -> dict[str, frozenset[str]]:
+    """What a caller can control, for every function in a module.
+
+    `self` and `cls` are left out: an assertion about them speaks to the object's
+    own state, not to anything supplied from outside. Two functions sharing a
+    name -- a method and a free function, an overload pair -- collide, and the
+    last definition wins.
+
+    @param tree the module's syntax tree
+    @return each function's name mapped to its caller-supplied parameter names
+    """
     result: dict[str, frozenset[str]] = {}
     for node in ast.walk(tree):
         if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -92,6 +145,14 @@ def _parameters_by_function(tree: ast.Module) -> dict[str, frozenset[str]]:
 
 
 def _call_name(node: ast.Call) -> str:
+    """The bare name invoked, discarding whatever it was reached through.
+
+    `json.loads(...)` and `payload.loads(...)` both answer `loads`, which is what
+    lets the table of external calls stay a short list of verbs.
+
+    @param node the call expression
+    @return the identifier, or the empty string when the callee is an expression
+    """
     func = node.func
     if isinstance(func, ast.Name):
         return func.id
@@ -99,6 +160,16 @@ def _call_name(node: ast.Call) -> str:
 
 
 def _message_text(node: ast.Assert) -> str:
+    """Whatever of an assertion's message is readable without running it.
+
+    An f-string yields only its literal segments, joined by spaces. A message
+    whose wording lives entirely in an interpolated value therefore reads as
+    empty, and the message signal cannot fire on it.
+
+    @param node the assertion
+    @return the literal text, or the empty string for no message, a non-string
+        message, or one made only of interpolations
+    """
     if isinstance(node.msg, ast.Constant) and isinstance(node.msg.value, str):
         return node.msg.value
     if isinstance(node.msg, ast.JoinedStr):

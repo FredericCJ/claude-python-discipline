@@ -13,6 +13,7 @@ that runs everywhere. See discipline/fact/doxygen.md.
 from __future__ import annotations
 
 import ast
+import re
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -20,6 +21,12 @@ from . import Check, Finding, is_test_path, main
 
 ## Names that carry no contract of their own and are documented by their owner.
 EXEMPT_NAMES = frozenset({"__all__", "__version__", "__author__", "_", "__"})
+
+## A documented parameter, however the meaning is phrased after the name.
+_DOC_PARAM = re.compile(r"@param\s+\**(\w+)")
+
+## A documented result, in either spelling Doxygen accepts.
+_DOC_RETURN = re.compile(r"@(?:returns?|retval)\b")
 
 ## Decorators that mark a class whose annotated attributes are its public shape.
 FIELD_CLASS_DECORATORS = frozenset({"dataclass", "define", "frozen"})
@@ -31,7 +38,7 @@ class DocCoverageCheck(Check):
     ## Invoked as `python -m checks.doc_coverage`.
     name = "doc_coverage"
     ## The law/DOC rules this check decides.
-    rules = ("DOC-001", "DOC-002", "DOC-003")
+    rules = ("DOC-001", "DOC-002", "DOC-003", "DOC-007")
 
     def visit_module(self, tree: ast.Module, path: Path, layer: str) -> Iterator[Finding]:
         """Yield one finding per undocumented element in `tree`.
@@ -66,13 +73,17 @@ class DocCoverageCheck(Check):
         @param path the file it came from
         @return one finding when the docstring is absent
         """
-        if ast.get_docstring(node) is not None or _is_overload(node):
+        if _is_overload(node):
             return
-        yield Finding(
-            "DOC-001", path, node.lineno,
-            f"{node.name}() has no docstring",
-            "State what it guarantees: parameters, result, and when it fails.",
-        )
+        docstring = ast.get_docstring(node)
+        if docstring is None:
+            yield Finding(
+                "DOC-001", path, node.lineno,
+                f"{node.name}() has no docstring",
+                "State what it guarantees: parameters, result, and when it fails.",
+            )
+            return
+        yield from _completeness(node, docstring, path)
 
     def _class(self, node: ast.ClassDef, path: Path,
                source: list[str]) -> Iterator[Finding]:
@@ -126,6 +137,73 @@ class DocCoverageCheck(Check):
                     f"module constant {target} has no `##` comment",
                     "Document it with a ## block above; a bare name states nothing.",
                 )
+
+
+def _completeness(node: ast.FunctionDef | ast.AsyncFunctionDef, docstring: str,
+                  path: Path) -> Iterator[Finding]:
+    """Report parameters and results a docstring leaves undocumented.
+
+    Owned here rather than left to Doxygen because Doxygen's Python parser does
+    not treat `-> None` as void: it demands an @return for a function that
+    returns nothing, which was 142 false demands on this repository alone. This
+    check reads the annotation and asks only for what is actually returned.
+
+    A `test_` function's parameters are fixtures, supplied by name rather than
+    by a caller. Their meaning belongs at the fixture, once, and restating it at
+    each of 130 call sites is the filler DOC-013 exists to refuse. Helpers in a
+    test file are ordinary callables and are held to the rule.
+
+    @param node the documented callable
+    @param docstring its docstring
+    @param path the file it came from
+    @return one finding per undocumented parameter, and one for a missing result
+    """
+    documented = set(_DOC_PARAM.findall(docstring))
+    for name in () if node.name.startswith("test_") else _parameter_names(node):
+        if name not in documented:
+            yield Finding(
+                "DOC-007", path, node.lineno,
+                f"{node.name}(): parameter `{name}` is not documented",
+                f"Add `@param {name} <what it means>` -- the signature already "
+                f"carries its type.",
+            )
+    if _returns_a_value(node) and not _DOC_RETURN.search(docstring):
+        yield Finding(
+            "DOC-007", path, node.lineno,
+            f"{node.name}(): the result is not documented",
+            "Add `@return <what the value signifies>`.",
+        )
+
+
+def _parameter_names(node: ast.FunctionDef | ast.AsyncFunctionDef) -> Iterator[str]:
+    """Every parameter a caller supplies, in signature order.
+
+    @param node the callable
+    @return each parameter name, excluding the implicit self and cls
+    """
+    args = node.args
+    for arg in (*args.posonlyargs, *args.args, *args.kwonlyargs):
+        if arg.arg not in {"self", "cls"}:
+            yield arg.arg
+    for arg in (args.vararg, args.kwarg):
+        if arg is not None:
+            yield arg.arg
+
+
+def _returns_a_value(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+    """Whether the callable's annotation promises something back.
+
+    An unannotated function is not pressed for an @return: the missing
+    annotation is a typing defect that TYPE-001 owns, and reporting it twice
+    under two rules helps nobody.
+
+    @param node the callable
+    @return True when the return annotation is anything but None
+    """
+    returns = node.returns
+    if returns is None:
+        return False
+    return not (isinstance(returns, ast.Constant) and returns.value is None)
 
 
 def _named_assignments(statement: ast.stmt) -> Iterator[tuple[str, int]]:

@@ -1132,11 +1132,33 @@
    }
   },
   {
+   "id": "examples/documentation",
+   "type": "module",
+   "label": "Documentation, Worked",
+   "path": "discipline/examples/documentation.md",
+   "tokens": 1373,
+   "attrs": {
+    "decay": "none",
+    "kind": "meta"
+   }
+  },
+  {
+   "id": "examples/port-triad",
+   "type": "module",
+   "label": "A Port and Its Three Adapters",
+   "path": "discipline/examples/port-triad.md",
+   "tokens": 1569,
+   "attrs": {
+    "decay": "none",
+    "kind": "meta"
+   }
+  },
+  {
    "id": "fact/doxygen",
    "type": "module",
    "label": "Doxygen for Python",
    "path": "discipline/fact/doxygen.md",
-   "tokens": 1805,
+   "tokens": 2391,
    "attrs": {
     "decay": "quarters",
     "kind": "fact",
@@ -1271,7 +1293,7 @@
    "type": "module",
    "label": "Documentation Comments",
    "path": "discipline/law/DOC.md",
-   "tokens": 2062,
+   "tokens": 2069,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1331,7 +1353,7 @@
    "type": "module",
    "label": "Systematic Testing and Oracles",
    "path": "discipline/law/TEST.md",
-   "tokens": 2766,
+   "tokens": 2774,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -3138,7 +3160,7 @@
    "id": "TEST-010",
    "type": "rule",
    "label": "The fault catalogue is covered per port",
-   "path": "discipline/law/TEST.md:124",
+   "path": "discipline/law/TEST.md:125",
    "tokens": 61,
    "attrs": {
     "force": "BINDING",
@@ -3149,7 +3171,7 @@
    "id": "TEST-011",
    "type": "rule",
    "label": "Propagation and containment are tested, not assumed",
-   "path": "discipline/law/TEST.md:132",
+   "path": "discipline/law/TEST.md:133",
    "tokens": 42,
    "attrs": {
     "force": "BINDING",
@@ -3160,7 +3182,7 @@
    "id": "TEST-012",
    "type": "rule",
    "label": "Interruption is tested at every effect boundary",
-   "path": "discipline/law/TEST.md:140",
+   "path": "discipline/law/TEST.md:141",
    "tokens": 38,
    "attrs": {
     "force": "BINDING",
@@ -3171,7 +3193,7 @@
    "id": "TEST-013",
    "type": "rule",
    "label": "Mutation score is gated on the core",
-   "path": "discipline/law/TEST.md:152",
+   "path": "discipline/law/TEST.md:153",
    "tokens": 40,
    "attrs": {
     "force": "BINDING",
@@ -3182,7 +3204,7 @@
    "id": "TEST-014",
    "type": "rule",
    "label": "Compound decisions are decomposed and tabulated",
-   "path": "discipline/law/TEST.md:160",
+   "path": "discipline/law/TEST.md:161",
    "tokens": 54,
    "attrs": {
     "force": "BINDING",
@@ -3193,7 +3215,7 @@
    "id": "TEST-015",
    "type": "rule",
    "label": "Every check has a proof-of-failure companion",
-   "path": "discipline/law/TEST.md:168",
+   "path": "discipline/law/TEST.md:169",
    "tokens": 36,
    "attrs": {
     "force": "BINDING",
@@ -3204,7 +3226,7 @@
    "id": "TEST-016",
    "type": "rule",
    "label": "A test that weakens must say so",
-   "path": "discipline/law/TEST.md:175",
+   "path": "discipline/law/TEST.md:176",
    "tokens": 42,
    "attrs": {
     "force": "BINDING",
@@ -3215,7 +3237,7 @@
    "id": "TEST-017",
    "type": "rule",
    "label": "Tests are order-independent and network-isolated",
-   "path": "discipline/law/TEST.md:186",
+   "path": "discipline/law/TEST.md:187",
    "tokens": 25,
    "attrs": {
     "force": "BINDING",
@@ -3226,7 +3248,7 @@
    "id": "TEST-018",
    "type": "rule",
    "label": "A flaky failure is a defect in the harness",
-   "path": "discipline/law/TEST.md:193",
+   "path": "discipline/law/TEST.md:194",
    "tokens": 46,
    "attrs": {
     "force": "BINDING",
@@ -3237,7 +3259,7 @@
    "id": "TEST-019",
    "type": "rule",
    "label": "Test names state the behaviour",
-   "path": "discipline/law/TEST.md:199",
+   "path": "discipline/law/TEST.md:200",
    "tokens": 24,
    "attrs": {
     "force": "ADVISORY",
@@ -3960,6 +3982,14 @@
    }
   },
   {
+   "id": "trigger:kw:contract suite example",
+   "type": "trigger",
+   "label": "contract suite example",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:contradiction",
    "type": "trigger",
    "label": "contradiction",
@@ -4088,6 +4118,14 @@
    }
   },
   {
+   "id": "trigger:kw:docstring example",
+   "type": "trigger",
+   "label": "docstring example",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:docstring format",
    "type": "trigger",
    "label": "docstring format",
@@ -4123,6 +4161,14 @@
    "id": "trigger:kw:doxygen",
    "type": "trigger",
    "label": "doxygen",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:doxygen example",
+   "type": "trigger",
+   "label": "doxygen example",
    "attrs": {
     "kind": "keyword"
    }
@@ -4240,9 +4286,33 @@
    }
   },
   {
+   "id": "trigger:kw:fake adapter",
+   "type": "trigger",
+   "label": "fake adapter",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:fault injection",
    "type": "trigger",
    "label": "fault injection",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:fault schedule example",
+   "type": "trigger",
+   "label": "fault schedule example",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:faulty adapter",
+   "type": "trigger",
+   "label": "faulty adapter",
    "attrs": {
     "kind": "keyword"
    }
@@ -4339,6 +4409,22 @@
    "id": "trigger:kw:hexagonal",
    "type": "trigger",
    "label": "hexagonal",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:how do i document this",
+   "type": "trigger",
+   "label": "how do i document this",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:how do i write a port",
+   "type": "trigger",
+   "label": "how do i write a port",
    "attrs": {
     "kind": "keyword"
    }
@@ -5032,6 +5118,14 @@
    }
   },
   {
+   "id": "trigger:kw:what does a good docstring look like",
+   "type": "trigger",
+   "label": "what does a good docstring look like",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:what does this mean",
    "type": "trigger",
    "label": "what does this mean",
@@ -5660,6 +5754,12 @@
   {
    "type": "cites",
    "src": "DOC-009",
+   "dst": "examples/documentation",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-009",
    "dst": "frame/spec",
    "origin": "derived"
   },
@@ -5883,6 +5983,12 @@
    "type": "cites",
    "src": "TEST-005",
    "dst": "law/ARCH",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "TEST-009",
+   "dst": "examples/port-triad",
    "origin": "derived"
   },
   {
@@ -10745,6 +10851,60 @@
    "type": "triggered_by",
    "src": "TYPE-003",
    "dst": "trigger:err:PGH003",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "examples/documentation",
+   "dst": "trigger:kw:docstring example",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "examples/documentation",
+   "dst": "trigger:kw:doxygen example",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "examples/documentation",
+   "dst": "trigger:kw:how do i document this",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "examples/documentation",
+   "dst": "trigger:kw:what does a good docstring look like",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "examples/port-triad",
+   "dst": "trigger:kw:contract suite example",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "examples/port-triad",
+   "dst": "trigger:kw:fake adapter",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "examples/port-triad",
+   "dst": "trigger:kw:fault schedule example",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "examples/port-triad",
+   "dst": "trigger:kw:faulty adapter",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "examples/port-triad",
+   "dst": "trigger:kw:how do i write a port",
    "origin": "derived"
   },
   {

@@ -38,20 +38,34 @@ from discipline_core import (
 )
 from graph_model import Edge, EdgeType, Graph, Node, NodeType, Origin
 
+## Recorded in the emitted JSON so a reader of graph.json knows what to re-run.
 GENERATED_BANNER: Final = "tools/build_graph.py"
 
+## A glossary entry heading; the optional trailing tag rides along in group 0.
 _TERM = re.compile(r"^###\s+(?P<term>.+?)(?:\s+\[BARE-BANNED\])?\s*$", re.MULTILINE)
+## A decision's own section heading, carrying the fuller of its two labels.
 _DECISION_HEADING = re.compile(r"^###\s+(?P<id>(?:CONF|OPEN)-\d{3})\s*(?:·|\|)\s*(?P<label>.+?)\s*$", re.MULTILINE)
+## A decision's summary-table row, for a ledger that lists an id before expanding it.
+## Narrower than the heading pattern on purpose: only the conflict ledger has such a table.
 _DECISION_ROW = re.compile(r"^\|\s*(?P<id>CONF-\d{3})\s*\|\s*(?P<label>[^|]+?)\s*\|", re.MULTILINE)
+## A provenance row: the two-letter tag and the archived document it stands for.
 _SOURCE_ROW = re.compile(r"^\|\s*`(?P<tag>[A-Z]{2})`\s+(?P<name>[^|]+?)\s*\|", re.MULTILINE)
+## A linter code as it appears in the comment beside the setting that selects it.
 _RUFF_CODE = re.compile(r"\b(?P<code>[A-Z]{1,4}\d{3,4})\b")
+## The `name = "..."` line that titles one import-linter contract.
 _CONTRACT_NAME = re.compile(r'^name\s*=\s*"(?P<name>[^"]+)"', re.MULTILINE)
 
+## The architectural layers a rule may be scoped to, core first.
 LAYERS: Final = ("domain", "app", "adapters", "shell")
 
 
 def _rel(path: Path, root: Path) -> str:
-    """Path relative to the corpus root, or absolute if it lies outside it."""
+    """Path relative to the corpus root, or absolute if it lies outside it.
+
+    @param path the file to express
+    @param root the root to express it against
+    @return a POSIX path, so the graph reads the same on either platform
+    """
     try:
         return path.relative_to(root).as_posix()
     except ValueError:
@@ -61,7 +75,16 @@ def _rel(path: Path, root: Path) -> str:
 
 
 def build(root: Path) -> tuple[Graph, list[str]]:
-    """Assemble the static graph. Returns the graph and any build warnings."""
+    """Assemble the whole static graph in one pass over the corpus.
+
+    The derived layer is added before the declared one so that hand-authored
+    edges can reference nodes the text produced. Nothing here validates
+    endpoints: an edge naming something absent is left dangling on purpose, for
+    the validator to report rather than for the build to drop in silence.
+
+    @param root the repository root
+    @return the graph, and one warning per thing that could not be derived
+    """
     graph = Graph()
     warnings: list[str] = []
     documents = _load(root, warnings)
@@ -77,6 +100,15 @@ def build(root: Path) -> tuple[Graph, list[str]]:
 
 
 def _load(root: Path, warnings: list[str]) -> list[Document]:
+    """Parse every corpus document, recording failures instead of raising them.
+
+    One malformed file must not cost the whole graph, so it is skipped and named.
+    `INDEX.md` is generated from the same rules and would double-count them.
+
+    @param root the repository root
+    @param warnings accumulator, appended to once per unparsable file
+    @return the documents that parsed, in path order
+    """
     documents: list[Document] = []
     for path in sorted((root / "discipline").rglob("*.md")):
         if path.name == "INDEX.md":
@@ -89,6 +121,13 @@ def _load(root: Path, warnings: list[str]) -> list[Document]:
 
 
 def _add_layers(graph: Graph) -> None:
+    """Seed the layer nodes, so `applies_to` edges have somewhere to land.
+
+    They exist whether or not any rule claims them; an empty layer is a fact
+    worth being able to observe.
+
+    @param graph the graph under construction
+    """
     for layer in LAYERS:
         graph.add_node(
             Node(id=f"layer:{layer}", type=NodeType.LAYER, label=layer)
@@ -96,6 +135,19 @@ def _add_layers(graph: Graph) -> None:
 
 
 def _add_modules_and_rules(graph: Graph, documents: Sequence[Document], root: Path) -> None:
+    """Add one node per module and per rule, with the containment edge between.
+
+    A document with no `id` in its front-matter is not addressable and is left
+    out entirely rather than given a synthesized one. Each node carries the path
+    and the reading cost an agent needs to decide whether to open it -- for a
+    module the count its front-matter declares, for a rule its statement measured
+    here -- and a rule's path is anchored at the line its heading sits on, so a
+    finding can be opened where it is reported.
+
+    @param graph the graph under construction
+    @param documents the parsed corpus
+    @param root the repository root, for the paths recorded on nodes
+    """
     for doc in documents:
         if not doc.doc_id:
             continue
@@ -133,6 +185,15 @@ def _add_modules_and_rules(graph: Graph, documents: Sequence[Document], root: Pa
 
 
 def _module_edges(graph: Graph, doc: Document) -> None:
+    """Add a module's front-matter relations, minting trigger nodes as it goes.
+
+    A `load_when` keyword and an `applies_to` glob both become triggers because
+    they answer the same question from opposite ends: they are how an agent
+    reaches a module without already knowing its name.
+
+    @param graph the graph under construction
+    @param doc the module whose front-matter is being read
+    """
     front = doc.front_matter
     for target in _as_list(front.get("requires")):
         graph.add_edge(Edge(EdgeType.REQUIRES, doc.doc_id, target))
@@ -151,6 +212,20 @@ def _module_edges(graph: Graph, doc: Document) -> None:
 
 
 def _rule_edges(graph: Graph, doc: Document, rule: object) -> None:
+    """Add a rule's mechanism, citation, supersession and grounding edges.
+
+    A `see` target keeps only the half before its anchor: an anchor addresses a
+    section of a node, not a node of its own. A supersession edge runs from the
+    replacement to the rule it replaced, so the rule still in force is always the
+    source and the retired one the target; to ask "what binds instead of this",
+    follow the edge backwards.
+
+    @param graph the graph under construction
+    @param doc the module that owns the rule, whose grounding the rule inherits
+    @param rule the parsed rule; the signature admits any object, so the
+        attributes read off it -- `rule_id`, `mechanisms`, `see`,
+        `superseded_by` -- are the real contract
+    """
     rule_id = rule.rule_id  # type: ignore[attr-defined]
     for mechanism in rule.mechanisms:  # type: ignore[attr-defined]
         node_id = f"mech:{mechanism}"
@@ -170,6 +245,15 @@ def _rule_edges(graph: Graph, doc: Document, rule: object) -> None:
 
 
 def _add_terms(graph: Graph, documents: Sequence[Document]) -> None:
+    """Add one node per glossary entry, flagging those banned in bare form.
+
+    Only `meta/GLOSSARY` is read; an H3 heading anywhere else is prose that
+    happens to share the shape. Decision ids share it too and are excluded, since
+    they are nodes of a different kind added elsewhere.
+
+    @param graph the graph under construction
+    @param documents the parsed corpus, of which at most one file is the glossary
+    """
     for doc in documents:
         if doc.doc_id != "meta/GLOSSARY":
             continue
@@ -187,6 +271,15 @@ def _add_terms(graph: Graph, documents: Sequence[Document]) -> None:
 
 
 def _add_decisions(graph: Graph, root: Path) -> None:
+    """Add a node per entry in the two decision ledgers.
+
+    A decision may appear as a full section, as a summary-table row, or as both;
+    the section's label wins, being the one written to be read. A missing ledger
+    is not an error, only a graph that cannot answer why a rule reads as it does.
+
+    @param graph the graph under construction
+    @param root the repository root
+    """
     for name in ("CONFLICTS", "OPEN"):
         path = root / "discipline" / "meta" / f"{name}.md"
         if not path.exists():
@@ -206,6 +299,18 @@ def _add_decisions(graph: Graph, root: Path) -> None:
 
 
 def _add_sources(graph: Graph, root: Path) -> None:
+    """Add a node per archived source document named in the provenance table.
+
+    The nodes are added with no edges at all: `derives_from` is constructed
+    nowhere in this build, so every source lands in the graph as an orphan even
+    though `nav.py` queries that edge type. The provenance table records where
+    material went per source *document*, not per rule, so nothing finer than a
+    document-level edge could be derived from it anyway. A missing provenance
+    file is not an error.
+
+    @param graph the graph under construction
+    @param root the repository root
+    """
     path = root / "discipline" / "meta" / "PROVENANCE.md"
     if not path.exists():
         return
@@ -219,8 +324,17 @@ def _add_sources(graph: Graph, root: Path) -> None:
 
 
 def _add_mechanisms(graph: Graph, root: Path) -> None:
-    """Error signatures are entry points: a tool's own rule code or contract name
-    is what an agent has in hand when something fails."""
+    """Add the implemented checks, and the error signatures that lead back to rules.
+
+    Error signatures are entry points: a tool's own diagnostic code or contract
+    name is what an agent has in hand when something fails, so both are indexed
+    as triggers. A ruff code reaches a rule only when the two are named in the
+    same configuration comment; a comment carrying a code and no rule id still
+    mints the trigger, which then stands with no edge into the corpus.
+
+    @param graph the graph under construction
+    @param root the repository root
+    """
     enforce = root / "enforce"
     for check in sorted((enforce / "checks").glob("*.py")):
         if check.stem.startswith(("__", "test_")):
@@ -253,6 +367,9 @@ def _add_mechanisms(graph: Graph, root: Path) -> None:
             comment = line.split("#", 1)[1]
             codes = {m.group("code") for m in _RUFF_CODE.finditer(comment)}
             rules = set(_RULE_IDS_IN(comment))
+            # Subtracting the ids is defensive only: a rule id carries a hyphen
+            # and a ruff code cannot, so as the two patterns stand nothing
+            # matches both.
             for code in codes - rules:
                 trigger = f"trigger:err:{code}"
                 graph.add_node(Node(id=trigger, type=NodeType.TRIGGER, label=code,
@@ -262,14 +379,33 @@ def _add_mechanisms(graph: Graph, root: Path) -> None:
                         graph.add_edge(Edge(EdgeType.TRIGGERED_BY, rule_id, trigger))
 
 
+## A rule id wherever it is embedded in free text -- a contract title, a comment.
 _RULE_ID_RE = re.compile(r"\b[A-Z][A-Z0-9]{1,7}-\d{3}\b")
 
 
 def _RULE_IDS_IN(text: str) -> list[str]:  # noqa: N802 - reads as a constant-like helper
+    """Every rule id mentioned in a string, in the order they appear.
+
+    @param text a contract title, a configuration comment, any prose
+    @return the ids found, duplicates kept
+    """
     return _RULE_ID_RE.findall(text)
 
 
 def _add_declared(graph: Graph, root: Path, warnings: list[str]) -> None:
+    """Overlay the relations no reading of the corpus text could produce.
+
+    Every edge added here carries `Origin.DECLARED`, which is what keeps a human
+    judgement distinguishable from a computed fact later; the artifact nodes it
+    also mints carry no origin, since a node records no such thing. A tension is
+    written both ways round, since neither of the two rules is the subject of it.
+    An absent edge file leaves the graph correct but thinner, so it warns rather
+    than fails.
+
+    @param graph the graph under construction
+    @param root the repository root
+    @param warnings accumulator, appended to when the edge file is absent
+    """
     path = root / "discipline" / "meta" / "edges.yaml"
     if not path.exists():
         warnings.append("no discipline/meta/edges.yaml; declared layer is empty")
@@ -310,6 +446,16 @@ def _add_declared(graph: Graph, root: Path, warnings: list[str]) -> None:
 
 
 def _as_list(value: object) -> list[str]:
+    """Normalize a front-matter field written as one string, a list, or not at all.
+
+    Total by construction: any other shape -- a number, a mapping, a null --
+    yields nothing rather than raising, because the schema, not the graph
+    builder, is where a malformed corpus is meant to be caught. The cost is that
+    a field written in an unexpected shape goes silently unedged.
+
+    @param value the raw YAML value
+    @return its entries, stringified; empty when the field is missing
+    """
     if isinstance(value, list):
         return [str(v) for v in value]
     if isinstance(value, str):
@@ -321,12 +467,30 @@ def _as_list(value: object) -> list[str]:
 
 
 def render(graph: Graph) -> str:
+    """Serialize to the exact bytes `discipline/graph.json` is meant to hold.
+
+    Byte-stability is the contract that makes `--check` meaningful: the same
+    corpus must produce the same text, or staleness cannot be told apart from
+    reordering. The sorting that guarantees it lives in `Graph.to_dict`.
+
+    @param graph the assembled graph
+    @return the JSON document, banner first and newline-terminated
+    """
     payload = {"generated_by": GENERATED_BANNER, **graph.to_dict()}
     return json.dumps(payload, indent=1, ensure_ascii=False) + "\n"
 
 
 def load_graph(root: Path = REPO_ROOT) -> Graph:
-    """Read the built graph. Used by nav.py and the validator."""
+    """Read the built graph, deriving it in memory when none has been written.
+
+    The fallback is what lets `nav.py` answer in a checkout where the build has
+    never run, at the cost of parsing the whole corpus first. A graph read from
+    disk is trusted as it stands: staleness is `main`'s `--check` to decide, not
+    this function's.
+
+    @param root the repository root
+    @return the graph, from disk when it is present there
+    """
     path = root / "discipline" / "graph.json"
     if not path.exists():
         graph, _ = build(root)
@@ -335,6 +499,15 @@ def load_graph(root: Path = REPO_ROOT) -> Graph:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Write the graph, or under `--check` report only whether it is stale.
+
+    Warnings go to stderr and never change the exit status: a graph missing its
+    declared layer is degraded, not wrong, and failing the build over it would
+    make the accelerator harder to live with than to live without.
+
+    @param argv command-line arguments, defaulting to `sys.argv`
+    @return 0 on success, 1 when `--check` finds the written graph out of date
+    """
     # The console encoding is not ours to choose, and a tool that dies on one is
     # worse than one that renders a character imperfectly.
     if hasattr(sys.stdout, "reconfigure"):

@@ -35,10 +35,23 @@ HIDE_UNDOC_CLASSES     = NO
 
 # ------------------------------------------------------------------- the gate
 
-# DOC-001: an undocumented member is reported.
-WARN_IF_UNDOCUMENTED   = YES
-# DOC-007: a documented callable whose parameters or return are undocumented.
-WARN_NO_PARAMDOC       = YES
+# DOC-001 / DOC-002 presence is decided by enforce/checks/doc_coverage.py, not
+# here. Doxygen's Python parser re-reports a field that IS documented at its
+# declaration whenever a method refers to it bare, as `self.field`, and it points
+# at the use rather than the declaration. Reproduced minimally: a documented
+# dataclass field read as `len(str(self.bare))` is reported undocumented, while
+# the same field read as `self.other.values()` is not, and a genuinely
+# undocumented field is reported either way. Six such false reports here against
+# zero true ones. doc_coverage decides presence from the declaration site, where
+# the fix belongs, and its proof-of-failure tests pin that it still fires.
+WARN_IF_UNDOCUMENTED   = NO
+# DOC-007 parameter and return completeness is decided by enforce/checks/
+# doc_coverage.py, not here. Doxygen's Python parser does not map `-> None` onto
+# void, so it demands an @return from every procedure: 142 false demands on this
+# repository against 3 true ones. The check reads the annotation instead. Turning
+# this off narrows Doxygen to what only Doxygen sees -- markup that does not
+# parse, and symbols documented that do not exist.
+WARN_NO_PARAMDOC       = NO
 # DOC-007: a parameter documented that does not exist, or documented twice.
 WARN_IF_DOC_ERROR      = YES
 WARN_IF_INCOMPLETE_DOC = YES

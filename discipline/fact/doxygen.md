@@ -2,7 +2,7 @@
 id: fact/doxygen
 kind: fact
 title: Doxygen for Python
-tokens: 1805
+tokens: 2391
 load_when:
   - "doxygen"
   - "documentation comment"
@@ -81,8 +81,8 @@ Both elements above produced **zero warnings** under the configuration below.
 | Option | Default | Set to | Effect |
 |---|---|---|---|
 | `PYTHON_DOCSTRING` | `YES` | `NO` | docstrings become real documentation blocks, commands enabled |
-| `WARN_IF_UNDOCUMENTED` | `YES` | `YES` | an undocumented member is reported |
-| `WARN_NO_PARAMDOC` | `NO` | `YES` | a documented function with undocumented parameters or return is reported |
+| `WARN_IF_UNDOCUMENTED` | `YES` | `NO` | see *Three defects* -- it misattributes documented fields; `doc_coverage` decides presence |
+| `WARN_NO_PARAMDOC` | `NO` | `NO` | see *Three defects* -- it cannot see `-> None` as void; `doc_coverage` decides completeness |
 | `WARN_IF_DOC_ERROR` | `YES` | `YES` | a parameter documented that does not exist, or documented twice |
 | `WARN_IF_INCOMPLETE_DOC` | `YES` | `YES` | some but not all parameters documented |
 | `WARN_AS_ERROR` | `NO` | `FAIL_ON_WARNINGS` | all warnings are emitted, then the process exits non-zero |
@@ -119,6 +119,41 @@ trains people to ignore it.
 default is **not** an error. It degrades silently to preformatted text, and every `@param`
 in it becomes literal characters in the output. Nothing warns. This is why the setting
 belongs in the project's Doxyfile rather than relying on an author remembering a marker.
+
+## Three defects that decide who owns which rule
+
+All three were found by running the gate over a fully migrated tree of 28 files, and each
+was reduced to a minimal reproducer before being acted on. Together they are why
+`enforce/Doxyfile` turns two warning classes off: not because the rules are unwanted, but
+because Doxygen's Python parser decides them wrongly and a better mechanism exists.
+
+`ESTABLISHED` — **`WARN_NO_PARAMDOC` cannot see that `-> None` is void.** It demands an
+`@return` from every procedure. On this repository that was 142 false demands against 3 true
+ones. `enforce/checks/doc_coverage.py` reads the return annotation instead, so it asks only
+for what is actually returned. DOC-007 completeness is therefore decided by the check, and
+`WARN_NO_PARAMDOC` is off.
+
+`ESTABLISHED` — **`WARN_IF_UNDOCUMENTED` re-reports a field that is documented**, whenever a
+method refers to it *bare* as `self.field`, and it points at the use rather than at the
+declaration. Reproduced minimally: in one class, a `##`-documented dataclass field read as
+`len(str(self.bare))` is reported undocumented, while a sibling field read as
+`self.other.values()` is not, and a genuinely undocumented field is reported either way — so
+the detection works and the attribution does not. Six false reports here against zero true
+ones. DOC-001 and DOC-002 presence is therefore decided by `doc_coverage`, which reports at
+the declaration site where the fix belongs.
+
+`ESTABLISHED` — **a code span ending in a single period aborts the comment block.** Doxygen
+emits only `end of comment block while expecting command </tt>`, naming neither the span nor
+the remedy. Bisected against 1.10.0:
+
+| Span | Parses? |
+|---|---|
+| `` `foo.` ``, `` `x.` ``, `` `a.b.` ``, `` `e.g.` `` | no |
+| `` `...` ``, `` `.leading` ``, `` `foo.bar` ``, `` `foo` `` | yes |
+
+The trigger is a final period preceded by anything other than another period. Write the
+period outside the span. `enforce/checks/doc_style.py` reports it under DOC-010 with the
+span named, so the author does not have to bisect the file to find it.
 
 ## Commands that carry a Python contract
 

@@ -2,7 +2,7 @@
 id: law/TEST
 kind: law
 title: Systematic Testing and Oracles
-tokens: 2766
+tokens: 2774
 load_when:
   - "write a test"
   - "pytest"
@@ -120,6 +120,7 @@ prohibited.
 - **Why** A schedule that survives as data is a failing case an agent can replay verbatim;
   a bespoke class is a one-off that has to be re-derived.
 - **Check** `pytest enforce/fitness/test_faults.py::test_fault_schedules_are_data`
+- **See** [examples/port-triad]
 
 ### TEST-010 · The fault catalogue is covered per port  [BINDING] [fitness:test_fault_catalogue]
 Each port MUST be exercised against the fault categories that apply to it: explicit

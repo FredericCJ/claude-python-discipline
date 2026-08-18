@@ -16,7 +16,7 @@ decay: none
 
 | Module | Kind | Tokens | Rules | Load when |
 |---|---|---|---|---|
-| [fact/doxygen](fact/doxygen.md) | fact | 1805 | 0 | doxygen, documentation comment, docstring format, @param, @return, generate documentation |
+| [fact/doxygen](fact/doxygen.md) | fact | 2391 | 0 | doxygen, documentation comment, docstring format, @param, @return, generate documentation |
 | [fact/py-errors](fact/py-errors.md) | fact | 1441 | 0 | raise from, __cause__, __context__, add_note, ExceptionGroup, except star |
 | [fact/py-logging](fact/py-logging.md) | fact | 1506 | 0 | log level, getLogger, basicConfig, NullHandler, handler, formatter |
 | [fact/py-testing](fact/py-testing.md) | fact | 1423 | 0 | pytest version, fixture scope, hypothesis, coverage tool, mutation tool, pytest plugin |
@@ -27,12 +27,12 @@ decay: none
 | [law/ARCH](law/ARCH.md) | law | 2467 | 17 | new module, package layout, port, adapter, hexagonal, dependency injection |
 | [law/DEP](law/DEP.md) | law | 2011 | 14 | add a dependency, third party library, lockfile, environment, code generation, generated file |
 | [law/DIAG](law/DIAG.md) | law | 2499 | 16 | exception, traceback, logging, error message, error code, correlation id |
-| [law/DOC](law/DOC.md) | law | 2062 | 13 | docstring, documentation comment, doxygen, @param, @return, document this function |
+| [law/DOC](law/DOC.md) | law | 2069 | 13 | docstring, documentation comment, doxygen, @param, @return, document this function |
 | [law/EFCT](law/EFCT.md) | law | 2239 | 16 | write a file, mutation, state machine, transaction, rollback, dry run |
 | [law/ERR](law/ERR.md) | law | 2450 | 16 | raise, except, Result, error type, exception hierarchy, validation |
 | [law/FLOW](law/FLOW.md) | law | 1994 | 13 | definition of done, before i commit, what should i do first, ADR, decision record, review |
 | [law/LEARN](law/LEARN.md) | law | 1888 | 12 | learning, record what i learned, session memory, why did this fail before, calibration, promote a learning |
-| [law/TEST](law/TEST.md) | law | 2766 | 19 | write a test, pytest, fixture, hypothesis, property test, mutation |
+| [law/TEST](law/TEST.md) | law | 2774 | 19 | write a test, pytest, fixture, hypothesis, property test, mutation |
 | [law/TYPE](law/TYPE.md) | law | 2059 | 15 | type hint, mypy, pyright, Protocol, generic, dataclass |
 | [ops/ALLOC](ops/ALLOC.md) | ops | 2050 | 10 | dispatch a subagent, which model, how much effort, delegate, escalate, sub-agent |
 | [ops/teams](ops/teams.md) | ops | 1384 | 3 | agent team, teammate, subagent definition, spawn an agent, task list, slash command |

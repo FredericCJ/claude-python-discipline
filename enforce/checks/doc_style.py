@@ -44,6 +44,20 @@ _TYPE_IN_RETURN = re.compile(
 ## Word tokens, for comparing a summary against an identifier.
 _WORD = re.compile(r"[a-z0-9]+")
 
+## A code span whose content ends in a single period, which Doxygen cannot parse.
+## Established by bisection against doxygen 1.10.0: a span holding foo. or x. or
+## a.b. aborts the comment block, while one holding an ellipsis, a leading dot,
+## foo.bar or plain foo is read normally -- so the trigger is a final period
+## preceded by anything but another period. The examples here are deliberately
+## written without code spans around them: an earlier draft of this very comment
+## put them in spans and broke the documentation build, which is how the gap
+## below was found. Doxygen catches this too, but reports only an unclosed inline
+## code tag, naming neither the span nor the remedy.
+##
+## Known gap: this check reads docstrings only, so it does not police the form of
+## a ## block like this one. The Doxygen gate is what covers that half.
+_TRAILING_DOT_SPAN = re.compile(r"`([^`\n]*[^.`]\.)`")
+
 
 class DocStyleCheck(Check):
     """Report documentation that is unparseable, redundant or empty of content."""
@@ -51,7 +65,7 @@ class DocStyleCheck(Check):
     ## Invoked as `python -m checks.doc_style`.
     name = "doc_style"
     ## The law/DOC rules this check decides.
-    rules = ("DOC-004", "DOC-008", "DOC-009")
+    rules = ("DOC-004", "DOC-008", "DOC-009", "DOC-010")
 
     def visit_module(self, tree: ast.Module, path: Path, layer: str) -> Iterator[Finding]:
         """Yield findings for every badly formed documentation comment in `tree`.
@@ -118,6 +132,17 @@ class DocStyleCheck(Check):
                     "The signature carries the type; the documentation carries the "
                     "meaning. A type written twice diverges once.",
                 )
+
+        for span in _TRAILING_DOT_SPAN.findall(docstring):
+            yield Finding(
+                "DOC-010", path, lineno,
+                f"{name}: the code span `{span}` ends in a period, which breaks "
+                f"the Doxygen build",
+                "Move the period outside the span: write `foo`. rather than "
+                "`foo.`. Doxygen reports this only as \"end of comment block "
+                "while expecting command </tt>\", naming neither the file's real "
+                "problem nor the fix.",
+            )
 
         if _restates_the_name(name, docstring):
             yield Finding(

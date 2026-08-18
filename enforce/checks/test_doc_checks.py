@@ -23,10 +23,14 @@ from checks.doc_style import DocStyleCheck
 def write(tmp_path: Path, source: str, name: str = "mod.py") -> Path:
     """Write a probe module and return its path.
 
-    @param tmp_path the per-test directory
+    Always under `src/mypkg/domain/`: the documentation checks ignore the layer,
+    so the path only has to look like a source file, not carry a meaning.
+
+    @param tmp_path pytest's per-test directory, used as the root of the fake tree
     @param source the module text, dedented before writing
-    @param name the file name to use
-    @return the path written
+    @param name the file's name -- a `test_` prefix would exempt it from the style
+        check, so every probe here keeps the default
+    @return the written file, ready to hand to a check
     """
     target = tmp_path / "src" / "mypkg" / "domain" / name
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -37,9 +41,12 @@ def write(tmp_path: Path, source: str, name: str = "mod.py") -> Path:
 def rules_fired(check: Check, path: Path) -> set[str]:
     """Rule ids the check reports for one file.
 
-    @param check the check to run
+    Collapses duplicates and discards line numbers, so a test asserts which rule
+    spoke rather than how often or where.
+
+    @param check any check; it is driven over this one file rather than a tree
     @param path the file to run it over
-    @return the set of rule ids reported
+    @return every rule id reported, empty when the file conforms
     """
     return {f.rule_id for f in check.run([path])}
 
@@ -54,7 +61,7 @@ def test_an_undocumented_module_fires(tmp_path: Path) -> None:
 
 
 def test_an_undocumented_function_fires(tmp_path: Path) -> None:
-    """A callable with no docstring is reported."""
+    """DOC-001 reaches inside a documented module: the summary does not cover its callables."""
     path = write(tmp_path, '''
         """! Module."""
 
@@ -66,7 +73,7 @@ def test_an_undocumented_function_fires(tmp_path: Path) -> None:
 
 
 def test_an_undocumented_class_fires(tmp_path: Path) -> None:
-    """A class with no docstring is reported."""
+    """A class is an element in its own right, reported by name and not by its module."""
     path = write(tmp_path, '''
         """! Module."""
 
@@ -99,7 +106,7 @@ def test_a_documented_module_constant_is_accepted(tmp_path: Path) -> None:
 
 
 def test_a_multi_line_hash_block_is_accepted(tmp_path: Path) -> None:
-    """A block opens with ## and continues with plain #."""
+    """A `##` block may continue with plain `#` lines; the search up does not stop at them."""
     path = write(tmp_path, '''
         """! Module."""
 
@@ -111,7 +118,7 @@ def test_a_multi_line_hash_block_is_accepted(tmp_path: Path) -> None:
 
 
 def test_an_undocumented_class_attribute_fires(tmp_path: Path) -> None:
-    """A dataclass field with no `##` block is reported."""
+    """A dataclass field needs its own `##` block; the class docstring does not cover it."""
     path = write(tmp_path, '''
         """! Module."""
 
@@ -181,6 +188,77 @@ def test_a_fully_documented_module_is_silent(tmp_path: Path) -> None:
             return title
     ''')
     assert rules_fired(DocCoverageCheck(), path) == set()
+
+
+def test_an_undocumented_parameter_fires(tmp_path: Path) -> None:
+    """DOC-007: a docstring that skips a parameter leaves the caller guessing."""
+    path = write(tmp_path, '''
+        """! Module."""
+
+
+        def rename(title: str, stage: str) -> str:
+            """! Give an outline a new title.
+
+            @param title the replacement title
+            @return the renamed outline
+            """
+            return title + stage
+    ''')
+    assert "DOC-007" in rules_fired(DocCoverageCheck(), path)
+
+
+def test_an_undocumented_result_fires(tmp_path: Path) -> None:
+    """DOC-007 covers the return value, which is the half most often skipped."""
+    path = write(tmp_path, '''
+        """! Module."""
+
+
+        def rename(title: str) -> str:
+            """! Give an outline a new title.
+
+            @param title the replacement title
+            """
+            return title
+    ''')
+    assert "DOC-007" in rules_fired(DocCoverageCheck(), path)
+
+
+def test_a_none_returning_function_is_not_asked_for_a_result(tmp_path: Path) -> None:
+    """Doxygen demands @return here and is wrong; reading the annotation is not."""
+    path = write(tmp_path, '''
+        """! Module."""
+
+
+        def emit(title: str) -> None:
+            """! Write the title to the report.
+
+            @param title the heading to emit
+            """
+    ''')
+    assert rules_fired(DocCoverageCheck(), path) == set()
+
+
+def test_a_tests_fixtures_are_not_demanded(tmp_path: Path) -> None:
+    """A fixture is documented where it is defined, not at each place it is used."""
+    target = tmp_path / "tests" / "test_thing.py"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        '"""! Tests."""\n\n\ndef test_x(tmp_path: Path) -> None:\n    """! It holds."""\n',
+        encoding="utf-8",
+    )
+    assert rules_fired(DocCoverageCheck(), target) == set()
+
+
+def test_a_helper_in_a_test_file_still_documents_its_parameters(tmp_path: Path) -> None:
+    """The exemption is for `test_` functions, not for every callable beside them."""
+    target = tmp_path / "tests" / "test_thing.py"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        '"""! Tests."""\n\n\ndef build(name: str) -> str:\n    """! Make a probe."""\n'
+        "    return name\n",
+        encoding="utf-8",
+    )
+    assert "DOC-007" in rules_fired(DocCoverageCheck(), target)
 
 
 # ---------------------------------------------------------------------- style
@@ -263,8 +341,42 @@ def test_a_summary_that_adds_meaning_is_accepted(tmp_path: Path) -> None:
     assert rules_fired(DocStyleCheck(), path) == set()
 
 
+def test_a_code_span_ending_in_a_period_fires(tmp_path: Path) -> None:
+    """DOC-010: Doxygen aborts the comment block, naming neither span nor remedy."""
+    path = write(tmp_path, '''
+        """! Module."""
+
+
+        def rename(title: str) -> str:
+            """! Give an outline a new title, as `A1.` does.
+
+            @param title the replacement title
+            @return the renamed outline
+            """
+            return title
+    ''')
+    assert "DOC-010" in rules_fired(DocStyleCheck(), path)
+
+
+def test_an_ellipsis_span_is_accepted(tmp_path: Path) -> None:
+    """`...` parses; the trigger is a final period with a non-period before it."""
+    path = write(tmp_path, '''
+        """! Module."""
+
+
+        def rename(title: str) -> str:
+            """! Give an outline a new title, written `def rename(...)` here.
+
+            @param title the replacement title
+            @return the renamed outline
+            """
+            return title
+    ''')
+    assert rules_fired(DocStyleCheck(), path) == set()
+
+
 def test_tests_are_exempt_from_the_style_check(tmp_path: Path) -> None:
-    """Test names state behaviour; their docstrings need no @param block."""
+    """The style check skips a test path outright; only the coverage check speaks there."""
     target = tmp_path / "tests" / "test_thing.py"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text('"""! Tests."""\n\n\ndef test_x() -> None:\n    pass\n',
@@ -278,7 +390,8 @@ def test_tests_are_exempt_from_the_style_check(tmp_path: Path) -> None:
 def test_each_check_declares_its_rules(check: Check) -> None:
     """Every check names the rules it decides, so output traces back to law.
 
-    @param check the check under test
+    @param check each documentation check in turn; the list is written out by
+        hand, so a new check has to be added to it to be covered here
     """
     assert check.rules
     assert all(r.startswith("DOC-") for r in check.rules)

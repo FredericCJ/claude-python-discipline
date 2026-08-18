@@ -18,9 +18,15 @@ from typing import Final
 
 import yaml
 
+## Anchor for every other path here, derived from this file rather than the working
+## directory, so a tool behaves the same however it was invoked.
 REPO_ROOT: Final = Path(__file__).resolve().parent.parent
+## The corpus itself: the default root walked by ``iter_documents``.
 DISCIPLINE_DIR: Final = REPO_ROOT / "discipline"
+## The mechanisms. A cross-reference may point here; SCHEMA.md section 5 admits
+## only this, the corpus and the examples as reference targets.
 ENFORCE_DIR: Final = REPO_ROOT / "enforce"
+## Worked code, for rules whose illustration is too long to sit in a rule body.
 EXAMPLES_DIR: Final = DISCIPLINE_DIR / "examples"
 
 ## Files written by ``build_index.py``; excluded from authored-content checks.
@@ -28,29 +34,54 @@ GENERATED_NAMES: Final[frozenset[str]] = frozenset(
     {"INDEX.md", "rules.json", "ENFORCEMENT.md"}
 )
 
+## Ceilings from SCHEMA.md section 2, keyed by file stem with ``*`` as the fallback.
+## Exceeding one is an error and not a warning: the budget is what lets an agent
+## decide to open a module without first paying to read it.
 TOKEN_BUDGETS: Final[Mapping[str, int]] = {"KERNEL": 2_000, "*": 4_000}
 
 
 class Kind(StrEnum):
-    """The genre of a document. See SCHEMA.md section 1."""
+    """The genre of a document, which fixes what that document may do.
 
+    Specified in SCHEMA.md section 1.
+    """
+
+    ## Binding rules and their mechanisms. One of the two genres that may carry rules,
+    ## and the only one forbidden to name a version.
     LAW = "law"
+    ## Verified truths about Python and its tooling, each stamped with a date and
+    ## re-verified when its decay window closes.
     FACT = "fact"
+    ## Vocabulary and reasoning scaffolds. Describes options; prescribing here is an error.
     FRAME = "frame"
+    ## Agent dispatch and coordination. The other genre that may carry rules, and the
+    ## one that decays fastest, being written against a specific agent harness.
     OPS = "ops"
+    ## Documents about the corpus: this format, the glossary, the ledgers.
     META = "meta"
 
 
 class Force(StrEnum):
-    """The normative force of a rule. See SCHEMA.md section 3.2."""
+    """The normative force of a rule, and what the rule then owes the reader.
 
+    Exactly one tag per heading. Specified in SCHEMA.md section 3.2.
+    """
+
+    ## Violation is a defect. Obliges the rule to name a mechanism and a check.
     BINDING = "BINDING"
+    ## A strong default, departed from with a recorded reason. Obliges the rule to
+    ## say why no mechanism could decide it.
     ADVISORY = "ADVISORY"
+    ## Blocked on an undecided question, so it can never also be binding. Obliges an
+    ## entry in ``meta/OPEN.md`` naming what the open question blocks.
     OPEN = "OPEN"
 
 
+## The delimited YAML header, anchored at the very start of the file. A block that
+## begins anywhere else is body text, so a stray ``---`` cannot be read as metadata.
 _FRONT_MATTER = re.compile(r"\A---\r?\n(?P<yaml>.*?)\r?\n---\r?\n", re.DOTALL)
 
+## A rule heading: id, separator, title, then the run of bracketed tags.
 ## ``### TYPE-012 · Domain code carries no `Any`  [BINDING] [auto:mypy]``
 _RULE_HEADING = re.compile(
     r"^###\s+"
@@ -59,24 +90,37 @@ _RULE_HEADING = re.compile(
     r"(?P<title>.+?)"
     r"\s*(?P<tags>(?:\[[^\]]+\]\s*)+)$"
 )
+## One bracketed tag, applied to the run the heading already isolated.
 _TAG = re.compile(r"\[([^\]]+)\]")
+## A rule body field. The five names are spelled out rather than matched generically,
+## so an invented field is left unrecognized instead of being silently accepted.
 _FIELD = re.compile(
     r"^\s*[-*]\s+\*\*(?P<name>Why|Check|See|No mechanism|Superseded by)\*\*\s*(?P<body>.*)$"
 )
 
+## A cross-reference target: a rule, a module, or a section of one.
 ## ``[TYPE-012]`` / ``[law/TYPE]`` / ``[fact/py-typing#strict-flags]``
 _XREF = re.compile(r"\[(?P<target>(?:[A-Z][A-Z0-9]{1,7}-\d{3})|(?:[a-z]+/[A-Za-z0-9_-]+(?:#[a-z0-9-]+)?))\]")
 
-## A version literal adjacent to a tool name, forbidden in ``law`` bodies.
+## The tools whose versions belong in a dated ``fact`` file and nowhere else.
+## Naming them explicitly is what keeps an ordinary number in prose from reading
+## as a pin.
 _PINNED_TOOLS: Final = (
     "mypy", "pyright", "ruff", "pytest", "hypothesis", "coverage",
     "mutmut", "pydantic", "python", "cpython", "import-linter",
 )
+## A version literal close enough to a tool name to be a pin. The gap is capped at
+## 24 characters and stops at a newline or a period, so a number in the next clause
+## is not attributed to a tool named in this one.
 _VERSION_NEAR_TOOL = re.compile(
     r"(?i)\b(?P<tool>" + "|".join(_PINNED_TOOLS) + r")\b[^\n.]{0,24}?(?P<ver>\d+\.\d+(?:\.\d+)?)"
 )
 
+## A fence line. Opening and closing look alike, so the scanner toggles on each match
+## rather than trying to tell them apart.
 _CODE_FENCE = re.compile(r"^\s*```")
+## A backtick span. Confined to one line, so an unpaired backtick blanks nothing
+## beyond the line it sits on.
 _INLINE_CODE = re.compile(r"`[^`\n]*`")
 
 
@@ -84,27 +128,57 @@ _INLINE_CODE = re.compile(r"`[^`\n]*`")
 class Rule:
     """One normative rule, parsed from its H3 block."""
 
+    ## ``MODULE-NNN``. Assigned once, never renumbered, never reused; it is quoted in
+    ## reviews, commits and diagnostic envelopes, so treat it as public API.
     rule_id: str
+    ## Front-matter id of the file this was read from, e.g. ``law/TYPE``.
     module_id: str
+    ## The imperative heading text, with the tags removed.
     title: str
+    ## Normative weight, taken from the single force tag the heading carried.
     force: Force
+    ## The remaining tags, naming what decides the rule. Empty means nothing does.
     mechanisms: tuple[str, ...]
+    ## The normative prose between the heading and the first field, joined to one line.
     statement: str
+    ## The rationale, tying the rule to the Prime Directive. None when the author gave none.
     why: str | None
+    ## The command or test that settles the rule; a binding rule without one is a defect.
     check: str | None
+    ## Targets extracted from the ``See`` field, in source order. The validator resolves
+    ## each one, which is what stops the corpus growing references to files that never existed.
     see: tuple[str, ...]
+    ## Why no mechanism can decide this rule. Belongs to advisory rules and to no others.
     no_mechanism: str | None
+    ## What replaced the rule. Set means the heading survives only to reserve its id.
     superseded_by: str | None
+    ## The file it was parsed from — the owning document's own ``path``, copied onto
+    ## each rule so a finding can travel without the document that produced it.
     path: Path
+    ## Line of the heading, counted from 1 in the whole file rather than in the body,
+    ## so a finding can be opened where it is reported.
     line: int
 
     @property
     def prefix(self) -> str:
-        """The module prefix embedded in the rule id, e.g. ``TYPE``."""
+        """The module prefix embedded in the rule id, e.g. ``TYPE``.
+
+        @return the part before the ordinal, which must match the ``NAME`` half of
+            the owning file's id, upper-cased
+        """
         return self.rule_id.rsplit("-", 1)[0]
 
     @property
     def ordinal(self) -> int:
+        """The numeric half of the id, the secondary sort key of the rule surface.
+
+        Not a position. Ids are never renumbered, so a deleted rule leaves a gap and
+        the largest ordinal in a module exceeds its rule count; a new id is allocated
+        from the maximum, never from the count.
+
+        @return the three-digit ordinal as a number, leading zeros dropped
+        @throws ValueError when the id does not end in digits
+        """
         return int(self.rule_id.rsplit("-", 1)[1])
 
 
@@ -112,19 +186,36 @@ class Rule:
 class Document:
     """One parsed corpus file."""
 
+    ## Where it was read from, kept absolute; ``relpath`` is the form to display.
     path: Path
+    ## The YAML header as loaded, with dates normalized back to ISO strings. Typed as
+    ## ``object`` because nothing here validates it — that is the validator's job.
     front_matter: Mapping[str, object]
+    ## Everything after the closing delimiter, verbatim and unstripped.
     body: str
+    ## How many lines the header occupied, added back to make body positions absolute.
     body_offset: int
+    ## The rules found in the body, in source order. Empty for the genres that carry none.
     rules: tuple[Rule, ...] = field(default=())
 
     @property
     def doc_id(self) -> str:
+        """The declared ``kind/NAME`` identity, or the empty string when it is missing.
+
+        Empty rather than None so callers may split and compare without a guard; a
+        header without an id is a finding for the validator, not a crash here.
+
+        @return the front-matter ``id`` when it is a string, else the empty string
+        """
         raw = self.front_matter.get("id")
         return raw if isinstance(raw, str) else ""
 
     @property
     def kind(self) -> Kind | None:
+        """The declared genre, or None when it is absent or not one this format knows.
+
+        @return the matching genre, or None for anything unrecognized
+        """
         raw = self.front_matter.get("kind")
         if isinstance(raw, str):
             try:
@@ -135,15 +226,32 @@ class Document:
 
     @property
     def module_name(self) -> str:
-        """The ``NAME`` half of ``kind/NAME``."""
+        """The ``NAME`` half of ``kind/NAME``.
+
+        This is the prefix every rule id in the file must carry.
+
+        @return the half after the slash, or the whole id when there is no slash
+        """
         return self.doc_id.split("/", 1)[-1] if "/" in self.doc_id else self.doc_id
 
     @property
     def relpath(self) -> str:
+        """Location in the form a finding should quote, identical on every platform.
+
+        @return the path below the repository root, with forward slashes
+        @throws ValueError when the document lies outside the repository
+        """
         return self.path.relative_to(REPO_ROOT).as_posix()
 
     @property
     def is_generated(self) -> bool:
+        """Whether a build writes this file, in which case its content is not authored.
+
+        Checks by name alone: the builders own these three wherever they sit, and an
+        authored-content finding against a generated file would be unfixable by hand.
+
+        @return True when the filename is one the builders produce
+        """
         return self.path.name in GENERATED_NAMES
 
 
@@ -151,6 +259,14 @@ class ParseError(ValueError):
     """Raised when a file cannot be parsed far enough to be checked."""
 
     def __init__(self, path: Path, reason: str) -> None:
+        """Compose the message and keep its two halves separately readable.
+
+        A caller that wants to group failures by file should not have to parse the
+        rendered string back apart.
+
+        @param path the file that could not be read far enough to check
+        @param reason what stopped the parse, as a statement about that file
+        """
         super().__init__(f"{path}: {reason}")
         self.path = path
         self.reason = reason
@@ -162,6 +278,11 @@ def _strip_code(text: str, *, inline: bool = True) -> str:
     Fenced blocks are always removed. Inline spans are removed by default, which
     makes backticks the way to write a *format example* of a rule id or reference
     without it being read as a live one.
+
+    @param text the document body to redact
+    @param inline whether backtick spans go too, or only fenced blocks
+    @return the same number of lines, fenced and fence lines emptied, inline spans
+        overwritten with as many spaces as they occupied so columns outside them hold
     """
     out: list[str] = []
     inside = False
@@ -178,7 +299,15 @@ def _strip_code(text: str, *, inline: bool = True) -> str:
 
 
 def parse_document(path: Path) -> Document:
-    """Parse one corpus file into front-matter, body and rules."""
+    """Parse one corpus file into front-matter, body and rules.
+
+    An unquoted ISO date is handed back as a string, so an author need not remember
+    to quote ``verified:``.
+
+    @param path the file to read
+    @return the document, its rules carrying line numbers absolute in the file
+    @throws ParseError when the header is absent, is not valid YAML, or is not a mapping
+    """
     text = path.read_text(encoding="utf-8")
     match = _FRONT_MATTER.match(text)
     if match is None:
@@ -210,6 +339,14 @@ def parse_document(path: Path) -> Document:
 
 
 def _parse_rules(doc: Document) -> Iterator[Rule]:
+    """Every H3 rule block in a body, yielded in the order it was written.
+
+    A heading whose tags name no force is passed over rather than reported: untagged
+    prose in a law file is framing, and framing carries no obligation.
+
+    @param doc the document whose body is scanned
+    @return each rule found, positioned against the whole file
+    """
     # Rule headings inside code fences are format examples, not rules; inline code
     # is kept so a statement may quote an identifier.
     lines = _strip_code(doc.body, inline=False).splitlines()
@@ -241,6 +378,14 @@ def _parse_rules(doc: Document) -> Iterator[Rule]:
 
 
 def _force_from_tags(tags: Sequence[str]) -> Force | None:
+    """The first tag naming a normative weight, the mechanism tags passing by.
+
+    None means the heading is not a rule, which is how an ordinary H3 that happens
+    to start with an id-shaped word is left alone.
+
+    @param tags the bracketed tags from a heading, in written order
+    @return the weight found, or None when none of them name one
+    """
     for tag in tags:
         try:
             return Force(tag)
@@ -250,7 +395,15 @@ def _force_from_tags(tags: Sequence[str]) -> Force | None:
 
 
 def _block_after(lines: Sequence[str], index: int) -> list[str]:
-    """Lines belonging to the rule that starts at ``index``, exclusive of its heading."""
+    """Lines belonging to the rule that starts at ``index``, exclusive of its heading.
+
+    Stops at the next heading of any level, so a rule body cannot silently swallow
+    the section beneath it.
+
+    @param lines the body, already split, with fenced blocks blanked
+    @param index position of the heading line
+    @return the lines under it, up to the next heading or the end
+    """
     block: list[str] = []
     for line in lines[index + 1 :]:
         if line.startswith("#"):
@@ -260,6 +413,14 @@ def _block_after(lines: Sequence[str], index: int) -> list[str]:
 
 
 def _statement_of(block: Sequence[str]) -> str:
+    """The normative prose of a rule: everything above its first field line.
+
+    Folded onto one line, so a sentence that wrapped in the source reads the same as
+    one that did not.
+
+    @param block the lines under a rule heading
+    @return the statement as a single line, empty when the rule states nothing
+    """
     parts: list[str] = []
     for line in block:
         if _FIELD.match(line):
@@ -270,6 +431,15 @@ def _statement_of(block: Sequence[str]) -> str:
 
 
 def _field_of(block: Sequence[str], name: str) -> str | None:
+    """One named field of a rule body, its continuation lines folded in.
+
+    Capture ends at the next field or at the first blank line, so a wrapped continuation
+    line belongs to the field above it while the paragraph after a gap does not.
+
+    @param block the lines under a rule heading
+    @param name the field wanted, spelled as it is in the source
+    @return the field on one line, or None when the rule does not carry it
+    """
     collected: list[str] = []
     capturing = False
     for line in block:
@@ -289,7 +459,15 @@ def _field_of(block: Sequence[str], name: str) -> str | None:
 
 
 def iter_documents(root: Path = DISCIPLINE_DIR) -> Iterator[Document]:
-    """Yield every parsable corpus document, in stable path order."""
+    """Yield every corpus document below ``root``, in stable path order.
+
+    Generated files are passed over: they are output, and a finding against one
+    names something no author can fix.
+
+    @param root the directory to walk
+    @return each authored document beneath it, sorted by path
+    @throws ParseError when a file below the root cannot be parsed
+    """
     for path in sorted(root.rglob("*.md")):
         if path.name in GENERATED_NAMES:
             continue
@@ -297,7 +475,14 @@ def iter_documents(root: Path = DISCIPLINE_DIR) -> Iterator[Document]:
 
 
 def prose_of(doc: Document) -> str:
-    """Document body with all code removed, for text-level checks."""
+    """Document body with all code removed, for text-level checks.
+
+    Line numbering survives the redaction, so an index into this text is an index into
+    the body; add ``doc.body_offset`` to turn it into a line of the file on disk.
+
+    @param doc the document to redact
+    @return the body with fenced blocks and backtick spans blanked
+    """
     return _strip_code(doc.body)
 
 
@@ -306,17 +491,34 @@ def body_without_fences(doc: Document) -> str:
 
     The right scope for scanning document mentions: a filename inside a fenced
     example is illustration, one in a sentence is a live reference.
+
+    @param doc the document to redact
+    @return the body with fences blanked and backtick spans left as written
     """
     return _strip_code(doc.body, inline=False)
 
 
 def find_version_literals(prose: str) -> list[tuple[str, str]]:
-    """Return ``(tool, version)`` pairs found in prose. See SCHEMA.md section 1."""
+    """Every version pin in a passage, paired with the tool it pins.
+
+    A law file may require a capability but never a version; pins belong in a dated
+    fact file, where the date says when to distrust them. See SCHEMA.md section 1.
+
+    @param prose text with code already stripped, so a fenced example is not read as a pin
+    @return each tool with the version literal found beside it, in source order
+    """
     return [(m.group("tool"), m.group("ver")) for m in _VERSION_NEAR_TOOL.finditer(prose)]
 
 
 def find_xrefs(text: str) -> list[str]:
-    """Every cross-reference target in ``text``."""
+    """Every cross-reference target in ``text``, as written and in source order.
+
+    Duplicates are kept and nothing is resolved here; whether a target exists is the
+    validator's finding to make.
+
+    @param text the passage to scan, usually a body with fences already removed
+    @return the raw targets, e.g. ``TYPE-012`` or ``fact/py-typing#strict-flags``
+    """
     return _XREF.findall(text)
 
 
@@ -325,6 +527,9 @@ def count_tokens(text: str) -> int:
 
     Falls back to a character-ratio estimate when the encoding cannot be
     downloaded, so a validation run never fails for lack of network.
+
+    @param text the passage to measure
+    @return the count, exact under the real encoding and approximate without it
     """
     encoding = _encoding()
     if encoding is None:
@@ -339,6 +544,8 @@ def _encoding() -> object | None:
     Building it per call made a validation run take over a minute: the graph
     measures every rule and the builders measure every file. None selects the
     character-ratio estimate instead.
+
+    @return the tokenizer, or None when it is not installed or cannot be built
     """
     try:
         import tiktoken
@@ -351,4 +558,12 @@ def _encoding() -> object | None:
 
 
 def budget_for(doc: Document) -> int:
+    """The token ceiling a document must stay under, by filename.
+
+    ``KERNEL.md`` is held tighter than the rest because every agent reads it and
+    nothing routes without it.
+
+    @param doc the document whose ceiling is wanted
+    @return the ceiling in tokens, falling back to the general module limit
+    """
     return TOKEN_BUDGETS.get(doc.path.stem, TOKEN_BUDGETS["*"])

@@ -2,7 +2,7 @@
 id: law/DOC
 kind: law
 title: Documentation Comments
-tokens: 2062
+tokens: 2069
 load_when:
   - "docstring"
   - "documentation comment"
@@ -113,7 +113,7 @@ modes, ordering — and MUST NOT merely restate its name or narrate its implemen
 - **Why** A comment that restates the name adds a second thing to keep in step and answers
   nothing; a comment describing the implementation is wrong after the first refactor.
 - **Check** `python -m checks.doc_style`
-- **See** [law/API] · [frame/spec]
+- **See** [law/API] · [frame/spec] · [examples/documentation]
 
 ### DOC-010 · A Doxygen run produces no warnings  [BINDING] [auto:doxygen]
 Documentation MUST be complete and well formed enough that the engine reports nothing, with

@@ -9,7 +9,7 @@
   "properties": {
     "id": {
       "type": "string",
-      "pattern": "^(law|fact|frame|ops|meta)/[A-Za-z][A-Za-z0-9-]{1,23}$"
+      "pattern": "^(law|fact|frame|ops|meta|examples)/[A-Za-z][A-Za-z0-9-]{1,23}$"
     },
     "kind": {
       "enum": ["law", "fact", "frame", "ops", "meta"]
@@ -35,11 +35,11 @@
     },
     "requires": {
       "type": "array",
-      "items": { "type": "string", "pattern": "^(law|fact|frame|ops|meta)/[A-Za-z][A-Za-z0-9-]*$" }
+      "items": { "type": "string", "pattern": "^(law|fact|frame|ops|meta|examples)/[A-Za-z][A-Za-z0-9-]*$" }
     },
     "grounds_on": {
       "type": "array",
-      "items": { "type": "string", "pattern": "^(law|fact|frame|ops|meta)/[A-Za-z][A-Za-z0-9-]*$" }
+      "items": { "type": "string", "pattern": "^(law|fact|frame|ops|meta|examples)/[A-Za-z][A-Za-z0-9-]*$" }
     },
     "verified": {
       "type": "string",

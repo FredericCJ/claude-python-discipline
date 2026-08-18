@@ -37,6 +37,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+## The repository root, one level up from this file.
 REPO_ROOT: Final = Path(__file__).resolve().parent.parent
 
 ## Where the pre-migration fingerprints live. Regenerating this after a real code
@@ -49,11 +50,12 @@ COVERED: Final[tuple[str, ...]] = ("tools", "enforce/checks")
 ## Files that are tooling for the gate itself, or have no elements to document.
 EXCLUDED: Final[frozenset[str]] = frozenset({"doc_baseline.json"})
 
-## The pydocstyle rules that carry DOC-001 and DOC-006.
 ## Terminal colour codes. ruff emits them even to a pipe and even with
 ## NO_COLOR set, so the only reliable move is to strip them before parsing.
-_ANSI: Final = re.compile("\x1b\[[0-9;]*m")
+_ANSI: Final = re.compile("\x1b\\[[0-9;]*m")
 
+## A `path:line[:col]` prefix, anchored on the `.py:` pair so a Windows
+## drive letter is not mistaken for the end of the path.
 _LOCATION: Final = re.compile(
     r"^(?P<path>.+?\.py):(?P<line>\d+)(?::\d+)?(?P<rest>.*)$"
 )
@@ -125,9 +127,13 @@ def strip_documentation(tree: ast.Module) -> ast.Module:
         first = body[0]
         if (isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant)
                 and isinstance(first.value.value, str)):
-            # A body cannot be empty; a bare pass keeps the tree well formed and
-            # is equivalent for the comparison's purpose.
-            body[0] = ast.Pass()
+            # Remove it rather than substitute for it. Replacing a docstring
+            # with a placeholder makes *adding* one change the body length, so
+            # every documented function would look like a code change -- which
+            # is exactly the false positive this gate must not produce.
+            del body[0]
+            if not body:
+                body.append(ast.Pass())
     return tree
 
 
@@ -153,6 +159,36 @@ def write_baseline(root: Path) -> int:
     }
     BASELINE_PATH.write_text(
         json.dumps({"generated_by": "tools/docgate.py", "files": prints},
+                   indent=1, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return len(prints)
+
+
+def write_baseline_from_ref(root: Path, ref: str) -> int:
+    """Record the code shape as it was at a git revision.
+
+    Used when the gate's own fingerprinting is corrected mid-migration: the
+    baseline must describe the code *before* the documentation work began, and
+    the working tree no longer does.
+
+    @param root the repository root
+    @param ref the git revision to read the files from
+    @return how many files were fingerprinted
+    """
+    prints: dict[str, str] = {}
+    for path in iter_python(covered_paths(root)):
+        name = _relative(path, root)
+        shown = subprocess.run(  # noqa: S603 - fixed argv, no shell
+            ["git", "show", f"{ref}:{name}"],
+            capture_output=True, text=True, cwd=root, check=False,
+        )
+        if shown.returncode != 0:
+            continue  # a file added since the reference has nothing to compare to
+        tree = ast.parse(shown.stdout, filename=name)
+        prints[name] = ast.dump(strip_documentation(tree), annotate_fields=False)
+    BASELINE_PATH.write_text(
+        json.dumps({"generated_by": "tools/docgate.py", "ref": ref, "files": prints},
                    indent=1, sort_keys=True) + "\n",
         encoding="utf-8",
     )
@@ -320,11 +356,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--all", action="store_true", help="check every covered file")
     parser.add_argument("--baseline", action="store_true",
                         help="record the current code shape and exit")
+    parser.add_argument("--from-ref", metavar="REF",
+                        help="with --baseline, fingerprint that git revision instead "
+                             "of the working tree")
     parser.add_argument("--root", type=Path, default=REPO_ROOT)
     args = parser.parse_args(argv)
     root = args.root.resolve()
 
     if args.baseline:
+        if args.from_ref:
+            print(f"recorded {write_baseline_from_ref(root, args.from_ref)} fingerprint(s) "
+                  f"from {args.from_ref} in "
+                  f"{BASELINE_PATH.relative_to(root).as_posix()}")
+            return 0
         print(f"recorded {write_baseline(root)} fingerprint(s) in "
               f"{BASELINE_PATH.relative_to(root).as_posix()}")
         return 0

@@ -46,7 +46,11 @@ PROJECT_OWNED: Final[tuple[str, ...]] = ("learning", "overrides")
 ## Seeded into learning/ on first install so the project can record immediately.
 LEARNING_SEED: Final[tuple[str, ...]] = ("schema.sql", "config.toml")
 
+## Build products and live databases. Hashing them would make the version stamp
+## depend on whether anything had been run in the checkout.
 SKIP_SUFFIXES: Final = (".pyc", ".db", ".db-wal", ".db-shm")
+
+## Caches, excluded whole so their contents need no rule of their own.
 SKIP_DIRS: Final = frozenset({"__pycache__", ".pytest_cache", ".hypothesis"})
 
 
@@ -54,20 +58,41 @@ SKIP_DIRS: Final = frozenset({"__pycache__", ".pytest_cache", ".hypothesis"})
 class Plan:
     """What an install would do, so `check` and `install` cannot disagree."""
 
+    ## The upstream checkout material is copied from.
     source: Path
+    ## The repository being vendored into; nothing outside its `.agent/` is touched.
     target: Path
 
     @property
     def agent_dir(self) -> Path:
+        """Where both halves live inside the target.
+
+        @return the `.agent/` directory, which need not exist yet
+        """
         return self.target / ".agent"
 
     @property
     def manifest(self) -> Path:
+        """Where the content hashes are recorded.
+
+        Its absence is how `check` knows a target was never vendored at all.
+
+        @return the manifest's path, which need not exist yet
+        """
         return self.agent_dir / "MANIFEST.json"
 
 
 def iter_upstream(source: Path) -> Iterator[Path]:
-    """Every upstream-owned file, in stable order."""
+    """Every upstream-owned file, in stable order.
+
+    The order is fixed so the manifest is written identically twice over the
+    same tree: its keys are serialized in insertion order, not sorted. The
+    version stamp is order-independent by construction, but it does depend on
+    *which* files appear, which is why caches and build products are excluded.
+
+    @param source the upstream checkout
+    @return each file an install would copy, root-level files first
+    """
     for name in UPSTREAM_FILES:
         candidate = source / name
         if candidate.exists():
@@ -85,6 +110,15 @@ def iter_upstream(source: Path) -> Iterator[Path]:
 
 
 def digest(path: Path) -> str:
+    """A file's SHA-256, truncated for a manifest people have to read.
+
+    Sixty-four bits is far past sufficient for the one question asked of it --
+    has this file been edited in place -- and full hashes make the manifest
+    unreadable.
+
+    @param path the file to hash
+    @return the leading 16 hex characters of its digest
+    """
     return hashlib.sha256(path.read_bytes()).hexdigest()[:16]
 
 
@@ -93,6 +127,10 @@ def build_manifest(source: Path) -> dict[str, object]:
 
     The version is derived from the content, not a wall clock, so two installs
     of the same corpus produce the same stamp (DEP-008).
+
+    @param source the upstream checkout
+    @return the stamp, the generating tool, and every upstream file's
+            source-relative POSIX path mapped to its digest
     """
     files = {
         path.relative_to(source).as_posix(): digest(path) for path in iter_upstream(source)
@@ -104,7 +142,24 @@ def build_manifest(source: Path) -> dict[str, object]:
 
 
 def install(plan: Plan, *, force: bool = False) -> tuple[int, list[str]]:
-    """Copy the upstream half; create the project half only if absent."""
+    """Copy the upstream half; create the project half only if absent.
+
+    An upstream directory that exists in the source is deleted before being
+    repopulated, so a file removed upstream does not survive an update; one
+    missing from the source is left as it stands rather than emptied.
+
+    The project half is never destroyed, `force` included. An existing
+    `learning/` or `overrides/` is normally skipped whole; `force` re-enters it,
+    but every seed copy is still guarded by the destination's absence, so the
+    reachable effect of `force` is to restore a seed file the project deleted.
+    Nothing there is overwritten or removed by either path.
+
+    @param plan where to copy from and to
+    @param force re-run seeding over an existing project half, replacing seed
+                 files that have gone missing
+    @return how many upstream files the manifest records, and a note for each
+            project directory left untouched or seeded
+    """
     notes: list[str] = []
     for name in UPSTREAM:
         source_dir = plan.source / name
@@ -149,7 +204,16 @@ def install(plan: Plan, *, force: bool = False) -> tuple[int, list[str]]:
 
 
 def check(plan: Plan) -> list[str]:
-    """Differences between a target's vendored copy and this upstream."""
+    """Differences between a target's vendored copy and this upstream.
+
+    Reports staleness (a version stamp that is not this corpus's), drift (an
+    upstream file edited in place or deleted, either of which the next update
+    would silently discard), and a project-owned directory that has vanished.
+    A target with no manifest is reported as never vendored, not as in step.
+
+    @param plan the target and the upstream to judge it against
+    @return one line per difference; empty when the target is in step
+    """
     if not plan.manifest.exists():
         return [f"no manifest at {plan.manifest}; the target has not been vendored"]
     recorded = json.loads(plan.manifest.read_text(encoding="utf-8"))
@@ -175,6 +239,12 @@ def check(plan: Plan) -> list[str]:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Install the discipline into a repository, or report how far it has drifted.
+
+    @param argv command-line arguments, defaulting to `sys.argv`
+    @return 0 when the install succeeded or the target is in step, 1 when `check`
+            found any difference
+    """
     # The console encoding is not ours to choose, and a tool that dies on one is
     # worse than one that renders a character imperfectly.
     if hasattr(sys.stdout, "reconfigure"):
@@ -183,6 +253,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("command", choices=("install", "check"))
     parser.add_argument("target", type=Path)
     parser.add_argument("--source", type=Path, default=REPO_ROOT)
+    # This help text overstates what the flag does: `install` never overwrites or
+    # deletes anything under learning/ or overrides/, with or without --force.
+    # See install() for what actually happens. Correcting the string is a
+    # behaviour change and belongs to whoever owns the intended semantics.
     parser.add_argument("--force", action="store_true",
                         help="also reset the project-owned half (destructive)")
     args = parser.parse_args(argv)

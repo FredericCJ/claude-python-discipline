@@ -4,10 +4,10 @@
 
 Every rule against the mechanism that decides it. The corpus's own standard is that a rule nothing checks is not binding in practice, whatever its tag says, so this table is where that claim is either kept or exposed.
 
-- **167** binding rules; **56** have every named mechanism built and runnable (34%).
+- **167** binding rules; **61** have every named mechanism built and runnable (37%).
 - **11** advisory rules -- the unenforceable surface, listed below with reasons.
 - **1** rules blocked on an open decision.
-- **29/87** named mechanisms are built; **58** are declared but not yet implemented.
+- **32/87** named mechanisms are built; **55** are declared but not yet implemented.
 
 > **Mechanisms still to build.** Listed rather than assumed closed: a rule whose mechanism does not exist is binding in name only. `tools/validate.py` reports each as `V080`.
 
@@ -38,8 +38,6 @@ Every rule against the mechanism that decides it. The corpus's own standard is t
 | `check:single_wiring_point` | `API-003`, `ARCH-011` |
 | `check:test_weakening` | `TEST-016` |
 | `fitness:test_agent_parity` | `API-009` |
-| `fitness:test_binding_rules_have_mechanisms` | `FLOW-006` |
-| `fitness:test_checks_can_fail` | `FLOW-007`, `TEST-015` |
 | `fitness:test_codes_are_stable` | `API-011`, `DIAG-004` |
 | `fitness:test_concurrency_documented` | `EFCT-013`, `EFCT-014` |
 | `fitness:test_contract_documented` | `API-001`, `API-002`, `FLOW-001` |
@@ -57,7 +55,6 @@ Every rule against the mechanism that decides it. The corpus's own standard is t
 | `fitness:test_fault_catalogue` | `DEP-003`, `TEST-010` |
 | `fitness:test_fault_containment` | `ERR-016`, `TEST-011` |
 | `fitness:test_fault_schedules_are_data` | `TEST-009` |
-| `fitness:test_gate_suite_defined` | `FLOW-009`, `TEAMS-003` |
 | `fitness:test_goldens_reviewed` | `TEST-008` |
 | `fitness:test_interruption_recovers` | `EFCT-007`, `EFCT-009`, `TEST-012` |
 | `fitness:test_layers_populated` | `FLOW-010`, `TEST-002`, `TEST-007` |

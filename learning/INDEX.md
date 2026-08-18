@@ -8,7 +8,8 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 
 | Status | Count |
 |---|---|
-| candidate | 13 |
+| candidate | 27 |
+| superseded | 1 |
 
 ## candidate
 
@@ -19,13 +20,6 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Confidence** 0.50, last seen 2026-08-18
 - **Triggers** `glob:tools/*.py`, `term:rstrip`
 - **Verify** `python -c "assert 'mypy'.removesuffix('.py') == 'mypy'"`
-
-### L-0002 · enforce/pyproject.toml makes ruff treat enforce/ as its own project, so a repo-root lint silently uses two configs
-
-- **Do** lint the whole repo with an explicit --config ruff.toml
-- **Kind** procedure · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
-- **Confidence** 0.50, last seen 2026-08-18
-- **Triggers** `command:ruff check`, `glob:enforce/**`
 
 ### L-0003 · count_tokens rebuilt the tiktoken encoding per call, which took validation from under a second to 66
 
@@ -115,3 +109,139 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Kind** diagnostic · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
 - **Confidence** 0.50, last seen 2026-08-18
 - **Triggers** `glob:**/settings.json`, `term:settings.json`
+
+### L-0014 · replacing a docstring with ast.Pass when fingerprinting makes ADDING a docstring change the body length, so every documented function falsely reads as a code change
+
+- **Do** delete the docstring node instead, and only append Pass if the body would be empty
+- **Kind** diagnostic · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `command:docgate`, `error:the code changed, not just its documentation`
+- **About** DOC-003
+- **Verify** `python tools/docgate.py --all`
+
+### L-0015 · correcting a fingerprinting bug mid-migration invalidates the baseline, and re-recording from the working tree would bake in whatever agents already changed
+
+- **Do** rebuild the baseline from the pre-migration commit with git archive, not from the working tree
+- **Kind** procedure · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `command:docgate --baseline`, `term:baseline`
+
+### L-0016 · ruff emits ANSI colour to a pipe and ignores NO_COLOR, so any tool parsing its output must strip escape codes
+
+- **Do** strip \x1b[...m before matching, rather than trying to disable colour
+- **Kind** constraint · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `command:ruff check`, `term:ANSI`
+
+### L-0017 · splitting a migration into a scripted mechanical half and an agent-authored judgment half kept every agent at a low allocation tier
+
+- **Do** before dispatching, extract the deterministic substitutions into a script and give agents only the part that needs judgment
+- **Kind** procedure · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `command:workflow`, `term:migration`
+- **About** ALLOC-007
+
+### L-0018 · a single deterministic stop condition lowered the tier of 13 parallel agents more than any prompt wording did
+
+- **Do** build the verifier before the fan-out, so each agent's contract is one command rather than a judgment
+- **Kind** procedure · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `command:docgate`, `term:fan-out`
+- **About** ALLOC-006
+
+### L-0019 · Doxygen's WARN_NO_PARAMDOC does not treat a Python '-> None' annotation as void, so it demands an @return from every procedure.
+
+- **Do** Leave WARN_NO_PARAMDOC off and let enforce/checks/doc_coverage.py decide DOC-007 completeness by reading the return annotation.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `error:return type of member .* is not documented`, `glob:**/Doxyfile`
+- **About** DOC-007, fact/doxygen
+- **Verify** `doxygen enforce/Doxyfile`
+
+### L-0020 · Doxygen re-reports an already-documented dataclass field as undocumented when a method reads it bare as self.field, pointing at the use rather than the declaration.
+
+- **Do** Leave WARN_IF_UNDOCUMENTED off; doc_coverage decides DOC-001/DOC-002 presence at the declaration site.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `error:Member .* \(variable\) of class .* is not documented`, `glob:**/Doxyfile`
+- **About** DOC-002, fact/doxygen
+- **Verify** `doxygen enforce/Doxyfile`
+
+### L-0021 · A Doxygen code span ending in a single period, as `foo.`, aborts the comment block and is reported only as an unclosed </tt>, naming neither file location nor cause.
+
+- **Do** Write the period outside the span. doc_style reports it under DOC-010 with the span named.
+- **Kind** diagnostic · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `error:end of comment block while expecting command </tt>`
+- **About** DOC-010, fact/doxygen
+- **Verify** `python -m pytest enforce/checks/test_doc_checks.py -q`
+
+### L-0022 · ruff's E266 forbids the ## block form that DOC-002 requires for elements Python gives no docstring slot; the two rules cannot both be obeyed.
+
+- **Do** Ignore multiple-leading-hashes-for-block-comment in the canonical enforce/pyproject.toml, not just locally: every adopting project hits this on its first documented constant.
+- **Kind** constraint · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `error:E266`, `glob:**/pyproject.toml`
+- **About** DOC-002
+- **Verify** `ruff check`
+
+### L-0023 · ruff configures each file from its nearest ancestor config, so enforce/pyproject.toml -- which is the template consumers copy -- was silently linting everything under enforce/ instead of the root ruff.toml.
+
+- **Do** Keep an enforce/ruff.toml that extends ../ruff.toml, so a vendored template never doubles as live configuration.
+- **Kind** defect · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `error:CPY001`, `glob:enforce/**/*.py`
+- **Verify** `ruff check`
+
+### L-0024 · A presence-only documentation gate passes happily on documentation that is confidently false: a review stage over the same 13 batches found 90 wrong claims and 59 filler docstrings that the gate had already accepted.
+
+- **Do** Pair every documentation-writing agent with a reviewer that verifies each claim against the code it describes; presence and truth are separate properties needing separate mechanisms.
+- **Kind** procedure · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `rule:DOC-001`, `rule:DOC-013`
+- **About** DOC-013
+- **Verify** `python tools/docgate.py --all`
+
+### L-0025 · A behaviour oracle that substitutes a placeholder for a removed docstring changes the body length, so adding a docstring registers as a behaviour change; deleting the node instead is what makes the AST comparison sound.
+
+- **Do** In docgate.strip_documentation, delete the docstring node and pad an emptied body with Pass; never substitute in place.
+- **Kind** procedure · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `error:the code changed, not just its documentation`, `glob:tools/docgate.py`
+- **Verify** `python tools/docgate.py --all`
+
+### L-0026 · A Bash heredoc on this machine collapses a doubled backslash, so Python source generated that way turned a regex \b into a literal backspace; the check kept passing its own tests and silently over-reported 400 findings.
+
+- **Do** Generate Python source with the Edit/Write tools rather than a heredoc. enforce/fitness/test_meta.py now fails on any control character in source.
+- **Kind** diagnostic · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `glob:**/*.py`
+- **Verify** `python -m pytest enforce/fitness/test_meta.py -q`
+
+### L-0027 · The learning database already held the ruff config-shadowing defect (L-0002) before this session rediscovered it independently; retrieval was sound, but nothing prompted a query before the gate was run.
+
+- **Do** Query learn.py retrieve --file/--error at the START of a gate run and on the first failing diagnostic, not at the end of the session when learnings are written. An un-queried database is indistinguishable from an empty one.
+- **Kind** procedure · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `command:ruff check`, `term:gate`
+- **About** LEARN-001
+- **Verify** `python tools/learn.py retrieve --file enforce/checks/x.py`
+
+### L-0028 · doc_style reads docstrings only, so it cannot police the form of a ## block; the comment documenting the trailing-period trap was itself written with the trap in it and only the Doxygen gate caught it.
+
+- **Do** Treat the Doxygen run as the mechanism covering ## block form, and do not assume an AST check that walks docstrings has seen the ## comments beside them.
+- **Kind** constraint · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `glob:enforce/checks/doc_style.py`, `rule:DOC-010`
+- **About** DOC-010
+- **Verify** `doxygen enforce/Doxyfile`
+
+## superseded
+
+### L-0002 · enforce/pyproject.toml makes ruff treat enforce/ as its own project, so a repo-root lint silently uses two configs
+
+- **Do** lint the whole repo with an explicit --config ruff.toml
+- **Kind** procedure · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `command:ruff check`, `glob:enforce/**`
+- **Superseded by** L-0023

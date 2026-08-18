@@ -80,11 +80,17 @@ GITIGNORE_ENTRIES: Final[tuple[str, ...]] = (
 class Kind(StrEnum):
     """What an action does to its target."""
 
+    ## The file did not exist; a minimal one is written.
     CREATE = "create"
+    ## The file existed with no managed block; the block is appended.
     INSERT = "insert"
+    ## An earlier block was found and is swapped for the current one.
     REPLACE = "replace"
+    ## Structured content the project owns, with our entries added to it.
     MERGE = "merge"
+    ## Our contribution is taken back out, leaving the rest.
     REMOVE = "remove"
+    ## Nothing to do; recorded anyway so the plan accounts for every target.
     SKIP = "skip"
 
 

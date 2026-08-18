@@ -39,12 +39,20 @@ ignore = [
     "incorrect-blank-line-before-class", "multi-line-summary-second-line",
     # These demand a Google-style `Returns:` / `Yields:` / `Raises:` section, which
     # full-featured Doxygen cannot read. The discipline uses @return / @throws
-    # instead, and completeness is checked by the engine itself via
-    # WARN_NO_PARAMDOC + WARN_IF_INCOMPLETE_DOC -- a stricter test than these rules,
-    # because it also catches a documented parameter that does not exist. Leaving
-    # both on would make the two mechanisms contradict each other in CI.
+    # instead, and completeness is decided by enforce/checks/doc_coverage.py.
+    # NOT by Doxygen's WARN_NO_PARAMDOC, which an earlier version of this comment
+    # named: that flag cannot see that `-> None` is void and demands an @return
+    # from every procedure (fact/doxygen). doc_coverage reads the annotation, so
+    # it asks only for what is actually returned, and it also flags a parameter
+    # documented under a name the signature does not have.
     "docstring-missing-returns", "docstring-missing-yields",
     "docstring-missing-exception",
+    # DOC-002 requires a `##` block on every element Python gives no docstring
+    # slot -- a module constant, a dataclass field, an enum member. It is the only
+    # form Doxygen reads for them, so this rule and DOC-002 cannot both be obeyed.
+    # DOC-002 wins: it is load-bearing for the documentation build, and this rule
+    # is a stylistic preference about how many `#` a comment opens with.
+    "multiple-leading-hashes-for-block-comment",
     # `Any` is banned outright in the domain by TYPE-002 via mypy, which can see
     # implicit Any that a linter cannot. Duplicate reporting here adds noise only.
     "any-type",

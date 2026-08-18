@@ -38,10 +38,22 @@ from typing import Any, Final
 
 from discipline_core import REPO_ROOT, count_tokens
 
+## The version this build stamps on the index it writes. Nothing ever compares
+## it: a sync rebuilds from the ledger unconditionally, so an index left by an
+## older tool is discarded rather than migrated, and the stamp only says what
+## wrote the file that is there now.
 SCHEMA_VERSION: Final = 1
 
+## The ways a situation may be recognised. A trigger outside this set is refused
+## at parse time, because it would produce an entry nothing could ever retrieve.
 TRIGGER_TYPES: Final = ("glob", "error", "rule", "command", "term")
+## The taxonomy a recorded claim must fall into, and the key each entry's decay
+## half-life is looked up by. `write.kinds_enabled` may narrow it further. Kept
+## short because a list nobody can choose from quickly collapses into one bucket.
 LEARNING_KINDS: Final = ("diagnostic", "constraint", "procedure", "rule-application", "defect")
+## Statuses that end an entry's working life: `_restatus` never revisits one, and
+## retrieval drops it whatever its confidence unless `retrieval.include_retired`
+## asks for it back.
 RETIRED: Final = ("superseded", "refuted", "promoted")
 
 ## Material that must never enter the ledger. The ledger is designed to be read
@@ -68,47 +80,89 @@ class LearnError(RuntimeError):
 
 @dataclass(frozen=True, slots=True)
 class Store:
-    """Where the learning database lives. Injected so tests get their own."""
+    """Where the learning database lives.
 
+    Injected rather than read from a global so a test gets its own tree and two
+    runs cannot silently share state.
+    """
+
+    ## The tree the store hangs off. Ledger, database and both views live under
+    ## it; the schema and the configuration fall back to this repository's own
+    ## copies when the tree carries none.
     root: Path
 
     @property
     def dir(self) -> Path:
+        """Where the ledger, the database and both views live, created by the first write.
+
+        @return the `learning` directory under the root
+        """
         return self.root / "learning"
 
     @property
     def ledger(self) -> Path:
+        """The durable record: one line per event, append-only, reviewable in a diff.
+
+        @return the path to `ledger.jsonl`, which need not exist yet
+        """
         return self.dir / "ledger.jsonl"
 
     @property
     def db(self) -> Path:
+        """The query index, safe to delete because a sync rebuilds it from the ledger.
+
+        @return the path to `learning.db`, which git ignores
+        """
         return self.dir / "learning.db"
 
     @property
     def schema(self) -> Path:
+        """The SQL executed on every connect, taken from the store when it carries a copy.
+
+        @return the store's own `schema.sql`, or this repository's when it has none
+        """
         # The schema is upstream-owned; a vendored copy falls back to this repo's.
         local = self.dir / "schema.sql"
         return local if local.exists() else REPO_ROOT / "learning" / "schema.sql"
 
     @property
     def config_path(self) -> Path:
+        """The tunables in force, and the file `calibrate --set` rewrites in place.
+
+        @return the store's own `config.toml`, or this repository's when it has none
+        """
         local = self.dir / "config.toml"
         return local if local.exists() else REPO_ROOT / "learning" / "config.toml"
 
     @property
     def index(self) -> Path:
+        """The readable roll-up of every learning, rewritten after each command that writes.
+
+        @return the path to `INDEX.md`
+        """
         return self.dir / "INDEX.md"
 
     @property
     def calibration(self) -> Path:
+        """The metrics report, rewritten beside `INDEX.md` and dated by `--as-of`.
+
+        @return the path to `calibration.md`
+        """
         return self.dir / "calibration.md"
 
     def config(self) -> dict[str, Any]:
+        """Read the tunables afresh, so an edit to them applies from the next call on.
+
+        @return the `write`, `retrieval`, `confidence`, `decay` and `promotion` sections
+        """
         return tomllib.loads(self.config_path.read_text(encoding="utf-8"))
 
 
 def now_iso() -> str:
-    """Wall clock, in one place so a test can replace it."""
+    """Wall clock, in one place so a test can replace it.
+
+    @return the current UTC time, truncated to whole seconds, in ISO form
+    """
     return dt.datetime.now(tz=dt.UTC).replace(microsecond=0).isoformat()
 
 
@@ -116,7 +170,16 @@ def now_iso() -> str:
 
 
 def read_ledger(store: Store) -> list[dict[str, Any]]:
-    """Every event, in order. The ledger is the record; the database is derived."""
+    """Every event in the ledger, in the order it was appended.
+
+    The ledger is the record and the database is only derived from it, so a
+    caller that needs the truth rather than a fast answer reads here. A single
+    malformed line stops the read: a partially understood log is worse than none.
+
+    @param store where the ledger lives
+    @return the parsed events, empty when nothing has been recorded yet
+    @throws LearnError when a line is not valid JSON, naming the file and line
+    """
     if not store.ledger.exists():
         return []
     events: list[dict[str, Any]] = []
@@ -134,10 +197,20 @@ def read_ledger(store: Store) -> list[dict[str, Any]]:
 
 def append_event(store: Store, kind: str, session: str, payload: dict[str, Any],
                  *, actor: str = "agent", ts: str | None = None) -> dict[str, Any]:
-    """Append one event to the ledger and return it.
+    """Add one event to the end of the ledger, stamped with the next sequence number.
 
     Written as a single line so a concurrent appender cannot interleave, and so
-    a merge conflict is resolvable by keeping both sides.
+    a merge conflict is resolvable by keeping both sides. The secret guard runs
+    before the file is touched, so a rejected payload leaves no trace.
+
+    @param store where the ledger lives; its directory is created if needed
+    @param kind the event verb the fold dispatches on
+    @param session the session the event belongs to
+    @param payload the event body
+    @param actor who is appending, which distinguishes agent writes from human ones
+    @param ts an explicit timestamp; the current time is used when omitted
+    @return the event exactly as written, including its assigned seq and id
+    @throws LearnError when the payload contains anything credential-shaped
     """
     guard_secrets(payload)
     events = read_ledger(store)
@@ -158,7 +231,16 @@ def append_event(store: Store, kind: str, session: str, payload: dict[str, Any],
 
 
 def guard_secrets(payload: dict[str, Any]) -> None:
-    """Refuse to record anything credential-shaped."""
+    """Refuse to record anything credential-shaped.
+
+    The refusal names which pattern matched and quotes the first 24 characters of
+    the match, which is enough to find the offending field. That excerpt is a
+    compromise rather than a redaction: the start of a short value can appear in
+    it, so the message is not safe to paste anywhere the entry was not.
+
+    @param payload the event body about to be serialised
+    @throws LearnError when any secret pattern matches the serialised payload
+    """
     blob = json.dumps(payload, ensure_ascii=False)
     for pattern, description in SECRET_PATTERNS:
         found = re.search(pattern, blob)
@@ -175,6 +257,14 @@ def guard_secrets(payload: dict[str, Any]) -> None:
 
 
 def connect(store: Store) -> sqlite3.Connection:
+    """Open the index, creating its tables and its version row when they are absent.
+
+    The schema script is idempotent, so opening an existing database is the same
+    call as creating a new one.
+
+    @param store where the database and its schema live
+    @return an open connection whose rows come back as `sqlite3.Row`
+    """
     connection = sqlite3.connect(store.db)
     connection.row_factory = sqlite3.Row
     connection.executescript(store.schema.read_text(encoding="utf-8"))
@@ -187,7 +277,15 @@ def connect(store: Store) -> sqlite3.Connection:
 
 
 def sync(store: Store) -> sqlite3.Connection:
-    """Rebuild every projection by folding the ledger. Idempotent by construction."""
+    """Rebuild every projection by folding the ledger from its first event.
+
+    Idempotent by construction: the tables are emptied first, so the result is a
+    function of the log alone and a lost or stale database costs nothing but time.
+
+    @param store where the ledger and the database live
+    @return the open connection, which the caller closes
+    @throws LearnError when the ledger cannot be read
+    """
     store.dir.mkdir(parents=True, exist_ok=True)
     connection = connect(store)
     with connection:
@@ -212,7 +310,16 @@ def sync(store: Store) -> sqlite3.Connection:
 
 def _apply(connection: sqlite3.Connection, event: dict[str, Any],
            config: dict[str, Any]) -> None:
-    """Fold one event into the projections."""
+    """Fold one event into the projections.
+
+    An unrecognised verb, and any feedback event naming a learning that is not
+    projected, is passed over rather than rejected: a ledger written by a newer
+    tool must still fold, and the ledger keeps the event either way.
+
+    @param connection the open index, inside the caller's transaction
+    @param event the event to apply
+    @param config the tunables governing base confidence, deltas and promotion
+    """
     kind, payload, seq = event["kind"], event["payload"], event["seq"]
 
     if kind == "session":
@@ -297,12 +404,24 @@ def _apply(connection: sqlite3.Connection, event: dict[str, Any],
 
 
 def _exists(connection: sqlite3.Connection, learning_id: str) -> bool:
+    """Whether a row is projected, which decides if a feedback event has a subject.
+
+    @param connection the open index
+    @param learning_id the id an event refers to
+    @return True when the learning has been folded already
+    """
     return connection.execute(
         "SELECT 1 FROM learning WHERE id = ?", (learning_id,)
     ).fetchone() is not None
 
 
 def _base_confidence(evidence: str, config: dict[str, Any]) -> float:
+    """Where a claim starts, set by how firmly it was established.
+
+    @param evidence how the claim was come by: observed, inferred or told
+    @param config the tunables, which carry one starting value per evidence kind
+    @return the configured starting confidence
+    """
     return float(config["confidence"][f"base_{evidence}"])
 
 
@@ -311,7 +430,12 @@ def _restatus(connection: sqlite3.Connection, learning_id: str,
     """Candidate becomes active once the evidence threshold is met.
 
     A verification command counts for more than a report: the check is the
-    evidence, which is the axiom applied to learnings.
+    evidence, which is the axiom applied to learnings. A retired entry is left
+    alone, so a refutation cannot be undone by further use.
+
+    @param connection the open index
+    @param learning_id the entry whose status is to be re-decided
+    @param config the tunables carrying the promotion thresholds
     """
     row = connection.execute(
         "SELECT helped, noise, sessions, verification, status FROM learning WHERE id = ?",
@@ -339,21 +463,39 @@ def _restatus(connection: sqlite3.Connection, learning_id: str,
 class Candidate:
     """One learning offered to a caller, with why it surfaced."""
 
+    ## The entry's identifier, as it appears in the ledger and in `INDEX.md`.
     id: str
+    ## One of `LEARNING_KINDS`, which is also the key its half-life is read by.
     kind: str
+    ## Whether the claim is about this project or about the discipline itself.
     scope: str
+    ## One sentence saying what was found to be true.
     claim: str
+    ## The imperative: what to do differently because of the claim.
     action: str
+    ## `candidate` or `active`; a retired entry is offered only when
+    ## `retrieval.include_retired` is set.
     status: str
+    ## The evidence-derived value the fold produced, before any decay.
     confidence: float
+    ## Confidence after decay, and the number that ordered and filtered this list.
     effective: float
+    ## Why it surfaced: one short phrase per trigger that fired, sorted.
     matched: tuple[str, ...]
+    ## Rule and module ids the claim is about, sorted.
     links: tuple[str, ...]
+    ## A command that re-establishes the claim, when one was recorded.
     verification: str | None
+    ## When the entry was last touched, which is what decay is measured from.
     last_seen: str
+    ## True once decay has cost more than half the stored confidence.
     stale: bool
 
     def render(self) -> str:
+        """The terminal form, whose token count is also the unit of the retrieval budget.
+
+        @return the block shown for one entry, with no trailing newline
+        """
         flag = " STALE" if self.stale else ""
         verify = f"\n      verify: {self.verification}" if self.verification else ""
         return (
@@ -370,7 +512,15 @@ def effective_confidence(stored: float, last_seen: str, kind: str,
     """Stored confidence, halved once per half-life since it was last seen.
 
     Decay is computed at read time rather than stored, so the folded state stays
-    a function of the log alone and the generated views stay byte-stable.
+    a function of the log alone and the generated views stay byte-stable. A
+    timestamp in the future is treated as today rather than decaying backwards.
+
+    @param stored the confidence the fold produced
+    @param last_seen when the entry was last touched, in ISO form
+    @param kind the entry's kind, which selects the half-life; 365 days if the table has none
+    @param config the tunables carrying the decay table
+    @param today the date the age is measured to
+    @return the decayed value, or `stored` unchanged when the timestamp will not parse
     """
     half_life = float(config["decay"].get(kind, 365))
     try:
@@ -384,7 +534,22 @@ def effective_confidence(stored: float, last_seen: str, kind: str,
 def retrieve(store: Store, connection: sqlite3.Connection, *, file: str | None = None,
              error: str | None = None, task: str | None = None,
              rules: Sequence[str] = (), today: dt.date | None = None) -> list[Candidate]:
-    """Learnings whose triggers match the situation, best first."""
+    """Learnings whose triggers match the situation, best first.
+
+    A trigger fires or it does not, so the same situation always yields the same
+    answer and a bad retrieval can be argued with. What decayed below
+    `retrieval.min_confidence` is dropped, and so is anything retired unless
+    `retrieval.include_retired` is set; what remains is cut to the budget.
+
+    @param store where the configuration lives
+    @param connection an index already folded from the ledger
+    @param file the path being worked on, matched against glob triggers
+    @param error the failure at hand, matched against error, term and rule triggers
+    @param task what the caller is doing, matched against command, term and rule triggers
+    @param rules rule ids already in play, matched against rule triggers only
+    @param today the date decay is measured to; the system date when omitted
+    @return the entries that survived filtering and the budget, most confident first
+    """
     config = store.config()
     settings = config["retrieval"]
     day = today or dt.date.today()
@@ -429,6 +594,16 @@ def retrieve(store: Store, connection: sqlite3.Connection, *, file: str | None =
 
 
 def _fit_budget(candidates: Sequence[Candidate], settings: dict[str, Any]) -> list[Candidate]:
+    """Take entries in order until the next one would exceed the context allowance.
+
+    The first entry is always kept however large it is: returning nothing would
+    withhold the very thing the caller asked for to save a budget that only
+    exists to make the answer readable.
+
+    @param candidates the ordered entries, best first
+    @param settings the retrieval section of the configuration
+    @return the leading run that fits both limits, except that the first is kept regardless
+    """
     kept: list[Candidate] = []
     spent = 0
     for candidate in candidates[: settings["max_learnings"]]:
@@ -442,7 +617,19 @@ def _fit_budget(candidates: Sequence[Candidate], settings: dict[str, Any]) -> li
 
 def _trigger_matches(trigger_type: str, pattern: str, file: str | None, error: str | None,
                      task: str | None, rules: Sequence[str]) -> str | None:
-    """Whether one trigger fires, and a short reason if it does."""
+    """Whether one trigger fires, and a short reason if it does.
+
+    The reason is carried back rather than recomputed because it is what makes a
+    retrieval reviewable: the caller can see which pattern brought each entry.
+
+    @param trigger_type one of the accepted trigger kinds
+    @param pattern the trigger's pattern, interpreted according to its kind
+    @param file the path in play, if any
+    @param error the failure text in play, if any
+    @param task the task description in play, if any
+    @param rules the rule ids in play
+    @return a phrase naming why it fired, or None when it did not
+    """
     if trigger_type == "glob" and file and fnmatch.fnmatch(Path(file).as_posix(), pattern):
         return f"path ~ {pattern}"
     if trigger_type == "error" and error and _signature_in(pattern, error):
@@ -461,11 +648,26 @@ def _trigger_matches(trigger_type: str, pattern: str, file: str | None, error: s
 
 
 def _words(text: str) -> set[str]:
+    """The distinct tokens of a text, with hyphen and underscore treated as spaces.
+
+    @param text any text
+    @return its lowercase alphanumeric tokens, deduplicated
+    """
     return set(re.findall(r"[a-z0-9_]+", text.lower().replace("-", " ").replace("_", " ")))
 
 
 def _signature_in(pattern: str, text: str) -> bool:
-    """Separator style must not decide whether an error signature matches."""
+    """Separator style must not decide whether an error signature matches.
+
+    A single word is required to appear literally; only a multi-word signature
+    earns the looser set comparison, since one common word matching by accident
+    would surface an entry for every unrelated failure.
+
+    @param pattern the recorded signature
+    @param text the failure at hand
+    @return True on a substring hit, or when every word of a multi-word signature
+        appears somewhere in the text, in any order and not necessarily adjacent
+    """
     if pattern.lower() in text.lower():
         return True
     signature = _words(pattern)
@@ -476,13 +678,29 @@ def _signature_in(pattern: str, text: str) -> bool:
 
 
 def next_learning_id(connection: sqlite3.Connection) -> str:
+    """One past the highest id yet projected, so a fresh entry cannot collide.
+
+    Read from the fold rather than kept in a counter, so the ledger remains the
+    only thing that has to be preserved.
+
+    @param connection an index already folded from the ledger
+    @return the next identifier, in `L-nnnn` form
+    """
     row = connection.execute("SELECT MAX(id) AS top FROM learning").fetchone()
     top = int(row["top"].split("-")[1]) if row and row["top"] else 0
     return f"L-{top + 1:04d}"
 
 
 def parse_trigger(raw: str) -> dict[str, str]:
-    """`glob:src/**/*.py` or `error:adapters are independent`."""
+    """Split a `type:pattern` argument, refusing a type retrieval could never use.
+
+    Written as `glob:src/**/*.py` or `error:adapters are independent`. Only the
+    first colon separates, so a pattern may contain colons of its own.
+
+    @param raw the argument as it was typed
+    @return the type and the pattern, the pattern stripped of surrounding space
+    @throws LearnError when the colon is missing or the type is not a known one
+    """
     trigger_type, separator, pattern = raw.partition(":")
     if not separator or trigger_type not in TRIGGER_TYPES:
         message = (
@@ -494,6 +712,16 @@ def parse_trigger(raw: str) -> dict[str, str]:
 
 
 def session_id(explicit: str | None) -> str:
+    """The caller's own id, or a fresh dated one so unrelated work stays separable.
+
+    A generated id is new on every call, so a caller wanting several commands
+    attributed to one sitting has to take the id `session` printed and pass it
+    back with `--session`. Sessions are what the promotion rule counts: an entry
+    that helped twice in one sitting is weaker evidence than one that helped in two.
+
+    @param explicit an id supplied on the command line, if any
+    @return the identifier to stamp on the events that follow
+    """
     if explicit:
         return explicit
     stamp = dt.datetime.now(tz=dt.UTC).strftime("%Y%m%d")
@@ -503,11 +731,22 @@ def session_id(explicit: str | None) -> str:
 # ------------------------------------------------------------ generated views
 
 
+## The banner both generated files open with, so an edit made by hand is visibly
+## a mistake: the next sync overwrites the file without asking.
 GENERATED = "<!-- GENERATED by tools/learn.py sync -- do not edit; append an event instead. -->"
 
 
 def render_index(connection: sqlite3.Connection, config: dict[str, Any]) -> str:
-    """The readable state. Deterministic: ordering and content come from the log."""
+    """Every learning, grouped by status, as a page a person can read in a diff.
+
+    Deterministic: ordering and content are functions of the log, so two syncs of
+    the same ledger produce the same bytes and a review sees only real change.
+    The confidence shown is the stored value, not the decayed one retrieval uses.
+
+    @param connection an index already folded from the ledger
+    @param config accepted for symmetry with `render_calibration`; nothing here reads it
+    @return the full text of `INDEX.md`, ending in a single newline
+    """
     rows = list(connection.execute("SELECT * FROM learning ORDER BY id"))
     lines = [
         GENERATED,
@@ -586,6 +825,16 @@ def render_calibration(connection: sqlite3.Connection, config: dict[str, Any],
     The date appears because the subject is time — staleness cannot be reported
     without one. It is a parameter, not a wall-clock stamp, so regenerating with
     the same `--as-of` reproduces the file byte for byte.
+
+    With nothing recorded the totals are still printed, precision reading `n/a`
+    because nothing has been offered yet, and a first-run protocol is appended
+    saying what to measure in place of a number that does not exist.
+
+    @param connection an index already folded from the ledger
+    @param config the tunables: its retrieval and promotion sections are tabulated
+        verbatim, and its decay table decides how many entries count as stale
+    @param as_of the date staleness and decay are measured to
+    @return the full text of `calibration.md`, ending in a single newline
     """
     learnings = list(connection.execute("SELECT * FROM learning"))
     usages = list(connection.execute("SELECT * FROM usage"))
@@ -674,6 +923,15 @@ def render_calibration(connection: sqlite3.Connection, config: dict[str, Any],
 
 
 def write_views(store: Store, connection: sqlite3.Connection, as_of: dt.date) -> None:
+    """Overwrite both generated files, so the readable state cannot lag the log.
+
+    Called after every write rather than on demand: a view that is only current
+    when someone remembers to refresh it is a view nobody can cite.
+
+    @param store where the two files are written
+    @param connection an index already folded from the ledger
+    @param as_of the date the calibration report is measured to
+    """
     config = store.config()
     store.index.write_text(render_index(connection, config), encoding="utf-8")
     store.calibration.write_text(
@@ -689,6 +947,14 @@ def graph_overlay(store: Store) -> Iterator[tuple[str, str, str, str, float]]:
 
     Consumed by `nav.py` so a reading plan can carry what was learned about the
     rules it selected. Overlaid at query time; the static graph stays untouched.
+
+    A missing or unreadable database yields nothing rather than failing. The
+    overlay is an enrichment, and navigation has to work before anything has
+    been learned.
+
+    @param store where the database lives
+    @return one tuple per link of every candidate or active entry, ordered by id then
+        node, weighted by the stored confidence rather than the decayed one
     """
     if not store.db.exists():
         return
@@ -712,6 +978,18 @@ def graph_overlay(store: Store) -> Iterator[tuple[str, str, str, str, float]]:
 
 
 def cmd_record(store: Store, args: argparse.Namespace) -> int:
+    """Check one entry against the write policy, append it, and republish the views.
+
+    Every policy check runs before the append, so a rejected entry leaves no
+    trace in the record. An entry with no trigger is refused outright: nothing
+    could ever retrieve it, so writing it would be pure cost.
+
+    @param store where the ledger and the configuration live
+    @param args the parsed `record` arguments
+    @return 0 once the entry is written and the views regenerated
+    @throws LearnError when the kind is disabled, a required action or trigger is absent,
+        a trigger is malformed, or the entry carries something credential-shaped
+    """
     config = store.config()
     if args.kind not in config["write"]["kinds_enabled"]:
         message = f"kind {args.kind!r} is not enabled; see learning/config.toml"
@@ -752,6 +1030,15 @@ def cmd_record(store: Store, args: argparse.Namespace) -> int:
 
 
 def cmd_retrieve(store: Store, args: argparse.Namespace) -> int:
+    """Print what is known about a situation, its context cost, and how to report back.
+
+    `--json` prints the same candidates as data instead, without the cost line or
+    the reminder, for a caller that is not a person reading a terminal.
+
+    @param store where the ledger and the configuration live
+    @param args the parsed `retrieve` arguments
+    @return 0, including when nothing matched; an empty answer is a valid one
+    """
     connection = sync(store)
     found = retrieve(
         store, connection, file=args.file, error=args.error, task=args.task,
@@ -773,6 +1060,16 @@ def cmd_retrieve(store: Store, args: argparse.Namespace) -> int:
 
 
 def cmd_outcome(store: Store, args: argparse.Namespace) -> int:
+    """Append the feedback event behind `used`, `refute`, `supersede` and `promote`.
+
+    One function for four subcommands because they differ only in the payload
+    they carry; what each one means to confidence and status is the fold's
+    business, not the command's.
+
+    @param store where the ledger lives
+    @param args the parsed arguments, whose `command` selects the event kind
+    @return 0 once the event is written and the views regenerated
+    """
     kind = {"used": "use", "refute": "refute", "supersede": "supersede",
             "promote": "promote"}[args.command]
     payload: dict[str, Any] = {"ref": args.id}
@@ -795,6 +1092,12 @@ def cmd_outcome(store: Store, args: argparse.Namespace) -> int:
 
 
 def cmd_session(store: Store, args: argparse.Namespace) -> int:
+    """Open a session and print its id, so what follows can be attributed to one sitting.
+
+    @param store where the ledger lives
+    @param args the parsed `session` arguments
+    @return 0; the id goes to stdout for later commands to pass back
+    """
     identifier = session_id(args.session)
     append_event(store, "session", identifier,
                  {"task": args.task, "discipline_version": args.discipline_version})
@@ -806,6 +1109,15 @@ def cmd_session(store: Store, args: argparse.Namespace) -> int:
 
 
 def cmd_sync(store: Store, args: argparse.Namespace) -> int:
+    """Rebuild the index and both views, reporting what the ledger folded into.
+
+    The counts are printed so drift is visible: a ledger that grew without the
+    learning count moving says the fold ignored something.
+
+    @param store where the ledger lives
+    @param args the parsed `sync` arguments; `--as-of` dates the calibration report
+    @return 0 once the projections match the ledger
+    """
     connection = sync(store)
     write_views(store, connection, args.as_of or dt.date.today())
     counts = connection.execute(
@@ -818,6 +1130,12 @@ def cmd_sync(store: Store, args: argparse.Namespace) -> int:
 
 
 def cmd_status(store: Store, args: argparse.Namespace) -> int:
+    """Print the ledger's size and the tally of entries by status, in one screen.
+
+    @param store where the ledger lives
+    @param args the parsed arguments, unused beyond selecting this command
+    @return 0, whether or not anything has been recorded
+    """
     connection = sync(store)
     rows = list(connection.execute(
         "SELECT status, COUNT(*) n FROM learning GROUP BY status ORDER BY status"
@@ -833,6 +1151,17 @@ def cmd_status(store: Store, args: argparse.Namespace) -> int:
 
 
 def cmd_calibrate(store: Store, args: argparse.Namespace) -> int:
+    """Print the metrics, and move a dial only with the reason recorded beside it.
+
+    A `--set` without a `--why` is refused, and every accepted change is appended
+    as an event: a parameter that moved for no stated reason is indistinguishable
+    from drift when someone later asks why retrieval behaves as it does.
+
+    @param store where the ledger and the configuration live
+    @param args the parsed `calibrate` arguments
+    @return 0 once the report has been printed
+    @throws LearnError when a setting is changed without a reason, or names nothing
+    """
     as_of = args.as_of or dt.date.today()
     if args.set:
         if not args.why:
@@ -850,7 +1179,18 @@ def cmd_calibrate(store: Store, args: argparse.Namespace) -> int:
 
 
 def _apply_settings(store: Store, assignments: Sequence[str]) -> dict[str, list[str]]:
-    """Edit config.toml in place, one `section.key=value` at a time."""
+    """Edit config.toml in place, one `section.key=value` at a time.
+
+    The matching line is rewritten rather than the file reserialised, so the
+    comments explaining each dial survive the change that most needs them. Only
+    the bare key is matched and only the first line carrying it is rewritten, so
+    two sections sharing a key name would collide on whichever comes first.
+
+    @param store where the configuration lives
+    @param assignments the raw assignments as they were typed
+    @return each dotted key mapped to its old and new value, for the event to carry
+    @throws LearnError when an assignment has no `=`, or names no setting in the file
+    """
     text = store.config_path.read_text(encoding="utf-8")
     changed: dict[str, list[str]] = {}
     for assignment in assignments:
@@ -874,6 +1214,15 @@ def _apply_settings(store: Store, assignments: Sequence[str]) -> dict[str, list[
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """The whole command-line surface, and which half of it writes to the ledger.
+
+    `record`, `used`, `refute`, `supersede`, `promote` and `session` each append
+    an event, and `calibrate` appends one when `--set` moves a dial. The other
+    three — `retrieve`, `sync` and `status` — only read and rebuild the derived
+    files; the ledger they leave exactly as they found it.
+
+    @return a parser that rejects an invocation naming no subcommand
+    """
     parser = argparse.ArgumentParser(description="Record and retrieve session learnings.")
     parser.add_argument("--root", type=Path, default=REPO_ROOT)
     parser.add_argument("--session", help="session id; one is generated if omitted")
@@ -932,6 +1281,8 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+## Subcommand name to the function that runs it. Four names share one function
+## because they differ only in the payload they append.
 COMMANDS = {
     "record": cmd_record, "retrieve": cmd_retrieve, "used": cmd_outcome,
     "refute": cmd_outcome, "supersede": cmd_outcome, "promote": cmd_outcome,
@@ -941,6 +1292,16 @@ COMMANDS = {
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Run one subcommand, turning a refusal into a message rather than a traceback.
+
+    Only LearnError is caught, because only it carries a message the caller can
+    act on; anything else is a defect and keeps its traceback. Stdout is switched
+    to UTF-8 first, so a console that cannot encode a character substitutes one
+    rather than failing a command that had already done its work.
+
+    @param argv the command line, defaulting to the process arguments
+    @return 0 on success, 1 when the tool refused with its reason on stderr
+    """
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     args = build_parser().parse_args(argv)

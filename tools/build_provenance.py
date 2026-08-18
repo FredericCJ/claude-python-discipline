@@ -24,6 +24,7 @@ from typing import Final
 
 import yaml
 
+## Derived from this file's location so the script works from any directory.
 REPO_ROOT: Final = Path(__file__).resolve().parent.parent
 
 ## Where each source document's material went, at document granularity.
@@ -42,6 +43,8 @@ DEFAULT_TARGETS: Final[dict[str, tuple[str, ...]]] = {
     "AT": ("ops/teams",),
 }
 
+## The path each two-letter census code stands for, shown so a reader of the
+## ledger never has to decode the abbreviations.
 SOURCE_NAMES: Final[dict[str, str]] = {
     "SG": "Software Engineering Style Guidelines.md",
     "SE": "doctrine/SOFTWARE-ENGINEERING.md",
@@ -88,16 +91,38 @@ DISPOSITIONS: Final[tuple[tuple[str, str, str, str], ...]] = (
 
 @dataclass(frozen=True, slots=True)
 class Row:
+    """One heading of one source document, and the verdict on its material.
+
+    Every censused heading yields exactly one of these, including the ones
+    nobody has ruled on; that is what keeps an omission visible.
+    """
+
+    ## Two-letter code of the owning document, as the census writes it.
     source: str
+    ## The heading text, verbatim from the source.
     heading: str
+    ## Line the heading sits on in its source document.
     line: int
+    ## `migrated`, `superseded`, `dropped`, or `UNREVIEWED` when nothing on
+    ## record says where the material went.
     disposition: str
+    ## Modules the material landed in; empty unless it was migrated.
     targets: tuple[str, ...]
+    ## Why this heading was ruled the way it was; empty when no DISPOSITIONS
+    ## entry matched it and the document's default applied unmodified.
     note: str
 
 
 def disposition_for(source: str, heading: str) -> tuple[str, str] | None:
-    """The most specific matching disposition, or None."""
+    """The most specific matching disposition, or None.
+
+    Specificity is the length of the matched substring, so a document-wide entry
+    (an empty needle) never shadows a section-level one.
+
+    @param source the two-letter code of the document the heading came from
+    @param heading the heading to rule on
+    @return the disposition and its reason, or None when no entry matches
+    """
     best: tuple[str, str] | None = None
     best_len = -1
     for src, needle, disposition, note in DISPOSITIONS:
@@ -111,6 +136,18 @@ def disposition_for(source: str, heading: str) -> tuple[str, str] | None:
 
 
 def build_rows(sections: Sequence[dict[str, object]]) -> list[Row]:
+    """Rule on every censused section, refusing to assume the undecided ones.
+
+    A section with no matching exception inherits its document's default
+    targets. When the document has none either, nothing has actually decided
+    where the material went, so it is marked UNREVIEWED rather than counted as
+    migrated -- an unbacked claim of survival is what this ledger exists to
+    prevent.
+
+    @param sections census entries, each carrying a source, a heading and a line
+    @return one row per section, in census order
+    @throws KeyError when a census entry is missing one of those three fields
+    """
     rows: list[Row] = []
     for section in sections:
         source = str(section["source"])
@@ -130,6 +167,17 @@ def build_rows(sections: Sequence[dict[str, object]]) -> list[Row]:
 
 
 def render(rows: Sequence[Row]) -> str:
+    """The whole of PROVENANCE.md: front matter, tallies, exceptions, gaps.
+
+    The exceptions table holds only headings matched by a *named* section in
+    DISPOSITIONS; a document-wide entry is that document's default, not an
+    exception to it, so it never appears there. Among what remains, each
+    distinct reason is printed once per document rather than once per heading.
+    The unreviewed section is emitted only when something is unreviewed.
+
+    @param rows every section, already ruled on
+    @return the file's complete text, newline-terminated
+    """
     counts = Counter(r.disposition for r in rows)
     by_source: defaultdict[str, list[Row]] = defaultdict(list)
     for row in rows:
@@ -237,10 +285,23 @@ def render(rows: Sequence[Row]) -> str:
 
 
 def _escape(text: str) -> str:
+    """Make a heading safe to drop into a Markdown table cell.
+
+    @param text arbitrary heading text
+    @return the same text with any pipe backslash-escaped
+    """
     return re.sub(r"\|", r"\\|", text)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Regenerate the provenance ledger from the extraction census.
+
+    Prints the tally per disposition, so an UNREVIEWED count is visible in the
+    build output and not only inside the file just written.
+
+    @param argv command-line arguments, defaulting to `sys.argv`
+    @return 0 once the ledger is written, or 1 when the census file is absent
+    """
     # The console encoding is not ours to choose, and a tool that dies on one is
     # worse than one that renders a character imperfectly.
     if hasattr(sys.stdout, "reconfigure"):

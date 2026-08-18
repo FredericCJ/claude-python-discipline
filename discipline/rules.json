@@ -2,10 +2,45 @@
   "generated_by": "tools/build_index.py",
   "modules": [
     {
+      "id": "examples/documentation",
+      "kind": "meta",
+      "title": "Documentation, Worked",
+      "tokens": 1373,
+      "load_when": [
+        "how do i document this",
+        "docstring example",
+        "doxygen example",
+        "what does a good docstring look like"
+      ],
+      "requires": [],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/examples/documentation.md"
+    },
+    {
+      "id": "examples/port-triad",
+      "kind": "meta",
+      "title": "A Port and Its Three Adapters",
+      "tokens": 1569,
+      "load_when": [
+        "how do i write a port",
+        "contract suite example",
+        "fault schedule example",
+        "fake adapter",
+        "faulty adapter"
+      ],
+      "requires": [],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/examples/port-triad.md"
+    },
+    {
       "id": "fact/doxygen",
       "kind": "fact",
       "title": "Doxygen for Python",
-      "tokens": 1805,
+      "tokens": 2391,
       "load_when": [
         "doxygen",
         "documentation comment",
@@ -255,7 +290,7 @@
       "id": "law/DOC",
       "kind": "law",
       "title": "Documentation Comments",
-      "tokens": 2062,
+      "tokens": 2069,
       "load_when": [
         "docstring",
         "documentation comment",
@@ -384,7 +419,7 @@
       "id": "law/TEST",
       "kind": "law",
       "title": "Systematic Testing and Oracles",
-      "tokens": 2766,
+      "tokens": 2774,
       "load_when": [
         "write a test",
         "pytest",
@@ -1997,7 +2032,8 @@
       "no_mechanism": null,
       "see": [
         "law/API",
-        "frame/spec"
+        "frame/spec",
+        "examples/documentation"
       ],
       "superseded_by": null,
       "path": "discipline/law/DOC.md",
@@ -3300,7 +3336,9 @@
       "why": "A schedule that survives as data is a failing case an agent can replay verbatim; a bespoke class is a one-off that has to be re-derived.",
       "check": "`pytest enforce/fitness/test_faults.py::test_fault_schedules_are_data`",
       "no_mechanism": null,
-      "see": [],
+      "see": [
+        "examples/port-triad"
+      ],
       "superseded_by": null,
       "path": "discipline/law/TEST.md",
       "line": 116
@@ -3320,7 +3358,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/TEST.md",
-      "line": 124
+      "line": 125
     },
     {
       "id": "TEST-011",
@@ -3339,7 +3377,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/TEST.md",
-      "line": 132
+      "line": 133
     },
     {
       "id": "TEST-012",
@@ -3358,7 +3396,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/TEST.md",
-      "line": 140
+      "line": 141
     },
     {
       "id": "TEST-013",
@@ -3377,7 +3415,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/TEST.md",
-      "line": 152
+      "line": 153
     },
     {
       "id": "TEST-014",
@@ -3394,7 +3432,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/TEST.md",
-      "line": 160
+      "line": 161
     },
     {
       "id": "TEST-015",
@@ -3411,7 +3449,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/TEST.md",
-      "line": 168
+      "line": 169
     },
     {
       "id": "TEST-016",
@@ -3428,7 +3466,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/TEST.md",
-      "line": 175
+      "line": 176
     },
     {
       "id": "TEST-017",
@@ -3446,7 +3484,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/TEST.md",
-      "line": 186
+      "line": 187
     },
     {
       "id": "TEST-018",
@@ -3463,7 +3501,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/TEST.md",
-      "line": 193
+      "line": 194
     },
     {
       "id": "TEST-019",
@@ -3478,7 +3516,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/TEST.md",
-      "line": 199
+      "line": 200
     },
     {
       "id": "TYPE-001",

@@ -149,27 +149,32 @@ turned on its tooling. Generated files carry a banner; edit the source module an
 
 Stated here rather than discovered later, because the axiom cuts both ways.
 
-- **58 of 79 named mechanisms are not built yet.** 42 of 152 binding rules currently have
+- **55 of 87 named mechanisms are not built yet.** 61 of 167 binding rules currently have
   every mechanism they name built and runnable. `enforce/ENFORCEMENT.md` lists the rest by name
-  and `tools/validate.py` reports each as `V080`. Until a mechanism exists, its rule is
-  binding in name only — which is exactly what the sources did, and the difference here is
-  that the gap is counted.
-- **Documentation comments are required everywhere, and this repository does not yet
-  comply.** `law/DOC` requires a documentation comment on every element, in Doxygen form.
-  The mechanisms are in place — ruff `D1xx`, `checks/doc_coverage.py`, and Doxygen itself
-  via `enforce/Doxyfile` — so the gap cannot grow, but roughly 460 elements still need
-  documenting. `enforce/checks/doc_coverage.py` and `doc_style.py` are written in the
-  mandated form and pass all three mechanisms, as the worked example.
-- **`discipline/examples/` is empty.** The worked artifacts worth preserving from the
-  sources — fault schedules as data, the interruption harness, a port contract suite — have
-  not been genericized yet, and the good/bad Python contrast pairs the corpus never had are
-  still missing.
+  and `tools/validate.py` reports each as `V080` (106 rule×mechanism pairs). Until a
+  mechanism exists, its rule is binding in name only — which is exactly what the sources
+  did, and the difference here is that the gap is counted.
 - **Provenance is at document granularity.** All 324 source sections are accounted for, but
   that proves no document was dropped, not that every individual claim survived.
-- **This repository's own Python has residual lint findings** under `select = ["ALL"]`,
-  mostly docstring completeness on internal helpers. Note that `enforce/pyproject.toml`
-  makes ruff treat `enforce/` as a separate project, so linting the whole repo needs
-  `--config ruff.toml` explicitly.
+- **This repository's own Python has 259 residual lint findings** under `select = ["ALL"]`,
+  down from 514 before the documentation migration. What remains is mostly `D401` imperative
+  mood, `TC003` type-checking imports and unused imports — style debt in the tooling, not
+  contract violations. Two structural conflicts that were in this list have been fixed
+  rather than described: ruff's `E266` forbade the `##` form `DOC-002` requires, and
+  `enforce/pyproject.toml` — the template consumers copy — was being applied by ruff as the
+  live config for everything under `enforce/`, so the root config's path scoping never
+  reached it. See `enforce/ruff.toml`.
+- **The documentation gate does not prove documentation is *true*.** All 28 files pass
+  presence, style, behaviour-preservation and Doxygen, but a reviewer pass over the same
+  files found 90 claims that were confidently false about the code they described. Presence
+  and truth are separate properties; only the first is mechanized. `DOC-013` names the
+  second and leaves it to review, which is honest but not sufficient.
+- **The learning database has 27 learnings and 0 reported outcomes**, so retrieval precision
+  is `n/a` and no learning has been promoted. `learn.py calibrate` prints the totals but
+  gives no guidance in this state — it has a bootstrap protocol for an *empty* database and
+  nothing for a populated one that has never been queried. The first calibration run found
+  that the database already held a defect (`L-0002`) which a later session rediscovered
+  independently, because nothing prompts a `retrieve` before a gate run.
 
 ## Auditing the merge
 
