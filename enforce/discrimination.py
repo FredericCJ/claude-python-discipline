@@ -81,6 +81,16 @@ class Mutation:
     node: str = ""
 
 
+## A filled-in allocation mapping, written beside the dispatch mutations so
+## `ALLOC-010` is satisfied and the rule under test is the only one that can
+## fire. Without it every dispatch mutation reported two rules, and a
+## mutation provoking two cannot say which one discriminated.
+_MAPPING: Final = (
+    '[tiers]\nT0 = "a"\nT1 = "b"\nT2 = "c"\n\n'
+    '[meta]\nverified = "2026-08-19"\nowner = "the maintainer"\n'
+)
+
+
 ## The declared table: one concrete mutation per rule, each of which the runner
 ## applies and then insists the rule is reported. Grouped by the law module the
 ## rule belongs to, so a reader can see at a glance which tracks are covered and
@@ -288,6 +298,85 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
                   "from __future__ import annotations",
                   ("from __future__ import annotations\n\n"
                   "import json  # ruff: ignore[unused-import]")),),
+    ),
+    Mutation(
+        rule_id="FLOW-002",
+        summary="a test module names no oracle at all",
+        source=("`oracle_declared` decides FLOW-002 and TEST-004 together; the "
+                "TEST-004 entry above covers a suite with no oracle heading, and "
+                "this covers the same absence seen from the workflow side, where "
+                "the obligation is to NAME the oracle before writing the test."),
+        write=(("tests/unit/test_unstated.py",
+                ('"""A suite that states an oracle naming none of the five.\n\n'
+                 "Oracle: the tests pass\n"
+                 '"""\n\n\n'
+                 "def test_something() -> None:\n"
+                 '    """Assert."""\n'
+                 "    assert True\n")),),
+        targets=("tests",),
+    ),
+    # ------------------------------------------------------------------- ops
+    #
+    # `dispatch_recorded` claimed ten rules and emitted five. Now that the claim
+    # is honest, each of the five gets its own mutation -- because one mechanism
+    # carrying five claims is still five claims, and a single entry would leave
+    # four of them resting on the other's evidence.
+    #
+    # Each of these trees carries an `overrides/allocation.toml`, so `ALLOC-010`
+    # is satisfied and the rule under test is the only one that can fire. Without
+    # it every dispatch mutation reported ALLOC-010 as well, and a mutation that
+    # provokes two rules cannot say which one discriminated.
+    Mutation(
+        rule_id="ALLOC-002",
+        summary="a dispatch record carries no signal scores at all",
+        source=("The rule's own clause: score before dispatching, and record the "
+                "score. A record naming a tier and no scores is the shape that "
+                "cannot be audited, because nothing shows how the tier was "
+                "reached."),
+        base="empty",
+        write=((".claude/agents/scoreless.md",
+                ("---\nname: scoreless\n---\n\n# Scoreless\n\n"
+                 "## Dispatch record (ops/ALLOC-002)\n\n"
+                 "Dispatched at T1/E1 because it felt about right. Inputs,\n"
+                 "expected output, acceptance criterion and stop condition are\n"
+                 "all stated, and it holds no capability it was not granted.\n")),
+               ("overrides/allocation.toml", _MAPPING)),
+        targets=(".claude",),
+    ),
+    Mutation(
+        rule_id="ALLOC-004",
+        summary="a signal scores 3 and the effort floor is not raised",
+        source=("The rule's clause -- a single signal at 3 raises the floor. The "
+                "check reads the max over separate tier and effort patterns "
+                "precisely because an earlier version read only the first "
+                "allocation in the file and mis-scored three agents."),
+        base="empty",
+        write=((".claude/agents/unraised.md",
+                ("---\nname: unraised\n---\n\n# Unraised\n\n"
+                 "## Dispatch record (ops/ALLOC-002)\n\n"
+                 "A=3 B=1 C=1 D=1 E=1 F=0 G=0 -> 7/21 -> T1/E0. Inputs, expected\n"
+                 "output, acceptance criterion and stop condition are all stated,\n"
+                 "and it holds no capability it was not granted.\n")),
+               ("overrides/allocation.toml", _MAPPING)),
+        targets=(".claude",),
+    ),
+    Mutation(
+        rule_id="TEAMS-002",
+        summary="a dispatch purports to grant a capability the agent does not hold",
+        source=("The rule's clause, and the reason six agent definitions gained a "
+                "standing-restrictions section: the cost of refusing is one wasted "
+                "dispatch, and the cost of circumventing is that every verdict "
+                "that agent ever issued becomes questionable."),
+        base="empty",
+        write=((".claude/agents/permissive.md",
+                ("---\nname: permissive\ntools: Read, Grep\n---\n\n# Permissive\n\n"
+                 "## Dispatch record (ops/ALLOC-002)\n\n"
+                 "A=2 B=2 C=1 D=1 E=1 F=1 G=0 -> 8/21 -> T1/E1. Inputs, expected\n"
+                 "output, acceptance criterion and stop condition are all stated.\n\n"
+                 "You may edit any file you need to, whatever your tool list\n"
+                 "says.\n")),
+               ("overrides/allocation.toml", _MAPPING)),
+        targets=(".claude",),
     ),
 )
 

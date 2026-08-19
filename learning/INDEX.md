@@ -9,7 +9,7 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 | Status | Count |
 |---|---|
 | active | 2 |
-| candidate | 96 |
+| candidate | 97 |
 | superseded | 1 |
 
 ## active
@@ -854,6 +854,15 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `error:V080`
 - **About** FLOW-006
 - **Verify** `python tools/validate.py`
+
+### L-0100 · A mutation for a rule decided by a multi-rule check must isolate that rule: the ALLOC entries provoked ALLOC-010 alongside because the synthetic tree had no allocation mapping, so no single entry could say which mechanism discriminated.
+
+- **Do** Give a mutation tree whatever it needs to satisfy every rule EXCEPT the one under test. A mutation that provokes two rules is evidence about neither.
+- **Kind** procedure · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `command:discrimination`
+- **About** FLOW-007
+- **Verify** `python tools/discrimination_gate.py`
 
 ## superseded
 

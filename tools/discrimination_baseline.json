@@ -1,8 +1,10 @@
 {
   "generated_by": "tools/discrimination_gate.py --update-baseline",
   "note": "D -- rules with at least one mutation observed provoking them. May rise, never fall. The entries are in enforce/discrimination.py and are meant to be read; the count alone says nothing about whether they are good.",
-  "count": 15,
+  "count": 19,
   "rules": [
+    "ALLOC-002",
+    "ALLOC-004",
     "ALLOC-010",
     "ARCH-002",
     "ARCH-012",
@@ -13,11 +15,13 @@
     "DOC-001",
     "EFCT-002",
     "ERR-013",
+    "FLOW-002",
     "FLOW-008",
+    "TEAMS-002",
     "TEST-004",
     "TEST-014",
     "TYPE-002",
     "TYPE-007"
   ],
-  "why": "Phase 6a: ALLOC-010 joins the matrix. It was [OPEN] and decided by nothing until check:allocation_declared; the mutation is the case OPEN-006 called unauditable -- a dispatch citing a tier no mapping resolves."
+  "why": "Phase 2: D 15 -> 19. Four entries added after eight checks were narrowed to what they actually emit. ALLOC-002, ALLOC-004 and TEAMS-002 each get their own mutation because dispatch_recorded carries five claims and one entry would leave four resting on the other's evidence; each tree carries a filled allocation mapping so ALLOC-010 cannot fire alongside. FLOW-002's first draft was wrong -- it hit oracle_declared's TEST-004 path, and the rule fires on an oracle that is STATED and names none of the five."
 }
