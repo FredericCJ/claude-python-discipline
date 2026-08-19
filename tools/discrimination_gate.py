@@ -35,6 +35,10 @@ import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
+import import_gate
+import lint_gate
+import type_gate
+
 ## The repository root, one level up from `tools/`.
 REPO_ROOT: Final = Path(__file__).resolve().parent.parent
 
@@ -50,12 +54,18 @@ from checks.__main__ import discover  # ruff: ignore[module-import-not-at-top-of
 from fixtures import broken_copy, reference_root  # ruff: ignore[module-import-not-at-top-of-file]
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Callable, Sequence
 
 ## The committed floor `D` ratchets against, beside this file for the same reason
 ## the other baselines are: a ceiling that travels separately from its tool can be
 ## edited without the tool noticing.
 BASELINE_PATH: Final = Path(__file__).resolve().parent / "discrimination_baseline.json"
+
+## The ruff configuration a `tool="ruff"` mutation is judged against: the one an
+## adopter copies. The reference fixture declares none of its own, so without
+## this ruff would lint a temp copy under its small default rule set and report
+## none of the codes the discipline names.
+RUFF_CONFIG: Final = REPO_ROOT / "enforce" / "templates" / "pyproject.toml"
 
 ## Exit status when every declared mutation provoked its rule and `D` held.
 EXIT_OK: Final = 0
@@ -129,6 +139,94 @@ def fails_against(node: str, root: Path) -> bool:
     return finished.returncode != 0
 
 
+def _ruff_codes(root: Path) -> set[str]:
+    """Every ruff code reported over one tree.
+
+    Invoked through `lint_gate.run_ruff`, which goes via `sys.executable -m ruff`
+    rather than locating an executable. Its docstring records why: a prior gate
+    looked beside the interpreter, missed `Scripts/` on Windows, and skipped
+    itself behind a green run with 766 findings unseen.
+
+    @param root the tree to lint
+    @return the codes, as ruff spells them
+    """
+    findings, _ = lint_gate.run_ruff(root, config=RUFF_CONFIG)
+    return {str(finding.get("code") or "") for finding in findings}
+
+
+def _mypy_output(root: Path) -> set[str]:
+    """What mypy said about one tree, as a single blob to search.
+
+    @param root the tree holding `src/`
+    @return a one-element set holding the output, so every tool has one shape
+    """
+    _, _, output = type_gate.run_mypy(root)
+    return {output}
+
+
+def _pyright_output(root: Path) -> set[str]:
+    """What pyright said about one tree.
+
+    @param root the tree holding `src/` and `pyrightconfig.json`
+    @return a one-element set holding the output
+    """
+    _, _, output = type_gate.run_pyright(root)
+    return {output}
+
+
+def _contract_output(root: Path) -> set[str]:
+    """What import-linter said about one tree.
+
+    Goes through `import_gate.check`, which calls the library's Python API. The
+    module form exits 0 having checked nothing, and `_evict` there removes root
+    packages from `sys.modules` because import-linter consults it before
+    `sys.path` -- a pre-imported package silently wins otherwise, and the damaged
+    copy would be checked as though it were the original.
+
+    @param root the tree holding `src/` and the contract configuration
+    @return a one-element set holding the report
+    """
+    _, output = import_gate.check(root, import_gate.DEFAULT_CONFIG, 0)
+    return {output}
+
+
+## How each `auto:` tool is run over a tree, and what its answer looks like. Ruff
+## yields codes to match exactly; the others yield one blob to search, because a
+## mypy code and a contract name are both substrings of a line rather than a
+## field the tool hands back separately.
+TOOLS: Final[dict[str, Callable[[Path], set[str]]]] = {
+    "ruff": _ruff_codes,
+    "mypy": _mypy_output,
+    "pyright": _pyright_output,
+    "import-linter": _contract_output,
+}
+
+
+def _present(mutation: discrimination.Mutation, answers: set[str]) -> bool:
+    """Whether the declared diagnostic is in one tool's answer.
+
+    Matching is exact for ruff, where a code is a whole token, and by substring
+    for the checkers, where the diagnostic is part of a printed line.
+
+    @param mutation the declared mutation, whose `tool` and `diagnostic` are read
+    @param answers what the tool reported, as `TOOLS` returns it
+    @return True when the diagnostic is present
+    """
+    if mutation.tool == "ruff":
+        return mutation.diagnostic in answers
+    return any(mutation.diagnostic in answer for answer in answers)
+
+
+def emits(mutation: discrimination.Mutation, root: Path) -> bool:
+    """Whether the declared tool reports the declared diagnostic against a tree.
+
+    @param mutation the declared mutation, whose `tool` and `diagnostic` are read
+    @param root the tree to run the tool over
+    @return True when the diagnostic is present in what the tool reported
+    """
+    return _present(mutation, TOOLS[mutation.tool](root))
+
+
 def provoke(mutation: discrimination.Mutation, workspace: Path) -> set[str]:
     """Apply one mutation and report which rules its mechanism then reports.
 
@@ -138,6 +236,8 @@ def provoke(mutation: discrimination.Mutation, workspace: Path) -> set[str]:
     @throws FileNotFoundError when a path named for damage is not there
     """
     root = damaged(mutation, workspace)
+    if mutation.tool:
+        return {mutation.rule_id} if emits(mutation, root) else set()
     if mutation.node:
         return {mutation.rule_id} if fails_against(mutation.node, root) else set()
     return findings_for(root, mutation.targets)
@@ -160,6 +260,28 @@ def run() -> tuple[int, list[str], set[str]]:
             f"Every result below would be crediting a mechanism with a finding it "
             f"did not earn."
         )
+        return EXIT_FAILED, complaints, provoked
+
+    # The same guard for the `auto:` tools, asked per diagnostic rather than per
+    # tool. Requiring a tool to be entirely silent over the reference would be a
+    # stronger claim than this gate needs and a flakier one; requiring that the
+    # SPECIFIC diagnostic a mutation claims is absent before the damage is what
+    # actually makes the observation mean something. Each tool is run once and
+    # its answer reused, because mypy over the reference is seconds, not
+    # milliseconds.
+    already: dict[str, set[str]] = {}
+    for mutation in discrimination.MUTATIONS:
+        if not mutation.tool:
+            continue
+        if mutation.tool not in already:
+            already[mutation.tool] = TOOLS[mutation.tool](reference)
+        if _present(mutation, already[mutation.tool]):
+            complaints.append(
+                f"{mutation.rule_id}: {mutation.tool} already reports "
+                f"{mutation.diagnostic!r} against the CONFORMANT reference, so "
+                f"seeing it after the damage would prove nothing."
+            )
+    if complaints:
         return EXIT_FAILED, complaints, provoked
 
     for mutation in discrimination.MUTATIONS:

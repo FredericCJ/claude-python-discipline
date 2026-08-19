@@ -79,6 +79,18 @@ class Mutation:
     ## Both kinds are the same claim -- *this mechanism rejects this thing* -- and
     ## they differ only in how the rejection is observed.
     node: str = ""
+    ## The tool that must report this mutation, for a rule decided by an `auto:`
+    ## tag rather than by a check or a fitness test. One of `TOOLS`. Twenty-seven
+    ## binding rules are decided by a configured tool alone, and until this field
+    ## existed not one of them could enter the matrix at all: `D` was structurally
+    ## incapable of covering them, which is a worse gap than a missing entry
+    ## because no amount of writing entries would close it.
+    tool: str = ""
+    ## The diagnostic that tool must emit -- a ruff code, a mypy error code, an
+    ## import-linter contract name. Asserted BY NAME rather than by the tool
+    ## merely exiting non-zero: a syntax error also exits non-zero, and crediting
+    ## a rule for one would let a single unparseable file certify the whole table.
+    diagnostic: str = ""
 
 
 ## A filled-in allocation mapping, written beside the dispatch mutations so
@@ -88,6 +100,13 @@ class Mutation:
 _MAPPING: Final = (
     '[tiers]\nT0 = "a"\nT1 = "b"\nT2 = "c"\n\n'
     '[meta]\nverified = "2026-08-19"\nowner = "the maintainer"\n'
+)
+
+
+## Fourteen branches, which is past the complexity budget `ARCH-016` sets. Built
+## as a constant rather than inline so the mutation entry stays a plain literal.
+TANGLED: Final = "".join(
+    f"    if n == {branch}:\n        return {branch}\n" for branch in range(14)
 )
 
 
@@ -392,6 +411,222 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
                  "says.\n")),
                ("overrides/allocation.toml", _MAPPING)),
         targets=(".claude",),
+    ),
+
+    # ------------------------------------------------- auto: import-linter
+    #
+    # Twenty-seven binding rules are decided by a configured tool alone. Until
+    # v3.1 the matrix had no way to express one, so `D` could not cover them at
+    # all -- a worse gap than a missing entry, because no amount of writing
+    # entries would have closed it.
+    Mutation(
+        rule_id="ARCH-001",
+        summary="the domain imports the shell, reversing the dependency arrow",
+        source=("The rule's whole content. The layers contract is the only thing "
+                "standing between a tidy diagram and a cycle, and nobody had "
+                "watched it break."),
+        tool="import-linter",
+        diagnostic="ARCH-001 layers point inward",
+        replace=(("src/refpkg/domain/plan.py",
+                  "from __future__ import annotations",
+                  ("from __future__ import annotations\n\n"
+                   "from refpkg.shell import envelope")),),
+    ),
+    Mutation(
+        rule_id="ARCH-003",
+        summary="the clock adapter imports the files adapter",
+        source=("ERR-016 and TEST-011 rest on adapters being independent: a "
+                "misbehaving component cannot contaminate a healthy one only if "
+                "it cannot reach it."),
+        tool="import-linter",
+        diagnostic="ARCH-003 adapters are independent",
+        replace=(("src/refpkg/adapters/clock/real.py",
+                  "from __future__ import annotations",
+                  ("from __future__ import annotations\n\n"
+                   "from refpkg.adapters.files import real as _files")),),
+    ),
+    Mutation(
+        rule_id="ARCH-004",
+        summary="the app reads the clock directly instead of through its adapter",
+        source=("The contract shipped with an EMPTY forbidden_modules list, which "
+                "forbids nothing and passes on every tree, with a comment making "
+                "the vacuity look deliberate. Two rules were counted decided on a "
+                "check that could not fail; this is the entry that would have "
+                "caught that."),
+        tool="import-linter",
+        diagnostic="ARCH-004 time is cornered in the clock adapter",
+        replace=(("src/refpkg/app/prune.py",
+                  "from __future__ import annotations",
+                  "from __future__ import annotations\n\nimport time"),),
+    ),
+    Mutation(
+        rule_id="EFCT-001",
+        summary="the app opens a socket, performing an effect outside the shell",
+        source=("Writing this entry is what found that EFCT-001 was tagged "
+                "`auto:import-linter` and named by NO contract. An `auto:` tag "
+                "resolves to None -- not checkable -- so V080 never reported it, "
+                "and the rule was decided by a tool nobody had told about it."),
+        tool="import-linter",
+        diagnostic="EFCT-001 effects stay in shell and adapters",
+        replace=(("src/refpkg/app/prune.py",
+                  "from __future__ import annotations",
+                  "from __future__ import annotations\n\nimport socket"),),
+    ),
+    Mutation(
+        rule_id="DEP-001",
+        summary="the domain imports pydantic, a third-party package",
+        source=("The same gap as EFCT-001, found the same way. Distinct from "
+                "ARCH-013, which catches a domain type INHERITING a framework "
+                "base: this catches the import itself, one layer earlier."),
+        tool="import-linter",
+        diagnostic="DEP-001 the domain imports no third-party package",
+        replace=(("src/refpkg/domain/model.py",
+                  "from __future__ import annotations",
+                  "from __future__ import annotations\n\nimport pydantic"),),
+    ),
+
+    # -------------------------------------------------------- auto: ruff
+    #
+    # Judged against `enforce/templates/pyproject.toml`, the configuration an
+    # adopter copies, because the reference carries no [tool.ruff] table of its
+    # own and ruff's defaults enable none of these codes.
+    Mutation(
+        rule_id="ERR-008",
+        summary="an except clause catches Exception and names nothing",
+        source=("A PROTECTED lint code -- `BLE001` may never enter the baseline. "
+                "A protected code nobody has watched fire is a protection nobody "
+                "has tested."),
+        tool="ruff",
+        diagnostic="BLE001",
+        replace=(("src/refpkg/app/prune.py",
+                  "from __future__ import annotations",
+                  ("from __future__ import annotations\n\n\n"
+                   "def swallow() -> None:\n"
+                   '    """Catch everything and say nothing.\n\n'
+                   '    @return nothing\n    """\n'
+                   "    try:\n        pass\n"
+                   "    except Exception:\n        return")),),
+    ),
+    Mutation(
+        rule_id="DIAG-012",
+        summary="a log call formats its argument eagerly with an f-string",
+        source=("`G004` is PROTECTED. DIAG-012's point is that the formatting cost "
+                "is paid whether or not the record is emitted, and that the "
+                "structured fields are lost to a flat string."),
+        tool="ruff",
+        diagnostic="G004",
+        replace=(("src/refpkg/shell/cli.py",
+                  "from __future__ import annotations",
+                  ("from __future__ import annotations\n\nimport logging\n\n\n"
+                   "def announce(what: str) -> None:\n"
+                   '    """Log eagerly.\n\n    @param what the subject\n    """\n'
+                   '    logging.getLogger(__name__).info(f"saw {what}")')),),
+    ),
+    Mutation(
+        rule_id="TYPE-003",
+        summary="a blanket type-ignore with no code and no justification",
+        source=("`PGH003` is PROTECTED. TYPE-003 asks that escape hatches be "
+                "narrow, justified and counted; a bare type-ignore is none of the "
+                "three and silences everything on the line forever."),
+        tool="ruff",
+        diagnostic="PGH003",
+        replace=(("src/refpkg/domain/plan.py",
+                  "from __future__ import annotations",
+                  ("from __future__ import annotations\n\n"
+                   '_ANYTHING: int = "not an int"  # type: ignore')),),
+    ),
+    Mutation(
+        rule_id="ARCH-016",
+        summary="a domain function whose branching exceeds the complexity budget",
+        source=("`C901` is PROTECTED, and it refused this repository's own code "
+                "twice while v3.0.0 was being written -- `cmd_diagnose` and "
+                "`integrate.main` both had to be decomposed. A rule that has "
+                "rejected the maintainer is worth pinning."),
+        tool="ruff",
+        diagnostic="C901",
+        replace=(("src/refpkg/domain/plan.py",
+                  "from __future__ import annotations",
+                  ("from __future__ import annotations\n\n\n"
+                   "def tangled(n: int) -> int:\n"
+                   '    """Branch past the budget.\n\n'
+                   '    @param n the input\n    @return a number\n    """\n'
+                   + TANGLED
+                   + "    return -1")),),
+    ),
+    Mutation(
+        rule_id="ERR-009",
+        summary="the try body ends with the return that only runs on success",
+        source=("`TRY300` is PROTECTED. ERR-009's point is that a return inside "
+                "the try widens what the except clause is standing guard over, so "
+                "a failure in the success path is caught as though it were the "
+                "operation failing."),
+        tool="ruff",
+        diagnostic="TRY300",
+        replace=(("src/refpkg/app/prune.py",
+                  "from __future__ import annotations",
+                  ("from __future__ import annotations\n\n\n"
+                   "def widened(value: int) -> int:\n"
+                   '    """Return from inside the try.\n\n'
+                   "    @param value the input\n    @return the value\n"
+                   '    """\n'
+                   "    try:\n        _ = 1 / value\n        return value\n"
+                   "    except ZeroDivisionError:\n        return 0")),),
+    ),
+    Mutation(
+        rule_id="DOC-006",
+        summary="a docstring runs its summary straight into the description",
+        source=("`D205` is PROTECTED. DOC-006 asks for a brief statement first "
+                "because the summary is what every tool -- the navigator "
+                "included -- shows when it has room for one line."),
+        tool="ruff",
+        diagnostic="D205",
+        replace=(("src/refpkg/domain/plan.py",
+                  "from __future__ import annotations",
+                  ("from __future__ import annotations\n\n\n"
+                   "def crowded() -> int:\n"
+                   '    """A summary\n'
+                   "    and a description with no blank line between them.\n\n"
+                   "    @return a number\n"
+                   '    """\n'
+                   "    return 1")),),
+    ),
+
+    # --------------------------------------------------------- auto: mypy
+    Mutation(
+        rule_id="TYPE-001",
+        summary="a domain function carries no annotations at all",
+        source=("The first thing `mypy --strict` reports on a package adopting "
+                "the typing track -- `enforce/signals.toml` indexes this exact "
+                "code against this exact rule, and nothing had ever confirmed "
+                "the pairing by making it happen."),
+        tool="mypy",
+        diagnostic="no-untyped-def",
+        replace=(("src/refpkg/domain/plan.py",
+                  "from __future__ import annotations",
+                  ("from __future__ import annotations\n\n\n"
+                   "def unchecked(value):\n"
+                   '    """A definition mypy cannot hold anyone to.\n\n'
+                   "    @param value anything\n    @return anything\n"
+                   '    """\n'
+                   "    return value")),),
+    ),
+    Mutation(
+        rule_id="TYPE-013",
+        summary="a str is returned where the signature promises an int",
+        source=("TYPE-013 asks that conversions across a boundary be explicit. "
+                "The mechanical half is that an implicit one is a type error, "
+                "and a checker that would not report this is a checker running "
+                "in a mode that decides nothing."),
+        tool="mypy",
+        diagnostic="return-value",
+        replace=(("src/refpkg/domain/plan.py",
+                  "from __future__ import annotations",
+                  ("from __future__ import annotations\n\n\n"
+                   "def converted() -> int:\n"
+                   '    """Promise an int, hand back a str.\n\n'
+                   "    @return an int, allegedly\n"
+                   '    """\n'
+                   '    return "12"')),),
     ),
 )
 

@@ -43,9 +43,15 @@ DEFAULT_ROOT: Final = REPO_ROOT / "enforce" / "fixtures" / "reference"
 DEFAULT_CONFIG: Final = "importlinter.toml"
 
 ## How many contracts the configuration must yield before a "0 broken" verdict is
-## believed. The reference declares seven; a run producing fewer has stopped
+## believed. The reference declares nine; a run producing fewer has stopped
 ## seeing the package rather than started agreeing with it.
-MINIMUM_CONTRACTS: Final = 7
+##
+## It was seven until v3.1, when writing discrimination mutations for the eight
+## rules tagged `auto:import-linter` found that four of them were named by no
+## contract at all. `EFCT-001` and `DEP-001` now have one each. `API-004` and
+## `EFCT-012` still do not: both are about a private persistent representation,
+## and the reference has no separate raw-storage module to corner.
+MINIMUM_CONTRACTS: Final = 9
 
 ## Exit status when every contract holds.
 EXIT_OK: Final = 0

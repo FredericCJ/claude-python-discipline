@@ -111,3 +111,52 @@ type = "forbidden"
 source_modules = ["refpkg.app"]
 forbidden_modules = ["refpkg.adapters.clock", "refpkg.adapters.files"]
 allow_indirect_imports = false
+
+# EFCT-001 -- effects are performed only in shell and adapters. Distinct from the
+# two ARCH-004 contracts above, which corner one dependency each: this one names
+# the remaining effect-bearing modules and holds the whole inward half of the
+# package to them.
+#
+# It exists because EFCT-001 was tagged `auto:import-linter` and NO CONTRACT
+# NAMED IT. The tag was resolved by `mechanism_is_implemented` as `None` -- not
+# checkable -- so V080 never reported the gap, and the rule was decided by a tool
+# that had never been told about it. Found in v3.1 by trying to write a mutation
+# for it and discovering there was nothing for the mutation to provoke.
+[[tool.importlinter.contracts]]
+name = "EFCT-001 effects stay in shell and adapters"
+type = "forbidden"
+source_modules = [
+    "refpkg.domain",
+    "refpkg.ports",
+    "refpkg.app",
+]
+forbidden_modules = [
+    "socket",
+    "subprocess",
+    "sqlite3",
+    "tempfile",
+    "urllib",
+    "http",
+    "asyncio",
+    "multiprocessing",
+]
+allow_indirect_imports = false
+
+# DEP-001 -- the domain depends on the standard library only. Same story as
+# EFCT-001: tagged `auto:import-linter`, named by no contract, decided by
+# nothing. The list names the packages actually installed in this environment,
+# because a forbidden contract can only forbid what it can name -- an adopter
+# regenerates it with `register_deps.py --emit`.
+[[tool.importlinter.contracts]]
+name = "DEP-001 the domain imports no third-party package"
+type = "forbidden"
+source_modules = ["refpkg.domain"]
+forbidden_modules = [
+    "pydantic",
+    "httpx",
+    "requests",
+    "attrs",
+    "hypothesis",
+    "pytest",
+]
+allow_indirect_imports = false

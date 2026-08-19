@@ -64,15 +64,26 @@ PROTECTED: Final[frozenset[str]] = frozenset({
 })
 
 
-def run_ruff(root: Path) -> tuple[list[dict[str, object]], str]:
+def run_ruff(root: Path, config: Path | None = None) -> tuple[list[dict[str, object]], str]:
     """Every finding ruff reports over the repository, as data.
 
+    `config` exists for the discrimination gate, which lints a throwaway copy of
+    the reference fixture. That fixture carries no `[tool.ruff]` table on purpose
+    -- its own pyproject says why -- so ruff in a temp directory would find no
+    configuration, fall back to its small default rule set, and report none of
+    the codes the discipline actually names. Pointing it at the template an
+    adopter copies is what makes the answer mean anything, and it exercises the
+    template at the same time.
+
     @param root the repository to lint
+    @param config a ruff configuration to use instead of whatever `root` provides
     @return the findings, and ruff's own human-readable output for printing
     @throws RuntimeError when ruff cannot be run at all, which must never be
         mistaken for a clean tree
     """
     common = [sys.executable, "-m", "ruff", "check"]
+    if config is not None:
+        common += ["--config", str(config)]
     try:
         structured = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv, no shell
             [*common, "--output-format", "json"],
