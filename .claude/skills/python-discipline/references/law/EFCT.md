@@ -2,7 +2,7 @@
 id: law/EFCT
 kind: law
 title: Effects, State and Time
-tokens: 2239
+tokens: 2281
 load_when:
   - "write a file"
   - "mutation"
@@ -39,7 +39,7 @@ never a single function that decides and acts.
 Domain and app code MUST NOT perform an effect. They compute a description of one.
 - **Why** A pure core means a domain test needs no environment and a domain failure
   implicates no environment.
-- **Check** `lint-imports` contract `domain-is-pure`
+- **Check** `lint-imports --config enforce/importlinter.toml` contract `ARCH-002 domain is pure` · `python tools/import_gate.py`
 - **See** [law/ARCH]
 
 ### EFCT-002 · Time, randomness and environment enter through ports  [BINDING] [check:explicit_effects]
@@ -133,7 +133,7 @@ Each persistent artifact MUST be written through one owning module. Clients, hoo
 agents go through the command surface, never directly to storage.
 - **Why** Two writers make every corruption a question of which one did it; one writer
   makes it an answer.
-- **Check** `lint-imports` contract `storage-has-one-owner`
+- **Check** `lint-imports --config enforce/importlinter.toml` contract `EFCT-012 storage has one owner` · `python tools/import_gate.py`
 - **See** [law/API]
 
 ---

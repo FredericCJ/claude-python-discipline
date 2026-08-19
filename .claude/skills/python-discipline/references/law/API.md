@@ -2,7 +2,7 @@
 id: law/API
 kind: law
 title: Contracts and Public Surface
-tokens: 2073
+tokens: 2093
 load_when:
   - "public API"
   - "contract"
@@ -62,7 +62,7 @@ detail. Where a file is deliberately hand-editable, that is a declared authoring
 whose next load re-runs full validation.
 - **Why** A sanctioned authoring surface with full revalidation is a different entry, not
   a weaker path; an unsanctioned one is a second writer with no owner.
-- **Check** `lint-imports` contract `storage-has-one-owner`
+- **Check** `lint-imports --config enforce/importlinter.toml` contract `EFCT-012 storage has one owner` · `python tools/import_gate.py`
 
 ---
 

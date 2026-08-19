@@ -404,6 +404,15 @@
    }
   },
   {
+   "id": "OPEN-008",
+   "type": "decision",
+   "label": "The Doxygen form is declared, not assumed",
+   "path": "discipline/meta/OPEN.md",
+   "attrs": {
+    "ledger": "meta/OPEN"
+   }
+  },
+  {
    "id": "layer:adapters",
    "type": "layer",
    "label": "adapters"
@@ -573,40 +582,50 @@
    "id": "mech:check:atomicity_qualified",
    "type": "mechanism",
    "label": "check:atomicity_qualified",
+   "path": "enforce/checks/atomicity_qualified.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
    "id": "mech:check:boundary_parsing",
    "type": "mechanism",
    "label": "check:boundary_parsing",
+   "path": "enforce/checks/boundary_parsing.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
    "id": "mech:check:compound_gate",
    "type": "mechanism",
    "label": "check:compound_gate",
+   "path": "enforce/checks/compound_gate.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
    "id": "mech:check:deviation_recorded",
    "type": "mechanism",
    "label": "check:deviation_recorded",
+   "path": "enforce/checks/deviation_recorded.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
    "id": "mech:check:dispatch_recorded",
    "type": "mechanism",
    "label": "check:dispatch_recorded",
+   "path": "enforce/checks/dispatch_recorded.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
@@ -643,96 +662,120 @@
    "id": "mech:check:error_channels",
    "type": "mechanism",
    "label": "check:error_channels",
+   "path": "enforce/checks/error_channels.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
    "id": "mech:check:exception_has_code",
    "type": "mechanism",
    "label": "check:exception_has_code",
+   "path": "enforce/checks/exception_has_code.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
    "id": "mech:check:exception_shape",
    "type": "mechanism",
    "label": "check:exception_shape",
+   "path": "enforce/checks/exception_shape.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
    "id": "mech:check:explicit_effects",
    "type": "mechanism",
    "label": "check:explicit_effects",
+   "path": "enforce/checks/explicit_effects.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
    "id": "mech:check:generated_provenance",
    "type": "mechanism",
    "label": "check:generated_provenance",
+   "path": "enforce/checks/generated_provenance.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
    "id": "mech:check:learning_scope",
    "type": "mechanism",
    "label": "check:learning_scope",
+   "path": "enforce/checks/learning_scope.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
    "id": "mech:check:learning_size",
    "type": "mechanism",
    "label": "check:learning_size",
+   "path": "enforce/checks/learning_size.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
    "id": "mech:check:ledger_append_only",
    "type": "mechanism",
    "label": "check:ledger_append_only",
+   "path": "enforce/checks/ledger_append_only.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
    "id": "mech:check:library_logging",
    "type": "mechanism",
    "label": "check:library_logging",
+   "path": "enforce/checks/library_logging.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
    "id": "mech:check:log_once",
    "type": "mechanism",
    "label": "check:log_once",
+   "path": "enforce/checks/log_once.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
    "id": "mech:check:no_magic_in_domain",
    "type": "mechanism",
    "label": "check:no_magic_in_domain",
+   "path": "enforce/checks/no_magic_in_domain.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
    "id": "mech:check:no_model_names",
    "type": "mechanism",
    "label": "check:no_model_names",
+   "path": "enforce/checks/no_model_names.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
@@ -749,24 +792,30 @@
    "id": "mech:check:oracle_declared",
    "type": "mechanism",
    "label": "check:oracle_declared",
+   "path": "enforce/checks/oracle_declared.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
    "id": "mech:check:plan_apply",
    "type": "mechanism",
    "label": "check:plan_apply",
+   "path": "enforce/checks/plan_apply.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
    "id": "mech:check:promotion_due",
    "type": "mechanism",
    "label": "check:promotion_due",
+   "path": "enforce/checks/promotion_due.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
@@ -783,24 +832,30 @@
    "id": "mech:check:redaction",
    "type": "mechanism",
    "label": "check:redaction",
+   "path": "enforce/checks/redaction.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
    "id": "mech:check:session_recorded",
    "type": "mechanism",
    "label": "check:session_recorded",
+   "path": "enforce/checks/session_recorded.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
    "id": "mech:check:single_wiring_point",
    "type": "mechanism",
    "label": "check:single_wiring_point",
+   "path": "enforce/checks/single_wiring_point.py",
    "attrs": {
-    "family": "check"
+    "family": "check",
+    "implemented": "true"
    }
   },
   {
@@ -1245,7 +1300,7 @@
    "type": "module",
    "label": "Contracts and Public Surface",
    "path": "discipline/law/API.md",
-   "tokens": 2073,
+   "tokens": 2093,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1257,7 +1312,7 @@
    "type": "module",
    "label": "Architecture and Coupling",
    "path": "discipline/law/ARCH.md",
-   "tokens": 2467,
+   "tokens": 2719,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1293,7 +1348,7 @@
    "type": "module",
    "label": "Documentation Comments",
    "path": "discipline/law/DOC.md",
-   "tokens": 2069,
+   "tokens": 2371,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1305,7 +1360,7 @@
    "type": "module",
    "label": "Effects, State and Time",
    "path": "discipline/law/EFCT.md",
-   "tokens": 2239,
+   "tokens": 2281,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1365,7 +1420,7 @@
    "type": "module",
    "label": "Typing and Contracts",
    "path": "discipline/law/TYPE.md",
-   "tokens": 2059,
+   "tokens": 2067,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1410,7 +1465,7 @@
    "type": "module",
    "label": "Open Decisions",
    "path": "discipline/meta/OPEN.md",
-   "tokens": 1645,
+   "tokens": 2138,
    "attrs": {
     "decay": "none",
     "kind": "meta"
@@ -1432,7 +1487,7 @@
    "type": "module",
    "label": "Document Format Specification",
    "path": "discipline/meta/SCHEMA.md",
-   "tokens": 2648,
+   "tokens": 2741,
    "attrs": {
     "decay": "none",
     "kind": "meta"
@@ -1742,7 +1797,7 @@
    "type": "rule",
    "label": "Dependencies point inward only",
    "path": "discipline/law/ARCH.md:44",
-   "tokens": 37,
+   "tokens": 68,
    "attrs": {
     "force": "BINDING",
     "module": "law/ARCH"
@@ -1752,7 +1807,7 @@
    "id": "ARCH-002",
    "type": "rule",
    "label": "The domain imports nothing that can perform I/O",
-   "path": "discipline/law/ARCH.md:51",
+   "path": "discipline/law/ARCH.md:59",
    "tokens": 48,
    "attrs": {
     "force": "BINDING",
@@ -1763,7 +1818,7 @@
    "id": "ARCH-003",
    "type": "rule",
    "label": "No adapter imports another adapter",
-   "path": "discipline/law/ARCH.md:60",
+   "path": "discipline/law/ARCH.md:68",
    "tokens": 29,
    "attrs": {
     "force": "BINDING",
@@ -1774,7 +1829,7 @@
    "id": "ARCH-004",
    "type": "rule",
    "label": "Each foreign dependency is imported in exactly one module",
-   "path": "discipline/law/ARCH.md:67",
+   "path": "discipline/law/ARCH.md:75",
    "tokens": 28,
    "attrs": {
     "force": "BINDING",
@@ -1785,7 +1840,7 @@
    "id": "ARCH-005",
    "type": "rule",
    "label": "Effects are named in the signature",
-   "path": "discipline/law/ARCH.md:75",
+   "path": "discipline/law/ARCH.md:83",
    "tokens": 56,
    "attrs": {
     "force": "BINDING",
@@ -1796,7 +1851,7 @@
    "id": "ARCH-006",
    "type": "rule",
    "label": "Domain functions are total or return a typed result",
-   "path": "discipline/law/ARCH.md:83",
+   "path": "discipline/law/ARCH.md:91",
    "tokens": 40,
    "attrs": {
     "force": "BINDING",
@@ -1807,7 +1862,7 @@
    "id": "ARCH-007",
    "type": "rule",
    "label": "Every port is a Protocol with a published contract",
-   "path": "discipline/law/ARCH.md:94",
+   "path": "discipline/law/ARCH.md:102",
    "tokens": 44,
    "attrs": {
     "force": "BINDING",
@@ -1818,7 +1873,7 @@
    "id": "ARCH-008",
    "type": "rule",
    "label": "Every port has a real, a fake and a faulty adapter",
-   "path": "discipline/law/ARCH.md:102",
+   "path": "discipline/law/ARCH.md:110",
    "tokens": 19,
    "attrs": {
     "force": "BINDING",
@@ -1829,7 +1884,7 @@
    "id": "ARCH-009",
    "type": "rule",
    "label": "One contract suite runs against every adapter",
-   "path": "discipline/law/ARCH.md:108",
+   "path": "discipline/law/ARCH.md:116",
    "tokens": 30,
    "attrs": {
     "force": "BINDING",
@@ -1840,7 +1895,7 @@
    "id": "ARCH-010",
    "type": "rule",
    "label": "A port earns its place from a stated justification",
-   "path": "discipline/law/ARCH.md:115",
+   "path": "discipline/law/ARCH.md:123",
    "tokens": 98,
    "attrs": {
     "force": "BINDING",
@@ -1851,7 +1906,7 @@
    "id": "ARCH-011",
    "type": "rule",
    "label": "Adapters are selected at one composition root",
-   "path": "discipline/law/ARCH.md:129",
+   "path": "discipline/law/ARCH.md:137",
    "tokens": 33,
    "attrs": {
     "force": "BINDING",
@@ -1862,7 +1917,7 @@
    "id": "ARCH-012",
    "type": "rule",
    "label": "No test-mode branch in production code",
-   "path": "discipline/law/ARCH.md:140",
+   "path": "discipline/law/ARCH.md:148",
    "tokens": 35,
    "attrs": {
     "force": "BINDING",
@@ -1873,7 +1928,7 @@
    "id": "ARCH-013",
    "type": "rule",
    "label": "Framework and transport types stay out of the domain",
-   "path": "discipline/law/ARCH.md:147",
+   "path": "discipline/law/ARCH.md:155",
    "tokens": 43,
    "attrs": {
     "force": "BINDING",
@@ -1884,7 +1939,7 @@
    "id": "ARCH-014",
    "type": "rule",
    "label": "Translation between representations is explicit",
-   "path": "discipline/law/ARCH.md:154",
+   "path": "discipline/law/ARCH.md:162",
    "tokens": 44,
    "attrs": {
     "force": "BINDING",
@@ -1895,7 +1950,7 @@
    "id": "ARCH-015",
    "type": "rule",
    "label": "Metaprogramming leaves the four questions answerable",
-   "path": "discipline/law/ARCH.md:161",
+   "path": "discipline/law/ARCH.md:169",
    "tokens": 45,
    "attrs": {
     "force": "BINDING",
@@ -1906,7 +1961,7 @@
    "id": "ARCH-016",
    "type": "rule",
    "label": "Module complexity stays within budget",
-   "path": "discipline/law/ARCH.md:168",
+   "path": "discipline/law/ARCH.md:176",
    "tokens": 18,
    "attrs": {
     "force": "BINDING",
@@ -1917,7 +1972,7 @@
    "id": "ARCH-017",
    "type": "rule",
    "label": "Prefer the direct call to the abstraction",
-   "path": "discipline/law/ARCH.md:174",
+   "path": "discipline/law/ARCH.md:182",
    "tokens": 38,
    "attrs": {
     "force": "ADVISORY",
@@ -2270,7 +2325,7 @@
    "type": "rule",
    "label": "Every named value is documented",
    "path": "discipline/law/DOC.md:49",
-   "tokens": 43,
+   "tokens": 71,
    "attrs": {
     "force": "BINDING",
     "module": "law/DOC"
@@ -2280,7 +2335,7 @@
    "id": "DOC-003",
    "type": "rule",
    "label": "Documentation is present whether or not it is generated",
-   "path": "discipline/law/DOC.md:57",
+   "path": "discipline/law/DOC.md:58",
    "tokens": 48,
    "attrs": {
     "force": "BINDING",
@@ -2291,7 +2346,7 @@
    "id": "DOC-004",
    "type": "rule",
    "label": "Documentation lives in docstrings wherever Python has a slot",
-   "path": "discipline/law/DOC.md:69",
+   "path": "discipline/law/DOC.md:70",
    "tokens": 41,
    "attrs": {
     "force": "BINDING",
@@ -2302,7 +2357,7 @@
    "id": "DOC-005",
    "type": "rule",
    "label": "Docstrings are parsed as documentation, not text",
-   "path": "discipline/law/DOC.md:76",
+   "path": "discipline/law/DOC.md:77",
    "tokens": 25,
    "attrs": {
     "force": "BINDING",
@@ -2313,7 +2368,7 @@
    "id": "DOC-006",
    "type": "rule",
    "label": "A brief statement comes first",
-   "path": "discipline/law/DOC.md:84",
+   "path": "discipline/law/DOC.md:85",
    "tokens": 35,
    "attrs": {
     "force": "BINDING",
@@ -2324,8 +2379,8 @@
    "id": "DOC-007",
    "type": "rule",
    "label": "Every parameter, result and raised exception is documented",
-   "path": "discipline/law/DOC.md:91",
-   "tokens": 41,
+   "path": "discipline/law/DOC.md:92",
+   "tokens": 65,
    "attrs": {
     "force": "BINDING",
     "module": "law/DOC"
@@ -2335,7 +2390,7 @@
    "id": "DOC-008",
    "type": "rule",
    "label": "Types are not restated in prose",
-   "path": "discipline/law/DOC.md:98",
+   "path": "discipline/law/DOC.md:102",
    "tokens": 37,
    "attrs": {
     "force": "BINDING",
@@ -2346,7 +2401,7 @@
    "id": "DOC-009",
    "type": "rule",
    "label": "Documentation states the contract, not the mechanism",
-   "path": "discipline/law/DOC.md:110",
+   "path": "discipline/law/DOC.md:114",
    "tokens": 47,
    "attrs": {
     "force": "BINDING",
@@ -2357,7 +2412,7 @@
    "id": "DOC-010",
    "type": "rule",
    "label": "A Doxygen run produces no warnings",
-   "path": "discipline/law/DOC.md:118",
+   "path": "discipline/law/DOC.md:122",
    "tokens": 33,
    "attrs": {
     "force": "BINDING",
@@ -2368,7 +2423,7 @@
    "id": "DOC-011",
    "type": "rule",
    "label": "The documentation check generates output",
-   "path": "discipline/law/DOC.md:125",
+   "path": "discipline/law/DOC.md:129",
    "tokens": 18,
    "attrs": {
     "force": "BINDING",
@@ -2379,7 +2434,7 @@
    "id": "DOC-012",
    "type": "rule",
    "label": "Generated documentation is not committed",
-   "path": "discipline/law/DOC.md:133",
+   "path": "discipline/law/DOC.md:137",
    "tokens": 33,
    "attrs": {
     "force": "BINDING",
@@ -2390,10 +2445,21 @@
    "id": "DOC-013",
    "type": "rule",
    "label": "Prefer one sentence that earns its place",
-   "path": "discipline/law/DOC.md:143",
+   "path": "discipline/law/DOC.md:147",
    "tokens": 33,
    "attrs": {
     "force": "ADVISORY",
+    "module": "law/DOC"
+   }
+  },
+  {
+   "id": "DOC-014",
+   "type": "rule",
+   "label": "A project declares which engine reads its documentation",
+   "path": "discipline/law/DOC.md:156",
+   "tokens": 44,
+   "attrs": {
+    "force": "BINDING",
     "module": "law/DOC"
    }
   },
@@ -5684,6 +5750,12 @@
   },
   {
    "type": "cites",
+   "src": "ARCH-001",
+   "dst": "DOC-014",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
    "src": "ARCH-002",
    "dst": "ARCH-006",
    "origin": "derived"
@@ -5763,6 +5835,12 @@
   {
    "type": "cites",
    "src": "DOC-002",
+   "dst": "DOC-014",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-002",
    "dst": "fact/doxygen",
    "origin": "derived"
   },
@@ -5776,6 +5854,12 @@
    "type": "cites",
    "src": "DOC-005",
    "dst": "fact/doxygen",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-007",
+   "dst": "DOC-014",
    "origin": "derived"
   },
   {
@@ -5812,6 +5896,24 @@
    "type": "cites",
    "src": "DOC-012",
    "dst": "law/DEP",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-014",
+   "dst": "DOC-002",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-014",
+   "dst": "DOC-007",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-014",
+   "dst": "meta/OPEN",
    "origin": "derived"
   },
   {
@@ -6556,6 +6658,12 @@
    "type": "contains",
    "src": "law/DOC",
    "dst": "DOC-013",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/DOC",
+   "dst": "DOC-014",
    "origin": "derived"
   },
   {
@@ -7724,6 +7832,12 @@
   },
   {
    "type": "enforced_by",
+   "src": "DOC-007",
+   "dst": "mech:check:doc_coverage",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
    "src": "DOC-008",
    "dst": "mech:check:doc_style",
    "origin": "derived"
@@ -7750,6 +7864,12 @@
    "type": "enforced_by",
    "src": "DOC-012",
    "dst": "mech:check:generated_provenance",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "DOC-014",
+   "dst": "mech:check:doc_coverage",
    "origin": "derived"
   },
   {
@@ -9237,6 +9357,18 @@
   {
    "type": "grounds_on",
    "src": "DOC-013",
+   "dst": "fact/py-typing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-014",
+   "dst": "fact/doxygen",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-014",
    "dst": "fact/py-typing",
    "origin": "derived"
   },

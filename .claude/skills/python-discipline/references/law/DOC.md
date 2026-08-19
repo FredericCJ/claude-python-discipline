@@ -2,7 +2,7 @@
 id: law/DOC
 kind: law
 title: Documentation Comments
-tokens: 2069
+tokens: 2371
 load_when:
   - "docstring"
   - "documentation comment"
@@ -48,11 +48,12 @@ about its audience.
 
 ### DOC-002 · Every named value is documented  [BINDING] [check:doc_coverage]
 Module-level constants, class attributes, dataclass fields and enum members MUST carry a
-`##` comment block, since Python provides no docstring slot for them.
+documentation comment, since Python provides no docstring slot for them. Under a project
+declaring Doxygen it MUST be a `##` block, which is the only form that engine reads.
 - **Why** These are exactly the elements a reader most often needs and the linters cannot
   see; leaving them out makes "every element" mean "every element with a convenient slot".
-- **Check** `python -m checks.doc_coverage`
-- **See** [fact/doxygen]
+- **Check** `python -m checks.doc_coverage`, which reads the declared engine
+- **See** [fact/doxygen] · [DOC-014]
 
 ### DOC-003 · Documentation is present whether or not it is generated  [BINDING] [auto:ruff:D100] [check:doc_coverage]
 The presence checks MUST run in the ordinary gate, not in a documentation job. A repository
@@ -88,12 +89,15 @@ blank line before any further detail.
   element whose first line is a continuation has no summary anywhere.
 - **Check** `ruff check` (rules `D205`, `D400`, `D415`)
 
-### DOC-007 · Every parameter, result and raised exception is documented  [BINDING] [auto:doxygen]
-A documented callable MUST document each parameter with `@param`, its result with `@return`
-or `@retval`, and each exception it raises with `@throws`.
+### DOC-007 · Every parameter, result and raised exception is documented  [BINDING] [auto:doxygen] [check:doc_coverage]
+A documented callable MUST document each parameter, its result, and each exception it
+raises. Under a project declaring Doxygen these MUST be written `@param`, `@return` or
+`@retval`, and `@throws`, which is the vocabulary that engine reads.
 - **Why** These are the questions a failing call raises, and the ones a signature alone
   cannot answer: what a parameter *means*, what the result *signifies*, when it *fails*.
-- **Check** `doxygen enforce/Doxyfile` with `WARN_NO_PARAMDOC` and `WARN_IF_INCOMPLETE_DOC`
+- **Check** `doxygen enforce/Doxyfile` with `WARN_NO_PARAMDOC` and `WARN_IF_INCOMPLETE_DOC` ·
+  `python -m checks.doc_coverage`, which reads the declared engine
+- **See** [DOC-014]
 
 ### DOC-008 · Types are not restated in prose  [BINDING] [check:doc_style]
 Documentation MUST NOT repeat a parameter's or return value's type. The signature carries
@@ -148,3 +152,14 @@ sentence rather than a padded block.
   the rest.
 - **Why** The objection to universal documentation is that it produces filler. The answer
   is short and true, not absent.
+
+### DOC-014 · A project declares which engine reads its documentation  [BINDING] [check:doc_coverage]
+A project MUST declare its documentation engine in `[tool.agent-discipline]`. An
+undeclared project is held to [DOC-001] and [DOC-003] alone, and every run says so.
+- **Why** [DOC-002] and [DOC-007] name one engine's punctuation. Demanding it of a project
+  documenting in another produced 1,064 findings of form against 18 of substance, which is
+  how a check stops being read; leaving it undeclared and silent is worse, because a
+  narrowed run and a clean one then look identical.
+- **Check** `python -m checks.doc_coverage`, which prints the declaration it found and
+  every rule that declaration leaves inactive
+- **See** [DOC-002] · [DOC-007] · [meta/OPEN]

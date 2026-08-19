@@ -2,7 +2,7 @@
 id: law/TYPE
 kind: law
 title: Typing and Contracts
-tokens: 2059
+tokens: 2067
 load_when:
   - "type hint"
   - "mypy"
@@ -41,7 +41,7 @@ The package MUST pass both configured checkers in their strict configurations, w
 enabled rule set committed to version control.
 - **Why** The two infer differently, so agreement between them is a differential oracle;
   "strict" alone names no portable rule set and guarantees nothing.
-- **Check** `mypy --strict src/` · `pyright src/`
+- **Check** `mypy --strict src/` · `pyright src/` · `python tools/type_gate.py`
 - **See** [law/TEST]
 
 ### TYPE-002 · The domain carries no `Any`  [BINDING] [auto:mypy] [check:domain_purity]
