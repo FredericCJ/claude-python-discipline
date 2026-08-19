@@ -9,7 +9,7 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 | Status | Count |
 |---|---|
 | active | 2 |
-| candidate | 97 |
+| candidate | 99 |
 | superseded | 1 |
 
 ## active
@@ -863,6 +863,24 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `command:discrimination`
 - **About** FLOW-007
 - **Verify** `python tools/discrimination_gate.py`
+
+### L-0101 · ALLOC-008 and TEAMS-002 are the same rule -- same obligation, same rationale, same check, near-identical wording. Two ids for one obligation means a reader who greps either finds half the rule and believes it is the whole.
+
+- **Do** When two rules state one obligation, retire one with a Superseded by field rather than keeping both. The id survives so an old citation still lands somewhere true.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `rule:ALLOC-008`
+- **About** TEAMS-002
+- **Verify** `python tools/validate.py`
+
+### L-0102 · A rule whose own check documents it as undecidable should be ADVISORY, not BINDING-and-unbuilt. ERR-011, ERR-014, TYPE-011 and TYPE-012 were BINDING while the checks naming them said in prose they could not decide them -- so the force tag promised a gate that would never fire.
+
+- **Do** Split undecided rules by whether a mechanism is POSSIBLE: advisory where it is a judgement, binding-and-unbuilt where it is merely unwritten. The corpus has both words and was using one for both cases.
+- **Kind** rule-application · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `error:V080`
+- **About** FLOW-006
+- **Verify** `python tools/validate.py`
 
 ## superseded
 

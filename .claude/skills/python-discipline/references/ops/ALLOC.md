@@ -2,7 +2,7 @@
 id: ops/ALLOC
 kind: ops
 title: Workload Allocation
-tokens: 2128
+tokens: 2213
 load_when:
   - "dispatch a subagent"
   - "which model"
@@ -136,14 +136,19 @@ running the whole at a high tier.
   agent, and the contract survives the task.
 - **Check** `python -m checks.dispatch_recorded`
 
-### ALLOC-008 · A restriction is not lifted by an instruction  [BINDING] [check:dispatch_recorded]
-A dispatch message cannot grant a capability the receiving agent does not hold, and that
-agent MUST NOT achieve the effect by other means — writing files through a shell when it
-holds no editing tool, for example.
-- **Why** The cost of refusing is one wasted dispatch. The cost of circumventing is that
-  every verdict the agent ever issued becomes open to question. That asymmetry is why this
-  rule is absolute.
-- **Check** `python -m checks.dispatch_recorded`
+### ALLOC-008 · A restriction is not lifted by an instruction  [ADVISORY]
+Retired as a duplicate. The obligation is [TEAMS-002], word for word in substance: a
+dispatch cannot grant a capability the receiving agent does not hold, and that agent must
+not achieve the effect by other means.
+- **Why** Two ids for one obligation is worse than either alone. A reader who greps
+  `ALLOC-008` and a reader who greps `TEAMS-002` find different halves of the same rule and
+  each believes they have the whole of it, and a finding cites whichever the check's author
+  reached for first.
+- **Superseded by** TEAMS-002
+- **No mechanism** The heading survives only to reserve the id, which is never reused. It
+  is `[ADVISORY]` rather than deleted because a citation in an old review comment or an old
+  error payload must still land somewhere that says what happened.
+- **See** [ops/teams]
 
 ### ALLOC-009 · Misclassification belongs to the coordinator  [BINDING] [check:dispatch_recorded]
 When returned work is inadequate, the coordinator MUST re-score and record which of four

@@ -840,3 +840,39 @@ def test_a_plain_domain_class_does_not_fire(tmp_path: Path) -> None:
 
             identifier: str
     ''')
+
+
+def test_a_mutable_collection_parameter_fires(tmp_path: Path) -> None:
+    """TYPE-008: a mutable collection in a signature is an undeclared output.
+
+    The caller cannot tell from the type whether their list comes back changed,
+    and the day it does the defect is attributed to whoever read it rather than
+    whoever wrote it.
+
+    @param tmp_path the fixture directory
+    """
+    assert "TYPE-008" in fired(DomainPurityCheck(), tmp_path, '''
+        """M."""
+
+        def widen(names: list[str]) -> tuple[str, ...]:
+            """Take a mutable list the caller still owns."""
+            return tuple(names)
+    ''')
+
+
+def test_a_mutable_return_does_not_fire(tmp_path: Path) -> None:
+    """...and handing back a fresh list owns nothing of the caller's.
+
+    Load-bearing. The rule is about a parameter the callee does not own; a check
+    that reported every `-> list[str]` would report most correct code, and a
+    check that noisy is switched off within a day.
+
+    @param tmp_path the fixture directory
+    """
+    assert "TYPE-008" not in fired(DomainPurityCheck(), tmp_path, '''
+        """M."""
+
+        def collect(names: tuple[str, ...]) -> list[str]:
+            """Return a fresh list nobody else holds."""
+            return list(names)
+    ''')

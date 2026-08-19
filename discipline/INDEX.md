@@ -16,7 +16,7 @@ decay: none
 
 **`mechanized` says a mechanism exists, not that it decides the whole rule.** The measurement is presence on disk; how completely a check covers the sentence above it is a judgement no build can make. `ARCH-012` is the worked example: `check:no_test_branches` is real and runs, and it matches a closed list of test signals, so `if os.environ.get("PYTEST_CURRENT_TEST")` -- the canonical pytest detector -- passes it, as does any indirection through a module constant. Read a `mechanized` row as *something will catch the obvious cases*, and the rule's own text as what you actually owe.
 
-20 of 169 binding rules are not mechanically decided. `enforce/ENFORCEMENT.md` names the mechanisms still to build.
+14 of 164 binding rules are not mechanically decided. `enforce/ENFORCEMENT.md` names the mechanisms still to build.
 
 ## Modules
 
@@ -35,12 +35,12 @@ decay: none
 | [law/DIAG](law/DIAG.md) | law | 2499 | 16 | exception, traceback, logging, error message, error code, correlation id |
 | [law/DOC](law/DOC.md) | law | 2367 | 14 | docstring, documentation comment, doxygen, @param, @return, document this function |
 | [law/EFCT](law/EFCT.md) | law | 2281 | 16 | write a file, mutation, state machine, transaction, rollback, dry run |
-| [law/ERR](law/ERR.md) | law | 2450 | 16 | raise, except, Result, error type, exception hierarchy, validation |
+| [law/ERR](law/ERR.md) | law | 2609 | 16 | raise, except, Result, error type, exception hierarchy, validation |
 | [law/FLOW](law/FLOW.md) | law | 1994 | 13 | definition of done, before i commit, what should i do first, ADR, decision record, review |
 | [law/LEARN](law/LEARN.md) | law | 1888 | 12 | learning, record what i learned, session memory, why did this fail before, calibration, promote a learning |
 | [law/TEST](law/TEST.md) | law | 2777 | 19 | write a test, pytest, fixture, hypothesis, property test, mutation |
-| [law/TYPE](law/TYPE.md) | law | 2067 | 15 | type hint, mypy, pyright, Protocol, generic, dataclass |
-| [ops/ALLOC](ops/ALLOC.md) | ops | 2128 | 10 | dispatch a subagent, which model, how much effort, delegate, escalate, sub-agent |
+| [law/TYPE](law/TYPE.md) | law | 2144 | 15 | type hint, mypy, pyright, Protocol, generic, dataclass |
+| [ops/ALLOC](ops/ALLOC.md) | ops | 2213 | 10 | dispatch a subagent, which model, how much effort, delegate, escalate, sub-agent |
 | [ops/teams](ops/teams.md) | ops | 2584 | 6 | agent team, teammate, subagent definition, spawn an agent, task list, slash command |
 
 ## Rules
@@ -181,10 +181,10 @@ decay: none
 | `ERR-008` | BINDING | `external` | `auto:ruff:BLE001` | Catch narrowly |
 | `ERR-009` | BINDING | `external` | `auto:ruff:TRY300` | The `try` body holds only what can fail |
 | `ERR-010` | BINDING | `mechanized` | `check:exception_shape` | Grouped failures propagate as a group |
-| `ERR-011` | BINDING | `unbuilt` **(!)** | `check:boundary_parsing` | Parse at the boundary; do not validate in the interior |
+| `ERR-011` | ADVISORY | `unmechanized` | — | Parse at the boundary; do not validate in the interior |
 | `ERR-012` | BINDING | `mechanized` | `check:assert_usage` | Boundary validation survives optimized bytecode |
 | `ERR-013` | BINDING | `mechanized` | `check:boundary_parsing` | Try the operation rather than pre-checking the world |
-| `ERR-014` | BINDING | `unbuilt` **(!)** | `check:error_channels` | Expected failure and contract violation are distinguished |
+| `ERR-014` | ADVISORY | `unmechanized` | — | Expected failure and contract violation are distinguished |
 | `ERR-015` | BINDING | `mechanized` | `fitness:test_no_unhandled_escape` | No unhandled exception reaches the process boundary |
 | `ERR-016` | BINDING | `mechanized` | `fitness:test_fault_containment` | A fault is contained at the boundary that detected it |
 
@@ -258,11 +258,11 @@ decay: none
 | `TYPE-005` | BINDING | `mechanized` | `check:boundary_parsing` | A constrained type is a wrapper with a parsing constructor |
 | `TYPE-006` | BINDING | `external` | `auto:mypy` `check:domain_purity` | Closed sets are enumerations |
 | `TYPE-007` | BINDING | `mechanized` | `check:domain_purity` | Domain values are frozen and slotted |
-| `TYPE-008` | BINDING | `unbuilt` **(!)** | `check:domain_purity` | Signatures take read-only collection types |
+| `TYPE-008` | BINDING | `mechanized` | `check:domain_purity` | Signatures take read-only collection types |
 | `TYPE-009` | BINDING | `mechanized` | `fitness:test_every_port_is_a_protocol` | Ports are structural protocols |
 | `TYPE-010` | BINDING | `mechanized` | `check:boundary_parsing` | Runtime protocol checks are not contract checks |
-| `TYPE-011` | BINDING | `unbuilt` **(!)** | `check:boundary_parsing` | What the checker cannot enforce is enforced at runtime |
-| `TYPE-012` | BINDING | `unbuilt` **(!)** | `check:boundary_parsing` | Signature or docstring, by who can enforce it |
+| `TYPE-011` | ADVISORY | `unmechanized` | — | What the checker cannot enforce is enforced at runtime |
+| `TYPE-012` | ADVISORY | `unmechanized` | — | Signature or docstring, by who can enforce it |
 | `TYPE-013` | BINDING | `external` | `auto:mypy` | Conversions are explicit |
 | `TYPE-014` | BINDING | `unbuilt` **(!)** | `check:domain_purity` | Immutability is declared, and not mistaken for a guarantee |
 | `TYPE-015` | ADVISORY | `unmechanized` | — | Type sophistication stays proportionate |
@@ -278,7 +278,7 @@ decay: none
 | `ALLOC-005` | BINDING | `unbuilt` **(!)** | `check:dispatch_recorded` | Escalation rules beat the mechanical permit |
 | `ALLOC-006` | BINDING | `unbuilt` **(!)** | `check:dispatch_recorded` | Sharpen the contract before raising the tier |
 | `ALLOC-007` | BINDING | `unbuilt` **(!)** | `check:dispatch_recorded` | Split before upgrading |
-| `ALLOC-008` | BINDING | `unbuilt` **(!)** | `check:dispatch_recorded` | A restriction is not lifted by an instruction |
+| `ALLOC-008` | ADVISORY | `unmechanized` | — | A restriction is not lifted by an instruction |
 | `ALLOC-009` | BINDING | `unbuilt` **(!)** | `check:dispatch_recorded` | Misclassification belongs to the coordinator |
 | `ALLOC-010` | BINDING | `mechanized` | `check:allocation_declared` | The gate's tier follows the risk under test |
 

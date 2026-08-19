@@ -12,7 +12,7 @@ sees the transitive graph, this one sees the line and can name it.
 from __future__ import annotations
 
 import ast
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from . import Finding, ModuleCheck, is_test_path, main
 
@@ -56,6 +56,20 @@ PURE_NAMES: frozenset[tuple[str, str]] = frozenset({
     ("datetime", "UTC"),
 })
 
+## Mutable collection types a domain signature may not take for a parameter the
+## callee does not own (`TYPE-008`). A mutable collection in a signature is an
+## undeclared output channel: the caller cannot tell from the type whether their
+## list comes back changed, and the day it does the defect is attributed to
+## whoever read it rather than whoever wrote it.
+##
+## The read-only counterparts -- `Sequence`, `Mapping`, `Set`, `Iterable`,
+## `frozenset` -- say the same thing about the shape and one more thing about the
+## ownership.
+MUTABLE_COLLECTIONS: Final[frozenset[str]] = frozenset({
+    "list", "dict", "set", "bytearray", "List", "Dict", "Set",
+    "MutableSequence", "MutableMapping", "MutableSet",
+})
+
 ## Types owned by a framework or a transport. A domain modelled in these is
 ## coupled to them at every call site (ARCH-013).
 FOREIGN_TYPES = frozenset({
@@ -78,7 +92,8 @@ class DomainPurityCheck(ModuleCheck):
     ## Invoked as `python -m checks.domain_purity`.
     name = "domain_purity"
     ## The law/ARCH and law/TYPE rules this mechanism decides.
-    rules = ("ARCH-002", "ARCH-013", "TYPE-002", "TYPE-006", "TYPE-007")
+    rules = ("ARCH-002", "ARCH-013", "TYPE-002", "TYPE-006", "TYPE-007",
+             "TYPE-008")
 
     def visit_module(self, tree: ast.Module, path: Path, layer: str) -> Iterator[Finding]:
         """Yield findings for one module, silent outside the domain layer.
@@ -168,6 +183,10 @@ class DomainPurityCheck(ModuleCheck):
         for node in ast.walk(tree):
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 continue
+            # Returns are excluded: handing back a fresh list is ordinary and
+            # owns nothing of the caller's. The rule is about a parameter the
+            # callee does not own, so only parameters are examined.
+            parameters = set(_annotations_of(node, returns=False))
             for annotation in _annotations_of(node):
                 for name in _names_in(annotation):
                     if name == "Any":
@@ -181,6 +200,14 @@ class DomainPurityCheck(ModuleCheck):
                             "ARCH-013", path, annotation.lineno,
                             f"framework or transport type `{name}` in a domain signature",
                             "Translate to a domain type at the boundary (ARCH-014).",
+                        )
+                    elif name in MUTABLE_COLLECTIONS and annotation in parameters:
+                        yield Finding(
+                            "TYPE-008", path, annotation.lineno,
+                            f"mutable `{name}` in a domain parameter",
+                            "Take `Sequence`, `Mapping` or `Set`. A mutable "
+                            "collection in a signature is an undeclared output "
+                            "channel the caller cannot see.",
                         )
                 if _is_literal_union(annotation):
                     yield Finding(
@@ -240,7 +267,8 @@ def _imported_modules(node: ast.AST) -> Iterator[tuple[str, str | None, int]]:
             yield node.module, alias.name, node.lineno
 
 
-def _annotations_of(node: ast.FunctionDef | ast.AsyncFunctionDef) -> Iterator[ast.expr]:
+def _annotations_of(node: ast.FunctionDef | ast.AsyncFunctionDef, *,
+                    returns: bool = True) -> Iterator[ast.expr]:
     """Every annotation that forms part of a function's published contract.
 
     Positional-only, positional-or-keyword and keyword-only parameters, plus
@@ -249,13 +277,16 @@ def _annotations_of(node: ast.FunctionDef | ast.AsyncFunctionDef) -> Iterator[as
     check's.
 
     @param node the function definition
+    @param returns whether to include the return annotation. `TYPE-008` is about
+        a parameter the callee does not own, and handing back a fresh list owns
+        nothing of the caller's, so that rule asks for parameters alone
     @return the annotation expressions, parameters first and the return last
     """
     args = node.args
     for arg in (*args.posonlyargs, *args.args, *args.kwonlyargs, args.vararg, args.kwarg):
         if arg is not None and arg.annotation is not None:
             yield arg.annotation
-    if node.returns is not None:
+    if returns and node.returns is not None:
         yield node.returns
 
 

@@ -2,7 +2,7 @@
 id: law/TYPE
 kind: law
 title: Typing and Contracts
-tokens: 2067
+tokens: 2144
 load_when:
   - "type hint"
   - "mypy"
@@ -115,22 +115,26 @@ contract; it confirms member existence only, never signature or behaviour.
   failure attributed to the wrong component.
 - **Check** `python -m checks.boundary_parsing`
 
-### TYPE-011 · What the checker cannot enforce is enforced at runtime  [BINDING] [check:boundary_parsing]
+### TYPE-011 · What the checker cannot enforce is enforced at runtime  [ADVISORY]
 Value ranges, cross-field invariants, ordering and temporal constraints, units, and
 stateful protocols MUST be enforced by boundary parsing or an explicit runtime contract,
 and stated in the docstring. They MUST NOT be assumed carried by an annotation.
 - **Why** Any claim that strict typing guarantees correctness is false, and a contract
   that relies on it fails without ever having been checked.
-- **Check** `python -m checks.boundary_parsing`
+- **No mechanism** Which constraints a checker *could* have carried is a judgement
+  about the type system's reach on that expression, not a property of the syntax.
+  `check:boundary_parsing` named this rule and never reported it.
 - **See** [TYPE-005] · [law/ERR]
 
-### TYPE-012 · Signature or docstring, by who can enforce it  [BINDING] [check:boundary_parsing]
+### TYPE-012 · Signature or docstring, by who can enforce it  [ADVISORY]
 If a checker can enforce a constraint, it MUST be in the signature. If only a human or a
 runtime check can, it MUST be in the docstring and backed by a runtime check where it
 matters.
 - **Why** A constraint in prose that a checker could have carried is a guarantee
   downgraded to a hope for no reason.
-- **Check** `python -m checks.boundary_parsing`
+- **No mechanism** The rule turns on who *can* enforce a constraint, which is the
+  same judgement as [TYPE-011] read from the other side. `check:boundary_parsing`
+  named it and never reported it.
 
 ### TYPE-013 · Conversions are explicit  [BINDING] [auto:mypy]
 Numeric and string conversions MUST be written explicitly; implicit coercion and

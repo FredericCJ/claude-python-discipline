@@ -9,7 +9,7 @@ As of **2026-08-19**. Regenerate with `python tools/learn.py calibrate --as-of 2
 | Measure | Value |
 |---|---|
 | sessions recorded | 6 |
-| learnings recorded | 100 |
+| learnings recorded | 102 |
 | outcomes reported | 3 |
 | of those, helped | 2 |
 | of those, noise | 1 |
@@ -25,10 +25,10 @@ As of **2026-08-19**. Regenerate with `python tools/learn.py calibrate --as-of 2
 | Kind | Count |
 |---|---|
 | constraint | 13 |
-| defect | 45 |
+| defect | 46 |
 | diagnostic | 12 |
 | procedure | 28 |
-| rule-application | 2 |
+| rule-application | 3 |
 
 ## Parameters in force
 

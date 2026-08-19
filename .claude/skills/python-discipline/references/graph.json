@@ -1387,7 +1387,7 @@
    "type": "module",
    "label": "Error Semantics",
    "path": "discipline/law/ERR.md",
-   "tokens": 2450,
+   "tokens": 2609,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1435,7 +1435,7 @@
    "type": "module",
    "label": "Typing and Contracts",
    "path": "discipline/law/TYPE.md",
-   "tokens": 2067,
+   "tokens": 2144,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1513,7 +1513,7 @@
    "type": "module",
    "label": "Workload Allocation",
    "path": "discipline/ops/ALLOC.md",
-   "tokens": 2128,
+   "tokens": 2213,
    "attrs": {
     "decay": "months",
     "kind": "ops",
@@ -1616,7 +1616,7 @@
    "path": "discipline/ops/ALLOC.md:139",
    "tokens": 58,
    "attrs": {
-    "force": "BINDING",
+    "force": "ADVISORY",
     "module": "ops/ALLOC"
    }
   },
@@ -1624,7 +1624,7 @@
    "id": "ALLOC-009",
    "type": "rule",
    "label": "Misclassification belongs to the coordinator",
-   "path": "discipline/ops/ALLOC.md:148",
+   "path": "discipline/ops/ALLOC.md:153",
    "tokens": 52,
    "attrs": {
     "force": "BINDING",
@@ -1635,7 +1635,7 @@
    "id": "ALLOC-010",
    "type": "rule",
    "label": "The gate's tier follows the risk under test",
-   "path": "discipline/ops/ALLOC.md:157",
+   "path": "discipline/ops/ALLOC.md:162",
    "tokens": 65,
    "attrs": {
     "force": "BINDING",
@@ -2771,7 +2771,7 @@
    "path": "discipline/law/ERR.md:147",
    "tokens": 46,
    "attrs": {
-    "force": "BINDING",
+    "force": "ADVISORY",
     "module": "law/ERR"
    }
   },
@@ -2779,7 +2779,7 @@
    "id": "ERR-012",
    "type": "rule",
    "label": "Boundary validation survives optimized bytecode",
-   "path": "discipline/law/ERR.md:155",
+   "path": "discipline/law/ERR.md:159",
    "tokens": 23,
    "attrs": {
     "force": "BINDING",
@@ -2790,7 +2790,7 @@
    "id": "ERR-013",
    "type": "rule",
    "label": "Try the operation rather than pre-checking the world",
-   "path": "discipline/law/ERR.md:162",
+   "path": "discipline/law/ERR.md:166",
    "tokens": 58,
    "attrs": {
     "force": "BINDING",
@@ -2801,10 +2801,10 @@
    "id": "ERR-014",
    "type": "rule",
    "label": "Expected failure and contract violation are distinguished",
-   "path": "discipline/law/ERR.md:174",
+   "path": "discipline/law/ERR.md:178",
    "tokens": 45,
    "attrs": {
-    "force": "BINDING",
+    "force": "ADVISORY",
     "module": "law/ERR"
    }
   },
@@ -2812,7 +2812,7 @@
    "id": "ERR-015",
    "type": "rule",
    "label": "No unhandled exception reaches the process boundary",
-   "path": "discipline/law/ERR.md:181",
+   "path": "discipline/law/ERR.md:188",
    "tokens": 29,
    "attrs": {
     "force": "BINDING",
@@ -2823,7 +2823,7 @@
    "id": "ERR-016",
    "type": "rule",
    "label": "A fault is contained at the boundary that detected it",
-   "path": "discipline/law/ERR.md:189",
+   "path": "discipline/law/ERR.md:196",
    "tokens": 36,
    "attrs": {
     "force": "BINDING",
@@ -3497,7 +3497,7 @@
    "path": "discipline/law/TYPE.md:118",
    "tokens": 68,
    "attrs": {
-    "force": "BINDING",
+    "force": "ADVISORY",
     "module": "law/TYPE"
    }
   },
@@ -3505,10 +3505,10 @@
    "id": "TYPE-012",
    "type": "rule",
    "label": "Signature or docstring, by who can enforce it",
-   "path": "discipline/law/TYPE.md:127",
+   "path": "discipline/law/TYPE.md:129",
    "tokens": 49,
    "attrs": {
-    "force": "BINDING",
+    "force": "ADVISORY",
     "module": "law/TYPE"
    }
   },
@@ -3516,7 +3516,7 @@
    "id": "TYPE-013",
    "type": "rule",
    "label": "Conversions are explicit",
-   "path": "discipline/law/TYPE.md:135",
+   "path": "discipline/law/TYPE.md:139",
    "tokens": 35,
    "attrs": {
     "force": "BINDING",
@@ -3527,7 +3527,7 @@
    "id": "TYPE-014",
    "type": "rule",
    "label": "Immutability is declared, and not mistaken for a guarantee",
-   "path": "discipline/law/TYPE.md:141",
+   "path": "discipline/law/TYPE.md:145",
    "tokens": 38,
    "attrs": {
     "force": "BINDING",
@@ -3538,7 +3538,7 @@
    "id": "TYPE-015",
    "type": "rule",
    "label": "Type sophistication stays proportionate",
-   "path": "discipline/law/TYPE.md:148",
+   "path": "discipline/law/TYPE.md:152",
    "tokens": 30,
    "attrs": {
     "force": "ADVISORY",
@@ -5904,6 +5904,12 @@
   },
   {
    "type": "cites",
+   "src": "ALLOC-008",
+   "dst": "ops/teams",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
    "src": "ALLOC-010",
    "dst": "meta/OPEN",
    "origin": "derived"
@@ -7578,12 +7584,6 @@
   },
   {
    "type": "enforced_by",
-   "src": "ALLOC-008",
-   "dst": "mech:check:dispatch_recorded",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
    "src": "ALLOC-009",
    "dst": "mech:check:dispatch_recorded",
    "origin": "derived"
@@ -8208,12 +8208,6 @@
   },
   {
    "type": "enforced_by",
-   "src": "ERR-011",
-   "dst": "mech:check:boundary_parsing",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
    "src": "ERR-012",
    "dst": "mech:check:assert_usage",
    "origin": "derived"
@@ -8222,12 +8216,6 @@
    "type": "enforced_by",
    "src": "ERR-013",
    "dst": "mech:check:boundary_parsing",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
-   "src": "ERR-014",
-   "dst": "mech:check:error_channels",
    "origin": "derived"
   },
   {
@@ -8599,18 +8587,6 @@
   {
    "type": "enforced_by",
    "src": "TYPE-010",
-   "dst": "mech:check:boundary_parsing",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
-   "src": "TYPE-011",
-   "dst": "mech:check:boundary_parsing",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
-   "src": "TYPE-012",
    "dst": "mech:check:boundary_parsing",
    "origin": "derived"
   },
@@ -10959,6 +10935,12 @@
    "src": "TYPE-006",
    "dst": "CONF-015",
    "origin": "declared"
+  },
+  {
+   "type": "supersedes",
+   "src": "TEAMS-002",
+   "dst": "ALLOC-008",
+   "origin": "derived"
   },
   {
    "type": "tensions_with",

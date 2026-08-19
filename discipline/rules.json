@@ -345,7 +345,7 @@
       "id": "law/ERR",
       "kind": "law",
       "title": "Error Semantics",
-      "tokens": 2450,
+      "tokens": 2609,
       "load_when": [
         "raise",
         "except",
@@ -451,7 +451,7 @@
       "id": "law/TYPE",
       "kind": "law",
       "title": "Typing and Contracts",
-      "tokens": 2067,
+      "tokens": 2144,
       "load_when": [
         "type hint",
         "mypy",
@@ -582,7 +582,7 @@
       "id": "ops/ALLOC",
       "kind": "ops",
       "title": "Workload Allocation",
-      "tokens": 2128,
+      "tokens": 2213,
       "load_when": [
         "dispatch a subagent",
         "which model",
@@ -759,18 +759,18 @@
       "id": "ALLOC-008",
       "module": "ops/ALLOC",
       "title": "A restriction is not lifted by an instruction",
-      "force": "BINDING",
-      "mechanisms": [
-        "check:dispatch_recorded"
-      ],
-      "enforcement": "unbuilt",
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "enforcement": "unmechanized",
       "mechanically_enforced": false,
-      "statement": "A dispatch message cannot grant a capability the receiving agent does not hold, and that agent MUST NOT achieve the effect by other means — writing files through a shell when it holds no editing tool, for example.",
-      "why": "The cost of refusing is one wasted dispatch. The cost of circumventing is that every verdict the agent ever issued becomes open to question. That asymmetry is why this rule is absolute.",
-      "check": "`python -m checks.dispatch_recorded`",
-      "no_mechanism": null,
-      "see": [],
-      "superseded_by": null,
+      "statement": "Retired as a duplicate. The obligation is [TEAMS-002], word for word in substance: a dispatch cannot grant a capability the receiving agent does not hold, and that agent must not achieve the effect by other means.",
+      "why": "Two ids for one obligation is worse than either alone. A reader who greps `ALLOC-008` and a reader who greps `TEAMS-002` find different halves of the same rule and each believes they have the whole of it, and a finding cites whichever the check's author reached for first.",
+      "check": null,
+      "no_mechanism": "The heading survives only to reserve the id, which is never reused. It is `[ADVISORY]` rather than deleted because a citation in an old review comment or an old error payload must still land somewhere that says what happened.",
+      "see": [
+        "ops/teams"
+      ],
+      "superseded_by": "TEAMS-002",
       "path": "discipline/ops/ALLOC.md",
       "line": 139
     },
@@ -791,7 +791,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/ops/ALLOC.md",
-      "line": 148
+      "line": 153
     },
     {
       "id": "ALLOC-010",
@@ -812,7 +812,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/ops/ALLOC.md",
-      "line": 157
+      "line": 162
     },
     {
       "id": "API-001",
@@ -2827,16 +2827,14 @@
       "id": "ERR-011",
       "module": "law/ERR",
       "title": "Parse at the boundary; do not validate in the interior",
-      "force": "BINDING",
-      "mechanisms": [
-        "check:boundary_parsing"
-      ],
-      "enforcement": "unbuilt",
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "enforcement": "unmechanized",
       "mechanically_enforced": false,
       "statement": "External data MUST be converted to a domain type by a validating constructor at the boundary, which returns a result. Interior code receives types that cannot be invalid.",
       "why": "Validation repeated in the interior is validation that can be forgotten in one place; parsing once makes the invalid state unrepresentable thereafter.",
-      "check": "`python -m checks.boundary_parsing`",
-      "no_mechanism": null,
+      "check": null,
+      "no_mechanism": "The rule's deeper claim -- that validation happens at the boundary rather than scattered through the interior -- needs to know which values crossed a boundary, and an AST check cannot see that. `check:boundary_parsing` named this rule for a year and never once reported it; its own docstring said so. What IS mechanized is the adjacent, narrower [ERR-013] and [TYPE-005].",
       "see": [
         "law/TYPE"
       ],
@@ -2863,7 +2861,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/ERR.md",
-      "line": 155
+      "line": 159
     },
     {
       "id": "ERR-013",
@@ -2882,26 +2880,24 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ERR.md",
-      "line": 162
+      "line": 166
     },
     {
       "id": "ERR-014",
       "module": "law/ERR",
       "title": "Expected failure and contract violation are distinguished",
-      "force": "BINDING",
-      "mechanisms": [
-        "check:error_channels"
-      ],
-      "enforcement": "unbuilt",
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "enforcement": "unmechanized",
       "mechanically_enforced": false,
       "statement": "A refusal the contract anticipates MUST be a typed result. A response that breaks the contract — a store that accepts a value and returns a different one — MUST raise.",
       "why": "They demand opposite reactions: one is handled, the other means a component is lying and nothing downstream of it can be trusted.",
-      "check": "`python -m checks.error_channels`",
-      "no_mechanism": null,
+      "check": null,
+      "no_mechanism": "Whether a given failure is *conceptually* expected or a contract violation is a judgement about intent. `check:error_channels` named this rule and never reported it, and its docstring said the rule keeps a reviewer for exactly this reason. Retagged rather than left claiming a gate that would never fire.",
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ERR.md",
-      "line": 174
+      "line": 178
     },
     {
       "id": "ERR-015",
@@ -2923,7 +2919,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/ERR.md",
-      "line": 181
+      "line": 188
     },
     {
       "id": "ERR-016",
@@ -2944,7 +2940,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/ERR.md",
-      "line": 189
+      "line": 196
     },
     {
       "id": "FLOW-001",
@@ -4087,8 +4083,8 @@
       "mechanisms": [
         "check:domain_purity"
       ],
-      "enforcement": "unbuilt",
-      "mechanically_enforced": false,
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
       "statement": "Function signatures MUST declare immutable or read-only collection types for parameters the callee does not own.",
       "why": "A mutable collection in a signature is an undeclared output channel, and the caller learns about it only when its own data changes underneath it.",
       "check": "`python -m checks.domain_purity`",
@@ -4142,16 +4138,14 @@
       "id": "TYPE-011",
       "module": "law/TYPE",
       "title": "What the checker cannot enforce is enforced at runtime",
-      "force": "BINDING",
-      "mechanisms": [
-        "check:boundary_parsing"
-      ],
-      "enforcement": "unbuilt",
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "enforcement": "unmechanized",
       "mechanically_enforced": false,
       "statement": "Value ranges, cross-field invariants, ordering and temporal constraints, units, and stateful protocols MUST be enforced by boundary parsing or an explicit runtime contract, and stated in the docstring. They MUST NOT be assumed carried by an annotation.",
       "why": "Any claim that strict typing guarantees correctness is false, and a contract that relies on it fails without ever having been checked.",
-      "check": "`python -m checks.boundary_parsing`",
-      "no_mechanism": null,
+      "check": null,
+      "no_mechanism": "Which constraints a checker *could* have carried is a judgement about the type system's reach on that expression, not a property of the syntax. `check:boundary_parsing` named this rule and never reported it.",
       "see": [
         "TYPE-005",
         "law/ERR"
@@ -4164,20 +4158,18 @@
       "id": "TYPE-012",
       "module": "law/TYPE",
       "title": "Signature or docstring, by who can enforce it",
-      "force": "BINDING",
-      "mechanisms": [
-        "check:boundary_parsing"
-      ],
-      "enforcement": "unbuilt",
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "enforcement": "unmechanized",
       "mechanically_enforced": false,
       "statement": "If a checker can enforce a constraint, it MUST be in the signature. If only a human or a runtime check can, it MUST be in the docstring and backed by a runtime check where it matters.",
       "why": "A constraint in prose that a checker could have carried is a guarantee downgraded to a hope for no reason.",
-      "check": "`python -m checks.boundary_parsing`",
-      "no_mechanism": null,
+      "check": null,
+      "no_mechanism": "The rule turns on who *can* enforce a constraint, which is the same judgement as [TYPE-011] read from the other side. `check:boundary_parsing` named it and never reported it.",
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/TYPE.md",
-      "line": 127
+      "line": 129
     },
     {
       "id": "TYPE-013",
@@ -4196,7 +4188,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/TYPE.md",
-      "line": 135
+      "line": 139
     },
     {
       "id": "TYPE-014",
@@ -4215,7 +4207,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/TYPE.md",
-      "line": 141
+      "line": 145
     },
     {
       "id": "TYPE-015",
@@ -4232,7 +4224,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/TYPE.md",
-      "line": 148
+      "line": 152
     }
   ]
 }

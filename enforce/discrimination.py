@@ -153,6 +153,21 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
     ),
     # ---------------------------------------------------------------- law/TYPE
     Mutation(
+        rule_id="TYPE-008",
+        summary="a domain function takes a mutable list as a parameter",
+        source=("Built during the requalification pass: TYPE-008 tagged "
+                "check:domain_purity, which claimed five rules and none of them "
+                "was this one, so the rule was decided by nothing while reading "
+                "as decided. The mutation is the rule's own clause -- a mutable "
+                "collection in a signature is an undeclared output channel."),
+        replace=(("src/refpkg/domain/plan.py",
+                  "from __future__ import annotations",
+                  ("from __future__ import annotations\n\n\n"
+                   "def absorb(names: list[str]) -> int:\n"
+                   '    """Take a list the caller still owns."""\n'
+                   "    return len(names)")),),
+    ),
+    Mutation(
         rule_id="TYPE-002",
         summary="a domain signature takes Any",
         source=("The rule's clause. Any in the domain is the hole the whole typing "

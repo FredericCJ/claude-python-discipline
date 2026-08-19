@@ -4,8 +4,8 @@
 
 Every rule against the mechanism that decides it. The corpus's own standard is that a rule nothing checks is not binding in practice, whatever its tag says, so this table is where that claim is either kept or exposed.
 
-- **169** binding rules; **149** are decided by something that runs (88%). The other **20** read as binding and are not mechanically decided.
-- **14** advisory rules -- the unenforceable surface, listed below with reasons.
+- **164** binding rules; **150** are decided by something that runs (91%). The other **14** read as binding and are not mechanically decided.
+- **19** advisory rules -- the unenforceable surface, listed below with reasons.
 - **0** rules blocked on an open decision.
 - **88/88** named mechanisms are built; **0** are declared but not yet implemented.
 
@@ -15,11 +15,11 @@ Measured against this tree, not declared. `discipline/rules.json` carries the sa
 
 | Status | Rules | Means |
 |---|---|---|
-| `mechanized` | 114 | every named mechanism was found here |
+| `mechanized` | 115 | every named mechanism was found here |
 | `external` | 35 | nothing missing, but a configured tool or a reviewer settles it |
 | `review` | 0 | a person decides it; no gate will report it |
-| `unbuilt` | 20 | a named check or fitness function does not exist |
-| `unmechanized` | 14 | the rule names no mechanism at all |
+| `unbuilt` | 14 | a named check or fitness function does not exist |
+| `unmechanized` | 19 | the rule names no mechanism at all |
 
 ## External mechanisms, and whether this repository runs them
 
@@ -42,7 +42,6 @@ These read as obligations a gate will catch, and no gate will. Until the mechani
 | `ALLOC-005` | `unbuilt` | `check:dispatch_recorded` | Escalation rules beat the mechanical permit |
 | `ALLOC-006` | `unbuilt` | `check:dispatch_recorded` | Sharpen the contract before raising the tier |
 | `ALLOC-007` | `unbuilt` | `check:dispatch_recorded` | Split before upgrading |
-| `ALLOC-008` | `unbuilt` | `check:dispatch_recorded` | A restriction is not lifted by an instruction |
 | `ALLOC-009` | `unbuilt` | `check:dispatch_recorded` | Misclassification belongs to the coordinator |
 | `ARCH-014` | `unbuilt` | `check:domain_purity` | Translation between representations is explicit |
 | `DOC-003` | `unbuilt` | `auto:ruff:D100` `check:doc_coverage` | Documentation is present whether or not it is generated |
@@ -51,13 +50,8 @@ These read as obligations a gate will catch, and no gate will. Until the mechani
 | `EFCT-004` | `unbuilt` | `check:plan_apply` | Mutating operations are commands, not raw writes |
 | `EFCT-011` | `unbuilt` | `check:plan_apply` | Illegal transitions are refused before any effect |
 | `ERR-003` | `unbuilt` | `check:error_channels` | Conversion between channels happens at one named seam |
-| `ERR-011` | `unbuilt` | `check:boundary_parsing` | Parse at the boundary; do not validate in the interior |
-| `ERR-014` | `unbuilt` | `check:error_channels` | Expected failure and contract violation are distinguished |
 | `FLOW-012` | `unbuilt` | `check:deviation_recorded` | Report what happened, including what did not |
 | `TYPE-004` | `unbuilt` | `check:domain_purity` | Distinct concepts are distinct types |
-| `TYPE-008` | `unbuilt` | `check:domain_purity` | Signatures take read-only collection types |
-| `TYPE-011` | `unbuilt` | `check:boundary_parsing` | What the checker cannot enforce is enforced at runtime |
-| `TYPE-012` | `unbuilt` | `check:boundary_parsing` | Signature or docstring, by who can enforce it |
 | `TYPE-014` | `unbuilt` | `check:domain_purity` | Immutability is declared, and not mistaken for a guarantee |
 
 ## Binding
@@ -71,7 +65,6 @@ These read as obligations a gate will catch, and no gate will. Until the mechani
 | `ALLOC-005` | `unbuilt` **(!)** | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | Escalation rules beat the mechanical permit |
 | `ALLOC-006` | `unbuilt` **(!)** | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | Sharpen the contract before raising the tier |
 | `ALLOC-007` | `unbuilt` **(!)** | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | Split before upgrading |
-| `ALLOC-008` | `unbuilt` **(!)** | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | A restriction is not lifted by an instruction |
 | `ALLOC-009` | `unbuilt` **(!)** | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | Misclassification belongs to the coordinator |
 | `ALLOC-010` | `mechanized` | `check:allocation_declared` | `python -m checks.allocation_declared` | The gate's tier follows the risk under test |
 | `API-001` | `mechanized` | `fitness:test_contract_documented` | `pytest enforce/fitness/test_api.py::test_contract_documented` | A contract states more than a signature |
@@ -169,10 +162,8 @@ These read as obligations a gate will catch, and no gate will. Until the mechani
 | `ERR-008` | `external` | `auto:ruff:BLE001` | `ruff check` (rules `E722`, `BLE001`) | Catch narrowly |
 | `ERR-009` | `external` | `auto:ruff:TRY300` | `ruff check` (rules `TRY300`, `TRY301`) | The `try` body holds only what can fail |
 | `ERR-010` | `mechanized` | `check:exception_shape` | `python -m checks.exception_shape` | Grouped failures propagate as a group |
-| `ERR-011` | `unbuilt` **(!)** | `check:boundary_parsing` | `python -m checks.boundary_parsing` | Parse at the boundary; do not validate in the interior |
 | `ERR-012` | `mechanized` | `check:assert_usage` | `python -m checks.assert_usage` | Boundary validation survives optimized bytecode |
 | `ERR-013` | `mechanized` | `check:boundary_parsing` | `python -m checks.boundary_parsing` | Try the operation rather than pre-checking the world |
-| `ERR-014` | `unbuilt` **(!)** | `check:error_channels` | `python -m checks.error_channels` | Expected failure and contract violation are distinguished |
 | `ERR-015` | `mechanized` | `fitness:test_no_unhandled_escape` | `pytest enforce/fitness/test_diagnostics.py::test_no_unhandled_escape` | No unhandled exception reaches the process boundary |
 | `ERR-016` | `mechanized` | `fitness:test_fault_containment` | `pytest enforce/fitness/test_faults.py::test_fault_containment` | A fault is contained at the boundary that detected it |
 | `FLOW-001` | `mechanized` | `fitness:test_contract_documented` | `pytest enforce/fitness/test_api.py::test_contract_documented` | The contract is written before the implementation |
@@ -226,11 +217,9 @@ These read as obligations a gate will catch, and no gate will. Until the mechani
 | `TYPE-005` | `mechanized` | `check:boundary_parsing` | `python -m checks.boundary_parsing` | A constrained type is a wrapper with a parsing constructor |
 | `TYPE-006` | `external` | `auto:mypy` `check:domain_purity` | `mypy --strict` · `python -m checks.domain_purity` | Closed sets are enumerations |
 | `TYPE-007` | `mechanized` | `check:domain_purity` | `python -m checks.domain_purity` | Domain values are frozen and slotted |
-| `TYPE-008` | `unbuilt` **(!)** | `check:domain_purity` | `python -m checks.domain_purity` | Signatures take read-only collection types |
+| `TYPE-008` | `mechanized` | `check:domain_purity` | `python -m checks.domain_purity` | Signatures take read-only collection types |
 | `TYPE-009` | `mechanized` | `fitness:test_every_port_is_a_protocol` | `pytest enforce/fitness/test_ports.py::test_every_port_is_a_protocol` | Ports are structural protocols |
 | `TYPE-010` | `mechanized` | `check:boundary_parsing` | `python -m checks.boundary_parsing` | Runtime protocol checks are not contract checks |
-| `TYPE-011` | `unbuilt` **(!)** | `check:boundary_parsing` | `python -m checks.boundary_parsing` | What the checker cannot enforce is enforced at runtime |
-| `TYPE-012` | `unbuilt` **(!)** | `check:boundary_parsing` | `python -m checks.boundary_parsing` | Signature or docstring, by who can enforce it |
 | `TYPE-013` | `external` | `auto:mypy` | `mypy --strict-equality` | Conversions are explicit |
 | `TYPE-014` | `unbuilt` **(!)** | `check:domain_purity` | `python -m checks.domain_purity` | Immutability is declared, and not mistaken for a guarantee |
 
@@ -239,7 +228,7 @@ These read as obligations a gate will catch, and no gate will. Until the mechani
 | Kind | Rules |
 |---|---|
 | `auto` | 40 |
-| `check` | 78 |
+| `check` | 73 |
 | `fitness` | 64 |
 
 ## Advisory -- the unenforceable surface
@@ -248,6 +237,7 @@ Each of these was tried against a mechanism and could not be reduced to one. Dri
 
 | Rule | Why no mechanism exists | Title |
 |---|---|---|
+| `ALLOC-008` | The heading survives only to reserve the id, which is never reused. It is `[ADVISORY]` rather than deleted because a citation in an old review comment or an old error payload must still land somewhere that says what happened. | A restriction is not lifted by an instruction |
 | `API-014` | Whether a change is genuinely additive in meaning, rather than only in shape, is a semantic judgment; [API-011] mechanizes the cases that can be detected. | Prefer additive change |
 | `ARCH-017` | Whether a boundary is *meaningful* is a design judgment; the closed justification list in [ARCH-010] mechanizes the part of it that can be. | Prefer the direct call to the abstraction |
 | `DEP-004` | Recognizing that a hand-rolled routine reimplements a standard is a judgment about intent that no check can make from the code. | Do not reimplement a solved, specified problem |
@@ -255,10 +245,14 @@ Each of these was tried against a mechanism and could not be reduced to one. Dri
 | `DOC-013` | Whether a sentence is informative or ceremonial is a reading judgment; [DOC-009] mechanizes the detectable half — restating the name — and no check can weigh the rest. | Prefer one sentence that earns its place |
 | `EFCT-016` | Whether a requirement genuinely demands concurrency cannot be read off the code; [EFCT-013] mechanizes the obligation to document it once it is introduced. | Prefer the sequential design |
 | `ERR-007` | Whether a caller *needs* to distinguish an outcome is a contract judgment; [ERR-006] mechanizes the shape, not the decision to create one. | Define an exception only when a caller must distinguish it |
+| `ERR-011` | The rule's deeper claim -- that validation happens at the boundary rather than scattered through the interior -- needs to know which values crossed a boundary, and an AST check cannot see that. `check:boundary_parsing` named this rule for a year and never once reported it; its own docstring said so. What IS mechanized is the adjacent, narrower [ERR-013] and [TYPE-005]. | Parse at the boundary; do not validate in the interior |
+| `ERR-014` | Whether a given failure is *conceptually* expected or a contract violation is a judgement about intent. `check:error_channels` named this rule and never reported it, and its docstring said the rule keeps a reviewer for exactly this reason. Retagged rather than left claiming a gate that would never fire. | Expected failure and contract violation are distinguished |
 | `FLOW-013` | Reuse ambition is an intention about the future that no check can read from the present code. | Scale ceremony to reuse ambition, not to line count |
 | `LEARN-012` | Whether a claim is the right size is a judgment about what a future reader will need; the trigger requirement in [LEARN-002] mechanizes only that it can be found at all. | Prefer the smallest true entry |
 | `TEAMS-004` | Whether a second, independent pass happened is a fact about dispatch history, not about the tree, and nothing in the repository can read it. | Documentation is written in one stage, verified in another |
 | `TEAMS-005` | The instruction is in a dispatch, and its effect is a judgment about whether a claim was tested rather than admired; neither is inspectable after the fact. | A verifier refutes claims; it does not improve prose |
 | `TEAMS-006` | Deciding whether a sentence is true of the code it sits above is the general program-understanding problem; [DOC-001]–[DOC-011] mechanize presence and form, which is the whole of what a checker can reach. | Presence and truth need separate mechanisms |
 | `TEST-019` | Whether a name describes behaviour or mechanism is a reading judgment; a pattern check would accept any sufficiently long name. | Test names state the behaviour |
+| `TYPE-011` | Which constraints a checker *could* have carried is a judgement about the type system's reach on that expression, not a property of the syntax. `check:boundary_parsing` named this rule and never reported it. | What the checker cannot enforce is enforced at runtime |
+| `TYPE-012` | The rule turns on who *can* enforce a constraint, which is the same judgement as [TYPE-011] read from the other side. `check:boundary_parsing` named it and never reported it. | Signature or docstring, by who can enforce it |
 | `TYPE-015` | "Proportionate" is a judgment about the defect being prevented, which no check can weigh against the reading cost it imposes. | Type sophistication stays proportionate |

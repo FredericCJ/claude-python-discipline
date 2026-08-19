@@ -2,7 +2,7 @@
 id: law/ERR
 kind: law
 title: Error Semantics
-tokens: 2450
+tokens: 2609
 load_when:
   - "raise"
   - "except"
@@ -144,12 +144,16 @@ and be handled with `except*`, rather than collapsing to the first failure.
 
 ## Boundaries
 
-### ERR-011 · Parse at the boundary; do not validate in the interior  [BINDING] [check:boundary_parsing]
+### ERR-011 · Parse at the boundary; do not validate in the interior  [ADVISORY]
 External data MUST be converted to a domain type by a validating constructor at the
 boundary, which returns a result. Interior code receives types that cannot be invalid.
 - **Why** Validation repeated in the interior is validation that can be forgotten in one
   place; parsing once makes the invalid state unrepresentable thereafter.
-- **Check** `python -m checks.boundary_parsing`
+- **No mechanism** The rule's deeper claim -- that validation happens at the
+  boundary rather than scattered through the interior -- needs to know which values
+  crossed a boundary, and an AST check cannot see that. `check:boundary_parsing`
+  named this rule for a year and never once reported it; its own docstring said so.
+  What IS mechanized is the adjacent, narrower [ERR-013] and [TYPE-005].
 - **See** [law/TYPE]
 
 ### ERR-012 · Boundary validation survives optimized bytecode  [BINDING] [check:assert_usage]
@@ -171,12 +175,15 @@ handled, rather than guarded by a prior check.
 
 ## Failure kinds
 
-### ERR-014 · Expected failure and contract violation are distinguished  [BINDING] [check:error_channels]
+### ERR-014 · Expected failure and contract violation are distinguished  [ADVISORY]
 A refusal the contract anticipates MUST be a typed result. A response that breaks the
 contract — a store that accepts a value and returns a different one — MUST raise.
 - **Why** They demand opposite reactions: one is handled, the other means a component is
   lying and nothing downstream of it can be trusted.
-- **Check** `python -m checks.error_channels`
+- **No mechanism** Whether a given failure is *conceptually* expected or a contract
+  violation is a judgement about intent. `check:error_channels` named this rule and
+  never reported it, and its docstring said the rule keeps a reviewer for exactly
+  this reason. Retagged rather than left claiming a gate that would never fire.
 
 ### ERR-015 · No unhandled exception reaches the process boundary  [BINDING] [fitness:test_no_unhandled_escape]
 Every entry point MUST convert an escaping exception into a diagnostic envelope and a

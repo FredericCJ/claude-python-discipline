@@ -1,7 +1,7 @@
 {
   "generated_by": "tools/discrimination_gate.py --update-baseline",
   "note": "D -- rules with at least one mutation observed provoking them. May rise, never fall. The entries are in enforce/discrimination.py and are meant to be read; the count alone says nothing about whether they are good.",
-  "count": 19,
+  "count": 20,
   "rules": [
     "ALLOC-002",
     "ALLOC-004",
@@ -21,7 +21,8 @@
     "TEST-004",
     "TEST-014",
     "TYPE-002",
-    "TYPE-007"
+    "TYPE-007",
+    "TYPE-008"
   ],
-  "why": "Phase 2: D 15 -> 19. Four entries added after eight checks were narrowed to what they actually emit. ALLOC-002, ALLOC-004 and TEAMS-002 each get their own mutation because dispatch_recorded carries five claims and one entry would leave four resting on the other's evidence; each tree carries a filled allocation mapping so ALLOC-010 cannot fire alongside. FLOW-002's first draft was wrong -- it hit oracle_declared's TEST-004 path, and the rule fires on an oracle that is STATED and names none of the five."
+  "why": "TYPE-008 joins the matrix. It tagged check:domain_purity, which claimed five rules and none of them was this one -- the rule read as decided and was decided by nothing. The check now emits it, and the mutation is the rule's own clause."
 }
