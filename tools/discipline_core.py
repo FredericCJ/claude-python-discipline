@@ -9,14 +9,15 @@ from __future__ import annotations
 
 import datetime
 import re
-from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
-from functools import lru_cache
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import yaml
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator, Mapping, Sequence
 
 ## Anchor for every other path here, derived from this file rather than the working
 ## directory, so a tool behaves the same however it was invoked.
@@ -38,6 +39,13 @@ GENERATED_NAMES: Final[frozenset[str]] = frozenset(
 ## Exceeding one is an error and not a warning: the budget is what lets an agent
 ## decide to open a module without first paying to read it.
 TOKEN_BUDGETS: Final[Mapping[str, int]] = {"KERNEL": 2_000, "*": 4_000}
+
+## The divisor ``count_tokens`` measures by, and therefore the definition of the
+## ``tokens:`` field. Chosen to sit close to a byte-pair encoder over English
+## markdown while depending on nothing that has to be installed or downloaded.
+## Changing it renumbers every module in the corpus, so it moves only with a
+## rebuild of every generated artifact in the same change.
+CHARACTERS_PER_TOKEN: Final = 3.7
 
 
 class Kind(StrEnum):
@@ -631,38 +639,21 @@ def find_xrefs(text: str) -> list[str]:
 
 
 def count_tokens(text: str) -> int:
-    """Token count, measured with tiktoken where available.
+    """The `tokens:` measurement, by the definition in `meta/SCHEMA.md`.
 
-    Falls back to a character-ratio estimate when the encoding cannot be
-    downloaded, so a validation run never fails for lack of network.
+    Deliberately arithmetic rather than a real tokenizer. An earlier version
+    imported tiktoken when it was installed and estimated when it was not, which
+    meant `build_index.py` wrote DIFFERENT BYTES on two machines running the same
+    command over the same corpus, and nothing reported the difference. Every
+    committed `tokens:` value came from the estimate; the tokenizer branch shipped
+    for months and never once ran here. A number every machine agrees on is worth
+    more than a more precise one that silently varies, because this figure is a
+    budgeting hint an agent reads before opening a module -- not a contract.
 
     @param text the passage to measure
-    @return the count, exact under the real encoding and approximate without it
+    @return the count, by `CHARACTERS_PER_TOKEN`, identical on every machine
     """
-    encoding = _encoding()
-    if encoding is None:
-        return round(len(text) / 3.7)
-    return len(encoding.encode(text))
-
-
-@lru_cache(maxsize=1)
-def _encoding() -> object | None:
-    """The tokenizer, constructed once.
-
-    Building it per call made a validation run take over a minute: the graph
-    measures every rule and the builders measure every file. None selects the
-    character-ratio estimate instead.
-
-    @return the tokenizer, or None when it is not installed or cannot be built
-    """
-    try:
-        import tiktoken
-    except ImportError:
-        return None
-    try:
-        return tiktoken.get_encoding("o200k_base")
-    except Exception:  # ruff: ignore[blind-except] - no network, no cached vocabulary
-        return None
+    return round(len(text) / CHARACTERS_PER_TOKEN)
 
 
 def budget_for(doc: Document) -> int:

@@ -12,6 +12,7 @@ these fails.
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 
 import pytest
 
@@ -310,6 +311,37 @@ def test_stats_reports_full_reachability(graph: Graph) -> None:
     """
     payload = nav.cmd_stats(graph, argparse.Namespace(depth=3, root=REPO_ROOT))
     assert payload["rules_reachable"] == payload["rules_total"]
+
+
+def test_a_reported_path_can_actually_be_opened(monkeypatch: pytest.MonkeyPatch) -> None:
+    """An answer naming a file the reader cannot open is not an answer.
+
+    The graph stores paths relative to the corpus root. That is right where the
+    corpus is the repository and wrong wherever it is vendored: from a consuming
+    repository the corpus sits under `.agent/`, and `discipline/law/ARCH.md`
+    names nothing there. Standing somewhere else is the cheapest way to
+    reproduce it, so this test does exactly that.
+
+    @param monkeypatch pytest's fixture, used to move the working directory
+    """
+    monkeypatch.chdir(REPO_ROOT.parent)
+    shown = nav.openable("discipline/law/ARCH.md:51")
+    body = shown.rsplit(":", 1)[0]
+    assert (REPO_ROOT.parent / body).exists(), f"{shown} does not resolve from {Path.cwd()}"
+    assert body.endswith("discipline/law/ARCH.md")
+
+    monkeypatch.chdir(REPO_ROOT)
+    assert nav.openable("discipline/law/ARCH.md:51") == "discipline/law/ARCH.md:51"
+
+
+def test_a_path_without_a_line_number_survives(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Module nodes carry a bare path; a colon-splitter must not mangle one.
+
+    @param monkeypatch pytest's fixture, used to move the working directory
+    """
+    monkeypatch.chdir(REPO_ROOT)
+    assert nav.openable("discipline/law/ARCH.md") == "discipline/law/ARCH.md"
+    assert not nav.openable("")
 
 
 if __name__ == "__main__":

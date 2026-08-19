@@ -23,15 +23,17 @@ import fnmatch
 import json
 import re
 import sys
-from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, replace
 from functools import lru_cache
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from build_graph import load_graph
 from discipline_core import REPO_ROOT
 from graph_model import READING_EXPANSION, Edge, EdgeType, Graph, Node, NodeType
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable, Mapping, Sequence
 
 ## Path segments that name an architectural layer. A path containing one is
 ## governed by whatever rules apply to that layer.
@@ -139,6 +141,36 @@ def force_tag(force: str | None, enforcement: str | None) -> str:
     return f"[{force} - {caveat}]" if caveat else f"[{force}]"
 
 
+def openable(stored: str) -> str:
+    """A stored graph path, rewritten so the reader can actually open it.
+
+    The graph records paths relative to the corpus root, which is correct where
+    the corpus *is* the repository and wrong everywhere it is vendored: under
+    `.agent/` the answer `discipline/law/ARCH.md:51` names nothing, and the file
+    is at `.agent/discipline/law/ARCH.md:51`. An answer an agent cannot act on
+    is the failure this navigator exists to prevent, so the path is resolved
+    against the tool's own root and then expressed from wherever the caller is
+    standing.
+
+    In the source repository, where the two coincide, the output is unchanged.
+
+    @param stored the path as the graph holds it, optionally suffixed `:LINE`
+    @return the same location relative to the working directory, or absolute
+        when it lies outside it
+    """
+    if not stored:
+        return stored
+    body, sep, line = stored.rpartition(":")
+    if not (sep and line.isdigit()):
+        body, line = stored, ""
+    absolute = (REPO_ROOT / body).resolve()
+    try:
+        shown = absolute.relative_to(Path.cwd()).as_posix()
+    except ValueError:
+        shown = absolute.as_posix()
+    return f"{shown}:{line}" if line else shown
+
+
 # --------------------------------------------------------------------- seeding
 
 
@@ -157,7 +189,24 @@ def seeds_for_file(graph: Graph, path: str) -> list[Hit]:
     """
     found: dict[str, Hit] = {}
     parts = Path(path).as_posix().split("/")
+    # Order is significant and the three differ in how they claim an id: a layer
+    # match overwrites, the other two defer to whatever is already there. Running
+    # them in this order is what makes "governs domain/" beat "matches **/*.py"
+    # for the same rule.
+    _seed_by_layer(graph, parts, found)
+    _seed_test_law(graph, path, parts, found)
+    _seed_by_glob(graph, path, found)
+    return sorted(found.values(), key=lambda h: (h.hops, h.id))
 
+
+def _seed_by_layer(graph: Graph, parts: Sequence[str], found: dict[str, Hit]) -> None:
+    """Claim every rule that governs an architectural layer the path sits in.
+
+    @param graph the discipline graph
+    @param parts the path's POSIX segments
+    @param found the accumulator, overwritten here because a layer match is the
+        strongest claim any route makes
+    """
     for layer in LAYERS:
         if layer not in parts:
             continue
@@ -166,22 +215,46 @@ def seeds_for_file(graph: Graph, path: str) -> list[Hit]:
             if node is not None:
                 found[node.id] = _hit(node, 0, f"governs {layer}/")
 
-    if "tests" in parts or Path(path).name.startswith("test_"):
-        for edge in graph.out_edges("law/TEST", [EdgeType.CONTAINS]):
-            node = graph.nodes.get(edge.dst)
-            if node is not None:
-                found.setdefault(node.id, _hit(node, 0, "test file"))
 
+def _seed_test_law(
+    graph: Graph, path: str, parts: Sequence[str], found: dict[str, Hit],
+) -> None:
+    """Claim the whole testing law for a file that is a test.
+
+    The testing rules bind on what a file *is* rather than where it sits, so this
+    fires on a `test_` prefix as well as on a `tests/` segment.
+
+    @param graph the discipline graph
+    @param path the file being worked on
+    @param parts the path's POSIX segments
+    @param found the accumulator, deferred to where a layer already claimed a rule
+    """
+    if "tests" not in parts and not Path(path).name.startswith("test_"):
+        return
+    for edge in graph.out_edges("law/TEST", [EdgeType.CONTAINS]):
+        node = graph.nodes.get(edge.dst)
+        if node is not None:
+            found.setdefault(node.id, _hit(node, 0, "test file"))
+
+
+def _seed_by_glob(graph: Graph, path: str, found: dict[str, Hit]) -> None:
+    """Claim the modules whose `applies_to` glob covers the path, one hop out.
+
+    A glob match is weaker than a layer match: it says a module's rules cover
+    this file, not that any of them is about what the file is.
+
+    @param graph the discipline graph
+    @param path the file being worked on
+    @param found the accumulator, deferred to where a stronger route already claimed
+    """
+    posix = Path(path).as_posix()
     for node in graph.of_type(NodeType.TRIGGER):
-        if node.attr("kind") != "glob":
-            continue
-        if not fnmatch.fnmatch(Path(path).as_posix(), node.label):
+        if node.attr("kind") != "glob" or not fnmatch.fnmatch(posix, node.label):
             continue
         for edge in graph.in_edges(node.id, [EdgeType.TRIGGERED_BY]):
             owner = graph.nodes.get(edge.src)
             if owner is not None and owner.type is NodeType.MODULE:
                 found.setdefault(owner.id, _hit(owner, 1, f"matches {node.label}"))
-    return sorted(found.values(), key=lambda h: (h.hops, h.id))
 
 
 def _normalize(text: str) -> set[str]:
@@ -210,6 +283,20 @@ def seeds_for_error(graph: Graph, text: str) -> list[Hit]:
     @return the rules and modules the message points at, nearest first then by id
     """
     found: dict[str, Hit] = {}
+    _seed_by_signature(graph, text, found)
+    _seed_by_quoted_id(graph, text, found)
+    _seed_by_mechanism(graph, text.lower(), found)
+    return sorted(found.values(), key=lambda h: (h.hops, h.id))
+
+
+def _seed_by_signature(graph: Graph, text: str, found: dict[str, Hit]) -> None:
+    """Claim rules whose error trigger the message matches.
+
+    @param graph the discipline graph
+    @param text whatever the failing tool printed
+    @param found the accumulator, overwritten because the message's own words are
+        the strongest evidence available
+    """
     lowered = text.lower()
     words = _normalize(text)
     for node in graph.of_type(NodeType.TRIGGER):
@@ -225,10 +312,31 @@ def seeds_for_error(graph: Graph, text: str) -> list[Hit]:
             owner = graph.nodes.get(edge.src)
             if owner is not None:
                 found[owner.id] = _hit(owner, 0, f"error signature {node.label!r}")
+
+
+def _seed_by_quoted_id(graph: Graph, text: str, found: dict[str, Hit]) -> None:
+    """Claim any rule the message names outright.
+
+    @param graph the discipline graph
+    @param text whatever the failing tool printed
+    @param found the accumulator, overwritten: a quoted id is not a guess
+    """
     for rule_id in _RULE_ID.findall(text):
         node = graph.nodes.get(rule_id)
         if node is not None:
             found[node.id] = _hit(node, 0, "named in the error")
+
+
+def _seed_by_mechanism(graph: Graph, lowered: str, found: dict[str, Hit]) -> None:
+    """Claim the rules enforced by whichever checker produced the message, one hop out.
+
+    Knowing which checker complained is weaker evidence than the rule's own words,
+    so this defers to anything the other two routes already claimed.
+
+    @param graph the discipline graph
+    @param lowered the message, already lowercased
+    @param found the accumulator, deferred to
+    """
     for node in graph.of_type(NodeType.MECHANISM):
         stem = node.label.split(":")[-1]
         if len(stem) > 4 and stem.lower() in lowered:
@@ -236,7 +344,6 @@ def seeds_for_error(graph: Graph, text: str) -> list[Hit]:
                 owner = graph.nodes.get(edge.src)
                 if owner is not None:
                     found.setdefault(owner.id, _hit(owner, 1, f"checked by {node.label}"))
-    return sorted(found.values(), key=lambda h: (h.hops, h.id))
 
 
 def seeds_for_task(graph: Graph, text: str) -> list[Hit]:
@@ -290,18 +397,15 @@ def _hit(node: Node, hops: int, reason: str) -> Hit:
 # -------------------------------------------------------------------- commands
 
 
-def cmd_context(graph: Graph, args: argparse.Namespace) -> dict[str, object]:
-    """The reading plan: what to load, why, and what it costs.
+def _gather_seeds(graph: Graph, args: argparse.Namespace) -> dict[str, Hit]:
+    """Every channel's seeds, merged at the shortest distance each was found at.
 
-    Seeds from every channel the caller supplied are merged at their shortest
-    distance, expanded along the reading edges, then costed as modules rather
-    than as rules -- a module is the unit an agent actually opens. The answer is
-    a plan, not a truncation: what does not fit the budget is still named.
+    A rule reached by two channels is kept once, at its nearer hop, so supplying
+    more context can only sharpen the plan and never dilute it.
 
     @param graph the discipline graph
-    @param args the parsed `context` arguments
-    @return the seeds, the selected rules, the modules to read, both costs, and
-        whatever the learned layer had to say about the situation
+    @param args the parsed `context` arguments; any channel may be absent
+    @return the merged seeds by node id
     """
     seeds: list[Hit] = []
     if args.file:
@@ -320,6 +424,52 @@ def cmd_context(graph: Graph, args: argparse.Namespace) -> dict[str, object]:
         current = by_id.get(hit.id)
         if current is None or hit.hops < current.hops:
             by_id[hit.id] = hit
+    return by_id
+
+
+def _module_relevance(
+    graph: Graph, rules: Sequence[Hit], modules: Sequence[Hit],
+) -> dict[str, tuple[int, int]]:
+    """Rank the modules worth reading, by nearness and then by how much they carry.
+
+    Reading a module is how a rule is actually loaded, so the budget is spent on
+    modules that own the selected rules rather than on the rules themselves.
+    Ranking by hop first and rule count second is what makes a tight budget keep
+    what the task is about instead of whatever happens to be smallest.
+
+    @param graph the discipline graph
+    @param rules the selected rules, in plan order
+    @param modules the modules selected in their own right
+    @return each module id mapped to its nearest hop and the number of selected
+        rules it owns
+    """
+    relevance: dict[str, tuple[int, int]] = {}
+    for hit in rules:
+        owner = graph.nodes[hit.id].attr("module") if hit.id in graph.nodes else None
+        if owner is None:
+            continue
+        hops, count = relevance.get(owner, (99, 0))
+        relevance[owner] = (min(hops, hit.hops), count + 1)
+    for hit in modules:
+        hops, count = relevance.get(hit.id, (99, 0))
+        relevance[hit.id] = (min(hops, hit.hops), count)
+    return relevance
+
+
+def cmd_context(graph: Graph, args: argparse.Namespace) -> dict[str, object]:
+    """The reading plan: what to load, why, and what it costs.
+
+    Seeds from every channel the caller supplied are merged at their shortest
+    distance, expanded along the reading edges, then costed as modules rather
+    than as rules -- a module is the unit an agent actually opens. The answer is
+    a plan, not a truncation: what does not fit the budget is still named.
+
+    @param graph the discipline graph
+    @param args the parsed `context` arguments
+    @return the seeds, the selected rules, the modules to read, both costs, and
+        whatever the learned layer had to say about the situation
+    """
+    by_id = _gather_seeds(graph, args)
 
     reached = graph.expand(
         sorted(by_id), types=READING_EXPANSION, depth=args.depth, undirected=False
@@ -342,21 +492,7 @@ def cmd_context(graph: Graph, args: argparse.Namespace) -> dict[str, object]:
     modules = sorted(
         (h for h in by_id.values() if h.type == "module"), key=lambda h: (h.hops, h.id)
     )
-    # Reading a module is how a rule is actually loaded, so cost the modules that
-    # own the selected rules, not the rules themselves. Rank by relevance --
-    # nearest hop first, then by how many selected rules the module owns -- so a
-    # tight budget keeps what the task is about rather than whatever is smallest.
-    relevance: dict[str, tuple[int, int]] = {}
-    for hit in rules:
-        owner = graph.nodes[hit.id].attr("module") if hit.id in graph.nodes else None
-        if owner is None:
-            continue
-        hops, count = relevance.get(owner, (99, 0))
-        relevance[owner] = (min(hops, hit.hops), count + 1)
-    for hit in modules:
-        hops, count = relevance.get(hit.id, (99, 0))
-        relevance[hit.id] = (min(hops, hit.hops), count)
-
+    relevance = _module_relevance(graph, rules, modules)
     ordered = sorted(
         relevance,
         key=lambda m: (relevance[m][0], -relevance[m][1], graph.nodes[m].tokens, m),
@@ -495,7 +631,7 @@ def cmd_rule(graph: Graph, args: argparse.Namespace) -> dict[str, object]:
             else None
         ),
         "module": node.attr("module"),
-        "path": node.path,
+        "path": openable(node.path),
         "out": {k: sorted(v) for k, v in sorted(out.items())},
         "in": {k: sorted(v) for k, v in sorted(incoming.items())},
     }
@@ -716,77 +852,119 @@ def _describe(graph: Graph, node_id: str, edge: Edge) -> str:
 # ---------------------------------------------------------------------- output
 
 
+def _render_context(payload: dict[str, object]) -> list[str]:
+    """The reading plan: what governs the situation, what to read, what it costs.
+
+    @param payload the `context` answer
+    @return the lines to print
+    """
+    shown, total = payload["rules_shown"], payload["rules_total"]
+    suffix = f" of {total} - raise --max-rules to see the rest" if shown < total else ""
+    lines = [f"RULES ({shown}{suffix})"]
+    for rule in payload["rules"]:  # type: ignore[union-attr]
+        tag = force_tag(rule["force"], rule.get("enforcement"))
+        lines.append(f"  {rule['id']:<10} {tag:<32} {rule['label']}")
+        lines.append(f"  {'':<10} {'':<32} ~ {rule['reason']}")
+    lines.append("")
+    lines.append("READ")
+    for item in payload["read"]:  # type: ignore[union-attr]
+        mark = " " if item["status"] == "read" else "!"
+        lines.append(f" {mark} {item['id']:<22} {item['tokens']:>6} tok  {item['status']}")
+    lines.append("")
+    lines.append(
+        f"BUDGET  planned {payload['tokens_planned']} tok"
+        f"  (all candidates {payload['tokens_if_all']} tok)"
+    )
+    if payload.get("learnings"):
+        lines.append("")
+        lines.append("LEARNED")
+        lines += [f"  {item}" for item in payload["learnings"]]  # type: ignore[union-attr]
+    return lines
+
+
+def _render_applies(payload: dict[str, object]) -> list[str]:
+    """Every rule and module that governs one path.
+
+    @param payload the `applies` answer
+    @return the lines to print
+    """
+    rules = payload["rules"]
+    lines = [f"{payload['path']}  ({len(rules)} rules)"]  # type: ignore[arg-type]
+    for rule in rules:  # type: ignore[union-attr]
+        lines.append(
+            f"  {rule['id']:<10} {force_tag(rule['force'], rule.get('enforcement')):<32}"
+            f" {rule['label']}   ~ {rule['reason']}"
+        )
+    lines += [f"  {module['id']:<20} ~ {module['reason']}"
+              for module in payload["modules"]]  # type: ignore[union-attr]
+    return lines
+
+
+def _render_node(payload: dict[str, object]) -> list[str]:
+    """One node and its edges, grouped by edge type.
+
+    Shared by `rule` and `why`: the two differ in which edges they select, not in
+    how the result reads.
+
+    @param payload the `rule` or `why` answer
+    @return the lines to print
+    """
+    lines = [f"{payload['id']} - {payload.get('label', '')}"]
+    for key, value in payload.items():
+        if key in {"id", "label", "type"} or not value:
+            continue
+        if isinstance(value, dict):
+            for edge_type, targets in value.items():
+                lines.append(f"  {edge_type}:")
+                lines += [f"    {t}" for t in targets]
+        elif isinstance(value, list):
+            lines.append(f"  {key}:")
+            lines += [f"    {t}" for t in value]
+        else:
+            lines.append(f"  {key}: {value}")
+    return lines
+
+
+def _render_stats(payload: dict[str, object]) -> list[str]:
+    """Node and edge census, and the reachability figure V092 gates on.
+
+    @param payload the `stats` answer
+    @return the lines to print
+    """
+    lines = [
+        "NODES  " + ", ".join(f"{k}={v}" for k, v in payload["nodes"].items()),  # type: ignore[union-attr]
+        "EDGES  " + ", ".join(f"{k}={v}" for k, v in payload["edges"].items()),  # type: ignore[union-attr]
+        f"REACH  {payload['rules_reachable']}/{payload['rules_total']} rules "
+        f"within {payload['reach_depth']} hops",
+    ]
+    if payload["unreachable"]:
+        lines.append("  unreachable: " + ", ".join(payload["unreachable"]))  # type: ignore[union-attr]
+    return lines
+
+
+## The per-command layouts. A command absent from this table falls back to
+## indented JSON, so a new subcommand prints something legible before anyone
+## writes its renderer.
+_RENDERERS: Final[Mapping[str, Callable[[dict[str, object]], list[str]]]] = {
+    "context": _render_context,
+    "applies": _render_applies,
+    "rule": _render_node,
+    "why": _render_node,
+    "stats": _render_stats,
+}
+
+
 def render(command: str, payload: dict[str, object]) -> str:
     """Lay an answer out for a terminal, in the shape that command deserves.
-
-    A command with no layout of its own falls back to indented JSON, so a new
-    subcommand prints something legible before anyone writes its renderer.
 
     @param command which subcommand produced the payload
     @param payload that command's answer, unmodified
     @return the text to print, with no trailing newline
     """
-    lines: list[str] = []
-    if command == "context":
-        rules = payload["rules"]  # type: ignore[index]
-        shown, total = payload["rules_shown"], payload["rules_total"]
-        suffix = f" of {total} - raise --max-rules to see the rest" if shown < total else ""
-        lines.append(f"RULES ({shown}{suffix})")
-        for rule in rules:  # type: ignore[union-attr]
-            tag = force_tag(rule["force"], rule.get("enforcement"))
-            lines.append(f"  {rule['id']:<10} {tag:<32} {rule['label']}")
-            lines.append(f"  {'':<10} {'':<32} ~ {rule['reason']}")
-        lines.append("")
-        lines.append("READ")
-        for item in payload["read"]:  # type: ignore[union-attr]
-            mark = " " if item["status"] == "read" else "!"
-            lines.append(f" {mark} {item['id']:<22} {item['tokens']:>6} tok  {item['status']}")
-        lines.append("")
-        lines.append(
-            f"BUDGET  planned {payload['tokens_planned']} tok"
-            f"  (all candidates {payload['tokens_if_all']} tok)"
-        )
-        if payload.get("learnings"):
-            lines.append("")
-            lines.append("LEARNED")
-            for item in payload["learnings"]:  # type: ignore[union-attr]
-                lines.append(f"  {item}")
-    elif command == "applies":
-        rules = payload["rules"]  # type: ignore[index]
-        lines.append(f"{payload['path']}  ({len(rules)} rules)")
-        for rule in rules:  # type: ignore[union-attr]
-            lines.append(
-                f"  {rule['id']:<10} {force_tag(rule['force'], rule.get('enforcement')):<32}"
-                f" {rule['label']}   ~ {rule['reason']}"
-            )
-        for module in payload["modules"]:  # type: ignore[union-attr]
-            lines.append(f"  {module['id']:<20} ~ {module['reason']}")
-    elif command in {"rule", "why"}:
-        lines.append(f"{payload['id']} - {payload.get('label', '')}")
-        for key, value in payload.items():
-            if key in {"id", "label", "type"} or not value:
-                continue
-            if isinstance(value, dict):
-                for edge_type, targets in value.items():
-                    lines.append(f"  {edge_type}:")
-                    lines += [f"    {t}" for t in targets]
-            elif isinstance(value, list):
-                lines.append(f"  {key}:")
-                lines += [f"    {t}" for t in value]
-            else:
-                lines.append(f"  {key}: {value}")
-    elif command == "stats":
-        lines.append("NODES  " + ", ".join(f"{k}={v}" for k, v in payload["nodes"].items()))  # type: ignore[union-attr]
-        lines.append("EDGES  " + ", ".join(f"{k}={v}" for k, v in payload["edges"].items()))  # type: ignore[union-attr]
-        lines.append(
-            f"REACH  {payload['rules_reachable']}/{payload['rules_total']} rules "
-            f"within {payload['reach_depth']} hops"
-        )
-        if payload["unreachable"]:
-            lines.append("  unreachable: " + ", ".join(payload["unreachable"]))  # type: ignore[union-attr]
-    else:
-        lines.append(json.dumps(payload, indent=1, ensure_ascii=False))
-    return "\n".join(lines)
+    renderer = _RENDERERS.get(command)
+    if renderer is None:
+        return json.dumps(payload, indent=1, ensure_ascii=False)
+    return "\n".join(renderer(payload))
 
 
 def build_parser() -> argparse.ArgumentParser:
