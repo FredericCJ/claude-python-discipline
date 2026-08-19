@@ -18,13 +18,18 @@ from __future__ import annotations
 
 import ast
 import json
+import re
 import subprocess
 import sys
-from collections.abc import Iterator
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import pytest
+
+import gate as _gate
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 ## The repository root, three levels up from this file.
 REPO_ROOT: Final = Path(__file__).resolve().parent.parent.parent
@@ -36,17 +41,10 @@ RULES_JSON: Final = REPO_ROOT / "discipline" / "rules.json"
 ## an external tool's own rule and `review` names a person; neither is a file.
 RESOLVABLE: Final[frozenset[str]] = frozenset({"check", "fitness"})
 
-## Every command a change must pass before it is offered. FLOW-009 requires this
-## list to exist somewhere runnable rather than in prose that drifts.
-GATE: Final[tuple[tuple[str, tuple[str, ...]], ...]] = (
-    ("format and lint", ("ruff", "check")),
-    ("rule corpus", (sys.executable, "tools/validate.py")),
-    ("navigation graph", (sys.executable, "tools/build_graph.py", "--check")),
-    ("generated artefacts", (sys.executable, "tools/build_index.py", "--check")),
-    ("skill mirror", (sys.executable, "tools/build_skill_mirror.py", "--check")),
-    ("documentation", (sys.executable, "tools/docgate.py", "--all")),
-    ("tests", (sys.executable, "-m", "pytest", "-q")),
-)
+## The gate, imported rather than restated. It moved to `tools/gate.py` so
+## `tools/release.py` could refuse to build from a tree that fails it without
+## importing a test module to find out what the gate is.
+GATE: Final[tuple[tuple[str, tuple[str, ...]], ...]] = _gate.GATE
 
 
 def load_rules() -> list[dict[str, object]]:
@@ -63,10 +61,25 @@ def load_rules() -> list[dict[str, object]]:
 def iter_check_modules() -> Iterator[Path]:
     """Every custom AST check module.
 
-    @return each check module, excluding the package init and its own tests
+    Membership is decided by what a module defines, not by where it sits. Not
+    everything under `enforce/checks/` is a mechanism -- `project.py` parses the
+    consuming project's declaration and implements none -- and demanding a
+    proof-of-failure companion for a module that checks nothing would be a
+    requirement no honest test could satisfy.
+
+    @return each module defining a `Check` subclass, excluding the package init
+        and its own tests
     """
     for path in sorted((REPO_ROOT / "enforce" / "checks").glob("*.py")):
-        if not path.stem.startswith(("__", "test_")):
+        if path.stem.startswith(("__", "test_")):
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        if any(
+            isinstance(node, ast.ClassDef)
+            and any(isinstance(b, ast.Name) and b.id in
+                    {"Check", "ModuleCheck", "TextCheck"} for b in node.bases)
+            for node in ast.walk(tree)
+        ):
             yield path
 
 
@@ -233,25 +246,17 @@ def test_every_gate_entry_is_runnable(name: str, command: tuple[str, ...]) -> No
     @param name the gate entry's name
     @param command the argv to run
     """
-    if command[0] == "ruff":
-        # A console script sits in Scripts/ on Windows and alongside the
-        # interpreter elsewhere; checking only one made the gate skip itself.
-        found = next(
-            (c for c in (Path(sys.executable).parent / "ruff.exe",
-                         Path(sys.executable).parent / "ruff",
-                         Path(sys.executable).parent / "Scripts" / "ruff.exe")
-             if c.exists()),
-            None,
-        )
-        if found is None:
-            pytest.skip("ruff not installed in this environment")
-        command = (str(found), *command[1:])
+    # The console-script hunt that used to live here is gone with the entry it
+    # served: gate step 1 now runs `tools/lint_gate.py`, which invokes ruff as
+    # `sys.executable -m ruff`. Locating an executable was what made the lint gate
+    # skip itself on this machine -- it looked beside the interpreter and not in
+    # Scripts/, and 766 findings went unseen behind a green run.
     if command[-1] == "-q" and "pytest" in command:
         pytest.skip("running the suite from inside the suite would recurse")
     # Encoding is pinned rather than left to the locale: on a cp932 machine the
     # default codec raised on ruff's own output, so the gate died deciding
     # nothing -- exactly the failure this test exists to catch.
-    finished = subprocess.run(  # noqa: S603 - fixed argv, no shell
+    finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv, no shell
         command, capture_output=True, text=True, encoding="utf-8", errors="replace",
         cwd=REPO_ROOT, check=False, timeout=180,
     )
@@ -259,6 +264,34 @@ def test_every_gate_entry_is_runnable(name: str, command: tuple[str, ...]) -> No
         f"gate entry {name!r} exited {finished.returncode}, which means it failed to run "
         f"rather than reporting a verdict:\n{finished.stderr[:400]}"
     )
+
+
+def test_the_workflow_mirrors_the_gate() -> None:
+    """FLOW-009: the CI workflow's steps are the GATE tuple, in order.
+
+    The workflow spells the seven steps out because a workflow step needs its own
+    name and failure boundary. Its own comment says that if `GATE` changes this
+    list must change with it -- a mechanizable claim that was left to memory, and
+    left there while the repository had no remote and no way to notice. Checking
+    it here is what makes a workflow nobody can run still worth shipping.
+    """
+    workflow = REPO_ROOT / ".github" / "workflows" / "gate.yml"
+    if not workflow.exists():
+        pytest.skip("no CI workflow in this tree")
+    text = workflow.read_text(encoding="utf-8")
+    steps = re.findall(r'- name: "Gate \d+/\d+ -- (?P<name>[^"]+)"\n\s+run: (?P<run>.+)',
+                       text)
+    assert [name for name, _ in steps] == [name for name, _ in GATE], (
+        "the workflow's step names have drifted from the GATE tuple"
+    )
+    for (_, run), (name, command) in zip(steps, GATE, strict=True):
+        # The workflow says `python`; the tuple says this interpreter. Compare the
+        # arguments, which is where a real divergence would show.
+        expected = " ".join(("python", *command[1:])) if command[0] == sys.executable \
+            else " ".join(command)
+        assert run.strip() == expected, (
+            f"gate entry {name!r} runs {expected!r} but the workflow runs {run.strip()!r}"
+        )
 
 
 def test_doxygen_version_matches_recorded() -> None:

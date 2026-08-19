@@ -50,10 +50,12 @@ import os
 import re
 import subprocess
 import sys
-from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator, Sequence
 
 ## The repository root, one level up from this file.
 REPO_ROOT: Final = Path(__file__).resolve().parent.parent
@@ -62,8 +64,11 @@ REPO_ROOT: Final = Path(__file__).resolve().parent.parent
 ## change is legitimate; regenerating it to silence gate 1 defeats the point.
 BASELINE_PATH: Final = REPO_ROOT / "tools" / "doc_baseline.json"
 
-## Directories the migration covers.
-COVERED: Final[tuple[str, ...]] = ("tools", "enforce/checks")
+## Directories the migration covers. The reference package is included because it
+## is the worked example an adopter reads: documentation that is exemplary
+## everywhere except in the thing held up as the example would be a poor joke.
+COVERED: Final[tuple[str, ...]] = ("tools", "enforce/checks", "enforce/fitness",
+                                   "enforce/fixtures")
 
 ## Files that are tooling for the gate itself, or have no elements to document.
 EXCLUDED: Final[frozenset[str]] = frozenset({"doc_baseline.json"})
@@ -248,7 +253,7 @@ def _ref_for(name: str, root: Path, head: str) -> str:
     """
     if head == "working-tree":
         return head
-    shown = subprocess.run(  # noqa: S603 - fixed argv, no shell
+    shown = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv, no shell
         ["git", "status", "--porcelain", "--", name],
         capture_output=True, encoding="utf-8", cwd=root, check=False,
     )
@@ -312,7 +317,7 @@ def write_baseline_from_ref(root: Path, ref: str) -> int:
     files: dict[str, BaselineEntry] = {}
     for path in iter_python(covered_paths(root)):
         name = _relative(path, root)
-        shown = subprocess.run(  # noqa: S603 - fixed argv, no shell
+        shown = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv, no shell
             ["git", "show", f"{ref}:{name}"],
             capture_output=True, encoding="utf-8", cwd=root, check=False,
         )
@@ -441,7 +446,7 @@ def run_check(module: str, paths: Sequence[Path], root: Path) -> Iterator[Failur
     """
     if not paths:
         return
-    finished = subprocess.run(  # noqa: S603 - fixed argv, no shell
+    finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv, no shell
         [sys.executable, "-m", f"checks.{module}", *(str(p) for p in paths)],
         capture_output=True, text=True, cwd=root / "enforce", check=False,
     )
@@ -459,7 +464,7 @@ def run_ruff(paths: Sequence[Path], root: Path) -> Iterator[Failure]:
     """
     if not paths:
         return
-    finished = subprocess.run(  # noqa: S603 - fixed argv, no shell
+    finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv, no shell
         [_ruff(), "check", "--no-cache", "--select", RUFF_RULES,
          "--output-format", "concise", *(str(p) for p in paths)],
         capture_output=True, text=True, cwd=root, check=False,
