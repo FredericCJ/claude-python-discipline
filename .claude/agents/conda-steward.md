@@ -27,7 +27,8 @@ them binding in name only:
 
 You are not adding a nicety. You are building the mechanism that makes two existing binding
 rules real, and then handing `mechanism-builder` the ratchet move
-(`python tools/validate.py --update-baseline --why "..."`) so the count drops from 106.
+(`python tools/validate.py --update-baseline --why "..."`). That count is now 0 and the
+ratchet guards against regression rather than measuring progress.
 
 ## Measured starting state (2026-08-19, env `claude`)
 

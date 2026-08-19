@@ -47,13 +47,21 @@ commit messages.
 The corpus validates itself. After any edit under `discipline/`:
 
 ```bash
-python tools/build_index.py     # refresh tokens:, INDEX.md, rules.json, ENFORCEMENT.md
-python tools/build_graph.py     # then the graph, which reads those token counts
-python tools/validate.py        # must exit 0
+python tools/build_index.py         # refresh tokens:, INDEX.md, rules.json, ENFORCEMENT.md
+python tools/build_graph.py         # then the graph, which reads those token counts
+python tools/build_skill_mirror.py  # then the mirror, which copies what both produced
+python tools/validate.py            # must exit 0
 python -m pytest -q
 ```
 
-Order matters: `build_index` rewrites the `tokens:` field that `build_graph` reads.
+Order matters: `build_index` rewrites the `tokens:` field that `build_graph` reads, and the
+skill mirror copies the output of both. Omitting `build_skill_mirror` leaves a stale mirror
+that passes every command above and fails the gate's fifth step — this sequence was missing
+it until a pass over the claims in this file ran them.
+
+The whole gate is nine steps, defined once in `tools/gate.py::GATE`, and `python
+tools/gate.py` runs all of them and names the ones that failed. `tools/release.py` runs the
+same tuple and refuses to build an archive from a tree that fails it.
 
 Before reporting done, record what the session learned — `python tools/learn.py record
 --kind ... --claim ... --action ... --trigger ...`, or nothing if there was nothing. The
@@ -74,7 +82,7 @@ against it looks like it passed and decided nothing.
 ## Maintenance agents
 
 Nine subject-matter agents in `.claude/agents/` maintain the machinery around the
-discipline: `graph-keeper` (derived layer), `gate-warden` (the seven-step gate),
+discipline: `graph-keeper` (derived layer), `gate-warden` (the nine-step gate),
 `conda-steward` (environment and lock), `mechanism-builder` (unbuilt checks and the V080
 ratchet), `release-engineer` and `adoption-tester` (build and round-trip the archive),
 `doc-verifier` (are the claims true), `learning-steward` (the learning loop) and

@@ -65,7 +65,7 @@ python tools/build_index.py --check && python tools/build_graph.py --check \
 
 - **Byte-stability.** Same corpus, same bytes. If a rebuild produces a diff with no corpus
   change, that is a defect in the builder, not a file to commit. Find it.
-- **Reachability (`V092`).** Every one of the 182 rules is reachable from some module
+- **Reachability (`V092`).** Every one of the 183 rules is reachable from some module
   within three hops. A new rule that nothing routes to is unreachable in practice.
 - **Token budgets (`V050`).** `KERNEL.md` ≤ 2,000; any module ≤ 4,000. A module that grew
   past its ceiling is split, or detail moves to `discipline/examples/`.

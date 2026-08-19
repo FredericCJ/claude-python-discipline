@@ -8,7 +8,7 @@ speculatively. Everything else is loaded on demand.
 
 ## Why it is shaped this way
 
-It replaces eight guideline documents (~113,000 tokens) accumulated from several disjoint
+It replaces eleven guideline documents (~113,000 tokens) accumulated from several disjoint
 projects. As a set they could not be used: four genres were mixed with no marking, ~35
 contradictions ran between them, ~130 references pointed at files that did not exist, and
 most of what they mandated was checked by nothing.
@@ -35,7 +35,7 @@ and the mechanisms still to build, so the gap is tracked rather than assumed clo
 ## Navigating it, and remembering what it taught
 
 Two systems, one graph. The **navigation graph** is a directed typed multigraph over
-modules, rules, mechanisms, layers, decisions and triggers — 571 nodes and 1,151 edges,
+modules, rules, mechanisms, layers, decisions and triggers — 573 nodes and 1,162 edges,
 generated from the corpus and byte-stable. Agents never load it; they ask `tools/nav.py`,
 which returns a few hundred tokens: what to read, why, and what it costs.
 
@@ -56,7 +56,7 @@ python tools/learn.py calibrate                           # is any of this worki
 doxygen enforce/Doxyfile                                  # the documentation gate
 ```
 
-**Reachability is the navigability metric**: every one of the 182 rules is reachable from
+**Reachability is the navigability metric**: every one of the 183 rules is reachable from
 some module within three hops, checked as `V092` on every validation run.
 
 ## Vendoring and integration
@@ -159,14 +159,16 @@ turned on its tooling. Generated files carry a banner; edit the source module an
 
 Stated here rather than discovered later, because the axiom cuts both ways.
 
-- **55 of 87 named mechanisms are not built yet.** 61 of 167 binding rules currently have
-  every mechanism they name built and runnable. `enforce/ENFORCEMENT.md` lists the rest by name
-  and `tools/validate.py` reports each as `V080` (106 rule×mechanism pairs). Until a
-  mechanism exists, its rule is binding in name only — which is exactly what the sources
-  did, and the difference here is that the gap is counted.
+- **Every named mechanism is now built: 87 of 87, and `V080` is 0.** All 168 binding rules
+  are decided by something that runs. What remains unmechanized is 15 rules and is the
+  permanent floor by construction — the 14 advisory rules, which are unenforceable by
+  definition, and `ALLOC-010`, which is `[OPEN]` and blocked on `OPEN-006`.
+  `enforce/ENFORCEMENT.md` carries the census. Note what `mechanized` claims: a mechanism
+  *exists*, not that the rule is fully decided by it — `ARCH-012` is the worked example.
+  The ratchet stays, now guarding against regression rather than measuring progress.
 - **Provenance is at document granularity.** All 324 source sections are accounted for, but
   that proves no document was dropped, not that every individual claim survived.
-- **This repository's own Python carries 131 residual lint findings**, ratcheted. Under
+- **This repository's own Python carries 113 residual lint findings**, ratcheted. Under
   `select = ["ALL"]` and ruff 0.16.3 the count was 275 at the start of v1.1.0; the eight
   `C901` findings — self-violations of `ARCH-016`, which this corpus enforces through that
   exact ruff code — were fixed by decomposition, every safe autofix was applied, and
@@ -176,19 +178,19 @@ Stated here rather than discovered later, because the axiom cuts both ways.
   held by `tools/lint_baseline.json` — the exact `(file, code)` pairs, so raising one
   integer cannot switch the gate off, and **no ruff code that decides a binding rule may
   enter it**, checked before the baseline is consulted at all.
-- **The documentation gate does not prove documentation is *true*.** All 38 covered files
+- **The documentation gate does not prove documentation is *true*.** All 120 covered files
   pass presence, style and behaviour-preservation, but a reviewer pass over an earlier
-  version of the same files found 90 claims that were confidently false about the code they
-  described. Presence and truth are separate properties; only the first is mechanized.
+  version of the same files found roughly 90 claims that were confidently false about the
+  code they described. Those were never itemized, and that list has still not been
+  reconstructed. Presence and truth are separate properties; only the first is mechanized.
   `DOC-013` names the second and leaves it to review, which is honest but not sufficient.
-  v1.1.0 verified the claims in the shipping documents and the executable claims in the
-  covered files; the wider prose re-audit has not been repeated.
-- **The learning database has 55 learnings and 0 reported outcomes**, so retrieval precision
-  is `n/a` and no learning has been promoted. `learn.py calibrate` prints the totals but
-  gives no guidance in this state — it has a bootstrap protocol for an *empty* database and
-  nothing for a populated one that has never been queried. The first calibration run found
-  that the database already held a defect (`L-0002`) which a later session rediscovered
-  independently, because nothing prompts a `retrieve` before a gate run.
+  What has been re-checked since is narrower and worth stating exactly: the numeric claims
+  in this file, several of which were stale by a full phase of work.
+- **The learning database holds 82 learnings and 2 reported outcomes**, so retrieval
+  precision is now a real number — 50% — on a sample far too small to act on, and one
+  learning has been promoted. The loop closed for the first time when a validation batch
+  retrieved before running and reported after; nothing yet *prompts* that, so it remains a
+  habit rather than a mechanism, and a habit is what `V096` exists because nobody keeps.
 
 ## Auditing the merge
 

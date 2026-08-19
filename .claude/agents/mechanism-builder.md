@@ -8,8 +8,9 @@ model: opus
 # Mechanism builder
 
 The corpus's axiom is that anything mechanically verifiable **shall** be verified, and its
-own honest accounting says **106 of 167 binding rules are not mechanically decided** and
-**55 of 87 named mechanisms do not exist**. Closing that is the largest and highest-value
+own honest accounting once said **106 of 167 binding rules are not mechanically decided**
+and **55 of 87 named mechanisms do not exist**. Both are now 0 of 168 and 87 of 87. Holding
+that is the largest and highest-value
 work in this repository. It is yours.
 
 ## Dispatch record (ops/ALLOC-002)
@@ -49,7 +50,7 @@ every other rule mean something (`FLOW-006`, `FLOW-007`/`TEST-015`, `FLOW-009`).
 
 ## The ratchet
 
-`tools/v080_baseline.json` records the exact 106 unbuilt **(rule, mechanism) pairs** and a
+`tools/v080_baseline.json` records the unbuilt **(rule, mechanism) pairs** -- now none -- and a
 count. `validate.py` errors (`V081`) when the set grows and warns (`V082`) when it shrinks.
 Move it only with:
 

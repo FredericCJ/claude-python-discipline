@@ -2,7 +2,7 @@
 id: ops/teams
 kind: ops
 title: Agent Team Mechanics
-tokens: 2245
+tokens: 2584
 load_when:
   - "agent team"
   - "teammate"
@@ -26,6 +26,31 @@ relied on.
 `VERSION-DEPENDENT` — **mechanics as of mid-2026.** Confirm against the installed version
 before deploying anything built on them. The source material already recorded one
 coordination tool pair that had been removed since it was documented.
+
+### Partial re-verification, 2026-08-19
+
+The front-matter `verified:` date has deliberately **not** moved. Only part of this
+module was re-checked, and dating the whole of it from a partial check is the failure
+that makes a date worse than no date.
+
+**Re-verified by execution.** A subagent definition is honoured with exactly four
+front-matter keys — `name`, `description`, `tools`, `model`. Evidence: the nine
+definitions under `.claude/agents/` carry those four and no others, and all nine load
+and appear as dispatchable types with their descriptions intact. One adjacent
+observation, made while writing them: the `description` value is parsed as YAML, so an
+unquoted colon-space inside it breaks the definition silently — `verified: ` in a
+sentence was enough to do it.
+
+**NOT re-verified, and still dated 2026-06-17.** The claims below need a live dispatch
+to test, which was out of scope for the session that wrote this note:
+
+- that a role definition reused as a teammate has its body *appended* rather than
+  substituted;
+- that some fields are silently dropped on that path;
+- `TEAMS-003`'s premise that the tooling offers a completion hook at all.
+
+Treat those three as the oldest material in the corpus and check them before relying on
+them.
 
 This module governs the *envelope* around delegated work. What the delegated work must
 produce is [law/FLOW]; who it should be delegated to is [ops/ALLOC].

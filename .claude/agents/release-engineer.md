@@ -62,7 +62,7 @@ Then verify, do not assume:
 4. **Round trip.** Hand the archive to `adoption-tester`. Unzipping at a repository root
    must land exactly where `integrate.py` expects, with nothing to move afterwards.
 
-**The gate runs first.** Since v1.1.0 `release.py` runs all seven steps from
+**The gate runs first.** Since v1.1.0 `release.py` runs every step of
 `tools/gate.py` before staging anything and refuses on any failure. `--skip-gate` exists
 and prints, loudly, that the archive is unverified; an archive built that way must not be
 published.
