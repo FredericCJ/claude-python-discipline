@@ -21,8 +21,15 @@ gate's covered set, where `enforce/gate.py` would not have been.
 
 from __future__ import annotations
 
+import argparse
+import subprocess  # ruff: ignore[suspicious-subprocess-import]
 import sys
+from pathlib import Path
 from typing import Final
+
+## The repository root, one level up from `tools/`, so the gate decides the same
+## verdict whatever directory it was invoked from.
+REPO_ROOT: Final = Path(__file__).resolve().parent.parent
 
 ## Every command a change must pass, in the order a person would want them: the
 ## cheap and specific first, the whole test suite last, so the fastest signal
@@ -48,3 +55,52 @@ GATE: Final[tuple[tuple[str, tuple[str, ...]], ...]] = (
     ("types", (sys.executable, "tools/type_gate.py")),
     ("tests", (sys.executable, "-m", "pytest", "-q")),
 )
+
+
+def run(*, stop_early: bool = False) -> int:
+    """Run every step in order and report each verdict.
+
+    The tuple above stays data -- this is a convenience runner over it, not a
+    second definition. Nothing here decides what a failure *means*; it reports
+    which steps failed and returns a status, and `release.py` still makes its own
+    decision from `GATE` directly.
+
+    Added because `python tools/gate.py` was documented as the way to run the
+    gate and did nothing at all: the module had no entry point, so it imported,
+    exited 0, and looked exactly like a pass. That is the same defect this file's
+    own comments describe in `lint-imports` and `mypy`, reproduced in the one
+    place that exists to prevent it.
+
+    @param stop_early whether to stop at the first failing step rather than
+        running all of them; running on is the default because a reader usually
+        wants the whole picture
+    @return 0 when every step passed, 1 otherwise
+    """
+    failed: list[str] = []
+    for name, command in GATE:
+        finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
+            command, cwd=REPO_ROOT, capture_output=True, text=True,
+            encoding="utf-8", errors="replace", check=False, timeout=1800,
+        )
+        lines = [x for x in (finished.stdout + finished.stderr).splitlines() if x.strip()]
+        verdict = "ok  " if finished.returncode == 0 else "FAIL"
+        print(f"{verdict} {name:22s} {lines[-1][:90] if lines else ''}")
+        if finished.returncode != 0:
+            failed.append(name)
+            if lines:
+                print("\n".join(f"       {x[:110]}" for x in lines[-12:]))
+            if stop_early:
+                break
+    if failed:
+        print(f"\ngate: {len(failed)} of {len(GATE)} step(s) failed -- "
+              f"{', '.join(failed)}", file=sys.stderr)
+        return 1
+    print(f"\ngate: all {len(GATE)} steps passed")
+    return 0
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--stop-early", action="store_true",
+                        help="stop at the first failing step")
+    raise SystemExit(run(stop_early=parser.parse_args().stop_early))
