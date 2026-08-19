@@ -19,11 +19,10 @@ import json
 import re
 import sys
 from collections import defaultdict
-from collections.abc import Iterator, Sequence
 from dataclasses import asdict, dataclass
 from enum import StrEnum
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import jsonschema
 
@@ -43,6 +42,9 @@ from discipline_core import (
     parse_document,
     prose_of,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator, Sequence
 
 ## The JSON Schema every corpus file's front-matter is validated against. Kept
 ## beside this file so the checker and its schema cannot be separated.
@@ -861,7 +863,10 @@ def check_graph(documents: Sequence[Document], layout: Layout) -> Iterator[Findi
         `REACH_DEPTH` hops, and a checked-in graph that disagrees with the corpus
     """
     try:
-        from build_graph import build, render  # noqa: PLC0415 - optional at import time
+        from build_graph import (  # ruff: ignore[import-outside-top-level] - optional at import time
+            build,
+            render,
+        )
         from graph_model import EdgeType, NodeType, Origin
     except ImportError:  # pragma: no cover - the graph tools are part of the repo
         return
@@ -983,7 +988,7 @@ def check_learning(layout: Layout) -> Iterator[Finding]:
         two disagree on how many events exist
     """
     try:
-        import learn  # noqa: PLC0415 - optional subsystem
+        import learn  # ruff: ignore[import-outside-top-level] - optional subsystem
     except ImportError:
         return
     store = learn.Store(layout.root)
@@ -998,7 +1003,7 @@ def check_learning(layout: Layout) -> Iterator[Finding]:
             remediation="Repair the line, or drop it and re-record the event.",
         )
         return
-    import sqlite3  # noqa: PLC0415 - only needed on this path
+    import sqlite3  # ruff: ignore[import-outside-top-level] - only needed on this path
 
     connection = sqlite3.connect(store.db)
     try:

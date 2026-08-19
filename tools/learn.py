@@ -41,12 +41,14 @@ import subprocess
 import sys
 import tomllib
 import uuid
-from collections.abc import Iterator, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from discipline_core import REPO_ROOT, count_tokens
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator, Sequence
 
 ## The version this build stamps on the index it writes. Nothing ever compares
 ## it: a sync rebuilds from the ledger unconditionally, so an index left by an
@@ -341,7 +343,7 @@ def sync(store: Store) -> sqlite3.Connection:
     connection = connect(store)
     with connection:
         for table in ("usage", "link", "trigger", "learning", "session", "event"):
-            connection.execute(f"DELETE FROM {table}")  # noqa: S608 - fixed table names
+            connection.execute(f"DELETE FROM {table}")  # ruff: ignore[hardcoded-sql-expression] - fixed table names
         events = read_ledger(store)
         for event in events:
             connection.execute(
@@ -427,7 +429,7 @@ def _apply(connection: sqlite3.Connection, event: dict[str, Any],
             "helped_delta" if outcome == "helped" else "noise_delta"
         ]
         connection.execute(
-            f"UPDATE learning SET {column} = {column} + 1, "  # noqa: S608 - column from a fixed map
+            f"UPDATE learning SET {column} = {column} + 1, "  # ruff: ignore[hardcoded-sql-expression] - column from a fixed map
             "confidence = MAX(?, MIN(?, confidence + ?)), "
             "sessions = (SELECT COUNT(DISTINCT session) FROM usage WHERE learning_id = ?), "
             "last_seen_ts = ? WHERE id = ?",
@@ -999,7 +1001,7 @@ def run_verification(argv: Sequence[str], root: Path,
     @return the outcome word, the exit status when there was one, and one line of detail
     """
     try:
-        finished = subprocess.run(  # noqa: S603 - allowlisted argv, list form, never a shell
+        finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - allowlisted argv, list form, never a shell
             list(argv), cwd=root, capture_output=True, text=True,
             encoding="utf-8", errors="replace", timeout=timeout, check=False,
         )
@@ -1055,7 +1057,7 @@ def verify(store: Store, connection: sqlite3.Connection, *, execute: bool = Fals
     @return one result per live entry carrying a verification command, ordered by id
     """
     rows = connection.execute(
-        "SELECT id, verification FROM learning "  # noqa: S608 - placeholders, not values
+        "SELECT id, verification FROM learning "  # ruff: ignore[hardcoded-sql-expression] - placeholders, not values
         "WHERE verification IS NOT NULL AND verification != '' "
         f"AND status NOT IN ({','.join('?' * len(RETIRED))}) ORDER BY id",
         RETIRED,
@@ -1181,39 +1183,53 @@ def render_index(connection: sqlite3.Connection, config: dict[str, Any]) -> str:
             continue
         lines += [f"## {status}", ""]
         for row in items:
-            triggers = [
-                f"`{t['type']}:{t['pattern']}`" for t in connection.execute(
-                    "SELECT type, pattern FROM trigger WHERE learning_id = ? "
-                    "ORDER BY type, pattern", (row["id"],)
-                )
-            ]
-            links = [
-                l["node"] for l in connection.execute(  # noqa: E741 - row alias
-                    "SELECT node FROM link WHERE learning_id = ? ORDER BY node", (row["id"],)
-                )
-            ]
-            lines += [
-                f"### {row['id']} · {row['claim']}",
-                "",
-                f"- **Do** {row['action']}",
-                f"- **Kind** {row['kind']} · **scope** {row['scope']} · "
-                f"**evidence** {row['evidence']} "
-                f"(+{row['helped']}/-{row['noise']} over {row['sessions']} session(s))",
-                f"- **Confidence** {row['confidence']:.2f}, last seen {row['last_seen_ts'][:10]}",
-                f"- **Triggers** {', '.join(triggers) or 'none'}",
-            ]
-            if links:
-                lines.append(f"- **About** {', '.join(links)}")
-            if row["verification"]:
-                lines.append(f"- **Verify** `{row['verification']}`")
-            if row["promoted_to"]:
-                lines.append(f"- **Promoted to** `{row['promoted_to']}` — retired from retrieval")
-            if row["superseded_by"]:
-                lines.append(f"- **Superseded by** {row['superseded_by']}")
-            if row["note"]:
-                lines.append(f"- **Note** {row['note']}")
-            lines.append("")
+            lines += _render_learning_entry(connection, row)
     return "\n".join(lines).rstrip() + "\n"
+
+
+def _render_learning_entry(connection: sqlite3.Connection, row: sqlite3.Row) -> list[str]:
+    """One learning as a readable block, with only the fields it actually has.
+
+    The optional lines are omitted rather than emitted empty, so a diff of this
+    file shows a learning gaining a verification command or a promotion as an
+    added line instead of a changed one.
+
+    @param connection an index already folded from the ledger
+    @param row the learning's folded state
+    @return the block's lines, ending in one blank
+    """
+    triggers = [
+        f"`{t['type']}:{t['pattern']}`" for t in connection.execute(
+            "SELECT type, pattern FROM trigger WHERE learning_id = ? "
+            "ORDER BY type, pattern", (row["id"],)
+        )
+    ]
+    links = [
+        l["node"] for l in connection.execute(  # ruff: ignore[ambiguous-variable-name] - row alias
+            "SELECT node FROM link WHERE learning_id = ? ORDER BY node", (row["id"],)
+        )
+    ]
+    lines = [
+        f"### {row['id']} · {row['claim']}",
+        "",
+        f"- **Do** {row['action']}",
+        f"- **Kind** {row['kind']} · **scope** {row['scope']} · "
+        f"**evidence** {row['evidence']} "
+        f"(+{row['helped']}/-{row['noise']} over {row['sessions']} session(s))",
+        f"- **Confidence** {row['confidence']:.2f}, last seen {row['last_seen_ts'][:10]}",
+        f"- **Triggers** {', '.join(triggers) or 'none'}",
+    ]
+    optional = (
+        (links, f"- **About** {', '.join(links)}"),
+        (row["verification"], f"- **Verify** `{row['verification']}`"),
+        (row["promoted_to"],
+         f"- **Promoted to** `{row['promoted_to']}` — retired from retrieval"),
+        (row["superseded_by"], f"- **Superseded by** {row['superseded_by']}"),
+        (row["note"], f"- **Note** {row['note']}"),
+    )
+    lines += [text for present, text in optional if present]
+    lines.append("")
+    return lines
 
 
 def render_calibration(connection: sqlite3.Connection, config: dict[str, Any],

@@ -17,12 +17,14 @@ import argparse
 import re
 import sys
 from collections import Counter, defaultdict
-from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import yaml
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 ## Derived from this file's location so the script works from any directory.
 REPO_ROOT: Final = Path(__file__).resolve().parent.parent

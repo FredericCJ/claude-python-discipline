@@ -21,12 +21,14 @@ import argparse
 import re
 import sys
 from collections import Counter
-from collections.abc import Iterator, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import yaml
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator, Sequence
 
 ## Where the corpus is read from unless `--root` says otherwise, and -- always,
 ## `--root` notwithstanding -- the root the paths in the output are relative to.

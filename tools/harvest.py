@@ -17,10 +17,13 @@ from __future__ import annotations
 
 import argparse
 import sys
-from collections.abc import Sequence
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import learn
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 ## A finding needs this much evidence before it is worth an upstream proposal.
 ## Below it, one session disliked a rule; at or above it, the rule is a problem.

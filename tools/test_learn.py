@@ -17,12 +17,15 @@ import datetime as dt
 import json
 import shutil
 import sqlite3
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 import learn
 from discipline_core import REPO_ROOT
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @pytest.fixture

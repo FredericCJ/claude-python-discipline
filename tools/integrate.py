@@ -51,11 +51,13 @@ import json
 import re
 import subprocess
 import sys
-from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator, Sequence
 
 ## Opens the managed region. The version lets `--check` see a stale block.
 BEGIN: Final = "<!-- BEGIN AGENT DISCIPLINE"
@@ -782,7 +784,7 @@ def _is_git_repository(root: Path) -> bool:
     @return True when git reports a working tree
     """
     try:
-        finished = subprocess.run(  # noqa: S603 - fixed argv, no shell
+        finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv, no shell
             ["git", "-C", str(root), "rev-parse", "--is-inside-work-tree"],
             capture_output=True, text=True, timeout=10, check=False,
         )

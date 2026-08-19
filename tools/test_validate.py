@@ -13,9 +13,8 @@ from __future__ import annotations
 import ast
 import datetime as dt
 import json
-from collections.abc import Iterable, Iterator, Sequence
-from pathlib import Path
 from textwrap import dedent
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -34,6 +33,10 @@ from validate import (
 from validate import (
     main as validate_main,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator, Sequence
+    from pathlib import Path
 
 ## A rule that passes every check, so each test can break exactly one thing and
 ## attribute the finding to that one thing.

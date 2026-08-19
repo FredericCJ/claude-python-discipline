@@ -17,10 +17,12 @@ Three edge origins, kept apart on purpose:
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator, Sequence
 
 
 class NodeType(StrEnum):
