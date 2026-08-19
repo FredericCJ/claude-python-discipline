@@ -628,6 +628,208 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
                    '    """\n'
                    '    return "12"')),),
     ),
+
+    # ------------------------------------------------- harvested fitness cases
+    #
+    # Twenty-two negative-case functions already existed across eleven suites --
+    # `test_a_missing_faulty_adapter_is_caught` and its kin -- each building a
+    # `broken_copy` and asserting the damage is visible. They were mutations in
+    # all but name, so these entries are TRANSCRIBED rather than invented.
+    #
+    # The transcription is strictly stronger than the test it came from. A
+    # negative case re-implements the assertion beside the real one and asserts
+    # the damage landed; these point `DISCIPLINE_REFERENCE` at the damaged tree
+    # and require THE TAGGED FUNCTION ITSELF to fail. A suite whose negative case
+    # passes while the function it guards would not have noticed is exactly the
+    # gap this matrix exists to close.
+    Mutation(
+        rule_id="TYPE-009",
+        summary="a port publishes an ordinary class instead of a Protocol",
+        source=("Transcribed from `test_a_port_without_a_protocol_is_caught`. "
+                "TYPE-009's whole content is that conformance is structural: an "
+                "adapter satisfying a base class must import the core to do it."),
+        node="enforce/fitness/test_ports.py::test_every_port_is_a_protocol",
+        write=(("src/refpkg/ports/clock.py",
+                ('"""A port with no contract."""\n\n\nclass Clock:\n'
+                 '    """Not a Protocol."""\n')),),
+    ),
+    Mutation(
+        rule_id="ARCH-007",
+        summary="a port is a Protocol whose docstring states no contract at all",
+        source=("The other half of `test_every_port_is_a_protocol`, given its own "
+                "damage so the two rules it decides are discriminated separately. "
+                "ARCH-007 asks for the terms, not merely the shape."),
+        node="enforce/fitness/test_ports.py::test_every_port_is_a_protocol",
+        write=(("src/refpkg/ports/clock.py",
+                ('"""A port that says nothing about its terms."""\n\n'
+                 "from typing import Protocol\n\n\nclass Clock(Protocol):\n"
+                 '    """A clock."""\n')),),
+    ),
+    Mutation(
+        rule_id="ARCH-008",
+        summary="a port loses its faulty adapter",
+        source=("Transcribed from `test_a_missing_faulty_adapter_is_caught`, and "
+                "the case an UNCONDITIONAL rule exists to catch: the faulty "
+                "adapter is the one people argue is unnecessary."),
+        node="enforce/fitness/test_ports.py::test_port_triad",
+        drop=("src/refpkg/adapters/clock/faulty.py",),
+    ),
+    Mutation(
+        rule_id="ARCH-009",
+        summary="the contract suite exercises the fake and neither other adapter",
+        source=("Transcribed from `test_a_suite_covering_one_adapter_is_caught`. "
+                "A suite run against the fake alone tests the fake."),
+        node="enforce/fitness/test_ports.py::test_contract_suite_per_adapter",
+        write=(("tests/contract/test_clock_contract.py",
+                ('"""Tests. Oracle: contract."""\n\n\ndef test_it():\n'
+                 '    """Only the fake."""\n    assert True\n')),),
+    ),
+    Mutation(
+        rule_id="TEST-005",
+        summary="a port has no contract suite at all",
+        source=("TEST-005 states ARCH-009 almost word for word, so it is given "
+                "DIFFERENT damage rather than a duplicate entry: the suite is "
+                "absent rather than narrow. Two rules this alike are a "
+                "supersession candidate, and recording both mutations is what "
+                "makes the overlap visible."),
+        node="enforce/fitness/test_ports.py::test_contract_suite_per_adapter",
+        drop=("tests/contract/test_clock_contract.py",),
+    ),
+    Mutation(
+        rule_id="ARCH-010",
+        summary="a port names none of the eight reasons it might exist",
+        source=("Transcribed from `test_a_port_with_no_justification_is_caught`. "
+                "A port with no stated justification is an indirection nobody can "
+                "argue with, which is how a codebase acquires ports it does not "
+                "need."),
+        node="enforce/fitness/test_ports.py::test_port_justification",
+        write=(("src/refpkg/ports/clock.py",
+                ('"""A port that says nothing about why it exists."""\n\n'
+                 "from typing import Protocol\n\n\nclass Clock(Protocol):\n"
+                 '    """A clock.\n\n    Raises an error on failure.\n    """\n')),),
+    ),
+    Mutation(
+        rule_id="EFCT-015",
+        summary="a writer takes a lock and never reports losing the race",
+        source=("Transcribed from `test_a_writer_that_blocks_silently_is_caught`. "
+                "EFCT-015's point is that contention is a RESULT: a caller that "
+                "blocks has been told nothing and cannot decide to do otherwise."),
+        node="enforce/fitness/test_concurrency.py::test_single_writer",
+        write=(("src/refpkg/adapters/files/locked.py",
+                ('"""A store that is thread-safe and blocks."""\n\n'
+                 "import threading\n\n\nclass LockedStore:\n"
+                 '    """Thread-safe by a lock order of one."""\n\n'
+                 '    def __init__(self):\n        """Build it."""\n'
+                 "        self._lock = threading.Lock()\n")),),
+    ),
+    Mutation(
+        rule_id="EFCT-013",
+        summary="a module shares state across threads and states no semantics",
+        source=("Transcribed from `test_undocumented_concurrency_is_caught`. "
+                "EFCT-013 asks for ownership, ordering, cancellation, shutdown "
+                "and stale-state behaviour to be written down BEFORE the "
+                "component is."),
+        node="enforce/fitness/test_concurrency.py::test_concurrency_documented",
+        write=(("src/refpkg/adapters/files/pooled.py",
+                ('"""A store that shares state across threads and says nothing."""\n\n'
+                 "import threading\n\n\nclass PooledStore:\n"
+                 '    """Shares a dictionary."""\n\n'
+                 '    def __init__(self):\n        """Build it."""\n'
+                 "        self._entries = {}\n")),),
+    ),
+    Mutation(
+        rule_id="EFCT-006",
+        summary="the applier loses the plan and recomputes what it should apply",
+        source=("Transcribed from `test_an_applier_that_recomputes_is_caught`. "
+                "This is the exact shape EFCT-006 forbids -- a second code path "
+                "that predicts what the real one would do -- and the reason a dry "
+                "run stops agreeing with the apply."),
+        node="enforce/fitness/test_effects.py::test_dry_run_matches_apply",
+        replace=(("src/refpkg/app/prune.py",
+                  "def apply(store: FileStore, plan: Plan) -> tuple[str, ...]:",
+                  "def apply(store: FileStore) -> tuple[str, ...]:"),),
+    ),
+    Mutation(
+        rule_id="TEST-001",
+        summary="a unit test imports pathlib and touches a disk",
+        source=("Transcribed from `test_an_impure_unit_test_is_caught`. A unit "
+                "failure the environment can cause is a unit failure that "
+                "localizes nothing, which is the whole reason the layer exists."),
+        node="enforce/fitness/test_layers.py::test_unit_layer_is_pure",
+        write=(("tests/unit/test_impure.py",
+                ('"""Tests. Oracle: example."""\n\nimport pathlib\n\n\n'
+                 'def test_it():\n    """Touches a disk."""\n'
+                 '    assert pathlib.Path(".").exists()\n')),),
+    ),
+    Mutation(
+        rule_id="TEST-002",
+        summary="the fault layer exists and holds no test",
+        source=("Transcribed from `test_an_empty_layer_is_caught`. An empty layer "
+                "is worse than a missing one: a missing directory prompts the "
+                "question, an empty one answers it wrongly."),
+        node="enforce/fitness/test_layers.py::test_layers_populated",
+        drop=("tests/fault/test_containment.py",),
+    ),
+    Mutation(
+        rule_id="TEST-007",
+        summary="the property layer holds hand-picked examples, not generated input",
+        source=("Transcribed from `test_a_property_suite_of_examples_is_caught`, "
+                "which was written in v3.1 because TEST-007 had been claimed by "
+                "`test_layers_populated` -- a function that counts tests per layer "
+                "and cannot tell the two apart."),
+        node="enforce/fitness/test_layers.py::test_property_suites_are_generated",
+        write=(("tests/property/test_examples.py",
+                ('"""Oracle: property."""\n\n\ndef test_round_trip():\n'
+                 '    """Round trip."""\n    assert 2 + 2 == 4\n')),),
+    ),
+    Mutation(
+        rule_id="TEST-009",
+        summary="a failure mode is encoded as a single-purpose class",
+        source=("Transcribed from `test_a_bespoke_fault_class_is_caught`. "
+                "TEST-009 prohibits exactly this: a fault that cannot be "
+                "serialized, replayed or shrunk is a fault nobody can reproduce."),
+        node="enforce/fitness/test_faults.py::test_fault_schedules_are_data",
+        write=(("src/refpkg/adapters/clock/bespoke.py",
+                ('"""A scenario as a class."""\n\n\nclass ClockThatFailsOnce:\n'
+                 '    """Fails the first time."""\n')),),
+    ),
+    Mutation(
+        rule_id="TEST-010",
+        summary="a port is left with no fault test naming it",
+        source=("Transcribed from `test_an_uncovered_port_is_caught`. The fault "
+                "catalogue is only a catalogue if every port appears in it."),
+        node="enforce/fitness/test_faults.py::test_fault_catalogue",
+        drop=("tests/fault/test_containment.py",),
+    ),
+    Mutation(
+        rule_id="ERR-016",
+        summary="the fault layer asserts that it raised and nothing about where",
+        source=("Transcribed from "
+                "`test_a_fault_layer_asserting_nothing_about_containment_is_caught`. "
+                "A test asserting only that something raised has shown the fault "
+                "escaped, not that it was contained."),
+        node="enforce/fitness/test_faults.py::test_fault_containment",
+        write=(("tests/fault/test_containment.py",
+                ('"""Tests. Oracle: contract."""\n\nimport pytest\n\n\n'
+                 'def test_it_raises():\n    """Something broke."""\n'
+                 "    with pytest.raises(ValueError):\n        raise ValueError\n")),),
+    ),
+    Mutation(
+        rule_id="TEST-008",
+        summary="a golden is compared with no deliberate regeneration path",
+        source=("Transcribed from `test_a_golden_with_no_deliberate_path_is_caught`. "
+                "Without one, the only way to update a golden is to edit it by "
+                "hand or regenerate it ambiently, and TEST-008 exists because the "
+                "second stops being a review."),
+        node="enforce/fitness/test_goldens.py::test_goldens_reviewed",
+        write=(("tests/golden/expected.txt", "some output\n"),
+               ("tests/integration/test_golden.py",
+                ('"""Tests. Oracle: golden."""\n\nfrom pathlib import Path\n\n\n'
+                 "def test_output_matches():\n"
+                 '    """Compare against the committed file."""\n'
+                 '    expected = Path("tests/golden/expected.txt").read_text()\n'
+                 "    assert expected\n"))),
+    ),
 )
 
 

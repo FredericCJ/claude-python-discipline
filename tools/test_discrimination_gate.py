@@ -283,3 +283,61 @@ def test_a_syntax_error_does_not_credit_an_auto_rule(
     status, _, provoked = discrimination_gate.run()
     assert status == discrimination_gate.EXIT_FAILED
     assert provoked == set()
+
+
+def test_a_rule_arriving_with_no_mutation_breaks_the_ceiling(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+) -> None:
+    """The direction `D` alone cannot see.
+
+    A release adding four decided rules and one mutation has raised `D` by one
+    and widened the gap by three. `D` may only rise, so it reports progress; the
+    ceiling is what reports the truth.
+
+    @param monkeypatch used to substitute the table and the baseline path
+    @param tmp_path holds a baseline recording a narrower gap than now exists
+    """
+    baseline = tmp_path / "baseline.json"
+    baseline.write_text(
+        json.dumps({"count": 1, "rules": ["DOC-001"], "gap": 0}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(discrimination_gate, "BASELINE_PATH", baseline)
+    monkeypatch.setattr(discrimination, "MUTATIONS", (_WORKS,))
+    assert discrimination_gate.main([]) == discrimination_gate.EXIT_FAILED
+
+
+def test_a_baseline_with_no_ceiling_is_not_treated_as_zero(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+) -> None:
+    """A baseline recorded before the ceiling existed must not fail every run.
+
+    The field is absent rather than zero in that case, and reading absent as
+    zero would fail the gate on every tree that had ever recorded a floor -- the
+    upgrade hazard that makes a new ratchet field worth a test of its own.
+
+    @param monkeypatch used to substitute the table and the baseline path
+    @param tmp_path holds a baseline in the pre-ceiling shape
+    """
+    baseline = tmp_path / "baseline.json"
+    baseline.write_text(
+        json.dumps({"count": 1, "rules": ["DOC-001"]}), encoding="utf-8",
+    )
+    monkeypatch.setattr(discrimination_gate, "BASELINE_PATH", baseline)
+    monkeypatch.setattr(discrimination, "MUTATIONS", (_WORKS,))
+    assert discrimination_gate.main([]) == discrimination_gate.EXIT_OK
+
+
+def test_the_gap_counts_only_rules_a_mechanism_actually_decides() -> None:
+    """A rule with no working mechanism is V080's business, not this one.
+
+    Counting it here would report the same defect twice under two names, and
+    the second count would move whenever the first did -- which is how two
+    numbers stop being independent evidence.
+    """
+    gap = set(discrimination_gate.undiscriminated(set(discrimination.covered())))
+    assert "ALLOC-005" not in gap, (
+        "ALLOC-005 is reported by V080 as undecided; it must not also be counted "
+        "as decided-but-undiscriminated"
+    )
+    assert gap, "the gap is empty, so this assertion proves nothing"

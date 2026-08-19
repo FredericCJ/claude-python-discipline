@@ -289,5 +289,72 @@ def test_the_decorated_function_is_returned_unchanged() -> None:
     assert sample() == 7
 
 
+# ----------------------------------------------------------------------- V098
+
+
+def write_matrix(root: Path, *covered: str) -> None:
+    """Give a scratch corpus a discrimination matrix covering the named rules.
+
+    @param root the scratch repository root
+    @param covered rule ids the matrix should report as discriminated
+    """
+    target = root / "enforce"
+    target.mkdir(parents=True, exist_ok=True)
+    listed = ", ".join(f'"{rule}"' for rule in covered)
+    (target / "discrimination.py").write_text(
+        '"""A matrix."""\n\n\n'
+        "def covered():\n"
+        '    """Which rules have a mutation.\n\n    @return the ids\n    """\n'
+        f"    return frozenset({{{listed}}})\n",
+        encoding="utf-8",
+    )
+
+
+def test_v098_reports_a_decided_rule_nobody_has_watched(tmp_path: Path) -> None:
+    """A rule whose mechanism exists, claims it, and has never been observed.
+
+    The third question, after "does a mechanism exist" and "does it claim this
+    rule". `ARCH-013` answered yes to both and reported nothing against four
+    real domains for as long as it was counted mechanized.
+    """
+    module(tmp_path, body=FITNESS_RULE)
+    write_fitness(tmp_path, declaration='@decides("TYPE-001")')
+    write_matrix(tmp_path)
+    findings = run_on(tmp_path)
+    assert "V080" not in codes(findings)
+    assert "V098" in codes(findings)
+
+
+def test_v098_clears_once_the_rule_has_a_mutation(tmp_path: Path) -> None:
+    """Declaring a mutation is what clears it, with nothing else changed."""
+    module(tmp_path, body=FITNESS_RULE)
+    write_fitness(tmp_path, declaration='@decides("TYPE-001")')
+    write_matrix(tmp_path, "TYPE-001")
+    assert "V098" not in codes(run_on(tmp_path))
+
+
+def test_v098_is_silent_when_the_rule_is_not_decided_at_all(tmp_path: Path) -> None:
+    """An undecided rule is V080's finding; reporting it twice is noise.
+
+    Two codes moving together are not two pieces of evidence.
+    """
+    module(tmp_path, body=FITNESS_RULE)
+    write_fitness(tmp_path)
+    write_matrix(tmp_path)
+    findings = run_on(tmp_path)
+    assert "V080" in codes(findings)
+    assert "V098" not in codes(findings)
+
+
+def test_v098_is_silent_when_the_tree_carries_no_matrix(tmp_path: Path) -> None:
+    """An adopter may vendor the corpus without the matrix.
+
+    Reporting a gap that cannot be computed would be worse than reporting none.
+    """
+    module(tmp_path, body=FITNESS_RULE)
+    write_fitness(tmp_path, declaration='@decides("TYPE-001")')
+    assert "V098" not in codes(run_on(tmp_path))
+
+
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-q"]))

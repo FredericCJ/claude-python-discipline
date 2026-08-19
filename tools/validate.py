@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import importlib.util
 import json
 import re
 import sys
@@ -89,6 +90,11 @@ MIN_OUTCOME_SHARE: Final = 0.10
 ## a wall: the wall is `V050` at the ceiling itself, and by then the addition has
 ## already been written.
 CROWDED_SHARE: Final = 0.90
+
+## How many of V098's rules are named in the message before it elides. Enough
+## to start on without turning a warning into a wall of ids; the full list is
+## what `python tools/discrimination_gate.py` prints.
+GAP_NAMED: Final = 6
 
 ## How far an agent may have to walk from a module to reach any rule (V092).
 REACH_DEPTH: Final = 3
@@ -1056,6 +1062,96 @@ def check_learning_outcomes(layout: Layout) -> Iterator[Finding]:
     )
 
 
+def check_discrimination_gap(documents: Sequence[Document],
+                             layout: Layout) -> Iterator[Finding]:
+    """V098 -- a decided rule has been watched rejecting something.
+
+    `V080` asks whether a mechanism exists. It has been wrong twice about that,
+    both times for the same reason: existence was standing in for agreement. A
+    check module existed and did not claim the rule; a fitness function existed
+    and declared nothing. Both were corrected by making the mechanism say what it
+    decides.
+
+    **Saying is still not doing.** `ARCH-013` named `BaseModel` among the
+    framework types a domain may not borrow, claimed the rule properly, was
+    counted `mechanized`, and reported nothing against four real domains modelled
+    entirely in pydantic -- because it read annotations and never bases. Nothing
+    in the corpus could have found that, because nothing had ever put something
+    it should reject in front of it.
+
+    So this is the third question, and the last one: has anyone watched it work?
+    The invariant the repository is aiming at is that the decided set and the
+    discriminated set are the same set, and the difference between them is a
+    defect list rather than a fact of life.
+
+    A WARNING with its own ratchet, deliberately, in the same shape as `V051`,
+    `V080` and `V097`. Ninety-three rules are in the gap as this ships. Making it
+    an error would fail the gate on the day it was written, and a gate that fails
+    for a reason nobody can fix that afternoon is a gate people learn to run with
+    `--no-verify`. The ratchet is what stops it drifting the wrong way; promoting
+    it to an error is a later release's decision, once the number is small enough
+    to read as a list.
+
+    @param documents every parsed corpus file
+    @param layout the tree they were read from
+    @return at most one finding, naming how many decided rules nobody has watched
+    """
+    # Loaded from the tree under validation BY PATH, never by import name. A
+    # plain `import discrimination` resolves to whichever copy is first on
+    # sys.path, which -- when the validator is run against a scratch corpus from
+    # a session that has already imported the real one -- is the repository's own
+    # matrix. The gap would then be computed for one tree and reported against
+    # another, and the first version of this function did exactly that.
+    source = layout.root / "enforce" / "discrimination.py"
+    if not source.is_file():
+        # An adopter may have vendored the corpus without the matrix. Reporting a
+        # gap that cannot be computed would be worse than reporting nothing.
+        return
+    spec = importlib.util.spec_from_file_location("_discrimination", source)
+    if spec is None or spec.loader is None:
+        return
+    discrimination = importlib.util.module_from_spec(spec)
+    # Registered before execution because `@dataclass(slots=True)` rebuilds the
+    # class and resolves `sys.modules[cls.__module__]` to do it. Without this the
+    # load dies with `'NoneType' object has no attribute '__dict__'`, which names
+    # neither the module nor the cause.
+    sys.modules[spec.name] = discrimination
+    try:
+        spec.loader.exec_module(discrimination)
+    except Exception:  # ruff: ignore[blind-except] - a corpus file, not ours
+        return
+    finally:
+        sys.modules.pop(spec.name, None)
+
+    covered = discrimination.covered()
+    gap = sorted(
+        rule.rule_id
+        for doc in documents for rule in doc.rules
+        if rule.force is Force.BINDING
+        and rule.rule_id not in covered
+        and rule.mechanisms
+        and any(mechanism_is_implemented(m, layout.root, rule.rule_id) is not False
+                for m in rule.mechanisms)
+    )
+    if not gap:
+        return
+    yield Finding(
+        code="V098",
+        severity=Severity.WARN,
+        path="enforce/discrimination.py",
+        line=1,
+        message=(f"{len(gap)} binding rule(s) name a mechanism that nobody has "
+                 f"watched reject anything: {', '.join(gap[:GAP_NAMED])}"
+                 f"{' ...' if len(gap) > GAP_NAMED else ''}"),
+        remediation=(
+            "Declare one concrete mutation per rule in `enforce/discrimination.py` "
+            "and run `python tools/discrimination_gate.py`. A mechanism that "
+            "exists and has never been observed failing may only ever have said "
+            "yes."
+        ),
+    )
+
+
 def check_learning(layout: Layout) -> Iterator[Finding]:
     """V096 -- the ledger and its query index agree.
 
@@ -1176,6 +1272,7 @@ def run(layout: Layout = DEFAULT_LAYOUT) -> list[Finding]:
     findings.extend(check_grounding(documents, layout))
     findings.extend(check_learning(layout))
     findings.extend(check_learning_outcomes(layout))
+    findings.extend(check_discrimination_gap(documents, layout))
     return findings
 
 

@@ -38,6 +38,7 @@ from typing import TYPE_CHECKING, Final
 import import_gate
 import lint_gate
 import type_gate
+from discipline_core import Force, iter_documents, mechanism_is_implemented
 
 ## The repository root, one level up from `tools/`.
 REPO_ROOT: Final = Path(__file__).resolve().parent.parent
@@ -308,6 +309,60 @@ def run() -> tuple[int, list[str], set[str]]:
     return (EXIT_FAILED if complaints else EXIT_OK), complaints, provoked
 
 
+def undiscriminated(provoked: set[str]) -> list[str]:
+    """Binding rules that name a working mechanism nobody has watched reject.
+
+    The complement of `D` within the decided set, and the number `V098` reports.
+    `D` on its own may only rise, which stops a mechanism that used to
+    discriminate from quietly ceasing to -- but it says nothing about a NEW
+    binding rule arriving with a mechanism and no mutation. That would leave `D`
+    untouched while the corpus grew a rule nobody had watched work. This is the
+    guard for that direction.
+
+    @param provoked the rules just observed being rejected
+    @return the gap, sorted, so the ceiling has something to name
+    """
+    return sorted(
+        rule.rule_id
+        for document in iter_documents(REPO_ROOT / "discipline")
+        for rule in document.rules
+        if rule.force is Force.BINDING
+        and rule.rule_id not in provoked
+        and rule.mechanisms
+        and any(mechanism_is_implemented(m, REPO_ROOT, rule.rule_id) is not False
+                for m in rule.mechanisms)
+    )
+
+
+def ratchets_held(provoked: set[str], gap: list[str],
+                  baseline: dict[str, object]) -> str:
+    """Whether either recorded number has slipped, and which way.
+
+    Two directions, and the second is the one a rising count hides. `D` falling
+    means a mechanism that used to discriminate has stopped. The gap widening
+    means a rule arrived carrying a mechanism and no mutation -- which leaves `D`
+    untouched, so a release adding four decided rules and one mutation reports
+    progress while covering proportionally less than before.
+
+    @param provoked the rules just observed being rejected
+    @param gap the decided rules with no mutation
+    @param baseline the committed floor and ceiling
+    @return an empty string when both hold, else what slipped and by how much
+    """
+    floor = int(baseline.get("count", 0))
+    if len(provoked) < floor:
+        lost = ", ".join(sorted(set(baseline.get("rules", [])) - provoked))
+        return (f"D fell from {floor} to {len(provoked)} -- {lost} no longer "
+                f"provoked. A ratchet may only rise.")
+
+    ceiling = baseline.get("gap")
+    if ceiling is not None and len(gap) > int(ceiling):
+        return (f"{len(gap)} decided rule(s) are undiscriminated, above the "
+                f"recorded {ceiling}. A rule may not arrive carrying a mechanism "
+                f"and no mutation.")
+    return ""
+
+
 def read_baseline() -> dict[str, object]:
     """The committed floor, or an empty one when nothing has been recorded.
 
@@ -358,6 +413,7 @@ def main(argv: list[str] | None = None) -> int:
                         "count alone says nothing about whether they are good.",
                 "count": len(provoked),
                 "rules": sorted(provoked),
+                "gap": len(undiscriminated(provoked)),
                 "why": arguments.why,
             }, indent=2) + "\n",
             encoding="utf-8",
@@ -368,13 +424,15 @@ def main(argv: list[str] | None = None) -> int:
     if status != EXIT_OK:
         print(f"discrimination: {len(complaints)} broken claim(s)", file=sys.stderr)
         return EXIT_FAILED
-    if len(provoked) < floor:
-        lost = ", ".join(sorted(set(baseline.get("rules", [])) - provoked))
-        print(f"discrimination: D fell from {floor} to {len(provoked)} -- {lost} no "
-              f"longer provoked. A ratchet may only rise.", file=sys.stderr)
+    gap = undiscriminated(provoked)
+    slipped = ratchets_held(provoked, gap, baseline)
+    if slipped:
+        print(f"discrimination: {slipped}", file=sys.stderr)
         return EXIT_FAILED
+
     print(f"discrimination: D={len(provoked)}, floor {floor}, "
-          f"{len(discrimination.MUTATIONS)} mutation(s) all provoking their rule")
+          f"{len(discrimination.MUTATIONS)} mutation(s) all provoking their rule; "
+          f"{len(gap)} decided rule(s) still undiscriminated")
     return EXIT_OK
 
 
