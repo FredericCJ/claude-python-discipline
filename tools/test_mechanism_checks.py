@@ -14,13 +14,16 @@ V096 asks whether the learning ledger and its derived index agree.
 from __future__ import annotations
 
 import shutil
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 import learn
 from discipline_core import REPO_ROOT
 from test_validate import CONFORMANT_RULE, codes, module, run_on
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 ## A rule naming a mechanism that will never exist on disk.
 UNBUILT_RULE = """\

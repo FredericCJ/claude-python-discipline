@@ -16,11 +16,14 @@ from __future__ import annotations
 
 import ast
 import re
-from collections.abc import Iterator
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-from . import Check, Finding, is_test_path, main
+from . import Finding, ModuleCheck, is_test_path, main
 from .doc_coverage import EXEMPT_NAMES, _named_assignments
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+    from pathlib import Path
 
 ## Words that carry no information when they are all a docstring adds.
 FILLER = frozenset({
@@ -69,7 +72,7 @@ _WORD = re.compile(r"[a-z0-9]+")
 _TRAILING_DOT_SPAN = re.compile(r"`([^`\n]*[^.`]\.)`")
 
 
-class DocStyleCheck(Check):
+class DocStyleCheck(ModuleCheck):
     """Report documentation that is unparseable, redundant or empty of content."""
 
     ## Invoked as `python -m checks.doc_style`.
@@ -77,12 +80,12 @@ class DocStyleCheck(Check):
     ## The law/DOC rules this check decides.
     rules = ("DOC-004", "DOC-008", "DOC-009", "DOC-010")
 
-    def visit_module(self, tree: ast.Module, path: Path, layer: str) -> Iterator[Finding]:
+    def visit_module(self, tree: ast.Module, path: Path, _layer: str) -> Iterator[Finding]:
         """Yield findings for every badly formed documentation comment in `tree`.
 
         @param tree the parsed module
         @param path the file it came from
-        @param layer the architectural layer, unused here
+        @param _layer the architectural layer, unused here
         @return findings for documentation that will not carry its contract
         """
         if is_test_path(path):

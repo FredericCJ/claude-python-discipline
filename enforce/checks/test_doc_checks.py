@@ -10,14 +10,19 @@ people learn to suppress.
 
 from __future__ import annotations
 
-from pathlib import Path
 from textwrap import dedent
+from typing import TYPE_CHECKING
 
 import pytest
 
-from checks import Check
+from checks import project
 from checks.doc_coverage import DocCoverageCheck
 from checks.doc_style import DocStyleCheck
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from checks import Check
 
 
 def write(tmp_path: Path, source: str, name: str = "mod.py") -> Path:
@@ -44,10 +49,17 @@ def rules_fired(check: Check, path: Path) -> set[str]:
     Collapses duplicates and discards line numbers, so a test asserts which rule
     spoke rather than how often or where.
 
+    The check is put under a Doxygen declaration first. `DOC-002` and `DOC-007`
+    describe that engine's own syntax and are inactive by default, so a test
+    asserting they fire has to say which engine it is testing -- exactly as an
+    adopting project does. Leaving it implicit is how these tests would come to
+    assert the default rather than the rule.
+
     @param check any check; it is driven over this one file rather than a tree
     @param path the file to run it over
     @return every rule id reported, empty when the file conforms
     """
+    check.declaration = project.Declaration(doc_engine="doxygen")
     return {f.rule_id for f in check.run([path])}
 
 

@@ -12,10 +12,13 @@ sees the transitive graph, this one sees the line and can name it.
 from __future__ import annotations
 
 import ast
-from collections.abc import Iterator
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-from . import Check, Finding, is_test_path, main
+from . import Finding, ModuleCheck, is_test_path, main
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+    from pathlib import Path
 
 ## Anything that can reach outside the process, or make a result irreproducible.
 IO_MODULES = frozenset({
@@ -33,7 +36,7 @@ FOREIGN_TYPES = frozenset({
 })
 
 
-class DomainPurityCheck(Check):
+class DomainPurityCheck(ModuleCheck):
     """Rejects a domain module that reaches outside itself or borrows a foreign type.
 
     Also rejects an unfrozen domain dataclass and a closed set written as a

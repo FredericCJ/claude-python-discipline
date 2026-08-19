@@ -11,17 +11,20 @@ survives, and the true origin is gone.
 from __future__ import annotations
 
 import ast
-from collections.abc import Iterator
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-from . import Check, Finding, is_test_path, main
+from . import Finding, ModuleCheck, is_test_path, main
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+    from pathlib import Path
 
 ## Catching one of these and doing nothing is the failure mode no diagnostic
 ## machinery can recover from: nothing is emitted to analyse.
 _BROAD = frozenset({"Exception", "BaseException"})
 
 
-class RaiseFromCheck(Check):
+class RaiseFromCheck(ModuleCheck):
     """Rejects a handler that loses what it caught.
 
     Every layer is examined, since a severed chain hides an origin wherever it
@@ -33,7 +36,7 @@ class RaiseFromCheck(Check):
     ## The law/DIAG rules this mechanism decides.
     rules = ("DIAG-005", "DIAG-006", "DIAG-007", "DIAG-008")
 
-    def visit_module(self, tree: ast.Module, path: Path, layer: str) -> Iterator[Finding]:
+    def visit_module(self, tree: ast.Module, path: Path, _layer: str) -> Iterator[Finding]:
         """Yield findings for every `except` clause in one module.
 
         The file is read again as text because DIAG-007 turns on whether a
@@ -41,7 +44,7 @@ class RaiseFromCheck(Check):
 
         @param tree the module's syntax tree
         @param path the file it was parsed from, and re-read from here
-        @param layer the architectural layer, unused -- the chain matters in all
+        @param _layer the architectural layer, unused -- the chain matters in all
         @return findings for handlers that break or silently drop the chain
         """
         if is_test_path(path):

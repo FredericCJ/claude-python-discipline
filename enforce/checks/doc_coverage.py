@@ -14,10 +14,13 @@ from __future__ import annotations
 
 import ast
 import re
-from collections.abc import Iterator
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-from . import Check, Finding, main
+from . import Finding, ModuleCheck, main
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+    from pathlib import Path
 
 ## Names that carry no contract of their own and are documented by their owner.
 EXEMPT_NAMES = frozenset({"__all__", "__version__", "__author__", "_", "__"})
@@ -32,7 +35,7 @@ _DOC_RETURN = re.compile(r"@(?:returns?|retval)\b")
 FIELD_CLASS_DECORATORS = frozenset({"dataclass", "define", "frozen"})
 
 
-class DocCoverageCheck(Check):
+class DocCoverageCheck(ModuleCheck):
     """Report elements with no documentation comment of any accepted form."""
 
     ## Invoked as `python -m checks.doc_coverage`.
@@ -40,12 +43,12 @@ class DocCoverageCheck(Check):
     ## The law/DOC rules this check decides.
     rules = ("DOC-001", "DOC-002", "DOC-003", "DOC-007")
 
-    def visit_module(self, tree: ast.Module, path: Path, layer: str) -> Iterator[Finding]:
+    def visit_module(self, tree: ast.Module, path: Path, _layer: str) -> Iterator[Finding]:
         """Yield one finding per undocumented element in `tree`.
 
         @param tree the parsed module
         @param path the file it came from, used for reporting
-        @param layer the architectural layer, unused here
+        @param _layer the architectural layer, unused here
         @return findings for every element lacking documentation
         """
         source = path.read_text(encoding="utf-8").splitlines()
@@ -57,21 +60,33 @@ class DocCoverageCheck(Check):
                 'Open the file with a """! summary; it is what every index shows.',
             )
 
+        # DOC-002 and DOC-007 describe one engine's comment syntax -- the `##`
+        # block and the `@param`/`@return` tags Doxygen reads. DOC-001 and
+        # DOC-003 describe whether an element is documented at all, which is
+        # engine-independent. Applying all four unconditionally produced 1,064
+        # findings of form against 18 of substance on a codebase documenting in
+        # another convention; a check with that ratio gets switched off.
+        forms = self.declaration.doc_engine == "doxygen"
+
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef):
-                yield from self._class(node, path, source)
+                yield from self._class(node, path, source, forms=forms)
             elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                yield from self._callable(node, path)
+                yield from self._callable(node, path, forms=forms)
 
-        yield from self._module_values(tree, path, source)
+        if forms:
+            yield from self._module_values(tree, path, source)
 
     def _callable(self, node: ast.FunctionDef | ast.AsyncFunctionDef,
-                  path: Path) -> Iterator[Finding]:
+                  path: Path, *, forms: bool) -> Iterator[Finding]:
         """Report a function or method with no docstring.
 
         @param node the callable
         @param path the file it came from
-        @return one finding when the docstring is absent
+        @param forms whether the declared engine reads `@param`/`@return`, which
+            decides whether per-parameter completeness is checked at all
+        @return one finding when the docstring is absent, plus DOC-007 findings
+            under an engine that reads the tags
         """
         if _is_overload(node):
             return
@@ -83,16 +98,21 @@ class DocCoverageCheck(Check):
                 "State what it guarantees: parameters, result, and when it fails.",
             )
             return
-        yield from _completeness(node, docstring, path)
+        if forms:
+            yield from _completeness(node, docstring, path)
 
     def _class(self, node: ast.ClassDef, path: Path,
-               source: list[str]) -> Iterator[Finding]:
+               source: list[str], *, forms: bool) -> Iterator[Finding]:
         """Report an undocumented class and any undocumented attribute in it.
 
         @param node the class definition
         @param path the file it came from
         @param source the file's lines, for finding `##` blocks
-        @return findings for the class and its attributes
+        @param forms whether the declared engine reads `##` blocks; when it does
+            not, the class itself is still required to be documented but its
+            attributes are not held to a syntax nothing reads
+        @return findings for the class and, under a `##`-reading engine, its
+            attributes
         """
         if ast.get_docstring(node) is None:
             yield Finding(
@@ -100,6 +120,8 @@ class DocCoverageCheck(Check):
                 f"class {node.name} has no docstring",
                 "State what the type represents and what holds of every instance.",
             )
+        if not forms:
+            return
         is_enum = any(_name_of(base).endswith(("Enum", "Flag")) for base in node.bases)
         for statement in node.body:
             for target, lineno in _named_assignments(statement):

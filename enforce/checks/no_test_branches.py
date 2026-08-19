@@ -10,10 +10,13 @@ the two paths diverge silently from the day it is written.
 from __future__ import annotations
 
 import ast
-from collections.abc import Iterator
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-from . import Check, Finding, is_test_path, main
+from . import Finding, ModuleCheck, is_test_path, main
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+    from pathlib import Path
 
 ## Environment variables and attributes whose presence means "we are testing".
 TEST_SIGNALS = frozenset({
@@ -28,7 +31,7 @@ TEST_SIGNALS = frozenset({
 TEST_MODULES = frozenset({"pytest", "unittest", "unittest.mock", "hypothesis"})
 
 
-class NoTestBranchesCheck(Check):
+class NoTestBranchesCheck(ModuleCheck):
     """Rejects production code that behaves differently once it recognizes a test.
 
     Every layer is examined; test files are exempt, since naming the test

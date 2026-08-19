@@ -13,10 +13,13 @@ outside the function is validation wearing an assertion's clothes.
 from __future__ import annotations
 
 import ast
-from collections.abc import Iterator
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-from . import Check, Finding, is_test_path, main
+from . import Finding, ModuleCheck, is_test_path, main
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+    from pathlib import Path
 
 ## Calls that mean "this value came from outside" -- if one appears in an
 ## assertion's condition, the assertion is validating external input.
@@ -33,7 +36,7 @@ VALIDATION_WORDS = frozenset({
 })
 
 
-class AssertUsageCheck(Check):
+class AssertUsageCheck(ModuleCheck):
     """Rejects an assertion that is really guarding the outside world.
 
     Three signals, any one sufficient: the condition calls something that reads
@@ -47,12 +50,12 @@ class AssertUsageCheck(Check):
     ## half; DIAG-009 is the same prohibition seen from the diagnostics side.
     rules = ("DIAG-009", "ERR-012")
 
-    def visit_module(self, tree: ast.Module, path: Path, layer: str) -> Iterator[Finding]:
+    def visit_module(self, tree: ast.Module, path: Path, _layer: str) -> Iterator[Finding]:
         """Yield a finding for each assertion that is load-bearing in production.
 
         @param tree the module's syntax tree
         @param path the file it was parsed from
-        @param layer the architectural layer, unused -- `-O` strips assertions
+        @param _layer the architectural layer, unused -- `-O` strips assertions
             from every layer alike
         @return one ERR-012 finding per suspect assertion, naming the evidence in
             its message; one per enclosing function for an assertion inside a

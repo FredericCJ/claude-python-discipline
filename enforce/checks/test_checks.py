@@ -9,17 +9,21 @@ conforming case that must not.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from pathlib import Path
 from textwrap import dedent
+from typing import TYPE_CHECKING
 
 import pytest
 
-from checks import Check
 from checks.assert_usage import AssertUsageCheck
 from checks.domain_purity import DomainPurityCheck
 from checks.no_test_branches import NoTestBranchesCheck
 from checks.raise_from import RaiseFromCheck
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from pathlib import Path
+
+    from checks import Check
 
 
 def write(tmp_path: Path, source: str, *, layer: str = "domain", name: str = "mod.py") -> Path:
