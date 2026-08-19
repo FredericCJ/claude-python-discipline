@@ -9,7 +9,7 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 | Status | Count |
 |---|---|
 | active | 1 |
-| candidate | 92 |
+| candidate | 93 |
 | superseded | 1 |
 
 ## active
@@ -809,6 +809,15 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `rule:ARCH-007`
 - **About** ARCH-007
 - **Verify** `python -m pytest -q enforce/fitness/test_routing.py`
+
+### L-0095 · The ten-step gate is 37.5s and the test suite is 30.9s of it -- 82%. Every other step together is 6.6s, so a scoped gate that skips untouched cheap steps saves about six seconds while introducing a gate that can narrow itself.
+
+- **Do** Do not build a scoped gate on this shape. Measure step timings before optimising a gate; the intuition that many steps means slow was wrong by an order of magnitude.
+- **Kind** constraint · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `command:gate`
+- **About** FLOW-009
+- **Verify** `python tools/gate.py`
 
 ## superseded
 

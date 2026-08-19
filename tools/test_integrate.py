@@ -15,6 +15,7 @@ accumulate blocks.
 from __future__ import annotations
 
 import json
+import subprocess  # ruff: ignore[suspicious-subprocess-import]
 from pathlib import Path
 
 import pytest
@@ -583,6 +584,99 @@ def test_only_restricts_the_markdown_targets(repo: Path) -> None:
     planned = kinds(repo, targets=("CLAUDE.md",))
     assert "AGENTS.md" not in planned
     assert planned["CLAUDE.md"] is Kind.CREATE
+
+
+# ------------------------------------------------------------------- hooks
+#
+# FLOW-009 -- the gates pass before a change is offered -- was enforced by memory
+# until `--hooks` existed. By this corpus's own standard that means it was not
+# binding at all.
+
+
+def _repo(root: Path, *, with_hooks: bool = True) -> Path:
+    """A throwaway git repository, optionally carrying the vendored hooks.
+
+    @param root the directory to initialise
+    @param with_hooks whether to place a hook directory in it
+    @return the repository root
+    """
+    subprocess.run(("git", "init", "-q", "."), cwd=root, check=True,  # ruff: ignore[start-process-with-partial-path]
+                   capture_output=True)
+    if with_hooks:
+        hooks = root / "enforce" / "templates" / "hooks"
+        hooks.mkdir(parents=True)
+        (hooks / "pre-push").write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    return root
+
+
+def _hooks_path(root: Path) -> str:
+    """What git currently believes `core.hooksPath` is.
+
+    @param root the repository to ask
+    @return the configured value, or the empty string when unset
+    """
+    finished = subprocess.run(("git", "config", "core.hooksPath"),  # ruff: ignore[start-process-with-partial-path]
+                              cwd=root, capture_output=True, text=True, check=False)
+    return finished.stdout.strip()
+
+
+def test_hooks_are_pointed_at_not_copied(tmp_path: Path) -> None:
+    """A copy is a fork; a pointer updates with the discipline.
+
+    Copying into `.git/hooks` means the first update to the vendored discipline
+    leaves a stale duplicate nobody diffs. Pointing means an update updates the
+    hook, and unsetting one config removes it with no residue.
+
+    @param tmp_path the fixture directory
+    """
+    root = _repo(tmp_path)
+    integrate.install_hooks(root, ".agent")
+    assert _hooks_path(root) == "enforce/templates/hooks"
+    assert not (root / ".git" / "hooks" / "pre-push").exists(), (
+        "the hook was copied into .git/hooks, which forks it from the discipline"
+    )
+
+
+def test_removing_the_hooks_leaves_nothing_behind(tmp_path: Path) -> None:
+    """...and taking it out restores git's default completely.
+
+    @param tmp_path the fixture directory
+    """
+    root = _repo(tmp_path)
+    integrate.install_hooks(root, ".agent")
+    integrate.install_hooks(root, ".agent", remove=True)
+    assert not _hooks_path(root)
+
+
+def test_a_missing_hook_directory_refuses(tmp_path: Path) -> None:
+    """Pointing git at an empty path would DISABLE hooks a project already had.
+
+    The failure mode this refuses is the quiet one: `core.hooksPath` set to a
+    directory with nothing in it turns off every hook the repository has, and
+    reports success while doing it.
+
+    @param tmp_path the fixture directory
+    """
+    root = _repo(tmp_path, with_hooks=False)
+    with pytest.raises(FileNotFoundError):
+        integrate.install_hooks(root, ".agent")
+    assert not _hooks_path(root)
+
+
+def test_the_shipped_hook_runs_the_whole_gate() -> None:
+    """The hook must run the gate, not a chosen part of it.
+
+    A pre-push hook running three cheap steps would report green for a tree the
+    gate rejects, which is worse than no hook: it is a hook people trust.
+    """
+    hook = (Path(integrate.__file__).resolve().parent.parent / "enforce"
+            / "templates" / "hooks" / "pre-push")
+    body = hook.read_text(encoding="utf-8")
+    assert "gate.py" in body, "the hook does not run the gate at all"
+    assert "--no-verify" in body, (
+        "the hook does not tell a reader how to bypass it, so they will find out "
+        "by guessing, and guess something worse"
+    )
 
 
 if __name__ == "__main__":

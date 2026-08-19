@@ -1,0 +1,58 @@
+#!/bin/sh
+#
+#  Run the discipline's gate before anything leaves this machine.
+#
+#  FLOW-009 says the gates pass before a change is offered. Until this hook
+#  existed that rule was enforced by whoever remembered it, which is the
+#  definition of an unenforced rule -- and this corpus counts a rule nothing
+#  checks as not binding in practice, whatever its tag claims.
+#
+#  WHY pre-push AND NOT pre-commit. A commit is a private act; a push is the
+#  offer. Gating the commit punishes the ordinary habit of committing work in
+#  progress, and a hook people resent is a hook people bypass with --no-verify
+#  until it may as well not exist. The push is the first moment FLOW-009's
+#  sentence actually applies.
+#
+#  COST. The full gate is about 40 seconds on the machine it was written on, of
+#  which the test suite is 30. That was measured before this hook was written,
+#  because a hook whose cost nobody checked is one that gets removed the first
+#  time it is inconvenient.
+#
+#  BYPASS. `git push --no-verify` skips this, and sometimes that is correct --
+#  pushing a branch to get a second opinion on a broken tree, for one. What must
+#  not happen is bypassing it silently and habitually; if you are reaching for
+#  --no-verify often, the gate is telling you something.
+#
+#  INSTALL
+#      python .agent/tools/integrate.py --hooks
+#  which points core.hooksPath at the directory holding this file rather than
+#  copying it into .git/hooks -- so an update to the vendored discipline updates
+#  the hook, and `git config --unset core.hooksPath` removes it completely.
+
+set -eu
+
+root=$(git rev-parse --show-toplevel)
+cd "$root"
+
+# The interpreter matters. A bare `python` on a machine with more than one
+# environment is a coin toss, and on at least one machine it resolves to an
+# interpreter with no pytest -- where the suite reports nothing and looks like it
+# passed. Prefer the one the environment declares.
+python="${DISCIPLINE_PYTHON:-python}"
+
+gate="$root/.agent/tools/gate.py"
+if [ ! -f "$gate" ]; then
+    gate="$root/tools/gate.py"
+fi
+if [ ! -f "$gate" ]; then
+    echo "pre-push: no gate.py found; nothing was verified" >&2
+    exit 1
+fi
+
+echo "pre-push: running the gate ($gate)"
+if ! "$python" "$gate"; then
+    echo >&2
+    echo "pre-push: the gate failed, so nothing was pushed." >&2
+    echo "Fix it, or push with --no-verify and say why in the pull request." >&2
+    exit 1
+fi

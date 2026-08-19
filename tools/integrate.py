@@ -832,6 +832,75 @@ def render_plan(plan: Plan, root: Path, *, show_diff: bool) -> Iterator[str]:
 # ---------------------------------------------------------------------- main
 
 
+def install_hooks(root: Path, agent_dir: str, *, remove: bool = False) -> list[str]:
+    """Point git's `core.hooksPath` at the vendored hook directory.
+
+    Pointed at, not copied into `.git/hooks`. A copy is a fork: the moment the
+    vendored discipline updates, the installed hook is a stale duplicate nobody
+    diffs. A pointer means an update to the discipline updates the hook, and
+    `git config --unset core.hooksPath` removes it completely with no residue.
+
+    `FLOW-009` -- the gates pass before a change is offered -- was enforced by
+    memory until this existed, which by this corpus's own standard means it was
+    not binding at all.
+
+    @param root the repository to configure
+    @param agent_dir where the discipline was vendored
+    @param remove whether to unset the setting instead of setting it
+    @return the lines to print, describing what was done
+    @throws FileNotFoundError when the hook directory is not there, because
+        pointing git at a directory with no hooks would silently disable the
+        hooks a project already had
+    """
+    hooks = root / agent_dir / "enforce" / "templates" / "hooks"
+    if not hooks.is_dir():
+        hooks = root / "enforce" / "templates" / "hooks"
+    if not remove and not hooks.is_dir():
+        raise FileNotFoundError(hooks)
+
+    if remove:
+        subprocess.run(("git", "config", "--unset", "core.hooksPath"),  # ruff: ignore[start-process-with-partial-path]
+                       cwd=root, capture_output=True, text=True, check=False)
+        return ["core.hooksPath unset; git's default hooks are in force again"]
+
+    relative = hooks.relative_to(root).as_posix()
+    finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
+        ("git", "config", "core.hooksPath", relative),  # ruff: ignore[start-process-with-partial-path]
+        cwd=root, capture_output=True, text=True, check=False)
+    if finished.returncode != 0:
+        return [f"could not set core.hooksPath: {finished.stderr.strip()}"]
+    installed = sorted(h.name for h in hooks.iterdir() if h.is_file())
+    return [
+        f"core.hooksPath -> {relative}",
+        f"  active: {', '.join(installed)}",
+        "  pre-push runs the full gate; `git push --no-verify` bypasses it.",
+        "  remove with: git config --unset core.hooksPath",
+    ]
+
+
+def _hooks_command(root: Path, agent_dir: str, *, remove: bool) -> int:
+    """Run the `--hooks` path and report, lifted out of `main`.
+
+    `main` crossed `C901`'s ceiling when this branch joined it, and `C901` is the
+    code `ARCH-016` is enforced through -- so the rule refused this change for the
+    same reason it would refuse an adopter's.
+
+    @param root the repository to configure
+    @param agent_dir where the discipline was vendored
+    @param remove whether to unset rather than set
+    @return the process exit status
+    """
+    try:
+        for line in install_hooks(root, agent_dir, remove=remove):
+            print(line)
+    except FileNotFoundError as absent:
+        print(f"no hook directory at {absent}; nothing was configured, and "
+              f"pointing git at it would have disabled the hooks this repository "
+              f"already has", file=sys.stderr)
+        return 1
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Entry point.
 
@@ -851,11 +920,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--check", action="store_true",
                         help="exit non-zero if the block is missing or stale")
     parser.add_argument("--remove", action="store_true", help="take the block back out")
+    parser.add_argument("--hooks", action="store_true",
+                        help="point core.hooksPath at the vendored hooks, so the "
+                             "gate runs before a push (FLOW-009)")
     parser.add_argument("--only", action="append", choices=list(MARKDOWN_TARGETS),
                         help="restrict to one markdown target; repeatable")
     args = parser.parse_args(argv)
 
     root = args.root.resolve()
+
+    if args.hooks:
+        return _hooks_command(root, args.agent_dir, remove=args.remove)
+
     plan = build_plan(root, args.agent_dir, remove=args.remove,
                       targets=args.only or MARKDOWN_TARGETS)
 

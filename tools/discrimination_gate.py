@@ -168,6 +168,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--why", help="required with --update-baseline")
     arguments = parser.parse_args(argv)
 
+    # Argument validation before the work, not after. The matrix takes about
+    # three and a half seconds; refusing a missing `--why` afterwards spent all
+    # of it to reach a conclusion available immediately.
+    if arguments.update_baseline and not arguments.why:
+        print("--update-baseline requires --why", file=sys.stderr)
+        return EXIT_FAILED
+
     status, complaints, provoked = run()
     for complaint in complaints:
         print(f"  {complaint}", file=sys.stderr)
@@ -176,9 +183,6 @@ def main(argv: list[str] | None = None) -> int:
     floor = int(baseline.get("count", 0))
 
     if arguments.update_baseline:
-        if not arguments.why:
-            print("--update-baseline requires --why", file=sys.stderr)
-            return EXIT_FAILED
         if status != EXIT_OK:
             print("refusing to move the floor while a declared mutation is broken",
                   file=sys.stderr)
