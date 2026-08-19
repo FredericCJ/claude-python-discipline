@@ -2,7 +2,7 @@
 id: meta/OPEN
 kind: meta
 title: Open Decisions
-tokens: 3985
+tokens: 3966
 load_when: ["open question", "undecided", "which tool", "pin a version"]
 decay: none
 ---
@@ -78,35 +78,22 @@ that means anything is now checked, and that was the half this record called una
 reason: *"a blanket requirement produces ceremonial docstrings that say nothing, which is
 worse than none."* That objection is real, and it is not answered by pretending it is not.
 
-The requirement is now universal: every element of the code carries a documentation
-comment, written for a full-featured Doxygen, present whether or not documentation is ever
-generated. The ceremony objection is answered by rules rather than by an exemption —
-[DOC-009] rejects documentation that merely restates the identifier, and [DOC-013] asks for
-one accurate sentence rather than a padded block. A rule against filler is a better answer
-than a licence to omit.
+The requirement is now universal: every element carries a documentation comment, written for
+a full-featured Doxygen, present whether or not documentation is ever generated. The ceremony
+objection is answered by rules rather than by an exemption — [DOC-009] rejects documentation
+that merely restates the identifier, and [DOC-013] asks for one accurate sentence rather than
+a padded block. A rule against filler is a better answer than a licence to omit.
 
-*Consequences, all decided here:*
+*Consequences:* docstrings where Python has a slot, `##` blocks where it does not — a `##`
+block on a function would be invisible to `help()`, so it is prohibited there. The engine
+settings this needs, and why each is what it is, are in [fact/doxygen]; no pydocstyle
+convention is set, because one would demand section headings Doxygen cannot read. The
+rendered tree is **not** committed — the one deliberate exception to [DEP-011], recorded as a
+tension because it is one: the reviewable artefact is the comment in the source, and a large
+generated tree in every diff is how reviewers learn to wave generated output through.
 
-- **Docstrings where Python has a slot; `##` blocks where it does not.** Python offers no
-  docstring slot for a module constant, class attribute, dataclass field or enum member, and
-  Doxygen reads `##` blocks for exactly those. A `##` block on a function would be invisible
-  to `help()` and to every other Python tool, so it is prohibited there.
-- **`PYTHON_DOCSTRING = NO`.** Otherwise a docstring full of `@param` renders as literal
-  text and nothing warns. Set once in the Doxyfile rather than trusted to a `"""!` marker an
-  author will eventually forget.
-- **No pydocstyle convention, and three ruff rules disabled.** A convention makes the linter
-  demand Google- or NumPy-style section headings that Doxygen cannot read without an input
-  filter. `docstring-missing-returns`, `-yields` and `-exception` are disabled for the same
-  reason; the engine's own `WARN_NO_PARAMDOC` is a stricter test, since it also catches a
-  documented parameter that does not exist.
-- **The rendered documentation tree is not committed** — the one deliberate exception to
-  [DEP-011], recorded as a tension because it genuinely is one. The reviewable artefact here
-  is the comment in the source, and a large rendered tree in every diff is how reviewers
-  learn to wave generated output through.
-
-*Cost, stated plainly:* this repository's own code does not yet comply — 441 findings at
-the time of the decision. The mechanisms are in place so the gap cannot grow, and the
-migration is real work that has not been done.
+*Cost, stated plainly:* this repository's own code did not comply when the decision was taken
+— 441 findings. The mechanisms are in place so the gap cannot grow.
 
 ### OPEN-008 · The Doxygen form is declared, not assumed
 
@@ -166,15 +153,26 @@ by wheel hash.
 
 ### OPEN-011 · No repository actually depends on this
 
-`tools/test_vendor.py` takes a greenfield temporary repository through install → integrate
-→ gate → check → remove, asserting every byte outside the managed markers survives in both
-line endings. That is a **synthetic** adopter: the machinery, once, on an empty tree. It
-does not exercise checks meeting code nobody wrote to satisfy them, or an update landing on
-a tree with local history. Every defect found in these mechanisms was found by contact with
-unfamiliar code.
+**Narrowed in v3.2, not closed.** Until this release a repository that already existed could
+not adopt at all: `python -m checks` printed every finding and exited 1, with no baseline and
+no ratchet. `tools/conformance.py` is the ratchet, validated by taking a copy of a real
+124-module codebase through the whole trip.
 
-*Closes when:* one repository depends on this in daily use and reports back. The last
-untested claim, and the one most likely to be expensive.
+*Measured rather than supposed:* **117 findings, none protected**, so the tree adopts. The
+baseline was minted, the tree went green, and then — the assertion that matters — a new
+violation of an already-baselined rule failed by name, and an `assert` used as validation
+failed as [ERR-012] and [DIAG-009] **with the baseline in place**. A baseline that goes green
+is easy; one that still catches the next regression is the feature.
+
+*What it also found:* two of `PROTECTED`'s four entries could never fire, being decided by a
+fitness test and a ruff code rather than by any check this tool runs — the vacuity this
+repository exists to remove, reproduced inside the guard against it.
+
+*Still not closed:* a copy driven through a script by its author is not a repository
+depending on this in daily use. Nothing here has met an update landing on a tree with local
+history, or a disagreement about a baselined finding.
+
+*Closes when:* one repository depends on this in daily use and reports back.
 
 ### OPEN-012 · Mutation testing cannot run on the maintaining platform
 
