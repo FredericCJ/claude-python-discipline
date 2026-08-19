@@ -17,12 +17,12 @@ remain a working fallback if it is absent.
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import re
 import sys
-from collections.abc import Sequence
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import yaml
 
@@ -34,6 +34,9 @@ from discipline_core import (
     parse_document,
 )
 from graph_model import Edge, EdgeType, Graph, Node, NodeType, Origin
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 ## Recorded in the emitted JSON so a reader of graph.json knows what to re-run.
 GENERATED_BANNER: Final = "tools/build_graph.py"
@@ -51,6 +54,11 @@ _SOURCE_ROW = re.compile(r"^\|\s*`(?P<tag>[A-Z]{2})`\s+(?P<name>[^|]+?)\s*\|", r
 _RUFF_CODE = re.compile(r"\b(?P<code>[A-Z]{1,4}\d{3,4})\b")
 ## The `name = "..."` line that titles one import-linter contract.
 _CONTRACT_NAME = re.compile(r'^name\s*=\s*"(?P<name>[^"]+)"', re.MULTILINE)
+
+## Base classes that make a module under `enforce/checks/` a mechanism. Two
+## walkers exist: one over Python syntax, one over files this repository does
+## not parse -- markdown dispatch records, the learning ledger.
+_CHECK_BASES: Final = frozenset({"Check", "ModuleCheck", "TextCheck"})
 
 ## The architectural layers a rule may be scoped to, core first.
 LAYERS: Final = ("domain", "app", "adapters", "shell")
@@ -333,54 +341,109 @@ def _add_mechanisms(graph: Graph, root: Path) -> None:
     @param root the repository root
     """
     enforce = root / "enforce"
+    _add_check_modules(graph, enforce, root)
+    _add_contract_triggers(graph, enforce / "importlinter.toml")
+    _add_ruff_triggers(graph, enforce / "templates" / "pyproject.toml")
+
+
+def _add_check_modules(graph: Graph, enforce: Path, root: Path) -> None:
+    """Add one mechanism node per AST check that exists on disk.
+
+    @param graph the graph under construction
+    @param enforce the `enforce/` directory
+    @param root the repository root, for the path recorded on each node
+    """
     for check in sorted((enforce / "checks").glob("*.py")):
-        if check.stem.startswith(("__", "test_")):
+        if check.stem.startswith(("__", "test_")) or not _defines_a_check(check):
             continue
         node_id = f"mech:check:{check.stem}"
         graph.add_node(Node(id=node_id, type=NodeType.MECHANISM, label=f"check:{check.stem}",
                             path=_rel(check, root),
                             attrs=(("family", "check"), ("implemented", "true"))))
 
-    config = enforce / "importlinter.toml"
-    if config.exists():
-        for match in _CONTRACT_NAME.finditer(config.read_text(encoding="utf-8")):
-            name = match.group("name")
-            # The contract is named "ARCH-003 adapters are independent"; a failure
-            # reports only the descriptive half, so that is what must match.
-            signature = _RULE_ID_RE.sub("", name).strip() or name
-            trigger = f"trigger:err:{signature}"
-            graph.add_node(Node(id=trigger, type=NodeType.TRIGGER, label=signature,
-                                attrs=(("kind", "error"), ("tool", "import-linter"),
-                                       ("contract", name))))
-            for rule_id in _RULE_IDS_IN(name):
+
+def _defines_a_check(path: Path) -> bool:
+    """Whether a module under `enforce/checks/` implements a mechanism.
+
+    Not every module there is a check. `project.py` parses the consuming
+    project's declaration and implements nothing; treating it as a mechanism
+    minted a `check:project` node no rule names, which `V094` then reported as
+    the graph disagreeing with the corpus. Membership is decided by what a module
+    defines rather than by where it sits, matching `checks/__main__.py`.
+
+    Read from the syntax tree rather than by importing, because the graph builder
+    must not execute the code it describes.
+
+    @param path the module to inspect
+    @return True when it defines a class deriving from `Check`
+    """
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    except (OSError, SyntaxError):
+        return False
+    return any(
+        isinstance(node, ast.ClassDef)
+        and any(isinstance(b, ast.Name) and b.id in _CHECK_BASES for b in node.bases)
+        for node in ast.walk(tree)
+    )
+
+
+def _add_contract_triggers(graph: Graph, config: Path) -> None:
+    """Index each import-linter contract name as an error an agent can arrive with.
+
+    @param graph the graph under construction
+    @param config the import-linter configuration, skipped when absent
+    """
+    if not config.exists():
+        return
+    for match in _CONTRACT_NAME.finditer(config.read_text(encoding="utf-8")):
+        name = match.group("name")
+        # The contract is named "ARCH-003 adapters are independent"; a failure
+        # reports only the descriptive half, so that is what must match.
+        signature = _RULE_ID_RE.sub("", name).strip() or name
+        trigger = f"trigger:err:{signature}"
+        graph.add_node(Node(id=trigger, type=NodeType.TRIGGER, label=signature,
+                            attrs=(("kind", "error"), ("tool", "import-linter"),
+                                   ("contract", name))))
+        for rule_id in _RULE_IDS_IN(name):
+            if rule_id in graph.nodes:
+                graph.add_edge(Edge(EdgeType.TRIGGERED_BY, rule_id, trigger))
+
+
+def _add_ruff_triggers(graph: Graph, pyproject: Path) -> None:
+    """Index each ruff code named in a configuration comment beside its rules.
+
+    A comment carrying a code and no rule id still mints the trigger, which then
+    stands with no edge into the corpus -- the code is still what an agent has in
+    hand when ruff fails, whether or not anyone wrote down which rule it serves.
+
+    @param graph the graph under construction
+    @param pyproject the enforcement template, skipped when absent
+    """
+    if not pyproject.exists():
+        return
+    for line in pyproject.read_text(encoding="utf-8").splitlines():
+        if "#" not in line:
+            continue
+        comment = line.split("#", 1)[1]
+        codes = {m.group("code") for m in _RUFF_CODE.finditer(comment)}
+        rules = set(_RULE_IDS_IN(comment))
+        # Subtracting the ids is defensive only: a rule id carries a hyphen and a
+        # ruff code cannot, so as the two patterns stand nothing matches both.
+        for code in codes - rules:
+            trigger = f"trigger:err:{code}"
+            graph.add_node(Node(id=trigger, type=NodeType.TRIGGER, label=code,
+                                attrs=(("kind", "error"), ("tool", "ruff"))))
+            for rule_id in rules:
                 if rule_id in graph.nodes:
                     graph.add_edge(Edge(EdgeType.TRIGGERED_BY, rule_id, trigger))
-
-    pyproject = enforce / "templates" / "pyproject.toml"
-    if pyproject.exists():
-        for line in pyproject.read_text(encoding="utf-8").splitlines():
-            if "#" not in line:
-                continue
-            comment = line.split("#", 1)[1]
-            codes = {m.group("code") for m in _RUFF_CODE.finditer(comment)}
-            rules = set(_RULE_IDS_IN(comment))
-            # Subtracting the ids is defensive only: a rule id carries a hyphen
-            # and a ruff code cannot, so as the two patterns stand nothing
-            # matches both.
-            for code in codes - rules:
-                trigger = f"trigger:err:{code}"
-                graph.add_node(Node(id=trigger, type=NodeType.TRIGGER, label=code,
-                                    attrs=(("kind", "error"), ("tool", "ruff"))))
-                for rule_id in rules:
-                    if rule_id in graph.nodes:
-                        graph.add_edge(Edge(EdgeType.TRIGGERED_BY, rule_id, trigger))
 
 
 ## A rule id wherever it is embedded in free text -- a contract title, a comment.
 _RULE_ID_RE = re.compile(r"\b[A-Z][A-Z0-9]{1,7}-\d{3}\b")
 
 
-def _RULE_IDS_IN(text: str) -> list[str]:  # noqa: N802 - reads as a constant-like helper
+def _RULE_IDS_IN(text: str) -> list[str]:  # ruff: ignore[invalid-function-name] - reads as a constant-like helper
     """Every rule id mentioned in a string, in the order they appear.
 
     @param text a contract title, a configuration comment, any prose
@@ -408,13 +471,53 @@ def _add_declared(graph: Graph, root: Path, warnings: list[str]) -> None:
         warnings.append("no discipline/meta/edges.yaml; declared layer is empty")
         return
     spec = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    _add_declared_layers(graph, spec)
+    _add_declared_decisions(graph, spec)
+    _add_declared_orderings(graph, spec)
+    _add_declared_artifacts(graph, spec)
 
+
+def _add_declared_layers(graph: Graph, spec: dict[str, object]) -> None:
+    """Edge each rule to the architectural layer it governs.
+
+    Written layer-first in the source, because a reader authoring the file thinks
+    in layers; the edge runs rule to layer, which is the direction a query walks.
+
+    @param graph the graph under construction
+    @param spec the parsed edge declaration
+    """
     for layer, rules in (spec.get("applies_to") or {}).items():
         for rule_id in rules:
             graph.add_edge(
                 Edge(EdgeType.APPLIES_TO, rule_id, f"layer:{layer}", Origin.DECLARED)
             )
 
+
+def _add_declared_decisions(graph: Graph, spec: dict[str, object]) -> None:
+    """Edge each rule to the decisions that shaped it or hold it up.
+
+    `resolved_by` is what `nav.py why` answers from; `blocked_by` is what keeps an
+    `[OPEN]` rule tied to the question in `meta/OPEN.md` that blocks it.
+
+    @param graph the graph under construction
+    @param spec the parsed edge declaration
+    """
+    for section, edge in (("resolved_by", EdgeType.RESOLVED_BY),
+                          ("blocked_by", EdgeType.BLOCKED_BY)):
+        for rule_id, decisions in (spec.get(section) or {}).items():
+            for decision in decisions:
+                graph.add_edge(Edge(edge, rule_id, decision, Origin.DECLARED))
+
+
+def _add_declared_orderings(graph: Graph, spec: dict[str, object]) -> None:
+    """Edge the relations that hold between two rules rather than rule and thing.
+
+    A tension is written both ways round, since neither of the two rules is the
+    subject of it; precedence is written one way, since one of them genuinely is.
+
+    @param graph the graph under construction
+    @param spec the parsed edge declaration
+    """
     for entry in spec.get("tensions_with") or []:
         left, right = entry["pair"]
         note = " ".join((entry.get("note") or "").split()) or None
@@ -424,14 +527,13 @@ def _add_declared(graph: Graph, root: Path, warnings: list[str]) -> None:
     for before, after in spec.get("precedes") or []:
         graph.add_edge(Edge(EdgeType.PRECEDES, before, after, Origin.DECLARED))
 
-    for rule_id, decisions in (spec.get("resolved_by") or {}).items():
-        for decision in decisions:
-            graph.add_edge(Edge(EdgeType.RESOLVED_BY, rule_id, decision, Origin.DECLARED))
 
-    for rule_id, decisions in (spec.get("blocked_by") or {}).items():
-        for decision in decisions:
-            graph.add_edge(Edge(EdgeType.BLOCKED_BY, rule_id, decision, Origin.DECLARED))
+def _add_declared_artifacts(graph: Graph, spec: dict[str, object]) -> None:
+    """Mint a node per configuration file a rule governs, and edge the rules to it.
 
+    @param graph the graph under construction
+    @param spec the parsed edge declaration
+    """
     for artifact_path, entry in (spec.get("artifacts") or {}).items():
         node_id = f"artifact:{artifact_path}"
         graph.add_node(

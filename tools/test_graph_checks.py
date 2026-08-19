@@ -10,12 +10,15 @@ graph-shaped fixture rather than a single module.
 
 from __future__ import annotations
 
-from pathlib import Path
 from textwrap import dedent
+from typing import TYPE_CHECKING
 
 import pytest
 
 from test_validate import CONFORMANT_RULE, codes, module, run_on, write
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 ## A fact module's version table, the smallest thing V095 will read a tool pin out of.
 FACT_TABLE = "| Tool | Version |\n|---|---|\n| mypy | 2.3.1 |\n"

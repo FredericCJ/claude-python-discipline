@@ -22,10 +22,9 @@ import json
 import re
 import sys
 from collections import Counter, defaultdict
-from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from discipline_core import (
     REPO_ROOT,
@@ -40,6 +39,9 @@ from discipline_core import (
     mechanism_is_implemented,
     parse_document,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 ## Heads every generated Markdown file this tool writes, so a human who opens one is
 ## warned before spending an edit that the next rebuild will overwrite.
@@ -137,6 +139,63 @@ def refresh_tokens(documents: Sequence[Document], *, write: bool) -> list[Path]:
             updated = candidate
         doc.path.write_text(updated, encoding="utf-8")
     return stale
+
+
+## Each `auto:` tool the corpus names, against whether THIS repository's own gate
+## runs it. `external` means "a configured tool settles it", and until gate steps
+## 7 and 8 existed that status was being read as though the tool ran -- for four
+## of these it ran nowhere at all. The distinction is worth printing because it
+## is the difference between a rule that is decided and one that is merely
+## delegated.
+##
+## The value is either the gate entry that runs the tool, or the reason it is not
+## run here. `_external_tool_section` cross-checks the former against
+## `tools/gate.py::GATE`, so a claim that a step exists cannot outlive the step.
+EXTERNAL_TOOLS: Final[dict[str, str]] = {
+    "ruff": "format and lint",
+    "import-linter": "import contracts",
+    "mypy": "types",
+    "pyright": "types",
+    "mutmut": "NOT RUN -- mutmut 3.3.1 does an unconditional `import resource` at "
+              "module scope, and `resource` is Unix-only. It raises "
+              "ModuleNotFoundError on Windows before parsing an argument, so it "
+              "cannot be pinned or wired here. TEST-013 is delegated and undecided.",
+}
+
+
+def _external_tool_section() -> list[str]:
+    """The table of external tools against the gate step that runs each.
+
+    @return the rendered lines
+    @throws ValueError when a tool claims a gate entry that `GATE` does not carry,
+        which would make this table a claim rather than a reading
+    """
+    import gate  # ruff: ignore[import-outside-top-level] - a sibling in tools/
+
+    entries = {name for name, _ in gate.GATE}
+    unknown = [
+        f"{tool} -> {where}" for tool, where in EXTERNAL_TOOLS.items()
+        if not where.startswith("NOT RUN") and where not in entries
+    ]
+    if unknown:
+        message = f"EXTERNAL_TOOLS names gate entries that do not exist: {'; '.join(unknown)}"
+        raise ValueError(message)
+
+    lines = [
+        "## External mechanisms, and whether this repository runs them",
+        "",
+        ("`external` says a configured tool decides the rule. It does not say the "
+         "tool ever runs. Four of the rows below were `external` while their tool "
+         "ran nowhere in this tree, which is indistinguishable from unenforced."),
+        "",
+        "| Tool | Run by this repository's gate |",
+        "|---|---|",
+    ]
+    for tool, where in sorted(EXTERNAL_TOOLS.items()):
+        cell = where if where.startswith("NOT RUN") else f"yes -- gate step `{where}`"
+        lines.append(f"| `{tool}` | {cell} |")
+    lines.append("")
+    return lines
 
 
 def _sorted_rules(documents: Sequence[Document]) -> list[Rule]:
@@ -238,6 +297,17 @@ def build_index(documents: Sequence[Document], root: Path) -> Artifact:
         "`unmechanized` -- the rule names no mechanism at all. A row marked **(!)** "
         "is binding and mechanically undecided: treat it as an obligation, not as "
         "something the gate will catch for you.",
+        "",
+        (
+            "**`mechanized` says a mechanism exists, not that it decides the whole "
+            "rule.** The measurement is presence on disk; how completely a check covers "
+            "the sentence above it is a judgement no build can make. `ARCH-012` is the "
+            "worked example: `check:no_test_branches` is real and runs, and it matches a "
+            'closed list of test signals, so `if os.environ.get("PYTEST_CURRENT_TEST")` '
+            "-- the canonical pytest detector -- passes it, as does any indirection "
+            "through a module constant. Read a `mechanized` row as *something will catch "
+            "the obvious cases*, and the rule's own text as what you actually owe."
+        ),
         "",
         f"{overstated} of {sum(1 for r in rules if r.force is Force.BINDING)} binding "
         "rules are not mechanically decided. `enforce/ENFORCEMENT.md` names the "
@@ -424,6 +494,8 @@ def build_enforcement(documents: Sequence[Document], root: Path) -> Artifact:
         f"| `unmechanized` | {census['unmechanized']} | the rule names no mechanism at all |",
         "",
     ]
+
+    lines += _external_tool_section()
 
     if overstated:
         lines += [
