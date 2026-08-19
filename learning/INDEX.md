@@ -9,7 +9,7 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 | Status | Count |
 |---|---|
 | active | 4 |
-| candidate | 97 |
+| candidate | 98 |
 | superseded | 1 |
 
 ## active
@@ -881,6 +881,15 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `error:V080`
 - **About** FLOW-006
 - **Verify** `python tools/validate.py`
+
+### L-0103 · 64 rules rest on a fitness: tag, which is resolved by asking whether a function of that name exists -- the same question that made V080 read 0 for two releases on the check side. A fitness function declares no rule list, so nothing can compare its claim against what it decides, and none of the 64 is discriminated.
+
+- **Do** Treat V080 as a floor, not a count, until the discrimination matrix covers fitness-decided rules. The DISCIPLINE_REFERENCE seam now makes that possible.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `error:V080`
+- **About** FLOW-006
+- **Verify** `python tools/discrimination_gate.py`
 
 ## superseded
 

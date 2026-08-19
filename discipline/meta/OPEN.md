@@ -2,7 +2,7 @@
 id: meta/OPEN
 kind: meta
 title: Open Decisions
-tokens: 2392
+tokens: 3971
 load_when: ["open question", "undecided", "which tool", "pin a version"]
 decay: none
 ---
@@ -14,12 +14,8 @@ question is a defect with a cost, not a neutral state. This file exists to keep 
 visible.
 
 Two sections: decisions **taken**, with the reasoning, so they are not silently
-re-litigated; and decisions **still open**, each naming what it blocks. Any rule tagged
-`[OPEN]` must appear below, and `tools/validate.py` enforces that.
-
-The source corpus deferred roughly fourteen decisions, several of them in circles — one
-document deferred distributed tracing to a second, which declined it. Most are settled
-here.
+re-litigated; and **accepted defects**, which block no rule and each name what would close
+them. Any rule tagged `[OPEN]` must appear below, and `tools/validate.py` enforces that.
 
 ---
 
@@ -161,6 +157,120 @@ clean. The layer mapping lives in the same declaration.
 ---
 
 ## Still open
+
+Known, costed, not fixable here as things stand. Each names what would close it: an
+accepted defect with no exit is an excuse. Recorded here rather than in a README because
+prose nothing checks has now been found stale twice.
+
+### OPEN-009 · No continuous integration has ever run
+
+The eleven-step, three-OS workflow has never executed. Every verdict this repository has
+reached came from one machine: win32, cp932. `test_the_workflow_mirrors_the_gate` keeps the
+file correct, which is not the same as run — and two real defects were found by reasoning
+about other platforms rather than testing them, so the class is real.
+
+*Closes when:* a remote exists and one matrix run is green. Portability stays withdrawn to
+win32 / Python 3.13.14.
+
+### OPEN-010 · No second machine has built the archive
+
+Two consecutive runs produce byte-identical archives. That is determinism in one
+environment, not reproducibility across environments. The lock pins by exact version, not
+by wheel hash.
+
+*Closes when:* a second machine builds the same commit to the same SHA-256.
+
+### OPEN-011 · No repository actually depends on this
+
+`tools/test_vendor.py` takes a greenfield temporary repository through install → integrate
+→ gate → check → remove, asserting every byte outside the managed markers survives in both
+line endings. That is a **synthetic** adopter: the machinery, once, on an empty tree. It
+does not exercise checks meeting code nobody wrote to satisfy them, or an update landing on
+a tree with local history. Every defect found in these mechanisms was found by contact with
+unfamiliar code.
+
+*Closes when:* one repository depends on this in daily use and reports back. The last
+untested claim, and the one most likely to be expensive.
+
+### OPEN-012 · Mutation testing cannot run on the maintaining platform
+
+`TEST-013` is `external` on `auto:mutmut`. mutmut 3.3.1 does an unconditional module-scope
+`import resource`, which is Unix-only, so it fails before parsing an argument. Not pinned:
+a lock demanding an unusable package is worse than an absent one.
+
+*Closes when:* a Unix runner exists, or a win32-capable engine is chosen and `OPEN-003`
+revisited. Until then `TEST-013` is delegated and undecided, and `ENFORCEMENT.md` says so.
+
+### OPEN-013 · Three tools decide against one 26-file layout
+
+mypy, pyright and import-linter run every gate — over `enforce/fixtures/reference/`: 26
+files, one package, shell as a directory. Shape matters. `layer_of` matched directory
+segments only, and a real codebase whose shell was `cli.py` and `composition.py` at the
+package root had its whole shell skipped in silence — invisible against a fixture without
+that shape.
+
+*Closes when:* a second conformant fixture exists in a deliberately different shape, and
+the three tools decide against both.
+
+### OPEN-014 · The reference is written to satisfy the rules it validates
+
+It is the positive case for 31 fitness suites, the subject of every mutation, and the
+target of four tools. Written to conform, so validating against it proves it conforms. The
+one independent check — a read-only pass over ~6,700 lines whose author had never read this
+corpus — changed no rule and corrected five mechanisms: four over-reporting, one silently
+under-reporting. Not repeatable; the code is not ours to vendor.
+
+*Closes when:* a fixture exists that is deliberately *wrong* in the ways real code is
+wrong, with an expected-findings manifest, so over-reporting is measured rather than
+noticed by luck.
+
+### OPEN-015 · A `fitness:` tag is resolved by existence alone
+
+The defect that made `V080` read 0 for two releases, on the side that cannot yet be
+checked. A `check:` tag now resolves against the check's own `rules` tuple — a module that
+exists but does not claim the rule decides nothing about it — and that correction found
+seventeen rules claimed by checks that could never report them. A fitness function declares
+no rule list, so its tag is still resolved by asking whether a function of that name
+exists.
+
+**64 rules rest on a `fitness:` tag and none is discriminated.** `V080 = 14` is a floor,
+not a count.
+
+*Closes when:* the discrimination matrix covers fitness-decided rules, which the
+`DISCIPLINE_REFERENCE` seam now makes possible.
+
+### OPEN-016 · Nineteen advisory rules are unenforceable by construction
+
+`[ADVISORY]` is a debt, not a category: no mechanism found, justification written. Five
+were added deliberately when `[BINDING]` proved to be promising a gate that would never
+fire. Some are judgements no machine can reach; others may yield to an instrument nobody
+has thought of yet.
+
+*Closes when:* a mechanism is found for one, moving it to `[BINDING]`; or it is retired
+under the supersession protocol, as `ALLOC-008` was. Not by the count falling for its own
+sake.
+
+### OPEN-017 · The recovery-cost benchmark is not gated
+
+`R` is measured by `tools/bench.py` and gated by nothing, so a regression in diagnosis cost
+is invisible unless somebody runs it. **Deliberate, and recorded so it is not "fixed" by
+someone tidying**: a benchmark wired into a gate becomes a target and stops measuring. The
+frozen defect set is protected by `test_the_defect_set_is_frozen`, because the cheapest way
+to improve `R` is to add defects the navigator already handles.
+
+*Closes when:* nothing. Revisit only if `R` is found to have regressed unnoticed, which is
+the risk being accepted.
+
+### OPEN-018 · Roughly ninety false documentation claims were never itemized
+
+A review pass found about ninety claims confidently false about the code they described.
+The number was recorded; the list was not, and has never been reconstructed. What has been
+re-checked since is narrower and should not be mistaken for it: the numeric claims and
+named commands in the shipping documents, found stale twice — both times by the work that
+made them stale.
+
+*Closes when:* the ninety are reconstructed as a list, each confirmed or refuted. `DOC-013`
+names the obligation and leaves it to review, which is honest and not sufficient.
 
 ---
 

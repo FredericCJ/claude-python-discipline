@@ -413,6 +413,96 @@
    }
   },
   {
+   "id": "OPEN-009",
+   "type": "decision",
+   "label": "No continuous integration has ever run",
+   "path": "discipline/meta/OPEN.md",
+   "attrs": {
+    "ledger": "meta/OPEN"
+   }
+  },
+  {
+   "id": "OPEN-010",
+   "type": "decision",
+   "label": "No second machine has built the archive",
+   "path": "discipline/meta/OPEN.md",
+   "attrs": {
+    "ledger": "meta/OPEN"
+   }
+  },
+  {
+   "id": "OPEN-011",
+   "type": "decision",
+   "label": "No repository actually depends on this",
+   "path": "discipline/meta/OPEN.md",
+   "attrs": {
+    "ledger": "meta/OPEN"
+   }
+  },
+  {
+   "id": "OPEN-012",
+   "type": "decision",
+   "label": "Mutation testing cannot run on the maintaining platform",
+   "path": "discipline/meta/OPEN.md",
+   "attrs": {
+    "ledger": "meta/OPEN"
+   }
+  },
+  {
+   "id": "OPEN-013",
+   "type": "decision",
+   "label": "Three tools decide against one 26-file layout",
+   "path": "discipline/meta/OPEN.md",
+   "attrs": {
+    "ledger": "meta/OPEN"
+   }
+  },
+  {
+   "id": "OPEN-014",
+   "type": "decision",
+   "label": "The reference is written to satisfy the rules it validates",
+   "path": "discipline/meta/OPEN.md",
+   "attrs": {
+    "ledger": "meta/OPEN"
+   }
+  },
+  {
+   "id": "OPEN-015",
+   "type": "decision",
+   "label": "A `fitness:` tag is resolved by existence alone",
+   "path": "discipline/meta/OPEN.md",
+   "attrs": {
+    "ledger": "meta/OPEN"
+   }
+  },
+  {
+   "id": "OPEN-016",
+   "type": "decision",
+   "label": "Nineteen advisory rules are unenforceable by construction",
+   "path": "discipline/meta/OPEN.md",
+   "attrs": {
+    "ledger": "meta/OPEN"
+   }
+  },
+  {
+   "id": "OPEN-017",
+   "type": "decision",
+   "label": "The recovery-cost benchmark is not gated",
+   "path": "discipline/meta/OPEN.md",
+   "attrs": {
+    "ledger": "meta/OPEN"
+   }
+  },
+  {
+   "id": "OPEN-018",
+   "type": "decision",
+   "label": "Roughly ninety false documentation claims were never itemized",
+   "path": "discipline/meta/OPEN.md",
+   "attrs": {
+    "ledger": "meta/OPEN"
+   }
+  },
+  {
    "id": "layer:adapters",
    "type": "layer",
    "label": "adapters"
@@ -1480,7 +1570,7 @@
    "type": "module",
    "label": "Open Decisions",
    "path": "discipline/meta/OPEN.md",
-   "tokens": 2392,
+   "tokens": 3971,
    "attrs": {
     "decay": "none",
     "kind": "meta"
