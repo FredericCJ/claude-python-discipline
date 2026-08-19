@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/agent-discipline/schema/diagnostic.schema.json",
+  "title": "Diagnostic envelope",
+  "description": "The record every error escaping to a process boundary serializes to (DIAG-001). law/DIAG specified this shape in prose from the first release; this file is that specification made machine-readable, so a consuming project can validate against it rather than re-reading the table. NOT YET SELF-ENFORCING: the fitness test DIAG-001 names, `test_envelope_conforms`, is still unbuilt and counted as such in enforce/ENFORCEMENT.md. This file is the contract; nothing in this repository yet proves a producer honours it. The Prime Directive is what every field below serves: an agent meeting a defect determines what broke, where, in which layer, against which contract, with which value, from the program's own output -- and derives the fix without re-reading the codebase.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["code", "layer", "expected", "actual", "cause_chain", "remediation"],
+  "properties": {
+    "code": {
+      "description": "Stable, namespaced, greppable (DIAG-002). Lives as a class attribute on the error type, never only in the message text: a code survives message rewording and translation where a sentence does not. Renaming or removing one is a breaking change (DIAG-004, API-011).",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$",
+      "examples": ["pkg.domain.invariant.outline_cycle", "pkg.adapter.fs.not_writable"]
+    },
+    "layer": {
+      "description": "Where the fault originated (ARCH-001). Derivable rather than guessed, because dependencies point inward and each layer produces only its own error family (ERR-004) -- which is what makes this field worth recording at all.",
+      "type": "string",
+      "enum": ["domain", "app", "adapter", "shell"]
+    },
+    "port": {
+      "description": "Which published contract was crossed. Adapter faults only; absent elsewhere, because there is no contract to name.",
+      "type": "string",
+      "minLength": 1
+    },
+    "operation": {
+      "description": "Which call on that contract. Adapter faults only.",
+      "type": "string",
+      "minLength": 1
+    },
+    "expected": {
+      "description": "The predicate that was violated, stated so a reader can compare it against `actual` (DIAG-003). Structured detail carried as an attribute on the error, not interpolated into a sentence an agent would have to parse back out.",
+      "type": "string",
+      "minLength": 1
+    },
+    "actual": {
+      "description": "What was seen instead. The pair (expected, actual) is the smallest thing from which a fix can be derived without opening the source.",
+      "type": "string",
+      "minLength": 1
+    },
+    "value": {
+      "description": "The offending input, redacted (DIAG-014). Absent rather than null when there is nothing to show; redaction is the producer's obligation and no schema can check it.",
+      "type": ["string", "number", "boolean", "object", "array", "null"]
+    },
+    "rule_ids": {
+      "description": "Discipline rules implicated, by their stable ids. Treated as public API (meta/SCHEMA section 3.1), which is why they may appear in a payload at all.",
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9]{1,7}-[0-9]{3}$" },
+      "uniqueItems": true,
+      "examples": [["TYPE-004", "ARCH-002"]]
+    },
+    "cause_chain": {
+      "description": "The `__cause__` walk, innermost first (DIAG-005). Present and possibly empty rather than omitted: an empty chain is the claim that nothing was chained, which is different from not having looked. Every cross-layer re-raise chains explicitly, so a gap here is a defect in the producer.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "message"],
+        "properties": {
+          "type": { "description": "The exception class name.", "type": "string" },
+          "message": { "description": "Its rendered message.", "type": "string" },
+          "code": { "description": "Its own stable code, where it carries one.", "type": "string" },
+          "layer": { "description": "The layer that raised it.", "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "notes": {
+      "description": "Context accreted on the way out via `Exception.add_note` (DIAG-006). Notes rather than re-wrapping, so the original exception and its traceback survive intact.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "correlation_id": {
+      "description": "Ties this record to its log lines (DIAG-013). Absent in a process that emits no correlated log.",
+      "type": "string",
+      "minLength": 1
+    },
+    "remediation": {
+      "description": "One line the reader can act on. The field that makes the envelope machine-REPAIRABLE and not merely machine-diagnosable; without it the record says what broke and leaves the next step to be inferred.",
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "allOf": [
+    {
+      "description": "An adapter fault names the contract it crossed and the call on it. Anywhere else there is no port to name, so requiring one would force a producer to invent it.",
+      "if": { "properties": { "layer": { "const": "adapter" } }, "required": ["layer"] },
+      "then": { "required": ["port", "operation"] }
+    }
+  ]
+}

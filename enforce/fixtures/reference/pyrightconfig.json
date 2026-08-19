@@ -1,0 +1,19 @@
+{
+  "//": [
+    "Pyright's settings for the reference package. A dedicated file rather than a",
+    "[tool.pyright] table in pyproject.toml, for the reason that file states: tool",
+    "tables there are resolved from the nearest ancestor and would silently govern",
+    "everything beneath this directory. Pyright reads this file only when this tree",
+    "is the project root, which is exactly the scope wanted.",
+    "",
+    "TYPE-001 asks for a strict checker, and strict is where the rule has teeth --",
+    "in standard mode an untyped def is accepted in silence, which is the case the",
+    "rule exists to refuse. A second checker beside mypy is OPEN-005's decision: a",
+    "claim that survives both is stronger than one that survives either."
+  ],
+  "include": ["src"],
+  "typeCheckingMode": "strict",
+  "pythonVersion": "3.13",
+  "reportMissingTypeStubs": "error",
+  "reportUnnecessaryTypeIgnoreComment": "error"
+}

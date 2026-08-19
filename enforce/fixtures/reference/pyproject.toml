@@ -1,0 +1,18 @@
+#  The reference package's own declaration, and nothing else.
+#
+#  DELIBERATELY NOT A CONFIGURATION FILE, for the same reason the repository root
+#  one is not: ruff and pytest resolve configuration from the nearest ANCESTOR of
+#  the file being processed, so a [tool.ruff] or [tool.pytest.ini_options] table
+#  here would silently govern everything under this directory and diverge from
+#  the repository's own posture. The canonical enforcement configuration an
+#  adopter copies is enforce/templates/pyproject.toml.
+#
+#  The layer table is empty because this package uses the canonical names -- it
+#  is the reference, so it demonstrates the default rather than the escape. A
+#  project laying its code out as services/ and composition/ maps them here; see
+#  the commented example in the template.
+
+[tool.agent-discipline]
+doc_engine = "doxygen"
+
+[tool.agent-discipline.layers]

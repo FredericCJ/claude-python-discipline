@@ -1,0 +1,113 @@
+#  Architecture as a checked contract, for the reference package.
+#
+#  Run with:
+#      lint-imports --config enforce/fixtures/reference/importlinter.toml
+#
+#  This is the first time these contracts have ever run against real code. The
+#  canonical template at enforce/importlinter.toml names a placeholder package
+#  `mypkg` that does not exist, so `lint-imports` had nothing to check and the
+#  eight ARCH and DEP rules it decides were, in this repository, decided by
+#  nothing. That is what the reference package is for.
+#
+#  Kept separate from the template rather than replacing it: the template is what
+#  an adopter copies and edits, and it must keep its placeholder.
+
+[tool.importlinter]
+root_packages = ["refpkg"]
+include_external_packages = true
+
+# ARCH-001 -- dependencies point inward only.
+[[tool.importlinter.contracts]]
+name = "ARCH-001 layers point inward"
+type = "layers"
+layers = [
+    "refpkg.shell",
+    "refpkg.adapters",
+    "refpkg.app",
+    "refpkg.domain",
+]
+# Not exhaustive: `refpkg.ports` sits outside the stack on purpose. Every layer
+# may name a port, because a port is a contract and not a layer -- it is what the
+# layers are decoupled THROUGH.
+exhaustive = false
+
+# ARCH-002, EFCT-001, DEP-001 -- the domain imports nothing that can perform I/O,
+# nothing from an outer layer, and no third-party package.
+[[tool.importlinter.contracts]]
+name = "ARCH-002 domain is pure"
+type = "forbidden"
+source_modules = ["refpkg.domain"]
+forbidden_modules = [
+    "refpkg.adapters",
+    "refpkg.app",
+    "refpkg.shell",
+    "os", "io", "pathlib", "socket", "subprocess", "shutil", "tempfile",
+    "sqlite3", "http", "urllib", "asyncio", "threading", "multiprocessing",
+    "random", "secrets", "time", "datetime", "logging", "argparse",
+]
+allow_indirect_imports = false
+
+# ARCH-002 again, applied to the ports: a contract that imports a foreign
+# dependency has stopped being a contract and become an adapter.
+[[tool.importlinter.contracts]]
+name = "ARCH-002 ports are pure"
+type = "forbidden"
+source_modules = ["refpkg.ports"]
+forbidden_modules = [
+    "refpkg.adapters",
+    "refpkg.app",
+    "refpkg.shell",
+    "os", "io", "pathlib", "socket", "subprocess", "time", "datetime",
+]
+allow_indirect_imports = false
+
+# ARCH-003 -- no adapter imports another adapter. Composition happens in shell.
+[[tool.importlinter.contracts]]
+name = "ARCH-003 adapters are independent"
+type = "independence"
+modules = [
+    "refpkg.adapters.clock",
+    "refpkg.adapters.files",
+]
+
+# ARCH-004 -- each foreign dependency is reachable from exactly one adapter.
+# `time` belongs to the clock's real adapter and `pathlib` to the store's; a
+# second importer of either is the coupling this rule exists to prevent.
+[[tool.importlinter.contracts]]
+name = "ARCH-004 time is cornered in the clock adapter"
+type = "forbidden"
+# `refpkg.shell` is deliberately absent. The composition root's whole job is to
+# name every concrete adapter (ARCH-011), so it necessarily reaches whatever
+# those adapters import. Forbidding it the transitive reach would make wiring
+# impossible and turn ARCH-004 into a rule no conformant program could satisfy --
+# which the contract's first run against real code demonstrated immediately.
+source_modules = [
+    "refpkg.domain",
+    "refpkg.ports",
+    "refpkg.app",
+    "refpkg.adapters.files",
+]
+forbidden_modules = ["time"]
+allow_indirect_imports = false
+
+[[tool.importlinter.contracts]]
+name = "ARCH-004 the filesystem is cornered in the store adapter"
+type = "forbidden"
+source_modules = [
+    "refpkg.domain",
+    "refpkg.ports",
+    "refpkg.app",
+    "refpkg.adapters.clock",
+]
+forbidden_modules = ["pathlib", "os", "shutil"]
+allow_indirect_imports = false
+
+# ARCH-011 -- concrete adapters are named at one composition root. Expressed as
+# the app layer being unable to reach an adapter at all: if orchestration cannot
+# see a concrete class, it cannot select one.
+[[tool.importlinter.contracts]]
+name = "ARCH-011 the app names no concrete adapter"
+type = "forbidden"
+source_modules = ["refpkg.app"]
+forbidden_modules = ["refpkg.adapters.clock", "refpkg.adapters.files"]
+allow_indirect_imports = false
