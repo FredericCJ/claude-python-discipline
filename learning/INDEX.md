@@ -8,7 +8,7 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 
 | Status | Count |
 |---|---|
-| candidate | 47 |
+| candidate | 79 |
 | superseded | 1 |
 
 ## candidate
@@ -405,6 +405,281 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `error:explicit link request to`, `rule:DOC-010`
 - **About** DOC-010, fact/doxygen
 - **Verify** `doxygen enforce/Doxyfile`
+
+### L-0049 · Committed tokens: values across the corpus are the len(text)/3.7 fallback estimate, not tiktoken measurements, because tiktoken is absent from the claude env; installing it would rewrite every module and cascade into graph.json
+
+- **Do** Pin tiktoken in the environment and rebuild the corpus as one change, or correct meta/SCHEMA.md, KERNEL.md and README.md which all claim the field is tiktoken-measured
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `glob:discipline/**/*.md`, `term:count_tokens`, `term:tiktoken`
+- **About** DEP-005, meta/SCHEMA
+- **Verify** `python -c "import tiktoken"`
+
+### L-0050 · tools/release.py derives blocking leak patterns from platform.node(), so a machine whose hostname is a common word (this one is MAIN) matches def main/__main__ everywhere and the release build aborts
+
+- **Do** Require a word boundary and a common-identifier stop-list in environment_literals, with a proof-of-failure test that a host named main still builds
+- **Kind** defect · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `command:release.py`, `error:leak scan found`, `glob:tools/release.py`
+- **About** FLOW-007
+
+### L-0051 · A bare python on this machine resolves to the miniforge base env, which has no pytest, jsonschema or ruff plugins, so a gate run against it decides nothing and looks like it passed
+
+- **Do** Invoke the claude conda env interpreter explicitly for every gate command; verify the interpreter before trusting a green run
+- **Kind** procedure · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `command:pytest`, `error:No module named pytest`, `term:conda`
+- **About** DEP-006
+- **Verify** `python -c "import pytest"`
+
+### L-0052 · release.py had three gates that all ask whether the archive is well formed and none that asks whether the corpus it was cut from passes its own gate, so an archive was buildable from a tree with stale artifacts and failing tests
+
+- **Do** Run the GATE tuple before staging and refuse on any non-zero step; keep the tuple in one importable module so the release and the fitness test cannot disagree
+- **Kind** procedure · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `command:release.py`, `term:gate`
+- **About** FLOW-009, TEAMS-003
+
+### L-0053 · A lint ratchet must refuse any ruff code that decides a binding rule even when that code is already in the baseline, or a future baseline move silently switches a rule's mechanism off
+
+- **Do** Keep a PROTECTED set checked before the baseline is consulted, and a test asserting every protected code is tied to a rule by a mechanism tag, the template or ENFORCEMENT.md
+- **Kind** constraint · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `command:lint_gate.py`, `term:ratchet`
+- **About** ARCH-016, FLOW-006
+- **Verify** `python -m pytest tools/test_lint_gate.py -q`
+
+### L-0054 · ruff D401 and DOC-009 cannot both be obeyed on an accessor: D401 demands an imperative where DOC-009 asks for the noun phrase that states what the value IS, and the imperative narrates the mechanism DOC-009 rejects
+
+- **Do** Ignore non-imperative-mood in the template with the conflict written down, keeping the summary-line rules on; do not reword accessor docstrings to satisfy it
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `error:non-imperative-mood`, `term:D401`
+- **About** DOC-009
+
+### L-0055 · build_graph derives triggered_by edges from a ruff code and a rule id appearing on the SAME comment line in the enforcement template, so a comment explaining that a code CONFLICTS with a rule mints a false enforcement edge
+
+- **Do** Keep the code and the rule id on separate lines when a template comment describes a conflict rather than an enforcement
+- **Kind** diagnostic · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `glob:enforce/templates/*.toml`, `term:triggered_by`
+- **About** law/DOC
+
+### L-0056 · layer_of matched four literal segment names, so a project laying out cli/composition/services had those files resolve to no layer and every layer-scoped check skipped them WHILE REPORTING CLEAN -- a silence indistinguishable from conformance
+
+- **Do** Read a layer alias map from [tool.agent-discipline]; a project renames its layers, and a run under a narrowed declaration announces what it left inactive
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `term:layer_of`, `term:unknown layer`
+- **About** ARCH-001, DOC-014
+- **Verify** `python -m pytest enforce/checks/test_project.py -q`
+
+### L-0057 · DOC-002 and DOC-007 mandated one engine's punctuation for every adopter: on 6,700 lines documented in Sphinx style they produced 1,064 findings of form against 18 of substance, burying the real ones
+
+- **Do** Split presence from form -- DOC-001/003 universal, DOC-002/007 conditional on a declared doc_engine, and DOC-014 makes the declaration itself binding so an undeclared project is never mistaken for a conformant one
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `error:has no `##` comment`, `term:doc_engine`
+- **About** DOC-014, meta/OPEN
+
+### L-0058 · Adding a non-check module to enforce/checks/ minted a phantom check:project mechanism node, because build_graph and test_meta both assumed every module there was a mechanism
+
+- **Do** Decide check membership by what a module defines -- a class deriving from Check -- read from the AST, never by directory position
+- **Kind** procedure · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `error:V094`, `glob:enforce/checks/*.py`
+- **About** FLOW-006
+
+### L-0059 · enforce/importlinter.toml used a [importlinter] section where import-linter requires [tool.importlinter], so it parsed as nothing and reported 'Could not read any configuration' -- the eight ARCH/DEP/EFCT/API rules it decides were marked external while the tool never loaded
+
+- **Do** Use [tool.importlinter] in a standalone toml, and run every named mechanism at least once against real code before recording it as external
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `command:lint-imports`, `error:Could not read any configuration`
+- **About** ARCH-001, FLOW-006
+- **Verify** `lint-imports --config enforce/fixtures/reference/importlinter.toml`
+
+### L-0060 · A port's error type belongs to the port, not to adapters: filing it under adapters/ forced the app layer to import adapters to catch a failure, which ARCH-001 flagged as an outward import
+
+- **Do** Declare each port's failure modes beside its Protocol, as ARCH-007 already requires the contract to state error modes; adapters raise them and the core catches them without knowing adapters exist
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `error:is not allowed to import`, `term:port error`
+- **About** ARCH-007, ERR-004
+
+### L-0061 · An ARCH-004 contract forbidding a layer transitive reach to a foreign dependency cannot bind the composition root, which necessarily reaches whatever the adapters it wires import -- ARCH-004 and ARCH-011 would be jointly unsatisfiable
+
+- **Do** Exempt the composition root from transitive-reach contracts and say why in the contract file
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `command:lint-imports`, `term:composition root`
+- **About** ARCH-004, ARCH-011
+
+### L-0062 · A property suite found a partition defect no hand-written example could reach: plan_prune used value membership to compute the complement, which collapses two equal entries; the store cannot hold one path twice so nobody would have written that case
+
+- **Do** Partition positionally rather than by value membership, and compare partitions as multisets in the property
+- **Kind** procedure · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `glob:**/domain/*.py`, `term:partition`
+- **About** TEST-007
+- **Verify** `python -m pytest enforce/fixtures/reference/tests/property -q`
+
+### L-0063 · EFCT-005 mechanized over the adapter layer reports every port delete primitive as ungated destruction -- six correct functions across three real packages plus the reference's own LocalFileStore.delete; an adapter IS the apply half of plan/apply
+
+- **Do** Scope the plan/apply obligation to the deciding layers (app, shell) and exclude adapters, the same shape as ARCH-004 having to exempt the composition root
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `error:with no plan and no opt-in`, `term:plan_apply`
+- **About** ARCH-004, EFCT-005
+- **Verify** `python -m pytest enforce/checks/test_phase2_checks.py -q`
+
+### L-0064 · A check that finds nothing across 6,700 lines of independently written code is a suspect, not a success: three of eight new checks reported zero and only the must-fire companions distinguished a working check from a dead one
+
+- **Do** Calibrate every new check against a conformant tree and an unrelated real tree before recording its baseline, and require both a must-fire and a must-not-fire case
+- **Kind** procedure · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `glob:enforce/checks/*.py`, `term:proof-of-failure`
+- **About** FLOW-007, TEST-015
+
+### L-0065 · 28 of 29 test files in a real hexagonal project declare no oracle, so their assertions rest on whatever the implementation produced when they were written
+
+- **Do** Open every test module with Oracle: <contract|property|differential|golden|example>; the closed list is what makes 'oracle: the tests pass' unwritable
+- **Kind** defect · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `error:declares no oracle`, `glob:**/test_*.py`
+- **About** TEST-004
+
+### L-0066 · Ten binding rules (ALLOC-002..009, TEAMS-001/002) were unmechanizable only because the check framework could parse nothing but Python, and a dispatch record is markdown -- the rules are not about source
+
+- **Do** Split the Check base into ModuleCheck and TextCheck so a rule whose subject is markdown, JSONL or any generated file can have a mechanism at all
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `term:TextCheck`, `term:dispatch record`
+- **About** ALLOC-002, FLOW-006
+- **Verify** `python -m pytest enforce/checks/test_phase2_checks.py -q`
+
+### L-0067 · A dispatch record states the mechanical allocation and then the escalation that overrides it, so reading only the first T/E pair reported three correct records as under-allocated -- and the escalation is often written as a bare E2, not in T/E form
+
+- **Do** Read the tier and the effort separately, each at its maximum over the whole record; the word boundary keeps a signal score like E=2 from being read as an effort tier
+- **Kind** defect · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `command:dispatch_recorded`, `term:ALLOC-004`
+- **About** ALLOC-003, ALLOC-004
+
+### L-0068 · Eight look-before-you-leap races in real code, every one the shape if p.exists(): p.unlink() -- the file can vanish between the question and the answer, and the handler needed anyway is the one that would have worked
+
+- **Do** Try the operation and handle its failure; reserve the probe for acting on absence, which does not race
+- **Kind** defect · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `error:probes with exists`, `term:ERR-013`
+- **About** ERR-013
+- **Verify** `python -m pytest enforce/checks/test_safety_checks.py -q`
+
+### L-0069 · A check's accepting case is what keeps it usable: acting on absence and a literal getattr are both common and correct, and a check reporting either would be switched off within a day
+
+- **Do** Write the must-not-fire case for the most common correct idiom the check could mistake, not just any conformant sample
+- **Kind** procedure · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `glob:enforce/checks/test_*.py`, `term:over-reporting`
+- **About** FLOW-007
+
+### L-0070 · Two checks reported correct files on their first run because the pattern was too literal: a bare date in generated output is data rather than a generation stamp, and a rule module about generation matched its own router keyword 'generated file'
+
+- **Do** Narrow a text pattern to the thing that actually breaks the property -- a clock reading or an explicit generation stamp, not any date -- and pin each calibration case as a must-not-fire test so the narrowing cannot be re-derived away
+- **Kind** procedure · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `term:DEP-008`, `term:generated_provenance`
+- **About** DEP-008, FLOW-007
+- **Verify** `python -m pytest enforce/checks/test_ledger_checks.py -q`
+
+### L-0071 · A bash heredoc failed twice this session on content containing triple quotes and backslash escapes, once mangling regex escapes into a SyntaxWarning and once aborting the whole command; neither corrupted a file but both wasted a step
+
+- **Do** Author any file containing quotes or backslashes with the Write or Edit tool, never a shell heredoc -- the same remedy L-0026 recorded for a different symptom of the same cause
+- **Kind** diagnostic · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `error:unexpected EOF while looking for matching`, `term:heredoc`
+- **About** law/FLOW
+
+### L-0072 · docgate --all passes on a newly covered file that has no baseline entry at all, because there is no prior fingerprint to compare against; only the roster test in tools/test_docgate.py notices the gap.
+
+- **Do** After widening docgate.COVERED, run pytest tools/test_docgate.py rather than trusting a green 'docgate --all'; a covered-but-unbaselined file is invisible to the gate itself.
+- **Kind** procedure · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `error:doc_baseline`
+- **About** DOC-002
+- **Verify** `python -m pytest -q tools/test_docgate.py`
+
+### L-0073 · Authoring Python that contains backslash escapes through a bash heredoc mangled '\n' into real newlines and produced a file with 262 syntax errors -- the third recurrence of L-0026 this session.
+
+- **Do** Write or edit any file containing quotes or backslash escapes with the Write/Edit tools; never through a heredoc.
+- **Kind** procedure · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `error:invalid-syntax`
+- **About** L-0026
+- **Verify** `python -m ruff check --output-format concise`
+
+### L-0074 · Ruff in this environment treats '# noqa: CODE' as a defect and expects '# ruff: ignore[rule-name]'; converting the repository's suppressions to noqa introduced 6 new findings and suppressed nothing.
+
+- **Do** Suppress a ruff finding with '# ruff: ignore[rule-name] - reason' using the long rule name, never '# noqa'.
+- **Kind** constraint · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `glob:*.py`
+- **About** DEP-005
+- **Verify** `python -m ruff check enforce/ --output-format concise`
+
+### L-0075 · docgate.COVERED named enforce/checks but not enforce/fitness, so 13 fitness suites -- mechanisms in exactly the same sense -- were written entirely outside the gate that keeps their documentation true; widening it immediately found three undocumented module constants.
+
+- **Do** When a new directory holds mechanisms, add it to docgate.COVERED in the same change that creates it, and baseline every file in it.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `glob:enforce/**`
+- **About** DOC-002
+- **Verify** `python tools/docgate.py --all`
+
+### L-0076 · python -m importlinter.cli exits 0 having checked nothing: the module has no __main__ guard, so it imports and returns success. Only the console script works, and it is not reachable from sys.executable.
+
+- **Do** Never wire import-linter into a gate as 'python -m importlinter.cli'. Call the API: configure(), read_user_options(), _register_contract_types(), create_report() -- and assert the contract count, because a config that resolves nothing reports '0 broken'.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `command:lint-imports`
+- **About** ARCH-001
+- **Verify** `python tools/import_gate.py`
+
+### L-0077 · import-linter resolves its root packages by import, and sys.modules is consulted before sys.path -- so with the package already imported by another test, contracts run against the tree imported FIRST and a deliberately broken copy came back '7 kept'.
+
+- **Do** Evict the root packages from sys.modules before building an import graph over a specific tree, and restore them after. A green contract run over a tree you did not analyse is a false pass.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `error:contracts-kept-unexpectedly`
+- **About** ARCH-001
+- **Verify** `python -m pytest -q tools/test_toolchain_gates.py`
+
+### L-0078 · mutmut 3.3.1 cannot run on Windows at all: mutmut/__main__.py does an unconditional module-scope 'import resource', which is Unix-only, so it raises ModuleNotFoundError before parsing an argument.
+
+- **Do** Do not pin or gate on mutmut in a Windows-hosted repository. TEST-013 stays external and undecided; record that rather than implying a tool runs.
+- **Kind** constraint · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `command:mutmut`
+- **About** TEST-013
+- **Verify** `python -m mutmut --help`
+
+### L-0079 · pyright strict found two defects in the reference package that mypy --strict reported clean: a frozenset whose element type was Unknown, and a redundant isinstance concealing an exhaustiveness guard that decided nothing.
+
+- **Do** Run both checkers, not one. OPEN-005's reasoning is empirical, not stylistic -- the second checker paid for itself on first contact with the reference.
+- **Kind** procedure · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `rule:TYPE-001`
+- **About** TYPE-001
+- **Verify** `python tools/type_gate.py`
+
+### L-0080 · vendor.py ships all of tools/ and all of enforce/, so an adopter receives import_gate.py and type_gate.py alongside the reference package they default to -- running them in an adopter repo would have reported green about a package the adopter did not write.
+
+- **Do** Any vendored tool with a default target must detect a vendored install and refuse the default rather than checking the shipped fixture. A false pass is worse than no check because it is reported as evidence.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `glob:tools/*_gate.py`
+- **About** API-015
+- **Verify** `python -m pytest -q tools/test_toolchain_gates.py`
 
 ## superseded
 
