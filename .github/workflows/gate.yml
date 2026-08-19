@@ -9,10 +9,11 @@
 # platform-specific assumption like either of those fails loudly in CI instead of
 # waiting for the next person on a different OS to find it by hand.
 #
-# The gate itself is NOT redefined here. `enforce/fitness/test_meta.py::GATE` is
+# The gate itself is NOT redefined here. `tools/gate.py::GATE` is
 # the single canonical sequence -- format and lint, rule corpus, navigation graph,
-# generated artefacts, skill mirror, documentation, tests -- and
-# `test_every_gate_entry_is_runnable` already proves each entry starts. The seven
+# generated artefacts, skill mirror, documentation, import contracts, types,
+# tests -- and
+# `test_every_gate_entry_is_runnable` already proves each entry starts. The nine
 # steps below are that tuple, spelled out because a workflow step needs its own
 # name and failure boundary per command; if `GATE` in test_meta.py changes, this
 # list must change with it or it has silently drifted from the thing it claims to
@@ -69,35 +70,38 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python 3.13
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          # This repository runs 3.13.15 (see CLAUDE.md); ruff.toml's
-          # target-version = "py311" is a floor for consuming projects, not a
-          # ceiling on what the discipline's own tooling is verified against.
-          python-version: "3.13"
+          # The exact patch environment.yml pins, so the following step's
+          # check_env.py run can decide the interpreter too rather than waving it
+          # through. ruff.toml's target-version = "py311" is a floor for
+          # consuming projects, not a ceiling on what this tooling is verified
+          # against. If a runner cannot supply this version the job fails, which
+          # is the intended behaviour -- see the note on `|| true` above.
+          python-version: "3.13.14"
 
       - name: Install Python gate dependencies
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
-          # Pinned to the versions this gate was verified against locally:
-          # ruff (lint), pytest + its plugins (timeout/randomly/socket are
-          # required by pytest.ini's addopts and markers), PyYAML and
-          # jsonschema (tools/discipline_core.py, tools/validate.py), and
-          # tiktoken (tools/discipline_core.py::count_tokens, used by
-          # tools/build_index.py). No requirements file exists yet to draw
-          # this list from; if one is added later, this step should read it
-          # instead of repeating it.
-          python -m pip install \
-            "ruff==0.16.3" \
-            "pytest==9.1.1" \
-            "pytest-randomly==4.1.0" \
-            "pytest-socket==0.8.0" \
-            "pytest-timeout==2.4.0" \
-            "PyYAML==6.0.3" \
-            "jsonschema==4.26.0" \
-            "tiktoken==0.14.0"
+          # Read from environment.yml rather than repeated here. The previous
+          # version of this step carried its own copy of the list and had already
+          # drifted from the machine it claimed to mirror -- it pinned ruff
+          # 0.16.3 while the maintainer environment ran 0.16.2, a three-finding
+          # difference in gate step 1 and therefore a different verdict.
+          # tools/check_env.py is the one reader of the declaration; emitting the
+          # requirements from it is what keeps this step from becoming a copy.
+          python tools/check_env.py --print-requirements > gate-requirements.txt
+          cat gate-requirements.txt
+          python -m pip install -r gate-requirements.txt
+
+      - name: Verify the interpreter matches the lock
+        # DEP-006. Fails the job on any drift, including the interpreter: the
+        # setup-python step above requests environment.yml's exact patch version,
+        # so a mismatch here means the runner did not supply what was asked for
+        # and the gate below would be deciding against a different toolchain.
+        run: python tools/check_env.py
 
       # --------------------------------------------------------------- doxygen
       #
@@ -170,29 +174,40 @@ jobs:
 
       # ------------------------------------------------------------------ gate
       #
-      # Seven entries, in the exact order and with the exact commands of
-      # enforce/fitness/test_meta.py::GATE. Each is its own step so one
-      # failing still reports which of the seven it was, and none may swallow a
-      # non-zero exit -- the workflow's default (no continue-on-error) is what
-      # makes that hold.
+      # Nine entries, in the exact order and with the exact commands of
+      # tools/gate.py::GATE. Each is its own step so one failing still reports
+      # which of the nine it was, and none may swallow a non-zero exit -- the
+      # workflow's default (no continue-on-error) is what makes that hold.
+      #
+      # Steps 7 and 8 hold enforce/fixtures/reference/ against import-linter,
+      # mypy --strict and pyright strict. They run here for the same reason
+      # they run locally, plus one specific to CI: pyright provisions its own
+      # node on first use, so this is where a runner without network access
+      # would fail loudly rather than a developer discovering it later.
 
-      - name: "Gate 1/7 -- format and lint"
-        run: ruff check
+      - name: "Gate 1/9 -- format and lint"
+        run: python tools/lint_gate.py
 
-      - name: "Gate 2/7 -- rule corpus"
+      - name: "Gate 2/9 -- rule corpus"
         run: python tools/validate.py
 
-      - name: "Gate 3/7 -- navigation graph"
+      - name: "Gate 3/9 -- navigation graph"
         run: python tools/build_graph.py --check
 
-      - name: "Gate 4/7 -- generated artefacts"
+      - name: "Gate 4/9 -- generated artefacts"
         run: python tools/build_index.py --check
 
-      - name: "Gate 5/7 -- skill mirror"
+      - name: "Gate 5/9 -- skill mirror"
         run: python tools/build_skill_mirror.py --check
 
-      - name: "Gate 6/7 -- documentation"
+      - name: "Gate 6/9 -- documentation"
         run: python tools/docgate.py --all
 
-      - name: "Gate 7/7 -- tests"
+      - name: "Gate 7/9 -- import contracts"
+        run: python tools/import_gate.py
+
+      - name: "Gate 8/9 -- types"
+        run: python tools/type_gate.py
+
+      - name: "Gate 9/9 -- tests"
         run: python -m pytest -q

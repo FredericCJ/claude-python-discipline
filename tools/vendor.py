@@ -26,26 +26,30 @@ import hashlib
 import json
 import shutil
 import sys
-from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from discipline_core import REPO_ROOT
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator, Sequence
 
 ## The published release this corpus ships as. The manifest's content hash answers
 ## "is this byte-for-byte the same corpus"; it is not something a reader recognises
 ## in a managed block, so the release name travels beside it. This constant lives
 ## under `tools`, which is hashed, so bumping it moves the content hash too -- the
 ## two can never disagree about which corpus is installed.
-RELEASE: Final = "v1.0.0"
+RELEASE: Final = "v1.1.0"
 
 ## Copied on every install and replaced wholesale. Nothing here is project-owned.
 UPSTREAM: Final[tuple[str, ...]] = ("discipline", "enforce", "tools")
 
 ## Root-level files copied alongside the upstream directories. INTEGRATION.md is
-## what an agent reads when told to wire the discipline into a repository.
-UPSTREAM_FILES: Final[tuple[str, ...]] = ("INTEGRATION.md",)
+## what an agent reads when told to wire the discipline into a repository;
+## requirements.txt names the two packages a vendored `.agent/` needs, which the
+## adopter previously had to discover from an ImportError.
+UPSTREAM_FILES: Final[tuple[str, ...]] = ("INTEGRATION.md", "requirements.txt")
 
 ## Created once if absent, then never touched again.
 PROJECT_OWNED: Final[tuple[str, ...]] = ("learning", "overrides")
@@ -62,7 +66,8 @@ SKIP_SUFFIXES: Final = (".pyc", ".db", ".db-wal", ".db-shm")
 ## appear inside an upstream directory; hashing one would make the version stamp
 ## depend on what had been run in the checkout (DEP-008).
 SKIP_DIRS: Final = frozenset(
-    {"__pycache__", ".pytest_cache", ".ruff_cache", ".hypothesis", ".mypy_cache"}
+    {"__pycache__", ".pytest_cache", ".ruff_cache", ".hypothesis", ".mypy_cache",
+     ".import_linter_cache"}
 )
 
 
@@ -160,26 +165,16 @@ def build_manifest(source: Path) -> dict[str, object]:
     }
 
 
-def install(plan: Plan, *, force: bool = False) -> tuple[int, list[str]]:
-    """Copy the upstream half; create the project half only if absent.
+def _replace_upstream(plan: Plan) -> None:
+    """Repopulate the upstream half wholesale, then copy the root-level files.
 
-    An upstream directory that exists in the source is deleted before being
-    repopulated, so a file removed upstream does not survive an update; one
-    missing from the source is left as it stands rather than emptied.
-
-    The project half is never destroyed, `force` included. An existing
-    `learning/` or `overrides/` is normally skipped whole; `force` re-enters it,
-    but every seed copy is still guarded by the destination's absence, so the
-    reachable effect of `force` is to restore a seed file the project deleted.
-    Nothing there is overwritten or removed by either path.
+    Each upstream directory is deleted before being refilled, so a file removed
+    upstream does not survive an update; one missing from the source is left as it
+    stands rather than emptied, since an absent source says nothing about what the
+    target should hold.
 
     @param plan where to copy from and to
-    @param force re-run seeding over an existing project half, replacing seed
-                 files that have gone missing
-    @return how many upstream files the manifest records, and a note for each
-            project directory left untouched or seeded
     """
-    notes: list[str] = []
     for name in UPSTREAM:
         source_dir = plan.source / name
         if not source_dir.exists():
@@ -201,6 +196,19 @@ def install(plan: Plan, *, force: bool = False) -> tuple[int, list[str]]:
         if source_file.exists():
             shutil.copy2(source_file, plan.agent_dir / name)
 
+
+def _seed_project_half(plan: Plan, *, force: bool) -> list[str]:
+    """Create the project-owned directories, and never overwrite what is there.
+
+    Every seed copy is guarded by the destination's absence, so the reachable
+    effect of `force` is to restore a seed file the project deleted -- not to
+    replace one it edited.
+
+    @param plan where to copy from and to
+    @param force re-enter a project directory that already exists
+    @return one note per project directory left untouched or seeded
+    """
+    notes: list[str] = []
     for name in PROJECT_OWNED:
         target_dir = plan.agent_dir / name
         if target_dir.exists() and not force:
@@ -214,6 +222,30 @@ def install(plan: Plan, *, force: bool = False) -> tuple[int, list[str]]:
                 if source_file.exists() and not destination.exists():
                     shutil.copy2(source_file, destination)
             notes.append("learning/ seeded; the ledger starts empty")
+    return notes
+
+
+def install(plan: Plan, *, force: bool = False) -> tuple[int, list[str]]:
+    """Copy the upstream half; create the project half only if absent.
+
+    An upstream directory that exists in the source is deleted before being
+    repopulated, so a file removed upstream does not survive an update; one
+    missing from the source is left as it stands rather than emptied.
+
+    The project half is never destroyed, `force` included. An existing
+    `learning/` or `overrides/` is normally skipped whole; `force` re-enters it,
+    but every seed copy is still guarded by the destination's absence, so the
+    reachable effect of `force` is to restore a seed file the project deleted.
+    Nothing there is overwritten or removed by either path.
+
+    @param plan where to copy from and to
+    @param force re-run seeding over an existing project half, replacing seed
+                 files that have gone missing
+    @return how many upstream files the manifest records, and a note for each
+            project directory left untouched or seeded
+    """
+    _replace_upstream(plan)
+    notes = _seed_project_half(plan, force=force)
 
     manifest = build_manifest(plan.source)
     plan.manifest.write_text(

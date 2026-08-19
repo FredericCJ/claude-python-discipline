@@ -1,0 +1,245 @@
+"""The two toolchain gate steps are observed failing, not assumed to work.
+
+**Oracle: differential.** Each gate script is run against a tree deliberately
+broken in one way, and the exit status compared against the clean run.
+
+`FLOW-007` and `TEST-015` require every mechanism to have a companion that shows
+it can fail. These two need it more than most. Both wrap a tool that *exits zero
+when it checks nothing*:
+
+* `python -m importlinter.cli lint-imports` imports the module, finds no
+  `__main__` guard, prints nothing and returns 0. Wired into the gate directly it
+  would have passed every run forever while reporting success.
+* `mypy` pointed at a path it cannot resolve prints "Success: no issues found in
+  0 source files" and returns 0. So does pyright, with `filesAnalyzed: 0`.
+
+So each wrapper carries a vacuity guard, and the guards are what is tested here
+alongside the real detection. A guard nobody has watched fire is a guard nobody
+knows is wired up.
+
+    pytest tools/test_toolchain_gates.py
+"""
+
+from __future__ import annotations
+
+import importlib
+import shutil
+import sys
+from typing import TYPE_CHECKING, Final
+
+import pytest
+
+import import_gate
+import type_gate
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+## The reference package both gates are pointed at.
+REFERENCE: Final = import_gate.DEFAULT_ROOT
+
+## Directories never copied into a broken tree: build artefacts, and caches that
+## could make a dropped module still importable.
+_SKIP: Final[frozenset[str]] = frozenset({
+    "__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache", ".hypothesis",
+    ".import_linter_cache",
+})
+
+
+@pytest.fixture
+def tree(tmp_path: Path) -> Path:
+    """A writable copy of the reference package.
+
+    No teardown: `tmp_path` is per-test and pytest keeps the last few for
+    inspection, which is what a reader wants after a negative case fails.
+
+    @param tmp_path the per-test directory
+    @return the copy's root
+    """
+    destination = tmp_path / "reference"
+    shutil.copytree(REFERENCE, destination,
+                    ignore=shutil.ignore_patterns(*_SKIP))
+    return destination
+
+
+# The import-contracts gate.
+
+
+def test_contracts_hold_on_the_reference() -> None:
+    """The positive case: the conformant tree keeps every contract.
+
+    Asserted before the negative cases, because a gate that fails on correct code
+    is not stricter, it is broken -- and every negative result below would then
+    be meaningless.
+    """
+    status, line = import_gate.check(REFERENCE, import_gate.DEFAULT_CONFIG,
+                                     import_gate.MINIMUM_CONTRACTS)
+    assert status == import_gate.EXIT_OK, line
+    assert "0 broken" in line
+
+
+def test_a_broken_layer_is_caught(tree: Path) -> None:
+    """`ARCH-001`: the domain importing an adapter breaks the layers contract.
+
+    The single most important thing the contract says -- dependencies point
+    inward -- driven by making them point outward.
+
+    @param tree a writable copy of the reference
+    """
+    model = tree / "src" / "refpkg" / "domain" / "model.py"
+    text = model.read_text(encoding="utf-8")
+    model.write_text(
+        text.replace("from __future__ import annotations",
+                     "from __future__ import annotations\n\n"
+                     "from refpkg.adapters.clock.real import SystemClock  # noqa", 1),
+        encoding="utf-8",
+    )
+    status, line = import_gate.check(tree, import_gate.DEFAULT_CONFIG,
+                                     import_gate.MINIMUM_CONTRACTS)
+    assert status == import_gate.EXIT_BROKEN, (
+        f"the domain imports an adapter and the contracts still passed: {line}"
+    )
+    assert "broken" in line
+
+
+def test_the_vacuity_guard_fires() -> None:
+    """A verdict from too few contracts is refused rather than believed.
+
+    The failure this prevents: a configuration whose `root_packages` stop
+    resolving yields zero contracts and a report saying nothing is broken, which
+    is indistinguishable from success at the exit status.
+    """
+    status, line = import_gate.check(REFERENCE, import_gate.DEFAULT_CONFIG,
+                                     minimum=999)
+    assert status == import_gate.EXIT_BROKEN
+    assert "evaluated" in line
+
+
+def test_a_missing_configuration_is_not_silence() -> None:
+    """No contract file is a failure, not an empty pass."""
+    with pytest.raises(FileNotFoundError):
+        import_gate.check(REFERENCE, "no-such-file.toml",
+                          import_gate.MINIMUM_CONTRACTS)
+
+
+# The type gate.
+
+
+@pytest.mark.parametrize("checker", ["mypy", "pyright"])
+def test_the_reference_is_clean(checker: str) -> None:
+    """The positive case: both checkers pass over the whole package.
+
+    @param checker which of the two is under test
+    """
+    runner = type_gate.run_mypy if checker == "mypy" else type_gate.run_pyright
+    passed, analysed, output = runner(REFERENCE)
+    assert passed, f"{checker} reported findings on the reference:\n{output[-1500:]}"
+    assert analysed >= type_gate.MINIMUM_FILES, (
+        f"{checker} analysed only {analysed} file(s)"
+    )
+
+
+def test_an_untyped_definition_is_caught(tree: Path) -> None:
+    """`TYPE-001`: strict mode rejects a function with no annotations.
+
+    Run against mypy only. pyright provisions its own node on first use and takes
+    an order of magnitude longer, so it is exercised by the positive case above
+    and by the gate itself rather than a second time here.
+
+    @param tree a writable copy of the reference
+    """
+    model = tree / "src" / "refpkg" / "domain" / "model.py"
+    model.write_text(
+        model.read_text(encoding="utf-8")
+        + '\n\ndef untyped(value):\n    """No annotations anywhere."""\n    return value\n',
+        encoding="utf-8",
+    )
+    passed, analysed, output = type_gate.run_mypy(tree)
+    assert not passed, (
+        f"mypy --strict accepted an unannotated function over {analysed} files; "
+        f"strict mode is not actually in force"
+    )
+    assert "untyped" in output
+
+
+def test_a_checker_that_examined_nothing_fails(tmp_path: Path) -> None:
+    """The vacuity case: an empty tree must not read as a clean one.
+
+    This is the whole reason `type_gate` exists as a wrapper. mypy over a package
+    it cannot find exits 0 saying "no issues found in 0 source files", which at
+    the exit status is exactly what success looks like.
+
+    @param tmp_path the per-test directory
+    """
+    (tmp_path / "src").mkdir()
+    assert type_gate.main(["--root", str(tmp_path)]) == type_gate.EXIT_FAILED
+
+
+# Both gates.
+
+
+@pytest.mark.parametrize("module", [import_gate, type_gate],
+                         ids=["import_gate", "type_gate"])
+def test_a_vendored_copy_refuses_its_default(module: object,
+                                             monkeypatch: pytest.MonkeyPatch) -> None:
+    """A vendored install must not report green about the shipped reference.
+
+    `vendor.py::UPSTREAM` ships all of `tools/` and all of `enforce/`, so an
+    adopter receives both scripts and the reference package they default to.
+    Without this guard, `python .agent/tools/type_gate.py` in an adopter's
+    repository passes -- having checked a package the adopter did not write. A
+    false pass is worse than no check, because it is reported as evidence.
+
+    @param module the gate script under test
+    @param monkeypatch used to make the script believe it is vendored
+    """
+    monkeypatch.setattr(module, "vendored", lambda: True)
+    assert module.main([]) != 0  # type: ignore[attr-defined]
+
+
+@pytest.mark.parametrize("module", [import_gate, type_gate],
+                         ids=["import_gate", "type_gate"])
+def test_the_guard_does_not_fire_upstream(module: object) -> None:
+    """...and the guard stays silent here, where the default is correct.
+
+    The companion to the case above. A guard that fired everywhere would have
+    passed that test while making both gate steps unrunnable.
+
+    @param module the gate script under test
+    """
+    assert module.vendored() is False  # type: ignore[attr-defined]
+    assert module.main([]) == 0  # type: ignore[attr-defined]
+
+
+def test_a_stale_import_does_not_decide_the_verdict(tree: Path) -> None:
+    """The graph comes from `--root`, not from whatever was imported first.
+
+    A regression pin. import-linter resolves its root packages by import, and an
+    import is served from `sys.modules` before the path is consulted -- so with
+    `refpkg` already loaded from the real reference, a run against a broken copy
+    came back "7 kept". Silent, directional, and a false pass.
+
+    Importing `refpkg` here first is what makes this test the failing case for
+    that defect rather than a restatement of `test_a_broken_layer_is_caught`.
+
+    @param tree a writable copy of the reference
+    """
+    sys.path.insert(0, str(REFERENCE / "src"))
+    importlib.import_module("refpkg.domain.model")
+
+    assert "refpkg" in sys.modules, "the precondition this test rests on did not hold"
+
+    model = tree / "src" / "refpkg" / "domain" / "model.py"
+    model.write_text(
+        model.read_text(encoding="utf-8").replace(
+            "from __future__ import annotations",
+            "from __future__ import annotations\n\n"
+            "from refpkg.adapters.clock.real import SystemClock  # noqa", 1),
+        encoding="utf-8",
+    )
+    status, line = import_gate.check(tree, import_gate.DEFAULT_CONFIG,
+                                     import_gate.MINIMUM_CONTRACTS)
+    assert status == import_gate.EXIT_BROKEN, (
+        f"the contracts were held against the already-imported reference rather "
+        f"than the tree at --root: {line}"
+    )

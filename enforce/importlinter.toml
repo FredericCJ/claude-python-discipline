@@ -8,12 +8,12 @@
 #  from anywhere but its one adapter fails the build, which is the property that
 #  makes a stack trace's layer attribution trustworthy.
 
-[importlinter]
+[tool.importlinter]
 root_packages = ["mypkg"]
 include_external_packages = true
 
 # ARCH-001 -- dependencies point inward only.
-[[importlinter.contracts]]
+[[tool.importlinter.contracts]]
 name = "ARCH-001 layers point inward"
 type = "layers"
 layers = [
@@ -27,7 +27,7 @@ exhaustive = true
 # ARCH-002, EFCT-001, DEP-001 -- the domain imports nothing that can perform I/O,
 # nothing from an adapter, and no third-party package. A domain failure that can
 # originate outside the domain is a domain failure that localizes nothing.
-[[importlinter.contracts]]
+[[tool.importlinter.contracts]]
 name = "ARCH-002 domain is pure"
 type = "forbidden"
 source_modules = ["mypkg.domain"]
@@ -58,7 +58,7 @@ allow_indirect_imports = false
 # ARCH-003 -- no adapter imports another adapter. Independent adapters are what
 # make "a misbehaving component cannot contaminate a healthy one" testable.
 # List every adapter module; the contract is only as complete as this list.
-[[importlinter.contracts]]
+[[tool.importlinter.contracts]]
 name = "ARCH-003 adapters are independent"
 type = "independence"
 modules = [
@@ -70,7 +70,7 @@ modules = [
 # ARCH-004, DEP-002 -- each foreign dependency is reachable from exactly one
 # adapter. Add one contract per third-party package; the pairing of package to
 # owning adapter is the dependency register DEP-002 requires.
-[[importlinter.contracts]]
+[[tool.importlinter.contracts]]
 name = "ARCH-004 foreign dependencies are cornered"
 type = "forbidden"
 source_modules = [
@@ -87,7 +87,7 @@ allow_indirect_imports = false
 
 # EFCT-012, API-004 -- persistent state has exactly one owning path. Two writers
 # make every corruption a question of which one did it.
-[[importlinter.contracts]]
+[[tool.importlinter.contracts]]
 name = "EFCT-012 storage has one owner"
 type = "forbidden"
 source_modules = [
