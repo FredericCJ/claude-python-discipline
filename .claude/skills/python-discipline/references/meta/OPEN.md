@@ -2,7 +2,7 @@
 id: meta/OPEN
 kind: meta
 title: Open Decisions
-tokens: 3971
+tokens: 3985
 load_when: ["open question", "undecided", "which tool", "pin a version"]
 decay: none
 ---
@@ -62,30 +62,14 @@ redundancy.
 
 ### OPEN-006 · The capability-tier to model mapping
 
-The mapping is **declared by the operating organization, and its use is checked by the
-corpus.** `overrides/allocation.toml` carries the table; `check:allocation_declared`
-requires that a mapping exist and that every dispatch record cite a tier it resolves.
-[ALLOC-010] is retagged `[BINDING]`.
-
-*The objection this had to answer, and does:* the table binds a tier to a model, and
-[ALLOC-001] forbids naming a model in a project document — a model name is the
-fastest-decaying fact in the system, and a corpus carrying one is wrong within months in a
-file nobody thinks to re-check. Hard-coding it was never available.
-
-*What changed:* `overrides/` is project-owned. The installer creates it once and never
-writes it again, and `vendor.py` copies `discipline/`, `enforce/` and `tools/` — not it.
-So an adopter's model names stay in the adopter's tree and the corpus still names none.
-This is the same shape `[tool.agent-discipline]` used to make `DOC-002` conditional
-without weakening it: **declare it, then be checked on it.**
-
-*What is still not checked, stated so nobody reads more into this than it says:* whether
-the mapping is any GOOD — whether `T2` really is the strongest model available — is
-unknowable from here and belongs to whoever owns the file, which is why the template
-carries an `owner` field. What is now knowable, and was not, is whether a dispatch cites a
-tier that means anything. That was the half `OPEN-006` called unauditable.
-
-*Consequence:* a repository that dispatches nothing needs no mapping and the check stays
-silent on it. A repository that dispatches at a tier resolving to nothing now fails.
+**Closed in v3.0.0.** `overrides/allocation.toml` carries the table and
+`check:allocation_declared` requires every dispatch record to cite a tier that resolves;
+[ALLOC-010] is `[BINDING]`. The objection it had to answer was [ALLOC-001] — a corpus may
+not name a model, because a model name is the fastest-decaying fact in the system. It does
+not: `overrides/` is project-owned and `vendor.py` never copies it, so an adopter's model
+names stay in the adopter's tree. Whether the mapping is any *good* remains unknowable from
+here, which is why the template carries an `owner` field; whether a dispatch cites a tier
+that means anything is now checked, and that was the half this record called unauditable.
 
 ### OPEN-007 · Documentation comments on every element, for Doxygen
 
@@ -226,18 +210,33 @@ noticed by luck.
 
 ### OPEN-015 · A `fitness:` tag is resolved by existence alone
 
-The defect that made `V080` read 0 for two releases, on the side that cannot yet be
-checked. A `check:` tag now resolves against the check's own `rules` tuple — a module that
-exists but does not claim the rule decides nothing about it — and that correction found
-seventeen rules claimed by checks that could never report them. A fitness function declares
-no rule list, so its tag is still resolved by asking whether a function of that name
-exists.
+**Closed in v3.1.** A fitness function declares what it decides via `@decides`
+(`enforce/decides.py`), and the tag resolves against that declaration exactly as a `check:`
+tag resolves against the check's `rules` tuple. **An undeclared function decides nothing** —
+treating a missing declaration as consent is how sixty-four rules came to rest on a tag that
+only asked whether some file contained the text `def <name>(`.
 
-**64 rules rest on a `fitness:` tag and none is discriminated.** `V080 = 14` is a floor,
-not a count.
+Reading all forty tagged functions against what they claimed found sixteen claims that did
+not hold — 20%, against the check side's 23%. `V080` stayed at 14. Superseded by `OPEN-019`.
 
-*Closes when:* the discrimination matrix covers fitness-decided rules, which the
-`DISCIPLINE_REFERENCE` seam now makes possible.
+### OPEN-019 · The decided set and the discriminated set are not the same set
+
+`V080` asks whether a mechanism exists and claims the rule. `V098` asks whether anyone has
+watched it work, and **93 of 142 decided binding rules have not been.**
+
+The scar is [ARCH-013]: it named `BaseModel` among the framework types a domain may not
+borrow, claimed the rule properly, was counted mechanized, and reported **nothing** against
+four domains modelled entirely in pydantic — it read annotations and never bases. Nothing
+here could have found that, because nothing had put something it should reject in front
+of it.
+
+`D` is 49, up from 20. A warning rather than an error, beside `V051`, `V080` and `V097`: a
+gate failing for a reason nobody can clear that afternoon is one people run with
+`--no-verify`. `tools/discrimination_baseline.json` carries a floor `D` may not fall below
+and a ceiling the gap may not rise above.
+
+*Closes when:* the gap reads as a list rather than a backlog, and a rule is decided if and
+only if it has been watched rejecting something.
 
 ### OPEN-016 · Nineteen advisory rules are unenforceable by construction
 

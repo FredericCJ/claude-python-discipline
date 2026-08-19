@@ -503,6 +503,15 @@
    }
   },
   {
+   "id": "OPEN-019",
+   "type": "decision",
+   "label": "The decided set and the discriminated set are not the same set",
+   "path": "discipline/meta/OPEN.md",
+   "attrs": {
+    "ledger": "meta/OPEN"
+   }
+  },
+  {
    "id": "layer:adapters",
    "type": "layer",
    "label": "adapters"
@@ -1586,7 +1595,7 @@
    "type": "module",
    "label": "Open Decisions",
    "path": "discipline/meta/OPEN.md",
-   "tokens": 3971,
+   "tokens": 3985,
    "attrs": {
     "decay": "none",
     "kind": "meta"
