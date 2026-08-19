@@ -14,6 +14,40 @@
 #  Posture is the hardest setting that can be sustained. Each relaxation below is
 #  individually justified; an unjustified ignore is a defect, not a preference.
 
+# ------------------------------------------------------------ the declaration
+#
+#  What this project says about its own conventions. The AST checks under
+#  enforce/checks/ read it; nothing else does.
+#
+#  ONLY TWO THINGS ARE DECLARABLE, and neither switches a rule off:
+#
+#  * `layers` maps this project's own directory names onto the four canonical
+#    layers law/ARCH defines. Without it, a project laid out as `services/` and
+#    `composition/` has those files resolve to no layer at all, and every
+#    layer-scoped check SKIPS them -- a silence indistinguishable from
+#    conformance. It renames; it cannot add a fifth layer.
+#  * `doc_engine` names what reads this project's documentation comments.
+#    DOC-001 and DOC-003 -- every element is documented -- apply whatever it
+#    says. DOC-002 and DOC-007 describe Doxygen's own syntax (the `##` block,
+#    the @param/@return tags) and apply only under `doxygen`, because demanding
+#    one engine's punctuation from a project using another produced 1,064
+#    findings of form against 18 of substance on a real codebase.
+#
+#  A check running with a rule narrowed by this table announces it on stdout. A
+#  reduced scan that looks like a clean one is the failure this table exists to
+#  prevent, not to cause.
+
+[tool.agent-discipline]
+doc_engine = "doxygen"             # doxygen | sphinx | none.  Absent => none.
+
+[tool.agent-discipline.layers]
+# Left empty because this template assumes the canonical src/ layout. A project
+# with its own vocabulary maps each of its segment names onto a canonical layer:
+#
+#   services = "app"
+#   composition = "shell"
+#   cli = "shell"
+
 # ---------------------------------------------------------------------------- ruff
 
 [tool.ruff]
@@ -63,6 +97,39 @@ ignore = [
     # `Any` is banned outright in the domain by TYPE-002 via mypy, which can see
     # implicit Any that a linter cannot. Duplicate reporting here adds noise only.
     "any-type",
+    # The imperative-mood rule demands "Return the exception types a handler
+    # names" where DOC-009 asks for "The exception types a handler names".
+    # On an accessor-shaped function the noun phrase IS the contract -- it says
+    # what the value is -- while the imperative narrates the mechanism, which is
+    # the half that rule explicitly rejects and which is wrong after the first
+    # refactor. The two cannot both be obeyed there, and the discipline's is a
+    # binding rule with a mechanism (checks.doc_style) where this is a
+    # preference about grammar.
+    #
+    # Narrow in what it gives up: the summary-line rules stay on, so a first line
+    # must still be a single, complete, properly closed sentence. Only its
+    # grammatical mood is unconstrained.
+    "non-imperative-mood",
+    # The error-suffix rule demands every exception class end in `Error`. The
+    # discipline's own error taxonomy, settled in the conflict ledger as
+    # CONF-002, contains no such name: NotFound, InvalidCommand,
+    # InvariantViolation, Conflict, PortFailure, ContractViolation,
+    # UnsupportedSchema, CorruptModel. Those names are published surface -- an
+    # error code and a variant name are versioned contract -- so renaming them
+    # to satisfy a linter would be a breaking change made for punctuation.
+    # Surfaced by building the reference package, where all four of its
+    # exception names were flagged.
+    "error-suffix-on-exception-name",
+    # The no-self-use rule advises that a method not touching `self` "could be a
+    # function". For a class implementing a Protocol the signature is fixed by
+    # the contract, and taking that advice would stop the class satisfying it.
+    # A stateless adapter -- a clock is the obvious one -- has no `self` to use
+    # and is not thereby a design fault.
+    #
+    # It is worth reading before dismissing: on the reference package it also
+    # flagged a store whose `delete` ignored its own root, which was a real
+    # encapsulation defect and was fixed rather than ignored.
+    "no-self-use",
 ]
 
 [tool.ruff.lint.per-file-ignores]

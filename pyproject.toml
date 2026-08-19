@@ -1,0 +1,25 @@
+#  This repository's own [tool.agent-discipline] declaration, and nothing else.
+#
+#  It exists because the declaration defaults to the permissive reading -- no
+#  documentation engine, canonical layer names only -- and a project that says
+#  nothing gets DOC-002 and DOC-007 switched off. That default is right for an
+#  adopter documenting in another convention. It is wrong here: this corpus
+#  decided the Doxygen form deliberately in meta/OPEN.md OPEN-007, every file
+#  under tools/ and enforce/checks/ is written to it, and tools/docgate.py exists
+#  to hold them there. Without this file the documentation gate would quietly
+#  stop checking two of its four rules.
+#
+#  DELIBERATELY NOT A CONFIGURATION FILE. ruff reads ruff.toml and pytest reads
+#  pytest.ini; both take precedence over this, and ruff ignores a pyproject.toml
+#  with no [tool.ruff] table at all. The canonical enforcement configuration an
+#  adopter copies is enforce/templates/pyproject.toml, which lives under a
+#  directory holding no Python precisely so no tool discovers it by walking up.
+#  Adding a [tool.ruff] or [tool.pytest] table here would undo that.
+
+[tool.agent-discipline]
+doc_engine = "doxygen"
+
+[tool.agent-discipline.layers]
+# Empty on purpose. This repository is a documentation corpus with a tools/ and
+# enforce/ layout and no hexagonal source tree, so it has no layer names of its
+# own to map. The four canonical names are recognised without being listed.
