@@ -9,13 +9,13 @@ As of **2026-08-19**. Regenerate with `python tools/learn.py calibrate --as-of 2
 | Measure | Value |
 |---|---|
 | sessions recorded | 6 |
-| learnings recorded | 80 |
-| outcomes reported | 0 |
-| of those, helped | 0 |
-| of those, noise | 0 |
+| learnings recorded | 84 |
+| outcomes reported | 2 |
+| of those, helped | 1 |
+| of those, noise | 1 |
 | of those, contradicted | 0 |
-| **retrieval precision** | **n/a** |
-| active | 0 |
+| **retrieval precision** | **50%** |
+| active | 1 |
 | promoted into a mechanism | 0 |
 | refuted | 0 |
 | stale (past one half-life) | 0 |
@@ -25,9 +25,10 @@ As of **2026-08-19**. Regenerate with `python tools/learn.py calibrate --as-of 2
 | Kind | Count |
 |---|---|
 | constraint | 11 |
-| defect | 34 |
+| defect | 36 |
 | diagnostic | 12 |
 | procedure | 23 |
+| rule-application | 2 |
 
 ## Parameters in force
 

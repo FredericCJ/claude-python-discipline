@@ -8,8 +8,20 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 
 | Status | Count |
 |---|---|
-| candidate | 79 |
+| active | 1 |
+| candidate | 82 |
 | superseded | 1 |
+
+## active
+
+### L-0074 · Ruff in this environment treats '# noqa: CODE' as a defect and expects '# ruff: ignore[rule-name]'; converting the repository's suppressions to noqa introduced 6 new findings and suppressed nothing.
+
+- **Do** Suppress a ruff finding with '# ruff: ignore[rule-name] - reason' using the long rule name, never '# noqa'.
+- **Kind** constraint · **scope** project · **evidence** observed (+1/-0 over 1 session(s))
+- **Confidence** 0.60, last seen 2026-08-19
+- **Triggers** `glob:*.py`
+- **About** DEP-005
+- **Verify** `python -m ruff check enforce/ --output-format concise`
 
 ## candidate
 
@@ -213,8 +225,8 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 ### L-0026 · A Bash heredoc on this machine collapses a doubled backslash, so Python source generated that way turned a regex \b into a literal backspace; the check kept passing its own tests and silently over-reported 400 findings.
 
 - **Do** Generate Python source with the Edit/Write tools rather than a heredoc. enforce/fitness/test_meta.py now fails on any control character in source.
-- **Kind** diagnostic · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
-- **Confidence** 0.50, last seen 2026-08-18
+- **Kind** diagnostic · **scope** project · **evidence** observed (+0/-1 over 1 session(s))
+- **Confidence** 0.35, last seen 2026-08-19
 - **Triggers** `glob:**/*.py`
 - **Verify** `python -m pytest enforce/fitness/test_meta.py -q`
 
@@ -618,15 +630,6 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **About** L-0026
 - **Verify** `python -m ruff check --output-format concise`
 
-### L-0074 · Ruff in this environment treats '# noqa: CODE' as a defect and expects '# ruff: ignore[rule-name]'; converting the repository's suppressions to noqa introduced 6 new findings and suppressed nothing.
-
-- **Do** Suppress a ruff finding with '# ruff: ignore[rule-name] - reason' using the long rule name, never '# noqa'.
-- **Kind** constraint · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
-- **Confidence** 0.50, last seen 2026-08-19
-- **Triggers** `glob:*.py`
-- **About** DEP-005
-- **Verify** `python -m ruff check enforce/ --output-format concise`
-
 ### L-0075 · docgate.COVERED named enforce/checks but not enforce/fitness, so 13 fitness suites -- mechanisms in exactly the same sense -- were written entirely outside the gate that keeps their documentation true; widening it immediately found three undocumented module constants.
 
 - **Do** When a new directory holds mechanisms, add it to docgate.COVERED in the same change that creates it, and baseline every file in it.
@@ -680,6 +683,42 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `glob:tools/*_gate.py`
 - **About** API-015
 - **Verify** `python -m pytest -q tools/test_toolchain_gates.py`
+
+### L-0081 · layer_of matched directory segments only, so a shell written as cli.py and composition.py at the package root resolved to 'unknown' and every layer-scoped check skipped 8 files silently. Separately, 'ports' was absent from CANONICAL_LAYERS, so every ports/ file also answered 'unknown'.
+
+- **Do** Resolve the final path component by stem as well as by name, and keep CANONICAL_LAYERS complete. A layer-scoped check that finds nothing reads exactly like a check that finds nothing wrong.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `rule:ARCH-001`
+- **About** ARCH-001
+- **Verify** `python -m pytest -q enforce/checks/test_project.py`
+
+### L-0082 · ARCH-013 listed BaseModel in FOREIGN_TYPES but examined only function signatures, so four domains modelled entirely in pydantic.BaseModel produced zero findings. import-linter's ARCH-004 contract caught the same coupling from the graph side, which is the only reason it was noticed.
+
+- **Do** When a rule forbids a foreign type, check inheritance as well as annotation -- inheriting is how a domain actually acquires a framework, and is strictly worse than annotating.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `rule:ARCH-013`
+- **About** ARCH-013
+- **Verify** `python -m pytest -q enforce/checks/test_phase2_checks.py`
+
+### L-0083 · A rule mechanized on the module name over-reports on code that uses only a module's pure members: ARCH-002 fired on PurePosixPath, which cannot touch a disk by construction, and on datetime.date imported as a type.
+
+- **Do** Exempt names that provably cannot perform the forbidden act, and pair every exemption with a must-still-fire companion. Telling a careful author to stop using the tool built for their situation is how a check loses its reader.
+- **Kind** rule-application · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `rule:ARCH-002`
+- **About** ARCH-002
+- **Verify** `python -m pytest -q enforce/checks/test_phase2_checks.py`
+
+### L-0084 · ARCH-012 flagged 'zone == "test"' in a domain that classifies source files into zones. A string literal is not a test signal; a test signal is something the environment tells the program.
+
+- **Do** Require a condition to read an environment, argv or a switch-named variable before a literal inside it counts as test detection.
+- **Kind** rule-application · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `rule:ARCH-012`
+- **About** ARCH-012
+- **Verify** `python -m pytest -q enforce/checks/test_phase2_checks.py`
 
 ## superseded
 
