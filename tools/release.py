@@ -1,6 +1,6 @@
 """Build the redistributable archive of this discipline.
 
-    python tools/release.py                  # -> dist/agent-discipline-v1.0.0.zip
+    python tools/release.py                  # -> dist/agent-discipline-v1.1.0.zip
     python tools/release.py --keep-staging    # leave the staged tree for inspection
 
 The archive is produced by running the real installer against a scratch
@@ -14,8 +14,12 @@ documents at the root. Those are there because `.agent/` is a hidden directory:
 an agent told "integrate the discipline that is already in this repo" has to be
 able to see that something arrived.
 
-Three gates stand between the staged tree and the zip, because a defective
-release ships silently to every adopter and cannot be recalled:
+The seven-step gate runs first, from `tools/gate.py`: an archive is never cut
+from a tree that fails it. Until v1.1.0 nothing here checked that, so a release
+could be, and was, buildable from a tree with stale generated artifacts and a
+failing suite. Three more gates then stand between the staged tree and the zip,
+because a defective release ships silently to every adopter and cannot be
+recalled:
 
 1. **Pruning.** Caches, build products and databases are deleted from the staged
    tree and named in the output. The installer already skips them; this catches
@@ -44,6 +48,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
+import gate
 import vendor
 from discipline_core import REPO_ROOT
 
@@ -75,12 +80,14 @@ REQUIRED_MEMBERS: Final[tuple[str, ...]] = (
     ".agent/discipline/KERNEL.md",
     ".agent/INTEGRATION.md",
     ".agent/MANIFEST.json",
+    ".agent/requirements.txt",
     "INSTALL-DISCIPLINE.md",
 )
 
 ## Directories deleted from the staged tree wholesale.
 PRUNED_DIRS: Final[frozenset[str]] = frozenset({
     "__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache", ".hypothesis",
+    ".import_linter_cache",
     ".git", "build", "dist", ".venv", "node_modules",
 })
 
@@ -182,29 +189,117 @@ class Finding:
         return f"  {self.member}:{self.line}: {self.pattern}: {self.excerpt}"
 
 
+## The shortest identifier worth matching. A one- or two-character login name
+## would match most of the corpus and localize nothing.
+MINIMUM_IDENTIFIER: Final = 3
+
+## Identifiers that carry no signal because source is full of them. A machine or
+## account named `main` turns the scan into a match on `def main(`, `__main__`
+## and every mention of the branch, which is thousands of blocking findings and a
+## build that can never complete on that host. Such an identifier is dropped, and
+## `unusable_identifiers` reports the drop so a weaker scan is never a silent one.
+COMMON_IDENTIFIERS: Final[frozenset[str]] = frozenset({
+    "main", "master", "test", "tests", "build", "user", "users", "home", "src",
+    "dev", "app", "apps", "root", "admin", "local", "temp", "tmp", "data",
+    "code", "python", "windows", "linux", "darwin", "node", "run", "lib", "bin",
+})
+
+
+def build_identity() -> tuple[str | None, str | None, str | None]:
+    """The account and machine this build is running as.
+
+    Read here rather than in the scan so the same three values decide both the
+    patterns and the report of what had to be dropped.
+
+    @return the login name, the machine name and the home directory, each as the
+        environment gives it or None where it says nothing
+    """
+    return (
+        os.environ.get("USERNAME") or os.environ.get("USER"),
+        platform.node(),
+        os.environ.get("USERPROFILE") or os.environ.get("HOME"),
+    )
+
+
+def _named_identifiers(
+    username: str | None, hostname: str | None, home: str | None,
+) -> tuple[tuple[str, str | None], ...]:
+    """The three build identifiers under the labels findings are reported by.
+
+    @param username the building account's login name
+    @param hostname the building machine's name
+    @param home the building account's home directory
+    @return each value beside the label a finding would name it by
+    """
+    return (("build username", username), ("build hostname", hostname),
+            ("build home directory", home))
+
+
+def _unusable_because(value: str | None) -> str | None:
+    """Why an identifier cannot serve as a leak signal.
+
+    @param value the identifier as the environment gave it
+    @return the reason it is unusable, or None when it can be matched on
+    """
+    if value is None or not value.strip():
+        return "absent"
+    cleaned = value.strip()
+    if len(cleaned) < MINIMUM_IDENTIFIER:
+        return f"shorter than {MINIMUM_IDENTIFIER} characters"
+    if cleaned.lower() in COMMON_IDENTIFIERS:
+        return "too common in source to distinguish a leak from ordinary code"
+    return None
+
+
 def environment_literals(
     username: str | None, hostname: str | None, home: str | None,
 ) -> tuple[tuple[str, re.Pattern[str]], ...]:
     """Patterns for the identifiers of the account building the release.
 
     Derived from the environment rather than written down, so the scan protects
-    whoever runs it and not only the machine it was first written on. Blank and
-    implausibly short values are dropped: a one-character username would match
-    most of the corpus.
+    whoever runs it and not only the machine it was first written on. Three kinds
+    of value are dropped: absent ones, ones below `MINIMUM_IDENTIFIER`, and ones
+    in `COMMON_IDENTIFIERS`.
+
+    Each surviving pattern is bounded so it matches a whole identifier only. The
+    bounds are lookarounds rather than `\\b`, because a home directory begins and
+    ends with characters that `\\b` would place the boundary on the wrong side of.
 
     @param username the building account's login name
     @param hostname the building machine's name
     @param home the building account's home directory
-    @return one case-insensitive literal pattern per usable identifier
+    @return one case-insensitive pattern per usable identifier
     """
-    named = (("build username", username), ("build hostname", hostname),
-             ("build home directory", home))
-    minimum = 3
     return tuple(
-        (label, re.compile(re.escape(value.strip()), re.IGNORECASE))
-        for label, value in named
-        if value and len(value.strip()) >= minimum
+        (label, re.compile(rf"(?<!\w){re.escape(value.strip())}(?!\w)", re.IGNORECASE))
+        for label, value in _named_identifiers(username, hostname, home)
+        if value is not None and _unusable_because(value) is None
     )
+
+
+def unusable_identifiers(
+    username: str | None, hostname: str | None, home: str | None,
+) -> tuple[tuple[str, str, str], ...]:
+    """Every identifier the scan was given and had to drop, with the reason.
+
+    An absent value is not reported: there is nothing remarkable about a machine
+    that does not set `USER`. A value that is present and still unusable is
+    reported, because it means this build is being scanned with fewer signals
+    than usual and nothing else would say so.
+
+    @param username the building account's login name
+    @param hostname the building machine's name
+    @param home the building account's home directory
+    @return the label, the value and the reason, for each present-but-unusable one
+    """
+    dropped = []
+    for label, value in _named_identifiers(username, hostname, home):
+        if value is None or not value.strip():
+            continue
+        reason = _unusable_because(value)
+        if reason is not None:
+            dropped.append((label, value.strip(), reason))
+    return tuple(dropped)
 
 
 def scan_text(
@@ -256,7 +351,7 @@ def stage(source: Path, staging: Path) -> tuple[int, list[str]]:
             own notes about the project-owned half
     """
     staging.mkdir(parents=True, exist_ok=True)
-    subprocess.run(  # noqa: S603 - fixed argv, no shell
+    subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv, no shell
         ["git", "init", "--quiet", str(staging)],
         capture_output=True, encoding="utf-8", errors="replace", check=True,
     )
@@ -345,11 +440,7 @@ def scan_tree(root: Path, members: Sequence[str]) -> tuple[list[Finding], list[s
     patterns = (
         *BLOCKING_PATTERNS,
         *REVIEW_PATTERNS,
-        *environment_literals(
-            os.environ.get("USERNAME") or os.environ.get("USER"),
-            platform.node(),
-            os.environ.get("USERPROFILE") or os.environ.get("HOME"),
-        ),
+        *environment_literals(*build_identity()),
     )
     findings: list[Finding] = []
     undecodable: list[str] = []
@@ -488,6 +579,9 @@ def build(source: Path, destination: Path, staging: Path) -> tuple[int, list[Fin
     if absent:
         raise RuntimeError("required member(s) missing: " + ", ".join(absent))
 
+    for label, value, reason in unusable_identifiers(*build_identity()):
+        print(f"  leak scan dropped the {label} ({value!r}): {reason}")
+
     findings, undecodable = scan_tree(staging, members)
     for member in undecodable:
         print(f"  not UTF-8, shipped unread: {member}")
@@ -501,6 +595,38 @@ def build(source: Path, destination: Path, staging: Path) -> tuple[int, list[Fin
 
     write_archive(staging, members, directories, destination)
     return len(members) + len(directories), reviewable
+
+
+def run_gate(source: Path) -> list[str]:
+    """Run the seven-step gate and report which steps refused.
+
+    Until v1.1.0 nothing here checked it. The three gates in this module -- prune,
+    empty ledger, leak scan -- all ask whether the ARCHIVE is well formed, and
+    none of them asks whether the corpus it was cut from is. An archive could be,
+    and was, buildable from a tree whose tests failed and whose generated
+    artifacts were stale.
+
+    The tuple comes from `tools/gate.py`, the same one
+    `enforce/fitness/test_meta.py` proves is runnable, so a step cannot be
+    skipped here by being forgotten there.
+
+    @param source the checkout to run the gate in
+    @return the name of each step that did not exit 0, in gate order
+    """
+    failed: list[str] = []
+    for name, command in gate.GATE:
+        finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv from gate.GATE
+            command, cwd=source, capture_output=True, text=True,
+            encoding="utf-8", errors="replace", check=False,
+        )
+        status = "ok" if finished.returncode == 0 else f"FAILED ({finished.returncode})"
+        print(f"  gate: {name:<22} {status}")
+        if finished.returncode != 0:
+            failed.append(name)
+            tail = (finished.stdout or finished.stderr or "").strip().splitlines()[-6:]
+            for line in tail:
+                print(f"      {line}")
+    return failed
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -521,7 +647,22 @@ def main(argv: Sequence[str] | None = None) -> int:
                         help="build here instead of a temporary directory")
     parser.add_argument("--keep-staging", action="store_true",
                         help="leave the staged tree in place for inspection")
+    parser.add_argument("--skip-gate", action="store_true",
+                        help="build without running the gate; the archive is unverified")
     args = parser.parse_args(argv)
+
+    if args.skip_gate:
+        print("!! --skip-gate: the gate did NOT run. This archive is unverified and")
+        print("!! must not be published. Use it for inspection only.")
+    else:
+        print("running the gate before staging anything")
+        failed = run_gate(args.source)
+        if failed:
+            print(f"refusing to build: {len(failed)} gate step(s) failed "
+                  f"({', '.join(failed)}). A release cannot be recalled; fix the "
+                  f"tree, or pass --skip-gate to build an archive marked unverified.",
+                  file=sys.stderr)
+            return 1
 
     staging = args.staging or Path(tempfile.mkdtemp(prefix="agent-discipline-"))
     if staging.exists() and any(staging.iterdir()):

@@ -79,6 +79,47 @@ def test_short_or_absent_identifiers_are_dropped() -> None:
     assert release.environment_literals(None, "x", "  ") == ()
 
 
+def test_a_host_named_after_a_common_word_can_still_build() -> None:
+    """The defect this guard was written for: a machine named `MAIN`.
+
+    Escaped as a bare literal, that hostname matched `def main(`, `__main__` and
+    every mention of the branch, so the build aborted on thousands of findings
+    and could not complete on that host at all.
+    """
+    patterns = release.environment_literals("jdoe", "MAIN", "D:/home/jdoe")
+    assert [label for label, _ in patterns] == ["build username", "build home directory"]
+    source = 'def main() -> int:\n    if __name__ == "__main__":\n        main()\n'
+    assert list(release.scan_text("a.py", source, patterns)) == []
+
+
+def test_dropping_an_unusable_identifier_is_reported_not_silent() -> None:
+    """A scan running with fewer signals than usual must say so."""
+    dropped = release.unusable_identifiers("jdoe", "MAIN", "D:/home/jdoe")
+    assert [(label, value) for label, value, _ in dropped] == [("build hostname", "MAIN")]
+    assert "too common" in dropped[0][2]
+
+
+def test_an_absent_identifier_is_not_reported_as_dropped() -> None:
+    """A machine that sets no USER is unremarkable; saying so is noise."""
+    assert release.unusable_identifiers(None, "BUILD-BOX", "   ") == ()
+
+
+def test_an_identifier_inside_a_longer_word_is_not_a_leak() -> None:
+    """A short login name must not match every word that contains it."""
+    patterns = release.environment_literals("ana", None, None)
+    assert list(release.scan_text("a.md", "analysis of a banana\n", patterns)) == []
+    found = list(release.scan_text("a.md", "written by ana today\n", patterns))
+    assert [f.pattern for f in found] == ["build username"]
+
+
+def test_a_genuine_identifier_is_still_caught_after_bounding() -> None:
+    """Precision must not have been bought by switching the guard off."""
+    patterns = release.environment_literals("jdoe", "BUILD-BOX", "D:/home/jdoe")
+    text = "built under D:/home/jdoe by jdoe on build-box\n"
+    assert {f.pattern for f in release.scan_text("a.md", text, patterns)} == {
+        "build username", "build hostname", "build home directory"}
+
+
 def test_an_excused_file_does_not_stop_the_build() -> None:
     """A fixture that proves a guard works must be allowed to contain its bait."""
     finding = release.Finding(".agent/tools/test_learn.py", 1, "aws access key", "AKIA...")
