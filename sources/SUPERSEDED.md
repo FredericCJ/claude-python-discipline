@@ -1,6 +1,6 @@
 # Superseded — do not read as guidance
 
-These eleven files are the eight source documents this repository was built from, frozen
+These eleven files are the source documents this repository was built from, frozen
 as an audit trail. **They are not current guidance.** The discipline is
 `discipline/KERNEL.md` and the modules it routes to.
 

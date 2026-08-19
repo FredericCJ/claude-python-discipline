@@ -8,8 +8,8 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 
 | Status | Count |
 |---|---|
-| active | 2 |
-| candidate | 99 |
+| active | 4 |
+| candidate | 97 |
 | superseded | 1 |
 
 ## active
@@ -25,11 +25,29 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 ### L-0074 · Ruff in this environment treats '# noqa: CODE' as a defect and expects '# ruff: ignore[rule-name]'; converting the repository's suppressions to noqa introduced 6 new findings and suppressed nothing.
 
 - **Do** Suppress a ruff finding with '# ruff: ignore[rule-name] - reason' using the long rule name, never '# noqa'.
-- **Kind** constraint · **scope** project · **evidence** observed (+1/-0 over 1 session(s))
-- **Confidence** 0.60, last seen 2026-08-19
+- **Kind** constraint · **scope** project · **evidence** observed (+2/-0 over 2 session(s))
+- **Confidence** 0.70, last seen 2026-08-19
 - **Triggers** `glob:*.py`
 - **About** DEP-005
 - **Verify** `python -m ruff check enforce/ --output-format concise`
+
+### L-0083 · A rule mechanized on the module name over-reports on code that uses only a module's pure members: ARCH-002 fired on PurePosixPath, which cannot touch a disk by construction, and on datetime.date imported as a type.
+
+- **Do** Exempt names that provably cannot perform the forbidden act, and pair every exemption with a must-still-fire companion. Telling a careful author to stop using the tool built for their situation is how a check loses its reader.
+- **Kind** rule-application · **scope** discipline · **evidence** observed (+1/-0 over 1 session(s))
+- **Confidence** 0.60, last seen 2026-08-19
+- **Triggers** `rule:ARCH-002`
+- **About** ARCH-002
+- **Verify** `python -m pytest -q enforce/checks/test_phase2_checks.py`
+
+### L-0099 · V080 was 0 because mechanism_is_implemented asked whether a check MODULE existed, never whether that check claimed the rule. Eight checks named 17 rules they can never report -- five saying so in their own docstrings -- and four rules tagged check:domain_purity, which claims none of them. The true count of binding rules decided by nothing was 20.
+
+- **Do** Resolve a mechanism tag against the mechanism's own claim, not against a filename. A rule can otherwise tag any check that exists and be counted decided; the headline number was overstated by twenty for a whole release.
+- **Kind** defect · **scope** discipline · **evidence** observed (+1/-0 over 1 session(s))
+- **Confidence** 0.60, last seen 2026-08-19
+- **Triggers** `error:V080`
+- **About** FLOW-006
+- **Verify** `python tools/validate.py`
 
 ## candidate
 
@@ -702,15 +720,6 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **About** ARCH-013
 - **Verify** `python -m pytest -q enforce/checks/test_phase2_checks.py`
 
-### L-0083 · A rule mechanized on the module name over-reports on code that uses only a module's pure members: ARCH-002 fired on PurePosixPath, which cannot touch a disk by construction, and on datetime.date imported as a type.
-
-- **Do** Exempt names that provably cannot perform the forbidden act, and pair every exemption with a must-still-fire companion. Telling a careful author to stop using the tool built for their situation is how a check loses its reader.
-- **Kind** rule-application · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
-- **Confidence** 0.50, last seen 2026-08-19
-- **Triggers** `rule:ARCH-002`
-- **About** ARCH-002
-- **Verify** `python -m pytest -q enforce/checks/test_phase2_checks.py`
-
 ### L-0084 · ARCH-012 flagged 'zone == "test"' in a domain that classifies source files into zones. A string literal is not a test signal; a test signal is something the environment tells the program.
 
 - **Do** Require a condition to read an environment, argv or a switch-named variable before a literal inside it counts as test detection.
@@ -845,15 +854,6 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `rule:DOC-010`
 - **About** DOC-010
 - **Verify** `python tools/doxygen_gate.py`
-
-### L-0099 · V080 was 0 because mechanism_is_implemented asked whether a check MODULE existed, never whether that check claimed the rule. Eight checks named 17 rules they can never report -- five saying so in their own docstrings -- and four rules tagged check:domain_purity, which claims none of them. The true count of binding rules decided by nothing was 20.
-
-- **Do** Resolve a mechanism tag against the mechanism's own claim, not against a filename. A rule can otherwise tag any check that exists and be counted decided; the headline number was overstated by twenty for a whole release.
-- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
-- **Confidence** 0.50, last seen 2026-08-19
-- **Triggers** `error:V080`
-- **About** FLOW-006
-- **Verify** `python tools/validate.py`
 
 ### L-0100 · A mutation for a rule decided by a multi-rule check must isolate that rule: the ALLOC entries provoked ALLOC-010 alongside because the synthetic tree had no allocation mapping, so no single entry could say which mechanism discriminated.
 

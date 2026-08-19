@@ -1,6 +1,6 @@
 ---
 name: gate-warden
-description: Use when any of the nine gate steps fails or is red, when ruff findings need reducing, when the GATE tuple and .github/workflows/gate.yml may have drifted apart, or when something behaves differently on another OS, locale or encoding. Contract - the nine-step gate is defined in one place, every step actually runs rather than silently skipping, it decides the same verdict on Windows, Linux and macOS, and its findings only ever go down.
+description: Use when any of the eleven gate steps fails or is red, when ruff findings need reducing, when the GATE tuple and .github/workflows/gate.yml may have drifted apart, or when something behaves differently on another OS, locale or encoding. Contract - the eleven-step gate is defined in one place, every step actually runs rather than silently skipping, it decides the same verdict on Windows, Linux and macOS, and its findings only ever go down.
 tools: Read, Write, Edit, Grep, Glob, Bash
 model: sonnet
 ---
@@ -63,7 +63,7 @@ consequence.
 3. **`gate.yml` mirrors the GATE tuple by hand.** The workflow says so itself: *"if `GATE`
    in test_meta.py changes, this list must change with it or it has silently drifted."*
    That is a mechanizable claim left to memory. Write the fitness test that parses the
-   workflow and asserts the nine steps match the tuple, in order, with the same commands.
+   workflow and asserts the eleven steps match the tuple, in order, with the same commands.
 4. **Cross-platform is asserted, never observed.** The workflow has never executed — the
    repository has no remote. Two real defects already came from win32-plus-cp932-only
    running: `ruff.exe` located only beside the interpreter (missing `Scripts/`, so the lint

@@ -43,7 +43,7 @@ previously a rule with no instances; now there are nine.
 A release is not one agent's job. Run it in this order; each step gates the next.
 
 1. `conda-steward` — the environment is locked and the lock verifies.
-2. `gate-warden` — all nine steps run, and their verdicts are quoted.
+2. `gate-warden` — all eleven steps run, and their verdicts are quoted.
 3. `graph-keeper` — the derived layer is byte-current.
 4. `doc-verifier` — the claims about to ship are true, the numbers especially.
 5. `release-engineer` — build, twice, on two machines, compare hashes.

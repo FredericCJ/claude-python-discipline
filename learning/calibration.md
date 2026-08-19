@@ -10,12 +10,12 @@ As of **2026-08-19**. Regenerate with `python tools/learn.py calibrate --as-of 2
 |---|---|
 | sessions recorded | 6 |
 | learnings recorded | 102 |
-| outcomes reported | 3 |
-| of those, helped | 2 |
+| outcomes reported | 6 |
+| of those, helped | 5 |
 | of those, noise | 1 |
 | of those, contradicted | 0 |
-| **retrieval precision** | **67%** |
-| active | 2 |
+| **retrieval precision** | **83%** |
+| active | 4 |
 | promoted into a mechanism | 0 |
 | refuted | 0 |
 | stale (past one half-life) | 0 |

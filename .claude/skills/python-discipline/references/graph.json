@@ -1469,7 +1469,7 @@
    "type": "module",
    "label": "Discipline Kernel",
    "path": "discipline/KERNEL.md",
-   "tokens": 1876,
+   "tokens": 1815,
    "attrs": {
     "decay": "none",
     "kind": "meta"

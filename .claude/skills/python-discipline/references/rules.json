@@ -514,7 +514,7 @@
       "id": "meta/KERNEL",
       "kind": "meta",
       "title": "Discipline Kernel",
-      "tokens": 1876,
+      "tokens": 1815,
       "load_when": [
         "python",
         "discipline",

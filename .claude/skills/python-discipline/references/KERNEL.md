@@ -2,7 +2,7 @@
 id: meta/KERNEL
 kind: meta
 title: Discipline Kernel
-tokens: 1876
+tokens: 1815
 load_when: ["python", "discipline", "how should i", "what are the rules"]
 decay: none
 ---
@@ -95,39 +95,33 @@ nav.py rule ID / why ID / neighbors ID       one rule, its shape, its neighbours
 nav.py path A B / budget IDS                 how two relate; what a set costs
 ```
 
-**Start with `diagnose` when something failed.** It returns the governing rules' own
-words — statement, rationale, the command that decides them — for tens of tokens, where
-`context` returns a reading plan for thousands. Measured over twelve real defects: 57
-tokens against 4,994. Use `context` when nothing has failed yet and you are about to write.
+**`diagnose` when something failed; `context` before you write.** The first returns the
+governing rules' own words — statement, rationale, the deciding command — for tens of
+tokens; the second returns a reading plan for thousands. Measured over twelve real
+defects: 57 against 4,994.
 
-Fallback if the tool cannot run: grep `INDEX.md` for a rule id, or `jq` over `rules.json`.
-Each module's front-matter carries a measured `tokens:` count — budget before you read.
+If the tool cannot run: grep `INDEX.md` for a rule id, or `jq` over `rules.json`. Every
+module's front-matter carries a measured `tokens:` count — budget before you read.
 
 ## What this repository has learned
 
 `learn.py retrieve --file P --error E` returns what earlier sessions found here. Entries
-carry a confidence and are marked stale when old — weigh them, do not obey them.
+carry a confidence and go stale — weigh them, do not obey them.
 
-Before reporting done, `learn.py record --kind ... --claim ... --action ... --trigger ...`.
+Before reporting done: `learn.py record --kind ... --claim ... --action ... --trigger ...`.
 A finding that the discipline itself is wrong is `--scope discipline`, harvested upstream
 rather than worked around. Full rules: `law/LEARN`.
 
-## Precedence
+## Genres, in precedence order
 
 1. The consuming project's own `CLAUDE.md`.
-2. `law/` — the binding rules.
-3. `fact/` — dated ecosystem truth. Facts constrain *how* a rule is satisfied; they never
-   override *what* it requires.
-4. `frame/` — grounding. Never prescriptive; informs judgment where no rule applies.
+2. `law/` — binding rules and the mechanisms that decide them.
+3. `fact/` — sourced, dated tooling truth. Facts constrain *how* a rule is satisfied;
+   they never override *what* it requires.
+4. `frame/` — vocabulary and reasoning scaffolds. Never prescriptive.
 
-More specific beats more general. Contradictions between the sources are resolved once in
-`meta/CONFLICTS`, not re-argued per task.
-
-## Genres
-
-`law/` rules and mechanisms (binding) · `fact/` sourced, dated tooling truth ·
-`frame/` vocabulary and reasoning scaffolds · `ops/` agent dispatch ·
-`meta/` this file, the format spec, the ledgers.
+Beside these: `ops/` agent dispatch · `meta/` this file, the format spec, the ledgers.
+More specific beats more general. Contradictions are resolved once in `meta/CONFLICTS`.
 
 ## Done means
 

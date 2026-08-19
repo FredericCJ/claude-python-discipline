@@ -9,9 +9,12 @@ model: opus
 
 The corpus's axiom is that anything mechanically verifiable **shall** be verified, and its
 own honest accounting once said **106 of 167 binding rules are not mechanically decided**
-and **55 of 87 named mechanisms do not exist**. Both are now 0 of 168 and 87 of 87. Holding
-that is the largest and highest-value
-work in this repository. It is yours.
+and **55 of 87 named mechanisms do not exist**. Both were then reported closed, and the
+closure was wrong: `V080` resolved a `check:` tag by asking whether the module existed,
+never whether that check claimed the rule. The true count is **14 of 164 binding rules
+decided by nothing**. Closing those, and raising `D` -- rules observed REJECTING
+something, currently 20 -- is the largest and highest-value work in this repository.
+It is yours.
 
 ## Dispatch record (ops/ALLOC-002)
 

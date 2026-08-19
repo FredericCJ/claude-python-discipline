@@ -159,13 +159,20 @@ turned on its tooling. Generated files carry a banner; edit the source module an
 
 Stated here rather than discovered later, because the axiom cuts both ways.
 
-- **Every named mechanism is now built: 87 of 87, and `V080` is 0.** All 168 binding rules
-  are decided by something that runs. What remains unmechanized is 15 rules and is the
-  permanent floor by construction — the 14 advisory rules, which are unenforceable by
-  definition, and `ALLOC-010`, which is `[OPEN]` and blocked on `OPEN-006`.
-  `enforce/ENFORCEMENT.md` carries the census. Note what `mechanized` claims: a mechanism
-  *exists*, not that the rule is fully decided by it — `ARCH-012` is the worked example.
-  The ratchet stays, now guarding against regression rather than measuring progress.
+- **`V080` is 14, and it was 0 for the wrong reason.** For two releases this section said
+  every binding rule was decided by something that runs. It was not. `V080` resolved a
+  `check:foo` tag by asking whether `enforce/checks/foo.py` *exists*, never whether that
+  check claims the rule — so a rule could tag any check in the repository and count as
+  decided. Eight checks named seventeen rules they can never report, **five of them saying
+  so in their own docstrings**. The tag now resolves against the check's own `rules` tuple.
+  Of the twenty that surfaced: one was a duplicate and was retired, one was built, four
+  were retagged `[ADVISORY]` because no machine can decide them, and **14 remain binding
+  and unbuilt** — which is what this number is for. `enforce/ENFORCEMENT.md` carries the
+  census; 164 binding rules, 19 advisory, 115 mechanized.
+- **A mechanism existing is not a mechanism discriminating.** `D` counts rules observed
+  rejecting a concrete thing: **20 of 164**. The other 144 have a mechanism nobody has
+  watched work. `ARCH-013` is why this is measured — `mechanized` its whole life, and it
+  reported nothing against four real domains modelled entirely in pydantic.
 - **Provenance is at document granularity.** All 324 source sections are accounted for, but
   that proves no document was dropped, not that every individual claim survived.
 - **This repository's own Python carries 113 residual lint findings**, ratcheted. Under
@@ -178,16 +185,17 @@ Stated here rather than discovered later, because the axiom cuts both ways.
   held by `tools/lint_baseline.json` — the exact `(file, code)` pairs, so raising one
   integer cannot switch the gate off, and **no ruff code that decides a binding rule may
   enter it**, checked before the baseline is consulted at all.
-- **The documentation gate does not prove documentation is *true*.** All 120 covered files
+- **The documentation gate does not prove documentation is *true*.** All 135 covered files
   pass presence, style and behaviour-preservation, but a reviewer pass over an earlier
   version of the same files found roughly 90 claims that were confidently false about the
   code they described. Those were never itemized, and that list has still not been
   reconstructed. Presence and truth are separate properties; only the first is mechanized.
   `DOC-013` names the second and leaves it to review, which is honest but not sufficient.
   What has been re-checked since is narrower and worth stating exactly: the numeric claims
-  in this file, several of which were stale by a full phase of work.
-- **The learning database holds 82 learnings and 2 reported outcomes**, so retrieval
-  precision is now a real number — 50% — on a sample far too small to act on, and one
+  in this file, which have now been found stale twice — both times by the work that made
+  them stale, and both times only because somebody went looking.
+- **The learning database holds 102 learnings and 3 reported outcomes**, so retrieval
+  precision is a real number — 67% — on a sample far too small to act on, and two
   learning has been promoted. The loop closed for the first time when a validation batch
   retrieved before running and reported after; nothing yet *prompts* that, so it remains a
   habit rather than a mechanism, and a habit is what `V096` exists because nobody keeps.

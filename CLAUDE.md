@@ -59,7 +59,7 @@ skill mirror copies the output of both. Omitting `build_skill_mirror` leaves a s
 that passes every command above and fails the gate's fifth step — this sequence was missing
 it until a pass over the claims in this file ran them.
 
-The whole gate is nine steps, defined once in `tools/gate.py::GATE`, and `python
+The whole gate is eleven steps, defined once in `tools/gate.py::GATE`, and `python
 tools/gate.py` runs all of them and names the ones that failed. `tools/release.py` runs the
 same tuple and refuses to build an archive from a tree that fails it.
 
@@ -82,7 +82,7 @@ against it looks like it passed and decided nothing.
 ## Maintenance agents
 
 Nine subject-matter agents in `.claude/agents/` maintain the machinery around the
-discipline: `graph-keeper` (derived layer), `gate-warden` (the nine-step gate),
+discipline: `graph-keeper` (derived layer), `gate-warden` (the eleven-step gate),
 `conda-steward` (environment and lock), `mechanism-builder` (unbuilt checks and the V080
 ratchet), `release-engineer` and `adoption-tester` (build and round-trip the archive),
 `doc-verifier` (are the claims true), `learning-steward` (the learning loop) and
