@@ -67,8 +67,13 @@ BASELINE_PATH: Final = REPO_ROOT / "tools" / "doc_baseline.json"
 ## Directories the migration covers. The reference package is included because it
 ## is the worked example an adopter reads: documentation that is exemplary
 ## everywhere except in the thing held up as the example would be a poor joke.
-COVERED: Final[tuple[str, ...]] = ("tools", "enforce/checks", "enforce/fitness",
-                                   "enforce/fixtures")
+##
+## `enforce` is named whole rather than by subdirectory. The subdirectory form
+## listed checks, fitness and fixtures, and `enforce/discrimination.py` -- a
+## mechanism in exactly the same sense -- landed beside them and outside the gate.
+## That is the second time a new mechanism was written outside `COVERED`; naming
+## the parent closes the shape rather than the instance.
+COVERED: Final[tuple[str, ...]] = ("tools", "enforce")
 
 ## Files that are tooling for the gate itself, or have no elements to document.
 EXCLUDED: Final[frozenset[str]] = frozenset({"doc_baseline.json"})

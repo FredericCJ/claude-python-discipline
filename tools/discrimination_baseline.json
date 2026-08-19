@@ -1,0 +1,22 @@
+{
+  "generated_by": "tools/discrimination_gate.py --update-baseline",
+  "note": "D -- rules with at least one mutation observed provoking them. May rise, never fall. The entries are in enforce/discrimination.py and are meant to be read; the count alone says nothing about whether they are good.",
+  "count": 14,
+  "rules": [
+    "ARCH-002",
+    "ARCH-012",
+    "ARCH-013",
+    "ARCH-015",
+    "DIAG-002",
+    "DIAG-008",
+    "DOC-001",
+    "EFCT-002",
+    "ERR-013",
+    "FLOW-008",
+    "TEST-004",
+    "TEST-014",
+    "TYPE-002",
+    "TYPE-007"
+  ],
+  "why": "Phase 1a: the matrix's first floor. Fourteen rules are observed rejecting a concrete mutation, twelve of which provoked on the first run. Two entries were wrong and the matrix said so -- ERR-013's insert broke parsing because delete is a method, and TEST-014's operands sat in a return where compound_gate examines conditions. Both were defects in the claim, not in the mechanism, which is the distinction this file exists to draw."
+}

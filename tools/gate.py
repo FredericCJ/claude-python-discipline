@@ -5,7 +5,7 @@ runnable rather than in prose that drifts, and three things now read it:
 
 * `enforce/fitness/test_meta.py` proves each entry names a real file and starts;
 * `tools/release.py` refuses to build an archive from a tree that fails it;
-* `.github/workflows/gate.yml` spells the same nine steps out, because a
+* `.github/workflows/gate.yml` spells the same ten steps out, because a
   workflow step needs its own name and failure boundary --
   `test_meta.py::test_the_workflow_mirrors_the_gate` is what keeps that copy
   honest.
@@ -53,6 +53,10 @@ GATE: Final[tuple[tuple[str, tuple[str, ...]], ...]] = (
     # so each wrapper asserts how much it actually examined.
     ("import contracts", (sys.executable, "tools/import_gate.py")),
     ("types", (sys.executable, "tools/type_gate.py")),
+    # `V080` asks whether a mechanism exists; this asks whether it discriminates.
+    # A rule nobody has watched reject anything may be deciding nothing, and
+    # ARCH-013 was exactly that for as long as it was counted mechanized.
+    ("discrimination", (sys.executable, "tools/discrimination_gate.py")),
     ("tests", (sys.executable, "-m", "pytest", "-q")),
 )
 
