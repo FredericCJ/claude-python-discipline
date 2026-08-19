@@ -704,8 +704,8 @@
       "mechanisms": [
         "check:dispatch_recorded"
       ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A mechanical substitution with an explicit stop condition may run at T0/E0 — but where an escalation rule also applies, the escalation wins.",
       "why": "This is not hypothetical. The recorded incident that destroyed 8,023 files began as exactly this shape: a mechanical directory-cleanup instruction, dispatched without regard for its blast radius.",
       "check": "`python -m checks.dispatch_recorded`",
@@ -725,8 +725,8 @@
       "mechanisms": [
         "check:dispatch_recorded"
       ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Where signal B is high, the coordinator MUST first attempt to complete the specification, and re-score, before escalating.",
       "why": "This is the doctrine's central lever: sharpening the contract lowers the tier, it is nearly always cheaper than escalating, and it produces a reusable artifact.",
       "check": "`python -m checks.dispatch_recorded`",
@@ -744,8 +744,8 @@
       "mechanisms": [
         "check:dispatch_recorded"
       ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Prefer decomposing a workload into a large mechanical part and a small reasoning part over running the whole at a high tier.",
       "why": "Two cheap agents with a clear contract between them usually beat one expensive agent, and the contract survives the task.",
       "check": "`python -m checks.dispatch_recorded`",
@@ -763,8 +763,8 @@
       "mechanisms": [
         "check:dispatch_recorded"
       ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A dispatch message cannot grant a capability the receiving agent does not hold, and that agent MUST NOT achieve the effect by other means — writing files through a shell when it holds no editing tool, for example.",
       "why": "The cost of refusing is one wasted dispatch. The cost of circumventing is that every verdict the agent ever issued becomes open to question. That asymmetry is why this rule is absolute.",
       "check": "`python -m checks.dispatch_recorded`",
@@ -782,8 +782,8 @@
       "mechanisms": [
         "check:dispatch_recorded"
       ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "When returned work is inadequate, the coordinator MUST re-score and record which of four defect kinds it was: misclassification, specification defect, execution defect, or capability mismatch.",
       "why": "The distribution over those four tells the organization whether it is under-tiering, under-specifying, or genuinely at a tier's limit — three problems with three different remedies.",
       "check": "`python -m checks.dispatch_recorded`",
@@ -1373,8 +1373,8 @@
       "mechanisms": [
         "check:domain_purity"
       ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Wire and storage representations MUST be converted to domain types by a named function at the boundary, never by attribute-name coincidence or automatic mapping.",
       "why": "An explicit mapping fails in one identifiable place with both values in hand; an implicit one fails somewhere downstream with neither.",
       "check": "`python -m checks.domain_purity`",
@@ -2073,8 +2073,8 @@
         "auto:ruff:D100",
         "check:doc_coverage"
       ],
-      "enforcement": "external",
-      "mechanically_enforced": true,
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "The presence checks MUST run in the ordinary gate, not in a documentation job. A repository that never builds documentation is held to the same standard as one that publishes it.",
       "why": "Documentation tied to a build step is documentation that lapses the moment the build is switched off, and nobody notices until someone needs it.",
       "check": "`ruff check` and `python -m checks.doc_coverage`, both in the standard gate",
@@ -2174,8 +2174,8 @@
       "mechanisms": [
         "check:doc_style"
       ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Documentation MUST NOT repeat a parameter's or return value's type. The signature carries the type; the documentation carries the meaning.",
       "why": "A type written twice diverges once, and the copy the checker cannot see is the one that goes stale.",
       "check": "`python -m checks.doc_style`",
@@ -2296,8 +2296,8 @@
       "mechanisms": [
         "check:doc_coverage"
       ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A project MUST declare its documentation engine in `[tool.agent-discipline]`. An undeclared project is held to [DOC-001] and [DOC-003] alone, and every run says so.",
       "why": "[DOC-002] and [DOC-007] name one engine's punctuation. Demanding it of a project documenting in another produced 1,064 findings of form against 18 of substance, which is how a check stops being read; leaving it undeclared and silent is worse, because a narrowed run and a clean one then look identical.",
       "check": "`python -m checks.doc_coverage`, which prints the declaration it found and every rule that declaration leaves inactive",
@@ -2380,8 +2380,8 @@
       "mechanisms": [
         "check:plan_apply"
       ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A change to persistent state MUST be expressed as a named command carrying its intent, not as a direct write performed wherever it was computed.",
       "why": "A named command is a thing that can be validated, logged, replayed and refused; a scattered write is none of those.",
       "check": "`python -m checks.plan_apply`",
@@ -2515,8 +2515,8 @@
       "mechanisms": [
         "check:plan_apply"
       ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A transition not in the table MUST be rejected during validation, with the source and target states in the error, and MUST NOT be partially performed.",
       "why": "Refusing before the first effect is what keeps the failure cheap and the state interpretable.",
       "check": "`python -m checks.plan_apply`",
@@ -2675,8 +2675,8 @@
       "mechanisms": [
         "check:error_channels"
       ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "The module and direction at which raised infrastructure failures become typed domain results MUST be named explicitly in the shell layer, and conversion MUST NOT occur anywhere else.",
       "why": "A seam left implicit is a seam no one can test, and the source corpus left this decision deferred between two documents until neither made it.",
       "check": "`python -m checks.error_channels`",
@@ -2831,8 +2831,8 @@
       "mechanisms": [
         "check:boundary_parsing"
       ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "External data MUST be converted to a domain type by a validating constructor at the boundary, which returns a result. Interior code receives types that cannot be invalid.",
       "why": "Validation repeated in the interior is validation that can be forgotten in one place; parsing once makes the invalid state unrepresentable thereafter.",
       "check": "`python -m checks.boundary_parsing`",
@@ -2892,8 +2892,8 @@
       "mechanisms": [
         "check:error_channels"
       ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A refusal the contract anticipates MUST be a typed result. A response that breaks the contract — a store that accepts a value and returns a different one — MUST raise.",
       "why": "They demand opposite reactions: one is handled, the other means a component is lying and nothing downstream of it can be trusted.",
       "check": "`python -m checks.error_channels`",
@@ -3178,8 +3178,8 @@
       "mechanisms": [
         "check:deviation_recorded"
       ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "A change description MUST state what was verified, what was skipped and why, and any rule deviation with its identifier. A failing test is reported as failing.",
       "why": "An agent inherits the previous agent's report as fact; a report that rounds a partial result up to a complete one poisons every decision built on it.",
       "check": "`python -m checks.deviation_recorded`",
@@ -4008,8 +4008,8 @@
       "mechanisms": [
         "check:domain_purity"
       ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Identifiers and domain scalars MUST NOT be interchangeable primitives. Each concept gets its own type.",
       "why": "Passing an argument in the wrong position is the defect class this eliminates outright rather than testing for.",
       "check": "`python -m checks.domain_purity`",
@@ -4087,8 +4087,8 @@
       "mechanisms": [
         "check:domain_purity"
       ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Function signatures MUST declare immutable or read-only collection types for parameters the callee does not own.",
       "why": "A mutable collection in a signature is an undeclared output channel, and the caller learns about it only when its own data changes underneath it.",
       "check": "`python -m checks.domain_purity`",
@@ -4146,8 +4146,8 @@
       "mechanisms": [
         "check:boundary_parsing"
       ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Value ranges, cross-field invariants, ordering and temporal constraints, units, and stateful protocols MUST be enforced by boundary parsing or an explicit runtime contract, and stated in the docstring. They MUST NOT be assumed carried by an annotation.",
       "why": "Any claim that strict typing guarantees correctness is false, and a contract that relies on it fails without ever having been checked.",
       "check": "`python -m checks.boundary_parsing`",
@@ -4168,8 +4168,8 @@
       "mechanisms": [
         "check:boundary_parsing"
       ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "If a checker can enforce a constraint, it MUST be in the signature. If only a human or a runtime check can, it MUST be in the docstring and backed by a runtime check where it matters.",
       "why": "A constraint in prose that a checker could have carried is a guarantee downgraded to a hope for no reason.",
       "check": "`python -m checks.boundary_parsing`",
@@ -4206,8 +4206,8 @@
       "mechanisms": [
         "check:domain_purity"
       ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "enforcement": "unbuilt",
+      "mechanically_enforced": false,
       "statement": "Frozen dataclasses, read-only mappings and final declarations MUST be used to signal intent; code MUST NOT rely on them being unbypassable.",
       "why": "The freeze is shallow and can be circumvented; treating it as a hard guarantee produces an invariant nothing actually maintains.",
       "check": "`python -m checks.domain_purity`",

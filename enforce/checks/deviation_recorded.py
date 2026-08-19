@@ -52,7 +52,11 @@ class DeviationRecordedCheck(ModuleCheck):
     ## Invoked as `python -m checks.deviation_recorded`.
     name = "deviation_recorded"
     ## The law/FLOW rules this check decides.
-    rules = ("FLOW-008", "FLOW-012")
+    ## Narrowed to what this check can actually REPORT. FLOW-012
+    ## were named here and never emitted, so they counted as `mechanized` while
+    ## being decided by nothing -- and this module's own docstring said so in
+    ## prose. `V080` rises as a result, which is the true number.
+    rules = ("FLOW-008",)
 
     def visit_module(self, _tree: ast.Module, path: Path, _layer: str) -> Iterator[Finding]:
         """Yield a finding for each unexplained suppression in the file.

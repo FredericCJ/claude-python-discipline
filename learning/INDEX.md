@@ -9,7 +9,7 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 | Status | Count |
 |---|---|
 | active | 2 |
-| candidate | 95 |
+| candidate | 96 |
 | superseded | 1 |
 
 ## active
@@ -845,6 +845,15 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `rule:DOC-010`
 - **About** DOC-010
 - **Verify** `python tools/doxygen_gate.py`
+
+### L-0099 · V080 was 0 because mechanism_is_implemented asked whether a check MODULE existed, never whether that check claimed the rule. Eight checks named 17 rules they can never report -- five saying so in their own docstrings -- and four rules tagged check:domain_purity, which claims none of them. The true count of binding rules decided by nothing was 20.
+
+- **Do** Resolve a mechanism tag against the mechanism's own claim, not against a filename. A rule can otherwise tag any check that exists and be counted decided; the headline number was overstated by twenty for a whole release.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `error:V080`
+- **About** FLOW-006
+- **Verify** `python tools/validate.py`
 
 ## superseded
 

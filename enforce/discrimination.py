@@ -71,6 +71,14 @@ class Mutation:
     ## default suits a package; a rule about a ledger or an agent file names its
     ## own subject.
     targets: tuple[str, ...] = field(default=("src",))
+    ## A pytest node id, for a rule decided by a fitness test rather than an AST
+    ## check. The runner points `DISCIPLINE_REFERENCE` at the damaged tree and
+    ## requires this node to FAIL. Empty means the rule is decided by a check and
+    ## the finding is looked for in what the checks report.
+    ##
+    ## Both kinds are the same claim -- *this mechanism rejects this thing* -- and
+    ## they differ only in how the rejection is observed.
+    node: str = ""
 
 
 ## The declared table: one concrete mutation per rule, each of which the runner

@@ -16,6 +16,7 @@ reader can mistake it for an example.
 
 from __future__ import annotations
 
+import os
 import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
@@ -33,17 +34,42 @@ _SKIP: Final[frozenset[str]] = frozenset({"__pycache__", ".pytest_cache", ".ruff
                                           ".mypy_cache", ".hypothesis"})
 
 
+## The variable that lets a caller point every fitness suite at a different tree.
+##
+## The suites were written against a constant, which made them unmutable: the
+## discrimination matrix could hold the 70 rules decided by AST checks to account
+## and not the 53 decided by fitness tests, because there was no way to run one
+## against a damaged copy. Thirteen modules would have needed a `--root`
+## parameter each; this is the same seam in one function.
+##
+## Deliberately an environment variable rather than an argument. A fitness test
+## is invoked by pytest, which passes no arguments of ours, so the value has to
+## arrive out of band or not at all.
+REFERENCE_VARIABLE: Final = "DISCIPLINE_REFERENCE"
+
+
 def reference_root() -> Path:
-    """The conformant reference package's root.
+    """The conformant reference package's root, or whatever was pointed at.
+
+    Honours `DISCIPLINE_REFERENCE` so a caller -- in practice
+    `tools/discrimination_gate.py` -- can run a fitness suite against a copy
+    broken in exactly one way and require it to fail. A fitness test that passes
+    against a tree damaged in the way it exists to catch is the same defect as a
+    check that reports nothing, and until this seam existed nothing could tell.
 
     @return the directory holding `src/` and `tests/`
-    @throws FileNotFoundError when the reference is missing, which would make
-        every fitness test vacuous rather than failing
+    @throws FileNotFoundError when the tree is missing, which would make every
+        fitness test vacuous rather than failing -- and which matters more for an
+        override than for the default, since a mistyped path would otherwise turn
+        the whole suite green
     """
-    if not (REFERENCE / "src").is_dir():
-        message = f"the reference package is missing from {REFERENCE}"
+    named = os.environ.get(REFERENCE_VARIABLE)
+    root = Path(named).resolve() if named else REFERENCE
+    if not (root / "src").is_dir():
+        origin = f" (from {REFERENCE_VARIABLE})" if named else ""
+        message = f"the reference package is missing from {root}{origin}"
         raise FileNotFoundError(message)
-    return REFERENCE
+    return root
 
 
 def broken_copy(

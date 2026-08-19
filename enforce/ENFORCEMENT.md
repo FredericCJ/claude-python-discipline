@@ -4,7 +4,7 @@
 
 Every rule against the mechanism that decides it. The corpus's own standard is that a rule nothing checks is not binding in practice, whatever its tag says, so this table is where that claim is either kept or exposed.
 
-- **169** binding rules; **169** are decided by something that runs (100%). The other **0** read as binding and are not mechanically decided.
+- **169** binding rules; **149** are decided by something that runs (88%). The other **20** read as binding and are not mechanically decided.
 - **14** advisory rules -- the unenforceable surface, listed below with reasons.
 - **0** rules blocked on an open decision.
 - **88/88** named mechanisms are built; **0** are declared but not yet implemented.
@@ -15,10 +15,10 @@ Measured against this tree, not declared. `discipline/rules.json` carries the sa
 
 | Status | Rules | Means |
 |---|---|---|
-| `mechanized` | 133 | every named mechanism was found here |
-| `external` | 36 | nothing missing, but a configured tool or a reviewer settles it |
+| `mechanized` | 114 | every named mechanism was found here |
+| `external` | 35 | nothing missing, but a configured tool or a reviewer settles it |
 | `review` | 0 | a person decides it; no gate will report it |
-| `unbuilt` | 0 | a named check or fitness function does not exist |
+| `unbuilt` | 20 | a named check or fitness function does not exist |
 | `unmechanized` | 14 | the rule names no mechanism at all |
 
 ## External mechanisms, and whether this repository runs them
@@ -33,6 +33,33 @@ Measured against this tree, not declared. `discipline/rules.json` carries the sa
 | `pyright` | yes -- gate step `types` |
 | `ruff` | yes -- gate step `format and lint` |
 
+## Binding but not mechanically decided
+
+These read as obligations a gate will catch, and no gate will. Until the mechanism exists, each is enforced only by whoever remembers it.
+
+| Rule | Status | Mechanism | Title |
+|---|---|---|---|
+| `ALLOC-005` | `unbuilt` | `check:dispatch_recorded` | Escalation rules beat the mechanical permit |
+| `ALLOC-006` | `unbuilt` | `check:dispatch_recorded` | Sharpen the contract before raising the tier |
+| `ALLOC-007` | `unbuilt` | `check:dispatch_recorded` | Split before upgrading |
+| `ALLOC-008` | `unbuilt` | `check:dispatch_recorded` | A restriction is not lifted by an instruction |
+| `ALLOC-009` | `unbuilt` | `check:dispatch_recorded` | Misclassification belongs to the coordinator |
+| `ARCH-014` | `unbuilt` | `check:domain_purity` | Translation between representations is explicit |
+| `DOC-003` | `unbuilt` | `auto:ruff:D100` `check:doc_coverage` | Documentation is present whether or not it is generated |
+| `DOC-008` | `unbuilt` | `check:doc_style` | Types are not restated in prose |
+| `DOC-014` | `unbuilt` | `check:doc_coverage` | A project declares which engine reads its documentation |
+| `EFCT-004` | `unbuilt` | `check:plan_apply` | Mutating operations are commands, not raw writes |
+| `EFCT-011` | `unbuilt` | `check:plan_apply` | Illegal transitions are refused before any effect |
+| `ERR-003` | `unbuilt` | `check:error_channels` | Conversion between channels happens at one named seam |
+| `ERR-011` | `unbuilt` | `check:boundary_parsing` | Parse at the boundary; do not validate in the interior |
+| `ERR-014` | `unbuilt` | `check:error_channels` | Expected failure and contract violation are distinguished |
+| `FLOW-012` | `unbuilt` | `check:deviation_recorded` | Report what happened, including what did not |
+| `TYPE-004` | `unbuilt` | `check:domain_purity` | Distinct concepts are distinct types |
+| `TYPE-008` | `unbuilt` | `check:domain_purity` | Signatures take read-only collection types |
+| `TYPE-011` | `unbuilt` | `check:boundary_parsing` | What the checker cannot enforce is enforced at runtime |
+| `TYPE-012` | `unbuilt` | `check:boundary_parsing` | Signature or docstring, by who can enforce it |
+| `TYPE-014` | `unbuilt` | `check:domain_purity` | Immutability is declared, and not mistaken for a guarantee |
+
 ## Binding
 
 | Rule | Status | Mechanism | Check | Title |
@@ -41,11 +68,11 @@ Measured against this tree, not declared. `discipline/rules.json` carries the sa
 | `ALLOC-002` | `mechanized` | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | Score before dispatching, and record the score |
 | `ALLOC-003` | `mechanized` | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | Named categories force escalation regardless of score |
 | `ALLOC-004` | `mechanized` | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | A single signal at 3 raises the floor |
-| `ALLOC-005` | `mechanized` | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | Escalation rules beat the mechanical permit |
-| `ALLOC-006` | `mechanized` | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | Sharpen the contract before raising the tier |
-| `ALLOC-007` | `mechanized` | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | Split before upgrading |
-| `ALLOC-008` | `mechanized` | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | A restriction is not lifted by an instruction |
-| `ALLOC-009` | `mechanized` | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | Misclassification belongs to the coordinator |
+| `ALLOC-005` | `unbuilt` **(!)** | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | Escalation rules beat the mechanical permit |
+| `ALLOC-006` | `unbuilt` **(!)** | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | Sharpen the contract before raising the tier |
+| `ALLOC-007` | `unbuilt` **(!)** | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | Split before upgrading |
+| `ALLOC-008` | `unbuilt` **(!)** | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | A restriction is not lifted by an instruction |
+| `ALLOC-009` | `unbuilt` **(!)** | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | Misclassification belongs to the coordinator |
 | `ALLOC-010` | `mechanized` | `check:allocation_declared` | `python -m checks.allocation_declared` | The gate's tier follows the risk under test |
 | `API-001` | `mechanized` | `fitness:test_contract_documented` | `pytest enforce/fitness/test_api.py::test_contract_documented` | A contract states more than a signature |
 | `API-002` | `mechanized` | `fitness:test_contract_documented` | `pytest enforce/fitness/test_api.py::test_contract_documented` | The implementation is not the contract |
@@ -74,7 +101,7 @@ Measured against this tree, not declared. `discipline/rules.json` carries the sa
 | `ARCH-011` | `mechanized` | `check:single_wiring_point` | `python -m checks.single_wiring_point` | Adapters are selected at one composition root |
 | `ARCH-012` | `mechanized` | `check:no_test_branches` | `python -m checks.no_test_branches` | No test-mode branch in production code |
 | `ARCH-013` | `mechanized` | `check:domain_purity` | `python -m checks.domain_purity` | Framework and transport types stay out of the domain |
-| `ARCH-014` | `mechanized` | `check:domain_purity` | `python -m checks.domain_purity` | Translation between representations is explicit |
+| `ARCH-014` | `unbuilt` **(!)** | `check:domain_purity` | `python -m checks.domain_purity` | Translation between representations is explicit |
 | `ARCH-015` | `mechanized` | `check:no_magic_in_domain` | `python -m checks.no_magic_in_domain` | Metaprogramming leaves the four questions answerable |
 | `ARCH-016` | `external` | `auto:ruff:C901` | `ruff check` (rule `C901`) | Module complexity stays within budget |
 | `DEP-001` | `external` | `auto:import-linter` | `lint-imports` contract `domain-is-pure` | The domain depends on the standard library only |
@@ -107,45 +134,45 @@ Measured against this tree, not declared. `discipline/rules.json` carries the sa
 | `DIAG-015` | `external` | `auto:ruff:G004` `check:log_once` | `ruff check` · `python -m checks.log_once` | Structured fields, not sentences |
 | `DOC-001` | `external` | `auto:ruff:D100` `check:doc_coverage` | `ruff check` (rules `D100`–`D107`) · `python -m checks.doc_coverage` | Every module, class, function and method is documented |
 | `DOC-002` | `mechanized` | `check:doc_coverage` | `python -m checks.doc_coverage`, which reads the declared engine | Every named value is documented |
-| `DOC-003` | `external` | `auto:ruff:D100` `check:doc_coverage` | `ruff check` and `python -m checks.doc_coverage`, both in the standard gate | Documentation is present whether or not it is generated |
+| `DOC-003` | `unbuilt` **(!)** | `auto:ruff:D100` `check:doc_coverage` | `ruff check` and `python -m checks.doc_coverage`, both in the standard gate | Documentation is present whether or not it is generated |
 | `DOC-004` | `mechanized` | `check:doc_style` | `python -m checks.doc_style` | Documentation lives in docstrings wherever Python has a slot |
 | `DOC-005` | `external` | `auto:doxygen` | `doxygen enforce/Doxyfile` with the setting in force | Docstrings are parsed as documentation, not text |
 | `DOC-006` | `external` | `auto:ruff:D205` | `ruff check` (rules `D205`, `D400`, `D415`) | A brief statement comes first |
 | `DOC-007` | `mechanized` | `check:doc_coverage` | `doxygen enforce/Doxyfile` with `WARN_NO_PARAMDOC` and `WARN_IF_INCOMPLETE_DOC` · `python -m checks.doc_coverage`, which reads the declared engine | Every parameter, result and raised exception is documented |
-| `DOC-008` | `mechanized` | `check:doc_style` | `python -m checks.doc_style` | Types are not restated in prose |
+| `DOC-008` | `unbuilt` **(!)** | `check:doc_style` | `python -m checks.doc_style` | Types are not restated in prose |
 | `DOC-009` | `mechanized` | `check:doc_style` | `python -m checks.doc_style` | Documentation states the contract, not the mechanism |
 | `DOC-010` | `external` | `auto:doxygen` | `doxygen enforce/Doxyfile` with `WARN_AS_ERROR = FAIL_ON_WARNINGS` | A Doxygen run produces no warnings |
 | `DOC-011` | `external` | `auto:doxygen` | `doxygen enforce/Doxyfile` exits 0 on a conformant tree | The documentation check generates output |
 | `DOC-012` | `mechanized` | `check:generated_provenance` | `python -m checks.generated_provenance` | Generated documentation is not committed |
-| `DOC-014` | `mechanized` | `check:doc_coverage` | `python -m checks.doc_coverage`, which prints the declaration it found and every rule that declaration leaves inactive | A project declares which engine reads its documentation |
+| `DOC-014` | `unbuilt` **(!)** | `check:doc_coverage` | `python -m checks.doc_coverage`, which prints the declaration it found and every rule that declaration leaves inactive | A project declares which engine reads its documentation |
 | `EFCT-001` | `external` | `auto:import-linter` | `lint-imports --config enforce/importlinter.toml` contract `ARCH-002 domain is pure` · `python tools/import_gate.py` | Effects are performed only in shell and adapters |
 | `EFCT-002` | `mechanized` | `check:explicit_effects` | `python -m checks.explicit_effects` | Time, randomness and environment enter through ports |
 | `EFCT-003` | `mechanized` | `fitness:test_determinism` | `pytest enforce/fitness/test_determinism.py` | Determinism is the default |
-| `EFCT-004` | `mechanized` | `check:plan_apply` | `python -m checks.plan_apply` | Mutating operations are commands, not raw writes |
+| `EFCT-004` | `unbuilt` **(!)** | `check:plan_apply` | `python -m checks.plan_apply` | Mutating operations are commands, not raw writes |
 | `EFCT-005` | `mechanized` | `check:plan_apply` | `python -m checks.plan_apply` | Destructive operations plan before they apply |
 | `EFCT-006` | `mechanized` | `fitness:test_dry_run_matches_apply` | `pytest enforce/fitness/test_effects.py::test_dry_run_matches_apply` | A dry run is the pipeline truncated, never a second path |
 | `EFCT-007` | `mechanized` | `fitness:test_interruption_recovers` | `pytest enforce/fitness/test_effects.py::test_interruption_recovers` | A multi-effect apply is journalled |
 | `EFCT-008` | `mechanized` | `check:atomicity_qualified` | `python -m checks.atomicity_qualified` | Atomicity claims are qualified |
 | `EFCT-009` | `mechanized` | `fitness:test_interruption_recovers` | `pytest enforce/fitness/test_effects.py::test_interruption_recovers` | What is not guaranteed is stated |
 | `EFCT-010` | `mechanized` | `check:plan_apply` | `python -m checks.plan_apply` | State transitions are explicit and closed |
-| `EFCT-011` | `mechanized` | `check:plan_apply` | `python -m checks.plan_apply` | Illegal transitions are refused before any effect |
+| `EFCT-011` | `unbuilt` **(!)** | `check:plan_apply` | `python -m checks.plan_apply` | Illegal transitions are refused before any effect |
 | `EFCT-012` | `external` | `auto:import-linter` | `lint-imports --config enforce/importlinter.toml` contract `EFCT-012 storage has one owner` · `python tools/import_gate.py` | Persistent state has exactly one owning path |
 | `EFCT-013` | `mechanized` | `fitness:test_concurrency_documented` | `pytest enforce/fitness/test_concurrency.py::test_concurrency_documented` | Concurrency is introduced only with stated semantics |
 | `EFCT-014` | `mechanized` | `fitness:test_concurrency_documented` | `pytest enforce/fitness/test_concurrency.py::test_concurrency_documented` | Shared mutable state is guarded by a stated lock order |
 | `EFCT-015` | `mechanized` | `fitness:test_single_writer` | `pytest enforce/fitness/test_concurrency.py::test_single_writer` | Writer exclusion is enforced; contention is a result |
 | `ERR-001` | `mechanized` | `check:error_channels` | `python -m checks.error_channels` | Exactly two propagation channels exist |
 | `ERR-002` | `external` | `auto:mypy` `auto:pyright` | `mypy --strict` · `pyright --strict` | Result unions are exhaustively handled |
-| `ERR-003` | `mechanized` | `check:error_channels` | `python -m checks.error_channels` | Conversion between channels happens at one named seam |
+| `ERR-003` | `unbuilt` **(!)** | `check:error_channels` | `python -m checks.error_channels` | Conversion between channels happens at one named seam |
 | `ERR-004` | `mechanized` | `check:error_channels` | `python -m checks.error_channels` | A layer produces only its own error family |
 | `ERR-005` | `external` | `auto:mypy` | `mypy --strict` | A new variant is declared at its definition site |
 | `ERR-006` | `mechanized` | `check:exception_shape` | `python -m checks.exception_shape` | Exceptions form one narrow hierarchy under a package base |
 | `ERR-008` | `external` | `auto:ruff:BLE001` | `ruff check` (rules `E722`, `BLE001`) | Catch narrowly |
 | `ERR-009` | `external` | `auto:ruff:TRY300` | `ruff check` (rules `TRY300`, `TRY301`) | The `try` body holds only what can fail |
 | `ERR-010` | `mechanized` | `check:exception_shape` | `python -m checks.exception_shape` | Grouped failures propagate as a group |
-| `ERR-011` | `mechanized` | `check:boundary_parsing` | `python -m checks.boundary_parsing` | Parse at the boundary; do not validate in the interior |
+| `ERR-011` | `unbuilt` **(!)** | `check:boundary_parsing` | `python -m checks.boundary_parsing` | Parse at the boundary; do not validate in the interior |
 | `ERR-012` | `mechanized` | `check:assert_usage` | `python -m checks.assert_usage` | Boundary validation survives optimized bytecode |
 | `ERR-013` | `mechanized` | `check:boundary_parsing` | `python -m checks.boundary_parsing` | Try the operation rather than pre-checking the world |
-| `ERR-014` | `mechanized` | `check:error_channels` | `python -m checks.error_channels` | Expected failure and contract violation are distinguished |
+| `ERR-014` | `unbuilt` **(!)** | `check:error_channels` | `python -m checks.error_channels` | Expected failure and contract violation are distinguished |
 | `ERR-015` | `mechanized` | `fitness:test_no_unhandled_escape` | `pytest enforce/fitness/test_diagnostics.py::test_no_unhandled_escape` | No unhandled exception reaches the process boundary |
 | `ERR-016` | `mechanized` | `fitness:test_fault_containment` | `pytest enforce/fitness/test_faults.py::test_fault_containment` | A fault is contained at the boundary that detected it |
 | `FLOW-001` | `mechanized` | `fitness:test_contract_documented` | `pytest enforce/fitness/test_api.py::test_contract_documented` | The contract is written before the implementation |
@@ -159,7 +186,7 @@ Measured against this tree, not declared. `discipline/rules.json` carries the sa
 | `FLOW-009` | `mechanized` | `fitness:test_gate_suite_defined` | `pytest enforce/fitness/test_meta.py::test_gate_suite_defined` | The gates pass before a change is offered |
 | `FLOW-010` | `mechanized` | `fitness:test_layers_populated` | `pytest enforce/fitness/test_layers.py::test_layers_populated` | New behaviour arrives with its obligations discharged |
 | `FLOW-011` | `mechanized` | `fitness:test_envelope_conforms` | `pytest enforce/fitness/test_diagnostics.py::test_envelope_conforms` | The diagnosis is checked, not assumed |
-| `FLOW-012` | `mechanized` | `check:deviation_recorded` | `python -m checks.deviation_recorded` | Report what happened, including what did not |
+| `FLOW-012` | `unbuilt` **(!)** | `check:deviation_recorded` | `python -m checks.deviation_recorded` | Report what happened, including what did not |
 | `LEARN-001` | `mechanized` | `check:session_recorded` | `python -m checks.session_recorded` | A session records what it learned before reporting done |
 | `LEARN-002` | `external` | `auto:learn` | `python tools/learn.py record` refuses all three omissions | A learning states a claim, an action and a trigger |
 | `LEARN-003` | `external` | `auto:learn` `fitness:test_a_credential_is_refused` | `pytest tools/test_learn.py::test_a_credential_is_refused` | Credentials never enter the ledger |
@@ -195,17 +222,17 @@ Measured against this tree, not declared. `discipline/rules.json` carries the sa
 | `TYPE-001` | `external` | `auto:mypy` `auto:pyright` | `mypy --strict src/` · `pyright src/` · `python tools/type_gate.py` | Two checkers, both strict, both pinned |
 | `TYPE-002` | `external` | `auto:mypy` `check:domain_purity` | `mypy --strict --disallow-any-explicit src/domain` · `python -m checks.domain_purity` | The domain carries no `Any` |
 | `TYPE-003` | `external` | `auto:mypy` `auto:ruff:PGH003` | `mypy --warn-redundant-casts --warn-unused-ignores` · `ruff check` (rule `PGH003`) | Escape hatches are narrow, justified and counted |
-| `TYPE-004` | `mechanized` | `check:domain_purity` | `python -m checks.domain_purity` | Distinct concepts are distinct types |
+| `TYPE-004` | `unbuilt` **(!)** | `check:domain_purity` | `python -m checks.domain_purity` | Distinct concepts are distinct types |
 | `TYPE-005` | `mechanized` | `check:boundary_parsing` | `python -m checks.boundary_parsing` | A constrained type is a wrapper with a parsing constructor |
 | `TYPE-006` | `external` | `auto:mypy` `check:domain_purity` | `mypy --strict` · `python -m checks.domain_purity` | Closed sets are enumerations |
 | `TYPE-007` | `mechanized` | `check:domain_purity` | `python -m checks.domain_purity` | Domain values are frozen and slotted |
-| `TYPE-008` | `mechanized` | `check:domain_purity` | `python -m checks.domain_purity` | Signatures take read-only collection types |
+| `TYPE-008` | `unbuilt` **(!)** | `check:domain_purity` | `python -m checks.domain_purity` | Signatures take read-only collection types |
 | `TYPE-009` | `mechanized` | `fitness:test_every_port_is_a_protocol` | `pytest enforce/fitness/test_ports.py::test_every_port_is_a_protocol` | Ports are structural protocols |
 | `TYPE-010` | `mechanized` | `check:boundary_parsing` | `python -m checks.boundary_parsing` | Runtime protocol checks are not contract checks |
-| `TYPE-011` | `mechanized` | `check:boundary_parsing` | `python -m checks.boundary_parsing` | What the checker cannot enforce is enforced at runtime |
-| `TYPE-012` | `mechanized` | `check:boundary_parsing` | `python -m checks.boundary_parsing` | Signature or docstring, by who can enforce it |
+| `TYPE-011` | `unbuilt` **(!)** | `check:boundary_parsing` | `python -m checks.boundary_parsing` | What the checker cannot enforce is enforced at runtime |
+| `TYPE-012` | `unbuilt` **(!)** | `check:boundary_parsing` | `python -m checks.boundary_parsing` | Signature or docstring, by who can enforce it |
 | `TYPE-013` | `external` | `auto:mypy` | `mypy --strict-equality` | Conversions are explicit |
-| `TYPE-014` | `mechanized` | `check:domain_purity` | `python -m checks.domain_purity` | Immutability is declared, and not mistaken for a guarantee |
+| `TYPE-014` | `unbuilt` **(!)** | `check:domain_purity` | `python -m checks.domain_purity` | Immutability is declared, and not mistaken for a guarantee |
 
 ### Mechanisms in use
 

@@ -78,7 +78,11 @@ class DocStyleCheck(ModuleCheck):
     ## Invoked as `python -m checks.doc_style`.
     name = "doc_style"
     ## The law/DOC rules this check decides.
-    rules = ("DOC-004", "DOC-008", "DOC-009", "DOC-010")
+    ## Narrowed to what this check can actually REPORT. DOC-008 were named
+    ## here and never emitted, so they counted as `mechanized` while being
+    ## decided by nothing -- and this module's own docstring said so in prose.
+    ## `V080` rises as a result, which is the true number.
+    rules = ("DOC-004", "DOC-009", "DOC-010")
 
     def visit_module(self, tree: ast.Module, path: Path, _layer: str) -> Iterator[Finding]:
         """Yield findings for every badly formed documentation comment in `tree`.

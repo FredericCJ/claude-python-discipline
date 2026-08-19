@@ -54,7 +54,11 @@ class BoundaryParsingCheck(ModuleCheck):
     ## Invoked as `python -m checks.boundary_parsing`.
     name = "boundary_parsing"
     ## The law/ERR and law/TYPE rules this check decides.
-    rules = ("ERR-011", "ERR-013", "TYPE-005", "TYPE-010", "TYPE-011", "TYPE-012")
+    ## Narrowed to what this check can actually REPORT. ERR-011, TYPE-011 and TYPE-012 were named
+    ## here and never emitted, so they counted as `mechanized` while being
+    ## decided by nothing -- and this module's own docstring said so in prose.
+    ## `V080` rises as a result, which is the true number.
+    rules = ("ERR-013", "TYPE-005", "TYPE-010")
 
     def visit_module(self, tree: ast.Module, path: Path, _layer: str) -> Iterator[Finding]:
         """Yield findings for each of the three shapes.

@@ -695,7 +695,7 @@ def check_mechanisms(documents: Sequence[Document], layout: Layout) -> Iterator[
     for doc in documents:
         for rule in doc.rules:
             for mechanism in rule.mechanisms:
-                if mechanism_is_implemented(mechanism, layout.root) is False:
+                if mechanism_is_implemented(mechanism, layout.root, rule.rule_id) is False:
                     yield Finding(
                         code="V080",
                         severity=Severity.WARN,
@@ -723,7 +723,7 @@ def unbuilt_pairs(documents: Sequence[Document], layout: Layout) -> frozenset[tu
         for doc in documents
         for rule in doc.rules
         for mechanism in rule.mechanisms
-        if mechanism_is_implemented(mechanism, layout.root) is False
+        if mechanism_is_implemented(mechanism, layout.root, rule.rule_id) is False
     )
 
 

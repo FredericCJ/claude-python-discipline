@@ -27,7 +27,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
+import subprocess  # ruff: ignore[suspicious-subprocess-import]
 import sys
 import tempfile
 from pathlib import Path
@@ -81,12 +83,12 @@ def findings_for(tree: Path, targets: Sequence[str]) -> set[str]:
     return reported
 
 
-def provoke(mutation: discrimination.Mutation, workspace: Path) -> set[str]:
-    """Apply one mutation and report what the checks then say.
+def damaged(mutation: discrimination.Mutation, workspace: Path) -> Path:
+    """Build the tree this mutation describes.
 
     @param mutation the declared mutation
-    @param workspace a fresh directory to build the damaged tree in
-    @return the rule ids reported against the damaged tree
+    @param workspace a fresh directory to build in
+    @return the damaged tree's root
     @throws FileNotFoundError when a path named for damage is not there, which
         `broken_copy` raises rather than silently leaving the tree intact
     """
@@ -97,9 +99,47 @@ def provoke(mutation: discrimination.Mutation, workspace: Path) -> set[str]:
             target = root / name
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(contents, encoding="utf-8")
-    else:
-        root = broken_copy(workspace, drop=mutation.drop, write=written or None,
-                           replace=mutation.replace)
+        return root
+    return broken_copy(workspace, drop=mutation.drop, write=written or None,
+                       replace=mutation.replace)
+
+
+def fails_against(node: str, root: Path) -> bool:
+    """Whether one fitness test fails when pointed at a damaged tree.
+
+    The suites read their subject through `fixtures.reference_root()`, which
+    honours `DISCIPLINE_REFERENCE`. Setting it here is what lets a fitness-decided
+    rule be held to the same standard as a check-decided one: the mechanism must
+    be watched rejecting something.
+
+    A node that ERRORS rather than fails counts as failing. Either way the tree
+    did not pass, and distinguishing them would credit a broken suite as a
+    working one.
+
+    @param node the pytest node id to run
+    @param root the damaged tree the suite should reject
+    @return True when pytest reported the node as not passing
+    """
+    finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
+        (sys.executable, "-m", "pytest", "-q", "-p", "no:randomly", "-x", node),
+        cwd=REPO_ROOT, env={**os.environ, "DISCIPLINE_REFERENCE": str(root)},
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        check=False, timeout=600,
+    )
+    return finished.returncode != 0
+
+
+def provoke(mutation: discrimination.Mutation, workspace: Path) -> set[str]:
+    """Apply one mutation and report which rules its mechanism then reports.
+
+    @param mutation the declared mutation
+    @param workspace a fresh directory to build the damaged tree in
+    @return the rule ids observed rejecting the damaged tree
+    @throws FileNotFoundError when a path named for damage is not there
+    """
+    root = damaged(mutation, workspace)
+    if mutation.node:
+        return {mutation.rule_id} if fails_against(mutation.node, root) else set()
     return findings_for(root, mutation.targets)
 
 

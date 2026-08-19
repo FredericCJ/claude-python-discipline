@@ -225,7 +225,8 @@ def statuses_for(rules: Sequence[Rule], root: Path) -> dict[str, Enforcement]:
     @param root the repository root the mechanisms are resolved against
     @return each rule id against its status
     """
-    return {rule.rule_id: enforcement_of(rule.mechanisms, root) for rule in rules}
+    return {rule.rule_id: enforcement_of(rule.mechanisms, root, rule.rule_id)
+            for rule in rules}
 
 
 def _status_cell(rule: Rule, status: Enforcement) -> str:

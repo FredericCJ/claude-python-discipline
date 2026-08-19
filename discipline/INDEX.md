@@ -16,7 +16,7 @@ decay: none
 
 **`mechanized` says a mechanism exists, not that it decides the whole rule.** The measurement is presence on disk; how completely a check covers the sentence above it is a judgement no build can make. `ARCH-012` is the worked example: `check:no_test_branches` is real and runs, and it matches a closed list of test signals, so `if os.environ.get("PYTEST_CURRENT_TEST")` -- the canonical pytest detector -- passes it, as does any indirection through a module constant. Read a `mechanized` row as *something will catch the obvious cases*, and the rule's own text as what you actually owe.
 
-0 of 169 binding rules are not mechanically decided. `enforce/ENFORCEMENT.md` names the mechanisms still to build.
+20 of 169 binding rules are not mechanically decided. `enforce/ENFORCEMENT.md` names the mechanisms still to build.
 
 ## Modules
 
@@ -82,7 +82,7 @@ decay: none
 | `ARCH-011` | BINDING | `mechanized` | `check:single_wiring_point` | Adapters are selected at one composition root |
 | `ARCH-012` | BINDING | `mechanized` | `check:no_test_branches` | No test-mode branch in production code |
 | `ARCH-013` | BINDING | `mechanized` | `check:domain_purity` | Framework and transport types stay out of the domain |
-| `ARCH-014` | BINDING | `mechanized` | `check:domain_purity` | Translation between representations is explicit |
+| `ARCH-014` | BINDING | `unbuilt` **(!)** | `check:domain_purity` | Translation between representations is explicit |
 | `ARCH-015` | BINDING | `mechanized` | `check:no_magic_in_domain` | Metaprogramming leaves the four questions answerable |
 | `ARCH-016` | BINDING | `external` | `auto:ruff:C901` | Module complexity stays within budget |
 | `ARCH-017` | ADVISORY | `unmechanized` | — | Prefer the direct call to the abstraction |
@@ -133,18 +133,18 @@ decay: none
 |---|---|---|---|---|
 | `DOC-001` | BINDING | `external` | `auto:ruff:D100` `check:doc_coverage` | Every module, class, function and method is documented |
 | `DOC-002` | BINDING | `mechanized` | `check:doc_coverage` | Every named value is documented |
-| `DOC-003` | BINDING | `external` | `auto:ruff:D100` `check:doc_coverage` | Documentation is present whether or not it is generated |
+| `DOC-003` | BINDING | `unbuilt` **(!)** | `auto:ruff:D100` `check:doc_coverage` | Documentation is present whether or not it is generated |
 | `DOC-004` | BINDING | `mechanized` | `check:doc_style` | Documentation lives in docstrings wherever Python has a slot |
 | `DOC-005` | BINDING | `external` | `auto:doxygen` | Docstrings are parsed as documentation, not text |
 | `DOC-006` | BINDING | `external` | `auto:ruff:D205` | A brief statement comes first |
 | `DOC-007` | BINDING | `mechanized` | `check:doc_coverage` | Every parameter, result and raised exception is documented |
-| `DOC-008` | BINDING | `mechanized` | `check:doc_style` | Types are not restated in prose |
+| `DOC-008` | BINDING | `unbuilt` **(!)** | `check:doc_style` | Types are not restated in prose |
 | `DOC-009` | BINDING | `mechanized` | `check:doc_style` | Documentation states the contract, not the mechanism |
 | `DOC-010` | BINDING | `external` | `auto:doxygen` | A Doxygen run produces no warnings |
 | `DOC-011` | BINDING | `external` | `auto:doxygen` | The documentation check generates output |
 | `DOC-012` | BINDING | `mechanized` | `check:generated_provenance` | Generated documentation is not committed |
 | `DOC-013` | ADVISORY | `unmechanized` | — | Prefer one sentence that earns its place |
-| `DOC-014` | BINDING | `mechanized` | `check:doc_coverage` | A project declares which engine reads its documentation |
+| `DOC-014` | BINDING | `unbuilt` **(!)** | `check:doc_coverage` | A project declares which engine reads its documentation |
 
 ### law/EFCT
 
@@ -153,14 +153,14 @@ decay: none
 | `EFCT-001` | BINDING | `external` | `auto:import-linter` | Effects are performed only in shell and adapters |
 | `EFCT-002` | BINDING | `mechanized` | `check:explicit_effects` | Time, randomness and environment enter through ports |
 | `EFCT-003` | BINDING | `mechanized` | `fitness:test_determinism` | Determinism is the default |
-| `EFCT-004` | BINDING | `mechanized` | `check:plan_apply` | Mutating operations are commands, not raw writes |
+| `EFCT-004` | BINDING | `unbuilt` **(!)** | `check:plan_apply` | Mutating operations are commands, not raw writes |
 | `EFCT-005` | BINDING | `mechanized` | `check:plan_apply` | Destructive operations plan before they apply |
 | `EFCT-006` | BINDING | `mechanized` | `fitness:test_dry_run_matches_apply` | A dry run is the pipeline truncated, never a second path |
 | `EFCT-007` | BINDING | `mechanized` | `fitness:test_interruption_recovers` | A multi-effect apply is journalled |
 | `EFCT-008` | BINDING | `mechanized` | `check:atomicity_qualified` | Atomicity claims are qualified |
 | `EFCT-009` | BINDING | `mechanized` | `fitness:test_interruption_recovers` | What is not guaranteed is stated |
 | `EFCT-010` | BINDING | `mechanized` | `check:plan_apply` | State transitions are explicit and closed |
-| `EFCT-011` | BINDING | `mechanized` | `check:plan_apply` | Illegal transitions are refused before any effect |
+| `EFCT-011` | BINDING | `unbuilt` **(!)** | `check:plan_apply` | Illegal transitions are refused before any effect |
 | `EFCT-012` | BINDING | `external` | `auto:import-linter` | Persistent state has exactly one owning path |
 | `EFCT-013` | BINDING | `mechanized` | `fitness:test_concurrency_documented` | Concurrency is introduced only with stated semantics |
 | `EFCT-014` | BINDING | `mechanized` | `fitness:test_concurrency_documented` | Shared mutable state is guarded by a stated lock order |
@@ -173,7 +173,7 @@ decay: none
 |---|---|---|---|---|
 | `ERR-001` | BINDING | `mechanized` | `check:error_channels` | Exactly two propagation channels exist |
 | `ERR-002` | BINDING | `external` | `auto:mypy` `auto:pyright` | Result unions are exhaustively handled |
-| `ERR-003` | BINDING | `mechanized` | `check:error_channels` | Conversion between channels happens at one named seam |
+| `ERR-003` | BINDING | `unbuilt` **(!)** | `check:error_channels` | Conversion between channels happens at one named seam |
 | `ERR-004` | BINDING | `mechanized` | `check:error_channels` | A layer produces only its own error family |
 | `ERR-005` | BINDING | `external` | `auto:mypy` | A new variant is declared at its definition site |
 | `ERR-006` | BINDING | `mechanized` | `check:exception_shape` | Exceptions form one narrow hierarchy under a package base |
@@ -181,10 +181,10 @@ decay: none
 | `ERR-008` | BINDING | `external` | `auto:ruff:BLE001` | Catch narrowly |
 | `ERR-009` | BINDING | `external` | `auto:ruff:TRY300` | The `try` body holds only what can fail |
 | `ERR-010` | BINDING | `mechanized` | `check:exception_shape` | Grouped failures propagate as a group |
-| `ERR-011` | BINDING | `mechanized` | `check:boundary_parsing` | Parse at the boundary; do not validate in the interior |
+| `ERR-011` | BINDING | `unbuilt` **(!)** | `check:boundary_parsing` | Parse at the boundary; do not validate in the interior |
 | `ERR-012` | BINDING | `mechanized` | `check:assert_usage` | Boundary validation survives optimized bytecode |
 | `ERR-013` | BINDING | `mechanized` | `check:boundary_parsing` | Try the operation rather than pre-checking the world |
-| `ERR-014` | BINDING | `mechanized` | `check:error_channels` | Expected failure and contract violation are distinguished |
+| `ERR-014` | BINDING | `unbuilt` **(!)** | `check:error_channels` | Expected failure and contract violation are distinguished |
 | `ERR-015` | BINDING | `mechanized` | `fitness:test_no_unhandled_escape` | No unhandled exception reaches the process boundary |
 | `ERR-016` | BINDING | `mechanized` | `fitness:test_fault_containment` | A fault is contained at the boundary that detected it |
 
@@ -203,7 +203,7 @@ decay: none
 | `FLOW-009` | BINDING | `mechanized` | `fitness:test_gate_suite_defined` | The gates pass before a change is offered |
 | `FLOW-010` | BINDING | `mechanized` | `fitness:test_layers_populated` | New behaviour arrives with its obligations discharged |
 | `FLOW-011` | BINDING | `mechanized` | `fitness:test_envelope_conforms` | The diagnosis is checked, not assumed |
-| `FLOW-012` | BINDING | `mechanized` | `check:deviation_recorded` | Report what happened, including what did not |
+| `FLOW-012` | BINDING | `unbuilt` **(!)** | `check:deviation_recorded` | Report what happened, including what did not |
 | `FLOW-013` | ADVISORY | `unmechanized` | — | Scale ceremony to reuse ambition, not to line count |
 
 ### law/LEARN
@@ -254,17 +254,17 @@ decay: none
 | `TYPE-001` | BINDING | `external` | `auto:mypy` `auto:pyright` | Two checkers, both strict, both pinned |
 | `TYPE-002` | BINDING | `external` | `auto:mypy` `check:domain_purity` | The domain carries no `Any` |
 | `TYPE-003` | BINDING | `external` | `auto:mypy` `auto:ruff:PGH003` | Escape hatches are narrow, justified and counted |
-| `TYPE-004` | BINDING | `mechanized` | `check:domain_purity` | Distinct concepts are distinct types |
+| `TYPE-004` | BINDING | `unbuilt` **(!)** | `check:domain_purity` | Distinct concepts are distinct types |
 | `TYPE-005` | BINDING | `mechanized` | `check:boundary_parsing` | A constrained type is a wrapper with a parsing constructor |
 | `TYPE-006` | BINDING | `external` | `auto:mypy` `check:domain_purity` | Closed sets are enumerations |
 | `TYPE-007` | BINDING | `mechanized` | `check:domain_purity` | Domain values are frozen and slotted |
-| `TYPE-008` | BINDING | `mechanized` | `check:domain_purity` | Signatures take read-only collection types |
+| `TYPE-008` | BINDING | `unbuilt` **(!)** | `check:domain_purity` | Signatures take read-only collection types |
 | `TYPE-009` | BINDING | `mechanized` | `fitness:test_every_port_is_a_protocol` | Ports are structural protocols |
 | `TYPE-010` | BINDING | `mechanized` | `check:boundary_parsing` | Runtime protocol checks are not contract checks |
-| `TYPE-011` | BINDING | `mechanized` | `check:boundary_parsing` | What the checker cannot enforce is enforced at runtime |
-| `TYPE-012` | BINDING | `mechanized` | `check:boundary_parsing` | Signature or docstring, by who can enforce it |
+| `TYPE-011` | BINDING | `unbuilt` **(!)** | `check:boundary_parsing` | What the checker cannot enforce is enforced at runtime |
+| `TYPE-012` | BINDING | `unbuilt` **(!)** | `check:boundary_parsing` | Signature or docstring, by who can enforce it |
 | `TYPE-013` | BINDING | `external` | `auto:mypy` | Conversions are explicit |
-| `TYPE-014` | BINDING | `mechanized` | `check:domain_purity` | Immutability is declared, and not mistaken for a guarantee |
+| `TYPE-014` | BINDING | `unbuilt` **(!)** | `check:domain_purity` | Immutability is declared, and not mistaken for a guarantee |
 | `TYPE-015` | ADVISORY | `unmechanized` | — | Type sophistication stays proportionate |
 
 ### ops/ALLOC
@@ -275,11 +275,11 @@ decay: none
 | `ALLOC-002` | BINDING | `mechanized` | `check:dispatch_recorded` | Score before dispatching, and record the score |
 | `ALLOC-003` | BINDING | `mechanized` | `check:dispatch_recorded` | Named categories force escalation regardless of score |
 | `ALLOC-004` | BINDING | `mechanized` | `check:dispatch_recorded` | A single signal at 3 raises the floor |
-| `ALLOC-005` | BINDING | `mechanized` | `check:dispatch_recorded` | Escalation rules beat the mechanical permit |
-| `ALLOC-006` | BINDING | `mechanized` | `check:dispatch_recorded` | Sharpen the contract before raising the tier |
-| `ALLOC-007` | BINDING | `mechanized` | `check:dispatch_recorded` | Split before upgrading |
-| `ALLOC-008` | BINDING | `mechanized` | `check:dispatch_recorded` | A restriction is not lifted by an instruction |
-| `ALLOC-009` | BINDING | `mechanized` | `check:dispatch_recorded` | Misclassification belongs to the coordinator |
+| `ALLOC-005` | BINDING | `unbuilt` **(!)** | `check:dispatch_recorded` | Escalation rules beat the mechanical permit |
+| `ALLOC-006` | BINDING | `unbuilt` **(!)** | `check:dispatch_recorded` | Sharpen the contract before raising the tier |
+| `ALLOC-007` | BINDING | `unbuilt` **(!)** | `check:dispatch_recorded` | Split before upgrading |
+| `ALLOC-008` | BINDING | `unbuilt` **(!)** | `check:dispatch_recorded` | A restriction is not lifted by an instruction |
+| `ALLOC-009` | BINDING | `unbuilt` **(!)** | `check:dispatch_recorded` | Misclassification belongs to the coordinator |
 | `ALLOC-010` | BINDING | `mechanized` | `check:allocation_declared` | The gate's tier follows the risk under test |
 
 ### ops/teams

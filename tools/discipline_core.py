@@ -7,6 +7,7 @@ can never disagree about what a rule is.
 
 from __future__ import annotations
 
+import ast
 import datetime
 import re
 from dataclasses import dataclass, field
@@ -135,8 +136,37 @@ class Enforcement(StrEnum):
         return self in {Enforcement.MECHANIZED, Enforcement.EXTERNAL}
 
 
-def mechanism_is_implemented(mechanism: str, root: Path = REPO_ROOT) -> bool | None:
-    """Whether a mechanism tag points at something that exists.
+def rules_claimed_by(check: str, root: Path = REPO_ROOT) -> frozenset[str] | None:
+    """Which rules a check module says it decides, read from its `rules` tuple.
+
+    Parsed rather than imported: the census runs in `build_index.py`, which must
+    not execute a check to find out what it claims.
+
+    @param check the check's module name, as a `check:` tag writes it
+    @param root the tree to look in
+    @return the rule ids it names, or None when the module or the tuple is absent
+    """
+    path = root / "enforce" / "checks" / f"{check}.py"
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    except (OSError, SyntaxError):
+        return None
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign):
+            continue
+        if not any(getattr(t, "id", "") == "rules" for t in node.targets):
+            continue
+        if isinstance(node.value, (ast.Tuple, ast.List)):
+            return frozenset(
+                element.value for element in node.value.elts
+                if isinstance(element, ast.Constant) and isinstance(element.value, str)
+            )
+    return None
+
+
+def mechanism_is_implemented(mechanism: str, root: Path = REPO_ROOT,
+                             rule_id: str | None = None) -> bool | None:
+    """Whether a mechanism tag points at something that decides this rule.
 
     The single implementation in the repository. ``validate.py`` reports the False
     case as V080 and ``build_index.py`` derives every rule's ``Enforcement`` from it;
@@ -149,15 +179,32 @@ def mechanism_is_implemented(mechanism: str, root: Path = REPO_ROOT) -> bool | N
     person -- is not decidable from this tree and is reported as such rather than
     guessed at.
 
+    A `check:` tag is resolved against the check's own `rules` tuple when a rule
+    id is supplied: a module that exists but does not claim this rule decides
+    nothing about it. A `fitness:` tag can only be resolved by existence, because
+    a fitness function declares no rule list -- an asymmetry worth knowing about
+    rather than papering over.
+
     @param mechanism a tag exactly as a rule heading writes it, such as
         `check:layering` or `fitness:no_cycles`
     @param root the tree to look in, defaulting to this repository
-    @return True when the file or function it names is present, False when the tag
-        is checkable and nothing answers it, None when it is not checkable here
+    @param rule_id the rule being resolved, so a `check:` tag can be held to what
+        the check claims; omitted, the older existence-only answer is given
+    @return True when something that names this rule is present, False when the
+        tag is checkable and nothing answers it, None when it is not checkable
     """
     kind, _, target = mechanism.partition(":")
     if kind == "check":
-        return (root / "enforce" / "checks" / f"{target}.py").exists()
+        if not (root / "enforce" / "checks" / f"{target}.py").exists():
+            return False
+        if rule_id is None:
+            return True
+        # Existence is not enough, and assuming it was is how fifteen binding
+        # rules came to be counted decided by checks that could never report
+        # them. Several of those checks said so in their own docstrings while
+        # their `rules` tuple claimed the rule anyway; nothing read the tuple.
+        claimed = rules_claimed_by(target, root)
+        return True if claimed is None else rule_id in claimed
     if kind == "fitness":
         return any(
             f"def {target}(" in path.read_text(encoding="utf-8")
@@ -168,7 +215,8 @@ def mechanism_is_implemented(mechanism: str, root: Path = REPO_ROOT) -> bool | N
     return None
 
 
-def enforcement_of(mechanisms: Sequence[str], root: Path = REPO_ROOT) -> Enforcement:
+def enforcement_of(mechanisms: Sequence[str], root: Path = REPO_ROOT,
+                   rule_id: str | None = None) -> Enforcement:
     """Classify a rule's mechanism set into one status an agent can act on.
 
     Absence dominates: one missing mechanism makes the whole rule ``UNBUILT``,
@@ -178,12 +226,14 @@ def enforcement_of(mechanisms: Sequence[str], root: Path = REPO_ROOT) -> Enforce
     @param mechanisms the rule's tags with the force tag already removed, in the
         order the heading wrote them
     @param root the tree the mechanisms are resolved against
+    @param rule_id the rule being classified, so a ``check:`` tag is resolved
+        against what that check claims rather than against its mere existence
     @return the status; never ``MECHANIZED`` for an empty set, and never a
         mechanical status for a rule decided only by ``review``
     """
     if not mechanisms:
         return Enforcement.UNMECHANIZED
-    resolved = [mechanism_is_implemented(m, root) for m in mechanisms]
+    resolved = [mechanism_is_implemented(m, root, rule_id) for m in mechanisms]
     if any(state is False for state in resolved):
         return Enforcement.UNBUILT
     if all(state is True for state in resolved):

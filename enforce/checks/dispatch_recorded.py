@@ -96,8 +96,11 @@ class DispatchRecordedCheck(TextCheck):
     ## Invoked as `python -m checks.dispatch_recorded`.
     name = "dispatch_recorded"
     ## The ops/ALLOC and ops/teams rules this check decides.
-    rules = ("ALLOC-002", "ALLOC-003", "ALLOC-004", "ALLOC-005", "ALLOC-006",
-             "ALLOC-007", "ALLOC-008", "ALLOC-009", "TEAMS-001", "TEAMS-002")
+    ## Narrowed to what this check can actually REPORT. ALLOC-005 through ALLOC-009
+    ## were named here and never emitted, so they counted as `mechanized` while
+    ## being decided by nothing -- and this module's own docstring said so in
+    ## prose. `V080` rises as a result, which is the true number.
+    rules = ("ALLOC-002", "ALLOC-003", "ALLOC-004", "TEAMS-001", "TEAMS-002")
     ## Dispatch records are markdown.
     suffixes = (".md",)
 

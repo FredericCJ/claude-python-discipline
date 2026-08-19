@@ -46,8 +46,9 @@ class AssertUsageCheck(ModuleCheck):
 
     ## Invoked as `python -m checks.assert_usage`.
     name = "assert_usage"
-    ## The rules this mechanism decides. Findings cite ERR-012, the boundary
-    ## half; DIAG-009 is the same prohibition seen from the diagnostics side.
+    ## The rules this mechanism decides, and it now REPORTS both. `ERR-012` is
+    ## the boundary half and `DIAG-009` the diagnostics half of one prohibition;
+    ## claiming both while emitting one left `DIAG-009` decided by nothing.
     rules = ("DIAG-009", "ERR-012")
 
     def visit_module(self, tree: ast.Module, path: Path, _layer: str) -> Iterator[Finding]:
@@ -57,9 +58,9 @@ class AssertUsageCheck(ModuleCheck):
         @param path the file it was parsed from
         @param _layer the architectural layer, unused -- `-O` strips assertions
             from every layer alike
-        @return one ERR-012 finding per suspect assertion, naming the evidence in
-            its message; one per enclosing function for an assertion inside a
-            nested one, see `_asserts`
+        @return one `ERR-012` and one `DIAG-009` finding per suspect assertion,
+            naming the evidence in its message; one pair per enclosing function
+            for an assertion inside a nested one, see `_asserts`
         """
         if is_test_path(path):
             return
@@ -67,12 +68,19 @@ class AssertUsageCheck(ModuleCheck):
         for func, node in _asserts(tree):
             reason = self._why_suspect(node, params.get(func, frozenset()))
             if reason is not None:
-                yield Finding(
-                    "ERR-012", path, node.lineno,
-                    f"assertion is validating {reason}",
-                    "Make it an ordinary check returning a typed error; assertions vanish "
-                    "under `python -O` and this one would cease to exist.",
-                )
+                # Both ids, not one. `DIAG-009` and `ERR-012` are the same
+                # prohibition from two sides, and the tuple above claimed both
+                # while only `ERR-012` was ever emitted -- so `DIAG-009` was
+                # counted decided and a reader grepping for it found nothing.
+                # A finding should name every contract it breaks; that is what
+                # makes it repairable from the output alone.
+                for rule_id in ("ERR-012", "DIAG-009"):
+                    yield Finding(
+                        rule_id, path, node.lineno,
+                        f"assertion is validating {reason}",
+                        "Make it an ordinary check returning a typed error; assertions "
+                        "vanish under `python -O` and this one would cease to exist.",
+                    )
 
     def _why_suspect(self, node: ast.Assert, params: frozenset[str]) -> str | None:
         """Decide whether an assertion is validating, and name what gave it away.

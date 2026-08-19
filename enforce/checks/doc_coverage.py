@@ -41,7 +41,11 @@ class DocCoverageCheck(ModuleCheck):
     ## Invoked as `python -m checks.doc_coverage`.
     name = "doc_coverage"
     ## The law/DOC rules this check decides.
-    rules = ("DOC-001", "DOC-002", "DOC-003", "DOC-007")
+    ## Narrowed to what this check can actually REPORT. DOC-003
+    ## were named here and never emitted, so they counted as `mechanized` while
+    ## being decided by nothing -- and this module's own docstring said so in
+    ## prose. `V080` rises as a result, which is the true number.
+    rules = ("DOC-001", "DOC-002", "DOC-007")
 
     def visit_module(self, tree: ast.Module, path: Path, _layer: str) -> Iterator[Finding]:
         """Yield one finding per undocumented element in `tree`.

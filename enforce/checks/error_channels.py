@@ -58,7 +58,11 @@ class ErrorChannelsCheck(ModuleCheck):
     ## Invoked as `python -m checks.error_channels`.
     name = "error_channels"
     ## The law/ERR rules this check decides.
-    rules = ("ERR-001", "ERR-003", "ERR-004", "ERR-014")
+    ## Narrowed to what this check can actually REPORT. ERR-003 and ERR-014
+    ## were named here and never emitted, so they counted as `mechanized` while
+    ## being decided by nothing -- and this module's own docstring said so in
+    ## prose. `V080` rises as a result, which is the true number.
+    rules = ("ERR-001", "ERR-004")
 
     def visit_module(self, tree: ast.Module, path: Path, layer: str) -> Iterator[Finding]:
         """Yield findings for unowned raises and for channel mixing.

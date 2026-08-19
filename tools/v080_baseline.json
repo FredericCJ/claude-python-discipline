@@ -1,7 +1,88 @@
 {
   "generated_by": "tools/validate.py --update-baseline",
   "note": "Ratchet ceiling for V081/V082. validate.py fails when the corpus's unbuilt-mechanism count exceeds `count` below, and only warns when it falls under it. Move this file with `python tools/validate.py --update-baseline --why \"...\"`, never by hand -- the pairs must stay exactly what the tool itself measured.",
-  "count": 0,
-  "pairs": [],
-  "why": "Phase 3 complete: all 31 fitness tests built across 13 modules, closing the last 53 rules. V080 reaches 0 -- every binding rule in the corpus is now decided by something that runs. The 14 advisory rules remain the permanent floor."
+  "count": 20,
+  "pairs": [
+    [
+      "ALLOC-005",
+      "check:dispatch_recorded"
+    ],
+    [
+      "ALLOC-006",
+      "check:dispatch_recorded"
+    ],
+    [
+      "ALLOC-007",
+      "check:dispatch_recorded"
+    ],
+    [
+      "ALLOC-008",
+      "check:dispatch_recorded"
+    ],
+    [
+      "ALLOC-009",
+      "check:dispatch_recorded"
+    ],
+    [
+      "ARCH-014",
+      "check:domain_purity"
+    ],
+    [
+      "DOC-003",
+      "check:doc_coverage"
+    ],
+    [
+      "DOC-008",
+      "check:doc_style"
+    ],
+    [
+      "DOC-014",
+      "check:doc_coverage"
+    ],
+    [
+      "EFCT-004",
+      "check:plan_apply"
+    ],
+    [
+      "EFCT-011",
+      "check:plan_apply"
+    ],
+    [
+      "ERR-003",
+      "check:error_channels"
+    ],
+    [
+      "ERR-011",
+      "check:boundary_parsing"
+    ],
+    [
+      "ERR-014",
+      "check:error_channels"
+    ],
+    [
+      "FLOW-012",
+      "check:deviation_recorded"
+    ],
+    [
+      "TYPE-004",
+      "check:domain_purity"
+    ],
+    [
+      "TYPE-008",
+      "check:domain_purity"
+    ],
+    [
+      "TYPE-011",
+      "check:boundary_parsing"
+    ],
+    [
+      "TYPE-012",
+      "check:boundary_parsing"
+    ],
+    [
+      "TYPE-014",
+      "check:domain_purity"
+    ]
+  ],
+  "why": "V080 was 0 because it asked whether a check MODULE existed, never whether that check claimed the rule. Eight checks named 17 rules they can never report -- five of them saying so in their own docstrings -- and four rules tagged check:domain_purity, which claims none of them. The tuples are now narrowed to what each check emits, mechanism_is_implemented resolves a check: tag against the check's own rules tuple, and the true count is 20. The ratchet rises because the measurement was wrong, not because the corpus regressed."
 }

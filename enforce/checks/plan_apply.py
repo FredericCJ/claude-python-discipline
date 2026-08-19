@@ -63,7 +63,11 @@ class PlanApplyCheck(ModuleCheck):
     ## Invoked as `python -m checks.plan_apply`.
     name = "plan_apply"
     ## The law/EFCT rules this check decides.
-    rules = ("EFCT-004", "EFCT-005", "EFCT-010", "EFCT-011")
+    ## Narrowed to what this check can actually REPORT. EFCT-004 and EFCT-011
+    ## were named here and never emitted, so they counted as `mechanized` while
+    ## being decided by nothing -- and this module's own docstring said so in
+    ## prose. `V080` rises as a result, which is the true number.
+    rules = ("EFCT-005", "EFCT-010")
 
     def visit_module(self, tree: ast.Module, path: Path, layer: str) -> Iterator[Finding]:
         """Yield findings for ungated destruction and for open state comparisons.
