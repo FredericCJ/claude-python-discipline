@@ -28,6 +28,34 @@ IO_MODULES = frozenset({
     "argparse", "sys", "pickle", "webbrowser",
 })
 
+## Names inside an I/O-capable module that provably cannot perform I/O, so
+## importing one is not the exposure `ARCH-002` describes. The rule forbids
+## importing what *can* reach outside the process; a name that cannot is simply
+## not the subject.
+##
+## Found by running this check against a real codebase that had reasoned about
+## exactly this. `PurePosixPath` exists in the standard library *because* it
+## cannot touch the filesystem -- that is the entire point of the Pure variants,
+## and flagging one told a careful author to stop using the tool designed for
+## the situation. `date` and `datetime` imported as TYPES are the same case:
+## `date.today()` reads a clock, which is `ARCH-005` and `EFCT-003`'s territory,
+## while the annotation is inert.
+##
+## The list is deliberately short and every entry is defensible from the
+## standard library's own documentation. It is not a place to park an import
+## somebody finds inconvenient.
+PURE_NAMES: frozenset[tuple[str, str]] = frozenset({
+    ("pathlib", "PurePath"),
+    ("pathlib", "PurePosixPath"),
+    ("pathlib", "PureWindowsPath"),
+    ("datetime", "date"),
+    ("datetime", "datetime"),
+    ("datetime", "time"),
+    ("datetime", "timedelta"),
+    ("datetime", "timezone"),
+    ("datetime", "UTC"),
+})
+
 ## Types owned by a framework or a transport. A domain modelled in these is
 ## coupled to them at every call site (ARCH-013).
 FOREIGN_TYPES = frozenset({
@@ -63,6 +91,7 @@ class DomainPurityCheck(ModuleCheck):
         if layer != "domain" or is_test_path(path):
             return
         yield from self._imports(tree, path)
+        yield from self._base_classes(tree, path)
         yield from self._annotations(tree, path)
         yield from self._dataclasses(tree, path)
 
@@ -79,13 +108,51 @@ class DomainPurityCheck(ModuleCheck):
             yields two, both at the statement's line
         """
         for node in ast.walk(tree):
-            for module, lineno in _imported_modules(node):
+            for module, name, lineno in _imported_modules(node):
                 root = module.split(".", 1)[0]
-                if root in IO_MODULES:
+                if root not in IO_MODULES:
+                    continue
+                if name is not None and (root, name) in PURE_NAMES:
+                    continue
+                yield Finding(
+                    "ARCH-002", path, lineno,
+                    f"domain imports `{module}`, which can perform I/O",
+                    "Move the effect behind a port and take it as a parameter (ARCH-005).",
+                )
+
+    def _base_classes(self, tree: ast.Module, path: Path) -> Iterator[Finding]:
+        """Report a domain class that INHERITS a framework or transport type.
+
+        The gap this closes was found by holding the check against a real
+        codebase whose four domains are modelled entirely in `pydantic.BaseModel`.
+        `BaseModel` was already listed in `FOREIGN_TYPES` and the check reported
+        nothing, because it only ever examined annotations -- and inheritance is
+        how a domain actually acquires a framework. import-linter's ARCH-004
+        contract caught the same coupling from the other side, which is the
+        overlap this module's docstring claims and is here the only reason it was
+        noticed at all.
+
+        Inheriting is strictly worse than annotating: every instance carries the
+        framework's construction, validation and serialization semantics, and no
+        call site can opt out.
+
+        @param tree the module's syntax tree
+        @param path the file it was parsed from
+        @return one ARCH-013 finding per offending base, at the class statement
+        """
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ClassDef):
+                continue
+            for base in node.bases:
+                named = getattr(base, "attr", getattr(base, "id", ""))
+                if named in FOREIGN_TYPES:
                     yield Finding(
-                        "ARCH-002", path, lineno,
-                        f"domain imports `{module}`, which can perform I/O",
-                        "Move the effect behind a port and take it as a parameter (ARCH-005).",
+                        "ARCH-013", path, node.lineno,
+                        f"domain class `{node.name}` inherits `{named}`, "
+                        f"a framework type",
+                        "Model the value with a plain frozen dataclass and convert at "
+                        "the boundary; a domain that IS a framework type cannot be "
+                        "constructed, compared or serialized without it.",
                     )
 
     def _annotations(self, tree: ast.Module, path: Path) -> Iterator[Finding]:
@@ -149,21 +216,28 @@ class DomainPurityCheck(ModuleCheck):
                     )
 
 
-def _imported_modules(node: ast.AST) -> Iterator[tuple[str, int]]:
-    """The modules one statement brings in, each with the line that brought it.
+def _imported_modules(node: ast.AST) -> Iterator[tuple[str, str | None, int]]:
+    """What one statement brings in: the module, the bound name, and the line.
 
     Relative imports yield nothing. A sibling module can of course reach an
     effect in turn, but that is a transitive fact only the import-linter contract
     can see; this one answers for the line in front of it.
 
+    The bound name is carried because `import pathlib` and
+    `from pathlib import PurePosixPath` are different claims. The first takes the
+    whole module and everything it can do; the second takes one name, and that
+    name may be provably incapable of the thing the rule forbids. `None` means
+    the statement took the module itself, where no such exemption can apply.
+
     @param node any node; only import statements produce anything
-    @return each imported module's dotted name paired with its line
+    @return each import as (module, bound name or None, line)
     """
     if isinstance(node, ast.Import):
         for alias in node.names:
-            yield alias.name, node.lineno
+            yield alias.name, None, node.lineno
     elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
-        yield node.module, node.lineno
+        for alias in node.names:
+            yield node.module, alias.name, node.lineno
 
 
 def _annotations_of(node: ast.FunctionDef | ast.AsyncFunctionDef) -> Iterator[ast.expr]:

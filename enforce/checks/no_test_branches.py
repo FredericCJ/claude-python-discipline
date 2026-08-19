@@ -10,7 +10,7 @@ the two paths diverge silently from the day it is written.
 from __future__ import annotations
 
 import ast
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from . import Finding, ModuleCheck, is_test_path, main
 
@@ -69,6 +69,8 @@ class NoTestBranchesCheck(ModuleCheck):
         for node in ast.walk(tree):
             if not isinstance(node, (ast.If, ast.IfExp)):
                 continue
+            if not _reads_a_switch(node.test):
+                continue
             for signal in _test_signals_in(node.test):
                 yield Finding(
                     "ARCH-012", path, node.lineno,
@@ -108,6 +110,51 @@ class NoTestBranchesCheck(ModuleCheck):
                             "Remove the probe; a test dependency must not shape production "
                             "behaviour.",
                         )
+
+
+## Where a test signal can actually come from. A condition must read one of these
+## before a string inside it counts as test detection.
+##
+## This guard exists because the check reported `zone == "test"` in a real
+## codebase whose domain classifies source files into zones -- `ports`, `test`,
+## and so on. The string "test" there is a value in a taxonomy the program is
+## reasoning ABOUT, not a signal about the process it is running IN. `ARCH-012`
+## forbids production code that behaves differently once it recognises a test;
+## comparing a domain value that happens to spell "test" recognises nothing.
+##
+## The distinction is the whole rule: a test signal is something the ENVIRONMENT
+## tells the program. A literal on its own tells it nothing.
+_SWITCH_SOURCES: Final[frozenset[str]] = frozenset({
+    "environ", "getenv", "argv", "flags", "settings", "config", "options",
+})
+
+
+def _reads_a_switch(expr: ast.expr) -> bool:
+    """Whether a condition reads something that could carry a test signal.
+
+    Satisfied by an environment or argv read, or by a name or attribute that is
+    itself one of the known signals -- `if is_test:` needs no second witness,
+    because the name IS the switch.
+
+    @param expr the condition expression
+    @return True when the condition consults a plausible signal source
+    """
+    for node in ast.walk(expr):
+        if isinstance(node, ast.Name) and node.id.lower() in TEST_SIGNALS:
+            return True
+        if isinstance(node, ast.Attribute) and (
+            node.attr.lower() in TEST_SIGNALS or node.attr in _SWITCH_SOURCES
+        ):
+            return True
+        if isinstance(node, ast.Call):
+            named = getattr(node.func, "attr", getattr(node.func, "id", ""))
+            if named in _SWITCH_SOURCES or named in {"getenv", "get"}:
+                return True
+        if isinstance(node, ast.Subscript):
+            inner = node.value
+            if getattr(inner, "attr", getattr(inner, "id", "")) in _SWITCH_SOURCES:
+                return True
+    return False
 
 
 def _test_signals_in(expr: ast.expr) -> Iterator[str]:

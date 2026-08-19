@@ -264,6 +264,15 @@ def layer_of(path: Path, declaration: project.Declaration = project.DEFAULT) -> 
         canonical = declaration.canonical(part)
         if canonical is not None:
             return canonical
+    # The final component is tried again without its suffix, because a shell is
+    # not always a package. A program of a few thousand lines commonly puts its
+    # entry point and its wiring at the package root as `cli.py` and
+    # `composition.py`, and no directory segment then names the layer at all.
+    # Found by running this against a real four-package codebase shaped exactly
+    # that way: both files resolved to 'unknown', so every layer-scoped check
+    # skipped the shell -- which is the layer where the effects are.
+    if path.suffix:
+        return declaration.canonical(path.stem) or "unknown"
     return "unknown"
 
 

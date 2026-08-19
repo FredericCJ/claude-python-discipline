@@ -46,11 +46,20 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
     from pathlib import Path
 
-## The canonical layer names `law/ARCH` defines, innermost last. A project may map
-## its own segment names onto these but may not invent a fifth: the four are what
-## makes a fault's origin derivable from its layer, and a fifth would have no
-## defined direction in the dependency graph.
-CANONICAL_LAYERS: Final[tuple[str, ...]] = ("domain", "app", "adapters", "shell")
+## The canonical layer names `law/ARCH` defines. The first four are the dependency
+## stack, innermost last; a project may map its own segment names onto them but
+## may not invent a fifth, because those four are what makes a fault's origin
+## derivable from its layer and a fifth would have no defined direction.
+##
+## `ports` is here and is NOT part of that stack -- it is the boundary the stack
+## is drawn against. It was omitted at first for exactly that reason, and the
+## omission meant every file under `ports/` resolved to 'unknown'. No check
+## happens to be scoped to `ports` today, so nothing was being skipped; what was
+## wrong is that `layer_of` answered "unknown" for a file plainly in a layer, and
+## the next check scoped to ports would have inherited a silent skip rather than
+## a decision.
+CANONICAL_LAYERS: Final[tuple[str, ...]] = ("domain", "app", "adapters", "shell",
+                                            "ports")
 
 ## Documentation engines a project may declare. `doxygen` activates the `@param`
 ## and `##` forms `law/DOC` describes; `sphinx` and `none` leave `DOC-002` and

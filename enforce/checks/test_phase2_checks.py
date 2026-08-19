@@ -23,11 +23,13 @@ import pytest
 
 from checks import Check, project
 from checks.dispatch_recorded import DispatchRecordedCheck
+from checks.domain_purity import DomainPurityCheck
 from checks.error_channels import ErrorChannelsCheck
 from checks.exception_has_code import ExceptionHasCodeCheck
 from checks.exception_shape import ExceptionShapeCheck
 from checks.explicit_effects import ExplicitEffectsCheck
 from checks.library_logging import LibraryLoggingCheck
+from checks.no_test_branches import NoTestBranchesCheck
 from checks.oracle_declared import OracleDeclaredCheck
 from checks.plan_apply import PlanApplyCheck
 from checks.single_wiring_point import SingleWiringPointCheck
@@ -709,3 +711,132 @@ def test_markdown_outside_an_agents_directory_is_ignored(tmp_path: Path) -> None
     target.write_text("# Just prose\n", encoding="utf-8")
     check = DispatchRecordedCheck()
     assert check.run([target]) == []
+
+
+# ---------------------------------------- Phase 5 regressions: over-reporting
+#
+# Three mechanisms fired on correct code the first time they met a codebase
+# written by someone who had never read these rules. Each pin below comes in a
+# pair: the case that must stay silent, and the case that must still fire. A
+# narrowing with only the first half is how a check gets quietly disarmed.
+
+
+def test_a_pure_path_is_not_an_effect(tmp_path: Path) -> None:
+    """ARCH-002 stays silent on `PurePosixPath` and on `date` as a type.
+
+    The Pure path variants exist in the standard library precisely because they
+    cannot touch a disk, and `date` in an annotation reads no clock. Flagging
+    either told a careful author to stop using the tool built for their
+    situation, which is how a check loses the reader it needs.
+
+    @param tmp_path the fixture directory
+    """
+    assert "ARCH-002" not in fired(DomainPurityCheck(), tmp_path, '''
+        """Classify a path by name alone."""
+        from pathlib import PurePosixPath
+        from datetime import date
+
+        def suffix_of(path: str) -> str:
+            """The suffix, as a string."""
+            return PurePosixPath(path).suffix
+
+        def seeded_on(day: date) -> date:
+            """Echo the day."""
+            return day
+    ''')
+
+
+def test_an_io_capable_path_still_fires(tmp_path: Path) -> None:
+    """...and the exemption did not disarm the rule.
+
+    An exemption list nobody has watched stay narrow is an exemption list that
+    grows.
+
+    @param tmp_path the fixture directory
+    """
+    assert "ARCH-002" in fired(DomainPurityCheck(), tmp_path, '''
+        """Read a file from the domain, which it must not do."""
+        from pathlib import Path
+
+        def read(path: str) -> str:
+            """Read it."""
+            return Path(path).read_text(encoding="utf-8")
+    ''')
+
+
+def test_a_domain_value_spelled_test_is_not_a_test_signal(tmp_path: Path) -> None:
+    """ARCH-012 stays silent on a taxonomy whose values include "test".
+
+    Found against a codebase that classifies source files into zones -- `ports`,
+    `test`, and so on. That string is a value the program reasons ABOUT, not a
+    signal about the process it runs IN, and the rule is about the second.
+
+    @param tmp_path the fixture directory
+    """
+    assert "ARCH-012" not in fired(NoTestBranchesCheck(), tmp_path, '''
+        """Name the relation between two zones."""
+
+        def relation(zone: str, other: str) -> str:
+            """The relation."""
+            if zone == "test" and other != "test":
+                return "tests"
+            return "includes"
+    ''')
+
+
+def test_an_environment_test_switch_still_fires(tmp_path: Path) -> None:
+    """...and a signal the environment actually carries is still caught.
+
+    @param tmp_path the fixture directory
+    """
+    assert "ARCH-012" in fired(NoTestBranchesCheck(), tmp_path, '''
+        """Behave differently under test, which is the defect."""
+        import os
+
+        def timeout() -> int:
+            """How long to wait."""
+            if os.environ.get("MODE") == "test":
+                return 0
+            return 30
+    ''', layer="app")
+
+
+def test_a_domain_class_inheriting_a_framework_fires(tmp_path: Path) -> None:
+    """ARCH-013 catches inheritance, not only annotations.
+
+    The under-reporting case, and the more dangerous of the two failure modes.
+    `BaseModel` was in FOREIGN_TYPES from the start and the check reported
+    nothing against four real domains modelled entirely in pydantic, because it
+    only ever looked at signatures.
+
+    @param tmp_path the fixture directory
+    """
+    assert "ARCH-013" in fired(DomainPurityCheck(), tmp_path, '''
+        """A domain modelled in a validation framework."""
+        from pydantic import BaseModel
+
+        class Issue(BaseModel):
+            """Every instance carries pydantic's semantics."""
+
+            identifier: str
+    ''')
+
+
+def test_a_plain_domain_class_does_not_fire(tmp_path: Path) -> None:
+    """...and an ordinary base class is left alone.
+
+    @param tmp_path the fixture directory
+    """
+    assert "ARCH-013" not in fired(DomainPurityCheck(), tmp_path, '''
+        """A domain modelled in itself."""
+        from dataclasses import dataclass
+
+        class Thing:
+            """A base of this project's own."""
+
+        @dataclass(frozen=True, slots=True)
+        class Issue(Thing):
+            """A value."""
+
+            identifier: str
+    ''')
