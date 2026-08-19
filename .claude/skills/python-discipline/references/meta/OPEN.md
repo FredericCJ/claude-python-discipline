@@ -2,7 +2,7 @@
 id: meta/OPEN
 kind: meta
 title: Open Decisions
-tokens: 2138
+tokens: 2392
 load_when: ["open question", "undecided", "which tool", "pin a version"]
 decay: none
 ---
@@ -63,6 +63,33 @@ forgets to request does not.
 mypy and pyright infer differently, and a claim that survives both is stronger than one
 that survives either. The second checker is treated as a differential oracle rather than
 redundancy.
+
+### OPEN-006 · The capability-tier to model mapping
+
+The mapping is **declared by the operating organization, and its use is checked by the
+corpus.** `overrides/allocation.toml` carries the table; `check:allocation_declared`
+requires that a mapping exist and that every dispatch record cite a tier it resolves.
+[ALLOC-010] is retagged `[BINDING]`.
+
+*The objection this had to answer, and does:* the table binds a tier to a model, and
+[ALLOC-001] forbids naming a model in a project document — a model name is the
+fastest-decaying fact in the system, and a corpus carrying one is wrong within months in a
+file nobody thinks to re-check. Hard-coding it was never available.
+
+*What changed:* `overrides/` is project-owned. The installer creates it once and never
+writes it again, and `vendor.py` copies `discipline/`, `enforce/` and `tools/` — not it.
+So an adopter's model names stay in the adopter's tree and the corpus still names none.
+This is the same shape `[tool.agent-discipline]` used to make `DOC-002` conditional
+without weakening it: **declare it, then be checked on it.**
+
+*What is still not checked, stated so nobody reads more into this than it says:* whether
+the mapping is any GOOD — whether `T2` really is the strongest model available — is
+unknowable from here and belongs to whoever owns the file, which is why the template
+carries an `owner` field. What is now knowable, and was not, is whether a dispatch cites a
+tier that means anything. That was the half `OPEN-006` called unauditable.
+
+*Consequence:* a repository that dispatches nothing needs no mapping and the check stays
+silent on it. A repository that dispatches at a tier resolving to nothing now fails.
 
 ### OPEN-007 · Documentation comments on every element, for Doxygen
 
@@ -134,21 +161,6 @@ clean. The layer mapping lives in the same declaration.
 ---
 
 ## Still open
-
-### OPEN-006 · The capability-tier to model mapping
-
-`ops/ALLOC` classifies work onto capability tiers, but the table binding a tier to an
-actual model is empty — it was empty in the source doctrine too, which called that "itself
-a defect while it persists".
-
-*Blocks:* [ALLOC-010], the rule that depends on it, is tagged `[OPEN]` rather than
-`[BINDING]`. Until
-the table is filled, a tier names a role rather than a verifiable choice, and a dispatch
-under that rule cannot be audited after the fact.
-
-*Deliberately not resolved here:* the mapping is an operating-organization decision that
-changes with procurement and model availability, and hard-coding it would violate the same
-doctrine's rule against naming models in project documents.
 
 ---
 

@@ -1,0 +1,45 @@
+#  The capability tiers this operating organization actually runs, and what it
+#  runs them on.
+#
+#  COPY THIS TO `overrides/allocation.toml`. That directory is project-owned: the
+#  installer creates it once and never touches it again, so what you write here
+#  survives every update to the vendored discipline.
+#
+#  WHY IT LIVES HERE AND NOT IN THE CORPUS. `ALLOC-001` forbids naming a model in
+#  a project document -- a model name is the fastest-decaying fact in the whole
+#  system, and a corpus that hard-codes one is wrong within months and wrong in a
+#  file nobody thinks to check. `OPEN-006` left the tier-to-model table empty for
+#  exactly that reason, and left `ALLOC-010` unable to bind for want of it.
+#
+#  The way out is the pattern `[tool.agent-discipline]` already established:
+#  DECLARE IT, THEN BE CHECKED ON IT. The corpus still names no model. What it
+#  now requires is that a mapping EXISTS and that every dispatch cites a tier the
+#  mapping resolves -- which is what makes a dispatch auditable after the fact,
+#  and was the whole of OPEN-006's objection.
+#
+#  T0/T1/T2 are capability; E0/E1/E2 are reasoning effort. `ops/ALLOC` scores a
+#  workload on seven signals and lands it in a tier; this says what that tier is
+#  in practice, on this machine, this quarter.
+
+[tiers]
+#  Replace every value. These are placeholders in the shape of real entries, not
+#  recommendations -- the discipline has no opinion on which model belongs where,
+#  and a repository that ships one has made a dated claim it cannot keep.
+T0 = "your-cheapest-capable-model"
+T1 = "your-default-model"
+T2 = "your-strongest-model"
+
+[effort]
+#  Reasoning effort, expressed however your tooling expresses it.
+E0 = "low"
+E1 = "medium"
+E2 = "high"
+
+[meta]
+#  When this was last true. The mapping decays with procurement and model
+#  availability, which is precisely why it is not in `fact/` either: `fact/`
+#  carries claims about the ecosystem, and this is a claim about YOUR
+#  organization that nobody upstream can verify or refresh for you.
+verified = "1970-01-01"
+#  Who decides this. Named so a stale mapping has an owner rather than a shrug.
+owner = "unassigned"

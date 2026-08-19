@@ -52,12 +52,17 @@ A release is not one agent's job. Run it in this order; each step gates the next
 
 ## Tier to model
 
-`ops/ALLOC` deliberately never names a model, and `OPEN-006` — the tier-to-model table — is
-the one decision the corpus leaves open, because it changes with procurement. The mapping
-used in these definitions is therefore a **local operating decision**, recorded here so it
-can be revised without touching a rule:
+`ops/ALLOC` deliberately never names a model — `ALLOC-001` forbids it, because a model name
+is the fastest-decaying fact in the system. The mapping is therefore a **local operating
+decision**, and it now lives in **`overrides/allocation.toml`** rather than in this
+paragraph.
 
-`T0 → haiku` · `T1 → sonnet` · `T2 → opus`
+That move is what closed `OPEN-006`. Prose is not auditable: this file carried
+`T0 → haiku · T1 → sonnet · T2 → opus` for as long as the mapping existed, and no check
+could read it. `overrides/` is project-owned and never vendored, so the names stay here and
+`check:allocation_declared` can now require that every dispatch cite a tier the mapping
+resolves. `ALLOC-010` is `[BINDING]` as a result, and no rule in the corpus is blocked on an
+open decision any more.
 
 Effort (`E0`/`E1`/`E2`) is carried as an instruction inside each agent, not as frontmatter.
 Three agents are `T2` and all three by escalation, not by score: `release-engineer` and

@@ -18,6 +18,7 @@ from textwrap import dedent
 from typing import TYPE_CHECKING
 
 from checks import project
+from checks.allocation_declared import AllocationDeclaredCheck
 from checks.boundary_parsing import BoundaryParsingCheck
 from checks.log_once import LogOnceCheck
 from checks.no_magic_in_domain import NoMagicInDomainCheck
@@ -288,3 +289,61 @@ def test_an_ordinary_value_is_silent(tmp_path: Path) -> None:
             \"\"\"Record what should be recorded.\"\"\"
             log.info("connecting as %s to %s", user, host)
     """, layer="adapters") == set()
+
+
+# ------------------------------------------------------------- ALLOC-010
+#
+# The rule that was [OPEN] from the day it was written, because it needed a
+# tier-to-model table and ALLOC-001 forbids the corpus naming a model.
+
+
+def test_a_dispatch_with_no_mapping_fires(tmp_path: Path) -> None:
+    """The case OPEN-006 called unauditable, now decided.
+
+    A tier that resolves to nothing names a role rather than a choice. Written
+    into a tmp tree so no `overrides/allocation.toml` is reachable by walking
+    upward, which is how the check looks for one.
+
+    @param tmp_path the fixture directory
+    """
+    agent = tmp_path / ".claude" / "agents" / "thing.md"
+    agent.parent.mkdir(parents=True)
+    agent.write_text(
+        "---\nname: thing\n---\n\n## Dispatch record (ops/ALLOC-002)\n\n"
+        "A3 B2 C1 D2 E2 F1 G0 = 11 -> T2/E2\n", encoding="utf-8")
+    found = AllocationDeclaredCheck().run([tmp_path / ".claude"])
+    assert [f.rule_id for f in found] == ["ALLOC-010"]
+
+
+def test_a_declared_mapping_satisfies_it(tmp_path: Path) -> None:
+    """...and a tier the mapping resolves is accepted.
+
+    The corpus still names no model: the table is in project-owned space, which
+    is the whole reason this rule could be closed at all.
+
+    @param tmp_path the fixture directory
+    """
+    agent = tmp_path / ".claude" / "agents" / "thing.md"
+    agent.parent.mkdir(parents=True)
+    agent.write_text(
+        "---\nname: thing\n---\n\n## Dispatch record (ops/ALLOC-002)\n\n"
+        "A3 B2 C1 D2 E2 F1 G0 = 11 -> T2/E2\n", encoding="utf-8")
+    overrides = tmp_path / "overrides"
+    overrides.mkdir()
+    (overrides / "allocation.toml").write_text(
+        '[tiers]\nT0 = "cheap"\nT1 = "default"\nT2 = "strong"\n', encoding="utf-8")
+    assert AllocationDeclaredCheck().run([tmp_path / ".claude"]) == []
+
+
+def test_a_file_that_dispatches_nothing_is_silent(tmp_path: Path) -> None:
+    """A repository that dispatches nothing needs no allocation table.
+
+    Demanding one would be the over-reporting that made five ARCH-002 findings
+    wrong against real code -- telling an author to configure something their
+    project has no use for.
+
+    @param tmp_path the fixture directory
+    """
+    plain = tmp_path / "notes.md"
+    plain.write_text("# Notes\n\nNothing here dispatches anything.\n", encoding="utf-8")
+    assert AllocationDeclaredCheck().run([tmp_path]) == []

@@ -16,7 +16,7 @@ decay: none
 
 **`mechanized` says a mechanism exists, not that it decides the whole rule.** The measurement is presence on disk; how completely a check covers the sentence above it is a judgement no build can make. `ARCH-012` is the worked example: `check:no_test_branches` is real and runs, and it matches a closed list of test signals, so `if os.environ.get("PYTEST_CURRENT_TEST")` -- the canonical pytest detector -- passes it, as does any indirection through a module constant. Read a `mechanized` row as *something will catch the obvious cases*, and the rule's own text as what you actually owe.
 
-0 of 168 binding rules are not mechanically decided. `enforce/ENFORCEMENT.md` names the mechanisms still to build.
+0 of 169 binding rules are not mechanically decided. `enforce/ENFORCEMENT.md` names the mechanisms still to build.
 
 ## Modules
 
@@ -40,7 +40,7 @@ decay: none
 | [law/LEARN](law/LEARN.md) | law | 1888 | 12 | learning, record what i learned, session memory, why did this fail before, calibration, promote a learning |
 | [law/TEST](law/TEST.md) | law | 2777 | 19 | write a test, pytest, fixture, hypothesis, property test, mutation |
 | [law/TYPE](law/TYPE.md) | law | 2067 | 15 | type hint, mypy, pyright, Protocol, generic, dataclass |
-| [ops/ALLOC](ops/ALLOC.md) | ops | 2050 | 10 | dispatch a subagent, which model, how much effort, delegate, escalate, sub-agent |
+| [ops/ALLOC](ops/ALLOC.md) | ops | 2128 | 10 | dispatch a subagent, which model, how much effort, delegate, escalate, sub-agent |
 | [ops/teams](ops/teams.md) | ops | 2584 | 6 | agent team, teammate, subagent definition, spawn an agent, task list, slash command |
 
 ## Rules
@@ -280,7 +280,7 @@ decay: none
 | `ALLOC-007` | BINDING | `mechanized` | `check:dispatch_recorded` | Split before upgrading |
 | `ALLOC-008` | BINDING | `mechanized` | `check:dispatch_recorded` | A restriction is not lifted by an instruction |
 | `ALLOC-009` | BINDING | `mechanized` | `check:dispatch_recorded` | Misclassification belongs to the coordinator |
-| `ALLOC-010` | OPEN | `unmechanized` | — | The gate's tier follows the risk under test |
+| `ALLOC-010` | BINDING | `mechanized` | `check:allocation_declared` | The gate's tier follows the risk under test |
 
 ### ops/teams
 

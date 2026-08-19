@@ -2,7 +2,7 @@
 id: ops/ALLOC
 kind: ops
 title: Workload Allocation
-tokens: 2050
+tokens: 2128
 load_when:
   - "dispatch a subagent"
   - "which model"
@@ -154,14 +154,16 @@ capability mismatch.
   three different remedies.
 - **Check** `python -m checks.dispatch_recorded`
 
-### ALLOC-010 · The gate's tier follows the risk under test  [OPEN]
+### ALLOC-010 · The gate's tier follows the risk under test  [BINDING] [check:allocation_declared]
 A verification workload is scored on the risk of the code it examines, not on how routine
-the act of verifying sounds.
+the act of verifying sounds. The tier it lands on MUST resolve through a declared
+tier-to-model mapping, so the dispatch can be audited after the fact.
 - **Why** Writing a fault-injection suite for a destructive operation is open-reasoning
-  work even though "writing tests" sounds mechanical.
+  work even though "writing tests" sounds mechanical. And a tier that resolves to nothing
+  names a role rather than a choice, which is unauditable however carefully it was scored.
+- **Check** `python -m checks.allocation_declared`
 - **See** [meta/OPEN]
 
-`OPEN` — this rule depends on a tier-to-model mapping that the operating organization owns
-and that is not filled. Until it is, a tier names a role rather than a verifiable choice,
-and a dispatch under this rule cannot be fully audited. Recorded rather than quietly
-asserted, per [meta/OPEN].
+The mapping is declared in `overrides/allocation.toml`, which is project-owned and never
+vendored — so this rule binds without the corpus naming a model, which [ALLOC-001] forbids.
+[meta/OPEN] `OPEN-006` records why that was the only way through.

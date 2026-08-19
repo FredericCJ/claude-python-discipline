@@ -80,6 +80,16 @@ _BARE_BANNED = re.compile(r"^###\s+(?P<term>.+?)\s*\[BARE-BANNED\]\s*$", re.MULT
 ## the right kind of thing to go looking for.
 _RULE_ID = re.compile(r"^[A-Z][A-Z0-9]{1,7}-\d{3}$")
 
+## How many outcomes a ledger should carry per learning before `V097` stops
+## saying so. One in ten is deliberately undemanding: the point is to notice a
+## loop that only ever writes, not to prescribe how much reporting is enough.
+MIN_OUTCOME_SHARE: Final = 0.10
+
+## How full the always-loaded file may get before `V051` says so. A warning, not
+## a wall: the wall is `V050` at the ceiling itself, and by then the addition has
+## already been written.
+CROWDED_SHARE: Final = 0.90
+
 ## How far an agent may have to walk from a module to reach any rule (V092).
 REACH_DEPTH: Final = 3
 ## The first cell of a markdown table row whose second cell opens with a digit --
@@ -535,6 +545,27 @@ def check_budgets(documents: Sequence[Document], layout: Layout) -> Iterator[Fin
                 message=f"{actual} tokens exceeds the {budget}-token ceiling",
                 remediation="Split the module, or move detail into discipline/examples/.",
             )
+        elif actual > budget * CROWDED_SHARE:
+            # A warning before the wall, and only for the always-loaded file.
+            # KERNEL is the one document every session pays for unconditionally,
+            # so it is the one whose remaining headroom is worth knowing BEFORE
+            # the next addition is written rather than after it is rejected.
+            # It stood at 1,876 of 2,000 -- 94% -- with nobody aware of it.
+            if doc.path.name != "KERNEL.md":
+                continue
+            yield Finding(
+                code="V051",
+                severity=Severity.WARN,
+                path=_relpath(layout, doc),
+                line=1,
+                message=(f"{actual} of the {budget}-token ceiling "
+                         f"({actual / budget:.0%}); {budget - actual} left"),
+                remediation=(
+                    "The always-loaded surface is the premise the layered design "
+                    "rests on. Pay for an addition here by trimming, not by "
+                    "raising the ceiling."
+                ),
+            )
 
 
 def check_freshness(
@@ -970,6 +1001,61 @@ def check_grounding(documents: Sequence[Document], layout: Layout) -> Iterator[F
                 )
 
 
+def check_learning_outcomes(layout: Layout) -> Iterator[Finding]:
+    """V097 -- learnings are reported on, so retrieval precision means something.
+
+    The loop writes and does not read back. Ninety-five learnings were recorded
+    across six sessions and two outcomes were ever reported, so precision was
+    computed from a sample of two and no learning could be promoted on evidence.
+
+    `LEARN` says a session records what it found; nothing said a session reports
+    what an earlier finding was worth. That left the most valuable half of the
+    subsystem -- knowing which learnings are noise -- resting on a habit, and a
+    habit is what `V096` exists because nobody keeps.
+
+    A warning, not an error. A session may legitimately retrieve nothing worth
+    reporting on, and failing the gate for it would teach people to record
+    nothing rather than to report.
+
+    @param layout the tree holding the ledger
+    @return at most one finding, naming how thin the outcome record is
+    """
+    try:
+        import learn  # ruff: ignore[import-outside-top-level] - optional subsystem
+    except ImportError:
+        return
+    store = learn.Store(layout.root)
+    try:
+        events = learn.read_ledger(store)
+    except (OSError, learn.LearnError):
+        # `V096` owns an unreadable ledger and reports it as an error. Two
+        # findings for one fault is noise, and the second would be derived from
+        # a count that could not be taken.
+        return
+
+    # Counted per learning, not per session: `learn.py record` mints a session id
+    # per invocation, so grouping by session reported "68 of 68 sessions" for a
+    # ledger holding six real sittings. The ratio is the fact worth acting on.
+    recorded = sum(1 for e in events if e.get("kind") == "learn")
+    reported = sum(1 for e in events if e.get("kind") == "use")
+    if not recorded or reported >= recorded * MIN_OUTCOME_SHARE:
+        return
+    yield Finding(
+        code="V097",
+        severity=Severity.WARN,
+        path="learning/ledger.jsonl",
+        line=1,
+        message=(f"{recorded} learning(s) recorded and {reported} outcome(s) "
+                 f"reported; precision rests on {reported} sample(s)"),
+        remediation=(
+            "Run `learn.py retrieve` before the work and `learn.py used <id> "
+            "--outcome helped|noise` after. Until outcomes accumulate, retrieval "
+            "precision is computed from too few samples to act on and nothing "
+            "can be promoted on evidence."
+        ),
+    )
+
+
 def check_learning(layout: Layout) -> Iterator[Finding]:
     """V096 -- the ledger and its query index agree.
 
@@ -1089,6 +1175,7 @@ def run(layout: Layout = DEFAULT_LAYOUT) -> list[Finding]:
     findings.extend(check_graph(documents, layout))
     findings.extend(check_grounding(documents, layout))
     findings.extend(check_learning(layout))
+    findings.extend(check_learning_outcomes(layout))
     return findings
 
 

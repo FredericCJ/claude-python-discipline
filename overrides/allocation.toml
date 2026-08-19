@@ -1,0 +1,34 @@
+#  This repository's own tier-to-model mapping.
+#
+#  PROJECT-OWNED AND NOT VENDORED. `vendor.py` copies `discipline/`, `enforce/`
+#  and `tools/`; `overrides/` is created once in an adopter's tree and never
+#  written again. So the model names below are this repository's operating
+#  decision and reach nobody else -- which is the property that lets `ALLOC-010`
+#  bind without the corpus ever naming a model, and was the whole of `OPEN-006`'s
+#  objection.
+#
+#  It was already recorded, in prose, in MAINTENANCE.md: "the tier-to-model
+#  mapping recorded as a local decision because OPEN-006 is open". Prose is not
+#  auditable. This file is the same decision somewhere a check can read it.
+#
+#  Template and reasoning: `enforce/templates/allocation.toml`.
+
+[tiers]
+#  The nine maintenance agents in `.claude/agents/` each carry an `ops/ALLOC-002`
+#  dispatch record scoring seven signals; the tier those scores land on resolves
+#  here.
+T0 = "claude-haiku-4-5-20251001"
+T1 = "claude-sonnet-5"
+T2 = "claude-opus-5"
+
+[effort]
+E0 = "low"
+E1 = "medium"
+E2 = "high"
+
+[meta]
+#  Moved out of MAINTENANCE.md's prose and into a readable table on this date.
+#  The mapping decays with procurement and model availability; re-check it when a
+#  tier's model is retired or a cheaper one becomes able.
+verified = "2026-08-19"
+owner = "the repository maintainer"

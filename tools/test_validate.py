@@ -751,3 +751,76 @@ def test_the_live_corpus_is_clean() -> None:
 
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-q"]))
+
+
+def test_v051_warns_before_the_always_loaded_ceiling(tmp_path: Path) -> None:
+    """The always-loaded file is warned about before it hits the wall, not at it.
+
+    `V050` fails at the ceiling, by which point the addition has been written and
+    the author is being asked to undo it. KERNEL stood at 94% of its budget with
+    nobody aware, and the next router line would have breached it.
+
+    @param tmp_path the fixture directory
+    """
+    kernel = tmp_path / "discipline" / "KERNEL.md"
+    kernel.parent.mkdir(parents=True, exist_ok=True)
+    module(tmp_path, body=CONFORMANT_RULE)
+    filler = "\n".join(f"Padding sentence {n}." for n in range(430))
+    kernel.write_text(
+        "---\nid: meta/KERNEL\nkind: meta\ntitle: Kernel\ntokens: 0\n"
+        'load_when: ["x"]\ndecay: none\n---\n\n# Kernel\n\n' + filler + "\n",
+        encoding="utf-8",
+    )
+    found = codes(run_on(tmp_path))
+    assert "V051" in found or "V050" in found, (
+        "a nearly-full always-loaded file produced no signal at all"
+    )
+
+
+def test_v097_notices_a_loop_that_only_writes(tmp_path: Path) -> None:
+    """A ledger with learnings and no outcomes cannot compute precision.
+
+    The subsystem's most valuable half is knowing which learnings were noise, and
+    that rested on a habit. Ninety-five recorded, two reported.
+
+    @param tmp_path the fixture directory
+    """
+    module(tmp_path)
+    ledger = tmp_path / "learning" / "ledger.jsonl"
+    ledger.parent.mkdir(parents=True, exist_ok=True)
+    ledger.write_text(
+        "\n".join(
+            json.dumps({"seq": n, "kind": "learn", "id": f"L-{n:04d}",
+                        "session": "S-1", "ts": "2026-08-19T00:00:00+00:00",
+                        "actor": "agent", "payload": {}})
+            for n in range(1, 21)
+        ) + "\n",
+        encoding="utf-8",
+    )
+    assert "V097" in codes(run_on(tmp_path))
+
+
+def test_v097_is_silent_once_outcomes_are_reported(tmp_path: Path) -> None:
+    """...and stops once the loop closes, so it is a prompt and not a nag.
+
+    A check that keeps complaining after it has been satisfied is one people
+    learn to read past, which costs every other warning beside it.
+
+    @param tmp_path the fixture directory
+    """
+    module(tmp_path)
+    ledger = tmp_path / "learning" / "ledger.jsonl"
+    ledger.parent.mkdir(parents=True, exist_ok=True)
+    events = [
+        {"seq": n, "kind": "learn", "id": f"L-{n:04d}", "session": "S-1",
+         "ts": "2026-08-19T00:00:00+00:00", "actor": "agent", "payload": {}}
+        for n in range(1, 11)
+    ] + [
+        {"seq": 20 + n, "kind": "use", "id": f"L-{n:04d}", "session": "S-1",
+         "ts": "2026-08-19T00:00:00+00:00", "actor": "agent",
+         "payload": {"outcome": "helped"}}
+        for n in range(1, 4)
+    ]
+    ledger.write_text("\n".join(json.dumps(e) for e in events) + "\n",
+                      encoding="utf-8")
+    assert "V097" not in codes(run_on(tmp_path))

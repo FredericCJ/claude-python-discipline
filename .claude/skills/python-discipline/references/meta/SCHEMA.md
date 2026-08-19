@@ -2,7 +2,7 @@
 id: meta/SCHEMA
 kind: meta
 title: Document Format Specification
-tokens: 2741
+tokens: 3014
 load_when: ["authoring a rule", "new module", "front-matter", "rule id", "validate"]
 decay: none
 ---
@@ -75,6 +75,23 @@ is not.
 **`verified:`/`decay:`** drive re-verification. `ops/teams` decays in months against a
 Claude Code version; `frame/*` never decays. A `fact` file older than its decay window
 is reported by `build_index.py`, not silently trusted.
+
+### Retiring a rule
+
+A rule is never deleted and its id is never reused. Retirement is: keep the heading,
+add `superseded_by: NEW-ID` to the block, record the decision in `meta/OPEN.md`, and
+rebuild. The id then resolves to a heading that says what replaced it, so a citation in
+an old review comment or an old error payload still lands somewhere true.
+
+**This exists because the corpus can only grow otherwise.** `SUPERSEDES` has been in the
+graph model since it was written and is used zero times; every rule ever added is still
+here. A corpus with no exit is a corpus that eventually breaks the budget premise its own
+layered design rests on -- and that premise, that an agent operates at a few thousand
+tokens, is the reason any of this is shaped the way it is.
+
+Retire a rule when a later one subsumes it, when its mechanism has been folded into
+another, or when it was always advisory and never once cited. Do not retire one because
+it is inconvenient; that is a deviation, and `FLOW-008` covers those.
 
 ### Budgets
 

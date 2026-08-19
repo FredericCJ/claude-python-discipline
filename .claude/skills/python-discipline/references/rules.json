@@ -531,7 +531,7 @@
       "id": "meta/OPEN",
       "kind": "meta",
       "title": "Open Decisions",
-      "tokens": 2138,
+      "tokens": 2392,
       "load_when": [
         "open question",
         "undecided",
@@ -564,7 +564,7 @@
       "id": "meta/SCHEMA",
       "kind": "meta",
       "title": "Document Format Specification",
-      "tokens": 2741,
+      "tokens": 3014,
       "load_when": [
         "authoring a rule",
         "new module",
@@ -582,7 +582,7 @@
       "id": "ops/ALLOC",
       "kind": "ops",
       "title": "Workload Allocation",
-      "tokens": 2050,
+      "tokens": 2128,
       "load_when": [
         "dispatch a subagent",
         "which model",
@@ -797,13 +797,15 @@
       "id": "ALLOC-010",
       "module": "ops/ALLOC",
       "title": "The gate's tier follows the risk under test",
-      "force": "OPEN",
-      "mechanisms": [],
-      "enforcement": "unmechanized",
-      "mechanically_enforced": false,
-      "statement": "A verification workload is scored on the risk of the code it examines, not on how routine the act of verifying sounds.",
-      "why": "Writing a fault-injection suite for a destructive operation is open-reasoning work even though \"writing tests\" sounds mechanical.",
-      "check": null,
+      "force": "BINDING",
+      "mechanisms": [
+        "check:allocation_declared"
+      ],
+      "enforcement": "mechanized",
+      "mechanically_enforced": true,
+      "statement": "A verification workload is scored on the risk of the code it examines, not on how routine the act of verifying sounds. The tier it lands on MUST resolve through a declared tier-to-model mapping, so the dispatch can be audited after the fact.",
+      "why": "Writing a fault-injection suite for a destructive operation is open-reasoning work even though \"writing tests\" sounds mechanical. And a tier that resolves to nothing names a role rather than a choice, which is unauditable however carefully it was scored.",
+      "check": "`python -m checks.allocation_declared`",
       "no_mechanism": null,
       "see": [
         "meta/OPEN"

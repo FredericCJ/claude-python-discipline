@@ -4,10 +4,10 @@
 
 Every rule against the mechanism that decides it. The corpus's own standard is that a rule nothing checks is not binding in practice, whatever its tag says, so this table is where that claim is either kept or exposed.
 
-- **168** binding rules; **168** are decided by something that runs (100%). The other **0** read as binding and are not mechanically decided.
+- **169** binding rules; **169** are decided by something that runs (100%). The other **0** read as binding and are not mechanically decided.
 - **14** advisory rules -- the unenforceable surface, listed below with reasons.
-- **1** rules blocked on an open decision.
-- **87/87** named mechanisms are built; **0** are declared but not yet implemented.
+- **0** rules blocked on an open decision.
+- **88/88** named mechanisms are built; **0** are declared but not yet implemented.
 
 ## Status census
 
@@ -15,11 +15,11 @@ Measured against this tree, not declared. `discipline/rules.json` carries the sa
 
 | Status | Rules | Means |
 |---|---|---|
-| `mechanized` | 131 | every named mechanism was found here |
+| `mechanized` | 132 | every named mechanism was found here |
 | `external` | 37 | nothing missing, but a configured tool or a reviewer settles it |
 | `review` | 0 | a person decides it; no gate will report it |
 | `unbuilt` | 0 | a named check or fitness function does not exist |
-| `unmechanized` | 15 | the rule names no mechanism at all |
+| `unmechanized` | 14 | the rule names no mechanism at all |
 
 ## External mechanisms, and whether this repository runs them
 
@@ -46,6 +46,7 @@ Measured against this tree, not declared. `discipline/rules.json` carries the sa
 | `ALLOC-007` | `mechanized` | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | Split before upgrading |
 | `ALLOC-008` | `mechanized` | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | A restriction is not lifted by an instruction |
 | `ALLOC-009` | `mechanized` | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | Misclassification belongs to the coordinator |
+| `ALLOC-010` | `mechanized` | `check:allocation_declared` | `python -m checks.allocation_declared` | The gate's tier follows the risk under test |
 | `API-001` | `mechanized` | `fitness:test_contract_documented` | `pytest enforce/fitness/test_api.py::test_contract_documented` | A contract states more than a signature |
 | `API-002` | `mechanized` | `fitness:test_contract_documented` | `pytest enforce/fitness/test_api.py::test_contract_documented` | The implementation is not the contract |
 | `API-003` | `mechanized` | `check:single_wiring_point` | `python -m checks.single_wiring_point` | Public operations speak the domain, not the store |
@@ -211,7 +212,7 @@ Measured against this tree, not declared. `discipline/rules.json` carries the sa
 | Kind | Rules |
 |---|---|
 | `auto` | 41 |
-| `check` | 77 |
+| `check` | 78 |
 | `fitness` | 64 |
 
 ## Advisory -- the unenforceable surface
@@ -234,9 +235,3 @@ Each of these was tried against a mechanism and could not be reduced to one. Dri
 | `TEAMS-006` | Deciding whether a sentence is true of the code it sits above is the general program-understanding problem; [DOC-001]–[DOC-011] mechanize presence and form, which is the whole of what a checker can reach. | Presence and truth need separate mechanisms |
 | `TEST-019` | Whether a name describes behaviour or mechanism is a reading judgment; a pattern check would accept any sufficiently long name. | Test names state the behaviour |
 | `TYPE-015` | "Proportionate" is a judgment about the defect being prevented, which no check can weigh against the reading cost it imposes. | Type sophistication stays proportionate |
-
-## Blocked on an open decision
-
-| Rule | Title |
-|---|---|
-| `ALLOC-010` | The gate's tier follows the risk under test |

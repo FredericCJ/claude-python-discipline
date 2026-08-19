@@ -260,6 +260,20 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
                   "        return True\n"
                   "    return False")),),
     ),
+    # ----------------------------------------------------------------- ops
+    Mutation(
+        rule_id="ALLOC-010",
+        summary="a dispatch record cites T2 with no tier mapping anywhere above it",
+        source=("The case OPEN-006 called unauditable: a tier that resolves to "
+                "nothing names a role rather than a choice. Built on an empty "
+                "base so no allocation.toml is reachable by walking upward."),
+        base="empty",
+        write=((".claude/agents/thing.md",
+                ("---\nname: thing\n---\n\n# Thing\n\n"
+                 "## Dispatch record (ops/ALLOC-002)\n\n"
+                 "A3 B2 C1 D2 E2 F1 G0 = 11 -> T2/E2\n")),),
+        targets=(".claude",),
+    ),
     # ---------------------------------------------------------------- law/FLOW
     Mutation(
         rule_id="FLOW-008",

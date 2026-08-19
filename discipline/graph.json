@@ -574,6 +574,16 @@
    }
   },
   {
+   "id": "mech:check:allocation_declared",
+   "type": "mechanism",
+   "label": "check:allocation_declared",
+   "path": "enforce/checks/allocation_declared.py",
+   "attrs": {
+    "family": "check",
+    "implemented": "true"
+   }
+  },
+  {
    "id": "mech:check:assert_usage",
    "type": "mechanism",
    "label": "check:assert_usage",
@@ -1470,7 +1480,7 @@
    "type": "module",
    "label": "Open Decisions",
    "path": "discipline/meta/OPEN.md",
-   "tokens": 2138,
+   "tokens": 2392,
    "attrs": {
     "decay": "none",
     "kind": "meta"
@@ -1492,7 +1502,7 @@
    "type": "module",
    "label": "Document Format Specification",
    "path": "discipline/meta/SCHEMA.md",
-   "tokens": 2741,
+   "tokens": 3014,
    "attrs": {
     "decay": "none",
     "kind": "meta"
@@ -1503,7 +1513,7 @@
    "type": "module",
    "label": "Workload Allocation",
    "path": "discipline/ops/ALLOC.md",
-   "tokens": 2050,
+   "tokens": 2128,
    "attrs": {
     "decay": "months",
     "kind": "ops",
@@ -1626,9 +1636,9 @@
    "type": "rule",
    "label": "The gate's tier follows the risk under test",
    "path": "discipline/ops/ALLOC.md:157",
-   "tokens": 32,
+   "tokens": 65,
    "attrs": {
-    "force": "OPEN",
+    "force": "BINDING",
     "module": "ops/ALLOC"
    }
   },
@@ -7576,6 +7586,12 @@
    "type": "enforced_by",
    "src": "ALLOC-009",
    "dst": "mech:check:dispatch_recorded",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "ALLOC-010",
+   "dst": "mech:check:allocation_declared",
    "origin": "derived"
   },
   {

@@ -8,11 +8,19 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 
 | Status | Count |
 |---|---|
-| active | 1 |
+| active | 2 |
 | candidate | 93 |
 | superseded | 1 |
 
 ## active
+
+### L-0026 · A Bash heredoc on this machine collapses a doubled backslash, so Python source generated that way turned a regex \b into a literal backspace; the check kept passing its own tests and silently over-reported 400 findings.
+
+- **Do** Generate Python source with the Edit/Write tools rather than a heredoc. enforce/fitness/test_meta.py now fails on any control character in source.
+- **Kind** diagnostic · **scope** project · **evidence** observed (+1/-1 over 2 session(s))
+- **Confidence** 0.45, last seen 2026-08-19
+- **Triggers** `glob:**/*.py`
+- **Verify** `python -m pytest enforce/fitness/test_meta.py -q`
 
 ### L-0074 · Ruff in this environment treats '# noqa: CODE' as a defect and expects '# ruff: ignore[rule-name]'; converting the repository's suppressions to noqa introduced 6 new findings and suppressed nothing.
 
@@ -221,14 +229,6 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Confidence** 0.50, last seen 2026-08-18
 - **Triggers** `error:the code changed, not just its documentation`, `glob:tools/docgate.py`
 - **Verify** `python tools/docgate.py --all`
-
-### L-0026 · A Bash heredoc on this machine collapses a doubled backslash, so Python source generated that way turned a regex \b into a literal backspace; the check kept passing its own tests and silently over-reported 400 findings.
-
-- **Do** Generate Python source with the Edit/Write tools rather than a heredoc. enforce/fitness/test_meta.py now fails on any control character in source.
-- **Kind** diagnostic · **scope** project · **evidence** observed (+0/-1 over 1 session(s))
-- **Confidence** 0.35, last seen 2026-08-19
-- **Triggers** `glob:**/*.py`
-- **Verify** `python -m pytest enforce/fitness/test_meta.py -q`
 
 ### L-0027 · The learning database already held the ruff config-shadowing defect (L-0002) before this session rediscovered it independently; retrieval was sound, but nothing prompted a query before the gate was run.
 
@@ -818,6 +818,15 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `command:gate`
 - **About** FLOW-009
 - **Verify** `python tools/gate.py`
+
+### L-0096 · OPEN-006 was closable without resolving it: the tier-to-model table moved to overrides/allocation.toml, which is project-owned and never vendored, so the corpus still names no model while a check can require every dispatch to cite a tier the mapping resolves.
+
+- **Do** When a decision is blocked because the corpus may not hold the value, put the value in project-owned space and check its USE rather than its content. Declare it, then be checked on it.
+- **Kind** procedure · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `rule:ALLOC-010`
+- **About** ALLOC-010
+- **Verify** `python -m checks.allocation_declared`
 
 ## superseded
 
