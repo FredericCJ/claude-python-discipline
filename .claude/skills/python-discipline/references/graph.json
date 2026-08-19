@@ -1228,7 +1228,7 @@
    "type": "module",
    "label": "Doxygen for Python",
    "path": "discipline/fact/doxygen.md",
-   "tokens": 2391,
+   "tokens": 2540,
    "attrs": {
     "decay": "quarters",
     "kind": "fact",
@@ -1363,7 +1363,7 @@
    "type": "module",
    "label": "Documentation Comments",
    "path": "discipline/law/DOC.md",
-   "tokens": 2371,
+   "tokens": 2367,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -8012,12 +8012,6 @@
    "type": "enforced_by",
    "src": "DOC-006",
    "dst": "mech:auto:ruff:D205",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
-   "src": "DOC-007",
-   "dst": "mech:auto:doxygen",
    "origin": "derived"
   },
   {

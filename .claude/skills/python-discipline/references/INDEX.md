@@ -22,7 +22,7 @@ decay: none
 
 | Module | Kind | Tokens | Rules | Load when |
 |---|---|---|---|---|
-| [fact/doxygen](fact/doxygen.md) | fact | 2391 | 0 | doxygen, documentation comment, docstring format, @param, @return, generate documentation |
+| [fact/doxygen](fact/doxygen.md) | fact | 2540 | 0 | doxygen, documentation comment, docstring format, @param, @return, generate documentation |
 | [fact/py-errors](fact/py-errors.md) | fact | 1441 | 0 | raise from, __cause__, __context__, add_note, ExceptionGroup, except star |
 | [fact/py-logging](fact/py-logging.md) | fact | 1509 | 0 | log level, getLogger, basicConfig, NullHandler, handler, formatter |
 | [fact/py-testing](fact/py-testing.md) | fact | 1423 | 0 | pytest version, fixture scope, hypothesis, coverage tool, mutation tool, pytest plugin |
@@ -33,7 +33,7 @@ decay: none
 | [law/ARCH](law/ARCH.md) | law | 2719 | 17 | new module, package layout, port, adapter, hexagonal, dependency injection |
 | [law/DEP](law/DEP.md) | law | 2011 | 14 | add a dependency, third party library, lockfile, environment, code generation, generated file |
 | [law/DIAG](law/DIAG.md) | law | 2499 | 16 | exception, traceback, logging, error message, error code, correlation id |
-| [law/DOC](law/DOC.md) | law | 2371 | 14 | docstring, documentation comment, doxygen, @param, @return, document this function |
+| [law/DOC](law/DOC.md) | law | 2367 | 14 | docstring, documentation comment, doxygen, @param, @return, document this function |
 | [law/EFCT](law/EFCT.md) | law | 2281 | 16 | write a file, mutation, state machine, transaction, rollback, dry run |
 | [law/ERR](law/ERR.md) | law | 2450 | 16 | raise, except, Result, error type, exception hierarchy, validation |
 | [law/FLOW](law/FLOW.md) | law | 1994 | 13 | definition of done, before i commit, what should i do first, ADR, decision record, review |
@@ -137,7 +137,7 @@ decay: none
 | `DOC-004` | BINDING | `mechanized` | `check:doc_style` | Documentation lives in docstrings wherever Python has a slot |
 | `DOC-005` | BINDING | `external` | `auto:doxygen` | Docstrings are parsed as documentation, not text |
 | `DOC-006` | BINDING | `external` | `auto:ruff:D205` | A brief statement comes first |
-| `DOC-007` | BINDING | `external` | `auto:doxygen` `check:doc_coverage` | Every parameter, result and raised exception is documented |
+| `DOC-007` | BINDING | `mechanized` | `check:doc_coverage` | Every parameter, result and raised exception is documented |
 | `DOC-008` | BINDING | `mechanized` | `check:doc_style` | Types are not restated in prose |
 | `DOC-009` | BINDING | `mechanized` | `check:doc_style` | Documentation states the contract, not the mechanism |
 | `DOC-010` | BINDING | `external` | `auto:doxygen` | A Doxygen run produces no warnings |

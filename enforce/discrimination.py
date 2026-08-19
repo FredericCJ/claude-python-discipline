@@ -73,11 +73,6 @@ class Mutation:
     targets: tuple[str, ...] = field(default=("src",))
 
 
-## A minimal conformant module, used as the unmutated half of an `empty` entry so
-## the damage is the only thing present that a check could object to.
-_CLEAN_MODULE: Final = '"""A module."""\n'
-
-
 ## The declared table: one concrete mutation per rule, each of which the runner
 ## applies and then insists the rule is reported. Grouped by the law module the
 ## rule belongs to, so a reader can see at a glance which tracks are covered and

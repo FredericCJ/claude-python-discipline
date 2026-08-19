@@ -15,8 +15,8 @@ Measured against this tree, not declared. `discipline/rules.json` carries the sa
 
 | Status | Rules | Means |
 |---|---|---|
-| `mechanized` | 132 | every named mechanism was found here |
-| `external` | 37 | nothing missing, but a configured tool or a reviewer settles it |
+| `mechanized` | 133 | every named mechanism was found here |
+| `external` | 36 | nothing missing, but a configured tool or a reviewer settles it |
 | `review` | 0 | a person decides it; no gate will report it |
 | `unbuilt` | 0 | a named check or fitness function does not exist |
 | `unmechanized` | 14 | the rule names no mechanism at all |
@@ -111,7 +111,7 @@ Measured against this tree, not declared. `discipline/rules.json` carries the sa
 | `DOC-004` | `mechanized` | `check:doc_style` | `python -m checks.doc_style` | Documentation lives in docstrings wherever Python has a slot |
 | `DOC-005` | `external` | `auto:doxygen` | `doxygen enforce/Doxyfile` with the setting in force | Docstrings are parsed as documentation, not text |
 | `DOC-006` | `external` | `auto:ruff:D205` | `ruff check` (rules `D205`, `D400`, `D415`) | A brief statement comes first |
-| `DOC-007` | `external` | `auto:doxygen` `check:doc_coverage` | `doxygen enforce/Doxyfile` with `WARN_NO_PARAMDOC` and `WARN_IF_INCOMPLETE_DOC` · `python -m checks.doc_coverage`, which reads the declared engine | Every parameter, result and raised exception is documented |
+| `DOC-007` | `mechanized` | `check:doc_coverage` | `doxygen enforce/Doxyfile` with `WARN_NO_PARAMDOC` and `WARN_IF_INCOMPLETE_DOC` · `python -m checks.doc_coverage`, which reads the declared engine | Every parameter, result and raised exception is documented |
 | `DOC-008` | `mechanized` | `check:doc_style` | `python -m checks.doc_style` | Types are not restated in prose |
 | `DOC-009` | `mechanized` | `check:doc_style` | `python -m checks.doc_style` | Documentation states the contract, not the mechanism |
 | `DOC-010` | `external` | `auto:doxygen` | `doxygen enforce/Doxyfile` with `WARN_AS_ERROR = FAIL_ON_WARNINGS` | A Doxygen run produces no warnings |
@@ -211,7 +211,7 @@ Measured against this tree, not declared. `discipline/rules.json` carries the sa
 
 | Kind | Rules |
 |---|---|
-| `auto` | 41 |
+| `auto` | 40 |
 | `check` | 78 |
 | `fitness` | 64 |
 

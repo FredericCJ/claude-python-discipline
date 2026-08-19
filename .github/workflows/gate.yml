@@ -12,8 +12,8 @@
 # The gate itself is NOT redefined here. `tools/gate.py::GATE` is
 # the single canonical sequence -- format and lint, rule corpus, navigation graph,
 # generated artefacts, skill mirror, documentation, import contracts, types,
-# discrimination, tests -- and
-# `test_every_gate_entry_is_runnable` already proves each entry starts. The ten
+# discrimination, documentation build, tests -- and
+# `test_every_gate_entry_is_runnable` already proves each entry starts. The eleven
 # steps below are that tuple, spelled out because a workflow step needs its own
 # name and failure boundary per command; if `GATE` in test_meta.py changes, this
 # list must change with it or it has silently drifted from the thing it claims to
@@ -174,9 +174,9 @@ jobs:
 
       # ------------------------------------------------------------------ gate
       #
-      # Ten entries, in the exact order and with the exact commands of
+      # Eleven entries, in the exact order and with the exact commands of
       # tools/gate.py::GATE. Each is its own step so one failing still reports
-      # which of the ten it was, and none may swallow a non-zero exit -- the
+      # which of the eleven it was, and none may swallow a non-zero exit -- the
       # workflow's default (no continue-on-error) is what makes that hold.
       #
       # Steps 7 and 8 hold enforce/fixtures/reference/ against import-linter,
@@ -185,32 +185,35 @@ jobs:
       # node on first use, so this is where a runner without network access
       # would fail loudly rather than a developer discovering it later.
 
-      - name: "Gate 1/10 -- format and lint"
+      - name: "Gate 1/11 -- format and lint"
         run: python tools/lint_gate.py
 
-      - name: "Gate 2/10 -- rule corpus"
+      - name: "Gate 2/11 -- rule corpus"
         run: python tools/validate.py
 
-      - name: "Gate 3/10 -- navigation graph"
+      - name: "Gate 3/11 -- navigation graph"
         run: python tools/build_graph.py --check
 
-      - name: "Gate 4/10 -- generated artefacts"
+      - name: "Gate 4/11 -- generated artefacts"
         run: python tools/build_index.py --check
 
-      - name: "Gate 5/10 -- skill mirror"
+      - name: "Gate 5/11 -- skill mirror"
         run: python tools/build_skill_mirror.py --check
 
-      - name: "Gate 6/10 -- documentation"
+      - name: "Gate 6/11 -- documentation"
         run: python tools/docgate.py --all
 
-      - name: "Gate 7/10 -- import contracts"
+      - name: "Gate 7/11 -- import contracts"
         run: python tools/import_gate.py
 
-      - name: "Gate 8/10 -- types"
+      - name: "Gate 8/11 -- types"
         run: python tools/type_gate.py
 
-      - name: "Gate 9/10 -- discrimination"
+      - name: "Gate 9/11 -- discrimination"
         run: python tools/discrimination_gate.py
 
-      - name: "Gate 10/10 -- tests"
+      - name: "Gate 10/11 -- documentation build"
+        run: python tools/doxygen_gate.py
+
+      - name: "Gate 11/11 -- tests"
         run: python -m pytest -q

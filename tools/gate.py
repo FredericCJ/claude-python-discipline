@@ -5,7 +5,7 @@ runnable rather than in prose that drifts, and three things now read it:
 
 * `enforce/fitness/test_meta.py` proves each entry names a real file and starts;
 * `tools/release.py` refuses to build an archive from a tree that fails it;
-* `.github/workflows/gate.yml` spells the same ten steps out, because a
+* `.github/workflows/gate.yml` spells the same eleven steps out, because a
   workflow step needs its own name and failure boundary --
   `test_meta.py::test_the_workflow_mirrors_the_gate` is what keeps that copy
   honest.
@@ -57,6 +57,10 @@ GATE: Final[tuple[tuple[str, tuple[str, ...]], ...]] = (
     # A rule nobody has watched reject anything may be deciding nothing, and
     # ARCH-013 was exactly that for as long as it was counted mechanized.
     ("discrimination", (sys.executable, "tools/discrimination_gate.py")),
+    # Doxygen was installed, pinned and version-verified for a whole release
+    # while the only invocation anywhere was `--version`. Four rules were
+    # `external` on a tool that answered what version it was.
+    ("documentation build", (sys.executable, "tools/doxygen_gate.py")),
     ("tests", (sys.executable, "-m", "pytest", "-q")),
 )
 

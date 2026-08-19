@@ -43,6 +43,21 @@ DECLARATION: Final = "allocation.toml"
 ## Directories the declaration may sit in, nearest first.
 SEARCH: Final[tuple[str, ...]] = ("overrides", ".agent/overrides")
 
+## Values that mean "nobody filled this in". A mapping carrying one of these is a
+## copied template, not a declaration, and the rule it would otherwise satisfy is
+## the one about a tier resolving to a real choice.
+##
+## THIS LIST EXISTS BECAUSE THE FIRST VERSION SHIPPED WITHOUT IT. The template
+## offered "your-strongest-model", which resolves, so an adopter who changed
+## nothing passed `ALLOC-010` -- a check satisfied by a file nobody had read, in
+## the repository whose whole subject is checks that decide nothing.
+UNFILLED: Final[frozenset[str]] = frozenset({
+    "unset", "unassigned", "todo", "tbd", "changeme", "xxx", "",
+})
+
+## A `verified` date that nobody set. The epoch is what a placeholder looks like.
+EPOCH: Final = "1970-01-01"
+
 ## A tier cited in a dispatch record, as `ops/ALLOC-002` writes them.
 _TIER = re.compile(r"\bT([0-2])\b")
 
@@ -79,7 +94,16 @@ class AllocationDeclaredCheck(TextCheck):
         if not cited:
             return
 
-        mapping, source = self._mapping(path)
+        mapping, source, unfilled = self._mapping(path)
+        if mapping is not None and unfilled:
+            yield Finding(
+                "ALLOC-010", path, 1,
+                f"{source} is an unedited template: {', '.join(unfilled)}",
+                "Fill the mapping in. A tier resolving to a placeholder resolves "
+                "to nothing a dispatch can be audited against, which is the "
+                "condition this rule exists to end.",
+            )
+            return
         if mapping is None:
             yield Finding(
                 "ALLOC-010", path, 1,
@@ -99,15 +123,16 @@ class AllocationDeclaredCheck(TextCheck):
                 f"exists. A cited tier nothing resolves is unauditable.",
             )
 
-    def _mapping(self, path: Path) -> tuple[dict[str, str] | None, str]:
-        """The nearest allocation declaration above `path`, and where it was found.
+    def _mapping(self, path: Path) -> tuple[dict[str, str] | None, str, list[str]]:
+        """The nearest allocation declaration above `path`, and what it leaves unset.
 
         Walked upward rather than read from a fixed location, for the same reason
         the project declaration is: the check runs against a vendored `.agent/`
         as readily as against this repository.
 
         @param path the file being examined
-        @return the `[tiers]` table and the file it came from, or `(None, "")`
+        @return the `[tiers]` table, the file it came from, and one description
+            per field nobody filled in; `(None, "", [])` when there is no file
         """
         for parent in [path.resolve(), *path.resolve().parents]:
             for where in SEARCH:
@@ -117,11 +142,25 @@ class AllocationDeclaredCheck(TextCheck):
                         document = tomllib.loads(
                             candidate.read_text(encoding="utf-8"))
                     except (OSError, tomllib.TOMLDecodeError):
-                        return None, ""
-                    tiers = document.get("tiers", {})
-                    return ({str(k): str(v) for k, v in tiers.items()},
-                            str(candidate.name))
-        return None, ""
+                        return None, "", []
+                    tiers = {str(k): str(v)
+                             for k, v in document.get("tiers", {}).items()}
+                    meta = document.get("meta", {})
+                    unfilled = [
+                        f"{name} is {value!r}" for name, value in tiers.items()
+                        if str(value).strip().lower() in UNFILLED
+                    ]
+                    # Only when the key is PRESENT and unfilled. An absent
+                    # `[meta]` block is a shorter file, not a placeholder, and
+                    # rejecting one would be the over-reporting that made five
+                    # ARCH-002 findings wrong against real code.
+                    if str(meta.get("verified", "")).strip() == EPOCH:
+                        unfilled.append("verified is the epoch")
+                    if ("owner" in meta
+                            and str(meta["owner"]).strip().lower() in UNFILLED):
+                        unfilled.append("owner is unassigned")
+                    return tiers, str(candidate.name), unfilled
+        return None, "", []
 
 
 if __name__ == "__main__":

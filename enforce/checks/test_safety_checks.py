@@ -347,3 +347,36 @@ def test_a_file_that_dispatches_nothing_is_silent(tmp_path: Path) -> None:
     plain = tmp_path / "notes.md"
     plain.write_text("# Notes\n\nNothing here dispatches anything.\n", encoding="utf-8")
     assert AllocationDeclaredCheck().run([tmp_path]) == []
+
+
+def test_the_unedited_template_does_not_satisfy_the_rule(tmp_path: Path) -> None:
+    """The defect this check shipped with, pinned.
+
+    The first template offered "your-strongest-model", which resolves -- so an
+    adopter who copied it and changed nothing PASSED `ALLOC-010`. A check
+    satisfied by a file nobody had read, in the repository whose entire subject
+    is checks that decide nothing.
+
+    Driven against the real shipped template rather than a synthetic copy, so the
+    two cannot drift apart.
+
+    @param tmp_path the fixture directory
+    """
+    import shutil  # ruff: ignore[import-outside-top-level]
+    from pathlib import Path as RealPath  # ruff: ignore[import-outside-top-level]
+
+    agent = tmp_path / ".claude" / "agents" / "thing.md"
+    agent.parent.mkdir(parents=True)
+    agent.write_text(
+        "---\nname: thing\n---\n\n## Dispatch record (ops/ALLOC-002)\n\n"
+        "A3 B2 C1 D2 E2 F1 G0 = 11 -> T2/E2\n", encoding="utf-8")
+    overrides = tmp_path / "overrides"
+    overrides.mkdir()
+    template = (RealPath(__file__).resolve().parent.parent / "templates"
+                / "allocation.toml")
+    shutil.copy2(template, overrides / "allocation.toml")
+
+    found = AllocationDeclaredCheck().run([tmp_path / ".claude"])
+    assert [f.rule_id for f in found] == ["ALLOC-010"], (
+        "the shipped template satisfies the rule it is meant to prompt filling in"
+    )

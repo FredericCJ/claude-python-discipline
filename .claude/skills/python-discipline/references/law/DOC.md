@@ -2,7 +2,7 @@
 id: law/DOC
 kind: law
 title: Documentation Comments
-tokens: 2371
+tokens: 2367
 load_when:
   - "docstring"
   - "documentation comment"
@@ -89,7 +89,7 @@ blank line before any further detail.
   element whose first line is a continuation has no summary anywhere.
 - **Check** `ruff check` (rules `D205`, `D400`, `D415`)
 
-### DOC-007 · Every parameter, result and raised exception is documented  [BINDING] [auto:doxygen] [check:doc_coverage]
+### DOC-007 · Every parameter, result and raised exception is documented  [BINDING] [check:doc_coverage]
 A documented callable MUST document each parameter, its result, and each exception it
 raises. Under a project declaring Doxygen these MUST be written `@param`, `@return` or
 `@retval`, and `@throws`, which is the vocabulary that engine reads.

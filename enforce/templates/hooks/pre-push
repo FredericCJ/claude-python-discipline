@@ -34,11 +34,30 @@ set -eu
 root=$(git rev-parse --show-toplevel)
 cd "$root"
 
-# The interpreter matters. A bare `python` on a machine with more than one
-# environment is a coin toss, and on at least one machine it resolves to an
-# interpreter with no pytest -- where the suite reports nothing and looks like it
-# passed. Prefer the one the environment declares.
-python="${DISCIPLINE_PYTHON:-python}"
+# The interpreter matters, and a bare `python` is a coin toss on any machine with
+# more than one environment. On the machine this was written on it resolves to a
+# base install with no pytest -- so the hook blocked EVERY push until
+# DISCIPLINE_PYTHON was set, and a hook that blocks by default is a hook people
+# disable. That is the failure this file warns about three paragraphs up.
+#
+# So: take an explicit override, else the interpreter of an active conda
+# environment, else whatever `python` means here -- and SAY WHICH, because a hook
+# that chose wrong should be diagnosable from its own output.
+if [ -n "${DISCIPLINE_PYTHON:-}" ]; then
+    python="$DISCIPLINE_PYTHON"
+elif [ -n "${CONDA_PREFIX:-}" ] && [ -x "$CONDA_PREFIX/python.exe" ]; then
+    python="$CONDA_PREFIX/python.exe"
+elif [ -n "${CONDA_PREFIX:-}" ] && [ -x "$CONDA_PREFIX/bin/python" ]; then
+    python="$CONDA_PREFIX/bin/python"
+else
+    python="python"
+fi
+
+if ! "$python" -c "import pytest" >/dev/null 2>&1; then
+    echo "pre-push: $python has no pytest, so the gate would decide nothing." >&2
+    echo "Activate the environment, or set DISCIPLINE_PYTHON to its interpreter." >&2
+    exit 1
+fi
 
 gate="$root/.agent/tools/gate.py"
 if [ ! -f "$gate" ]; then

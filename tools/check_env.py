@@ -133,16 +133,34 @@ def native_version(name: str) -> str | None:
     @return the first whitespace-separated token of its `--version` output, or
         None when the binary cannot be found or refuses to report
     """
+    located = locate_native(name)
+    return _ask_version(located) if located else None
+
+
+def locate_native(name: str) -> str | None:
+    """Where a conda-installed native tool actually is, or None when absent.
+
+    Beside the running interpreter before PATH, because conda puts native
+    binaries in `Library/bin` (Windows) or `bin` (POSIX) and prepends them to
+    PATH only on ACTIVATION. Every gate step here runs `sys.executable`
+    directly, so a PATH-only search finds nothing on a machine where the tool is
+    correctly installed -- and the caller then reports it missing, which is the
+    same wrong answer as not looking.
+
+    Extracted so there is ONE of these. There were two: this, and a copy in
+    `enforce/fitness/test_meta.py` written for the same reason a day apart. Two
+    copies of a search path is how the two stop agreeing about where a tool is.
+
+    @param name the conda package name
+    @return the path to run, or None when it cannot be found at all
+    """
     root = Path(sys.executable).parent
-    for filename in NATIVE_VERIFIERS.get(name, ()):
+    for filename in NATIVE_VERIFIERS.get(name, (f"{name}.exe", name)):
         for candidate in (root / "Library" / "bin" / filename, root / filename,
                           root / "bin" / filename):
             if candidate.is_file():
-                found = _ask_version(str(candidate))
-                if found is not None:
-                    return found
-    located = shutil.which(name)
-    return _ask_version(located) if located else None
+                return str(candidate)
+    return shutil.which(name)
 
 
 def _ask_version(executable: str) -> str | None:

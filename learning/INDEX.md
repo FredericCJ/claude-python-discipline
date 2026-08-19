@@ -9,7 +9,7 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 | Status | Count |
 |---|---|
 | active | 2 |
-| candidate | 93 |
+| candidate | 95 |
 | superseded | 1 |
 
 ## active
@@ -827,6 +827,24 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `rule:ALLOC-010`
 - **About** ALLOC-010
 - **Verify** `python -m checks.allocation_declared`
+
+### L-0097 · The allocation.toml template shipped plausible placeholders ('your-strongest-model'), which resolve -- so an adopter copying it unedited SATISFIED ALLOC-010. A check passed on a file nobody had read, in the repository whose whole subject is checks that decide nothing.
+
+- **Do** A template's placeholder must be a sentinel the check refuses, not prose in the shape of an answer. Test the check against the real shipped template so the two cannot drift.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `rule:ALLOC-010`
+- **About** ALLOC-010
+- **Verify** `python -m pytest -q enforce/checks/test_safety_checks.py`
+
+### L-0098 · Doxygen was installed, pinned and version-verified for a full release while the only invocation anywhere was --version; four rules were external on a tool that answered what version it was. Running it also showed DOC-007's auto:doxygen tag claimed a contribution the configuration cannot make.
+
+- **Do** Installing a tool is not wiring it. Run it against something, count what it examined, and check what the CONFIGURATION actually enables before crediting a rule to it.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `rule:DOC-010`
+- **About** DOC-010
+- **Verify** `python tools/doxygen_gate.py`
 
 ## superseded
 

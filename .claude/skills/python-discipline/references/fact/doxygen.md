@@ -2,7 +2,7 @@
 id: fact/doxygen
 kind: fact
 title: Doxygen for Python
-tokens: 2391
+tokens: 2540
 load_when:
   - "doxygen"
   - "documentation comment"
@@ -92,6 +92,14 @@ Both elements above produced **zero warnings** under the configuration below.
 `ESTABLISHED` — `WARN_AS_ERROR = FAIL_ON_WARNINGS` reports every warning and *then* exits
 non-zero. Verified: a run with three defects exited 1 and printed all three; the same tree
 with the defects fixed exited 0 and printed nothing.
+
+`ESTABLISHED` — **the generator now runs, as gate step 10.** `tools/doxygen_gate.py`
+builds the reference package through this configuration on every gate run. With
+`WARN_IF_DOC_ERROR` and `WARN_IF_INCOMPLETE_DOC` on under `WARN_AS_ERROR`, that decides
+[DOC-005] and [DOC-010]; the generated page count decides [DOC-011]. It decides nothing
+about [DOC-007], because the two settings below are off — so `DOC-007` no longer claims
+`auto:doxygen` and rests on `check:doc_coverage` alone, which is what the table already
+said and the rule's tag did not.
 
 `ESTABLISHED` — **`EXTRACT_ALL = YES` automatically disables `WARN_IF_UNDOCUMENTED`.**
 Turning it on to "see everything" silently switches off the check that matters.

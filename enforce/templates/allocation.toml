@@ -22,12 +22,19 @@
 #  in practice, on this machine, this quarter.
 
 [tiers]
-#  Replace every value. These are placeholders in the shape of real entries, not
-#  recommendations -- the discipline has no opinion on which model belongs where,
-#  and a repository that ships one has made a dated claim it cannot keep.
-T0 = "your-cheapest-capable-model"
-T1 = "your-default-model"
-T2 = "your-strongest-model"
+#  Replace every value. The discipline has no opinion on which model belongs
+#  where, and a repository that ships one has made a dated claim it cannot keep.
+#  `UNSET` is a sentinel the check refuses, deliberately.
+#
+#  The first version of this file shipped plausible placeholders --
+#  "your-strongest-model" and the like -- and a tier resolving to one of those
+#  SATISFIED `ALLOC-010`. An adopter who copied the template and changed nothing
+#  passed the rule: the exact vacuity this repository exists to remove, shipped
+#  in the newest check it had written. A sentinel that cannot resolve is the
+#  difference between a declaration and a file somebody once copied.
+T0 = "UNSET"
+T1 = "UNSET"
+T2 = "UNSET"
 
 [effort]
 #  Reasoning effort, expressed however your tooling expresses it.

@@ -40,7 +40,7 @@
       "id": "fact/doxygen",
       "kind": "fact",
       "title": "Doxygen for Python",
-      "tokens": 2391,
+      "tokens": 2540,
       "load_when": [
         "doxygen",
         "documentation comment",
@@ -292,7 +292,7 @@
       "id": "law/DOC",
       "kind": "law",
       "title": "Documentation Comments",
-      "tokens": 2371,
+      "tokens": 2367,
       "load_when": [
         "docstring",
         "documentation comment",
@@ -2151,10 +2151,9 @@
       "title": "Every parameter, result and raised exception is documented",
       "force": "BINDING",
       "mechanisms": [
-        "auto:doxygen",
         "check:doc_coverage"
       ],
-      "enforcement": "external",
+      "enforcement": "mechanized",
       "mechanically_enforced": true,
       "statement": "A documented callable MUST document each parameter, its result, and each exception it raises. Under a project declaring Doxygen these MUST be written `@param`, `@return` or `@retval`, and `@throws`, which is the vocabulary that engine reads.",
       "why": "These are the questions a failing call raises, and the ones a signature alone cannot answer: what a parameter *means*, what the result *signifies*, when it *fails*.",
