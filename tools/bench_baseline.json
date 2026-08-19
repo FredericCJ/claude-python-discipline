@@ -4,10 +4,10 @@
       "defect": "D-01",
       "summary": "a probe with exists() before unlink races, and loses",
       "names_a_rule": false,
-      "found": false,
-      "hops": null,
-      "tokens": 0,
-      "tokens_if_all": 0
+      "found": true,
+      "hops": 0,
+      "tokens": 5314,
+      "tokens_if_all": 6863
     },
     {
       "defect": "D-02",
@@ -22,19 +22,19 @@
       "defect": "D-03",
       "summary": "the domain reaches for a clock, so the same input gives two answers",
       "names_a_rule": false,
-      "found": false,
-      "hops": null,
-      "tokens": 0,
-      "tokens_if_all": 0
+      "found": true,
+      "hops": 0,
+      "tokens": 4731,
+      "tokens_if_all": 14420
     },
     {
       "defect": "D-04",
       "summary": "an unannotated function in a strictly-typed package",
       "names_a_rule": false,
-      "found": false,
-      "hops": null,
-      "tokens": 0,
-      "tokens_if_all": 0
+      "found": true,
+      "hops": 0,
+      "tokens": 5039,
+      "tokens_if_all": 7816
     },
     {
       "defect": "D-05",
@@ -67,10 +67,10 @@
       "defect": "D-08",
       "summary": "a domain function whose signature admits Any",
       "names_a_rule": false,
-      "found": false,
-      "hops": null,
-      "tokens": 0,
-      "tokens_if_all": 0
+      "found": true,
+      "hops": 0,
+      "tokens": 5039,
+      "tokens_if_all": 5039
     },
     {
       "defect": "D-09",
@@ -112,11 +112,11 @@
   "summary": {
     "derived": {
       "defects": 8,
-      "found": 4,
-      "hit_rate": 0.5,
-      "median_tokens": 4949.0,
+      "found": 8,
+      "hit_rate": 1.0,
+      "median_tokens": 4994.0,
       "median_hops": 0.0,
-      "named_outright": 4
+      "named_outright": 8
     },
     "control": {
       "defects": 4,

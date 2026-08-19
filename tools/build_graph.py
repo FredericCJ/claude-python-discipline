@@ -21,6 +21,7 @@ import ast
 import json
 import re
 import sys
+import tomllib
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
@@ -344,6 +345,7 @@ def _add_mechanisms(graph: Graph, root: Path) -> None:
     _add_check_modules(graph, enforce, root)
     _add_contract_triggers(graph, enforce / "importlinter.toml")
     _add_ruff_triggers(graph, enforce / "templates" / "pyproject.toml")
+    _add_signal_triggers(graph, enforce / "signals.toml")
 
 
 def _add_check_modules(graph: Graph, enforce: Path, root: Path) -> None:
@@ -406,6 +408,39 @@ def _add_contract_triggers(graph: Graph, config: Path) -> None:
                             attrs=(("kind", "error"), ("tool", "import-linter"),
                                    ("contract", name))))
         for rule_id in _RULE_IDS_IN(name):
+            if rule_id in graph.nodes:
+                graph.add_edge(Edge(EdgeType.TRIGGERED_BY, rule_id, trigger))
+
+
+def _add_signal_triggers(graph: Graph, config: Path) -> None:
+    """Index the error vocabulary an agent meets, as opposed to the one we emit.
+
+    The other two trigger sources index this repository's own instruments: ruff
+    codes and import-linter contract names. `tools/bench.py` measured what that
+    leaves out -- a Python traceback, a mypy line and a pytest failure resolved to
+    an entirely empty reading plan, and those are the three outputs an agent meets
+    most. `enforce/signals.toml` is the vocabulary that closes it.
+
+    An entry naming a rule the corpus does not carry mints the trigger anyway and
+    leaves it unattached, the same way an unattributed ruff code does: the
+    signature is still what an agent has in hand, whether or not anyone has said
+    which rule it serves.
+
+    @param graph the graph under construction
+    @param config the signal table, skipped when absent
+    """
+    if not config.exists():
+        return
+    document = tomllib.loads(config.read_text(encoding="utf-8"))
+    for entry in document.get("signal", []):
+        signature = str(entry.get("match", "")).strip()
+        if not signature:
+            continue
+        trigger = f"trigger:err:{signature}"
+        graph.add_node(Node(id=trigger, type=NodeType.TRIGGER, label=signature,
+                            attrs=(("kind", "error"),
+                                   ("tool", str(entry.get("tool", "unknown"))))))
+        for rule_id in entry.get("rules", []):
             if rule_id in graph.nodes:
                 graph.add_edge(Edge(EdgeType.TRIGGERED_BY, rule_id, trigger))
 

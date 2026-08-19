@@ -1,0 +1,163 @@
+#  Error signatures an agent actually meets, against the rules that govern them.
+#
+#  WHY THIS FILE EXISTS, measured rather than supposed. `tools/bench.py` asks the
+#  navigator to route from a failing program's own output to the rule that governs
+#  the fix. On its first run, four of eight realistic outputs reached NOTHING --
+#  not a poor reading plan, an empty one. The cause was that the graph carried
+#  seventeen error triggers and every one of them was a ruff code or an
+#  import-linter contract name: the vocabulary this repository's OWN GATE emits.
+#
+#  A Python traceback, a mypy line and a pytest failure resolved to nothing at
+#  all, which are the three things an agent meets most. The Prime Directive says a
+#  failure must be diagnosable "from the program's own output"; a traceback is the
+#  program's own output in the most literal sense that sentence can carry.
+#
+#  HOW IT IS READ. `tools/build_graph.py` mints one `trigger:err:<match>` node per
+#  entry and edges it to each rule named, exactly as it already does for
+#  `enforce/importlinter.toml` and the ruff codes in `enforce/templates/`.
+#  `tools/nav.py::_seed_by_signature` matches a trigger either literally
+#  (case-insensitively, as a substring) or when every word of its label is present
+#  -- so both a bare `FileNotFoundError` and a phrase like
+#  `Explicit "Any" is not allowed` resolve.
+#
+#  WHAT MAY GO IN HERE. A signature must be something a tool or the runtime
+#  actually prints, and the rules named must be the ones a reader needs to fix
+#  THAT failure -- not every rule the topic touches. An entry that maps a common
+#  exception onto half the corpus makes the reading plan bigger and the answer
+#  worse, which is the opposite of the point. `why` says what the connection is;
+#  an entry that cannot state one does not belong.
+#
+#  THIS IS NOT LAW. `law/` never pins a version, and a mypy code is a dated fact
+#  about a tool. These mappings decay the way `fact/` does: when a checker renames
+#  a code, the entry stops matching and silently indexes nothing, which
+#  `tools/bench.py` is the thing most likely to notice.
+
+# --------------------------------------------------------------------- runtime
+#
+# What CPython itself raises. These are the outputs with no tool in front of them
+# at all -- the agent has a traceback and nothing else.
+
+[[signal]]
+match = "FileNotFoundError"
+tool = "python"
+rules = ["ERR-013"]
+why = """A missing file at the moment of use is the classic outcome of pre-checking
+the world: `if p.exists(): p.unlink()` passes its own probe and then races. Found
+eight times over in one unrelated codebase's deletion paths."""
+
+[[signal]]
+match = "PermissionError"
+tool = "python"
+rules = ["ERR-013", "ERR-016"]
+why = """The same probe-then-act shape as FileNotFoundError, plus the containment
+question: a permission fault is the boundary's to report, not the core's to guess at."""
+
+[[signal]]
+match = "ValidationError"
+tool = "pydantic"
+rules = ["ERR-011", "ERR-014"]
+why = """A pydantic ValidationError means a boundary parsed. Where it surfaces says
+whether the parse happened at the boundary or leaked inward, and whether the
+failure is an expected outcome or a contract violation."""
+
+[[signal]]
+match = "AssertionError"
+tool = "python"
+rules = ["ERR-012", "TEST-004"]
+why = """An AssertionError in production code means validation was written as an
+assert, which `python -O` removes. In a test it is the ordinary outcome, and the
+question becomes which oracle the suite declared."""
+
+[[signal]]
+match = "ExceptionGroup"
+tool = "python"
+rules = ["ERR-010"]
+why = """A group is the shape ERR-010 asks for, and the rule is what says how it
+must propagate rather than be flattened at the first handler."""
+
+[[signal]]
+match = "ModuleNotFoundError"
+tool = "python"
+rules = ["ARCH-001", "DEP-002"]
+why = """An import that fails at runtime is usually a dependency reachable from a
+layer that should not hold it, or one nobody registered."""
+
+# ------------------------------------------------------------------------ mypy
+#
+# Codes are matched where they are specific enough to name a rule. Where the code
+# is generic -- `misc` covers a great deal -- the printed MESSAGE is matched
+# instead, which the all-words rule in `_seed_by_signature` supports.
+
+[[signal]]
+match = "no-untyped-def"
+tool = "mypy"
+rules = ["TYPE-001"]
+why = """The first thing `mypy --strict` reports on a package adopting the typing
+track: a definition the checker cannot hold anyone to."""
+
+[[signal]]
+match = "no-any-return"
+tool = "mypy"
+rules = ["TYPE-002"]
+why = """A function declared to return something concrete and returning Any has a
+signature that promises what the body does not deliver."""
+
+[[signal]]
+match = 'Explicit "Any" is not allowed'
+tool = "mypy"
+rules = ["TYPE-002"]
+why = """`misc` is too broad a code to route on, so the message is matched. This is
+the disallow-any-explicit half of the strict profile, and it is the exact wording
+mypy prints."""
+
+[[signal]]
+match = "Statement is unreachable"
+tool = "mypy"
+rules = ["ERR-002"]
+why = """Unreachable code after a narrowed union is usually the `assert_never` arm
+proving the union was already exhausted -- or the narrowing being wrong. Either way
+ERR-002 is what settles it."""
+
+[[signal]]
+match = "Returning Any from function"
+tool = "mypy"
+rules = ["TYPE-002", "TYPE-013"]
+why = """The value crossed a boundary untyped and was not converted explicitly on
+the way in."""
+
+# ---------------------------------------------------------------------- pytest
+#
+# A bare `FAILED` names nothing and is deliberately absent: it would match every
+# failing run and route to the whole corpus. What is indexed is the shape of the
+# failure, and the behaviour the test named -- which is diagnostic precisely
+# because TEST-019 requires the name to state it.
+
+[[signal]]
+match = "SocketBlockedError"
+tool = "pytest-socket"
+rules = ["TEST-017", "TEST-001"]
+why = """A unit test reached the network. pytest-socket fails closed by default,
+which is why this surfaces as an error rather than a slow test nobody notices."""
+
+[[signal]]
+match = "Failed: Timeout"
+tool = "pytest-timeout"
+rules = ["TEST-003"]
+why = """A test exceeded its budget. The rule is what says the budget exists and is
+enforced rather than aspirational."""
+
+[[signal]]
+match = "test_deterministic"
+tool = "pytest"
+rules = ["EFCT-003", "EFCT-002"]
+why = """A failing determinism property is the usual first symptom of the core
+reaching for a clock, a random source or the environment. Routing on the test's
+NAME is sound here only because TEST-019 requires the name to state the behaviour."""
+
+[[signal]]
+match = "flaky"
+tool = "pytest"
+rules = ["TEST-018"]
+why = """The rule's whole content is that this word describes a defect in the
+harness, investigated at the priority of a domain bug, rather than a property of
+the world to be re-run past."""

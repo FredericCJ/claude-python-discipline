@@ -3675,6 +3675,15 @@
    }
   },
   {
+   "id": "trigger:err:AssertionError",
+   "type": "trigger",
+   "label": "AssertionError",
+   "attrs": {
+    "kind": "error",
+    "tool": "python"
+   }
+  },
+  {
    "id": "trigger:err:BLE001",
    "type": "trigger",
    "label": "BLE001",
@@ -3720,6 +3729,42 @@
    }
   },
   {
+   "id": "trigger:err:ExceptionGroup",
+   "type": "trigger",
+   "label": "ExceptionGroup",
+   "attrs": {
+    "kind": "error",
+    "tool": "python"
+   }
+  },
+  {
+   "id": "trigger:err:Explicit \"Any\" is not allowed",
+   "type": "trigger",
+   "label": "Explicit \"Any\" is not allowed",
+   "attrs": {
+    "kind": "error",
+    "tool": "mypy"
+   }
+  },
+  {
+   "id": "trigger:err:Failed: Timeout",
+   "type": "trigger",
+   "label": "Failed: Timeout",
+   "attrs": {
+    "kind": "error",
+    "tool": "pytest-timeout"
+   }
+  },
+  {
+   "id": "trigger:err:FileNotFoundError",
+   "type": "trigger",
+   "label": "FileNotFoundError",
+   "attrs": {
+    "kind": "error",
+    "tool": "python"
+   }
+  },
+  {
    "id": "trigger:err:G004",
    "type": "trigger",
    "label": "G004",
@@ -3738,12 +3783,39 @@
    }
   },
   {
+   "id": "trigger:err:ModuleNotFoundError",
+   "type": "trigger",
+   "label": "ModuleNotFoundError",
+   "attrs": {
+    "kind": "error",
+    "tool": "python"
+   }
+  },
+  {
    "id": "trigger:err:PGH003",
    "type": "trigger",
    "label": "PGH003",
    "attrs": {
     "kind": "error",
     "tool": "ruff"
+   }
+  },
+  {
+   "id": "trigger:err:PermissionError",
+   "type": "trigger",
+   "label": "PermissionError",
+   "attrs": {
+    "kind": "error",
+    "tool": "python"
+   }
+  },
+  {
+   "id": "trigger:err:Returning Any from function",
+   "type": "trigger",
+   "label": "Returning Any from function",
+   "attrs": {
+    "kind": "error",
+    "tool": "mypy"
    }
   },
   {
@@ -3765,6 +3837,24 @@
    }
   },
   {
+   "id": "trigger:err:SocketBlockedError",
+   "type": "trigger",
+   "label": "SocketBlockedError",
+   "attrs": {
+    "kind": "error",
+    "tool": "pytest-socket"
+   }
+  },
+  {
+   "id": "trigger:err:Statement is unreachable",
+   "type": "trigger",
+   "label": "Statement is unreachable",
+   "attrs": {
+    "kind": "error",
+    "tool": "mypy"
+   }
+  },
+  {
    "id": "trigger:err:TRY300",
    "type": "trigger",
    "label": "TRY300",
@@ -3780,6 +3870,15 @@
    "attrs": {
     "kind": "error",
     "tool": "ruff"
+   }
+  },
+  {
+   "id": "trigger:err:ValidationError",
+   "type": "trigger",
+   "label": "ValidationError",
+   "attrs": {
+    "kind": "error",
+    "tool": "pydantic"
    }
   },
   {
@@ -3803,6 +3902,15 @@
    }
   },
   {
+   "id": "trigger:err:flaky",
+   "type": "trigger",
+   "label": "flaky",
+   "attrs": {
+    "kind": "error",
+    "tool": "pytest"
+   }
+  },
+  {
    "id": "trigger:err:foreign dependencies are cornered",
    "type": "trigger",
    "label": "foreign dependencies are cornered",
@@ -3823,6 +3931,24 @@
    }
   },
   {
+   "id": "trigger:err:no-any-return",
+   "type": "trigger",
+   "label": "no-any-return",
+   "attrs": {
+    "kind": "error",
+    "tool": "mypy"
+   }
+  },
+  {
+   "id": "trigger:err:no-untyped-def",
+   "type": "trigger",
+   "label": "no-untyped-def",
+   "attrs": {
+    "kind": "error",
+    "tool": "mypy"
+   }
+  },
+  {
    "id": "trigger:err:storage has one owner",
    "type": "trigger",
    "label": "storage has one owner",
@@ -3830,6 +3956,15 @@
     "kind": "error",
     "tool": "import-linter",
     "contract": "EFCT-012 storage has one owner"
+   }
+  },
+  {
+   "id": "trigger:err:test_deterministic",
+   "type": "trigger",
+   "label": "test_deterministic",
+   "attrs": {
+    "kind": "error",
+    "tool": "pytest"
    }
   },
   {
@@ -10919,6 +11054,12 @@
   {
    "type": "triggered_by",
    "src": "ARCH-001",
+   "dst": "trigger:err:ModuleNotFoundError",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "ARCH-001",
    "dst": "trigger:err:layers point inward",
    "origin": "derived"
   },
@@ -10960,6 +11101,12 @@
   },
   {
    "type": "triggered_by",
+   "src": "DEP-002",
+   "dst": "trigger:err:ModuleNotFoundError",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
    "src": "DIAG-008",
    "dst": "trigger:err:BLE001",
    "origin": "derived"
@@ -11020,8 +11167,26 @@
   },
   {
    "type": "triggered_by",
+   "src": "EFCT-002",
+   "dst": "trigger:err:test_deterministic",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "EFCT-003",
+   "dst": "trigger:err:test_deterministic",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
    "src": "EFCT-012",
    "dst": "trigger:err:storage has one owner",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "ERR-002",
+   "dst": "trigger:err:Statement is unreachable",
    "origin": "derived"
   },
   {
@@ -11056,6 +11221,24 @@
   },
   {
    "type": "triggered_by",
+   "src": "ERR-010",
+   "dst": "trigger:err:ExceptionGroup",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "ERR-011",
+   "dst": "trigger:err:ValidationError",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "ERR-012",
+   "dst": "trigger:err:AssertionError",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
    "src": "ERR-012",
    "dst": "trigger:err:S101",
    "origin": "derived"
@@ -11068,8 +11251,92 @@
   },
   {
    "type": "triggered_by",
+   "src": "ERR-013",
+   "dst": "trigger:err:FileNotFoundError",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "ERR-013",
+   "dst": "trigger:err:PermissionError",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "ERR-014",
+   "dst": "trigger:err:ValidationError",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "ERR-016",
+   "dst": "trigger:err:PermissionError",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "TEST-001",
+   "dst": "trigger:err:SocketBlockedError",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "TEST-003",
+   "dst": "trigger:err:Failed: Timeout",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "TEST-004",
+   "dst": "trigger:err:AssertionError",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "TEST-017",
+   "dst": "trigger:err:SocketBlockedError",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "TEST-018",
+   "dst": "trigger:err:flaky",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "TYPE-001",
+   "dst": "trigger:err:no-untyped-def",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "TYPE-002",
+   "dst": "trigger:err:Explicit \"Any\" is not allowed",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "TYPE-002",
+   "dst": "trigger:err:Returning Any from function",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "TYPE-002",
+   "dst": "trigger:err:no-any-return",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
    "src": "TYPE-003",
    "dst": "trigger:err:PGH003",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "TYPE-013",
+   "dst": "trigger:err:Returning Any from function",
    "origin": "derived"
   },
   {
