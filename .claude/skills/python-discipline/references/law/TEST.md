@@ -2,7 +2,7 @@
 id: law/TEST
 kind: law
 title: Systematic Testing and Oracles
-tokens: 2777
+tokens: 2786
 load_when:
   - "write a test"
   - "pytest"
@@ -95,12 +95,12 @@ contract suite.
   fake, and none of them will say so.
 - **Check** `pytest enforce/fitness/test_ports.py::test_contract_suite_per_adapter`
 
-### TEST-007 · Stated invariants have property suites  [BINDING] [fitness:test_layers_populated]
+### TEST-007 · Stated invariants have property suites  [BINDING] [fitness:test_property_suites_are_generated]
 Round-trip, idempotence, involution, ordering and closure properties MUST be expressed as
 generated-input property tests, not as hand-picked examples.
 - **Why** A property is a claim about all inputs; three examples test three inputs and
   imply the rest.
-- **Check** `pytest enforce/fitness/test_layers.py::test_layers_populated`
+- **Check** `pytest enforce/fitness/test_layers.py::test_property_suites_are_generated`
 
 ### TEST-008 · Golden files are reviewed, never merely regenerated  [BINDING] [fitness:test_goldens_reviewed]
 A change to a golden artifact MUST be accompanied by the source change that justifies it.
@@ -191,11 +191,11 @@ default.
   produce failures that reproduce only sometimes.
 - **Check** `pytest` with the configured plugins
 
-### TEST-018 · A flaky failure is a defect in the harness  [BINDING] [fitness:test_seeds_recorded]
+### TEST-018 · A flaky failure is a defect in the harness  [BINDING] [fitness:test_no_rerun_dismissal]
 An unreproducible failure MUST be investigated at the priority of a domain defect. Reruns
 MUST NOT be used to dismiss one. Failing generated cases are recorded as fixtures.
 - **Why** Rerunning until green discards the one observation that had diagnostic value.
-- **Check** `pytest enforce/fitness/test_determinism.py::test_seeds_recorded`
+- **Check** `pytest enforce/fitness/test_determinism.py::test_no_rerun_dismissal`
 
 ### TEST-019 · Test names state the behaviour  [ADVISORY]
 A test name SHOULD say what must hold, not restate the implementation or number a case.

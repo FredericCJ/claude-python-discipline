@@ -22,6 +22,7 @@ import pytest
 
 import integrate
 import vendor
+from decides import decides
 from integrate import Kind
 
 ## A configuration a project already had before the discipline arrived, in the
@@ -255,6 +256,7 @@ def test_a_created_file_uses_lf(repo: Path) -> None:
     assert (repo / "CLAUDE.md").read_bytes().count(b"\r") == 0
 
 
+@decides("DEP-013")
 def test_an_existing_block_is_replaced_not_duplicated(repo: Path) -> None:
     """A newer discipline replaces its own block rather than stacking one.
 
@@ -391,6 +393,7 @@ def test_check_reports_a_stale_block(repo: Path) -> None:
     assert run(repo, "--check") == 1
 
 
+@decides("DEP-014")
 def test_a_dry_run_writes_nothing(repo: Path) -> None:
     """The preview truncates the same pipeline; it does not predict a second one.
 

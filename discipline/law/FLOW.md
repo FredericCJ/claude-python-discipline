@@ -2,7 +2,7 @@
 id: law/FLOW
 kind: law
 title: How a Change Is Made
-tokens: 1994
+tokens: 2233
 load_when:
   - "definition of done"
   - "before i commit"
@@ -30,13 +30,19 @@ against. Skipping a step does not save it — it moves it to the point where it 
 
 ## Order
 
-### FLOW-001 · The contract is written before the implementation  [BINDING] [fitness:test_contract_documented]
+### FLOW-001 · The contract is written before the implementation  [ADVISORY]
 Before a component is written, its inputs, outputs, invariants, error modes and ordering
 constraints MUST be stated. The specification owns what and how well; the implementer owns
 how.
 - **Why** A contract written afterwards describes what was built, so it can never disagree
   with it, and can therefore never catch anything.
-- **Check** `pytest enforce/fitness/test_api.py::test_contract_documented`
+- **No mechanism** The rule is about *when* the contract was written, and a tree
+  carries no record of the order its files came to exist in. `test_contract_documented`
+  claimed this rule while asserting only that a docstring was present -- which is
+  equally true of a contract written afterwards to describe what was built, the exact
+  failure the **Why** above names. What IS mechanized is the adjacent [API-001]: the
+  contract states its terms. A commit-scoped check reading which files a change
+  introduced, and in which order, would close this.
 - **See** [law/API] · [frame/spec]
 
 ### FLOW-002 · Test obligations are named before tests are written  [BINDING] [check:oracle_declared]
@@ -57,18 +63,18 @@ consequences and enforcement.
 - **Check** `pytest enforce/fitness/test_decisions.py::test_decisions_recorded`
 - **See** [law/ARCH]
 
-### FLOW-004 · Decision records are appended, never rewritten  [BINDING] [fitness:test_decisions_recorded]
+### FLOW-004 · Decision records are appended, never rewritten  [BINDING] [fitness:test_decision_records_are_appended]
 Records MUST be numbered sequentially and never renumbered or deleted. A superseded
 decision is marked superseded and kept.
 - **Why** A deleted decision takes its reasoning with it, and the next agent re-derives
   and re-litigates it.
-- **Check** `pytest enforce/fitness/test_decisions.py::test_decisions_recorded`
+- **Check** `pytest enforce/fitness/test_decisions.py::test_decision_records_are_appended`
 
-### FLOW-005 · Overruled objections are recorded, not discarded  [BINDING] [fitness:test_decisions_recorded]
+### FLOW-005 · Overruled objections are recorded, not discarded  [BINDING] [fitness:test_overruled_objections_are_kept]
 Where a decision was contested, the objection and its resolution MUST be recorded.
 - **Why** When the decision later proves wrong, the recorded objection is usually the
   fastest available description of why — the cheapest future-debugging asset there is.
-- **Check** `pytest enforce/fitness/test_decisions.py::test_decisions_recorded`
+- **Check** `pytest enforce/fitness/test_decisions.py::test_overruled_objections_are_kept`
 
 ---
 
@@ -113,13 +119,18 @@ recorded for the touched modules, and the mutation gate runs on touched core mod
   time instead of the author's.
 - **Check** `pytest enforce/fitness/test_meta.py::test_gate_suite_defined`
 
-### FLOW-010 · New behaviour arrives with its obligations discharged  [BINDING] [fitness:test_layers_populated]
+### FLOW-010 · New behaviour arrives with its obligations discharged  [ADVISORY]
 A new component arrives with its contract, its unit tests, and — if it is a port — its
 three adapters, its contract suite and its fault suite. A new invariant arrives with its
 property test.
 - **Why** The suite is complete at every commit or at none; "tests to follow" is where
   they stop following.
-- **Check** `pytest enforce/fitness/test_layers.py::test_layers_populated`
+- **No mechanism** The rule is about what arrives *with* a change, and a static tree
+  shows what is there now rather than what landed together. `test_layers_populated`
+  claimed it and counts named tests per layer, which a repository holding one thorough
+  component and ten bare ones satisfies. Per-component completeness is mechanized where
+  the component is a port -- [ARCH-008], [ARCH-009] -- and nowhere else. A check reading
+  the diff for a new module without its obligations would close this.
 - **See** [law/ARCH]
 
 ### FLOW-011 · The diagnosis is checked, not assumed  [BINDING] [fitness:test_envelope_conforms]

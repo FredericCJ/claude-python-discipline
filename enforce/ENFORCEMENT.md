@@ -4,10 +4,10 @@
 
 Every rule against the mechanism that decides it. The corpus's own standard is that a rule nothing checks is not binding in practice, whatever its tag says, so this table is where that claim is either kept or exposed.
 
-- **164** binding rules; **150** are decided by something that runs (91%). The other **14** read as binding and are not mechanically decided.
-- **19** advisory rules -- the unenforceable surface, listed below with reasons.
+- **155** binding rules; **141** are decided by something that runs (91%). The other **14** read as binding and are not mechanically decided.
+- **28** advisory rules -- the unenforceable surface, listed below with reasons.
 - **0** rules blocked on an open decision.
-- **88/88** named mechanisms are built; **0** are declared but not yet implemented.
+- **90/90** named mechanisms are built; **0** are declared but not yet implemented.
 
 ## Status census
 
@@ -15,11 +15,11 @@ Measured against this tree, not declared. `discipline/rules.json` carries the sa
 
 | Status | Rules | Means |
 |---|---|---|
-| `mechanized` | 115 | every named mechanism was found here |
+| `mechanized` | 106 | every named mechanism was found here |
 | `external` | 35 | nothing missing, but a configured tool or a reviewer settles it |
 | `review` | 0 | a person decides it; no gate will report it |
 | `unbuilt` | 14 | a named check or fitness function does not exist |
-| `unmechanized` | 19 | the rule names no mechanism at all |
+| `unmechanized` | 28 | the rule names no mechanism at all |
 
 ## External mechanisms, and whether this repository runs them
 
@@ -74,13 +74,9 @@ These read as obligations a gate will catch, and no gate will. Until the mechani
 | `API-005` | `mechanized` | `fitness:test_structured_output` | `pytest enforce/fitness/test_api.py::test_structured_output` | Structured output is the primary interface |
 | `API-006` | `mechanized` | `fitness:test_structured_output` | `pytest enforce/fitness/test_api.py::test_structured_output` | Human output renders the same result object |
 | `API-007` | `mechanized` | `fitness:test_exit_codes` | `pytest enforce/fitness/test_api.py::test_exit_codes` | Exit status is part of the contract |
-| `API-008` | `mechanized` | `fitness:test_structured_output` | `pytest enforce/fitness/test_api.py::test_structured_output` | The surface is self-describing |
 | `API-009` | `mechanized` | `fitness:test_agent_parity` | `pytest enforce/fitness/test_api.py::test_agent_parity` | Automation gets no relaxed validation |
 | `API-010` | `mechanized` | `fitness:test_schema_versioned` | `pytest enforce/fitness/test_api.py::test_schema_versioned` | Every published payload carries a schema version |
-| `API-011` | `mechanized` | `fitness:test_codes_are_stable` | `pytest enforce/fitness/test_diagnostics.py::test_codes_are_stable` | Error codes and result variants are versioned surface |
 | `API-012` | `mechanized` | `fitness:test_migrations` | `pytest enforce/fitness/test_api.py::test_migrations` | A format change ships with a migration and its test |
-| `API-013` | `mechanized` | `fitness:test_schema_versioned` | `pytest enforce/fitness/test_api.py::test_schema_versioned` | Compatibility is not inherited from parser tolerance |
-| `API-015` | `mechanized` | `fitness:test_delivered_boundary` | `pytest enforce/fitness/test_api.py::test_delivered_boundary` | The delivered artifact is what gets tested |
 | `ARCH-001` | `external` | `auto:import-linter` | `lint-imports --config enforce/importlinter.toml` contract `ARCH-001 layers point inward` · `python tools/import_gate.py` | Dependencies point inward only |
 | `ARCH-002` | `external` | `auto:import-linter` `check:domain_purity` | `lint-imports --config enforce/importlinter.toml` contract `ARCH-002 domain is pure` · `python tools/import_gate.py` · `python -m checks.domain_purity` | The domain imports nothing that can perform I/O |
 | `ARCH-003` | `external` | `auto:import-linter` | `lint-imports --config enforce/importlinter.toml` contract `ARCH-003 adapters are independent` · `python tools/import_gate.py` | No adapter imports another adapter |
@@ -99,7 +95,6 @@ These read as obligations a gate will catch, and no gate will. Until the mechani
 | `ARCH-016` | `external` | `auto:ruff:C901` | `ruff check` (rule `C901`) | Module complexity stays within budget |
 | `DEP-001` | `external` | `auto:import-linter` | `lint-imports` contract `domain-is-pure` | The domain depends on the standard library only |
 | `DEP-002` | `mechanized` | `fitness:test_dependency_position` | `pytest enforce/fitness/test_deps.py::test_dependency_position` | A dependency is judged by its architectural position |
-| `DEP-003` | `mechanized` | `fitness:test_fault_catalogue` | `pytest enforce/fitness/test_faults.py::test_fault_catalogue` | An adapter owns its dependency's failure modes |
 | `DEP-005` | `mechanized` | `fitness:test_environment_locked` | `pytest enforce/fitness/test_deps.py::test_environment_locked` | The environment is locked by content hash |
 | `DEP-006` | `mechanized` | `fitness:test_environment_locked` | `pytest enforce/fitness/test_deps.py::test_environment_locked` | A command verifies the environment matches the lock |
 | `DEP-007` | `mechanized` | `check:generated_provenance` | `python -m checks.generated_provenance` | Generated files carry a provenance header |
@@ -113,7 +108,6 @@ These read as obligations a gate will catch, and no gate will. Until the mechani
 | `DIAG-001` | `mechanized` | `fitness:test_envelope_conforms` | `pytest enforce/fitness/test_diagnostics.py::test_envelope_conforms` | Every escaping error produces a valid envelope |
 | `DIAG-002` | `mechanized` | `check:exception_has_code` | `python -m checks.exception_has_code` | Every custom exception carries a stable code |
 | `DIAG-003` | `mechanized` | `check:exception_has_code` | `python -m checks.exception_has_code` | Error detail is carried in attributes, not interpolated away |
-| `DIAG-004` | `mechanized` | `fitness:test_codes_are_stable` | `pytest enforce/fitness/test_diagnostics.py::test_codes_are_stable` | A code is a public contract |
 | `DIAG-005` | `mechanized` | `check:raise_from` | `python -m checks.raise_from` | Every cross-layer re-raise uses explicit chaining |
 | `DIAG-006` | `mechanized` | `check:raise_from` | `python -m checks.raise_from` | Context is accreted with notes, not by re-wrapping |
 | `DIAG-007` | `mechanized` | `check:raise_from` | `python -m checks.raise_from` | Suppressing the cause requires a stated reason |
@@ -122,7 +116,6 @@ These read as obligations a gate will catch, and no gate will. Until the mechani
 | `DIAG-010` | `mechanized` | `check:log_once` | `python -m checks.log_once` | Each exception is logged once, at its handling boundary |
 | `DIAG-011` | `mechanized` | `check:library_logging` | `python -m checks.library_logging` | Library code configures no logging |
 | `DIAG-012` | `external` | `auto:ruff:G004` | `ruff check` (rules `G004`, `G010`) | Log arguments are deferred, never pre-formatted |
-| `DIAG-013` | `mechanized` | `fitness:test_correlation_propagates` | `pytest enforce/fitness/test_diagnostics.py::test_correlation_propagates` | A correlation identifier ties a failure to its trace |
 | `DIAG-014` | `mechanized` | `check:redaction` | `python -m checks.redaction` | Secrets and personal data never reach a log or an envelope |
 | `DIAG-015` | `external` | `auto:ruff:G004` `check:log_once` | `ruff check` · `python -m checks.log_once` | Structured fields, not sentences |
 | `DOC-001` | `external` | `auto:ruff:D100` `check:doc_coverage` | `ruff check` (rules `D100`–`D107`) · `python -m checks.doc_coverage` | Every module, class, function and method is documented |
@@ -146,7 +139,7 @@ These read as obligations a gate will catch, and no gate will. Until the mechani
 | `EFCT-006` | `mechanized` | `fitness:test_dry_run_matches_apply` | `pytest enforce/fitness/test_effects.py::test_dry_run_matches_apply` | A dry run is the pipeline truncated, never a second path |
 | `EFCT-007` | `mechanized` | `fitness:test_interruption_recovers` | `pytest enforce/fitness/test_effects.py::test_interruption_recovers` | A multi-effect apply is journalled |
 | `EFCT-008` | `mechanized` | `check:atomicity_qualified` | `python -m checks.atomicity_qualified` | Atomicity claims are qualified |
-| `EFCT-009` | `mechanized` | `fitness:test_interruption_recovers` | `pytest enforce/fitness/test_effects.py::test_interruption_recovers` | What is not guaranteed is stated |
+| `EFCT-009` | `mechanized` | `fitness:test_what_is_not_guaranteed_is_stated` | `pytest enforce/fitness/test_effects.py::test_what_is_not_guaranteed_is_stated` | What is not guaranteed is stated |
 | `EFCT-010` | `mechanized` | `check:plan_apply` | `python -m checks.plan_apply` | State transitions are explicit and closed |
 | `EFCT-011` | `unbuilt` **(!)** | `check:plan_apply` | `python -m checks.plan_apply` | Illegal transitions are refused before any effect |
 | `EFCT-012` | `external` | `auto:import-linter` | `lint-imports --config enforce/importlinter.toml` contract `EFCT-012 storage has one owner` · `python tools/import_gate.py` | Persistent state has exactly one owning path |
@@ -166,16 +159,14 @@ These read as obligations a gate will catch, and no gate will. Until the mechani
 | `ERR-013` | `mechanized` | `check:boundary_parsing` | `python -m checks.boundary_parsing` | Try the operation rather than pre-checking the world |
 | `ERR-015` | `mechanized` | `fitness:test_no_unhandled_escape` | `pytest enforce/fitness/test_diagnostics.py::test_no_unhandled_escape` | No unhandled exception reaches the process boundary |
 | `ERR-016` | `mechanized` | `fitness:test_fault_containment` | `pytest enforce/fitness/test_faults.py::test_fault_containment` | A fault is contained at the boundary that detected it |
-| `FLOW-001` | `mechanized` | `fitness:test_contract_documented` | `pytest enforce/fitness/test_api.py::test_contract_documented` | The contract is written before the implementation |
 | `FLOW-002` | `mechanized` | `check:oracle_declared` | `python -m checks.oracle_declared` | Test obligations are named before tests are written |
 | `FLOW-003` | `mechanized` | `fitness:test_decisions_recorded` | `pytest enforce/fitness/test_decisions.py::test_decisions_recorded` | A structural decision is recorded before it is relied upon |
-| `FLOW-004` | `mechanized` | `fitness:test_decisions_recorded` | `pytest enforce/fitness/test_decisions.py::test_decisions_recorded` | Decision records are appended, never rewritten |
-| `FLOW-005` | `mechanized` | `fitness:test_decisions_recorded` | `pytest enforce/fitness/test_decisions.py::test_decisions_recorded` | Overruled objections are recorded, not discarded |
+| `FLOW-004` | `mechanized` | `fitness:test_decision_records_are_appended` | `pytest enforce/fitness/test_decisions.py::test_decision_records_are_appended` | Decision records are appended, never rewritten |
+| `FLOW-005` | `mechanized` | `fitness:test_overruled_objections_are_kept` | `pytest enforce/fitness/test_decisions.py::test_overruled_objections_are_kept` | Overruled objections are recorded, not discarded |
 | `FLOW-006` | `mechanized` | `fitness:test_binding_rules_have_mechanisms` | `pytest enforce/fitness/test_meta.py::test_binding_rules_have_mechanisms` | A rule without a mechanism is not binding |
 | `FLOW-007` | `mechanized` | `fitness:test_checks_can_fail` | `pytest enforce/fitness/test_meta.py::test_checks_can_fail` | No check may pass vacuously |
 | `FLOW-008` | `mechanized` | `check:deviation_recorded` | `python -m checks.deviation_recorded` | Deviations from an advisory rule are recorded in the change |
 | `FLOW-009` | `mechanized` | `fitness:test_gate_suite_defined` | `pytest enforce/fitness/test_meta.py::test_gate_suite_defined` | The gates pass before a change is offered |
-| `FLOW-010` | `mechanized` | `fitness:test_layers_populated` | `pytest enforce/fitness/test_layers.py::test_layers_populated` | New behaviour arrives with its obligations discharged |
 | `FLOW-011` | `mechanized` | `fitness:test_envelope_conforms` | `pytest enforce/fitness/test_diagnostics.py::test_envelope_conforms` | The diagnosis is checked, not assumed |
 | `FLOW-012` | `unbuilt` **(!)** | `check:deviation_recorded` | `python -m checks.deviation_recorded` | Report what happened, including what did not |
 | `LEARN-001` | `mechanized` | `check:session_recorded` | `python -m checks.session_recorded` | A session records what it learned before reporting done |
@@ -191,14 +182,14 @@ These read as obligations a gate will catch, and no gate will. Until the mechani
 | `LEARN-011` | `external` | `auto:learn` | `python tools/learn.py calibrate --set` refuses without `--why` | A parameter change is recorded with its reason |
 | `TEAMS-001` | `mechanized` | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | A dispatch states the contract, not the intention |
 | `TEAMS-002` | `mechanized` | `check:dispatch_recorded` | `python -m checks.dispatch_recorded` | A restriction is never lifted by an instruction |
-| `TEAMS-003` | `mechanized` | `fitness:test_gate_suite_defined` | `pytest enforce/fitness/test_meta.py::test_gate_suite_defined` | Verification runs as a gate, not as a request |
+| `TEAMS-003` | `mechanized` | `fitness:test_completion_hook_enforces_the_gate` | `pytest enforce/fitness/test_meta.py::test_completion_hook_enforces_the_gate` | Verification runs as a gate, not as a request |
 | `TEST-001` | `mechanized` | `fitness:test_unit_layer_is_pure` | `pytest enforce/fitness/test_layers.py::test_unit_layer_is_pure` | Unit tests touch no external resource |
 | `TEST-002` | `mechanized` | `fitness:test_layers_populated` | `pytest enforce/fitness/test_layers.py::test_layers_populated` | Each test layer exists and is populated |
 | `TEST-003` | `external` | `auto:pytest-timeout` | `pytest --timeout` as configured in `enforce/templates/pyproject.toml` | Per-test time is budgeted and enforced |
 | `TEST-004` | `mechanized` | `check:oracle_declared` | `python -m checks.oracle_declared` | Every test module declares its oracle |
 | `TEST-005` | `mechanized` | `fitness:test_contract_suite_per_adapter` | `pytest enforce/fitness/test_ports.py::test_contract_suite_per_adapter` | One contract suite runs against every adapter |
 | `TEST-006` | `mechanized` | `fitness:test_contract_suite_per_adapter` | `pytest enforce/fitness/test_ports.py::test_contract_suite_per_adapter` | A fake that can drift from the real adapter is worthless |
-| `TEST-007` | `mechanized` | `fitness:test_layers_populated` | `pytest enforce/fitness/test_layers.py::test_layers_populated` | Stated invariants have property suites |
+| `TEST-007` | `mechanized` | `fitness:test_property_suites_are_generated` | `pytest enforce/fitness/test_layers.py::test_property_suites_are_generated` | Stated invariants have property suites |
 | `TEST-008` | `mechanized` | `fitness:test_goldens_reviewed` | `pytest enforce/fitness/test_goldens.py::test_goldens_reviewed` | Golden files are reviewed, never merely regenerated |
 | `TEST-009` | `mechanized` | `fitness:test_fault_schedules_are_data` | `pytest enforce/fitness/test_faults.py::test_fault_schedules_are_data` | Fault injection is data, not bespoke classes |
 | `TEST-010` | `mechanized` | `fitness:test_fault_catalogue` | `pytest enforce/fitness/test_faults.py::test_fault_catalogue` | The fault catalogue is covered per port |
@@ -209,7 +200,7 @@ These read as obligations a gate will catch, and no gate will. Until the mechani
 | `TEST-015` | `mechanized` | `fitness:test_checks_can_fail` | `pytest enforce/fitness/test_meta.py::test_checks_can_fail` | Every check has a proof-of-failure companion |
 | `TEST-016` | `mechanized` | `check:test_weakening` | `python -m checks.test_weakening` | A test that weakens must say so |
 | `TEST-017` | `external` | `auto:pytest-randomly` `auto:pytest-socket` | `pytest` with the configured plugins | Tests are order-independent and network-isolated |
-| `TEST-018` | `mechanized` | `fitness:test_seeds_recorded` | `pytest enforce/fitness/test_determinism.py::test_seeds_recorded` | A flaky failure is a defect in the harness |
+| `TEST-018` | `mechanized` | `fitness:test_no_rerun_dismissal` | `pytest enforce/fitness/test_determinism.py::test_no_rerun_dismissal` | A flaky failure is a defect in the harness |
 | `TYPE-001` | `external` | `auto:mypy` `auto:pyright` | `mypy --strict src/` · `pyright src/` · `python tools/type_gate.py` | Two checkers, both strict, both pinned |
 | `TYPE-002` | `external` | `auto:mypy` `check:domain_purity` | `mypy --strict --disallow-any-explicit src/domain` · `python -m checks.domain_purity` | The domain carries no `Any` |
 | `TYPE-003` | `external` | `auto:mypy` `auto:ruff:PGH003` | `mypy --warn-redundant-casts --warn-unused-ignores` · `ruff check` (rule `PGH003`) | Escape hatches are narrow, justified and counted |
@@ -229,7 +220,7 @@ These read as obligations a gate will catch, and no gate will. Until the mechani
 |---|---|
 | `auto` | 40 |
 | `check` | 73 |
-| `fitness` | 64 |
+| `fitness` | 55 |
 
 ## Advisory -- the unenforceable surface
 
@@ -238,15 +229,24 @@ Each of these was tried against a mechanism and could not be reduced to one. Dri
 | Rule | Why no mechanism exists | Title |
 |---|---|---|
 | `ALLOC-008` | The heading survives only to reserve the id, which is never reused. It is `[ADVISORY]` rather than deleted because a citation in an old review comment or an old error payload must still land somewhere that says what happened. | A restriction is not lifted by an instruction |
+| `API-008` | `test_structured_output` claimed this rule and asserts the entry point emits JSON carrying a schema version. That is output, not self-description: nothing checks the surface can enumerate its own operations, arguments and error codes. A check asserting the entry point offers a description command whose output lists every operation would close it -- once the reference has one to check against. | The surface is self-describing |
+| `API-011` | Renaming is a change between two versions and a check sees one. `test_codes_are_stable` claimed this rule and asserts codes are namespaced and mutually distinct, both of which hold of a code renamed this morning. A committed snapshot of the published codes, ratcheted the way `tools/lint_baseline.json` is, would close it: removing or renaming one would then fail against the recorded set. | Error codes and result variants are versioned surface |
+| `API-013` | Compatibility resting on a stated policy is a claim about a document. `test_schema_versioned` claimed this rule while asserting a version constant exists, which is [API-010] and not this. A policy has nowhere to live yet; naming a location for it, as `overrides/allocation.toml` is named for the tier mapping, would give a check something to read and close this. | Compatibility is not inherited from parser tolerance |
 | `API-014` | Whether a change is genuinely additive in meaning, rather than only in shape, is a semantic judgment; [API-011] mechanizes the cases that can be detected. | Prefer additive change |
+| `API-015` | `test_delivered_boundary` claimed this rule and asserts `release.py` builds through the installer -- a different proposition. The rule is about end-to-end tests running the installed entry point as a separate process. The reference's integration layer starts no subprocess, so there is nothing to check against. A check asserting that layer invokes the entry point and asserts on its exit status and its parsed output would close this, once the reference carries one. | The delivered artifact is what gets tested |
 | `ARCH-017` | Whether a boundary is *meaningful* is a design judgment; the closed justification list in [ARCH-010] mechanizes the part of it that can be. | Prefer the direct call to the abstraction |
+| `DEP-003` | `test_fault_catalogue` claimed this rule and asserts a faulty adapter file exists for every port. The rule's two obligations -- that the adapter STATES which faults it can produce, and that it TRANSLATES them into the infrastructure error family -- are both unchecked. The second is mechanizable: an adapter letting a vendor exception cross its own boundary is visible to an AST check, and [ERR-004] is the neighbouring rule that would host it. | An adapter owns its dependency's failure modes |
 | `DEP-004` | Recognizing that a hand-rolled routine reimplements a standard is a judgment about intent that no check can make from the code. | Do not reimplement a solved, specified problem |
+| `DIAG-004` | The same gap as [API-011], which states this rule almost word for word. `test_codes_are_stable` claimed both and detects neither a rename nor a removal. A committed snapshot of the code set, ratcheted, would close both at once. | A code is a public contract |
+| `DIAG-013` | `test_correlation_propagates` claimed this rule and asserts the envelope schema has a `correlation_id` property -- while also asserting it is NOT required, which is the opposite of what this rule says every envelope must do. Neither the establishment of an identifier at each entry point nor its presence on log records is checked, and the reference establishes none. Making the field required and asserting each entry point sets it would close this. | A correlation identifier ties a failure to its trace |
 | `DIAG-016` | Which machines are "non-trivial" cannot be decided statically; the transition legality rules are enforced separately in [law/EFCT]. | State transitions are observable |
 | `DOC-013` | Whether a sentence is informative or ceremonial is a reading judgment; [DOC-009] mechanizes the detectable half — restating the name — and no check can weigh the rest. | Prefer one sentence that earns its place |
 | `EFCT-016` | Whether a requirement genuinely demands concurrency cannot be read off the code; [EFCT-013] mechanizes the obligation to document it once it is introduced. | Prefer the sequential design |
 | `ERR-007` | Whether a caller *needs* to distinguish an outcome is a contract judgment; [ERR-006] mechanizes the shape, not the decision to create one. | Define an exception only when a caller must distinguish it |
 | `ERR-011` | The rule's deeper claim -- that validation happens at the boundary rather than scattered through the interior -- needs to know which values crossed a boundary, and an AST check cannot see that. `check:boundary_parsing` named this rule for a year and never once reported it; its own docstring said so. What IS mechanized is the adjacent, narrower [ERR-013] and [TYPE-005]. | Parse at the boundary; do not validate in the interior |
 | `ERR-014` | Whether a given failure is *conceptually* expected or a contract violation is a judgement about intent. `check:error_channels` named this rule and never reported it, and its docstring said the rule keeps a reviewer for exactly this reason. Retagged rather than left claiming a gate that would never fire. | Expected failure and contract violation are distinguished |
+| `FLOW-001` | The rule is about *when* the contract was written, and a tree carries no record of the order its files came to exist in. `test_contract_documented` claimed this rule while asserting only that a docstring was present -- which is equally true of a contract written afterwards to describe what was built, the exact failure the **Why** above names. What IS mechanized is the adjacent [API-001]: the contract states its terms. A commit-scoped check reading which files a change introduced, and in which order, would close this. | The contract is written before the implementation |
+| `FLOW-010` | The rule is about what arrives *with* a change, and a static tree shows what is there now rather than what landed together. `test_layers_populated` claimed it and counts named tests per layer, which a repository holding one thorough component and ten bare ones satisfies. Per-component completeness is mechanized where the component is a port -- [ARCH-008], [ARCH-009] -- and nowhere else. A check reading the diff for a new module without its obligations would close this. | New behaviour arrives with its obligations discharged |
 | `FLOW-013` | Reuse ambition is an intention about the future that no check can read from the present code. | Scale ceremony to reuse ambition, not to line count |
 | `LEARN-012` | Whether a claim is the right size is a judgment about what a future reader will need; the trigger requirement in [LEARN-002] mechanizes only that it can be found at all. | Prefer the smallest true entry |
 | `TEAMS-004` | Whether a second, independent pass happened is a fact about dispatch history, not about the tree, and nothing in the repository can read it. | Documentation is written in one stage, verified in another |

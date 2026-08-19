@@ -16,8 +16,10 @@ until it fails. That is the whole argument for `TEST-002`, and it is why an
 from __future__ import annotations
 
 import ast
+import re
 from typing import TYPE_CHECKING, Final
 
+from decides import decides
 from fixtures import broken_copy, reference_root
 
 if TYPE_CHECKING:
@@ -26,6 +28,11 @@ if TYPE_CHECKING:
 ## The five layers `law/TEST` names, each with what makes it different from the
 ## others. A project may add more; it may not omit one and call the suite whole.
 LAYERS: Final[tuple[str, ...]] = ("unit", "contract", "integration", "fault", "property")
+
+## Evidence that a property suite draws its input rather than listing it.
+## `TEST-007` is about the form of the test, and these are the ways this
+## toolchain expresses generation.
+_GENERATED = re.compile(r"@given|hypothesis|strategies|st\.|@settings")
 
 ## Modules the unit layer may not reach. Anything here can fail for a reason
 ## outside the code under test, and a unit failure that the environment can cause
@@ -70,6 +77,7 @@ def imports_of(path: Path) -> set[str]:
 # ------------------------------------------- TEST-002 / TEST-007 / FLOW-010
 
 
+@decides("TEST-002")
 def test_layers_populated() -> None:
     """TEST-002, TEST-007, FLOW-010: every layer exists and holds tests.
 
@@ -101,6 +109,7 @@ def test_an_empty_layer_is_caught(tmp_path: Path) -> None:
 # ------------------------------------------------------------------- TEST-001
 
 
+@decides("TEST-001")
 def test_unit_layer_is_pure() -> None:
     """TEST-001: the unit layer imports nothing that can fail for its own reasons.
 
@@ -129,3 +138,43 @@ def test_an_impure_unit_test_is_caught(tmp_path: Path) -> None:
     })
     reached = imports_of(root / "tests" / "unit" / "test_impure.py") & FORBIDDEN_IN_UNIT
     assert reached == {"pathlib"}
+
+
+@decides("TEST-007")
+def test_property_suites_are_generated() -> None:
+    """TEST-007: an invariant is tested over generated input, not three examples.
+
+    The rule names the form, not merely the presence: round-trip, idempotence,
+    involution, ordering and closure "MUST be expressed as generated-input
+    property tests, not as hand-picked examples". A directory called `property/`
+    holding three `assert f(2) == 2` lines satisfies every structural check that
+    only counts files, and tests nothing a unit test was not already testing.
+
+    Until v3.1 this rule was claimed by `test_layers_populated`, which counts
+    named tests per layer and cannot tell the two apart.
+    """
+    root = reference_root()
+    modules = sorted((root / "tests" / "property").rglob("test_*.py"))
+    assert modules, "no property suite; a stated invariant has nowhere to be tested"
+
+    for module in modules:
+        text = module.read_text(encoding="utf-8")
+        assert _GENERATED.search(text), (
+            f"{module.name} is in the property layer and draws no generated "
+            f"input. Hand-picked examples test the cases someone thought of, "
+            f"which are the cases already covered by the unit suite."
+        )
+
+
+def test_a_property_suite_of_examples_is_caught(tmp_path: Path) -> None:
+    """The negative case: a property module that only tries what someone typed.
+
+    @param tmp_path the fixture directory
+    """
+    root = broken_copy(tmp_path, write={
+        "tests/property/test_examples.py":
+            '"""Oracle: property."""\n\n\ndef test_round_trip():\n'
+            '    """Round trip."""\n    assert 2 + 2 == 4\n',
+    })
+    text = (root / "tests" / "property" / "test_examples.py").read_text(encoding="utf-8")
+    assert not _GENERATED.search(text)

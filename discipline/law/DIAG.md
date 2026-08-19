@@ -2,7 +2,7 @@
 id: law/DIAG
 kind: law
 title: Diagnostics and Traceability
-tokens: 2499
+tokens: 2634
 load_when:
   - "exception"
   - "traceback"
@@ -73,12 +73,14 @@ attributes on the error. The message renders them; it is not where they live.
   out of a formatted sentence.
 - **Check** `python -m checks.exception_has_code`
 
-### DIAG-004 · A code is a public contract  [BINDING] [fitness:test_codes_are_stable]
+### DIAG-004 · A code is a public contract  [ADVISORY]
 Renaming or removing an error code, or adding a variant to a result union, is a breaking
 change and MUST be versioned as one.
 - **Why** Automated diagnosis is only worth building against a surface that holds still
   across releases.
-- **Check** `pytest enforce/fitness/test_diagnostics.py::test_codes_are_stable`
+- **No mechanism** The same gap as [API-011], which states this rule almost word for
+  word. `test_codes_are_stable` claimed both and detects neither a rename nor a
+  removal. A committed snapshot of the code set, ratcheted, would close both at once.
 - **See** [law/API]
 
 ---
@@ -156,12 +158,17 @@ call site.
   discard it, which is how debug logging gets deleted instead of disabled.
 - **Check** `ruff check` (rules `G004`, `G010`)
 
-### DIAG-013 · A correlation identifier ties a failure to its trace  [BINDING] [fitness:test_correlation_propagates]
+### DIAG-013 · A correlation identifier ties a failure to its trace  [ADVISORY]
 Every entry point MUST establish a correlation identifier in context-local state, and every
 log record and envelope MUST carry it.
 - **Why** It is what turns scattered lines into one reconstructable story, which is the
   difference between reading a trace and searching a file.
-- **Check** `pytest enforce/fitness/test_diagnostics.py::test_correlation_propagates`
+- **No mechanism** `test_correlation_propagates` claimed this rule and asserts the
+  envelope schema has a `correlation_id` property -- while also asserting it is NOT
+  required, which is the opposite of what this rule says every envelope must do.
+  Neither the establishment of an identifier at each entry point nor its presence on
+  log records is checked, and the reference establishes none. Making the field required
+  and asserting each entry point sets it would close this.
 
 ### DIAG-014 · Secrets and personal data never reach a log or an envelope  [BINDING] [check:redaction]
 Credentials, tokens and personal data MUST be redacted before they are logged or placed in

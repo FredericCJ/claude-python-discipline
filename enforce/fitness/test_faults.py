@@ -21,6 +21,7 @@ import ast
 import re
 from typing import TYPE_CHECKING, Final
 
+from decides import decides
 from fixtures import broken_copy, modules_in, package_root, reference_root
 
 if TYPE_CHECKING:
@@ -68,6 +69,7 @@ def is_frozen_value(node: ast.ClassDef) -> bool:
 # ------------------------------------------------------------------- TEST-009
 
 
+@decides("TEST-009")
 def test_fault_schedules_are_data() -> None:
     """TEST-009: a failure mode is a value, not a subclass.
 
@@ -117,6 +119,7 @@ def test_a_bespoke_fault_class_is_caught(tmp_path: Path) -> None:
 # ------------------------------------------------------- DEP-003 / TEST-010
 
 
+@decides("TEST-010")
 def test_fault_catalogue() -> None:
     """DEP-003, TEST-010: every port has a faulty adapter and a fault test.
 
@@ -158,6 +161,7 @@ def test_an_uncovered_port_is_caught(tmp_path: Path) -> None:
 # ------------------------------------------------------- ERR-016 / TEST-011
 
 
+@decides("ERR-016", "TEST-011")
 def test_fault_containment() -> None:
     """ERR-016, TEST-011: containment is demonstrated, not assumed.
 

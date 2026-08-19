@@ -27,6 +27,7 @@ import ast
 import re
 from typing import TYPE_CHECKING, Final
 
+from decides import decides
 from fixtures import broken_copy, package_root, reference_root
 
 if TYPE_CHECKING:
@@ -79,6 +80,7 @@ def concurrent_modules(package: Path) -> dict[Path, set[str]]:
 # ------------------------------------------------------- EFCT-013 / EFCT-014
 
 
+@decides("EFCT-013", "EFCT-014")
 def test_concurrency_documented() -> None:
     """EFCT-013, EFCT-014: a module using a primitive states what it guarantees.
 
@@ -127,6 +129,7 @@ def test_undocumented_concurrency_is_caught(tmp_path: Path) -> None:
 # ------------------------------------------------------------------ EFCT-015
 
 
+@decides("EFCT-015")
 def test_single_writer() -> None:
     """EFCT-015: where there is exclusion, losing the race is a result.
 

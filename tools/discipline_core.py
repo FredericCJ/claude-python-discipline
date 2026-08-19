@@ -164,6 +164,68 @@ def rules_claimed_by(check: str, root: Path = REPO_ROOT) -> frozenset[str] | Non
     return None
 
 
+def rules_declared_by(function: str, root: Path = REPO_ROOT) -> frozenset[str] | None:
+    """Which rules a fitness test says it decides, read from its `@decides`.
+
+    Parsed rather than imported, for the reason `rules_claimed_by` is: the census
+    runs in `build_index.py`, which must not execute a test suite to find out what
+    it claims. Parsing also means a decorator that names a constant instead of a
+    literal resolves to nothing rather than to something wrong.
+
+    Both trees are searched. Thirty-four of the forty tagged functions live in
+    `enforce/fitness/`, but six are in `tools/test_*.py` -- `test_a_dry_run_writes_nothing`
+    and its kin -- and a resolver narrowed to the suites would silently undecide them.
+
+    An empty set and None mean different things and both are false-y on purpose
+    only at the call site: None is "no such function", an empty set is "the
+    function is there and has declared nothing".
+
+    @param function the test's name, as a `fitness:` tag writes it
+    @param root the tree to look in
+    @return the union of the ids it declares, or None when no such function exists
+    """
+    found = False
+    declared: set[str] = set()
+    for directory in (root / "enforce" / "fitness", root / "tools"):
+        if not directory.exists():
+            continue
+        for path in directory.rglob("*.py"):
+            try:
+                tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            except (OSError, SyntaxError):
+                continue
+            for node in ast.walk(tree):
+                if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    continue
+                if node.name != function:
+                    continue
+                found = True
+                declared |= _declared_on(node)
+    return frozenset(declared) if found else None
+
+
+def _declared_on(node: ast.FunctionDef | ast.AsyncFunctionDef) -> set[str]:
+    """Read the rule ids out of one function's `@decides(...)` decorator.
+
+    @param node the function definition to inspect
+    @return the literal string arguments, or an empty set when it is undecorated
+    """
+    ids: set[str] = set()
+    for decorator in node.decorator_list:
+        if not isinstance(decorator, ast.Call):
+            continue
+        target = decorator.func
+        name = (target.attr if isinstance(target, ast.Attribute)
+                else getattr(target, "id", ""))
+        if name != "decides":
+            continue
+        ids |= {
+            argument.value for argument in decorator.args
+            if isinstance(argument, ast.Constant) and isinstance(argument.value, str)
+        }
+    return ids
+
+
 def mechanism_is_implemented(mechanism: str, root: Path = REPO_ROOT,
                              rule_id: str | None = None) -> bool | None:
     """Whether a mechanism tag points at something that decides this rule.
@@ -179,17 +241,22 @@ def mechanism_is_implemented(mechanism: str, root: Path = REPO_ROOT,
     person -- is not decidable from this tree and is reported as such rather than
     guessed at.
 
-    A `check:` tag is resolved against the check's own `rules` tuple when a rule
-    id is supplied: a module that exists but does not claim this rule decides
-    nothing about it. A `fitness:` tag can only be resolved by existence, because
-    a fitness function declares no rule list -- an asymmetry worth knowing about
-    rather than papering over.
+    Both tags are resolved against what the mechanism itself declares when a rule
+    id is supplied: a check against its `rules` tuple, a fitness test against its
+    `@decides` decorator. Something that exists but does not name this rule decides
+    nothing about it.
+
+    The two arms differ in one place, deliberately. A check with no `rules` tuple
+    at all is given the benefit of the doubt; **a fitness test with no `@decides`
+    is not.** Treating a missing declaration as consent is precisely how sixty-four
+    rules came to rest on a tag that only ever asked whether some file contained
+    the text `def <name>(`.
 
     @param mechanism a tag exactly as a rule heading writes it, such as
         `check:layering` or `fitness:no_cycles`
     @param root the tree to look in, defaulting to this repository
-    @param rule_id the rule being resolved, so a `check:` tag can be held to what
-        the check claims; omitted, the older existence-only answer is given
+    @param rule_id the rule being resolved, so a tag can be held to what the
+        mechanism claims; omitted, the older existence-only answer is given
     @return True when something that names this rule is present, False when the
         tag is checkable and nothing answers it, None when it is not checkable
     """
@@ -206,12 +273,10 @@ def mechanism_is_implemented(mechanism: str, root: Path = REPO_ROOT,
         claimed = rules_claimed_by(target, root)
         return True if claimed is None else rule_id in claimed
     if kind == "fitness":
-        return any(
-            f"def {target}(" in path.read_text(encoding="utf-8")
-            for directory in (root / "enforce" / "fitness", root / "tools")
-            if directory.exists()
-            for path in directory.rglob("*.py")
-        )
+        declared = rules_declared_by(target, root)
+        if declared is None:
+            return False
+        return True if rule_id is None else rule_id in declared
     return None
 
 

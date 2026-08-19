@@ -28,6 +28,7 @@ from typing import Final
 
 import pytest
 
+from decides import decides
 from fixtures import package_root, reference_root
 
 ## The validator library. Imported through `importorskip` so a tree without
@@ -70,6 +71,7 @@ def validator() -> object:
 # ------------------------------------------------------- DIAG-001 / FLOW-011
 
 
+@decides("DIAG-001", "FLOW-011")
 def test_envelope_conforms(envelope_module: object, validator: object) -> None:
     """DIAG-001, FLOW-011: a real error is serialized and the record validated.
 
@@ -221,6 +223,7 @@ def test_correlation_propagates() -> None:
 # ------------------------------------------------------------------- ERR-015
 
 
+@decides("ERR-015")
 def test_no_unhandled_escape() -> None:
     """ERR-015: the process boundary catches everything and returns a code.
 

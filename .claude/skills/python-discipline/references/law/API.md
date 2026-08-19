@@ -2,7 +2,7 @@
 id: law/API
 kind: law
 title: Contracts and Public Surface
-tokens: 2093
+tokens: 2445
 load_when:
   - "public API"
   - "contract"
@@ -90,12 +90,16 @@ and tested.
 - **Check** `pytest enforce/fitness/test_api.py::test_exit_codes`
 - **See** [law/ERR]
 
-### API-008 · The surface is self-describing  [BINDING] [fitness:test_structured_output]
+### API-008 · The surface is self-describing  [ADVISORY]
 The published surface MUST offer a machine-readable description of its own operations,
 arguments and error codes.
 - **Why** A client that can enumerate the contract can adapt to it; one that cannot must
   hard-code assumptions that silently rot.
-- **Check** `pytest enforce/fitness/test_api.py::test_structured_output`
+- **No mechanism** `test_structured_output` claimed this rule and asserts the entry
+  point emits JSON carrying a schema version. That is output, not self-description:
+  nothing checks the surface can enumerate its own operations, arguments and error
+  codes. A check asserting the entry point offers a description command whose output
+  lists every operation would close it -- once the reference has one to check against.
 
 ### API-009 · Automation gets no relaxed validation  [BINDING] [fitness:test_agent_parity]
 A request from an agent, a hook or a script MUST be validated identically to one from a
@@ -117,12 +121,16 @@ Structured results and persisted formats MUST carry an explicit version identifi
   present as malformed input.
 - **Check** `pytest enforce/fitness/test_api.py::test_schema_versioned`
 
-### API-011 · Error codes and result variants are versioned surface  [BINDING] [fitness:test_codes_are_stable]
+### API-011 · Error codes and result variants are versioned surface  [ADVISORY]
 Renaming an error code, removing one, or adding a variant to a published result union is a
 breaking change.
 - **Why** These are what an automated consumer branches on, so they are load-bearing in
   exactly the way a function name is.
-- **Check** `pytest enforce/fitness/test_diagnostics.py::test_codes_are_stable`
+- **No mechanism** Renaming is a change between two versions and a check sees one.
+  `test_codes_are_stable` claimed this rule and asserts codes are namespaced and
+  mutually distinct, both of which hold of a code renamed this morning. A committed
+  snapshot of the published codes, ratcheted the way `tools/lint_baseline.json` is,
+  would close it: removing or renaming one would then fail against the recorded set.
 - **See** [law/DIAG]
 
 ### API-012 · A format change ships with a migration and its test  [BINDING] [fitness:test_migrations]
@@ -131,11 +139,15 @@ fixture of the previous version.
 - **Why** A migration nobody has run against real prior data is a plan, not a migration.
 - **Check** `pytest enforce/fitness/test_api.py::test_migrations`
 
-### API-013 · Compatibility is not inherited from parser tolerance  [BINDING] [fitness:test_schema_versioned]
+### API-013 · Compatibility is not inherited from parser tolerance  [ADVISORY]
 Compatibility MUST rest on a stated policy, never on a parser happening to accept an
 older shape.
 - **Why** Accidental tolerance disappears in a dependency upgrade nobody connected to it.
-- **Check** `pytest enforce/fitness/test_api.py::test_schema_versioned`
+- **No mechanism** Compatibility resting on a stated policy is a claim about a
+  document. `test_schema_versioned` claimed this rule while asserting a version
+  constant exists, which is [API-010] and not this. A policy has nowhere to live yet;
+  naming a location for it, as `overrides/allocation.toml` is named for the tier
+  mapping, would give a check something to read and close this.
 
 ### API-014 · Prefer additive change  [ADVISORY]
 Extend the surface with new fields and new operations rather than repurposing existing
@@ -145,9 +157,14 @@ ones.
 - **Why** A field that quietly changes meaning breaks consumers that still typecheck,
   which is the failure mode with the worst diagnostic signal of all.
 
-### API-015 · The delivered artifact is what gets tested  [BINDING] [fitness:test_delivered_boundary]
+### API-015 · The delivered artifact is what gets tested  [ADVISORY]
 End-to-end tests MUST exercise the installed entry point as a separate process, asserting
 its structured output and exit status.
 - **Why** Testing the imported function verifies the library; the contract that ships is
   the process boundary, and only running it tests packaging, arguments and exit paths.
-- **Check** `pytest enforce/fitness/test_api.py::test_delivered_boundary`
+- **No mechanism** `test_delivered_boundary` claimed this rule and asserts `release.py`
+  builds through the installer -- a different proposition. The rule is about end-to-end
+  tests running the installed entry point as a separate process. The reference's
+  integration layer starts no subprocess, so there is nothing to check against. A check
+  asserting that layer invokes the entry point and asserts on its exit status and its
+  parsed output would close this, once the reference carries one.
