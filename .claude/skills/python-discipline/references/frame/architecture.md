@@ -2,7 +2,7 @@
 id: frame/architecture
 kind: frame
 title: Architectural Vocabulary and Paradigms
-tokens: 2188
+tokens: 2197
 load_when:
   - "which paradigm"
   - "tradeoff"
@@ -12,6 +12,8 @@ load_when:
   - "cohesion"
   - "seam"
   - "design options"
+  - "inheritance"
+  - "composition"
 decay: none
 ---
 

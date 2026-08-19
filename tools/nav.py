@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 
 ## Path segments that name an architectural layer. A path containing one is
 ## governed by whatever rules apply to that layer.
-LAYERS: Final = ("domain", "app", "adapters", "shell")
+LAYERS: Final = ("domain", "app", "adapters", "shell", "ports")
 ## Reading budget assumed when the caller names none -- about what an agent can
 ## absorb alongside the task that sent it here.
 DEFAULT_BUDGET: Final = 6_000
@@ -346,27 +346,83 @@ def _seed_by_mechanism(graph: Graph, lowered: str, found: dict[str, Hit]) -> Non
                     found.setdefault(owner.id, _hit(owner, 1, f"checked by {node.label}"))
 
 
+## Words too common to carry a topic. Dropped from both sides before a keyword is
+## compared, so `a`, `this` and `the` cannot make up a keyword's overlap.
+_STOPWORDS: Final[frozenset[str]] = frozenset({
+    "a", "an", "the", "this", "that", "these", "it", "its", "is", "are", "was",
+    "be", "to", "for", "of", "in", "on", "at", "and", "or", "my", "i", "we",
+    "do", "does", "did", "how", "should", "would", "can", "with", "some", "any",
+})
+
+
+## How short a stem may get before a suffix is left alone. `is`, `as` and `us`
+## are not inflections of `i`, `a` and `u`, and stripping them would collapse
+## unrelated words onto each other.
+_MIN_STEM: Final = 3
+
+## The suffix that needs its own rule, because dropping it leaves a stem the
+## singular form does not share: `dependencies` -> `dependenc` never meets
+## `dependency`.
+_PLURAL_Y: Final = "ies"
+
+
+def _stem(word: str) -> str:
+    """A word reduced to a form that survives ordinary inflection.
+
+    Deliberately crude, and deliberately small. The alternative was exact
+    matching, which is what the router did: `load_when` carried "add a
+    dependency" and the query "adding a new dependency" reached NOTHING, sending
+    the agent to read speculatively -- the one behaviour the layered design
+    exists to prevent. A real stemmer would be a dependency in the core of a tool
+    that must run anywhere; four suffixes recover most of the loss.
+
+    @param word one lowercased word
+    @return the stem, or the word unchanged when no suffix applies
+    """
+    if word.endswith(_PLURAL_Y) and len(word) - len(_PLURAL_Y) >= _MIN_STEM:
+        return word[: -len(_PLURAL_Y)] + "y"
+    for suffix in ("ing", "ed", "es", "s"):
+        if word.endswith(suffix) and len(word) - len(suffix) >= _MIN_STEM:
+            return word[: -len(suffix)]
+    return word
+
+
+def _content(text: str) -> set[str]:
+    """The stemmed, topic-bearing words of a phrase.
+
+    @param text a query or a router keyword
+    @return its stems, with stopwords removed
+    """
+    return {_stem(w) for w in _WORD.findall(text.lower())} - _STOPWORDS
+
+
 def seeds_for_task(graph: Graph, text: str) -> list[Hit]:
     """Modules whose router keywords the task text mentions.
 
-    A space in the keyword is what decides how it matches. Without one it is
-    satisfied when every word it contains appears anywhere in the task, so order
-    and punctuation are irrelevant; with one it must appear verbatim, which keeps
-    a common pair of words from dragging in a module the task never meant.
+    A single-word keyword must appear. A multi-word keyword is satisfied by half
+    its topic-bearing words, rounded up -- because the phrasings a keyword is
+    written in and the phrasings a person uses are rarely the same, and demanding
+    the whole phrase verbatim produced empty answers for ordinary questions.
+
+    Half is a judgement, and the reject cases in `enforce/fixtures/routing.toml`
+    are what hold it: a router that answers "renaming a variable" with five law
+    modules has been loosened past usefulness, and KERNEL's negative-routing
+    paragraph says that query should load nothing at all.
 
     @param graph the discipline graph
     @param text the task description, in the author's own words
     @return the modules whose entry keywords it mentions, ordered by id
     """
-    words = set(_WORD.findall(text.lower()))
+    asked = _content(text)
     found: dict[str, Hit] = {}
     for node in graph.of_type(NodeType.TRIGGER):
         if node.attr("kind") != "keyword":
             continue
-        keyword = node.label.lower()
-        parts = set(_WORD.findall(keyword))
-        matched = keyword in text.lower() if " " in keyword else parts <= words
-        if not (matched and parts):
+        parts = _content(node.label)
+        if not parts:
+            continue
+        needed = 1 if len(parts) == 1 else -(-len(parts) // 2)
+        if len(parts & asked) < needed:
             continue
         for edge in graph.in_edges(node.id, [EdgeType.TRIGGERED_BY]):
             owner = graph.nodes.get(edge.src)
@@ -1127,19 +1183,20 @@ def _render_diagnose(payload: dict[str, object]) -> list[str]:
 
     lines.append("")
     for rule in rules:  # type: ignore[union-attr]
-        lines.append(f"{rule['id']} {rule['force']}  {rule['title']}")
-        lines.append(f"    {rule['statement']}")
+        lines += [
+            f"{rule['id']} {rule['force']}  {rule['title']}",
+            f"    {rule['statement']}",
+        ]
         if rule.get("why"):
             lines.append(f"    why    {rule['why']}")
         if rule.get("check"):
             lines.append(f"    check  {rule['check']}")
-        lines.append(f"    open   {rule['open']}  ({rule['module']})")
-        lines.append("")
-    lines.append(f"COST  {payload['tokens']} tok"
-                 f"  -- {len(rules)} rule(s), read in full")
+        lines += [f"    open   {rule['open']}  ({rule['module']})", ""]
+    lines.append(
+        f"COST  {payload['tokens']} tok -- {len(rules)} rule(s), read in full")
     if payload.get("unresolved"):
-        lines.append(f"UNRESOLVED  {', '.join(payload['unresolved'])}"  # type: ignore[arg-type]
-                     f" -- named by the envelope and not in the corpus")
+        named = ", ".join(payload["unresolved"])  # type: ignore[arg-type]
+        lines.append(f"UNRESOLVED  {named} -- named by the envelope, absent here")
     return lines
 
 

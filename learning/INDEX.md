@@ -9,7 +9,7 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 | Status | Count |
 |---|---|
 | active | 1 |
-| candidate | 90 |
+| candidate | 92 |
 | superseded | 1 |
 
 ## active
@@ -791,6 +791,24 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `rule:ARCH-004`
 - **About** ARCH-004
 - **Verify** `python tools/register_deps.py --check`
+
+### L-0093 · The router matched multi-word load_when keywords VERBATIM, so 'adding a new dependency' reached nothing where 'add a dependency' was the trigger. Eight of fifteen realistic task queries routed to an empty answer, which sends the agent to read speculatively -- the one behaviour the layered design exists to prevent.
+
+- **Do** Match a keyword by half its topic-bearing stems rather than verbatim, and hold the looseness with reject cases: a router answering 'renaming a variable' with five law modules is as useless as one answering nothing.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `command:nav`
+- **About** FLOW-011
+- **Verify** `python -m pytest -q enforce/fitness/test_routing.py`
+
+### L-0094 · ARCH-007 -- every port is a Protocol with a published contract -- was declared in edges.yaml as applying to the adapters layer only, so 'nav applies src/pkg/ports/clock.py', the most obvious question anyone would ask about a port, returned nothing about ports.
+
+- **Do** Scope a rule to the layer the FILE it governs lives in, not the layer that implements it. ports is now a declared layer carrying ARCH-007, ARCH-010 and TYPE-009.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `rule:ARCH-007`
+- **About** ARCH-007
+- **Verify** `python -m pytest -q enforce/fitness/test_routing.py`
 
 ## superseded
 

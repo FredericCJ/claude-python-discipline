@@ -62,7 +62,7 @@ _CONTRACT_NAME = re.compile(r'^name\s*=\s*"(?P<name>[^"]+)"', re.MULTILINE)
 _CHECK_BASES: Final = frozenset({"Check", "ModuleCheck", "TextCheck"})
 
 ## The architectural layers a rule may be scoped to, core first.
-LAYERS: Final = ("domain", "app", "adapters", "shell")
+LAYERS: Final = ("domain", "app", "adapters", "shell", "ports")
 
 
 def _rel(path: Path, root: Path) -> str:

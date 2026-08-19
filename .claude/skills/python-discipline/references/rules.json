@@ -144,7 +144,7 @@
       "id": "frame/architecture",
       "kind": "frame",
       "title": "Architectural Vocabulary and Paradigms",
-      "tokens": 2188,
+      "tokens": 2197,
       "load_when": [
         "which paradigm",
         "tradeoff",
@@ -153,7 +153,9 @@
         "coupling",
         "cohesion",
         "seam",
-        "design options"
+        "design options",
+        "inheritance",
+        "composition"
       ],
       "requires": [],
       "grounds_on": [],

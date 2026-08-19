@@ -16,6 +16,14 @@ version: 1
 # equally is left undeclared, because an edge that is always true carries no
 # information and would make `nav applies` useless.
 applies_to:
+  ports:
+    # A port lives in `ports/`, and these are the rules a reader opening one
+    # needs. ARCH-007 was declared against `adapters` alone, so `nav applies
+    # src/pkg/ports/clock.py` -- the most obvious query anyone would make about a
+    # port -- returned nothing about ports at all. Found by the routing oracle.
+    - ARCH-007   # every port is a Protocol with a published contract
+    - ARCH-010   # a port earns its place from a stated justification
+    - TYPE-009   # ports are structural protocols
   domain:
     - ARCH-002   # imports nothing that can perform I/O
     - ARCH-006   # total or returns a typed result

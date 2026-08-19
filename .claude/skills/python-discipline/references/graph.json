@@ -428,6 +428,11 @@
    "label": "domain"
   },
   {
+   "id": "layer:ports",
+   "type": "layer",
+   "label": "ports"
+  },
+  {
    "id": "layer:shell",
    "type": "layer",
    "label": "shell"
@@ -1278,7 +1283,7 @@
    "type": "module",
    "label": "Architectural Vocabulary and Paradigms",
    "path": "discipline/frame/architecture.md",
-   "tokens": 2188,
+   "tokens": 2197,
    "attrs": {
     "decay": "none",
     "kind": "frame"
@@ -4184,6 +4189,14 @@
    }
   },
   {
+   "id": "trigger:kw:composition",
+   "type": "trigger",
+   "label": "composition",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:concurrency",
    "type": "trigger",
    "label": "concurrency",
@@ -4691,6 +4704,14 @@
    "id": "trigger:kw:import error",
    "type": "trigger",
    "label": "import error",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:inheritance",
+   "type": "trigger",
+   "label": "inheritance",
    "attrs": {
     "kind": "keyword"
    }
@@ -5561,6 +5582,12 @@
   },
   {
    "type": "applies_to",
+   "src": "ARCH-007",
+   "dst": "layer:ports",
+   "origin": "declared"
+  },
+  {
+   "type": "applies_to",
    "src": "ARCH-008",
    "dst": "layer:adapters",
    "origin": "declared"
@@ -5575,6 +5602,12 @@
    "type": "applies_to",
    "src": "ARCH-010",
    "dst": "layer:adapters",
+   "origin": "declared"
+  },
+  {
+   "type": "applies_to",
+   "src": "ARCH-010",
+   "dst": "layer:ports",
    "origin": "declared"
   },
   {
@@ -5833,6 +5866,12 @@
    "type": "applies_to",
    "src": "TYPE-008",
    "dst": "layer:domain",
+   "origin": "declared"
+  },
+  {
+   "type": "applies_to",
+   "src": "TYPE-009",
+   "dst": "layer:ports",
    "origin": "declared"
   },
   {
@@ -11636,6 +11675,12 @@
   {
    "type": "triggered_by",
    "src": "frame/architecture",
+   "dst": "trigger:kw:composition",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "frame/architecture",
    "dst": "trigger:kw:coupling",
    "origin": "derived"
   },
@@ -11643,6 +11688,12 @@
    "type": "triggered_by",
    "src": "frame/architecture",
    "dst": "trigger:kw:design options",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "frame/architecture",
+   "dst": "trigger:kw:inheritance",
    "origin": "derived"
   },
   {

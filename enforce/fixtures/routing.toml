@@ -1,0 +1,130 @@
+#  What an agent asks, and where it should land.
+#
+#  The router is the highest-traffic and least-verified path in the corpus. If it
+#  routes wrong the agent pays to read the wrong module and then reasons from the
+#  wrong law; if it routes to NOTHING the agent reads speculatively, which is the
+#  single behaviour the whole layered design exists to prevent.
+#
+#  `tools/bench.py` already holds the error channel to account -- twelve real
+#  failures against the rules that govern them. This file covers the two channels
+#  it does not: a task described in prose, and a file path.
+#
+#  THE QUERIES ARE DELIBERATELY NOT THE FRONT-MATTER'S OWN WORDS. Every module
+#  carries `load_when` phrases, and it is trivial to write a test that feeds those
+#  phrases back and passes. That measures nothing. These are phrased the way
+#  somebody with the problem would phrase it, which is the only phrasing that
+#  matters, and several of them failed when this file was written.
+#
+#  `reject` is as important as `expect`. A router that returns everything is as
+#  useless as one that returns nothing, and cheaper to accidentally build: the way
+#  to make every `expect` pass is to loosen matching until each query drags in the
+#  whole corpus. The rejections are what makes that visible.
+
+# ============================================================== task -> module
+
+[[task]]
+query = "adding a new dependency to the project"
+expect = ["law/DEP"]
+why = "The canonical case. `load_when` carries 'add a dependency'; nobody asks that way."
+
+[[task]]
+query = "where should this new code live"
+expect = ["law/ARCH"]
+why = "ARCH carries 'where does this code go' -- the same question, none of the same words."
+
+[[task]]
+query = "how do I test an adapter against its port"
+expect = ["law/TEST", "law/ARCH"]
+why = "Two modules is right here: the contract suite is ARCH-009 and the layers are TEST."
+
+[[task]]
+query = "I need to delete some files safely"
+expect = ["law/EFCT"]
+reject = ["ops/ALLOC"]
+why = "Destructive work plans before it applies. Dispatch has nothing to do with it."
+
+[[task]]
+query = "logging an error so it can be traced later"
+expect = ["law/DIAG"]
+why = "The diagnostic channel, not the error taxonomy -- this is about the record."
+
+[[task]]
+query = "choosing between inheritance and composition here"
+expect = ["frame/architecture"]
+reject = ["law/DEP"]
+why = "A paradigm tradeoff is grounding, not law. frame/ prescribes nothing and is right."
+
+[[task]]
+query = "the type checker is complaining about a protocol"
+expect = ["law/TYPE"]
+why = "Ports are structural protocols, TYPE-009."
+
+[[task]]
+query = "writing the docstring for this function"
+expect = ["law/DOC"]
+why = "DOC-001 and DOC-003 are universal; the form depends on the declared engine."
+
+[[task]]
+query = "what counts as finished for this change"
+expect = ["law/FLOW"]
+why = "Definition of done. FLOW carries it; the phrasing here is not FLOW's."
+
+[[task]]
+query = "should I hand this off to a cheaper agent"
+expect = ["ops/ALLOC"]
+why = "Dispatch, tier and effort. The cheapest-able question in its natural form."
+
+[[task]]
+query = "designing the public command line interface"
+expect = ["law/API"]
+why = "Structured output, exit status and versioning are all API's."
+
+[[task]]
+query = "recording what I learned while fixing this"
+expect = ["law/LEARN"]
+why = "LEARN carries 'record what i learned'; this is the same act described afterwards."
+
+[[task]]
+query = "a fix for a flaky test that only fails sometimes"
+expect = ["law/TEST"]
+why = "TEST-018 -- a flaky failure is a defect in the harness, not a property of the world."
+
+[[task]]
+query = "renaming a variable"
+reject = ["law/ARCH", "law/TEST", "law/ERR", "law/DIAG", "law/EFCT"]
+why = """The negative-routing case KERNEL states outright: a rename that changes no
+contract should load nothing further. A router that answers this one has learned to
+answer everything."""
+
+[[task]]
+query = "fixing a typo in a comment"
+reject = ["law/ARCH", "law/TEST", "law/ERR", "law/DIAG"]
+why = "The same. Loading a module you do not need costs the budget it was written to protect."
+
+# ================================================================ file -> rules
+#
+# The path need not exist; only its shape decides the answer. What is asserted is
+# that the layer in the path pulls the rules scoped to that layer.
+
+[[file]]
+path = "src/pkg/domain/plan.py"
+expect = ["ARCH-002"]
+why = "A domain module is governed by domain purity before anything else."
+
+[[file]]
+path = "src/pkg/adapters/store.py"
+expect = ["ARCH-003"]
+reject = ["ARCH-002"]
+why = """An adapter may import what a domain may not, so pulling ARCH-002 here would
+be telling an adapter it cannot do its job -- the shape of over-reporting that made
+five ARCH-002 findings wrong against real code."""
+
+[[file]]
+path = "tests/unit/test_plan.py"
+expect = ["TEST-004"]
+why = "A test module declares its oracle, whatever else it does."
+
+[[file]]
+path = "src/pkg/ports/clock.py"
+expect = ["ARCH-007"]
+why = "Every port is a Protocol with a published contract."
