@@ -9,7 +9,7 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 | Status | Count |
 |---|---|
 | active | 1 |
-| candidate | 86 |
+| candidate | 88 |
 | superseded | 1 |
 
 ## active
@@ -755,6 +755,24 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `glob:environment.yml`
 - **About** DEP-005
 - **Verify** `python -m pytest -q tools/test_check_env.py`
+
+### L-0089 · The graph indexes 17 error triggers, all of them ruff codes and import-linter contract names. It indexes no mypy error code, no Python exception type and no pytest failure shape -- so nav.py context returns a completely empty plan for a traceback, which is the output an agent most often meets.
+
+- **Do** Index the error vocabulary an agent actually sees, not only the vocabulary this repository's own gate emits. The Prime Directive says 'from the program's own output'; a traceback IS the program's own output.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `command:nav`
+- **About** DIAG-001
+- **Verify** `python tools/bench.py`
+
+### L-0090 · Recovery cost can be measured deterministically without an agent in the loop: nav.py --json reports tokens_planned and per-seed hops, so the reading plan itself is the measurable quantity and it is identical on every run.
+
+- **Do** Measure the artefact the corpus controls -- the reading plan -- rather than simulating an agent. It is repeatable, free, and it is the thing a change to the corpus actually moves.
+- **Kind** procedure · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `command:bench`
+- **About** FLOW-011
+- **Verify** `python tools/bench.py --compare`
 
 ## superseded
 

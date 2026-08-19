@@ -1,0 +1,130 @@
+{
+  "results": [
+    {
+      "defect": "D-01",
+      "summary": "a probe with exists() before unlink races, and loses",
+      "names_a_rule": false,
+      "found": false,
+      "hops": null,
+      "tokens": 0,
+      "tokens_if_all": 0
+    },
+    {
+      "defect": "D-02",
+      "summary": "a domain modelled in pydantic, so the framework is the domain",
+      "names_a_rule": false,
+      "found": true,
+      "hops": 0,
+      "tokens": 4730,
+      "tokens_if_all": 7702
+    },
+    {
+      "defect": "D-03",
+      "summary": "the domain reaches for a clock, so the same input gives two answers",
+      "names_a_rule": false,
+      "found": false,
+      "hops": null,
+      "tokens": 0,
+      "tokens_if_all": 0
+    },
+    {
+      "defect": "D-04",
+      "summary": "an unannotated function in a strictly-typed package",
+      "names_a_rule": false,
+      "found": false,
+      "hops": null,
+      "tokens": 0,
+      "tokens_if_all": 0
+    },
+    {
+      "defect": "D-05",
+      "summary": "a bare except that swallows the failure entirely",
+      "names_a_rule": false,
+      "found": true,
+      "hops": 0,
+      "tokens": 4949,
+      "tokens_if_all": 10871
+    },
+    {
+      "defect": "D-06",
+      "summary": "an f-string built into a log call, so the message cannot be grouped",
+      "names_a_rule": false,
+      "found": true,
+      "hops": 0,
+      "tokens": 5363,
+      "tokens_if_all": 8421
+    },
+    {
+      "defect": "D-07",
+      "summary": "a boundary parsed with assert, which vanishes under python -O",
+      "names_a_rule": false,
+      "found": true,
+      "hops": 0,
+      "tokens": 4949,
+      "tokens_if_all": 10871
+    },
+    {
+      "defect": "D-08",
+      "summary": "a domain function whose signature admits Any",
+      "names_a_rule": false,
+      "found": false,
+      "hops": null,
+      "tokens": 0,
+      "tokens_if_all": 0
+    },
+    {
+      "defect": "D-09",
+      "summary": "a custom exception with no code, reported by this repository's check",
+      "names_a_rule": true,
+      "found": true,
+      "hops": 0,
+      "tokens": 5363,
+      "tokens_if_all": 10514
+    },
+    {
+      "defect": "D-10",
+      "summary": "the domain importing something that can perform I/O",
+      "names_a_rule": true,
+      "found": true,
+      "hops": 0,
+      "tokens": 5691,
+      "tokens_if_all": 8190
+    },
+    {
+      "defect": "D-11",
+      "summary": "an unjustified suppression",
+      "names_a_rule": true,
+      "found": true,
+      "hops": 0,
+      "tokens": 3417,
+      "tokens_if_all": 3417
+    },
+    {
+      "defect": "D-12",
+      "summary": "a dataclass in the domain that is neither frozen nor slotted",
+      "names_a_rule": true,
+      "found": true,
+      "hops": 0,
+      "tokens": 5039,
+      "tokens_if_all": 5039
+    }
+  ],
+  "summary": {
+    "derived": {
+      "defects": 8,
+      "found": 4,
+      "hit_rate": 0.5,
+      "median_tokens": 4949.0,
+      "median_hops": 0.0,
+      "named_outright": 4
+    },
+    "control": {
+      "defects": 4,
+      "found": 4,
+      "hit_rate": 1.0,
+      "median_tokens": 5201.0,
+      "median_hops": 0.0,
+      "named_outright": 4
+    }
+  }
+}
