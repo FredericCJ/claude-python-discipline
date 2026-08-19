@@ -9,7 +9,7 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 | Status | Count |
 |---|---|
 | active | 1 |
-| candidate | 82 |
+| candidate | 86 |
 | superseded | 1 |
 
 ## active
@@ -719,6 +719,42 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `rule:ARCH-012`
 - **About** ARCH-012
 - **Verify** `python -m pytest -q enforce/checks/test_phase2_checks.py`
+
+### L-0085 · tools/gate.py was documented as the way to run the gate and did nothing: the module held the GATE tuple and no __main__ block, so 'python tools/gate.py' imported, printed nothing and exited 0 -- indistinguishable from nine passing steps.
+
+- **Do** Give any module documented as runnable an entry point, and test that the runner can fail. This is the same defect the file's own comments describe in lint-imports and mypy, in the one place that exists to prevent it.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `command:gate`
+- **About** FLOW-009
+- **Verify** `python -m pytest -q tools/test_gate_runner.py`
+
+### L-0086 · A conda-installed native binary is on PATH only while the environment is ACTIVATED; every gate step here invokes sys.executable directly, so doxygen was installed correctly and test_doxygen_version_matches_recorded still skipped, verifying nothing.
+
+- **Do** Locate a native tool beside the interpreter -- Library/bin on Windows, bin on POSIX -- before falling back to PATH. Same lesson as the ruff finding that let 766 lint findings hide behind a green run.
+- **Kind** constraint · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `command:doxygen`
+- **About** DEP-006
+- **Verify** `python tools/check_env.py`
+
+### L-0087 · CLAUDE.md's post-edit rebuild sequence omitted build_skill_mirror.py, so a maintainer following it exactly would pass all four documented commands and then fail the gate's fifth step on a stale mirror.
+
+- **Do** Run the commands a document states, not just read them. Every numeric claim in README was also stale by a full phase -- rules, mechanisms, lint count, covered files, learnings.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `glob:CLAUDE.md`
+- **About** DOC-013
+- **Verify** `python tools/gate.py`
+
+### L-0088 · A conda pin written with a single '=' matched neither check_env's pip pattern nor its loose-range pattern, so adding one would have declared a dependency the lock silently did not cover.
+
+- **Do** When a lock format gains a new kind of entry, make the unrecognised case an ERROR rather than a no-match. check_env now reports any conda pin it has no verifier for.
+- **Kind** procedure · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `glob:environment.yml`
+- **About** DEP-005
+- **Verify** `python -m pytest -q tools/test_check_env.py`
 
 ## superseded
 

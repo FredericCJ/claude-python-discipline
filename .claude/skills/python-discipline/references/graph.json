@@ -1510,7 +1510,7 @@
    "type": "module",
    "label": "Agent Team Mechanics",
    "path": "discipline/ops/teams.md",
-   "tokens": 2245,
+   "tokens": 2584,
    "attrs": {
     "decay": "months",
     "kind": "ops",
@@ -3094,7 +3094,7 @@
    "id": "TEAMS-001",
    "type": "rule",
    "label": "A dispatch states the contract, not the intention",
-   "path": "discipline/ops/teams.md:69",
+   "path": "discipline/ops/teams.md:94",
    "tokens": 35,
    "attrs": {
     "force": "BINDING",
@@ -3105,7 +3105,7 @@
    "id": "TEAMS-002",
    "type": "rule",
    "label": "A restriction is never lifted by an instruction",
-   "path": "discipline/ops/teams.md:77",
+   "path": "discipline/ops/teams.md:102",
    "tokens": 47,
    "attrs": {
     "force": "BINDING",
@@ -3116,7 +3116,7 @@
    "id": "TEAMS-003",
    "type": "rule",
    "label": "Verification runs as a gate, not as a request",
-   "path": "discipline/ops/teams.md:85",
+   "path": "discipline/ops/teams.md:110",
    "tokens": 40,
    "attrs": {
     "force": "BINDING",
@@ -3127,7 +3127,7 @@
    "id": "TEAMS-004",
    "type": "rule",
    "label": "Documentation is written in one stage, verified in another",
-   "path": "discipline/ops/teams.md:111",
+   "path": "discipline/ops/teams.md:136",
    "tokens": 47,
    "attrs": {
     "force": "ADVISORY",
@@ -3138,7 +3138,7 @@
    "id": "TEAMS-005",
    "type": "rule",
    "label": "A verifier refutes claims; it does not improve prose",
-   "path": "discipline/ops/teams.md:120",
+   "path": "discipline/ops/teams.md:145",
    "tokens": 44,
    "attrs": {
     "force": "ADVISORY",
@@ -3149,7 +3149,7 @@
    "id": "TEAMS-006",
    "type": "rule",
    "label": "Presence and truth need separate mechanisms",
-   "path": "discipline/ops/teams.md:129",
+   "path": "discipline/ops/teams.md:154",
    "tokens": 49,
    "attrs": {
     "force": "ADVISORY",

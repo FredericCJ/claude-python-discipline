@@ -41,7 +41,7 @@ decay: none
 | [law/TEST](law/TEST.md) | law | 2777 | 19 | write a test, pytest, fixture, hypothesis, property test, mutation |
 | [law/TYPE](law/TYPE.md) | law | 2067 | 15 | type hint, mypy, pyright, Protocol, generic, dataclass |
 | [ops/ALLOC](ops/ALLOC.md) | ops | 2050 | 10 | dispatch a subagent, which model, how much effort, delegate, escalate, sub-agent |
-| [ops/teams](ops/teams.md) | ops | 2245 | 6 | agent team, teammate, subagent definition, spawn an agent, task list, slash command |
+| [ops/teams](ops/teams.md) | ops | 2584 | 6 | agent team, teammate, subagent definition, spawn an agent, task list, slash command |
 
 ## Rules
 

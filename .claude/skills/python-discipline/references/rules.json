@@ -599,7 +599,7 @@
       "id": "ops/teams",
       "kind": "ops",
       "title": "Agent Team Mechanics",
-      "tokens": 2245,
+      "tokens": 2584,
       "load_when": [
         "agent team",
         "teammate",
@@ -3459,7 +3459,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/ops/teams.md",
-      "line": 69
+      "line": 94
     },
     {
       "id": "TEAMS-002",
@@ -3480,7 +3480,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/ops/teams.md",
-      "line": 77
+      "line": 102
     },
     {
       "id": "TEAMS-003",
@@ -3501,7 +3501,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/ops/teams.md",
-      "line": 85
+      "line": 110
     },
     {
       "id": "TEAMS-004",
@@ -3521,7 +3521,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/ops/teams.md",
-      "line": 111
+      "line": 136
     },
     {
       "id": "TEAMS-005",
@@ -3541,7 +3541,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/ops/teams.md",
-      "line": 120
+      "line": 145
     },
     {
       "id": "TEAMS-006",
@@ -3561,7 +3561,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/ops/teams.md",
-      "line": 129
+      "line": 154
     },
     {
       "id": "TEST-001",
