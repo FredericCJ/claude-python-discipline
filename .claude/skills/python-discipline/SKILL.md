@@ -1,6 +1,6 @@
 ---
 name: python-discipline
-description: Load the Python engineering discipline — hexagonal architecture with a functional core, strict typing, deep error traceability, and systematic testing, all machine-enforced. Use when writing or reviewing Python, deciding where code goes, designing error handling or logging, writing tests, adding a dependency, or asking "what are the rules here". Routes to one of 23 modules rather than loading everything.
+description: Load the Python engineering discipline — hexagonal architecture with a functional core, strict typing, deep error traceability, and systematic testing, all machine-enforced. Use when writing or reviewing Python, deciding where code goes, designing error handling or logging, writing tests, adding a dependency, or asking "what are the rules here". Routes to one of 20 modules rather than loading everything.
 ---
 
 # Python Engineering Discipline

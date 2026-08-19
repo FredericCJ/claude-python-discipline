@@ -84,7 +84,7 @@ in.
 ```bash
 python tools/vendor.py check   ../some-repo   # local edits to read-only files
 python tools/harvest.py        ../some-repo   # discipline-level findings, upstream
-python tools/release.py                       # -> dist/agent-discipline-v1.0.0.zip
+python tools/release.py                       # -> dist/agent-discipline-v1.1.0.zip
 ```
 
 `release.py` builds the redistributable archive by running `vendor.py install` against a
@@ -166,22 +166,24 @@ Stated here rather than discovered later, because the axiom cuts both ways.
   did, and the difference here is that the gap is counted.
 - **Provenance is at document granularity.** All 324 source sections are accounted for, but
   that proves no document was dropped, not that every individual claim survived.
-- **This repository's own Python has 273 residual lint findings** under `select = ["ALL"]`,
-  down from 514 before the documentation migration. What remains is mostly `D401` imperative
-  mood, `TC003` type-checking imports and unused imports — style debt in the tooling, not
-  contract violations. Two structural conflicts that were in this list have been fixed
-  rather than described: ruff's `E266` forbade the `##` form `DOC-002` requires, and
-  `enforce/pyproject.toml` — the template consumers copy — was being applied by ruff and
-  pytest as the live config for everything under `enforce/`, so the root config's path
-  scoping never reached it. The template now lives at `enforce/templates/pyproject.toml`,
-  a directory holding no Python and therefore an ancestor of nothing either tool
-  processes.
-- **The documentation gate does not prove documentation is *true*.** All 31 files pass
-  presence, style, behaviour-preservation and Doxygen, but a reviewer pass over the same
-  files found 90 claims that were confidently false about the code they described. Presence
-  and truth are separate properties; only the first is mechanized. `DOC-013` names the
-  second and leaves it to review, which is honest but not sufficient.
-- **The learning database has 35 learnings and 0 reported outcomes**, so retrieval precision
+- **This repository's own Python carries 131 residual lint findings**, ratcheted. Under
+  `select = ["ALL"]` and ruff 0.16.3 the count was 275 at the start of v1.1.0; the eight
+  `C901` findings — self-violations of `ARCH-016`, which this corpus enforces through that
+  exact ruff code — were fixed by decomposition, every safe autofix was applied, and
+  type-only imports were moved. `D401` was resolved the other way: it demands an imperative
+  where `DOC-009` asks for the noun phrase that states an accessor's contract, so it is
+  ignored in the template with that conflict written down. What remains is style debt,
+  held by `tools/lint_baseline.json` — the exact `(file, code)` pairs, so raising one
+  integer cannot switch the gate off, and **no ruff code that decides a binding rule may
+  enter it**, checked before the baseline is consulted at all.
+- **The documentation gate does not prove documentation is *true*.** All 38 covered files
+  pass presence, style and behaviour-preservation, but a reviewer pass over an earlier
+  version of the same files found 90 claims that were confidently false about the code they
+  described. Presence and truth are separate properties; only the first is mechanized.
+  `DOC-013` names the second and leaves it to review, which is honest but not sufficient.
+  v1.1.0 verified the claims in the shipping documents and the executable claims in the
+  covered files; the wider prose re-audit has not been repeated.
+- **The learning database has 55 learnings and 0 reported outcomes**, so retrieval precision
   is `n/a` and no learning has been promoted. `learn.py calibrate` prints the totals but
   gives no guidance in this state — it has a bootstrap protocol for an *empty* database and
   nothing for a populated one that has never been queried. The first calibration run found

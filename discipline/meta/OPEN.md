@@ -2,7 +2,7 @@
 id: meta/OPEN
 kind: meta
 title: Open Decisions
-tokens: 1645
+tokens: 2138
 load_when: ["open question", "undecided", "which tool", "pin a version"]
 decay: none
 ---
@@ -100,6 +100,36 @@ than a licence to omit.
 *Cost, stated plainly:* this repository's own code does not yet comply — 441 findings at
 the time of the decision. The mechanisms are in place so the gap cannot grow, and the
 migration is real work that has not been done.
+
+### OPEN-008 · The Doxygen form is declared, not assumed
+
+**This refines OPEN-007; it does not reverse it.** That decision made a documentation
+comment on every element universal, and answered the ceremony objection with rules against
+filler rather than an exemption. All of that stands.
+
+What it did not separate is *that* an element is documented from *how the comment is
+punctuated*. `DOC-002`'s `##` block and `DOC-007`'s `@param` are Doxygen's own syntax, and
+they were required of every adopter.
+
+The cost was measured rather than argued. Run over four independently written hexagonal
+Python packages — about 6,700 lines, documented throughout in Sphinx style — the check
+reported **1,082 findings, of which 1,064 were the form**: 702 `@param` tags absent where
+`:param:` was present, 362 `##` blocks absent where the values were described in prose. The
+18 real findings were invisible underneath. A check at that ratio is not read; it is
+switched off, and `DOC-001` goes with it.
+
+*Resolved:* `DOC-001` and `DOC-003` — every element carries a documentation comment — stay
+universal. `DOC-002` and `DOC-007` apply under a declared engine that reads those forms.
+`DOC-014` makes the declaration itself binding, because the failure being avoided is not
+strictness but *silence*: an undeclared project must not look the same as a conformant one.
+
+*Consequence:* this repository declares `doc_engine = "doxygen"` in its own
+`pyproject.toml`. It was the first thing the change broke — without it, this corpus's
+documentation gate quietly stopped deciding two of its four rules.
+
+*Same shape, same fix:* `ARCH-001`'s four layer names had the identical defect. A project
+naming its layers otherwise had every layer-scoped check skip its files while reporting
+clean. The layer mapping lives in the same declaration.
 
 ---
 

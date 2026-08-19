@@ -2,7 +2,7 @@
 id: meta/SCHEMA
 kind: meta
 title: Document Format Specification
-tokens: 2648
+tokens: 2741
 load_when: ["authoring a rule", "new module", "front-matter", "rule id", "validate"]
 decay: none
 ---
@@ -60,8 +60,12 @@ python: ">=3.11"               # optional. PEP 440 specifier.
 ---
 ```
 
-**`tokens:`** is the reason an agent can budget before reading. It is measured with
-`tiktoken` by `build_index.py`, never hand-written.
+**`tokens:`** is the reason an agent can budget before reading. It is written by
+`build_index.py`, never by hand, and measured by one character ratio defined in
+`tools/discipline_core.py` — deliberately arithmetic rather than a real tokenizer, so the
+same corpus yields the same number on every machine with nothing to install. It is a
+budgeting hint, accurate to a few percent against a byte-pair encoder; it is not a
+contract, and no rule is decided by its exact value.
 
 **`load_when:`** is the router's keyword index. Terms should be what an agent would
 actually have in hand at the moment it needs the module — error messages, API names,

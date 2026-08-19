@@ -2,7 +2,7 @@
 id: law/ARCH
 kind: law
 title: Architecture and Coupling
-tokens: 2467
+tokens: 2719
 load_when:
   - "new module"
   - "package layout"
@@ -43,10 +43,18 @@ domain       pure logic; total or Result-returning
 
 ### ARCH-001 · Dependencies point inward only  [BINDING] [auto:import-linter]
 Each layer MUST import only from layers beneath it: `shell` to `adapters` to `app` to
-`domain`. `domain` imports nothing from the others.
+`domain`. `domain` imports nothing from the others. A project MAY map its own directory
+names onto these four in `[tool.agent-discipline]`; it MUST NOT add a fifth.
 - **Why** An inward-only graph is what lets a stack trace's deepest frame name the layer
-  that owns the fault.
-- **Check** `lint-imports` contract `layers`
+  that owns the fault. The names are canonical because the *order* is what carries the
+  meaning; a layer outside that order has no defined direction to point in.
+- **Check** `lint-imports --config enforce/importlinter.toml` contract `ARCH-001 layers point inward` · `python tools/import_gate.py`
+- **See** [DOC-014]
+
+The four names are how every layer-scoped mechanism finds its subject. A project laying its
+code out as `services/` and `composition/` without declaring the mapping has those files
+resolve to no layer at all, and every such check skips them **while reporting clean** —
+which is why the declaration is a rule and not a convenience.
 
 ### ARCH-002 · The domain imports nothing that can perform I/O  [BINDING] [auto:import-linter] [check:domain_purity]
 Modules under `domain/` MUST NOT import any I/O-capable module — filesystem, network,
@@ -54,7 +62,7 @@ subprocess, environment, wall clock or process-global randomness — directly or
 transitively.
 - **Why** A pure domain means a domain-layer failure is a logic defect, never an
   environment one; that inference is what makes the layer field worth recording.
-- **Check** `lint-imports` contract `domain-is-pure` · `python -m checks.domain_purity`
+- **Check** `lint-imports --config enforce/importlinter.toml` contract `ARCH-002 domain is pure` · `python tools/import_gate.py` · `python -m checks.domain_purity`
 - **See** [ARCH-006] · [law/DIAG]
 
 ### ARCH-003 · No adapter imports another adapter  [BINDING] [auto:import-linter]
@@ -62,14 +70,14 @@ Adapter modules MUST be independent of one another. Composition happens in `shel
 between adapters.
 - **Why** Independent adapters mean a misbehaving one cannot contaminate a healthy one,
   which is the property the fault tests exist to demonstrate.
-- **Check** `lint-imports` contract `adapters-are-independent`
+- **Check** `lint-imports --config enforce/importlinter.toml` contract `ARCH-003 adapters are independent` · `python tools/import_gate.py`
 
 ### ARCH-004 · Each foreign dependency is imported in exactly one module  [BINDING] [auto:import-linter]
 A third-party or system-level dependency MUST appear in the import graph of exactly one
 adapter module.
 - **Why** This is what "push coupling to the very edge" means operationally: a library
   reachable from two places has two possible blast radii and no single owner.
-- **Check** `lint-imports` contract `foreign-deps-are-cornered`
+- **Check** `lint-imports --config enforce/importlinter.toml` contract `ARCH-004 foreign dependencies are cornered` · `python tools/import_gate.py`
 - **See** [ARCH-010]
 
 ### ARCH-005 · Effects are named in the signature  [BINDING] [check:explicit_effects]

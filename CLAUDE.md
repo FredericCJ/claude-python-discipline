@@ -67,7 +67,22 @@ if you add a check, add its companion.
 `discipline/INDEX.md`, `discipline/rules.json` and `enforce/ENFORCEMENT.md` are generated.
 Edit the source module and rebuild.
 
-The Python environment is the conda env named `claude`.
+The Python environment is the conda env named `claude`. Note that a bare `python` resolves
+to the miniforge base environment, which has no pytest and no jsonschema — a gate run
+against it looks like it passed and decided nothing.
+
+## Maintenance agents
+
+Nine subject-matter agents in `.claude/agents/` maintain the machinery around the
+discipline: `graph-keeper` (derived layer), `gate-warden` (the seven-step gate),
+`conda-steward` (environment and lock), `mechanism-builder` (unbuilt checks and the V080
+ratchet), `release-engineer` and `adoption-tester` (build and round-trip the archive),
+`doc-verifier` (are the claims true), `learning-steward` (the learning loop) and
+`fact-refresher` (dated `fact/` and `ops/` claims).
+
+`MAINTENANCE.md` carries the dispatch table, the seams between them, the release train and
+the restrictions that hold for all of them. They maintain this repository; they are not part
+of the discipline and are not vendored.
 
 ## `sources/`
 
