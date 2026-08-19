@@ -356,7 +356,7 @@ def _add_mechanisms(graph: Graph, root: Path) -> None:
                 if rule_id in graph.nodes:
                     graph.add_edge(Edge(EdgeType.TRIGGERED_BY, rule_id, trigger))
 
-    pyproject = enforce / "pyproject.toml"
+    pyproject = enforce / "templates" / "pyproject.toml"
     if pyproject.exists():
         for line in pyproject.read_text(encoding="utf-8").splitlines():
             if "#" not in line:

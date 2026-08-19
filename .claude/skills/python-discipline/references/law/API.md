@@ -2,7 +2,7 @@
 id: law/API
 kind: law
 title: Contracts and Public Surface
-tokens: 2064
+tokens: 2073
 load_when:
   - "public API"
   - "contract"
@@ -14,6 +14,7 @@ load_when:
   - "schema version"
   - "migration"
 applies_to: ["**/*.py"]
+grounds_on: ["fact/py-testing"]
 requires: ["law/ARCH", "law/ERR"]
 decay: none
 python: ">=3.11"

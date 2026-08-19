@@ -84,7 +84,7 @@ then `frame/` (grounding, never prescriptive). More specific beats more general.
 
 ## Applying it to a project
 
-`enforce/pyproject.toml` and `enforce/importlinter.toml` are the canonical tool
+`enforce/templates/pyproject.toml` and `enforce/importlinter.toml` are the canonical tool
 configuration; `enforce/checks/` holds the AST checks for rules no linter covers. Copy them
 in and replace the placeholder package name. `enforce/ENFORCEMENT.md` maps every rule to
 the mechanism that decides it, and lists the mechanisms not yet built.

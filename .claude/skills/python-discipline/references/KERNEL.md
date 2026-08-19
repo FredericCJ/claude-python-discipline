@@ -2,7 +2,7 @@
 id: meta/KERNEL
 kind: meta
 title: Discipline Kernel
-tokens: 1532
+tokens: 1876
 load_when: ["python", "discipline", "how should i", "what are the rules"]
 decay: none
 ---
@@ -53,6 +53,7 @@ binding in practice, whatever its tag claims.**
 13. Destructive work plans before it applies. `EFCT-005`
 14. Every test module declares its oracle. `TEST-004`
 15. Every check has a proof-of-failure companion. `TEST-015`, `FLOW-007`
+16. Every element carries a documentation comment, generated or not. `DOC-001/003`
 
 ## Router
 
@@ -69,6 +70,7 @@ an API name, a task verb.
 | writing tests, fixtures, properties, fault injection, mutation | `law/TEST` + `fact/py-testing` |
 | public surface, CLI, structured output, versioning, migrations | `law/API` |
 | adding a dependency, lockfiles, generated files | `law/DEP` |
+| docstrings, documentation comments, Doxygen | `law/DOC` + `fact/doxygen` |
 | what to do first, definition of done, decision records | `law/FLOW` |
 | choosing a paradigm, refactoring, legacy code, tradeoffs | `frame/architecture` |
 | writing a spec, requirements, traceability, reusability | `frame/spec` |
@@ -81,8 +83,32 @@ an API name, a task verb.
 docstring: load nothing further. Loading a module you do not need costs the task budget it
 was written to protect.
 
-Grep `INDEX.md` for a rule id, or `jq` over `rules.json`; then open only the owning module.
+## Navigating
+
+Prefer the navigator to reading speculatively. It answers from the rule graph and returns
+a few hundred tokens, not a module.
+
+```
+nav.py context --file P --error E --task T   what to read, why, and the token cost
+nav.py applies PATH                          which rules govern this file
+nav.py rule ID          / neighbors ID       one rule and what it connects to
+nav.py why ID                                which decision gave it this shape
+nav.py path A B         / budget IDS         how two rules relate; what a set costs
+```
+
+Fallback if the tool cannot run: grep `INDEX.md` for a rule id, or `jq` over `rules.json`.
 Each module's front-matter carries a measured `tokens:` count — budget before you read.
+
+## What this repository has learned
+
+`learn.py retrieve --file P --error E` returns what earlier sessions found out here:
+project constraints, error-to-fix mappings, places a rule was ambiguous. Entries carry a
+confidence and are marked stale when old — weigh them, do not obey them.
+
+Before reporting done, record what *this* session learned:
+`learn.py record --kind ... --claim ... --action ... --trigger ...`. A finding that the
+discipline itself is wrong is `--scope discipline`, and is harvested upstream rather than
+worked around. Full rules: `law/LEARN`.
 
 ## Precedence
 

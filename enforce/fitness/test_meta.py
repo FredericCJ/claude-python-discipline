@@ -43,6 +43,7 @@ GATE: Final[tuple[tuple[str, tuple[str, ...]], ...]] = (
     ("rule corpus", (sys.executable, "tools/validate.py")),
     ("navigation graph", (sys.executable, "tools/build_graph.py", "--check")),
     ("generated artefacts", (sys.executable, "tools/build_index.py", "--check")),
+    ("skill mirror", (sys.executable, "tools/build_skill_mirror.py", "--check")),
     ("documentation", (sys.executable, "tools/docgate.py", "--all")),
     ("tests", (sys.executable, "-m", "pytest", "-q")),
 )

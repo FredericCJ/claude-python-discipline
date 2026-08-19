@@ -2,7 +2,7 @@
 id: law/TEST
 kind: law
 title: Systematic Testing and Oracles
-tokens: 2774
+tokens: 2777
 load_when:
   - "write a test"
   - "pytest"
@@ -63,7 +63,7 @@ unit tests and, where it states an invariant, a property suite.
 Unit tests MUST complete within the configured per-test budget.
 - **Why** The budget is a proxy for the architecture: a unit test that got slow did so by
   acquiring a dependency it was not supposed to have.
-- **Check** `pytest --timeout` as configured in `enforce/pyproject.toml`
+- **Check** `pytest --timeout` as configured in `enforce/templates/pyproject.toml`
 
 The suite's wall-clock total is reported, never gated. It is flaky by construction and
 gameable by splitting, and one source document set it as a budget in one section and argued

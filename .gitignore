@@ -1,4 +1,6 @@
 .pytest_cache/
+.ruff_cache/
+.mypy_cache/
 __pycache__/
 *.pyc
 .hypothesis/
@@ -15,3 +17,8 @@ learning/learning.db-shm
 # artefact is the comment in the source; a large tree in every diff is how
 # reviewers learn to wave generated output through.
 build/doc/
+
+# The redistributable archive, built by tools/release.py from the tracked corpus.
+# A build product derived entirely from what is already committed; the archive is
+# byte-reproducible, so the recipe is the durable record and the zip is not.
+dist/

@@ -81,7 +81,7 @@
       "id": "fact/py-logging",
       "kind": "fact",
       "title": "Python Logging Mechanics",
-      "tokens": 1506,
+      "tokens": 1509,
       "load_when": [
         "log level",
         "getLogger",
@@ -123,7 +123,7 @@
       "id": "fact/py-typing",
       "kind": "fact",
       "title": "Python Typing and Checkers",
-      "tokens": 1546,
+      "tokens": 1549,
       "load_when": [
         "mypy flags",
         "pyright config",
@@ -419,7 +419,7 @@
       "id": "law/TEST",
       "kind": "law",
       "title": "Systematic Testing and Oracles",
-      "tokens": 2774,
+      "tokens": 2777,
       "load_when": [
         "write a test",
         "pytest",
@@ -478,7 +478,7 @@
       "id": "meta/CONFLICTS",
       "kind": "meta",
       "title": "Conflict Ledger",
-      "tokens": 3262,
+      "tokens": 3250,
       "load_when": [
         "contradiction",
         "which source wins",
@@ -3586,7 +3586,7 @@
       "mechanically_enforced": true,
       "statement": "Unit tests MUST complete within the configured per-test budget.",
       "why": "The budget is a proxy for the architecture: a unit test that got slow did so by acquiring a dependency it was not supposed to have.",
-      "check": "`pytest --timeout` as configured in `enforce/pyproject.toml`",
+      "check": "`pytest --timeout` as configured in `enforce/templates/pyproject.toml`",
       "no_mechanism": null,
       "see": [],
       "superseded_by": null,

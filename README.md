@@ -35,7 +35,7 @@ and the mechanisms still to build, so the gap is tracked rather than assumed clo
 ## Navigating it, and remembering what it taught
 
 Two systems, one graph. The **navigation graph** is a directed typed multigraph over
-modules, rules, mechanisms, layers, decisions and triggers — 517 nodes and 1,025 edges,
+modules, rules, mechanisms, layers, decisions and triggers — 571 nodes and 1,151 edges,
 generated from the corpus and byte-stable. Agents never load it; they ask `tools/nav.py`,
 which returns a few hundred tokens: what to read, why, and what it costs.
 
@@ -56,7 +56,7 @@ python tools/learn.py calibrate                           # is any of this worki
 doxygen enforce/Doxyfile                                  # the documentation gate
 ```
 
-**Reachability is the navigability metric**: every one of the 163 rules is reachable from
+**Reachability is the navigability metric**: every one of the 182 rules is reachable from
 some module within three hops, checked as `V092` on every validation run.
 
 ## Vendoring and integration
@@ -84,7 +84,15 @@ in.
 ```bash
 python tools/vendor.py check   ../some-repo   # local edits to read-only files
 python tools/harvest.py        ../some-repo   # discipline-level findings, upstream
+python tools/release.py                       # -> dist/agent-discipline-v1.0.0.zip
 ```
+
+`release.py` builds the redistributable archive by running `vendor.py install` against a
+scratch repository, so what ships is what the installer writes and not a hand-assembled
+copy. It prunes caches and databases, refuses to build if the learning ledger would ship
+non-empty, scans every member for absolute paths and credential shapes, and emits a
+byte-reproducible zip whose members are `.agent/` plus `INSTALL-DISCIPLINE.md` and the
+release notes. Unzipped at a repository root it lands exactly where `integrate.py` expects.
 
 `.agent/discipline/`, `.agent/enforce/` and `.agent/tools/` are upstream-owned and replaced
 wholesale on update. `.agent/learning/` and `.agent/overrides/` are project-owned and never
@@ -107,21 +115,23 @@ discipline/
   ops/               ALLOC teams
   meta/              SCHEMA GLOSSARY CONFLICTS OPEN PROVENANCE edges.yaml
 enforce/
-  pyproject.toml     ruff / mypy / pyright / pytest / coverage / mutmut
-  importlinter.toml  layer, purity, independence contracts
+  templates/         copied into a consuming project, never live here
+    pyproject.toml   ruff / mypy / pyright / pytest / coverage / mutmut
+  importlinter.toml  layer, purity, independence contracts (needs --config)
   checks/            AST checks for what no linter covers, with failure proofs
   ENFORCEMENT.md     generated: every rule against its mechanism
 learning/            schema.sql  config.toml  ledger.jsonl  INDEX.md  calibration.md
 tools/               validate.py build_index.py build_graph.py nav.py learn.py
-                     vendor.py integrate.py harvest.py build_provenance.py
+                     vendor.py integrate.py harvest.py build_provenance.py release.py
+packaging/           INSTALL-DISCIPLINE.md, the archive-root pointer for adopters
 INTEGRATION.md       what an agent reads when told to wire the discipline in
-sources/             the eight originals, frozen and superseded
+sources/             the eleven originals, frozen and superseded
 .claude/skills/python-discipline/   the same discipline as a Claude Code skill
 ```
 
 ## Using it in a project
 
-Copy `enforce/pyproject.toml` and `enforce/importlinter.toml` into the target project and
+Copy `enforce/templates/pyproject.toml` and `enforce/importlinter.toml` into the target project and
 replace the placeholder package name; copy `enforce/checks/` alongside. The configuration
 comments name the rule ids each stanza enforces, so a lint failure traces back to a rule
 and a rule traces forward to the check that decides it.
@@ -156,20 +166,22 @@ Stated here rather than discovered later, because the axiom cuts both ways.
   did, and the difference here is that the gap is counted.
 - **Provenance is at document granularity.** All 324 source sections are accounted for, but
   that proves no document was dropped, not that every individual claim survived.
-- **This repository's own Python has 259 residual lint findings** under `select = ["ALL"]`,
+- **This repository's own Python has 273 residual lint findings** under `select = ["ALL"]`,
   down from 514 before the documentation migration. What remains is mostly `D401` imperative
   mood, `TC003` type-checking imports and unused imports — style debt in the tooling, not
   contract violations. Two structural conflicts that were in this list have been fixed
   rather than described: ruff's `E266` forbade the `##` form `DOC-002` requires, and
-  `enforce/pyproject.toml` — the template consumers copy — was being applied by ruff as the
-  live config for everything under `enforce/`, so the root config's path scoping never
-  reached it. See `enforce/ruff.toml`.
-- **The documentation gate does not prove documentation is *true*.** All 28 files pass
+  `enforce/pyproject.toml` — the template consumers copy — was being applied by ruff and
+  pytest as the live config for everything under `enforce/`, so the root config's path
+  scoping never reached it. The template now lives at `enforce/templates/pyproject.toml`,
+  a directory holding no Python and therefore an ancestor of nothing either tool
+  processes.
+- **The documentation gate does not prove documentation is *true*.** All 31 files pass
   presence, style, behaviour-preservation and Doxygen, but a reviewer pass over the same
   files found 90 claims that were confidently false about the code they described. Presence
   and truth are separate properties; only the first is mechanized. `DOC-013` names the
   second and leaves it to review, which is honest but not sufficient.
-- **The learning database has 27 learnings and 0 reported outcomes**, so retrieval precision
+- **The learning database has 35 learnings and 0 reported outcomes**, so retrieval precision
   is `n/a` and no learning has been promoted. `learn.py calibrate` prints the totals but
   gives no guidance in this state — it has a bootstrap protocol for an *empty* database and
   nothing for a populated one that has never been queried. The first calibration run found

@@ -71,7 +71,7 @@ The Python environment is the conda env named `claude`.
 
 ## `sources/`
 
-The eight original documents, superseded. They contain ~35 known contradictions and ~130
+The eleven original documents, superseded. They contain ~35 known contradictions and ~130
 references to files that do not exist. **Do not read them as guidance.** Where their
 material went is recorded in `discipline/meta/PROVENANCE.md`; why each conflict resolved
 the way it did is in `discipline/meta/CONFLICTS.md`.

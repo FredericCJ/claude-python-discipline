@@ -2,7 +2,7 @@
 id: law/DIAG
 kind: law
 title: Diagnostics and Traceability
-tokens: 2478
+tokens: 2499
 load_when:
   - "exception"
   - "traceback"
@@ -14,6 +14,7 @@ load_when:
   - "raise from"
   - "what went wrong"
 applies_to: ["**/*.py"]
+grounds_on: ["fact/py-errors", "fact/py-logging", "fact/py-testing", "fact/py-typing"]
 requires: ["law/ARCH"]
 decay: none
 python: ">=3.11"

@@ -2,7 +2,7 @@
 id: law/TYPE
 kind: law
 title: Typing and Contracts
-tokens: 2045
+tokens: 2059
 load_when:
   - "type hint"
   - "mypy"
@@ -16,6 +16,7 @@ load_when:
   - "cast"
   - "type error"
 applies_to: ["**/*.py"]
+grounds_on: ["fact/py-testing", "fact/py-typing"]
 requires: ["law/ARCH"]
 decay: none
 python: ">=3.11"

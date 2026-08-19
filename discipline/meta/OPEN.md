@@ -67,7 +67,7 @@ redundancy.
 ### OPEN-007 · Documentation comments on every element, for Doxygen
 
 **This reverses a decision this repository previously made and justified.**
-`enforce/pyproject.toml` used to ignore the missing-module-docstring rules, with the
+`enforce/templates/pyproject.toml` used to ignore the missing-module-docstring rules, with the
 reason: *"a blanket requirement produces ceremonial docstrings that say nothing, which is
 worse than none."* That objection is real, and it is not answered by pretending it is not.
 

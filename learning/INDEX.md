@@ -8,7 +8,7 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 
 | Status | Count |
 |---|---|
-| candidate | 32 |
+| candidate | 47 |
 | superseded | 1 |
 
 ## candidate
@@ -277,6 +277,134 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `rule:TEAMS-004`, `term:verify`
 - **About** ops/teams
 - **Verify** `python tools/learn.py status`
+
+### L-0034 · A ruff/pytest config file inside a vendored directory is discovered from the nearest ancestor, so a template carrying [tool.ruff] or [tool.pytest.ini_options] governs the host repository's files; a shim extending a relative parent path fixes it upstream and breaks ruff outright once vendored, because the parent it names does not exist under .agent/.
+
+- **Do** Keep every copy-me configuration under enforce/templates/, a directory holding no Python, so it is an ancestor of nothing either tool processes; never shadow a template with a second live config.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `error:Failed to load extended configuration`, `glob:enforce/**`
+- **Verify** `ruff check .agent/enforce/checks/doc_style.py`
+
+### L-0035 · vendor.py's SKIP_DIRS excluded __pycache__ and .pytest_cache but not .ruff_cache, so 18 cache files written beside the template configuration were copied into .agent/ and hashed into MANIFEST.json, making the version stamp depend on what had been run in the checkout.
+
+- **Do** Exclude every tool cache directory from the vendored set, and gitignore .ruff_cache/ and .mypy_cache/ as .pytest_cache/ already was.
+- **Kind** defect · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `glob:.agent/**/.ruff_cache/**`
+- **Verify** `python tools/vendor.py install <target> --source .`
+
+### L-0036 · vendor.py creates .agent/overrides/ empty, and a zip built only from file members silently drops it, so unzipping a release yields an install that vendor.py check itself calls broken.
+
+- **Do** When packaging a vendored tree, write an explicit zip directory entry for every directory that holds no file at any depth.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `command:tools/release.py`, `error:project-owned overrides/ is missing`
+- **About** DEP-008
+- **Verify** `python tools/release.py`
+
+### L-0037 · Two of the 31 files the documentation gate covers (tools/test_docgate.py, tools/test_mechanism_checks.py) had no baseline entry at all, so the behaviour oracle silently verified nothing for them; a hard-coded entry count in test_docgate.py hid it.
+
+- **Do** Assert the baseline's key set equals the covered Python files rather than asserting a count, so a covered file that is never baselined fails instead of passing.
+- **Kind** procedure · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `command:tools/docgate.py`, `glob:tools/doc_baseline.json`
+- **About** DOC-001
+- **Verify** `python -m pytest tools/test_docgate.py -q`
+
+### L-0038 · A leak scan over the shipped tree fires on proof-of-failure fixtures for learn.py's own credential guard and on the AST fingerprints of those fixtures in tools/doc_baseline.json, which are synthetic by construction.
+
+- **Do** Excuse those files per pattern name with a written reason in release.py ALLOWED, never by exempting test files wholesale.
+- **Kind** constraint · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `command:tools/release.py`, `error:leak scan found`
+- **About** DIAG-014
+- **Verify** `python tools/release.py`
+
+### L-0039 · A self-check that resolves references through a tree the release does not ship is green in the development repository and red in every vendored install
+
+- **Do** Limit a validator's resolution roots to what the release actually ships, and prove the exclusion with a proof-of-failure test
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `command:validate.py`
+- **About** meta/SCHEMA
+- **Verify** `python tools/vendor.py install TMP && python TMP/.agent/tools/validate.py`
+
+### L-0040 · Path.write_text without newline= rewrites every LF to CRLF on Windows, so integrate.py cannot honour its documented byte-preservation contract there
+
+- **Do** Pass newline= explicitly on both read_text and write_text whenever a file's existing bytes are part of the contract
+- **Kind** defect · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `glob:tools/integrate.py`
+- **About** DOC-013
+
+### L-0041 · A test that round-trips through read_text and write_text normalises line endings on both sides, so it cannot detect the newline corruption its name claims to prove absent
+
+- **Do** Compare bytes, not decoded text, in any test whose oracle is byte preservation
+- **Kind** defect · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `glob:tools/test_integrate.py`
+- **About** TEST-004
+
+### L-0042 · Removing configuration entries by value cannot distinguish an entry the integrator added from an identical one the host already had, so uninstall destroys host configuration
+
+- **Do** Record what was added at apply time, or leave shared-valued entries in place on removal
+- **Kind** defect · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `glob:tools/integrate.py`
+
+### L-0043 · The .claude/skills/python-discipline/references/ mirror can be generated verbatim (whole-tree file copy) from discipline/, mirroring build_index.py's Artifact/--check pattern; SKILL.md is hand-authored and adapted, never part of the copy.
+
+- **Do** Regenerate the mirror with tools/build_skill_mirror.py --check before trusting anything under references/, and add its --check to enforce/fitness/test_meta.py::GATE (and .github/workflows/gate.yml, kept in sync by hand).
+- **Kind** procedure · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `glob:.claude/skills/python-discipline/references/**`
+- **About** FLOW-009
+- **Verify** `python tools/build_skill_mirror.py --check`
+
+### L-0044 · On Windows, reading a file with Path.read_text and writing it back with Path.write_text rewrites every line ending in it: read_text folds CRLF to LF and write_text expands LF to os.linesep, so a pure-LF host file comes back with a CR on every line while every assertion made on decoded text still passes.
+
+- **Do** Read and write host-owned files with newline='' on both sides, and assert preservation on read_bytes against the original bytes, driven from a pure-LF fixture as well as a pure-CRLF one -- on Windows the CRLF case passes by accident.
+- **Kind** defect · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `glob:tools/integrate.py`
+- **About** EFCT-005
+- **Verify** `python -m pytest tools/test_integrate.py -q`
+
+### L-0045 · An uninstall that identifies its own contributions by value cannot distinguish an entry it added from an identical one the host already had, so it silently deletes host configuration; integrate.py --remove destroyed a pre-existing Bash(pytest:*) permission this way.
+
+- **Do** Record at apply time which entries were genuinely absent beforehand, in a file outside the directories vendor.py replaces wholesale, and remove only those; with no record, remove nothing and print which entries were left and why.
+- **Kind** defect · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `glob:tools/integrate.py`
+- **About** EFCT-005
+- **Verify** `python -m pytest tools/test_integrate.py -q`
+
+### L-0046 · A test named for a property can fail to check it: test_an_existing_file_keeps_every_byte_it_had wrote its fixture with write_text and read it back with read_text, normalising both sides, and was cited in shipped documentation as evidence for byte preservation.
+
+- **Do** When a test names a byte-level or encoding-level property, drive it from bytes and assert on bytes; before citing a test as evidence in a document, run it against the unfixed code and confirm it fails.
+- **Kind** procedure · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `command:pytest`
+- **About** TEST-015
+- **Verify** `python -m pytest tools/test_integrate.py -q`
+
+### L-0047 · A code span of the form path::Name in a docstring makes Doxygen 1.10.0 emit an unresolvable explicit-link error, which docgate does not catch because it runs no Doxygen stage
+
+- **Do** Write the qualified name as prose (the Artifact shape in tools/build_index.py) instead of path::Name, and run a real doxygen build over tools/ before declaring the documentation gate green
+- **Kind** defect · **scope** project · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-18
+- **Triggers** `error:explicit link request to`
+- **Verify** `doxygen enforce/Doxyfile`
+
+### L-0048 · Doxygen 1.10.0 reads a code span of the form path::Name as an explicit link request and fails the build when it cannot resolve it, so a docstring citing another module's class inside one span breaks the documentation gate.
+
+- **Do** Split the two names across separate spans: write the Name in one span and the module path in another, never joined by a double colon inside a single span.
+- **Kind** diagnostic · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `error:explicit link request to`, `rule:DOC-010`
+- **About** DOC-010, fact/doxygen
+- **Verify** `doxygen enforce/Doxyfile`
 
 ## superseded
 

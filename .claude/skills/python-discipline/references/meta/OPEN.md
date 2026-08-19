@@ -2,7 +2,7 @@
 id: meta/OPEN
 kind: meta
 title: Open Decisions
-tokens: 971
+tokens: 1645
 load_when: ["open question", "undecided", "which tool", "pin a version"]
 decay: none
 ---
@@ -25,7 +25,7 @@ here.
 
 ## Taken
 
-### Python floor 3.11, target 3.13
+### OPEN-001 · Python floor 3.11, target 3.13
 
 The sources assumed three different floors (3.11, 3.12–3.14, and unpinned). 3.11 is the
 version at which `ExceptionGroup`, `except*`, `Exception.add_note`, `Self` and
@@ -36,7 +36,7 @@ project environment.
 *Consequence:* PEP 695 native generic syntax needs 3.12+ and is therefore advisory, not
 binding, until the floor moves.
 
-### pydantic v2 for boundary parsing
+### OPEN-002 · pydantic v2 for boundary parsing
 
 One source left the choice open between pydantic v1, v2 and hand-written parsing; another
 already mandated v2. v2 is chosen: it is the maintained line, its `ValidationError`
@@ -45,30 +45,67 @@ its validation survives `python -O` where an `assert` would not.
 
 *Consequence:* v1 idioms are a migration defect, not a style preference.
 
-### mutmut as the mutation engine
+### OPEN-003 · mutmut as the mutation engine
 
 The sources mandated mutation testing and then declined to name an engine, which left the
 requirement unenforceable. mutmut is chosen for having a workable incremental mode over a
 pytest suite. The requirement is on the capability, not the tool, so the pin lives in a
 `fact` file and can be swapped without touching any rule.
 
-### pytest-socket for network isolation
+### OPEN-004 · pytest-socket for network isolation
 
 Left open in the sources as "a dedicated plugin vs a hand-rolled `monkeypatch` autouse
 fixture". The plugin is chosen: it fails closed by default, which a fixture someone
 forgets to request does not.
 
-### Two type checkers, both pinned
+### OPEN-005 · Two type checkers, both pinned
 
 mypy and pyright infer differently, and a claim that survives both is stronger than one
 that survives either. The second checker is treated as a differential oracle rather than
 redundancy.
 
+### OPEN-007 · Documentation comments on every element, for Doxygen
+
+**This reverses a decision this repository previously made and justified.**
+`enforce/templates/pyproject.toml` used to ignore the missing-module-docstring rules, with the
+reason: *"a blanket requirement produces ceremonial docstrings that say nothing, which is
+worse than none."* That objection is real, and it is not answered by pretending it is not.
+
+The requirement is now universal: every element of the code carries a documentation
+comment, written for a full-featured Doxygen, present whether or not documentation is ever
+generated. The ceremony objection is answered by rules rather than by an exemption —
+[DOC-009] rejects documentation that merely restates the identifier, and [DOC-013] asks for
+one accurate sentence rather than a padded block. A rule against filler is a better answer
+than a licence to omit.
+
+*Consequences, all decided here:*
+
+- **Docstrings where Python has a slot; `##` blocks where it does not.** Python offers no
+  docstring slot for a module constant, class attribute, dataclass field or enum member, and
+  Doxygen reads `##` blocks for exactly those. A `##` block on a function would be invisible
+  to `help()` and to every other Python tool, so it is prohibited there.
+- **`PYTHON_DOCSTRING = NO`.** Otherwise a docstring full of `@param` renders as literal
+  text and nothing warns. Set once in the Doxyfile rather than trusted to a `"""!` marker an
+  author will eventually forget.
+- **No pydocstyle convention, and three ruff rules disabled.** A convention makes the linter
+  demand Google- or NumPy-style section headings that Doxygen cannot read without an input
+  filter. `docstring-missing-returns`, `-yields` and `-exception` are disabled for the same
+  reason; the engine's own `WARN_NO_PARAMDOC` is a stricter test, since it also catches a
+  documented parameter that does not exist.
+- **The rendered documentation tree is not committed** — the one deliberate exception to
+  [DEP-011], recorded as a tension because it genuinely is one. The reviewable artefact here
+  is the comment in the source, and a large rendered tree in every diff is how reviewers
+  learn to wave generated output through.
+
+*Cost, stated plainly:* this repository's own code does not yet comply — 441 findings at
+the time of the decision. The mechanisms are in place so the gap cannot grow, and the
+migration is real work that has not been done.
+
 ---
 
 ## Still open
 
-### The capability-tier to model mapping
+### OPEN-006 · The capability-tier to model mapping
 
 `ops/ALLOC` classifies work onto capability tiers, but the table binding a tier to an
 actual model is empty — it was empty in the source doctrine too, which called that "itself

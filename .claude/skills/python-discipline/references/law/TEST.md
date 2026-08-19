@@ -2,7 +2,7 @@
 id: law/TEST
 kind: law
 title: Systematic Testing and Oracles
-tokens: 2752
+tokens: 2777
 load_when:
   - "write a test"
   - "pytest"
@@ -16,6 +16,7 @@ load_when:
   - "golden file"
   - "flaky"
 applies_to: ["tests/**/*.py", "**/*.py"]
+grounds_on: ["fact/py-testing", "fact/py-typing"]
 requires: ["law/ARCH", "law/ERR"]
 decay: none
 python: ">=3.11"
@@ -62,7 +63,7 @@ unit tests and, where it states an invariant, a property suite.
 Unit tests MUST complete within the configured per-test budget.
 - **Why** The budget is a proxy for the architecture: a unit test that got slow did so by
   acquiring a dependency it was not supposed to have.
-- **Check** `pytest --timeout` as configured in `enforce/pyproject.toml`
+- **Check** `pytest --timeout` as configured in `enforce/templates/pyproject.toml`
 
 The suite's wall-clock total is reported, never gated. It is flaky by construction and
 gameable by splitting, and one source document set it as a budget in one section and argued
@@ -119,6 +120,7 @@ prohibited.
 - **Why** A schedule that survives as data is a failing case an agent can replay verbatim;
   a bespoke class is a one-off that has to be re-derived.
 - **Check** `pytest enforce/fitness/test_faults.py::test_fault_schedules_are_data`
+- **See** [examples/port-triad]
 
 ### TEST-010 · The fault catalogue is covered per port  [BINDING] [fitness:test_fault_catalogue]
 Each port MUST be exercised against the fault categories that apply to it: explicit

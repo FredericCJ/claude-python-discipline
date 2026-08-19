@@ -2,7 +2,7 @@
 id: law/FLOW
 kind: law
 title: How a Change Is Made
-tokens: 1985
+tokens: 1994
 load_when:
   - "definition of done"
   - "before i commit"
@@ -12,6 +12,7 @@ load_when:
   - "review"
   - "is this finished"
 applies_to: ["**/*"]
+grounds_on: ["fact/py-testing"]
 requires: ["law/TEST"]
 decay: none
 python: ">=3.11"

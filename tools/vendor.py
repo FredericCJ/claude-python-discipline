@@ -33,6 +33,13 @@ from typing import Final
 
 from discipline_core import REPO_ROOT
 
+## The published release this corpus ships as. The manifest's content hash answers
+## "is this byte-for-byte the same corpus"; it is not something a reader recognises
+## in a managed block, so the release name travels beside it. This constant lives
+## under `tools`, which is hashed, so bumping it moves the content hash too -- the
+## two can never disagree about which corpus is installed.
+RELEASE: Final = "v1.0.0"
+
 ## Copied on every install and replaced wholesale. Nothing here is project-owned.
 UPSTREAM: Final[tuple[str, ...]] = ("discipline", "enforce", "tools")
 
@@ -50,8 +57,13 @@ LEARNING_SEED: Final[tuple[str, ...]] = ("schema.sql", "config.toml")
 ## depend on whether anything had been run in the checkout.
 SKIP_SUFFIXES: Final = (".pyc", ".db", ".db-wal", ".db-shm")
 
-## Caches, excluded whole so their contents need no rule of their own.
-SKIP_DIRS: Final = frozenset({"__pycache__", ".pytest_cache", ".hypothesis"})
+## Caches, excluded whole so their contents need no rule of their own. A tool
+## writes its cache beside the configuration it resolved, so any of these can
+## appear inside an upstream directory; hashing one would make the version stamp
+## depend on what had been run in the checkout (DEP-008).
+SKIP_DIRS: Final = frozenset(
+    {"__pycache__", ".pytest_cache", ".ruff_cache", ".hypothesis", ".mypy_cache"}
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -126,11 +138,13 @@ def build_manifest(source: Path) -> dict[str, object]:
     """Content hashes of the upstream half, plus a version stamp.
 
     The version is derived from the content, not a wall clock, so two installs
-    of the same corpus produce the same stamp (DEP-008).
+    of the same corpus produce the same stamp (DEP-008). The release name is
+    recorded alongside it and is never what staleness is judged by: a hash
+    cannot be claimed, only computed.
 
     @param source the upstream checkout
-    @return the stamp, the generating tool, and every upstream file's
-            source-relative POSIX path mapped to its digest
+    @return the release name, the content stamp, the generating tool, and every
+            upstream file's source-relative POSIX path mapped to its digest
     """
     files = {
         path.relative_to(source).as_posix(): digest(path) for path in iter_upstream(source)
@@ -138,7 +152,12 @@ def build_manifest(source: Path) -> dict[str, object]:
     combined = hashlib.sha256(
         "".join(f"{k}:{v}" for k, v in sorted(files.items())).encode()
     ).hexdigest()[:12]
-    return {"version": combined, "generated_by": "tools/vendor.py", "files": files}
+    return {
+        "release": RELEASE,
+        "version": combined,
+        "generated_by": "tools/vendor.py",
+        "files": files,
+    }
 
 
 def install(plan: Plan, *, force: bool = False) -> tuple[int, list[str]]:

@@ -345,7 +345,17 @@ def test_migrated_baseline_holds_the_original_fingerprints() -> None:
     """
     document = json.loads(docgate.BASELINE_PATH.read_text(encoding="utf-8"))
     files = document["files"]
-    assert len(files) == 27
+    # The migration recorded 27 entries. The roster grows when the repository
+    # gains a covered file and must never shrink, so the count is a floor, and
+    # the real property -- every covered file is baselined and no entry was
+    # dropped -- is the set equality below. A count alone would pass a baseline
+    # that swapped one entry for another.
+    migrated_entries = 27
+    assert len(files) >= migrated_entries
+    assert set(files) == {
+        docgate._relative(path, docgate.REPO_ROOT)
+        for path in docgate.iter_python(docgate.covered_paths(docgate.REPO_ROOT))
+    }
 
     pre_migration_ref = "99314dbb6983e620a9bfb402b4ead27c06d153a9"
     # Every entry not carrying its own re-record reason must still point at

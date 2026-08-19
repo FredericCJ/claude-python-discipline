@@ -335,7 +335,7 @@ These read as obligations a gate will catch, and no gate will. Until the mechani
 | `TEAMS-003` | `mechanized` | `fitness:test_gate_suite_defined` | `pytest enforce/fitness/test_meta.py::test_gate_suite_defined` | Verification runs as a gate, not as a request |
 | `TEST-001` | `unbuilt` **(!)** | `fitness:test_unit_layer_is_pure` | `pytest enforce/fitness/test_layers.py::test_unit_layer_is_pure` | Unit tests touch no external resource |
 | `TEST-002` | `unbuilt` **(!)** | `fitness:test_layers_populated` | `pytest enforce/fitness/test_layers.py::test_layers_populated` | Each test layer exists and is populated |
-| `TEST-003` | `external` | `auto:pytest-timeout` | `pytest --timeout` as configured in `enforce/pyproject.toml` | Per-test time is budgeted and enforced |
+| `TEST-003` | `external` | `auto:pytest-timeout` | `pytest --timeout` as configured in `enforce/templates/pyproject.toml` | Per-test time is budgeted and enforced |
 | `TEST-004` | `unbuilt` **(!)** | `check:oracle_declared` | `python -m checks.oracle_declared` | Every test module declares its oracle |
 | `TEST-005` | `unbuilt` **(!)** | `fitness:test_contract_suite_per_adapter` | `pytest enforce/fitness/test_ports.py::test_contract_suite_per_adapter` | One contract suite runs against every adapter |
 | `TEST-006` | `unbuilt` **(!)** | `fitness:test_contract_suite_per_adapter` | `pytest enforce/fitness/test_ports.py::test_contract_suite_per_adapter` | A fake that can drift from the real adapter is worthless |

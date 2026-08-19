@@ -2,7 +2,7 @@
 id: meta/CONFLICTS
 kind: meta
 title: Conflict Ledger
-tokens: 3262
+tokens: 3250
 load_when: ["contradiction", "which source wins", "why was this decided", "precedence"]
 decay: none
 ---
@@ -16,11 +16,10 @@ claim produces a third, worse one.
 
 ## Precedence
 
-1. `doctrine/` beats `Software Engineering Style Guidelines.md`. The doctrine is the later,
-   Python-aware adaptation and names the supersession itself in its section 3.1.
-2. More specific beats more general. `doctrine/TESTING.md` sets thresholds;
-   `doctrine/SOFTWARE-ENGINEERING.md` section 23 says outright that it binds the
-   requirement, not the number.
+1. The doctrine (`SE`, `TD`, `CA`) beats the style guidelines (`SG`). The doctrine is the
+   later, Python-aware adaptation and names the supersession itself in its section 3.1.
+2. More specific beats more general. `TD` sets thresholds; `SE` section 23 says outright
+   that it binds the requirement, not the number.
 3. `law/` never pins a version; pins live in `fact/` with a `verified:` date.
 4. A consuming project's `CLAUDE.md` beats this discipline.
 

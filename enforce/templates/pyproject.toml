@@ -1,8 +1,15 @@
-#  Canonical enforcement configuration.
+#  Canonical enforcement configuration. A TEMPLATE, not live configuration.
 #
 #  Copy the [tool.*] tables into a consuming project's pyproject.toml. Every stanza
 #  names the discipline rules it enforces, so a rule can be traced to its mechanism
 #  and back. Rule ids are stable; grep discipline/INDEX.md for one.
+#
+#  It lives under enforce/templates/ because ruff and pytest resolve configuration
+#  from the nearest ANCESTOR directory of the file being processed. In enforce/ it
+#  was an ancestor of enforce/checks/, so it silently governed this repository's own
+#  code -- and, once vendored, .agent/enforce/. A directory holding no Python is an
+#  ancestor of nothing either tool processes, which removes it from discovery while
+#  leaving it obviously a template.
 #
 #  Posture is the hardest setting that can be sustained. Each relaxation below is
 #  individually justified; an unjustified ignore is a defect, not a preference.

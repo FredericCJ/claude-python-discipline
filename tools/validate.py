@@ -456,6 +456,12 @@ def check_xrefs(documents: Sequence[Document], layout: Layout) -> Iterator[Findi
     a reader would plausibly look. Names in `KNOWN_EXTERNAL_MD` are exempt, being
     real documents the corpus does not own.
 
+    `sources/` is deliberately not a resolution root. It is superseded material
+    that the release does not ship, so a reference resolving only there passes in
+    this repository and dangles for every adopter -- the validator would be green
+    exactly where it is needed most. Cite a corpus module, or the sigil that
+    `meta/PROVENANCE` maps back to the source document.
+
     @param documents every parsed corpus file
     @param layout the tree they were read from
     @return findings for unresolved ids and for filenames matching nothing on disk
@@ -491,7 +497,7 @@ def check_xrefs(documents: Sequence[Document], layout: Layout) -> Iterator[Findi
             candidates = (
                 layout.root / name,
                 doc.path.parent / name,
-                *(layout.root / d / name for d in ("discipline", "enforce", "sources")),
+                *(layout.root / d / name for d in ("discipline", "enforce")),
             )
             if any(c.exists() for c in candidates):
                 continue

@@ -2,7 +2,7 @@
 id: law/DEP
 kind: law
 title: Dependencies and Generated Artefacts
-tokens: 1539
+tokens: 2011
 load_when:
   - "add a dependency"
   - "third party library"
@@ -12,6 +12,7 @@ load_when:
   - "generated file"
   - "vendoring"
 applies_to: ["**/*.py", "pyproject.toml"]
+grounds_on: ["fact/py-testing"]
 requires: ["law/ARCH"]
 decay: none
 python: ">=3.11"
@@ -75,6 +76,35 @@ the lockfile, and it MUST run before the test suite in continuous integration.
 - **Why** Drift discovered by a mysterious test failure costs far more than drift reported
   as drift.
 - **Check** `pytest enforce/fitness/test_deps.py::test_environment_locked`
+
+---
+
+## A vendored discipline
+
+### DEP-012 · A vendored discipline is announced, not merely present  [BINDING] [auto:integrate]
+A repository that vendors this discipline MUST carry a pointer to it in the top-level agent
+configuration its sessions actually read.
+- **Why** Copying the files does not make them load. A discipline nobody is told about is
+  one every session ignores, which costs the vendoring and returns nothing.
+- **Check** `python .agent/tools/integrate.py --check`
+
+### DEP-013 · The announcement is generated, never hand-edited  [BINDING] [auto:integrate] [fitness:test_an_existing_block_is_replaced_not_duplicated]
+The pointer MUST live inside the managed markers, and everything outside them MUST be left
+untouched by the tool. Hand-editing inside the block is prohibited; it is overwritten on
+the next update.
+- **Why** A clear boundary is what lets an update replace the pointer without touching the
+  project's own configuration, and lets the project write freely without fear of losing it.
+- **Check** `python .agent/tools/integrate.py --check` · `pytest tools/test_integrate.py`
+- **See** [DEP-007]
+
+### DEP-014 · Configuration is changed by plan, then apply  [BINDING] [fitness:test_a_dry_run_writes_nothing]
+A tool that edits files the project owns MUST be able to show its complete plan without
+writing, and the preview MUST be the same code path truncated rather than a second
+implementation that predicts it.
+- **Why** This is [EFCT-005] applied to the discipline's own installer: a preview produced
+  by different code is a preview that can be wrong in exactly the case that matters.
+- **Check** `pytest tools/test_integrate.py::test_a_dry_run_writes_nothing`
+- **See** [law/EFCT]
 
 ---
 

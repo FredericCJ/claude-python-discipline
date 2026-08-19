@@ -2,7 +2,7 @@
 id: law/ARCH
 kind: law
 title: Architecture and Coupling
-tokens: 2454
+tokens: 2467
 load_when:
   - "new module"
   - "package layout"
@@ -14,6 +14,7 @@ load_when:
   - "import error"
   - "circular import"
 applies_to: ["**/*.py"]
+grounds_on: ["fact/py-typing", "fact/py-testing"]
 decay: none
 python: ">=3.11"
 ---

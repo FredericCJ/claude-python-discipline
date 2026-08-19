@@ -1,14 +1,19 @@
 #  Lint configuration for THIS repository's own tooling.
 #
 #  Not the template. The canonical configuration a consuming project copies is
-#  enforce/pyproject.toml, and it targets a src/ + tests/ layout. This repository
-#  is a documentation corpus with a tools/ + enforce/ layout instead, so the same
-#  posture needs different path scoping.
+#  enforce/templates/pyproject.toml, and it targets a src/ + tests/ layout. This
+#  repository is a documentation corpus with a tools/ + enforce/ layout instead,
+#  so the same posture needs different path scoping.
+#
+#  The template lives under enforce/templates/ precisely because ruff and pytest
+#  resolve configuration from the nearest ANCESTOR of the file being processed.
+#  A pyproject.toml sitting in enforce/ silently governed every Python file below
+#  it -- here, and in any repository that vendors this tree.
 #
 #  Every relaxation below names why it applies here and not to a real project.
 #  An unjustified ignore is a defect (ARCH-017 reasoning, applied to ourselves).
 
-extend = "enforce/pyproject.toml"
+extend = "enforce/templates/pyproject.toml"
 src = ["tools", "enforce"]
 
 [lint]

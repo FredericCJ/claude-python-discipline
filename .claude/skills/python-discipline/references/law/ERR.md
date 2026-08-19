@@ -2,7 +2,7 @@
 id: law/ERR
 kind: law
 title: Error Semantics
-tokens: 2432
+tokens: 2450
 load_when:
   - "raise"
   - "except"
@@ -14,6 +14,7 @@ load_when:
   - "assert_never"
   - "ExceptionGroup"
 applies_to: ["**/*.py"]
+grounds_on: ["fact/py-errors", "fact/py-testing", "fact/py-typing"]
 requires: ["law/ARCH"]
 decay: none
 python: ">=3.11"

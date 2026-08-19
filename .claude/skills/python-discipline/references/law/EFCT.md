@@ -2,7 +2,7 @@
 id: law/EFCT
 kind: law
 title: Effects, State and Time
-tokens: 2233
+tokens: 2239
 load_when:
   - "write a file"
   - "mutation"
@@ -16,6 +16,7 @@ load_when:
   - "random"
   - "delete"
 applies_to: ["**/*.py"]
+grounds_on: ["fact/py-testing"]
 requires: ["law/ARCH"]
 decay: none
 python: ">=3.11"

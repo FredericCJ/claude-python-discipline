@@ -47,7 +47,7 @@ class NodeType(StrEnum):
     ## One architectural tier, so a rule can say where it bites.
     LAYER = "layer"          # domain | app | adapters | shell
     ## A concrete file the corpus obliges or ships, as opposed to prose about one.
-    ARTIFACT = "artifact"    # enforce/pyproject.toml, a schema, an example
+    ARTIFACT = "artifact"    # enforce/templates/pyproject.toml, a schema, an example
     ## An observation from practice. Advisory: it never enters the static graph.
     LEARNING = "learning"    # L-0001, from the learning database
 

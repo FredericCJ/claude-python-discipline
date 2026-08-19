@@ -2,7 +2,7 @@
 id: fact/py-typing
 kind: fact
 title: Python Typing and Checkers
-tokens: 1546
+tokens: 1549
 load_when:
   - "mypy flags"
   - "pyright config"
@@ -55,7 +55,7 @@ or on decorated-`Any` by default.
 the editor-extension default differ, so a file can be clean in one and not the other.
 
 **Consequence for [law/TYPE]:** naming a checker is not enough. The version and the
-enabled rule set are pinned in `enforce/pyproject.toml` and committed, and both checkers
+enabled rule set are pinned in `enforce/templates/pyproject.toml` and committed, and both checkers
 run because their disagreement is information.
 
 ## What the type system cannot express

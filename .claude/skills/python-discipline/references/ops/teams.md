@@ -2,7 +2,7 @@
 id: ops/teams
 kind: ops
 title: Agent Team Mechanics
-tokens: 1384
+tokens: 2245
 load_when:
   - "agent team"
   - "teammate"
@@ -89,6 +89,53 @@ there — a task cannot be marked done while its gate fails.
   discipline's own axiom can be applied to agent coordination itself.
 - **Check** `pytest enforce/fitness/test_meta.py::test_gate_suite_defined`
 - **See** [law/FLOW]
+
+## Documentation work: write, then refute
+
+`ESTABLISHED` — measured on this repository. A documentation migration ran 13 batches of
+agents over 585 elements in 28 files. Every batch passed four mechanical gates — behaviour
+preservation by AST fingerprint, `doc_coverage`, `doc_style`, ruff — and a clean Doxygen
+build. A second, independent agent was then run over each batch with the sole task of
+checking each claim against the code it described. It found **90 claims that were
+confidently false** and **59 filler docstrings restating the identifier**: roughly a 15
+percent semantic error rate surviving a green gate.
+
+`ESTABLISHED` — the 90 were sampled and classified as almost entirely *semantic*, not
+referential: they cite symbols that genuinely exist and attribute behaviour the code does
+not have. "Normalizes a scalar" where only strings normalize; "parameters of all four
+kinds" where there are three; "the strongest evidence found" where the code reports the
+first one written; "everything added here is marked declared" where the node type has no
+origin field at all. A reference-existence linter would have caught approximately none of
+them. This is what [DOC-013] names when it says the remainder is a reading judgment.
+
+### TEAMS-004 · Documentation is written in one stage, verified in another  [ADVISORY]
+Documentation dispatched to agents SHOULD run as two stages, the verifier a fresh agent
+holding no memory of having written the text and re-deriving each claim from the code.
+- **Why** A writer re-reading its own documentation re-derives its own assumptions and so
+  confirms them; independence is the only thing that makes the second reading evidence.
+- **No mechanism** Whether a second, independent pass happened is a fact about dispatch
+  history, not about the tree, and nothing in the repository can read it.
+- **See** [TEAMS-001] · [law/DOC]
+
+### TEAMS-005 · A verifier refutes claims; it does not improve prose  [ADVISORY]
+The verifier's task SHOULD be stated as refutation — for each claim, find the code that
+contradicts it — and SHOULD NOT include rewriting, tightening or restyling.
+- **Why** An agent asked to improve documentation optimizes wording it can see; an agent
+  asked to refute must open the code, which is the only place the error is visible.
+- **No mechanism** The instruction is in a dispatch, and its effect is a judgment about
+  whether a claim was tested rather than admired; neither is inspectable after the fact.
+- **See** [DOC-009] · [TEAMS-001]
+
+### TEAMS-006 · Presence and truth need separate mechanisms  [ADVISORY]
+Documentation completeness and documentation truth SHOULD be treated as two properties;
+the mechanical gate decides only the first, and a green gate SHOULD NOT be read as the
+second.
+- **Why** Treating the gate as a truth oracle is what let 90 false claims ship green —
+  and a false docstring is worse than an absent one, because an agent trusts it.
+- **No mechanism** Deciding whether a sentence is true of the code it sits above is the
+  general program-understanding problem; [DOC-001]–[DOC-011] mechanize presence and form,
+  which is the whole of what a checker can reach.
+- **See** [DOC-013] · [law/DOC]
 
 ## Cost
 

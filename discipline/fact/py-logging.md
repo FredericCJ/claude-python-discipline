@@ -2,7 +2,7 @@
 id: fact/py-logging
 kind: fact
 title: Python Logging Mechanics
-tokens: 1506
+tokens: 1509
 load_when:
   - "log level"
   - "getLogger"
@@ -88,7 +88,7 @@ avoids computing them at all.
 `VERSION-DEPENDENT` — linters commonly flag deferred-argument style and offer to rewrite it
 to eager interpolation. That rewrite is wrong for logging, and the rule has to be configured
 deliberately rather than left to collide. This is the concrete collision recorded in
-[meta/CONFLICTS] and settled in `enforce/pyproject.toml`.
+[meta/CONFLICTS] and settled in `enforce/templates/pyproject.toml`.
 
 ## Context
 

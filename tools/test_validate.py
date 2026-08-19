@@ -363,6 +363,20 @@ def test_v041_dangling_document_reference(tmp_path: Path) -> None:
     assert "V041" in codes(run_on(tmp_path))
 
 
+def test_v041_does_not_resolve_a_reference_through_sources(tmp_path: Path) -> None:
+    """Superseded material is not shipped, so resolving through it hides the defect.
+
+    A reference that exists only under `sources/` passes in this repository and
+    dangles in every vendored install -- green exactly where the validator is
+    supposed to be the adopter's first check.
+    """
+    superseded = tmp_path / "sources" / "doctrine"
+    superseded.mkdir(parents=True)
+    (superseded / "TESTING.md").write_text("# superseded\n", encoding="utf-8")
+    module(tmp_path, body=CONFORMANT_RULE + "\nSee `doctrine/TESTING.md` section 4.\n")
+    assert "V041" in codes(run_on(tmp_path))
+
+
 def test_v050_over_token_budget(tmp_path: Path) -> None:
     """A module too large to load is a module an agent will skip, so the ceiling binds."""
     filler = "\n".join(f"Sentence number {n} of padding prose." for n in range(2_000))

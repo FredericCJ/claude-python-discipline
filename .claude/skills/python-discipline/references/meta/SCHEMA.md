@@ -137,7 +137,7 @@ not hold them in working memory — a direct saving of attention on every task.
 | Tag | Enforced by |
 |---|---|
 | `[auto:ruff:<code>]` | a ruff rule, named |
-| `[auto:mypy]` / `[auto:pyright]` | the type checkers as configured in `enforce/pyproject.toml` |
+| `[auto:mypy]` / `[auto:pyright]` | the type checkers as configured in `enforce/templates/pyproject.toml` |
 | `[auto:import-linter]` | a contract in `enforce/importlinter.toml` |
 | `[check:<name>]` | an AST check in `enforce/checks/<name>.py` |
 | `[fitness:<test>]` | a test in `enforce/fitness/` |
