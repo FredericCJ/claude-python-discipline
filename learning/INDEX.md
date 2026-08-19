@@ -9,7 +9,7 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 | Status | Count |
 |---|---|
 | active | 1 |
-| candidate | 89 |
+| candidate | 90 |
 | superseded | 1 |
 
 ## active
@@ -782,6 +782,15 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `command:nav`
 - **About** DIAG-001
 - **Verify** `python tools/bench.py`
+
+### L-0092 · enforce/importlinter.toml shipped ARCH-004 with an empty forbidden_modules list, which forbids nothing and passes on every tree forever -- and carried a comment saying an empty list merely meant nothing was registered yet, which made the vacuity read as deliberate.
+
+- **Do** Derive a register rather than asking for one, and fail closed when the tree imports something the register does not name. A check with nothing to say is indistinguishable from a check that found nothing wrong.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `rule:ARCH-004`
+- **About** ARCH-004
+- **Verify** `python tools/register_deps.py --check`
 
 ## superseded
 
