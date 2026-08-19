@@ -35,6 +35,19 @@ dependencies:
   # 3.13 is the tested target.
   - python=3.13.14
 
+  # DOC-005/007/010/011. Doxygen is a native binary, not a pip package, and 1.10.0
+  # is the exact version discipline/fact/doxygen.md's measurements were taken
+  # against -- two enforce/Doxyfile settings are consequences of defects verified
+  # at precisely this version, so a different one changes what those settings are
+  # for. conda-forge carries 1.10.0 and pinning it here is not the same as
+  # letting a package manager track its own latest, which is what the earlier
+  # note in this file warned against.
+  #
+  # tools/check_env.py verifies it by RUNNING it, because importlib.metadata
+  # knows nothing about a native binary. Any conda pin without a verifier there
+  # is reported as unverifiable rather than waved through.
+  - doxygen=1.10.0
+
   - pip
   - pip:
       # ---------------------------------------------------------- gate step 1
@@ -91,14 +104,6 @@ dependencies:
 
 # ---------------------------------------------------------------------------
 # NOT PINNED HERE, deliberately.
-#
-# doxygen (DOC-005/007/010/011) is a system install, not a pip package, and is
-# pinned to 1.10.0 by discipline/fact/doxygen.md -- two enforce/Doxyfile settings
-# are consequences of defects verified at exactly that version. Install it from
-# the upstream release asset, not from a package manager that tracks its own
-# latest. Until it is installed,
-# enforce/fitness/test_meta.py::test_doxygen_version_matches_recorded SKIPS and
-# verifies nothing.
 #
 # mutmut (TEST-013, OPEN-003) and pydantic (OPEN-002) remain unpinned.
 #

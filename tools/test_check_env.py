@@ -13,6 +13,8 @@ from __future__ import annotations
 import sys
 from typing import TYPE_CHECKING
 
+import pytest
+
 import check_env
 
 if TYPE_CHECKING:
@@ -38,7 +40,7 @@ def test_exact_pins_are_read(tmp_path: Path) -> None:
     """The declaration is read without importing the parser it pins."""
     path = _write(tmp_path, "dependencies:\n  - python=3.13.14\n  - pip:\n"
                             "      - ruff==0.16.3\n      - PyYAML==6.0.3\n")
-    python, pins, loose = check_env.read_pins(path)
+    python, pins, loose, _ = check_env.read_pins(path)
     assert python == "3.13.14"
     assert pins == {"ruff": "0.16.3", "PyYAML": "6.0.3"}
     assert loose == []
@@ -52,14 +54,14 @@ def test_a_package_named_only_in_a_comment_is_not_a_pin(tmp_path: Path) -> None:
     """
     path = _write(tmp_path, "dependencies:\n  - pip:\n      - ruff==0.16.3\n"
                             "# - mutmut==3.4.0 is named by TEST-013 and NOT pinned here\n")
-    _, pins, _ = check_env.read_pins(path)
+    _, pins, _, _ = check_env.read_pins(path)
     assert pins == {"ruff": "0.16.3"}
 
 
 def test_a_range_is_reported_as_a_defect_in_the_lock(tmp_path: Path) -> None:
     """A range is not a lock. Accepting one quietly would defeat the file."""
     path = _write(tmp_path, "dependencies:\n  - pip:\n      - ruff>=0.16.3\n")
-    _, _, loose = check_env.read_pins(path)
+    _, _, loose, _ = check_env.read_pins(path)
     assert len(loose) == 1
     assert "range" in loose[0]
 
@@ -126,3 +128,63 @@ def test_requirements_are_emitted_for_ci(tmp_path: Path, capsys: object) -> None
     assert check_env.main(["--file", str(path), "--print-requirements"]) == 0
     printed = capsys.readouterr().out.split()  # type: ignore[attr-defined]
     assert printed == ["PyYAML==6.0.3", "ruff==0.16.3"]
+
+
+# ------------------------------------------------- conda pins, Phase 6
+
+
+def test_a_conda_pin_is_read(tmp_path: Path) -> None:
+    """A single-`=` line is a conda pin, not noise.
+
+    `- doxygen=1.10.0` matches neither the pip pattern (which needs `==`) nor the
+    loose-range one, so before this it was parsed by nothing and ignored in
+    silence -- a declared dependency the lock did not actually cover.
+
+    @param tmp_path the fixture directory
+    """
+    declaration = tmp_path / "environment.yml"
+    declaration.write_text(
+        "dependencies:\n  - python=3.13.14\n  - doxygen=1.10.0\n"
+        "  - pip:\n      - ruff==0.16.3\n",
+        encoding="utf-8",
+    )
+    python, pins, loose, conda = check_env.read_pins(declaration)
+    assert python == "3.13.14"
+    assert pins == {"ruff": "0.16.3"}
+    assert conda == {"doxygen": "1.10.0"}
+    assert loose == []
+
+
+def test_a_conda_pin_nobody_can_verify_is_reported() -> None:
+    """An unverifiable pin fails rather than passing quietly.
+
+    The failure this refuses: adding a conda dependency the checker has no
+    verifier for, and having the lock report success anyway. That is how a lock
+    stops covering things one entry at a time.
+    """
+    problems = check_env.drift(None, {}, {"graphviz": "9.0.0"})
+    assert problems
+    assert "no way to verify it" in problems[0]
+
+
+def test_a_verifiable_conda_pin_at_the_wrong_version_fails() -> None:
+    """Doxygen is checked by running it, and a wrong pin is caught.
+
+    Not skipped when doxygen is absent: `native_version` returning None produces
+    a "not installed" complaint, which is also a failure. Either way this asserts
+    something.
+    """
+    problems = check_env.drift(None, {}, {"doxygen": "0.0.1"})
+    assert problems
+    assert "doxygen" in problems[0]
+
+
+def test_the_installed_doxygen_matches_its_pin() -> None:
+    """The positive case: the declaration and the environment agree.
+
+    @throws AssertionError when the pin and the installed binary differ
+    """
+    _, _, _, conda = check_env.read_pins(check_env.ENVIRONMENT_PATH)
+    if "doxygen" not in conda:
+        pytest.skip("this declaration pins no doxygen")
+    assert check_env.drift(None, {}, conda) == []

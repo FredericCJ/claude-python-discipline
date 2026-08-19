@@ -19,6 +19,7 @@ from __future__ import annotations
 import ast
 import json
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -294,6 +295,28 @@ def test_the_workflow_mirrors_the_gate() -> None:
         )
 
 
+def doxygen_executable() -> str | None:
+    """Where doxygen actually is, or None when this environment has none.
+
+    Looked for beside the running interpreter before PATH, because a conda
+    environment puts native binaries in `Library/bin` (Windows) or `bin` (POSIX)
+    and only prepends them to PATH on activation. Every gate step here invokes
+    `sys.executable` directly, so PATH alone finds nothing on a machine where
+    doxygen is correctly installed -- and the test then skips, which is
+    indistinguishable from passing.
+
+    @return the path to run, or None when doxygen cannot be found at all
+    """
+    root = Path(sys.executable).parent
+    for candidate in (root / "Library" / "bin" / "doxygen.exe",
+                      root / "doxygen.exe",
+                      root / "bin" / "doxygen",
+                      root / "doxygen"):
+        if candidate.is_file():
+            return str(candidate)
+    return shutil.which("doxygen")
+
+
 def test_doxygen_version_matches_recorded() -> None:
     """Doxygen defects fixed between versions; ensure configuration does not drift.
 
@@ -328,18 +351,23 @@ def test_doxygen_version_matches_recorded() -> None:
         "'| Doxygen | <version> | VERSION-DEPENDENT |'"
     )
 
-    # Run 'doxygen --version' and parse the output
-    try:
-        result = subprocess.run(
-            ("doxygen", "--version"),
-            capture_output=True, text=True, encoding="utf-8", errors="replace",
-            cwd=REPO_ROOT, check=False, timeout=30,
-        )
-    except FileNotFoundError:
-        pytest.skip("doxygen not installed")
+    # Located rather than named. `doxygen` is on PATH only while the conda
+    # environment is ACTIVATED, and the gate invokes the interpreter directly --
+    # so a machine with doxygen correctly installed still skipped this test and
+    # verified nothing. That is the same defect as the ruff one recorded in this
+    # repository's history, where locating an executable by PATH alone made the
+    # lint gate skip itself behind a green run.
+    executable = doxygen_executable()
+    if executable is None:
+        pytest.skip("doxygen not installed in this environment or on PATH")
 
+    result = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
+        (executable, "--version"),
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        cwd=REPO_ROOT, check=False, timeout=30,
+    )
     if result.returncode != 0:
-        pytest.skip("doxygen not installed or not in PATH")
+        pytest.skip(f"{executable} did not report a version")
 
     # Extract the version from the output (e.g., "1.10.0" or "1.10.0 (some extra text)")
     installed_version = result.stdout.strip().split()[0]

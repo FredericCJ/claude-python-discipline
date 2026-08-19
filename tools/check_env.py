@@ -27,6 +27,8 @@ from __future__ import annotations
 
 import argparse
 import re
+import shutil
+import subprocess  # ruff: ignore[suspicious-subprocess-import]
 import sys
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
@@ -51,8 +53,23 @@ _PYTHON: Final = re.compile(r"^\s*-\s*python=([0-9][A-Za-z0-9._]*)\s*$")
 ## point of the file and is reported as a defect in the lock itself.
 _LOOSE: Final = re.compile(r"^\s*-\s*([A-Za-z0-9._-]+)\s*(>=|<=|>|<|~=|!=)")
 
+## A conda pin, written with one `=` -- `  - doxygen=1.10.0`. These are not pip
+## distributions and `importlib.metadata` knows nothing about them, so each needs
+## a verifier of its own. `python` is matched by `_PYTHON` above and excluded
+## here.
+_CONDA: Final = re.compile(r"^\s*-\s*([A-Za-z0-9._-]+)=([0-9][A-Za-z0-9._]*)\s*$")
 
-def read_pins(path: Path) -> tuple[str | None, dict[str, str], list[str]]:
+## How to ask a conda-installed native tool for its version. Anything declared as
+## a conda pin and absent from this table is REPORTED as unverifiable rather than
+## passed over: a declared dependency nobody checks is the exact shape of defect
+## this file exists to remove, and adding a pin the checker silently ignores
+## would reintroduce it one entry at a time.
+NATIVE_VERIFIERS: Final[dict[str, tuple[str, ...]]] = {
+    "doxygen": ("doxygen.exe", "doxygen"),
+}
+
+
+def read_pins(path: Path) -> tuple[str | None, dict[str, str], list[str], dict[str, str]]:
     """Parse the declared environment without importing a YAML parser.
 
     Comment lines are dropped first, so the prose in `environment.yml` -- which
@@ -60,12 +77,14 @@ def read_pins(path: Path) -> tuple[str | None, dict[str, str], list[str]]:
     a requirement.
 
     @param path the environment file to read
-    @return the interpreter version or None, the exact pins by package name, and
-        one complaint per requirement that was not pinned exactly
+    @return the interpreter version or None, the pip pins by distribution name,
+        one complaint per requirement that was not pinned exactly, and the conda
+        pins by package name
     """
     python: str | None = None
     pins: dict[str, str] = {}
     loose: list[str] = []
+    conda: dict[str, str] = {}
     for raw in path.read_text(encoding="utf-8").splitlines():
         line = raw.split("#", 1)[0]
         if not line.strip():
@@ -81,7 +100,11 @@ def read_pins(path: Path) -> tuple[str | None, dict[str, str], list[str]]:
         vague = _LOOSE.match(line)
         if vague is not None:
             loose.append(f"{vague.group(1)} is given a range, not an exact version")
-    return python, pins, loose
+            continue
+        native = _CONDA.match(line)
+        if native is not None:
+            conda[native.group(1)] = native.group(2)
+    return python, pins, loose, conda
 
 
 def installed(name: str) -> str | None:
@@ -96,11 +119,54 @@ def installed(name: str) -> str | None:
         return None
 
 
-def drift(python: str | None, pins: dict[str, str]) -> list[str]:
+def native_version(name: str) -> str | None:
+    """The version a conda-installed native tool reports, or None when absent.
+
+    Looked for beside the running interpreter before PATH, because conda puts
+    native binaries in `Library/bin` (Windows) or `bin` (POSIX) and prepends them
+    to PATH only on ACTIVATION. Every gate step here runs `sys.executable`
+    directly, so a PATH-only search finds nothing on a machine where the tool is
+    correctly installed -- and the caller then reports it missing, which is the
+    same wrong answer as not looking.
+
+    @param name the conda package name
+    @return the first whitespace-separated token of its `--version` output, or
+        None when the binary cannot be found or refuses to report
+    """
+    root = Path(sys.executable).parent
+    for filename in NATIVE_VERIFIERS.get(name, ()):
+        for candidate in (root / "Library" / "bin" / filename, root / filename,
+                          root / "bin" / filename):
+            if candidate.is_file():
+                found = _ask_version(str(candidate))
+                if found is not None:
+                    return found
+    located = shutil.which(name)
+    return _ask_version(located) if located else None
+
+
+def _ask_version(executable: str) -> str | None:
+    """Run `<executable> --version` and return its first token.
+
+    @param executable the binary to run
+    @return the version token, or None when the call fails
+    """
+    finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
+        (executable, "--version"), capture_output=True, text=True,
+        encoding="utf-8", errors="replace", check=False, timeout=60,
+    )
+    if finished.returncode != 0 or not finished.stdout.strip():
+        return None
+    return finished.stdout.strip().split()[0]
+
+
+def drift(python: str | None, pins: dict[str, str],
+          conda: dict[str, str] | None = None) -> list[str]:
     """Every way the running interpreter departs from the declaration.
 
     @param python the pinned interpreter version, or None when none is declared
     @param pins the pinned package versions by distribution name
+    @param conda the pinned conda packages, checked by running each tool
     @return one line per departure, naming the package, the pin and what is there
     """
     problems: list[str] = []
@@ -109,6 +175,19 @@ def drift(python: str | None, pins: dict[str, str]) -> list[str]:
         problems.append(f"python: pinned {python}, running {running}")
     for name, pinned in sorted(pins.items()):
         found = installed(name)
+        if found is None:
+            problems.append(f"{name}: pinned {pinned}, not installed")
+        elif found != pinned:
+            problems.append(f"{name}: pinned {pinned}, installed {found}")
+    for name, pinned in sorted((conda or {}).items()):
+        if name not in NATIVE_VERIFIERS:
+            problems.append(
+                f"{name}: pinned {pinned} as a conda package, and this checker has "
+                f"no way to verify it. Add it to NATIVE_VERIFIERS or remove the "
+                f"pin -- a declared dependency nobody checks is not a lock."
+            )
+            continue
+        found = native_version(name)
         if found is None:
             problems.append(f"{name}: pinned {pinned}, not installed")
         elif found != pinned:
@@ -136,7 +215,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"no environment declaration at {args.file}", file=sys.stderr)
         return 2
 
-    python, pins, loose = read_pins(args.file)
+    python, pins, loose, conda = read_pins(args.file)
 
     if args.print_requirements:
         # So a CI job installs from the declaration instead of carrying its own
@@ -154,7 +233,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{args.file} pins nothing; there is no lock to check", file=sys.stderr)
         return 2
 
-    problems = drift(python, pins)
+    problems = drift(python, pins, conda)
     if problems:
         print(f"environment does not match {args.file.name}:", file=sys.stderr)
         for problem in problems:
@@ -163,8 +242,13 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     if not args.quiet:
+        # The conda pins are named rather than counted. They are verified by
+        # running a binary rather than by reading metadata, which is the less
+        # obvious half of what this command does, and a bare total would let a
+        # reader assume the familiar half was all of it.
+        native = f", {', '.join(sorted(conda))} verified by execution" if conda else ""
         print(f"environment matches {args.file.name}: "
-              f"python {python}, {len(pins)} pinned package(s)")
+              f"python {python}, {len(pins)} pinned package(s){native}")
     return 0
 
 

@@ -91,7 +91,7 @@ def test_the_lock_pins_exact_versions() -> None:
     sys.path.insert(0, str(REPO_ROOT / "tools"))
     import check_env  # ruff: ignore[import-outside-top-level] - imported here so the path insert applies
 
-    python, pins, loose = check_env.read_pins(ENVIRONMENT)
+    python, pins, loose, _ = check_env.read_pins(ENVIRONMENT)
     assert python, "the interpreter itself is unpinned"
     assert pins, "the declaration pins no package"
     assert loose == [], f"unpinned requirement(s): {'; '.join(loose)}"
