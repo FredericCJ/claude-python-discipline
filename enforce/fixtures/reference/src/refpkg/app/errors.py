@@ -14,6 +14,8 @@ class AppError(Exception):
 
     ## Namespaced and stable, like every other code in the package.
     code: str = "refpkg.app.error"
+    ## The rules an app failure defends.
+    rule_ids: tuple[str, ...] = ("ERR-004",)
 
 
 class PruneInterrupted(AppError):
@@ -26,6 +28,9 @@ class PruneInterrupted(AppError):
 
     ## Distinguishes this arm from every other in the family.
     code = "refpkg.app.prune_interrupted"
+    ## An interrupted multi-effect apply is exactly what `EFCT-007` journals
+    ## and `EFCT-009` requires be stated rather than quietly hoped past.
+    rule_ids: tuple[str, ...] = ("EFCT-007", "EFCT-009")
 
     def __init__(self, deleted: tuple[str, ...], remaining: tuple[str, ...]) -> None:
         """Record how far the apply got.

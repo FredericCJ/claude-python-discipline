@@ -257,3 +257,52 @@ def test_no_unhandled_escape() -> None:
                 f"{module.name} catches broadly and does not produce an envelope; "
                 f"the failure is swallowed rather than reported."
             )
+
+
+# ------------------------------------------------------------------- DIAG-001
+#
+# The field that closes the Prime Directive's last hop.
+
+
+def test_every_envelope_names_a_rule_that_resolves(envelope_module: object) -> None:
+    """DIAG-001: a failure says which contract it broke, in ids the corpus carries.
+
+    `rule_ids` was in the published schema from the start and nothing populated
+    it, so the one field that turns a diagnosis into a lookup was specified,
+    shipped and dead. An agent had to infer the rule from a message.
+
+    An unresolvable id is worse than an absent one: it sends a reader to a rule
+    that does not exist and costs them the trip. So this asserts both halves --
+    the ids are there, and they name rules `discipline/rules.json` actually holds.
+
+    @param envelope_module the reference's envelope producer
+    """
+    sys.path.insert(0, str(_SRC))
+    from refpkg.app.errors import (  # ruff: ignore[import-outside-top-level]
+        PruneInterrupted,
+    )
+    from refpkg.domain.errors import (  # ruff: ignore[import-outside-top-level]
+        InvariantViolated,
+    )
+    from refpkg.ports.errors import (  # ruff: ignore[import-outside-top-level]
+        ClockUnavailable,
+    )
+
+    corpus = Path(__file__).resolve().parent.parent.parent / "discipline"
+    index = json.loads((corpus / "rules.json").read_text(encoding="utf-8"))
+    known = {rule["id"] for rule in index["rules"]}
+
+    for error in (InvariantViolated("an instant is at or after the epoch", -1),
+                  ClockUnavailable("no reading"),
+                  PruneInterrupted(("a.log",), ("b.log",))):
+        record = envelope_module.from_error(error)  # type: ignore[attr-defined]
+        named = record.get("rule_ids") or []
+        assert named, (
+            f"{type(error).__name__} produces an envelope naming no rule, so a "
+            f"consumer must infer the contract from prose"
+        )
+        unknown = sorted(set(named) - known)
+        assert not unknown, (
+            f"{type(error).__name__} names {unknown}, which the corpus does not "
+            f"carry. An id that resolves to nothing costs a reader the trip."
+        )

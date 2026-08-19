@@ -85,30 +85,32 @@ was written to protect.
 
 ## Navigating
 
-Prefer the navigator to reading speculatively. It answers from the rule graph and returns
-a few hundred tokens, not a module.
+Prefer the navigator to reading speculatively.
 
 ```
-nav.py context --file P --error E --task T   what to read, why, and the token cost
+nav.py diagnose --envelope E | --error TEXT  what broke, which rule, what to do
+nav.py context --file P --error E --task T   what to read, and the token cost
 nav.py applies PATH                          which rules govern this file
-nav.py rule ID          / neighbors ID       one rule and what it connects to
-nav.py why ID                                which decision gave it this shape
-nav.py path A B         / budget IDS         how two rules relate; what a set costs
+nav.py rule ID / why ID / neighbors ID       one rule, its shape, its neighbours
+nav.py path A B / budget IDS                 how two relate; what a set costs
 ```
+
+**Start with `diagnose` when something failed.** It returns the governing rules' own
+words — statement, rationale, the command that decides them — for tens of tokens, where
+`context` returns a reading plan for thousands. Measured over twelve real defects: 57
+tokens against 4,994. Use `context` when nothing has failed yet and you are about to write.
 
 Fallback if the tool cannot run: grep `INDEX.md` for a rule id, or `jq` over `rules.json`.
 Each module's front-matter carries a measured `tokens:` count — budget before you read.
 
 ## What this repository has learned
 
-`learn.py retrieve --file P --error E` returns what earlier sessions found out here:
-project constraints, error-to-fix mappings, places a rule was ambiguous. Entries carry a
-confidence and are marked stale when old — weigh them, do not obey them.
+`learn.py retrieve --file P --error E` returns what earlier sessions found here. Entries
+carry a confidence and are marked stale when old — weigh them, do not obey them.
 
-Before reporting done, record what *this* session learned:
-`learn.py record --kind ... --claim ... --action ... --trigger ...`. A finding that the
-discipline itself is wrong is `--scope discipline`, and is harvested upstream rather than
-worked around. Full rules: `law/LEARN`.
+Before reporting done, `learn.py record --kind ... --claim ... --action ... --trigger ...`.
+A finding that the discipline itself is wrong is `--scope discipline`, harvested upstream
+rather than worked around. Full rules: `law/LEARN`.
 
 ## Precedence
 
@@ -118,10 +120,8 @@ worked around. Full rules: `law/LEARN`.
    override *what* it requires.
 4. `frame/` — grounding. Never prescriptive; informs judgment where no rule applies.
 
-More specific beats more general. `law/` states capability requirements and never pins a
-version; every pin lives in `fact/` with a `verified:` date, so rules outlive their tools.
-Contradictions between the source documents are resolved once in `meta/CONFLICTS`, not
-re-argued per task.
+More specific beats more general. Contradictions between the sources are resolved once in
+`meta/CONFLICTS`, not re-argued per task.
 
 ## Genres
 

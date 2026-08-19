@@ -58,18 +58,25 @@ BASELINE_PATH: Final = Path(__file__).resolve().parent / "bench_baseline.json"
 NAMED_OUTRIGHT: Final = 0
 
 
-def plan_for(output: str) -> dict[str, object]:
-    """The reading plan the navigator produces for one program output.
+def plan_for(output: str, route: str = "context") -> dict[str, object]:
+    """What the navigator answers for one program output, by one route.
 
     Shelled out rather than imported, because the CLI is what an agent actually
     invokes and a benchmark that exercises a different path measures a different
     thing.
 
+    Two routes are measured and reported side by side rather than one replacing
+    the other. `context` answers "what should I read" with a reading plan;
+    `diagnose` answers "what broke and what do I do" with the rules themselves.
+    Swapping the cheaper one in silently would show a fall in cost that was really
+    a change of question.
+
     @param output exactly what the failing program printed
+    @param route the subcommand to ask, `context` or `diagnose`
     @return the navigator's JSON payload, empty when it could not answer
     """
     finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
-        (sys.executable, "tools/nav.py", "--json", "context", "--error", output),
+        (sys.executable, "tools/nav.py", "--json", route, "--error", output),
         cwd=REPO_ROOT, capture_output=True, text=True,
         encoding="utf-8", errors="replace", check=False, timeout=180,
     )
@@ -94,6 +101,11 @@ def measure(defect: defects.Defect) -> dict[str, object]:
         seed for seed in seeds
         if isinstance(seed, dict) and seed.get("id") in defect.governs
     ]
+    answer = plan_for(defect.output, route="diagnose")
+    answered = [
+        rule for rule in (answer.get("rules", []) if answer else [])
+        if isinstance(rule, dict) and rule.get("id") in defect.governs
+    ]
     return {
         "defect": defect.defect_id,
         "summary": defect.summary,
@@ -102,6 +114,8 @@ def measure(defect: defects.Defect) -> dict[str, object]:
         "hops": min((int(s.get("hops", 99)) for s in reached), default=None),
         "tokens": int(payload.get("tokens_planned", 0)) if payload else 0,
         "tokens_if_all": int(payload.get("tokens_if_all", 0)) if payload else 0,
+        "diagnosed": bool(answered),
+        "diagnose_tokens": int(answer.get("tokens", 0)) if answer else 0,
     }
 
 
@@ -127,6 +141,11 @@ def summarize(results: Sequence[dict[str, object]]) -> dict[str, object]:
             "median_hops": (statistics.median(int(r["hops"]) for r in hits)
                             if hits else None),
             "named_outright": sum(1 for r in hits if r["hops"] == NAMED_OUTRIGHT),
+            "diagnosed": sum(1 for r in group if r.get("diagnosed")),
+            "median_diagnose_tokens": (
+                statistics.median(int(r["diagnose_tokens"]) for r in group
+                                  if r.get("diagnosed"))
+                if any(r.get("diagnosed") for r in group) else None),
         }
     return summary
 
@@ -146,12 +165,13 @@ def render(report: dict[str, object]) -> str:
     @param report what `run` produced
     @return the printable text
     """
-    lines = ["defect  found  hops  tokens  summary"]
+    lines = ["defect  found  hops  context  diagnose  summary"]
     for entry in report["results"]:  # type: ignore[union-attr]
         mark = "yes" if entry["found"] else "NO "
         hops = "-" if entry["hops"] is None else str(entry["hops"])
+        answer = str(entry["diagnose_tokens"]) if entry["diagnosed"] else "-"
         lines.append(f"{entry['defect']:7s} {mark:5s} {hops:>4s}  "
-                     f"{entry['tokens']:6d}  {entry['summary'][:52]}")
+                     f"{entry['tokens']:7d}  {answer:>8s}  {entry['summary'][:44]}")
     summary = report["summary"]
     for name in ("derived", "control"):
         part = summary[name]  # type: ignore[index]
@@ -160,7 +180,9 @@ def render(report: dict[str, object]) -> str:
             f"\n{name}: {part['found']}/{part['defects']} reached, "
             f"median {cost if cost is not None else 'n/a'} tokens, "
             f"median {part['median_hops']} hop(s), "
-            f"{part['named_outright']} named outright"
+            f"{part['named_outright']} named outright; "
+            f"diagnose reached {part['diagnosed']}/{part['defects']} at "
+            f"median {part['median_diagnose_tokens']} tok"
         )
     return "\n".join(lines)
 
@@ -178,7 +200,8 @@ def compare(report: dict[str, object], baseline: dict[str, object]) -> list[str]
         was = baseline.get("summary", {}).get(name, {})
         moved.extend(
             f"{name}.{field}: {was.get(field)} -> {now.get(field)}"
-            for field in ("found", "median_tokens", "median_hops", "named_outright")
+            for field in ("found", "median_tokens", "median_hops", "named_outright",
+                          "diagnosed", "median_diagnose_tokens")
             if was.get(field) != now.get(field)
         )
     return moved

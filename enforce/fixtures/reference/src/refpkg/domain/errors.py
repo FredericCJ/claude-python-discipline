@@ -24,6 +24,11 @@ class DomainError(Exception):
     ## Namespaced, greppable, and part of the published surface: renaming one is
     ## a breaking change (`DIAG-004`, `API-011`).
     code: str = "refpkg.domain.error"
+    ## The rules a domain failure defends. `ERR-004` because a layer produces
+    ## only its own family, `ARCH-006` because a domain function is total or
+    ## says how it failed. Carried into the envelope so the failure names its
+    ## own contract (`DIAG-001`).
+    rule_ids: tuple[str, ...] = ("ERR-004", "ARCH-006")
 
     def __init__(self, message: str) -> None:
         """Record the rendered message.
@@ -44,6 +49,9 @@ class InvariantViolated(DomainError):
 
     ## Distinguishes this arm from every other in the family.
     code = "refpkg.domain.invariant_violated"
+    ## A broken invariant is the domain refusing a value it was handed, which
+    ## is `ERR-014`'s contract-violation half rather than an expected outcome.
+    rule_ids: tuple[str, ...] = ("ERR-014", "ARCH-006")
 
     def __init__(self, invariant: str, actual: object) -> None:
         """Record which invariant failed and what was seen instead.

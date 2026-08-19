@@ -12,6 +12,7 @@ these fails.
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 import pytest
@@ -346,3 +347,104 @@ def test_a_path_without_a_line_number_survives(monkeypatch: pytest.MonkeyPatch) 
 
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-q"]))
+
+
+# ---------------------------------------------------------------- diagnose
+#
+# The Prime Directive's last hop. `context` answers "what should I read";
+# `diagnose` answers "what broke and what do I do", which is the question an
+# agent holding a failure actually has.
+
+
+def _diagnose(**kwargs: object) -> dict[str, object]:
+    """Run `cmd_diagnose` with the arguments a caller would pass.
+
+    @param kwargs the namespace fields, defaulted for the ones every call needs
+    @return the payload
+    """
+    fields = {"envelope": None, "error": None, "root": str(nav.REPO_ROOT)}
+    fields.update(kwargs)  # type: ignore[arg-type]
+    return nav.cmd_diagnose(nav.load_graph(nav.REPO_ROOT),
+                            argparse.Namespace(**fields))
+
+
+def test_an_envelope_resolves_the_rules_it_names(tmp_path: Path) -> None:
+    """The lookup case: a failure that says which contracts it broke.
+
+    `rule_ids` sat in the published schema unpopulated, so this hop did not exist
+    and an agent had to infer the rule from prose. Seeded at zero hops because a
+    quoted id is not a guess.
+
+    @param tmp_path holds the serialized envelope
+    """
+    envelope = tmp_path / "e.json"
+    envelope.write_text(json.dumps({
+        "code": "refpkg.app.prune_interrupted",
+        "layer": "app",
+        "remediation": "re-run to retry what remains",
+        "rule_ids": ["EFCT-007", "EFCT-009"],
+    }), encoding="utf-8")
+
+    payload = _diagnose(envelope=str(envelope))
+    found = {rule["id"] for rule in payload["rules"]}  # type: ignore[union-attr,index]
+    assert found == {"EFCT-007", "EFCT-009"}
+    assert payload["reported_remediation"] == "re-run to retry what remains"
+    assert all(rule["statement"] for rule in payload["rules"])  # type: ignore[union-attr,index]
+
+
+def test_the_answer_costs_a_fraction_of_a_reading_plan() -> None:
+    """The reason `diagnose` exists rather than `context --error` being enough.
+
+    A reading plan for one defect costs about five thousand tokens; the rules
+    themselves cost tens. Both are correct answers to different questions, and an
+    agent holding a traceback is asking the cheap one.
+    """
+    payload = _diagnose(error="FileNotFoundError: [Errno 2] No such file")
+    assert payload["rules"], "the traceback reached no rule"
+    assert 0 < int(payload["tokens"]) < 1000, (  # type: ignore[arg-type]
+        f"a diagnosis cost {payload['tokens']} tokens; at that price a caller "
+        f"may as well read the module"
+    )
+
+
+def test_raw_error_text_still_works_without_an_envelope() -> None:
+    """Not every program emits an envelope, and most output is not one.
+
+    The fallback is the same signature and quoted-id seeding `context` uses, so a
+    codebase that has adopted none of this still gets an answer.
+    """
+    payload = _diagnose(error="src/p.py:4: error: Function is missing a type "
+                              "annotation  [no-untyped-def]")
+    assert {r["id"] for r in payload["rules"]} & {"TYPE-001"}  # type: ignore[union-attr,index]
+
+
+def test_an_id_the_corpus_does_not_carry_is_reported_not_dropped(
+    tmp_path: Path,
+) -> None:
+    """An envelope naming a rule that does not exist must say so.
+
+    Silently dropping it would let a consuming project drift its ids away from
+    the corpus and never learn -- the envelope would go on looking well formed
+    while naming nothing that resolves.
+
+    @param tmp_path holds the serialized envelope
+    """
+    envelope = tmp_path / "e.json"
+    envelope.write_text(json.dumps({
+        "code": "pkg.gone",
+        "rule_ids": ["EFCT-007", "ZZZZ-999"],
+    }), encoding="utf-8")
+
+    payload = _diagnose(envelope=str(envelope))
+    assert {r["id"] for r in payload["rules"]} == {"EFCT-007"}  # type: ignore[union-attr,index]
+    assert payload["unresolved"] == ["ZZZZ-999"]
+
+
+def test_diagnose_refuses_when_given_nothing() -> None:
+    """Two empty inputs is a caller error, not an empty answer.
+
+    An empty answer reads as "no rule governs this", which is a claim, and it
+    would be one nobody made.
+    """
+    with pytest.raises(SystemExit):
+        _diagnose()

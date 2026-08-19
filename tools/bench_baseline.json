@@ -7,7 +7,9 @@
       "found": true,
       "hops": 0,
       "tokens": 5314,
-      "tokens_if_all": 6863
+      "tokens_if_all": 6863,
+      "diagnosed": true,
+      "diagnose_tokens": 58
     },
     {
       "defect": "D-02",
@@ -16,7 +18,9 @@
       "found": true,
       "hops": 0,
       "tokens": 4730,
-      "tokens_if_all": 7702
+      "tokens_if_all": 7702,
+      "diagnosed": true,
+      "diagnose_tokens": 28
     },
     {
       "defect": "D-03",
@@ -25,7 +29,9 @@
       "found": true,
       "hops": 0,
       "tokens": 4731,
-      "tokens_if_all": 14420
+      "tokens_if_all": 14420,
+      "diagnosed": true,
+      "diagnose_tokens": 142
     },
     {
       "defect": "D-04",
@@ -34,7 +40,9 @@
       "found": true,
       "hops": 0,
       "tokens": 5039,
-      "tokens_if_all": 7816
+      "tokens_if_all": 7816,
+      "diagnosed": true,
+      "diagnose_tokens": 36
     },
     {
       "defect": "D-05",
@@ -43,7 +51,9 @@
       "found": true,
       "hops": 0,
       "tokens": 4949,
-      "tokens_if_all": 10871
+      "tokens_if_all": 10871,
+      "diagnosed": true,
+      "diagnose_tokens": 93
     },
     {
       "defect": "D-06",
@@ -52,7 +62,9 @@
       "found": true,
       "hops": 0,
       "tokens": 5363,
-      "tokens_if_all": 8421
+      "tokens_if_all": 8421,
+      "diagnosed": true,
+      "diagnose_tokens": 55
     },
     {
       "defect": "D-07",
@@ -61,7 +73,9 @@
       "found": true,
       "hops": 0,
       "tokens": 4949,
-      "tokens_if_all": 10871
+      "tokens_if_all": 10871,
+      "diagnosed": true,
+      "diagnose_tokens": 129
     },
     {
       "defect": "D-08",
@@ -70,7 +84,9 @@
       "found": true,
       "hops": 0,
       "tokens": 5039,
-      "tokens_if_all": 5039
+      "tokens_if_all": 5039,
+      "diagnosed": true,
+      "diagnose_tokens": 35
     },
     {
       "defect": "D-09",
@@ -79,7 +95,9 @@
       "found": true,
       "hops": 0,
       "tokens": 5363,
-      "tokens_if_all": 10514
+      "tokens_if_all": 10514,
+      "diagnosed": true,
+      "diagnose_tokens": 36
     },
     {
       "defect": "D-10",
@@ -88,7 +106,9 @@
       "found": true,
       "hops": 0,
       "tokens": 5691,
-      "tokens_if_all": 8190
+      "tokens_if_all": 8190,
+      "diagnosed": true,
+      "diagnose_tokens": 48
     },
     {
       "defect": "D-11",
@@ -97,7 +117,9 @@
       "found": true,
       "hops": 0,
       "tokens": 3417,
-      "tokens_if_all": 3417
+      "tokens_if_all": 3417,
+      "diagnosed": true,
+      "diagnose_tokens": 33
     },
     {
       "defect": "D-12",
@@ -106,7 +128,9 @@
       "found": true,
       "hops": 0,
       "tokens": 5039,
-      "tokens_if_all": 5039
+      "tokens_if_all": 5039,
+      "diagnosed": true,
+      "diagnose_tokens": 16
     }
   ],
   "summary": {
@@ -116,7 +140,9 @@
       "hit_rate": 1.0,
       "median_tokens": 4994.0,
       "median_hops": 0.0,
-      "named_outright": 8
+      "named_outright": 8,
+      "diagnosed": 8,
+      "median_diagnose_tokens": 56.5
     },
     "control": {
       "defects": 4,
@@ -124,7 +150,9 @@
       "hit_rate": 1.0,
       "median_tokens": 5201.0,
       "median_hops": 0.0,
-      "named_outright": 4
+      "named_outright": 4,
+      "diagnosed": 4,
+      "median_diagnose_tokens": 34.5
     }
   }
 }

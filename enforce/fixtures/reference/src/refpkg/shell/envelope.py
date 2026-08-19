@@ -82,6 +82,11 @@ def from_error(error: BaseException) -> dict[str, Any]:
         "cause_chain": causes(error),
         "notes": list(getattr(error, "__notes__", [])),
         "remediation": _remediation(error),
+        # The field that turns a diagnosis into a lookup. An error family says
+        # which contracts it defends; carrying that outward is what lets a
+        # consumer -- `python -m nav diagnose`, or a person -- go straight to the
+        # rule instead of inferring it from a message.
+        "rule_ids": list(getattr(error, "rule_ids", ())),
     }
     if isinstance(error, PortError):
         # The schema requires both of these for an adapter fault, and only an

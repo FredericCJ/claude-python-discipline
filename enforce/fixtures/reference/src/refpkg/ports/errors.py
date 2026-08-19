@@ -47,6 +47,12 @@ class PortError(Exception):
 
     ## Namespaced, greppable, and part of the published surface (`DIAG-002`).
     code: str = "refpkg.port.error"
+    ## The rules this family defends, carried into the envelope so a consumer --
+    ## or an agent -- can go from the failure to the contract it broke without
+    ## guessing. `DIAG-001`'s envelope has carried a `rule_ids` field since it was
+    ## published; until something populated it, the field was specified, shipped
+    ## and dead, and the last hop of the Prime Directive stayed manual.
+    rule_ids: tuple[str, ...] = ("ERR-004", "ARCH-008")
 
     def __init__(self, port: str, operation: str, detail: str) -> None:
         """Record which contract was crossed, doing what, and what went wrong.

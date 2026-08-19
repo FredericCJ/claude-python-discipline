@@ -591,6 +591,167 @@ def _fit_budget(graph: Graph, module_ids: Sequence[str], budget: int) -> list[di
     return plan
 
 
+def rules_by_id(root: Path) -> dict[str, object]:
+    """Every parsed rule in the corpus, by id.
+
+    Parsed from the modules rather than read from the graph, because the graph
+    carries a rule's identity and not its words -- and the words are the whole
+    answer `diagnose` exists to give.
+
+    @param root the repository root
+    @return each rule id against its parsed `Rule`
+    """
+    from discipline_core import (  # ruff: ignore[import-outside-top-level]
+        iter_documents,
+    )
+
+    found: dict[str, object] = {}
+    for document in iter_documents(root / "discipline"):
+        for rule in document.rules:
+            found[rule.rule_id] = rule
+    return found
+
+
+def envelope_ids(payload: dict[str, object]) -> list[str]:
+    """The rules a diagnostic envelope names outright.
+
+    `DIAG-001`'s envelope carries `rule_ids` precisely so a failure can say which
+    contract it broke. Reading them is the difference between a lookup and a
+    derivation, and it is the hop the Prime Directive was missing.
+
+    @param payload a parsed envelope
+    @return the rule ids it names, in order, empty when it names none
+    """
+    named = payload.get("rule_ids") or []
+    return [str(entry) for entry in named] if isinstance(named, list) else []
+
+
+def _read_envelope(source: str | None) -> dict[str, object]:
+    """Parse a serialized envelope from a path, or from stdin when given `-`.
+
+    @param source the path, `-` for stdin, or None when the caller passed none
+    @return the parsed envelope, empty when there was nothing to read
+    @throws SystemExit when the text is not JSON, because a malformed envelope
+        that fell through as an empty one would read as "this failure names no
+        rule", which is a claim nobody made
+    """
+    if source is None:
+        return {}
+    raw = sys.stdin.read() if str(source) == "-" else Path(source).read_text(
+        encoding="utf-8")
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError as broken:
+        message = f"the envelope is not JSON: {broken}"
+        raise SystemExit(message) from broken
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def _diagnostic_seeds(graph: Graph, envelope: dict[str, object],
+                      text: str) -> dict[str, Hit]:
+    """Which rules the failure implicates, preferring what it named outright.
+
+    An id the envelope carries is evidence, not a guess, so it seeds at zero hops
+    and nothing else is consulted. Only when the envelope named none does this
+    fall back to the signature and quoted-id seeding `context` uses -- over the
+    envelope's own prose as well as any raw text, since a program that emits an
+    envelope without ids still describes itself in one.
+
+    @param graph the discipline graph
+    @param envelope the parsed envelope, possibly empty
+    @param text raw error text, possibly empty
+    @return the implicated nodes by id
+    """
+    found: dict[str, Hit] = {}
+    for rule_id in envelope_ids(envelope):
+        node = graph.nodes.get(rule_id)
+        if node is not None:
+            found[node.id] = _hit(node, 0, "named by the envelope")
+    if found:
+        return found
+
+    prose = " ".join(str(envelope.get(field, "")) for field in
+                     ("code", "operation", "expected", "actual", "notes"))
+    for hit in seeds_for_error(graph, f"{text} {prose}".strip()):
+        found.setdefault(hit.id, hit)
+    return found
+
+
+def _rule_answer(hit: Hit, node: Node, rule: object, enforcement: str | None,
+                 ) -> dict[str, object]:
+    """One rule laid out as an answer: what it says, why, and what decides it.
+
+    @param hit how the rule was reached
+    @param node its graph node, carrying the force tag and reading cost
+    @param rule its parsed form, carrying the words
+    @param enforcement the measured status, so a binding rule nothing decides
+        does not read as a guarantee
+    @return the fields a caller needs to act without opening the module
+    """
+    return {
+        "id": hit.id,
+        "title": rule.title,          # type: ignore[attr-defined]
+        "force": force_tag(node.attr("force"), enforcement),
+        "statement": rule.statement,  # type: ignore[attr-defined]
+        "why": rule.why,              # type: ignore[attr-defined]
+        "check": rule.check,          # type: ignore[attr-defined]
+        "module": node.attr("module"),
+        "open": openable(node.path),
+        "tokens": node.tokens,
+        "reason": hit.reason,
+    }
+
+
+def cmd_diagnose(graph: Graph, args: argparse.Namespace) -> dict[str, object]:
+    """What broke, against which rule, and what to do -- and nothing else.
+
+    `context` answers "what should I read", and answers it with a reading plan
+    costing about five thousand tokens. That is the right answer to that question
+    and the wrong answer to this one. An agent holding a failure wants the
+    governing rule's own words, its rationale, and the line to open if the words
+    are not enough.
+
+    So this returns the rules themselves, at a measured median of 57 tokens
+    against `context`'s 4,994 over the same twelve defects. The owning module is
+    NAMED, not read: it is there for the case where the rule alone does not settle
+    it.
+
+    @param graph the discipline graph
+    @param args the parsed `diagnose` arguments
+    @return the implicated rules with their text, the envelope's own remediation
+        when it carried one, what the answer cost, and any id the envelope named
+        that the corpus does not carry
+    @throws SystemExit when neither an envelope nor an error text was supplied
+    """
+    envelope = _read_envelope(args.envelope)
+    text = args.error or ""
+    if not (envelope or text):
+        message = "diagnose needs --envelope or --error"
+        raise SystemExit(message)
+
+    root = Path(args.root).resolve()
+    found = _diagnostic_seeds(graph, envelope, text)
+    parsed = rules_by_id(root)
+    status = enforcement_index(root)
+
+    implicated: list[dict[str, object]] = []
+    for hit in sorted(found.values(), key=lambda h: (h.hops, h.id)):
+        node = graph.nodes.get(hit.id)
+        rule = parsed.get(hit.id)
+        if hit.type == "rule" and node is not None and rule is not None:
+            implicated.append(_rule_answer(hit, node, rule, status.get(hit.id)))
+
+    reached = {entry["id"] for entry in implicated}
+    return {
+        "code": envelope.get("code"),
+        "layer": envelope.get("layer"),
+        "reported_remediation": envelope.get("remediation"),
+        "rules": implicated,
+        "tokens": sum(int(entry["tokens"]) for entry in implicated),
+        "unresolved": [r for r in envelope_ids(envelope) if r not in reached],
+    }
+
+
 def cmd_rule(graph: Graph, args: argparse.Namespace) -> dict[str, object]:
     """One node with everything it relates to, grouped by relation.
 
@@ -945,8 +1106,50 @@ def _render_stats(payload: dict[str, object]) -> list[str]:
 ## The per-command layouts. A command absent from this table falls back to
 ## indented JSON, so a new subcommand prints something legible before anyone
 ## writes its renderer.
+def _render_diagnose(payload: dict[str, object]) -> list[str]:
+    """Lay a diagnosis out as an answer, not as a reading list.
+
+    @param payload what `cmd_diagnose` produced
+    @return the lines to print
+    """
+    lines: list[str] = []
+    if payload.get("code"):
+        where = f" in the {payload['layer']} layer" if payload.get("layer") else ""
+        lines.append(f"{payload['code']}{where}")
+    if payload.get("reported_remediation"):
+        lines += ["", f"REPORTED  {payload['reported_remediation']}"]
+
+    rules = payload.get("rules") or []
+    if not rules:
+        lines += ["", "no rule in the corpus matched this output.",
+                  "Add a signature to enforce/signals.toml if this shape recurs."]
+        return lines
+
+    lines.append("")
+    for rule in rules:  # type: ignore[union-attr]
+        lines.append(f"{rule['id']} {rule['force']}  {rule['title']}")
+        lines.append(f"    {rule['statement']}")
+        if rule.get("why"):
+            lines.append(f"    why    {rule['why']}")
+        if rule.get("check"):
+            lines.append(f"    check  {rule['check']}")
+        lines.append(f"    open   {rule['open']}  ({rule['module']})")
+        lines.append("")
+    lines.append(f"COST  {payload['tokens']} tok"
+                 f"  -- {len(rules)} rule(s), read in full")
+    if payload.get("unresolved"):
+        lines.append(f"UNRESOLVED  {', '.join(payload['unresolved'])}"  # type: ignore[arg-type]
+                     f" -- named by the envelope and not in the corpus")
+    return lines
+
+
+## Which renderer lays out which command's payload. A table rather than a chain
+## of conditionals, because the chain was over `C901`'s ceiling and `ARCH-016` is
+## enforced through that exact code. A command absent from here falls back to
+## JSON, which is readable if not shaped.
 _RENDERERS: Final[Mapping[str, Callable[[dict[str, object]], list[str]]]] = {
     "context": _render_context,
+    "diagnose": _render_diagnose,
     "applies": _render_applies,
     "rule": _render_node,
     "why": _render_node,
@@ -996,6 +1199,11 @@ def build_parser() -> argparse.ArgumentParser:
     nb.add_argument("--depth", type=int, default=1)
     nb.add_argument("--undirected", action="store_true")
 
+    dg = sub.add_parser("diagnose",
+                        help="what broke, against which rule, and what to do")
+    dg.add_argument("--envelope", help="a serialized diagnostic envelope, or - for stdin")
+    dg.add_argument("--error", help="raw error text, when there is no envelope")
+
     ap = sub.add_parser("applies", help="rules governing a file")
     ap.add_argument("path")
 
@@ -1019,6 +1227,7 @@ def build_parser() -> argparse.ArgumentParser:
 ## raises KeyError at dispatch, and one added here alone is simply unreachable.
 COMMANDS = {
     "context": cmd_context,
+    "diagnose": cmd_diagnose,
     "rule": cmd_rule,
     "neighbors": cmd_neighbors,
     "applies": cmd_applies,

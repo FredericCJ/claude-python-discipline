@@ -9,7 +9,7 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 | Status | Count |
 |---|---|
 | active | 1 |
-| candidate | 88 |
+| candidate | 89 |
 | superseded | 1 |
 
 ## active
@@ -773,6 +773,15 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `command:bench`
 - **About** FLOW-011
 - **Verify** `python tools/bench.py --compare`
+
+### L-0091 · A reading plan and a diagnosis are different questions with a 88x cost difference: nav.py context returns ~4,994 tokens of modules to read, nav.py diagnose returns the governing rules' own words for a median of 57.
+
+- **Do** When something has failed, run diagnose, not context. Reserve context for before you write, when nothing has failed and the question really is what to read.
+- **Kind** procedure · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `command:nav`
+- **About** DIAG-001
+- **Verify** `python tools/bench.py`
 
 ## superseded
 
