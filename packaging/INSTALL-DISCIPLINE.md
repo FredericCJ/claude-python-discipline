@@ -1,6 +1,6 @@
 # A Python engineering discipline was unzipped here
 
-**Release v2.0.0.** The archive placed one directory at the root of this repository:
+**Release v3.0.0.** The archive placed one directory at the root of this repository:
 
 ```
 .agent/
