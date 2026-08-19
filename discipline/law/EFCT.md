@@ -2,7 +2,7 @@
 id: law/EFCT
 kind: law
 title: Effects, State and Time
-tokens: 2281
+tokens: 2286
 load_when:
   - "write a file"
   - "mutation"
@@ -101,13 +101,13 @@ documentation defect.
 - **Check** `python -m checks.atomicity_qualified`
 - **See** [meta/GLOSSARY]
 
-### EFCT-009 · What is not guaranteed is stated  [BINDING] [fitness:test_interruption_recovers]
+### EFCT-009 · What is not guaranteed is stated  [BINDING] [fitness:test_what_is_not_guaranteed_is_stated]
 A contract offering partial guarantees MUST name what it does not guarantee — cross-process
 isolation during a commit window, the indivisibility of the journal write itself, ordering
 under concurrent readers.
 - **Why** An unstated non-guarantee is discovered as a bug, and attributed to the wrong
   component every time.
-- **Check** `pytest enforce/fitness/test_effects.py::test_interruption_recovers`
+- **Check** `pytest enforce/fitness/test_effects.py::test_what_is_not_guaranteed_is_stated`
 
 ---
 

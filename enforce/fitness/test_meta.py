@@ -28,6 +28,7 @@ from typing import TYPE_CHECKING, Final
 import pytest
 
 import gate as _gate
+from decides import decides
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -108,6 +109,7 @@ def names_defined_in(directory: Path) -> set[str]:
 # ------------------------------------------------------------------- FLOW-006
 
 
+@decides("FLOW-006")
 def test_binding_rules_have_mechanisms() -> None:
     """FLOW-006: a rule tagged binding names a mechanism and a check command.
 
@@ -143,6 +145,7 @@ def test_advisory_rules_justify_themselves() -> None:
 # ------------------------------------------------------------- FLOW-007 / TEST-015
 
 
+@decides("FLOW-007", "TEST-015")
 def test_checks_can_fail() -> None:
     """FLOW-007: every AST check has a companion test proving it fails.
 
@@ -221,6 +224,7 @@ def test_no_source_file_carries_a_control_character() -> None:
     assert not offenders, "control characters in source:\n" + "\n".join(offenders)
 
 
+@decides("FLOW-009")
 def test_gate_suite_defined() -> None:
     """FLOW-009: the gate is a list, in one place, not prose that drifts.
 
@@ -391,3 +395,44 @@ def test_doxygen_version_matches_recorded() -> None:
 
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-q"]))
+
+
+@decides("TEAMS-003")
+def test_completion_hook_enforces_the_gate() -> None:
+    """TEAMS-003: where the tooling offers a hook, the gate is enforced there.
+
+    "A task cannot be marked done while its gate fails." The rule's subject is the
+    completion hook, and until v3.1 it was claimed by `test_gate_suite_defined`,
+    which asserts the GATE tuple is well-formed and says nothing about whether
+    anything runs it unasked. A gate a person has to remember is a preference.
+
+    The vendored hook is the mechanism: `integrate.py --hooks` points
+    `core.hooksPath` at it, so a push runs the gate without anyone choosing to.
+    """
+    hook = REPO_ROOT / "enforce" / "templates" / "hooks" / "pre-push"
+    assert hook.is_file(), (
+        "no pre-push hook ships, so the verification obligation is a request"
+    )
+    text = hook.read_text(encoding="utf-8")
+    assert "gate.py" in text, (
+        "the pre-push hook does not run the gate, so a change can be offered "
+        "without one having passed"
+    )
+    assert "exit" in text, (
+        "the hook runs the gate and does not act on the result; a hook that "
+        "reports and returns zero is a slower way of not checking"
+    )
+    installer = (REPO_ROOT / "tools" / "integrate.py").read_text(encoding="utf-8")
+    assert "hooksPath" in installer, (
+        "nothing installs the hook, so it ships and never runs"
+    )
+
+
+def test_a_hook_that_does_not_run_the_gate_is_caught(tmp_path: Path) -> None:
+    """The negative case: a hook that greets the user and exits zero.
+
+    @param tmp_path holds the substituted hook
+    """
+    hook = tmp_path / "pre-push"
+    hook.write_text("#!/bin/sh\necho pushing\nexit 0\n", encoding="utf-8")
+    assert "gate.py" not in hook.read_text(encoding="utf-8")

@@ -22,6 +22,7 @@ import sys
 from pathlib import Path
 from typing import Final
 
+from decides import decides
 from fixtures import package_root, reference_root
 
 ## The repository root, three levels up from this file.
@@ -62,6 +63,7 @@ def imports_of(path: Path) -> set[str]:
 # ------------------------------------------------------- DEP-005 / DEP-006
 
 
+@decides("DEP-005", "DEP-006")
 def test_environment_locked() -> None:
     """DEP-005, DEP-006: the environment is pinned, and something checks it.
 
@@ -116,6 +118,7 @@ def test_the_verifier_can_fail(tmp_path: Path) -> None:
 # ------------------------------------------------------------------- DEP-002
 
 
+@decides("DEP-002")
 def test_dependency_position() -> None:
     """DEP-002: a dependency is judged by where it sits, not by whether it is good.
 

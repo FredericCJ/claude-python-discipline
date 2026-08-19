@@ -23,6 +23,7 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING, Final
 
+from decides import decides
 from fixtures import broken_copy, reference_root
 
 if TYPE_CHECKING:
@@ -59,6 +60,7 @@ def goldens_in(root: Path) -> list[Path]:
     return sorted(set(found))
 
 
+@decides("TEST-008")
 def test_goldens_reviewed() -> None:
     """TEST-008: regeneration is deliberate, or there are no goldens.
 

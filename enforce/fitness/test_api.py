@@ -29,6 +29,7 @@ from typing import Final
 
 import pytest
 
+from decides import decides
 from fixtures import broken_copy, package_root, reference_root
 
 ## The repository root, three levels up from this file.
@@ -88,21 +89,54 @@ def protocol_methods(package: Path) -> list[tuple[str, ast.FunctionDef]]:
 # ------------------------------------------- API-001 / API-002 / FLOW-001
 
 
+@decides("API-001", "API-002")
 def test_contract_documented() -> None:
-    """API-001, API-002, FLOW-001: the contract exists, and is not the code.
+    """API-001, API-002: the contract states its terms, and is not the code.
 
     A `Protocol` method may hold a docstring and an ellipsis. Anything more is an
     implementation living in the place reserved for the promise, and every
     adapter then inherits behaviour the contract never described.
+
+    **`API-001` is not satisfied by the presence of a docstring.** Until v3.1 this
+    test asserted `get_docstring(method)` was truthy and claimed the rule, so a
+    method documented as `"x"` passed while stating none of the seven things the
+    rule requires. That is the same defect -- existence standing in for agreement
+    -- that `@decides` exists to stop, and it was found by asking what this
+    function could actually reject.
+
+    What is checked here is the mechanical subset: every argument named, and the
+    result stated unless the signature returns None. Ordering, idempotency and
+    concurrency are prose that lives in the module docstring, and
+    `test_every_port_is_a_protocol` holds that to `CONTRACT_TOPICS`.
     """
     package = package_root(reference_root())
     methods = protocol_methods(package)
     assert methods, "no Protocol methods found; this test would pass vacuously"
 
     for owner, method in methods:
-        assert ast.get_docstring(method), (
+        documentation = ast.get_docstring(method)
+        assert documentation, (
             f"{owner}.{method.name} is part of a contract and states nothing"
         )
+        for argument in (*method.args.args, *method.args.kwonlyargs):
+            if argument.arg in {"self", "cls"}:
+                continue
+            assert f"@param {argument.arg}" in documentation, (
+                f"{owner}.{method.name} takes {argument.arg!r} and the contract "
+                f"never says what it is. A signature names an argument; a "
+                f"contract says what a caller may pass and what happens if they "
+                f"do not."
+            )
+        # `-> None` is an `ast.Constant` holding None, not a `Name` called
+        # "None". Reading it as a Name reported every void method as an
+        # undescribed result, which is how this assertion first ran.
+        annotation = method.returns
+        void = isinstance(annotation, ast.Constant) and annotation.value is None
+        if not void:
+            assert "@return" in documentation, (
+                f"{owner}.{method.name} returns something the contract does not "
+                f"describe, so every adapter is free to return a different one."
+            )
         substantive = [
             s for s in method.body
             if not (isinstance(s, ast.Expr) and isinstance(s.value, ast.Constant))
@@ -113,6 +147,31 @@ def test_contract_documented() -> None:
             f"Protocol method with a body is behaviour every adapter inherits "
             f"and the contract never described."
         )
+
+
+def test_a_contract_that_only_has_a_docstring_is_caught(tmp_path: Path) -> None:
+    """The negative case for `API-001`, and the reason it was rewritten.
+
+    The damage here is the one the old assertion could not see: the docstring is
+    present, non-empty and useless. `TEST-015` asks every mechanism to be shown
+    failing, and a mechanism whose companion only proves it catches an *absent*
+    docstring has not been shown to check what the rule says.
+
+    @param tmp_path the fixture directory
+    """
+    stated = ('        """The current instant.\n\n'
+              '        @return the current instant, at or after the epoch\n'
+              '        @throws ClockUnavailable when no reading can be taken\n'
+              '        """')
+    root = broken_copy(tmp_path, replace=[
+        ("src/refpkg/ports/clock.py", stated, '        """The current instant."""'),
+    ])
+    methods = protocol_methods(package_root(root))
+    hollow = [
+        (owner, method) for owner, method in methods
+        if "@return" not in (ast.get_docstring(method) or "")
+    ]
+    assert hollow, "the damage did not land; the contract still states its result"
 
 
 def test_a_protocol_carrying_an_implementation_is_caught(tmp_path: Path) -> None:
@@ -136,6 +195,7 @@ def test_a_protocol_carrying_an_implementation_is_caught(tmp_path: Path) -> None
 # ------------------------------------------- API-005 / API-006 / API-008
 
 
+@decides("API-005", "API-006")
 def test_structured_output() -> None:
     """API-005, API-006, API-008: one result object, two renderings, self-describing.
 
@@ -170,6 +230,7 @@ def test_structured_output() -> None:
 # ------------------------------------------------------------------- API-007
 
 
+@decides("API-007")
 def test_exit_codes() -> None:
     """API-007: exit status is named, not a literal at the point of return.
 
@@ -189,6 +250,7 @@ def test_exit_codes() -> None:
 # ------------------------------------------------------------------- API-009
 
 
+@decides("API-009")
 def test_agent_parity() -> None:
     """API-009: there is one validation path, whoever is calling.
 
@@ -209,6 +271,7 @@ def test_agent_parity() -> None:
 # ------------------------------------------------------- API-010 / API-013
 
 
+@decides("API-010")
 def test_schema_versioned() -> None:
     """API-010, API-013: the payload says which version it is.
 
@@ -237,6 +300,7 @@ def test_schema_versioned() -> None:
 # ------------------------------------------------------------------- API-012
 
 
+@decides("API-012")
 def test_migrations() -> None:
     """API-012: a format past its first version ships a migration and its test.
 

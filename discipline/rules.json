@@ -187,7 +187,7 @@
       "id": "law/API",
       "kind": "law",
       "title": "Contracts and Public Surface",
-      "tokens": 2093,
+      "tokens": 2445,
       "load_when": [
         "public API",
         "contract",
@@ -239,7 +239,7 @@
       "id": "law/DEP",
       "kind": "law",
       "title": "Dependencies and Generated Artefacts",
-      "tokens": 2011,
+      "tokens": 2111,
       "load_when": [
         "add a dependency",
         "third party library",
@@ -263,7 +263,7 @@
       "id": "law/DIAG",
       "kind": "law",
       "title": "Diagnostics and Traceability",
-      "tokens": 2499,
+      "tokens": 2634,
       "load_when": [
         "exception",
         "traceback",
@@ -317,7 +317,7 @@
       "id": "law/EFCT",
       "kind": "law",
       "title": "Effects, State and Time",
-      "tokens": 2281,
+      "tokens": 2286,
       "load_when": [
         "write a file",
         "mutation",
@@ -373,7 +373,7 @@
       "id": "law/FLOW",
       "kind": "law",
       "title": "How a Change Is Made",
-      "tokens": 1994,
+      "tokens": 2233,
       "load_when": [
         "definition of done",
         "before i commit",
@@ -421,7 +421,7 @@
       "id": "law/TEST",
       "kind": "law",
       "title": "Systematic Testing and Oracles",
-      "tokens": 2777,
+      "tokens": 2786,
       "load_when": [
         "write a test",
         "pytest",
@@ -531,7 +531,7 @@
       "id": "meta/OPEN",
       "kind": "meta",
       "title": "Open Decisions",
-      "tokens": 3971,
+      "tokens": 3966,
       "load_when": [
         "open question",
         "undecided",
@@ -601,7 +601,7 @@
       "id": "ops/teams",
       "kind": "ops",
       "title": "Agent Team Mechanics",
-      "tokens": 2584,
+      "tokens": 2592,
       "load_when": [
         "agent team",
         "teammate",
@@ -957,16 +957,14 @@
       "id": "API-008",
       "module": "law/API",
       "title": "The surface is self-describing",
-      "force": "BINDING",
-      "mechanisms": [
-        "fitness:test_structured_output"
-      ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
       "statement": "The published surface MUST offer a machine-readable description of its own operations, arguments and error codes.",
       "why": "A client that can enumerate the contract can adapt to it; one that cannot must hard-code assumptions that silently rot.",
-      "check": "`pytest enforce/fitness/test_api.py::test_structured_output`",
-      "no_mechanism": null,
+      "check": null,
+      "no_mechanism": "`test_structured_output` claimed this rule and asserts the entry point emits JSON carrying a schema version. That is output, not self-description: nothing checks the surface can enumerate its own operations, arguments and error codes. A check asserting the entry point offers a description command whose output lists every operation would close it -- once the reference has one to check against.",
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/API.md",
@@ -989,7 +987,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/API.md",
-      "line": 100
+      "line": 104
     },
     {
       "id": "API-010",
@@ -1008,28 +1006,26 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/API.md",
-      "line": 114
+      "line": 118
     },
     {
       "id": "API-011",
       "module": "law/API",
       "title": "Error codes and result variants are versioned surface",
-      "force": "BINDING",
-      "mechanisms": [
-        "fitness:test_codes_are_stable"
-      ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
       "statement": "Renaming an error code, removing one, or adding a variant to a published result union is a breaking change.",
       "why": "These are what an automated consumer branches on, so they are load-bearing in exactly the way a function name is.",
-      "check": "`pytest enforce/fitness/test_diagnostics.py::test_codes_are_stable`",
-      "no_mechanism": null,
+      "check": null,
+      "no_mechanism": "Renaming is a change between two versions and a check sees one. `test_codes_are_stable` claimed this rule and asserts codes are namespaced and mutually distinct, both of which hold of a code renamed this morning. A committed snapshot of the published codes, ratcheted the way `tools/lint_baseline.json` is, would close it: removing or renaming one would then fail against the recorded set.",
       "see": [
         "law/DIAG"
       ],
       "superseded_by": null,
       "path": "discipline/law/API.md",
-      "line": 120
+      "line": 124
     },
     {
       "id": "API-012",
@@ -1048,26 +1044,24 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/API.md",
-      "line": 128
+      "line": 136
     },
     {
       "id": "API-013",
       "module": "law/API",
       "title": "Compatibility is not inherited from parser tolerance",
-      "force": "BINDING",
-      "mechanisms": [
-        "fitness:test_schema_versioned"
-      ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
       "statement": "Compatibility MUST rest on a stated policy, never on a parser happening to accept an older shape.",
       "why": "Accidental tolerance disappears in a dependency upgrade nobody connected to it.",
-      "check": "`pytest enforce/fitness/test_api.py::test_schema_versioned`",
-      "no_mechanism": null,
+      "check": null,
+      "no_mechanism": "Compatibility resting on a stated policy is a claim about a document. `test_schema_versioned` claimed this rule while asserting a version constant exists, which is [API-010] and not this. A policy has nowhere to live yet; naming a location for it, as `overrides/allocation.toml` is named for the tier mapping, would give a check something to read and close this.",
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/API.md",
-      "line": 134
+      "line": 142
     },
     {
       "id": "API-014",
@@ -1084,26 +1078,24 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/API.md",
-      "line": 140
+      "line": 152
     },
     {
       "id": "API-015",
       "module": "law/API",
       "title": "The delivered artifact is what gets tested",
-      "force": "BINDING",
-      "mechanisms": [
-        "fitness:test_delivered_boundary"
-      ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
       "statement": "End-to-end tests MUST exercise the installed entry point as a separate process, asserting its structured output and exit status.",
       "why": "Testing the imported function verifies the library; the contract that ships is the process boundary, and only running it tests packaging, arguments and exit paths.",
-      "check": "`pytest enforce/fitness/test_api.py::test_delivered_boundary`",
-      "no_mechanism": null,
+      "check": null,
+      "no_mechanism": "`test_delivered_boundary` claimed this rule and asserts `release.py` builds through the installer -- a different proposition. The rule is about end-to-end tests running the installed entry point as a separate process. The reference's integration layer starts no subprocess, so there is nothing to check against. A check asserting that layer invokes the entry point and asserts on its exit status and its parsed output would close this, once the reference carries one.",
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/API.md",
-      "line": 148
+      "line": 160
     },
     {
       "id": "ARCH-001",
@@ -1483,16 +1475,14 @@
       "id": "DEP-003",
       "module": "law/DEP",
       "title": "An adapter owns its dependency's failure modes",
-      "force": "BINDING",
-      "mechanisms": [
-        "fitness:test_fault_catalogue"
-      ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
       "statement": "The adapter owning a dependency MUST state which faults it can produce and translate them into the infrastructure error family.",
       "why": "An untranslated vendor exception crossing a layer boundary carries the vendor's vocabulary into a diagnosis written in ours.",
-      "check": "`pytest enforce/fitness/test_faults.py::test_fault_catalogue`",
-      "no_mechanism": null,
+      "check": null,
+      "no_mechanism": "`test_fault_catalogue` claimed this rule and asserts a faulty adapter file exists for every port. The rule's two obligations -- that the adapter STATES which faults it can produce, and that it TRANSLATES them into the infrastructure error family -- are both unchecked. The second is mechanizable: an adapter letting a vendor exception cross its own boundary is visible to an AST check, and [ERR-004] is the neighbouring rule that would host it.",
       "see": [
         "law/ERR"
       ],
@@ -1515,7 +1505,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DEP.md",
-      "line": 55
+      "line": 60
     },
     {
       "id": "DEP-005",
@@ -1534,7 +1524,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DEP.md",
-      "line": 67
+      "line": 72
     },
     {
       "id": "DEP-006",
@@ -1553,7 +1543,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DEP.md",
-      "line": 73
+      "line": 78
     },
     {
       "id": "DEP-007",
@@ -1572,7 +1562,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DEP.md",
-      "line": 116
+      "line": 121
     },
     {
       "id": "DEP-008",
@@ -1591,7 +1581,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DEP.md",
-      "line": 123
+      "line": 128
     },
     {
       "id": "DEP-009",
@@ -1610,7 +1600,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DEP.md",
-      "line": 129
+      "line": 134
     },
     {
       "id": "DEP-010",
@@ -1629,7 +1619,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DEP.md",
-      "line": 135
+      "line": 140
     },
     {
       "id": "DEP-011",
@@ -1648,7 +1638,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DEP.md",
-      "line": 142
+      "line": 147
     },
     {
       "id": "DEP-012",
@@ -1667,7 +1657,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DEP.md",
-      "line": 84
+      "line": 89
     },
     {
       "id": "DEP-013",
@@ -1689,7 +1679,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/DEP.md",
-      "line": 91
+      "line": 96
     },
     {
       "id": "DEP-014",
@@ -1710,7 +1700,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/DEP.md",
-      "line": 100
+      "line": 105
     },
     {
       "id": "DIAG-001",
@@ -1775,16 +1765,14 @@
       "id": "DIAG-004",
       "module": "law/DIAG",
       "title": "A code is a public contract",
-      "force": "BINDING",
-      "mechanisms": [
-        "fitness:test_codes_are_stable"
-      ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
       "statement": "Renaming or removing an error code, or adding a variant to a result union, is a breaking change and MUST be versioned as one.",
       "why": "Automated diagnosis is only worth building against a surface that holds still across releases.",
-      "check": "`pytest enforce/fitness/test_diagnostics.py::test_codes_are_stable`",
-      "no_mechanism": null,
+      "check": null,
+      "no_mechanism": "The same gap as [API-011], which states this rule almost word for word. `test_codes_are_stable` claimed both and detects neither a rename nor a removal. A committed snapshot of the code set, ratcheted, would close both at once.",
       "see": [
         "law/API"
       ],
@@ -1809,7 +1797,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DIAG.md",
-      "line": 88
+      "line": 90
     },
     {
       "id": "DIAG-006",
@@ -1828,7 +1816,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DIAG.md",
-      "line": 95
+      "line": 97
     },
     {
       "id": "DIAG-007",
@@ -1847,7 +1835,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DIAG.md",
-      "line": 106
+      "line": 108
     },
     {
       "id": "DIAG-008",
@@ -1867,7 +1855,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DIAG.md",
-      "line": 113
+      "line": 115
     },
     {
       "id": "DIAG-009",
@@ -1888,7 +1876,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/DIAG.md",
-      "line": 121
+      "line": 123
     },
     {
       "id": "DIAG-010",
@@ -1907,7 +1895,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DIAG.md",
-      "line": 137
+      "line": 139
     },
     {
       "id": "DIAG-011",
@@ -1926,7 +1914,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DIAG.md",
-      "line": 144
+      "line": 146
     },
     {
       "id": "DIAG-012",
@@ -1945,26 +1933,24 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DIAG.md",
-      "line": 152
+      "line": 154
     },
     {
       "id": "DIAG-013",
       "module": "law/DIAG",
       "title": "A correlation identifier ties a failure to its trace",
-      "force": "BINDING",
-      "mechanisms": [
-        "fitness:test_correlation_propagates"
-      ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
       "statement": "Every entry point MUST establish a correlation identifier in context-local state, and every log record and envelope MUST carry it.",
       "why": "It is what turns scattered lines into one reconstructable story, which is the difference between reading a trace and searching a file.",
-      "check": "`pytest enforce/fitness/test_diagnostics.py::test_correlation_propagates`",
-      "no_mechanism": null,
+      "check": null,
+      "no_mechanism": "`test_correlation_propagates` claimed this rule and asserts the envelope schema has a `correlation_id` property -- while also asserting it is NOT required, which is the opposite of what this rule says every envelope must do. Neither the establishment of an identifier at each entry point nor its presence on log records is checked, and the reference establishes none. Making the field required and asserting each entry point sets it would close this.",
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DIAG.md",
-      "line": 159
+      "line": 161
     },
     {
       "id": "DIAG-014",
@@ -1983,7 +1969,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DIAG.md",
-      "line": 166
+      "line": 173
     },
     {
       "id": "DIAG-015",
@@ -2003,7 +1989,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DIAG.md",
-      "line": 173
+      "line": 180
     },
     {
       "id": "DIAG-016",
@@ -2020,7 +2006,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DIAG.md",
-      "line": 180
+      "line": 187
     },
     {
       "id": "DOC-001",
@@ -2475,13 +2461,13 @@
       "title": "What is not guaranteed is stated",
       "force": "BINDING",
       "mechanisms": [
-        "fitness:test_interruption_recovers"
+        "fitness:test_what_is_not_guaranteed_is_stated"
       ],
       "enforcement": "mechanized",
       "mechanically_enforced": true,
       "statement": "A contract offering partial guarantees MUST name what it does not guarantee — cross-process isolation during a commit window, the indivisibility of the journal write itself, ordering under concurrent readers.",
       "why": "An unstated non-guarantee is discovered as a bug, and attributed to the wrong component every time.",
-      "check": "`pytest enforce/fitness/test_effects.py::test_interruption_recovers`",
+      "check": "`pytest enforce/fitness/test_effects.py::test_what_is_not_guaranteed_is_stated`",
       "no_mechanism": null,
       "see": [],
       "superseded_by": null,
@@ -2946,16 +2932,14 @@
       "id": "FLOW-001",
       "module": "law/FLOW",
       "title": "The contract is written before the implementation",
-      "force": "BINDING",
-      "mechanisms": [
-        "fitness:test_contract_documented"
-      ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
       "statement": "Before a component is written, its inputs, outputs, invariants, error modes and ordering constraints MUST be stated. The specification owns what and how well; the implementer owns how.",
       "why": "A contract written afterwards describes what was built, so it can never disagree with it, and can therefore never catch anything.",
-      "check": "`pytest enforce/fitness/test_api.py::test_contract_documented`",
-      "no_mechanism": null,
+      "check": null,
+      "no_mechanism": "The rule is about *when* the contract was written, and a tree carries no record of the order its files came to exist in. `test_contract_documented` claimed this rule while asserting only that a docstring was present -- which is equally true of a contract written afterwards to describe what was built, the exact failure the **Why** above names. What IS mechanized is the adjacent [API-001]: the contract states its terms. A commit-scoped check reading which files a change introduced, and in which order, would close this.",
       "see": [
         "law/API",
         "frame/spec"
@@ -2983,7 +2967,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/FLOW.md",
-      "line": 42
+      "line": 48
     },
     {
       "id": "FLOW-003",
@@ -3004,7 +2988,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/FLOW.md",
-      "line": 51
+      "line": 57
     },
     {
       "id": "FLOW-004",
@@ -3012,18 +2996,18 @@
       "title": "Decision records are appended, never rewritten",
       "force": "BINDING",
       "mechanisms": [
-        "fitness:test_decisions_recorded"
+        "fitness:test_decision_records_are_appended"
       ],
       "enforcement": "mechanized",
       "mechanically_enforced": true,
       "statement": "Records MUST be numbered sequentially and never renumbered or deleted. A superseded decision is marked superseded and kept.",
       "why": "A deleted decision takes its reasoning with it, and the next agent re-derives and re-litigates it.",
-      "check": "`pytest enforce/fitness/test_decisions.py::test_decisions_recorded`",
+      "check": "`pytest enforce/fitness/test_decisions.py::test_decision_records_are_appended`",
       "no_mechanism": null,
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/FLOW.md",
-      "line": 60
+      "line": 66
     },
     {
       "id": "FLOW-005",
@@ -3031,18 +3015,18 @@
       "title": "Overruled objections are recorded, not discarded",
       "force": "BINDING",
       "mechanisms": [
-        "fitness:test_decisions_recorded"
+        "fitness:test_overruled_objections_are_kept"
       ],
       "enforcement": "mechanized",
       "mechanically_enforced": true,
       "statement": "Where a decision was contested, the objection and its resolution MUST be recorded.",
       "why": "When the decision later proves wrong, the recorded objection is usually the fastest available description of why — the cheapest future-debugging asset there is.",
-      "check": "`pytest enforce/fitness/test_decisions.py::test_decisions_recorded`",
+      "check": "`pytest enforce/fitness/test_decisions.py::test_overruled_objections_are_kept`",
       "no_mechanism": null,
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/FLOW.md",
-      "line": 67
+      "line": 73
     },
     {
       "id": "FLOW-006",
@@ -3063,7 +3047,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/FLOW.md",
-      "line": 77
+      "line": 83
     },
     {
       "id": "FLOW-007",
@@ -3084,7 +3068,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/FLOW.md",
-      "line": 85
+      "line": 91
     },
     {
       "id": "FLOW-008",
@@ -3103,7 +3087,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/FLOW.md",
-      "line": 94
+      "line": 100
     },
     {
       "id": "FLOW-009",
@@ -3122,28 +3106,26 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/FLOW.md",
-      "line": 108
+      "line": 114
     },
     {
       "id": "FLOW-010",
       "module": "law/FLOW",
       "title": "New behaviour arrives with its obligations discharged",
-      "force": "BINDING",
-      "mechanisms": [
-        "fitness:test_layers_populated"
-      ],
-      "enforcement": "mechanized",
-      "mechanically_enforced": true,
+      "force": "ADVISORY",
+      "mechanisms": [],
+      "enforcement": "unmechanized",
+      "mechanically_enforced": false,
       "statement": "A new component arrives with its contract, its unit tests, and — if it is a port — its three adapters, its contract suite and its fault suite. A new invariant arrives with its property test.",
       "why": "The suite is complete at every commit or at none; \"tests to follow\" is where they stop following.",
-      "check": "`pytest enforce/fitness/test_layers.py::test_layers_populated`",
-      "no_mechanism": null,
+      "check": null,
+      "no_mechanism": "The rule is about what arrives *with* a change, and a static tree shows what is there now rather than what landed together. `test_layers_populated` claimed it and counts named tests per layer, which a repository holding one thorough component and ten bare ones satisfies. Per-component completeness is mechanized where the component is a port -- [ARCH-008], [ARCH-009] -- and nowhere else. A check reading the diff for a new module without its obligations would close this.",
       "see": [
         "law/ARCH"
       ],
       "superseded_by": null,
       "path": "discipline/law/FLOW.md",
-      "line": 116
+      "line": 122
     },
     {
       "id": "FLOW-011",
@@ -3164,7 +3146,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/FLOW.md",
-      "line": 125
+      "line": 136
     },
     {
       "id": "FLOW-012",
@@ -3183,7 +3165,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/FLOW.md",
-      "line": 134
+      "line": 145
     },
     {
       "id": "FLOW-013",
@@ -3200,7 +3182,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/FLOW.md",
-      "line": 141
+      "line": 152
     },
     {
       "id": "LEARN-001",
@@ -3487,13 +3469,13 @@
       "title": "Verification runs as a gate, not as a request",
       "force": "BINDING",
       "mechanisms": [
-        "fitness:test_gate_suite_defined"
+        "fitness:test_completion_hook_enforces_the_gate"
       ],
       "enforcement": "mechanized",
       "mechanically_enforced": true,
       "statement": "Where the tooling offers a completion hook, the verification obligation MUST be enforced there — a task cannot be marked done while its gate fails.",
       "why": "This is what turns a soft norm into a hard one, and it is the only place the discipline's own axiom can be applied to agent coordination itself.",
-      "check": "`pytest enforce/fitness/test_meta.py::test_gate_suite_defined`",
+      "check": "`pytest enforce/fitness/test_meta.py::test_completion_hook_enforces_the_gate`",
       "no_mechanism": null,
       "see": [
         "law/FLOW"
@@ -3686,13 +3668,13 @@
       "title": "Stated invariants have property suites",
       "force": "BINDING",
       "mechanisms": [
-        "fitness:test_layers_populated"
+        "fitness:test_property_suites_are_generated"
       ],
       "enforcement": "mechanized",
       "mechanically_enforced": true,
       "statement": "Round-trip, idempotence, involution, ordering and closure properties MUST be expressed as generated-input property tests, not as hand-picked examples.",
       "why": "A property is a claim about all inputs; three examples test three inputs and imply the rest.",
-      "check": "`pytest enforce/fitness/test_layers.py::test_layers_populated`",
+      "check": "`pytest enforce/fitness/test_layers.py::test_property_suites_are_generated`",
       "no_mechanism": null,
       "see": [],
       "superseded_by": null,
@@ -3904,13 +3886,13 @@
       "title": "A flaky failure is a defect in the harness",
       "force": "BINDING",
       "mechanisms": [
-        "fitness:test_seeds_recorded"
+        "fitness:test_no_rerun_dismissal"
       ],
       "enforcement": "mechanized",
       "mechanically_enforced": true,
       "statement": "An unreproducible failure MUST be investigated at the priority of a domain defect. Reruns MUST NOT be used to dismiss one. Failing generated cases are recorded as fixtures.",
       "why": "Rerunning until green discards the one observation that had diagnostic value.",
-      "check": "`pytest enforce/fitness/test_determinism.py::test_seeds_recorded`",
+      "check": "`pytest enforce/fitness/test_determinism.py::test_no_rerun_dismissal`",
       "no_mechanism": null,
       "see": [],
       "superseded_by": null,

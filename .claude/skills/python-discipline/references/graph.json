@@ -503,6 +503,15 @@
    }
   },
   {
+   "id": "OPEN-019",
+   "type": "decision",
+   "label": "The decided set and the discriminated set are not the same set",
+   "path": "discipline/meta/OPEN.md",
+   "attrs": {
+    "ledger": "meta/OPEN"
+   }
+  },
+  {
    "id": "layer:adapters",
    "type": "layer",
    "label": "adapters"
@@ -1020,9 +1029,9 @@
    }
   },
   {
-   "id": "mech:fitness:test_codes_are_stable",
+   "id": "mech:fitness:test_completion_hook_enforces_the_gate",
    "type": "mechanism",
-   "label": "fitness:test_codes_are_stable",
+   "label": "fitness:test_completion_hook_enforces_the_gate",
    "attrs": {
     "family": "fitness"
    }
@@ -1060,9 +1069,9 @@
    }
   },
   {
-   "id": "mech:fitness:test_correlation_propagates",
+   "id": "mech:fitness:test_decision_records_are_appended",
    "type": "mechanism",
-   "label": "fitness:test_correlation_propagates",
+   "label": "fitness:test_decision_records_are_appended",
    "attrs": {
     "family": "fitness"
    }
@@ -1071,14 +1080,6 @@
    "id": "mech:fitness:test_decisions_recorded",
    "type": "mechanism",
    "label": "fitness:test_decisions_recorded",
-   "attrs": {
-    "family": "fitness"
-   }
-  },
-  {
-   "id": "mech:fitness:test_delivered_boundary",
-   "type": "mechanism",
-   "label": "fitness:test_delivered_boundary",
    "attrs": {
     "family": "fitness"
    }
@@ -1204,9 +1205,25 @@
    }
   },
   {
+   "id": "mech:fitness:test_no_rerun_dismissal",
+   "type": "mechanism",
+   "label": "fitness:test_no_rerun_dismissal",
+   "attrs": {
+    "family": "fitness"
+   }
+  },
+  {
    "id": "mech:fitness:test_no_unhandled_escape",
    "type": "mechanism",
    "label": "fitness:test_no_unhandled_escape",
+   "attrs": {
+    "family": "fitness"
+   }
+  },
+  {
+   "id": "mech:fitness:test_overruled_objections_are_kept",
+   "type": "mechanism",
+   "label": "fitness:test_overruled_objections_are_kept",
    "attrs": {
     "family": "fitness"
    }
@@ -1223,6 +1240,14 @@
    "id": "mech:fitness:test_port_triad",
    "type": "mechanism",
    "label": "fitness:test_port_triad",
+   "attrs": {
+    "family": "fitness"
+   }
+  },
+  {
+   "id": "mech:fitness:test_property_suites_are_generated",
+   "type": "mechanism",
+   "label": "fitness:test_property_suites_are_generated",
    "attrs": {
     "family": "fitness"
    }
@@ -1247,14 +1272,6 @@
    "id": "mech:fitness:test_schema_versioned",
    "type": "mechanism",
    "label": "fitness:test_schema_versioned",
-   "attrs": {
-    "family": "fitness"
-   }
-  },
-  {
-   "id": "mech:fitness:test_seeds_recorded",
-   "type": "mechanism",
-   "label": "fitness:test_seeds_recorded",
    "attrs": {
     "family": "fitness"
    }
@@ -1287,6 +1304,14 @@
    "id": "mech:fitness:test_unit_layer_is_pure",
    "type": "mechanism",
    "label": "fitness:test_unit_layer_is_pure",
+   "attrs": {
+    "family": "fitness"
+   }
+  },
+  {
+   "id": "mech:fitness:test_what_is_not_guaranteed_is_stated",
+   "type": "mechanism",
+   "label": "fitness:test_what_is_not_guaranteed_is_stated",
    "attrs": {
     "family": "fitness"
    }
@@ -1405,7 +1430,7 @@
    "type": "module",
    "label": "Contracts and Public Surface",
    "path": "discipline/law/API.md",
-   "tokens": 2093,
+   "tokens": 2445,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1429,7 +1454,7 @@
    "type": "module",
    "label": "Dependencies and Generated Artefacts",
    "path": "discipline/law/DEP.md",
-   "tokens": 2011,
+   "tokens": 2111,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1441,7 +1466,7 @@
    "type": "module",
    "label": "Diagnostics and Traceability",
    "path": "discipline/law/DIAG.md",
-   "tokens": 2499,
+   "tokens": 2634,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1465,7 +1490,7 @@
    "type": "module",
    "label": "Effects, State and Time",
    "path": "discipline/law/EFCT.md",
-   "tokens": 2281,
+   "tokens": 2286,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1489,7 +1514,7 @@
    "type": "module",
    "label": "How a Change Is Made",
    "path": "discipline/law/FLOW.md",
-   "tokens": 1994,
+   "tokens": 2233,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1513,7 +1538,7 @@
    "type": "module",
    "label": "Systematic Testing and Oracles",
    "path": "discipline/law/TEST.md",
-   "tokens": 2777,
+   "tokens": 2786,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1570,7 +1595,7 @@
    "type": "module",
    "label": "Open Decisions",
    "path": "discipline/meta/OPEN.md",
-   "tokens": 3971,
+   "tokens": 3966,
    "attrs": {
     "decay": "none",
     "kind": "meta"
@@ -1615,7 +1640,7 @@
    "type": "module",
    "label": "Agent Team Mechanics",
    "path": "discipline/ops/teams.md",
-   "tokens": 2584,
+   "tokens": 2592,
    "attrs": {
     "decay": "months",
     "kind": "ops",
@@ -1816,7 +1841,7 @@
    "path": "discipline/law/API.md:93",
    "tokens": 31,
    "attrs": {
-    "force": "BINDING",
+    "force": "ADVISORY",
     "module": "law/API"
    }
   },
@@ -1824,7 +1849,7 @@
    "id": "API-009",
    "type": "rule",
    "label": "Automation gets no relaxed validation",
-   "path": "discipline/law/API.md:100",
+   "path": "discipline/law/API.md:104",
    "tokens": 43,
    "attrs": {
     "force": "BINDING",
@@ -1835,7 +1860,7 @@
    "id": "API-010",
    "type": "rule",
    "label": "Every published payload carries a schema version",
-   "path": "discipline/law/API.md:114",
+   "path": "discipline/law/API.md:118",
    "tokens": 22,
    "attrs": {
     "force": "BINDING",
@@ -1846,10 +1871,10 @@
    "id": "API-011",
    "type": "rule",
    "label": "Error codes and result variants are versioned surface",
-   "path": "discipline/law/API.md:120",
+   "path": "discipline/law/API.md:124",
    "tokens": 29,
    "attrs": {
-    "force": "BINDING",
+    "force": "ADVISORY",
     "module": "law/API"
    }
   },
@@ -1857,7 +1882,7 @@
    "id": "API-012",
    "type": "rule",
    "label": "A format change ships with a migration and its test",
-   "path": "discipline/law/API.md:128",
+   "path": "discipline/law/API.md:136",
    "tokens": 32,
    "attrs": {
     "force": "BINDING",
@@ -1868,10 +1893,10 @@
    "id": "API-013",
    "type": "rule",
    "label": "Compatibility is not inherited from parser tolerance",
-   "path": "discipline/law/API.md:134",
+   "path": "discipline/law/API.md:142",
    "tokens": 26,
    "attrs": {
-    "force": "BINDING",
+    "force": "ADVISORY",
     "module": "law/API"
    }
   },
@@ -1879,7 +1904,7 @@
    "id": "API-014",
    "type": "rule",
    "label": "Prefer additive change",
-   "path": "discipline/law/API.md:140",
+   "path": "discipline/law/API.md:152",
    "tokens": 25,
    "attrs": {
     "force": "ADVISORY",
@@ -1890,10 +1915,10 @@
    "id": "API-015",
    "type": "rule",
    "label": "The delivered artifact is what gets tested",
-   "path": "discipline/law/API.md:148",
+   "path": "discipline/law/API.md:160",
    "tokens": 35,
    "attrs": {
-    "force": "BINDING",
+    "force": "ADVISORY",
     "module": "law/API"
    }
   },
@@ -2113,7 +2138,7 @@
    "path": "discipline/law/DEP.md:47",
    "tokens": 34,
    "attrs": {
-    "force": "BINDING",
+    "force": "ADVISORY",
     "module": "law/DEP"
    }
   },
@@ -2121,7 +2146,7 @@
    "id": "DEP-004",
    "type": "rule",
    "label": "Do not reimplement a solved, specified problem",
-   "path": "discipline/law/DEP.md:55",
+   "path": "discipline/law/DEP.md:60",
    "tokens": 34,
    "attrs": {
     "force": "ADVISORY",
@@ -2132,7 +2157,7 @@
    "id": "DEP-005",
    "type": "rule",
    "label": "The environment is locked by content hash",
-   "path": "discipline/law/DEP.md:67",
+   "path": "discipline/law/DEP.md:72",
    "tokens": 24,
    "attrs": {
     "force": "BINDING",
@@ -2143,7 +2168,7 @@
    "id": "DEP-006",
    "type": "rule",
    "label": "A command verifies the environment matches the lock",
-   "path": "discipline/law/DEP.md:73",
+   "path": "discipline/law/DEP.md:78",
    "tokens": 45,
    "attrs": {
     "force": "BINDING",
@@ -2154,7 +2179,7 @@
    "id": "DEP-007",
    "type": "rule",
    "label": "Generated files carry a provenance header",
-   "path": "discipline/law/DEP.md:116",
+   "path": "discipline/law/DEP.md:121",
    "tokens": 41,
    "attrs": {
     "force": "BINDING",
@@ -2165,7 +2190,7 @@
    "id": "DEP-008",
    "type": "rule",
    "label": "Generated output contains no timestamp",
-   "path": "discipline/law/DEP.md:123",
+   "path": "discipline/law/DEP.md:128",
    "tokens": 15,
    "attrs": {
     "force": "BINDING",
@@ -2176,7 +2201,7 @@
    "id": "DEP-009",
    "type": "rule",
    "label": "Regeneration is idempotent and byte-stable",
-   "path": "discipline/law/DEP.md:129",
+   "path": "discipline/law/DEP.md:134",
    "tokens": 24,
    "attrs": {
     "force": "BINDING",
@@ -2187,7 +2212,7 @@
    "id": "DEP-010",
    "type": "rule",
    "label": "Drift between model and output fails the build",
-   "path": "discipline/law/DEP.md:135",
+   "path": "discipline/law/DEP.md:140",
    "tokens": 32,
    "attrs": {
     "force": "BINDING",
@@ -2198,7 +2223,7 @@
    "id": "DEP-011",
    "type": "rule",
    "label": "Generated output is committed",
-   "path": "discipline/law/DEP.md:142",
+   "path": "discipline/law/DEP.md:147",
    "tokens": 26,
    "attrs": {
     "force": "BINDING",
@@ -2209,7 +2234,7 @@
    "id": "DEP-012",
    "type": "rule",
    "label": "A vendored discipline is announced, not merely present",
-   "path": "discipline/law/DEP.md:84",
+   "path": "discipline/law/DEP.md:89",
    "tokens": 36,
    "attrs": {
     "force": "BINDING",
@@ -2220,7 +2245,7 @@
    "id": "DEP-013",
    "type": "rule",
    "label": "The announcement is generated, never hand-edited",
-   "path": "discipline/law/DEP.md:91",
+   "path": "discipline/law/DEP.md:96",
    "tokens": 53,
    "attrs": {
     "force": "BINDING",
@@ -2231,7 +2256,7 @@
    "id": "DEP-014",
    "type": "rule",
    "label": "Configuration is changed by plan, then apply",
-   "path": "discipline/law/DEP.md:100",
+   "path": "discipline/law/DEP.md:105",
    "tokens": 55,
    "attrs": {
     "force": "BINDING",
@@ -2278,7 +2303,7 @@
    "path": "discipline/law/DIAG.md:76",
    "tokens": 34,
    "attrs": {
-    "force": "BINDING",
+    "force": "ADVISORY",
     "module": "law/DIAG"
    }
   },
@@ -2286,7 +2311,7 @@
    "id": "DIAG-005",
    "type": "rule",
    "label": "Every cross-layer re-raise uses explicit chaining",
-   "path": "discipline/law/DIAG.md:88",
+   "path": "discipline/law/DIAG.md:90",
    "tokens": 29,
    "attrs": {
     "force": "BINDING",
@@ -2297,7 +2322,7 @@
    "id": "DIAG-006",
    "type": "rule",
    "label": "Context is accreted with notes, not by re-wrapping",
-   "path": "discipline/law/DIAG.md:95",
+   "path": "discipline/law/DIAG.md:97",
    "tokens": 36,
    "attrs": {
     "force": "BINDING",
@@ -2308,7 +2333,7 @@
    "id": "DIAG-007",
    "type": "rule",
    "label": "Suppressing the cause requires a stated reason",
-   "path": "discipline/law/DIAG.md:106",
+   "path": "discipline/law/DIAG.md:108",
    "tokens": 31,
    "attrs": {
     "force": "BINDING",
@@ -2319,7 +2344,7 @@
    "id": "DIAG-008",
    "type": "rule",
    "label": "Exceptions are never silently swallowed",
-   "path": "discipline/law/DIAG.md:113",
+   "path": "discipline/law/DIAG.md:115",
    "tokens": 48,
    "attrs": {
     "force": "BINDING",
@@ -2330,7 +2355,7 @@
    "id": "DIAG-009",
    "type": "rule",
    "label": "Assertions are not validation",
-   "path": "discipline/law/DIAG.md:121",
+   "path": "discipline/law/DIAG.md:123",
    "tokens": 58,
    "attrs": {
     "force": "BINDING",
@@ -2341,7 +2366,7 @@
    "id": "DIAG-010",
    "type": "rule",
    "label": "Each exception is logged once, at its handling boundary",
-   "path": "discipline/law/DIAG.md:137",
+   "path": "discipline/law/DIAG.md:139",
    "tokens": 36,
    "attrs": {
     "force": "BINDING",
@@ -2352,7 +2377,7 @@
    "id": "DIAG-011",
    "type": "rule",
    "label": "Library code configures no logging",
-   "path": "discipline/law/DIAG.md:144",
+   "path": "discipline/law/DIAG.md:146",
    "tokens": 55,
    "attrs": {
     "force": "BINDING",
@@ -2363,7 +2388,7 @@
    "id": "DIAG-012",
    "type": "rule",
    "label": "Log arguments are deferred, never pre-formatted",
-   "path": "discipline/law/DIAG.md:152",
+   "path": "discipline/law/DIAG.md:154",
    "tokens": 27,
    "attrs": {
     "force": "BINDING",
@@ -2374,10 +2399,10 @@
    "id": "DIAG-013",
    "type": "rule",
    "label": "A correlation identifier ties a failure to its trace",
-   "path": "discipline/law/DIAG.md:159",
+   "path": "discipline/law/DIAG.md:161",
    "tokens": 35,
    "attrs": {
-    "force": "BINDING",
+    "force": "ADVISORY",
     "module": "law/DIAG"
    }
   },
@@ -2385,7 +2410,7 @@
    "id": "DIAG-014",
    "type": "rule",
    "label": "Secrets and personal data never reach a log or an envelope",
-   "path": "discipline/law/DIAG.md:166",
+   "path": "discipline/law/DIAG.md:173",
    "tokens": 29,
    "attrs": {
     "force": "BINDING",
@@ -2396,7 +2421,7 @@
    "id": "DIAG-015",
    "type": "rule",
    "label": "Structured fields, not sentences",
-   "path": "discipline/law/DIAG.md:173",
+   "path": "discipline/law/DIAG.md:180",
    "tokens": 28,
    "attrs": {
     "force": "BINDING",
@@ -2407,7 +2432,7 @@
    "id": "DIAG-016",
    "type": "rule",
    "label": "State transitions are observable",
-   "path": "discipline/law/DIAG.md:180",
+   "path": "discipline/law/DIAG.md:187",
    "tokens": 35,
    "attrs": {
     "force": "ADVISORY",
@@ -2927,7 +2952,7 @@
    "path": "discipline/law/FLOW.md:33",
    "tokens": 50,
    "attrs": {
-    "force": "BINDING",
+    "force": "ADVISORY",
     "module": "law/FLOW"
    }
   },
@@ -2935,7 +2960,7 @@
    "id": "FLOW-002",
    "type": "rule",
    "label": "Test obligations are named before tests are written",
-   "path": "discipline/law/FLOW.md:42",
+   "path": "discipline/law/FLOW.md:48",
    "tokens": 48,
    "attrs": {
     "force": "BINDING",
@@ -2946,7 +2971,7 @@
    "id": "FLOW-003",
    "type": "rule",
    "label": "A structural decision is recorded before it is relied upon",
-   "path": "discipline/law/FLOW.md:51",
+   "path": "discipline/law/FLOW.md:57",
    "tokens": 57,
    "attrs": {
     "force": "BINDING",
@@ -2957,7 +2982,7 @@
    "id": "FLOW-004",
    "type": "rule",
    "label": "Decision records are appended, never rewritten",
-   "path": "discipline/law/FLOW.md:60",
+   "path": "discipline/law/FLOW.md:66",
    "tokens": 33,
    "attrs": {
     "force": "BINDING",
@@ -2968,7 +2993,7 @@
    "id": "FLOW-005",
    "type": "rule",
    "label": "Overruled objections are recorded, not discarded",
-   "path": "discipline/law/FLOW.md:67",
+   "path": "discipline/law/FLOW.md:73",
    "tokens": 22,
    "attrs": {
     "force": "BINDING",
@@ -2979,7 +3004,7 @@
    "id": "FLOW-006",
    "type": "rule",
    "label": "A rule without a mechanism is not binding",
-   "path": "discipline/law/FLOW.md:77",
+   "path": "discipline/law/FLOW.md:83",
    "tokens": 36,
    "attrs": {
     "force": "BINDING",
@@ -2990,7 +3015,7 @@
    "id": "FLOW-007",
    "type": "rule",
    "label": "No check may pass vacuously",
-   "path": "discipline/law/FLOW.md:85",
+   "path": "discipline/law/FLOW.md:91",
    "tokens": 58,
    "attrs": {
     "force": "BINDING",
@@ -3001,7 +3026,7 @@
    "id": "FLOW-008",
    "type": "rule",
    "label": "Deviations from an advisory rule are recorded in the change",
-   "path": "discipline/law/FLOW.md:94",
+   "path": "discipline/law/FLOW.md:100",
    "tokens": 33,
    "attrs": {
     "force": "BINDING",
@@ -3012,7 +3037,7 @@
    "id": "FLOW-009",
    "type": "rule",
    "label": "The gates pass before a change is offered",
-   "path": "discipline/law/FLOW.md:108",
+   "path": "discipline/law/FLOW.md:114",
    "tokens": 71,
    "attrs": {
     "force": "BINDING",
@@ -3023,10 +3048,10 @@
    "id": "FLOW-010",
    "type": "rule",
    "label": "New behaviour arrives with its obligations discharged",
-   "path": "discipline/law/FLOW.md:116",
+   "path": "discipline/law/FLOW.md:122",
    "tokens": 51,
    "attrs": {
-    "force": "BINDING",
+    "force": "ADVISORY",
     "module": "law/FLOW"
    }
   },
@@ -3034,7 +3059,7 @@
    "id": "FLOW-011",
    "type": "rule",
    "label": "The diagnosis is checked, not assumed",
-   "path": "discipline/law/FLOW.md:125",
+   "path": "discipline/law/FLOW.md:136",
    "tokens": 57,
    "attrs": {
     "force": "BINDING",
@@ -3045,7 +3070,7 @@
    "id": "FLOW-012",
    "type": "rule",
    "label": "Report what happened, including what did not",
-   "path": "discipline/law/FLOW.md:134",
+   "path": "discipline/law/FLOW.md:145",
    "tokens": 43,
    "attrs": {
     "force": "BINDING",
@@ -3056,7 +3081,7 @@
    "id": "FLOW-013",
    "type": "rule",
    "label": "Scale ceremony to reuse ambition, not to line count",
-   "path": "discipline/law/FLOW.md:141",
+   "path": "discipline/law/FLOW.md:152",
    "tokens": 26,
    "attrs": {
     "force": "ADVISORY",
@@ -7728,12 +7753,6 @@
   },
   {
    "type": "enforced_by",
-   "src": "API-008",
-   "dst": "mech:fitness:test_structured_output",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
    "src": "API-009",
    "dst": "mech:fitness:test_agent_parity",
    "origin": "derived"
@@ -7746,26 +7765,8 @@
   },
   {
    "type": "enforced_by",
-   "src": "API-011",
-   "dst": "mech:fitness:test_codes_are_stable",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
    "src": "API-012",
    "dst": "mech:fitness:test_migrations",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
-   "src": "API-013",
-   "dst": "mech:fitness:test_schema_versioned",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
-   "src": "API-015",
-   "dst": "mech:fitness:test_delivered_boundary",
    "origin": "derived"
   },
   {
@@ -7884,12 +7885,6 @@
   },
   {
    "type": "enforced_by",
-   "src": "DEP-003",
-   "dst": "mech:fitness:test_fault_catalogue",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
    "src": "DEP-005",
    "dst": "mech:fitness:test_environment_locked",
    "origin": "derived"
@@ -7974,12 +7969,6 @@
   },
   {
    "type": "enforced_by",
-   "src": "DIAG-004",
-   "dst": "mech:fitness:test_codes_are_stable",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
    "src": "DIAG-005",
    "dst": "mech:check:raise_from",
    "origin": "derived"
@@ -8030,12 +8019,6 @@
    "type": "enforced_by",
    "src": "DIAG-012",
    "dst": "mech:auto:ruff:G004",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
-   "src": "DIAG-013",
-   "dst": "mech:fitness:test_correlation_propagates",
    "origin": "derived"
   },
   {
@@ -8197,7 +8180,7 @@
   {
    "type": "enforced_by",
    "src": "EFCT-009",
-   "dst": "mech:fitness:test_interruption_recovers",
+   "dst": "mech:fitness:test_what_is_not_guaranteed_is_stated",
    "origin": "derived"
   },
   {
@@ -8322,12 +8305,6 @@
   },
   {
    "type": "enforced_by",
-   "src": "FLOW-001",
-   "dst": "mech:fitness:test_contract_documented",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
    "src": "FLOW-002",
    "dst": "mech:check:oracle_declared",
    "origin": "derived"
@@ -8341,13 +8318,13 @@
   {
    "type": "enforced_by",
    "src": "FLOW-004",
-   "dst": "mech:fitness:test_decisions_recorded",
+   "dst": "mech:fitness:test_decision_records_are_appended",
    "origin": "derived"
   },
   {
    "type": "enforced_by",
    "src": "FLOW-005",
-   "dst": "mech:fitness:test_decisions_recorded",
+   "dst": "mech:fitness:test_overruled_objections_are_kept",
    "origin": "derived"
   },
   {
@@ -8372,12 +8349,6 @@
    "type": "enforced_by",
    "src": "FLOW-009",
    "dst": "mech:fitness:test_gate_suite_defined",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
-   "src": "FLOW-010",
-   "dst": "mech:fitness:test_layers_populated",
    "origin": "derived"
   },
   {
@@ -8479,7 +8450,7 @@
   {
    "type": "enforced_by",
    "src": "TEAMS-003",
-   "dst": "mech:fitness:test_gate_suite_defined",
+   "dst": "mech:fitness:test_completion_hook_enforces_the_gate",
    "origin": "derived"
   },
   {
@@ -8521,7 +8492,7 @@
   {
    "type": "enforced_by",
    "src": "TEST-007",
-   "dst": "mech:fitness:test_layers_populated",
+   "dst": "mech:fitness:test_property_suites_are_generated",
    "origin": "derived"
   },
   {
@@ -8593,7 +8564,7 @@
   {
    "type": "enforced_by",
    "src": "TEST-018",
-   "dst": "mech:fitness:test_seeds_recorded",
+   "dst": "mech:fitness:test_no_rerun_dismissal",
    "origin": "derived"
   },
   {

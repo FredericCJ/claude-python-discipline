@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 import learn
+from decides import decides
 from discipline_core import REPO_ROOT
 
 if TYPE_CHECKING:
@@ -91,6 +92,7 @@ def states(store: learn.Store) -> dict[str, str]:
 # ------------------------------------------------------------------ durability
 
 
+@decides("LEARN-006")
 def test_the_database_is_reconstructible_from_the_ledger(store: learn.Store) -> None:
     """The ledger is the record; the database is a query index over it."""
     first = record(store)
@@ -146,6 +148,7 @@ def test_a_corrupt_ledger_line_names_itself(store: learn.Store) -> None:
 # ------------------------------------------------------------------ discipline
 
 
+@decides("LEARN-003")
 def test_a_credential_is_refused(store: learn.Store) -> None:
     """DIAG-014 applied to the ledger: it is designed to be read widely."""
     with pytest.raises(learn.LearnError, match="credential"):
@@ -248,6 +251,7 @@ def test_nothing_matches_an_unrelated_situation(store: learn.Store) -> None:
     assert found == []
 
 
+@decides("LEARN-007")
 def test_retrieval_is_reproducible(store: learn.Store) -> None:
     """The same query returns the same candidates in the same order.
 
@@ -307,6 +311,7 @@ def test_a_retired_learning_is_not_offered(store: learn.Store) -> None:
     assert states(store)[first] == "refuted"
 
 
+@decides("LEARN-008")
 def test_confidence_decays_with_time(store: learn.Store) -> None:
     """Confidence halves once per half-life since the entry was last seen.
 

@@ -183,3 +183,161 @@ def test_the_committed_table_holds() -> None:
     status, complaints, provoked = discrimination_gate.run()
     assert status == discrimination_gate.EXIT_OK, "; ".join(complaints)
     assert provoked == discrimination.covered()
+
+
+## An `auto` mutation whose tool genuinely reports the code it claims.
+_AUTO_WORKS = discrimination.Mutation(
+    rule_id="ERR-008",
+    summary="an except clause catches Exception and names nothing",
+    source="A known-good auto entry, to prove the runner credits a true claim.",
+    tool="ruff",
+    diagnostic="BLE001",
+    replace=(("src/refpkg/app/prune.py",
+              "from __future__ import annotations",
+              ("from __future__ import annotations\n\n\ndef swallow() -> None:\n"
+               '    """Catch everything.\n\n    @return nothing\n    """\n'
+               "    try:\n        pass\n    except Exception:\n        return")),),
+)
+
+## An `auto` mutation claiming a code the damage cannot produce.
+_AUTO_HOLLOW = discrimination.Mutation(
+    rule_id="ERR-008",
+    summary="a comment is added and BLE001 is claimed anyway",
+    source="A deliberately false auto claim, so the runner is watched rejecting one.",
+    tool="ruff",
+    diagnostic="BLE001",
+    replace=(("src/refpkg/app/prune.py",
+              "from __future__ import annotations",
+              "from __future__ import annotations\n\n# a comment"),),
+)
+
+
+def test_a_true_auto_claim_passes(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A mutation whose tool reports the declared diagnostic is counted.
+
+    @param monkeypatch used to substitute the declared table
+    """
+    monkeypatch.setattr(discrimination, "MUTATIONS", (_AUTO_WORKS,))
+    status, complaints, provoked = discrimination_gate.run()
+    assert status == discrimination_gate.EXIT_OK, complaints
+    assert provoked == {"ERR-008"}
+
+
+def test_an_auto_claim_the_tool_does_not_report_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Damage that does not produce the declared code is a broken claim.
+
+    @param monkeypatch used to substitute the declared table
+    """
+    monkeypatch.setattr(discrimination, "MUTATIONS", (_AUTO_HOLLOW,))
+    status, _, provoked = discrimination_gate.run()
+    assert status == discrimination_gate.EXIT_FAILED
+    assert provoked == set()
+
+
+def test_a_diagnostic_the_reference_already_emits_is_refused(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The guard that keeps every auto result honest.
+
+    If the conformant reference already emits the code, seeing it after the
+    damage proves nothing -- the mutation would be credited with a finding that
+    was there before it ran. Asked per DIAGNOSTIC rather than per tool: requiring
+    ruff to be entirely silent over the reference would be a stronger claim than
+    this gate needs and a flakier one.
+
+    @param monkeypatch used to make the reference look like it already reports
+    """
+    monkeypatch.setattr(discrimination, "MUTATIONS", (_AUTO_WORKS,))
+    monkeypatch.setitem(discrimination_gate.TOOLS, "ruff",
+                        lambda _root: {"BLE001"})
+    status, complaints, provoked = discrimination_gate.run()
+    assert status == discrimination_gate.EXIT_FAILED
+    assert provoked == set()
+    assert "already reports" in complaints[0]
+
+
+def test_a_syntax_error_does_not_credit_an_auto_rule(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The reason the diagnostic is asserted by name rather than by exit status.
+
+    An unparseable file makes every tool exit non-zero. A runner that read the
+    status alone would let one broken file certify the whole table, which is the
+    vacuity this repository has caught in five separate tools.
+
+    @param monkeypatch used to substitute the declared table
+    """
+    broken = discrimination.Mutation(
+        rule_id="ERR-008",
+        summary="the file no longer parses, which is not the rule being tested",
+        source="Pins that a non-zero exit is not on its own evidence of anything.",
+        tool="ruff",
+        diagnostic="BLE001",
+        replace=(("src/refpkg/app/prune.py",
+                  "from __future__ import annotations",
+                  "from __future__ import annotations\n\ndef ("),),
+    )
+    monkeypatch.setattr(discrimination, "MUTATIONS", (broken,))
+    status, _, provoked = discrimination_gate.run()
+    assert status == discrimination_gate.EXIT_FAILED
+    assert provoked == set()
+
+
+def test_a_rule_arriving_with_no_mutation_breaks_the_ceiling(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+) -> None:
+    """The direction `D` alone cannot see.
+
+    A release adding four decided rules and one mutation has raised `D` by one
+    and widened the gap by three. `D` may only rise, so it reports progress; the
+    ceiling is what reports the truth.
+
+    @param monkeypatch used to substitute the table and the baseline path
+    @param tmp_path holds a baseline recording a narrower gap than now exists
+    """
+    baseline = tmp_path / "baseline.json"
+    baseline.write_text(
+        json.dumps({"count": 1, "rules": ["DOC-001"], "gap": 0}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(discrimination_gate, "BASELINE_PATH", baseline)
+    monkeypatch.setattr(discrimination, "MUTATIONS", (_WORKS,))
+    assert discrimination_gate.main([]) == discrimination_gate.EXIT_FAILED
+
+
+def test_a_baseline_with_no_ceiling_is_not_treated_as_zero(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+) -> None:
+    """A baseline recorded before the ceiling existed must not fail every run.
+
+    The field is absent rather than zero in that case, and reading absent as
+    zero would fail the gate on every tree that had ever recorded a floor -- the
+    upgrade hazard that makes a new ratchet field worth a test of its own.
+
+    @param monkeypatch used to substitute the table and the baseline path
+    @param tmp_path holds a baseline in the pre-ceiling shape
+    """
+    baseline = tmp_path / "baseline.json"
+    baseline.write_text(
+        json.dumps({"count": 1, "rules": ["DOC-001"]}), encoding="utf-8",
+    )
+    monkeypatch.setattr(discrimination_gate, "BASELINE_PATH", baseline)
+    monkeypatch.setattr(discrimination, "MUTATIONS", (_WORKS,))
+    assert discrimination_gate.main([]) == discrimination_gate.EXIT_OK
+
+
+def test_the_gap_counts_only_rules_a_mechanism_actually_decides() -> None:
+    """A rule with no working mechanism is V080's business, not this one.
+
+    Counting it here would report the same defect twice under two names, and
+    the second count would move whenever the first did -- which is how two
+    numbers stop being independent evidence.
+    """
+    gap = set(discrimination_gate.undiscriminated(set(discrimination.covered())))
+    assert "ALLOC-005" not in gap, (
+        "ALLOC-005 is reported by V080 as undecided; it must not also be counted "
+        "as decided-but-undiscriminated"
+    )
+    assert gap, "the gap is empty, so this assertion proves nothing"

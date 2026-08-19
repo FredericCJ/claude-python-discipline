@@ -26,6 +26,8 @@ from typing import Final
 
 import pytest
 
+from decides import decides
+
 ## The repository root, three levels up from this file.
 REPO_ROOT: Final = Path(__file__).resolve().parent.parent.parent
 
@@ -59,6 +61,7 @@ def run(command: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
 
 
 @pytest.mark.parametrize("name", [n for n, _ in GENERATORS])
+@decides("DEP-009", "DEP-010", "DEP-011")
 def test_regeneration_stable(name: str) -> None:
     """DEP-009, DEP-010, DEP-011: the artefact on disk is what the builder makes.
 

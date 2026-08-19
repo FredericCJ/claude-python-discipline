@@ -29,6 +29,7 @@ from typing import TYPE_CHECKING, Final
 
 import pytest
 
+from decides import decides
 from fixtures import broken_copy, modules_in, package_root, reference_root
 
 if TYPE_CHECKING:
@@ -87,6 +88,7 @@ def protocols_in(path: Path) -> list[ast.ClassDef]:
 # --------------------------------------------------------- ARCH-007 / TYPE-009
 
 
+@decides("ARCH-007", "TYPE-009")
 def test_every_port_is_a_protocol() -> None:
     """ARCH-007, TYPE-009: a port is a structural contract, with its terms stated.
 
@@ -126,6 +128,7 @@ def test_a_port_without_a_protocol_is_caught(tmp_path: Path) -> None:
 # ------------------------------------------------------------------- ARCH-008
 
 
+@decides("ARCH-008")
 def test_port_triad() -> None:
     """ARCH-008: real, fake and faulty for every port, with no qualifier.
 
@@ -159,6 +162,7 @@ def test_a_missing_faulty_adapter_is_caught(tmp_path: Path) -> None:
 # ------------------------------------------- ARCH-009 / TEST-005 / TEST-006
 
 
+@decides("ARCH-009", "TEST-005", "TEST-006")
 def test_contract_suite_per_adapter() -> None:
     """ARCH-009, TEST-005, TEST-006: one suite, run against all three adapters.
 
@@ -201,6 +205,7 @@ def test_a_suite_covering_one_adapter_is_caught(tmp_path: Path) -> None:
 # ------------------------------------------------------------------- ARCH-010
 
 
+@decides("ARCH-010")
 def test_port_justification() -> None:
     """ARCH-010: a port names which of the eight reasons it claims.
 

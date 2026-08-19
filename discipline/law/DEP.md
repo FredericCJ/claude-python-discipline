@@ -2,7 +2,7 @@
 id: law/DEP
 kind: law
 title: Dependencies and Generated Artefacts
-tokens: 2011
+tokens: 2111
 load_when:
   - "add a dependency"
   - "third party library"
@@ -44,12 +44,17 @@ adapter that owns it.
   position is the only part that can be checked.
 - **Check** `pytest enforce/fitness/test_deps.py::test_dependency_position`
 
-### DEP-003 · An adapter owns its dependency's failure modes  [BINDING] [fitness:test_fault_catalogue]
+### DEP-003 · An adapter owns its dependency's failure modes  [ADVISORY]
 The adapter owning a dependency MUST state which faults it can produce and translate them
 into the infrastructure error family.
 - **Why** An untranslated vendor exception crossing a layer boundary carries the vendor's
   vocabulary into a diagnosis written in ours.
-- **Check** `pytest enforce/fitness/test_faults.py::test_fault_catalogue`
+- **No mechanism** `test_fault_catalogue` claimed this rule and asserts a faulty
+  adapter file exists for every port. The rule's two obligations -- that the adapter
+  STATES which faults it can produce, and that it TRANSLATES them into the
+  infrastructure error family -- are both unchecked. The second is mechanizable: an
+  adapter letting a vendor exception cross its own boundary is visible to an AST check,
+  and [ERR-004] is the neighbouring rule that would host it.
 - **See** [law/ERR]
 
 ### DEP-004 · Do not reimplement a solved, specified problem  [ADVISORY]

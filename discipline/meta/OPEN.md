@@ -2,7 +2,7 @@
 id: meta/OPEN
 kind: meta
 title: Open Decisions
-tokens: 3971
+tokens: 3966
 load_when: ["open question", "undecided", "which tool", "pin a version"]
 decay: none
 ---
@@ -62,30 +62,14 @@ redundancy.
 
 ### OPEN-006 · The capability-tier to model mapping
 
-The mapping is **declared by the operating organization, and its use is checked by the
-corpus.** `overrides/allocation.toml` carries the table; `check:allocation_declared`
-requires that a mapping exist and that every dispatch record cite a tier it resolves.
-[ALLOC-010] is retagged `[BINDING]`.
-
-*The objection this had to answer, and does:* the table binds a tier to a model, and
-[ALLOC-001] forbids naming a model in a project document — a model name is the
-fastest-decaying fact in the system, and a corpus carrying one is wrong within months in a
-file nobody thinks to re-check. Hard-coding it was never available.
-
-*What changed:* `overrides/` is project-owned. The installer creates it once and never
-writes it again, and `vendor.py` copies `discipline/`, `enforce/` and `tools/` — not it.
-So an adopter's model names stay in the adopter's tree and the corpus still names none.
-This is the same shape `[tool.agent-discipline]` used to make `DOC-002` conditional
-without weakening it: **declare it, then be checked on it.**
-
-*What is still not checked, stated so nobody reads more into this than it says:* whether
-the mapping is any GOOD — whether `T2` really is the strongest model available — is
-unknowable from here and belongs to whoever owns the file, which is why the template
-carries an `owner` field. What is now knowable, and was not, is whether a dispatch cites a
-tier that means anything. That was the half `OPEN-006` called unauditable.
-
-*Consequence:* a repository that dispatches nothing needs no mapping and the check stays
-silent on it. A repository that dispatches at a tier resolving to nothing now fails.
+**Closed in v3.0.0.** `overrides/allocation.toml` carries the table and
+`check:allocation_declared` requires every dispatch record to cite a tier that resolves;
+[ALLOC-010] is `[BINDING]`. The objection it had to answer was [ALLOC-001] — a corpus may
+not name a model, because a model name is the fastest-decaying fact in the system. It does
+not: `overrides/` is project-owned and `vendor.py` never copies it, so an adopter's model
+names stay in the adopter's tree. Whether the mapping is any *good* remains unknowable from
+here, which is why the template carries an `owner` field; whether a dispatch cites a tier
+that means anything is now checked, and that was the half this record called unauditable.
 
 ### OPEN-007 · Documentation comments on every element, for Doxygen
 
@@ -94,35 +78,22 @@ silent on it. A repository that dispatches at a tier resolving to nothing now fa
 reason: *"a blanket requirement produces ceremonial docstrings that say nothing, which is
 worse than none."* That objection is real, and it is not answered by pretending it is not.
 
-The requirement is now universal: every element of the code carries a documentation
-comment, written for a full-featured Doxygen, present whether or not documentation is ever
-generated. The ceremony objection is answered by rules rather than by an exemption —
-[DOC-009] rejects documentation that merely restates the identifier, and [DOC-013] asks for
-one accurate sentence rather than a padded block. A rule against filler is a better answer
-than a licence to omit.
+The requirement is now universal: every element carries a documentation comment, written for
+a full-featured Doxygen, present whether or not documentation is ever generated. The ceremony
+objection is answered by rules rather than by an exemption — [DOC-009] rejects documentation
+that merely restates the identifier, and [DOC-013] asks for one accurate sentence rather than
+a padded block. A rule against filler is a better answer than a licence to omit.
 
-*Consequences, all decided here:*
+*Consequences:* docstrings where Python has a slot, `##` blocks where it does not — a `##`
+block on a function would be invisible to `help()`, so it is prohibited there. The engine
+settings this needs, and why each is what it is, are in [fact/doxygen]; no pydocstyle
+convention is set, because one would demand section headings Doxygen cannot read. The
+rendered tree is **not** committed — the one deliberate exception to [DEP-011], recorded as a
+tension because it is one: the reviewable artefact is the comment in the source, and a large
+generated tree in every diff is how reviewers learn to wave generated output through.
 
-- **Docstrings where Python has a slot; `##` blocks where it does not.** Python offers no
-  docstring slot for a module constant, class attribute, dataclass field or enum member, and
-  Doxygen reads `##` blocks for exactly those. A `##` block on a function would be invisible
-  to `help()` and to every other Python tool, so it is prohibited there.
-- **`PYTHON_DOCSTRING = NO`.** Otherwise a docstring full of `@param` renders as literal
-  text and nothing warns. Set once in the Doxyfile rather than trusted to a `"""!` marker an
-  author will eventually forget.
-- **No pydocstyle convention, and three ruff rules disabled.** A convention makes the linter
-  demand Google- or NumPy-style section headings that Doxygen cannot read without an input
-  filter. `docstring-missing-returns`, `-yields` and `-exception` are disabled for the same
-  reason; the engine's own `WARN_NO_PARAMDOC` is a stricter test, since it also catches a
-  documented parameter that does not exist.
-- **The rendered documentation tree is not committed** — the one deliberate exception to
-  [DEP-011], recorded as a tension because it genuinely is one. The reviewable artefact here
-  is the comment in the source, and a large rendered tree in every diff is how reviewers
-  learn to wave generated output through.
-
-*Cost, stated plainly:* this repository's own code does not yet comply — 441 findings at
-the time of the decision. The mechanisms are in place so the gap cannot grow, and the
-migration is real work that has not been done.
+*Cost, stated plainly:* this repository's own code did not comply when the decision was taken
+— 441 findings. The mechanisms are in place so the gap cannot grow.
 
 ### OPEN-008 · The Doxygen form is declared, not assumed
 
@@ -182,15 +153,26 @@ by wheel hash.
 
 ### OPEN-011 · No repository actually depends on this
 
-`tools/test_vendor.py` takes a greenfield temporary repository through install → integrate
-→ gate → check → remove, asserting every byte outside the managed markers survives in both
-line endings. That is a **synthetic** adopter: the machinery, once, on an empty tree. It
-does not exercise checks meeting code nobody wrote to satisfy them, or an update landing on
-a tree with local history. Every defect found in these mechanisms was found by contact with
-unfamiliar code.
+**Narrowed in v3.2, not closed.** Until this release a repository that already existed could
+not adopt at all: `python -m checks` printed every finding and exited 1, with no baseline and
+no ratchet. `tools/conformance.py` is the ratchet, validated by taking a copy of a real
+124-module codebase through the whole trip.
 
-*Closes when:* one repository depends on this in daily use and reports back. The last
-untested claim, and the one most likely to be expensive.
+*Measured rather than supposed:* **117 findings, none protected**, so the tree adopts. The
+baseline was minted, the tree went green, and then — the assertion that matters — a new
+violation of an already-baselined rule failed by name, and an `assert` used as validation
+failed as [ERR-012] and [DIAG-009] **with the baseline in place**. A baseline that goes green
+is easy; one that still catches the next regression is the feature.
+
+*What it also found:* two of `PROTECTED`'s four entries could never fire, being decided by a
+fitness test and a ruff code rather than by any check this tool runs — the vacuity this
+repository exists to remove, reproduced inside the guard against it.
+
+*Still not closed:* a copy driven through a script by its author is not a repository
+depending on this in daily use. Nothing here has met an update landing on a tree with local
+history, or a disagreement about a baselined finding.
+
+*Closes when:* one repository depends on this in daily use and reports back.
 
 ### OPEN-012 · Mutation testing cannot run on the maintaining platform
 
@@ -226,18 +208,33 @@ noticed by luck.
 
 ### OPEN-015 · A `fitness:` tag is resolved by existence alone
 
-The defect that made `V080` read 0 for two releases, on the side that cannot yet be
-checked. A `check:` tag now resolves against the check's own `rules` tuple — a module that
-exists but does not claim the rule decides nothing about it — and that correction found
-seventeen rules claimed by checks that could never report them. A fitness function declares
-no rule list, so its tag is still resolved by asking whether a function of that name
-exists.
+**Closed in v3.1.** A fitness function declares what it decides via `@decides`
+(`enforce/decides.py`), and the tag resolves against that declaration exactly as a `check:`
+tag resolves against the check's `rules` tuple. **An undeclared function decides nothing** —
+treating a missing declaration as consent is how sixty-four rules came to rest on a tag that
+only asked whether some file contained the text `def <name>(`.
 
-**64 rules rest on a `fitness:` tag and none is discriminated.** `V080 = 14` is a floor,
-not a count.
+Reading all forty tagged functions against what they claimed found sixteen claims that did
+not hold — 20%, against the check side's 23%. `V080` stayed at 14. Superseded by `OPEN-019`.
 
-*Closes when:* the discrimination matrix covers fitness-decided rules, which the
-`DISCIPLINE_REFERENCE` seam now makes possible.
+### OPEN-019 · The decided set and the discriminated set are not the same set
+
+`V080` asks whether a mechanism exists and claims the rule. `V098` asks whether anyone has
+watched it work, and **93 of 142 decided binding rules have not been.**
+
+The scar is [ARCH-013]: it named `BaseModel` among the framework types a domain may not
+borrow, claimed the rule properly, was counted mechanized, and reported **nothing** against
+four domains modelled entirely in pydantic — it read annotations and never bases. Nothing
+here could have found that, because nothing had put something it should reject in front
+of it.
+
+`D` is 49, up from 20. A warning rather than an error, beside `V051`, `V080` and `V097`: a
+gate failing for a reason nobody can clear that afternoon is one people run with
+`--no-verify`. `tools/discrimination_baseline.json` carries a floor `D` may not fall below
+and a ceiling the gap may not rise above.
+
+*Closes when:* the gap reads as a list rather than a backlog, and a rule is decided if and
+only if it has been watched rejecting something.
 
 ### OPEN-016 · Nineteen advisory rules are unenforceable by construction
 

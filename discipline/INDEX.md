@@ -16,7 +16,7 @@ decay: none
 
 **`mechanized` says a mechanism exists, not that it decides the whole rule.** The measurement is presence on disk; how completely a check covers the sentence above it is a judgement no build can make. `ARCH-012` is the worked example: `check:no_test_branches` is real and runs, and it matches a closed list of test signals, so `if os.environ.get("PYTEST_CURRENT_TEST")` -- the canonical pytest detector -- passes it, as does any indirection through a module constant. Read a `mechanized` row as *something will catch the obvious cases*, and the rule's own text as what you actually owe.
 
-14 of 164 binding rules are not mechanically decided. `enforce/ENFORCEMENT.md` names the mechanisms still to build.
+14 of 155 binding rules are not mechanically decided. `enforce/ENFORCEMENT.md` names the mechanisms still to build.
 
 ## Modules
 
@@ -29,19 +29,19 @@ decay: none
 | [fact/py-typing](fact/py-typing.md) | fact | 1549 | 0 | mypy flags, pyright config, strict mode, Protocol, TypedDict, PEP 695 |
 | [frame/architecture](frame/architecture.md) | frame | 2197 | 0 | which paradigm, tradeoff, refactoring, legacy code, coupling, cohesion |
 | [frame/spec](frame/spec.md) | frame | 1865 | 0 | write a spec, requirements, elicitation, design document, traceability, reusability |
-| [law/API](law/API.md) | law | 2093 | 15 | public API, contract, versioning, breaking change, CLI, JSON output |
+| [law/API](law/API.md) | law | 2445 | 15 | public API, contract, versioning, breaking change, CLI, JSON output |
 | [law/ARCH](law/ARCH.md) | law | 2719 | 17 | new module, package layout, port, adapter, hexagonal, dependency injection |
-| [law/DEP](law/DEP.md) | law | 2011 | 14 | add a dependency, third party library, lockfile, environment, code generation, generated file |
-| [law/DIAG](law/DIAG.md) | law | 2499 | 16 | exception, traceback, logging, error message, error code, correlation id |
+| [law/DEP](law/DEP.md) | law | 2111 | 14 | add a dependency, third party library, lockfile, environment, code generation, generated file |
+| [law/DIAG](law/DIAG.md) | law | 2634 | 16 | exception, traceback, logging, error message, error code, correlation id |
 | [law/DOC](law/DOC.md) | law | 2367 | 14 | docstring, documentation comment, doxygen, @param, @return, document this function |
-| [law/EFCT](law/EFCT.md) | law | 2281 | 16 | write a file, mutation, state machine, transaction, rollback, dry run |
+| [law/EFCT](law/EFCT.md) | law | 2286 | 16 | write a file, mutation, state machine, transaction, rollback, dry run |
 | [law/ERR](law/ERR.md) | law | 2609 | 16 | raise, except, Result, error type, exception hierarchy, validation |
-| [law/FLOW](law/FLOW.md) | law | 1994 | 13 | definition of done, before i commit, what should i do first, ADR, decision record, review |
+| [law/FLOW](law/FLOW.md) | law | 2233 | 13 | definition of done, before i commit, what should i do first, ADR, decision record, review |
 | [law/LEARN](law/LEARN.md) | law | 1888 | 12 | learning, record what i learned, session memory, why did this fail before, calibration, promote a learning |
-| [law/TEST](law/TEST.md) | law | 2777 | 19 | write a test, pytest, fixture, hypothesis, property test, mutation |
+| [law/TEST](law/TEST.md) | law | 2786 | 19 | write a test, pytest, fixture, hypothesis, property test, mutation |
 | [law/TYPE](law/TYPE.md) | law | 2144 | 15 | type hint, mypy, pyright, Protocol, generic, dataclass |
 | [ops/ALLOC](ops/ALLOC.md) | ops | 2213 | 10 | dispatch a subagent, which model, how much effort, delegate, escalate, sub-agent |
-| [ops/teams](ops/teams.md) | ops | 2584 | 6 | agent team, teammate, subagent definition, spawn an agent, task list, slash command |
+| [ops/teams](ops/teams.md) | ops | 2592 | 6 | agent team, teammate, subagent definition, spawn an agent, task list, slash command |
 
 ## Rules
 
@@ -56,14 +56,14 @@ decay: none
 | `API-005` | BINDING | `mechanized` | `fitness:test_structured_output` | Structured output is the primary interface |
 | `API-006` | BINDING | `mechanized` | `fitness:test_structured_output` | Human output renders the same result object |
 | `API-007` | BINDING | `mechanized` | `fitness:test_exit_codes` | Exit status is part of the contract |
-| `API-008` | BINDING | `mechanized` | `fitness:test_structured_output` | The surface is self-describing |
+| `API-008` | ADVISORY | `unmechanized` | — | The surface is self-describing |
 | `API-009` | BINDING | `mechanized` | `fitness:test_agent_parity` | Automation gets no relaxed validation |
 | `API-010` | BINDING | `mechanized` | `fitness:test_schema_versioned` | Every published payload carries a schema version |
-| `API-011` | BINDING | `mechanized` | `fitness:test_codes_are_stable` | Error codes and result variants are versioned surface |
+| `API-011` | ADVISORY | `unmechanized` | — | Error codes and result variants are versioned surface |
 | `API-012` | BINDING | `mechanized` | `fitness:test_migrations` | A format change ships with a migration and its test |
-| `API-013` | BINDING | `mechanized` | `fitness:test_schema_versioned` | Compatibility is not inherited from parser tolerance |
+| `API-013` | ADVISORY | `unmechanized` | — | Compatibility is not inherited from parser tolerance |
 | `API-014` | ADVISORY | `unmechanized` | — | Prefer additive change |
-| `API-015` | BINDING | `mechanized` | `fitness:test_delivered_boundary` | The delivered artifact is what gets tested |
+| `API-015` | ADVISORY | `unmechanized` | — | The delivered artifact is what gets tested |
 
 ### law/ARCH
 
@@ -93,7 +93,7 @@ decay: none
 |---|---|---|---|---|
 | `DEP-001` | BINDING | `external` | `auto:import-linter` | The domain depends on the standard library only |
 | `DEP-002` | BINDING | `mechanized` | `fitness:test_dependency_position` | A dependency is judged by its architectural position |
-| `DEP-003` | BINDING | `mechanized` | `fitness:test_fault_catalogue` | An adapter owns its dependency's failure modes |
+| `DEP-003` | ADVISORY | `unmechanized` | — | An adapter owns its dependency's failure modes |
 | `DEP-004` | ADVISORY | `unmechanized` | — | Do not reimplement a solved, specified problem |
 | `DEP-005` | BINDING | `mechanized` | `fitness:test_environment_locked` | The environment is locked by content hash |
 | `DEP-006` | BINDING | `mechanized` | `fitness:test_environment_locked` | A command verifies the environment matches the lock |
@@ -113,7 +113,7 @@ decay: none
 | `DIAG-001` | BINDING | `mechanized` | `fitness:test_envelope_conforms` | Every escaping error produces a valid envelope |
 | `DIAG-002` | BINDING | `mechanized` | `check:exception_has_code` | Every custom exception carries a stable code |
 | `DIAG-003` | BINDING | `mechanized` | `check:exception_has_code` | Error detail is carried in attributes, not interpolated away |
-| `DIAG-004` | BINDING | `mechanized` | `fitness:test_codes_are_stable` | A code is a public contract |
+| `DIAG-004` | ADVISORY | `unmechanized` | — | A code is a public contract |
 | `DIAG-005` | BINDING | `mechanized` | `check:raise_from` | Every cross-layer re-raise uses explicit chaining |
 | `DIAG-006` | BINDING | `mechanized` | `check:raise_from` | Context is accreted with notes, not by re-wrapping |
 | `DIAG-007` | BINDING | `mechanized` | `check:raise_from` | Suppressing the cause requires a stated reason |
@@ -122,7 +122,7 @@ decay: none
 | `DIAG-010` | BINDING | `mechanized` | `check:log_once` | Each exception is logged once, at its handling boundary |
 | `DIAG-011` | BINDING | `mechanized` | `check:library_logging` | Library code configures no logging |
 | `DIAG-012` | BINDING | `external` | `auto:ruff:G004` | Log arguments are deferred, never pre-formatted |
-| `DIAG-013` | BINDING | `mechanized` | `fitness:test_correlation_propagates` | A correlation identifier ties a failure to its trace |
+| `DIAG-013` | ADVISORY | `unmechanized` | — | A correlation identifier ties a failure to its trace |
 | `DIAG-014` | BINDING | `mechanized` | `check:redaction` | Secrets and personal data never reach a log or an envelope |
 | `DIAG-015` | BINDING | `external` | `auto:ruff:G004` `check:log_once` | Structured fields, not sentences |
 | `DIAG-016` | ADVISORY | `unmechanized` | — | State transitions are observable |
@@ -158,7 +158,7 @@ decay: none
 | `EFCT-006` | BINDING | `mechanized` | `fitness:test_dry_run_matches_apply` | A dry run is the pipeline truncated, never a second path |
 | `EFCT-007` | BINDING | `mechanized` | `fitness:test_interruption_recovers` | A multi-effect apply is journalled |
 | `EFCT-008` | BINDING | `mechanized` | `check:atomicity_qualified` | Atomicity claims are qualified |
-| `EFCT-009` | BINDING | `mechanized` | `fitness:test_interruption_recovers` | What is not guaranteed is stated |
+| `EFCT-009` | BINDING | `mechanized` | `fitness:test_what_is_not_guaranteed_is_stated` | What is not guaranteed is stated |
 | `EFCT-010` | BINDING | `mechanized` | `check:plan_apply` | State transitions are explicit and closed |
 | `EFCT-011` | BINDING | `unbuilt` **(!)** | `check:plan_apply` | Illegal transitions are refused before any effect |
 | `EFCT-012` | BINDING | `external` | `auto:import-linter` | Persistent state has exactly one owning path |
@@ -192,16 +192,16 @@ decay: none
 
 | Rule | Force | Status | Mechanism | Title |
 |---|---|---|---|---|
-| `FLOW-001` | BINDING | `mechanized` | `fitness:test_contract_documented` | The contract is written before the implementation |
+| `FLOW-001` | ADVISORY | `unmechanized` | — | The contract is written before the implementation |
 | `FLOW-002` | BINDING | `mechanized` | `check:oracle_declared` | Test obligations are named before tests are written |
 | `FLOW-003` | BINDING | `mechanized` | `fitness:test_decisions_recorded` | A structural decision is recorded before it is relied upon |
-| `FLOW-004` | BINDING | `mechanized` | `fitness:test_decisions_recorded` | Decision records are appended, never rewritten |
-| `FLOW-005` | BINDING | `mechanized` | `fitness:test_decisions_recorded` | Overruled objections are recorded, not discarded |
+| `FLOW-004` | BINDING | `mechanized` | `fitness:test_decision_records_are_appended` | Decision records are appended, never rewritten |
+| `FLOW-005` | BINDING | `mechanized` | `fitness:test_overruled_objections_are_kept` | Overruled objections are recorded, not discarded |
 | `FLOW-006` | BINDING | `mechanized` | `fitness:test_binding_rules_have_mechanisms` | A rule without a mechanism is not binding |
 | `FLOW-007` | BINDING | `mechanized` | `fitness:test_checks_can_fail` | No check may pass vacuously |
 | `FLOW-008` | BINDING | `mechanized` | `check:deviation_recorded` | Deviations from an advisory rule are recorded in the change |
 | `FLOW-009` | BINDING | `mechanized` | `fitness:test_gate_suite_defined` | The gates pass before a change is offered |
-| `FLOW-010` | BINDING | `mechanized` | `fitness:test_layers_populated` | New behaviour arrives with its obligations discharged |
+| `FLOW-010` | ADVISORY | `unmechanized` | — | New behaviour arrives with its obligations discharged |
 | `FLOW-011` | BINDING | `mechanized` | `fitness:test_envelope_conforms` | The diagnosis is checked, not assumed |
 | `FLOW-012` | BINDING | `unbuilt` **(!)** | `check:deviation_recorded` | Report what happened, including what did not |
 | `FLOW-013` | ADVISORY | `unmechanized` | — | Scale ceremony to reuse ambition, not to line count |
@@ -233,7 +233,7 @@ decay: none
 | `TEST-004` | BINDING | `mechanized` | `check:oracle_declared` | Every test module declares its oracle |
 | `TEST-005` | BINDING | `mechanized` | `fitness:test_contract_suite_per_adapter` | One contract suite runs against every adapter |
 | `TEST-006` | BINDING | `mechanized` | `fitness:test_contract_suite_per_adapter` | A fake that can drift from the real adapter is worthless |
-| `TEST-007` | BINDING | `mechanized` | `fitness:test_layers_populated` | Stated invariants have property suites |
+| `TEST-007` | BINDING | `mechanized` | `fitness:test_property_suites_are_generated` | Stated invariants have property suites |
 | `TEST-008` | BINDING | `mechanized` | `fitness:test_goldens_reviewed` | Golden files are reviewed, never merely regenerated |
 | `TEST-009` | BINDING | `mechanized` | `fitness:test_fault_schedules_are_data` | Fault injection is data, not bespoke classes |
 | `TEST-010` | BINDING | `mechanized` | `fitness:test_fault_catalogue` | The fault catalogue is covered per port |
@@ -244,7 +244,7 @@ decay: none
 | `TEST-015` | BINDING | `mechanized` | `fitness:test_checks_can_fail` | Every check has a proof-of-failure companion |
 | `TEST-016` | BINDING | `mechanized` | `check:test_weakening` | A test that weakens must say so |
 | `TEST-017` | BINDING | `external` | `auto:pytest-randomly` `auto:pytest-socket` | Tests are order-independent and network-isolated |
-| `TEST-018` | BINDING | `mechanized` | `fitness:test_seeds_recorded` | A flaky failure is a defect in the harness |
+| `TEST-018` | BINDING | `mechanized` | `fitness:test_no_rerun_dismissal` | A flaky failure is a defect in the harness |
 | `TEST-019` | ADVISORY | `unmechanized` | — | Test names state the behaviour |
 
 ### law/TYPE
@@ -288,7 +288,7 @@ decay: none
 |---|---|---|---|---|
 | `TEAMS-001` | BINDING | `mechanized` | `check:dispatch_recorded` | A dispatch states the contract, not the intention |
 | `TEAMS-002` | BINDING | `mechanized` | `check:dispatch_recorded` | A restriction is never lifted by an instruction |
-| `TEAMS-003` | BINDING | `mechanized` | `fitness:test_gate_suite_defined` | Verification runs as a gate, not as a request |
+| `TEAMS-003` | BINDING | `mechanized` | `fitness:test_completion_hook_enforces_the_gate` | Verification runs as a gate, not as a request |
 | `TEAMS-004` | ADVISORY | `unmechanized` | — | Documentation is written in one stage, verified in another |
 | `TEAMS-005` | ADVISORY | `unmechanized` | — | A verifier refutes claims; it does not improve prose |
 | `TEAMS-006` | ADVISORY | `unmechanized` | — | Presence and truth need separate mechanisms |

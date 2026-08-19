@@ -23,6 +23,7 @@ import ast
 from pathlib import Path
 from typing import Final
 
+from decides import decides
 from fixtures import package_root, reference_root
 
 ## The repository root, three levels up from this file.
@@ -44,7 +45,12 @@ PURE_LAYERS: Final[frozenset[str]] = frozenset({"domain"})
 ## reach and how long it may take.
 HARNESS_PLUGINS: Final[tuple[str, ...]] = ("randomly", "socket", "timeout")
 
+## Ways a harness can be told to retry a failure until it stops failing.
+## `TEST-018` prohibits the habit; these are the switches that automate it.
+RERUN_SWITCHES: Final[tuple[str, ...]] = ("--reruns", "--only-rerun", "flaky")
 
+
+@decides("EFCT-003")
 def test_determinism() -> None:
     """EFCT-003: the core reaches for nothing that could change its answer.
 
@@ -125,3 +131,44 @@ def _installed_plugins() -> set[str]:
         for d in distributions()
         if (d.metadata["Name"] or "").lower().startswith("pytest-")
     }
+
+
+@decides("TEST-018")
+def test_no_rerun_dismissal() -> None:
+    """TEST-018: the harness cannot be configured to re-run a failure away.
+
+    The rule's three clauses are that an unreproducible failure is investigated
+    at the priority of a domain defect, that "reruns MUST NOT be used to dismiss
+    one", and that failing generated cases are recorded as fixtures. The second
+    is the one with a mechanical subject: a rerun plugin, installed or configured,
+    turns a flaky failure into a green run and removes the evidence that there was
+    anything to investigate.
+
+    Until v3.1 this rule was claimed by `test_seeds_recorded`, which asserts the
+    randomising plugins are *present*. Presence of a randomiser says nothing about
+    whether a failure can be dismissed, and the two are easy to confuse because
+    both are about how the harness is configured.
+    """
+    installed = _installed_plugins()
+    assert "rerunfailures" not in installed, (
+        "pytest-rerunfailures is installed. A failure that passes on the second "
+        "attempt is a defect in the harness, and this plugin is the mechanism "
+        "for not finding out which one."
+    )
+    configured = (REPO_ROOT / "pytest.ini").read_text(encoding="utf-8")
+    for switch in RERUN_SWITCHES:
+        assert switch not in configured, (
+            f"pytest.ini configures {switch!r}, so a flaky failure is retried "
+            f"rather than investigated."
+        )
+
+
+def test_a_configured_rerun_is_caught(tmp_path: Path) -> None:
+    """The negative case: an ini that retries what it could not reproduce.
+
+    @param tmp_path holds the substituted configuration
+    """
+    configured = tmp_path / "pytest.ini"
+    configured.write_text("[pytest]\naddopts = --reruns 3\n", encoding="utf-8")
+    text = configured.read_text(encoding="utf-8")
+    assert any(switch in text for switch in RERUN_SWITCHES)

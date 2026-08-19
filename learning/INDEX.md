@@ -8,8 +8,8 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 
 | Status | Count |
 |---|---|
-| active | 4 |
-| candidate | 98 |
+| active | 5 |
+| candidate | 100 |
 | superseded | 1 |
 
 ## active
@@ -17,19 +17,28 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 ### L-0026 · A Bash heredoc on this machine collapses a doubled backslash, so Python source generated that way turned a regex \b into a literal backspace; the check kept passing its own tests and silently over-reported 400 findings.
 
 - **Do** Generate Python source with the Edit/Write tools rather than a heredoc. enforce/fitness/test_meta.py now fails on any control character in source.
-- **Kind** diagnostic · **scope** project · **evidence** observed (+1/-1 over 2 session(s))
-- **Confidence** 0.45, last seen 2026-08-19
+- **Kind** diagnostic · **scope** project · **evidence** observed (+2/-1 over 3 session(s))
+- **Confidence** 0.55, last seen 2026-08-19
 - **Triggers** `glob:**/*.py`
 - **Verify** `python -m pytest enforce/fitness/test_meta.py -q`
 
 ### L-0074 · Ruff in this environment treats '# noqa: CODE' as a defect and expects '# ruff: ignore[rule-name]'; converting the repository's suppressions to noqa introduced 6 new findings and suppressed nothing.
 
 - **Do** Suppress a ruff finding with '# ruff: ignore[rule-name] - reason' using the long rule name, never '# noqa'.
-- **Kind** constraint · **scope** project · **evidence** observed (+2/-0 over 2 session(s))
-- **Confidence** 0.70, last seen 2026-08-19
+- **Kind** constraint · **scope** project · **evidence** observed (+3/-0 over 3 session(s))
+- **Confidence** 0.80, last seen 2026-08-19
 - **Triggers** `glob:*.py`
 - **About** DEP-005
 - **Verify** `python -m ruff check enforce/ --output-format concise`
+
+### L-0075 · docgate.COVERED named enforce/checks but not enforce/fitness, so 13 fitness suites -- mechanisms in exactly the same sense -- were written entirely outside the gate that keeps their documentation true; widening it immediately found three undocumented module constants.
+
+- **Do** When a new directory holds mechanisms, add it to docgate.COVERED in the same change that creates it, and baseline every file in it.
+- **Kind** defect · **scope** discipline · **evidence** observed (+1/-0 over 1 session(s))
+- **Confidence** 0.60, last seen 2026-08-19
+- **Triggers** `glob:enforce/**`
+- **About** DOC-002
+- **Verify** `python tools/docgate.py --all`
 
 ### L-0083 · A rule mechanized on the module name over-reports on code that uses only a module's pure members: ARCH-002 fired on PurePosixPath, which cannot touch a disk by construction, and on datetime.date imported as a type.
 
@@ -648,15 +657,6 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **About** L-0026
 - **Verify** `python -m ruff check --output-format concise`
 
-### L-0075 · docgate.COVERED named enforce/checks but not enforce/fitness, so 13 fitness suites -- mechanisms in exactly the same sense -- were written entirely outside the gate that keeps their documentation true; widening it immediately found three undocumented module constants.
-
-- **Do** When a new directory holds mechanisms, add it to docgate.COVERED in the same change that creates it, and baseline every file in it.
-- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
-- **Confidence** 0.50, last seen 2026-08-19
-- **Triggers** `glob:enforce/**`
-- **About** DOC-002
-- **Verify** `python tools/docgate.py --all`
-
 ### L-0076 · python -m importlinter.cli exits 0 having checked nothing: the module has no __main__ guard, so it imports and returns success. Only the console script works, and it is not reachable from sys.executable.
 
 - **Do** Never wire import-linter into a gate as 'python -m importlinter.cli'. Call the API: configure(), read_user_options(), _register_contract_types(), create_report() -- and assert the contract count, because a config that resolves nothing reports '0 broken'.
@@ -889,6 +889,32 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Confidence** 0.50, last seen 2026-08-19
 - **Triggers** `error:V080`
 - **About** FLOW-006
+- **Verify** `python tools/discrimination_gate.py`
+
+### L-0104 · importlib.util.module_from_spec loading a module that defines a slots dataclass dies with "'NoneType' object has no attribute '__dict__'", naming neither the module nor the cause, because the dataclass machinery resolves sys.modules[cls.__module__] to rebuild the class.
+
+- **Do** Assign sys.modules[spec.name] before calling exec_module, and pop it in a finally block.
+- **Kind** procedure · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `error:NoneType' object has no attribute '__dict__'`
+- **Verify** `python -m pytest tools/test_mechanism_checks.py -q`
+
+### L-0105 · A mechanism tag resolved by the existence of a file or function counts a rule as decided that the mechanism never claimed; the check side was wrong for 17 of 73 rules and the fitness side for 16 of 64, both around 20-23%.
+
+- **Do** Make every mechanism declare what it decides in a form a parser can read -- a rules tuple for a check, a @decides decorator for a fitness test -- and resolve the tag against the declaration, never against the file existing.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `glob:tools/discipline_core.py`
+- **About** FLOW-006
+- **Verify** `python tools/validate.py`
+
+### L-0106 · An auto: mechanism tag is unverifiable by construction -- mechanism_is_implemented returns None for it -- so four of the eight rules tagged auto:import-linter were named by no contract that runs, and V080 could never have said so.
+
+- **Do** Write a discrimination mutation for every auto: rule. The mutation is the only thing that can discover a rule whose tool was never told about it.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-19
+- **Triggers** `glob:enforce/importlinter.toml`
+- **About** ARCH-004
 - **Verify** `python tools/discrimination_gate.py`
 
 ## superseded

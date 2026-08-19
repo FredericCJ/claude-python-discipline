@@ -2,7 +2,7 @@
 id: ops/teams
 kind: ops
 title: Agent Team Mechanics
-tokens: 2584
+tokens: 2592
 load_when:
   - "agent team"
   - "teammate"
@@ -107,12 +107,12 @@ a dispatch MUST NOT purport to grant a capability the receiving agent does not h
 - **Check** `python -m checks.dispatch_recorded`
 - **See** [ops/ALLOC]
 
-### TEAMS-003 · Verification runs as a gate, not as a request  [BINDING] [fitness:test_gate_suite_defined]
+### TEAMS-003 · Verification runs as a gate, not as a request  [BINDING] [fitness:test_completion_hook_enforces_the_gate]
 Where the tooling offers a completion hook, the verification obligation MUST be enforced
 there — a task cannot be marked done while its gate fails.
 - **Why** This is what turns a soft norm into a hard one, and it is the only place the
   discipline's own axiom can be applied to agent coordination itself.
-- **Check** `pytest enforce/fitness/test_meta.py::test_gate_suite_defined`
+- **Check** `pytest enforce/fitness/test_meta.py::test_completion_hook_enforces_the_gate`
 - **See** [law/FLOW]
 
 ## Documentation work: write, then refute

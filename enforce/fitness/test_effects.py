@@ -21,6 +21,7 @@ import ast
 import re
 from typing import TYPE_CHECKING, Final
 
+from decides import decides
 from fixtures import broken_copy, package_root, reference_root
 
 if TYPE_CHECKING:
@@ -64,6 +65,7 @@ def functions_in(package: Path) -> dict[str, ast.FunctionDef | ast.AsyncFunction
 # ------------------------------------------------------------------- EFCT-006
 
 
+@decides("EFCT-006")
 def test_dry_run_matches_apply() -> None:
     """EFCT-006: one pipeline, truncated -- not two implementations.
 
@@ -122,6 +124,7 @@ def test_an_applier_that_recomputes_is_caught(tmp_path: Path) -> None:
 # --------------------------------------------- EFCT-007 / EFCT-009 / TEST-012
 
 
+@decides("EFCT-007", "TEST-012")
 def test_interruption_recovers() -> None:
     """EFCT-007, TEST-012: an interruption is driven, and its aftermath asserted.
 
@@ -140,6 +143,7 @@ def test_interruption_recovers() -> None:
     )
 
 
+@decides("EFCT-009")
 def test_what_is_not_guaranteed_is_stated() -> None:
     """EFCT-009: the limit is written down where a caller will meet it.
 

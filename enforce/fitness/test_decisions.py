@@ -25,6 +25,8 @@ from typing import Final
 
 import pytest
 
+from decides import decides
+
 ## The repository root, three levels up from this file.
 REPO_ROOT: Final = Path(__file__).resolve().parent.parent.parent
 
@@ -75,6 +77,7 @@ def decisions_in(path: Path) -> list[tuple[str, str]]:
 
 
 @pytest.mark.parametrize("ledger", LEDGERS, ids=lambda p: p.name)
+@decides("FLOW-003")
 def test_decisions_recorded(ledger: Path) -> None:
     """FLOW-003: a structural decision is written down, with its reasoning.
 
@@ -95,6 +98,7 @@ def test_decisions_recorded(ledger: Path) -> None:
         )
 
 
+@decides("FLOW-005")
 def test_overruled_objections_are_kept() -> None:
     """FLOW-005: a reversal shows what it is answering.
 
@@ -112,6 +116,7 @@ def test_overruled_objections_are_kept() -> None:
     )
 
 
+@decides("FLOW-004")
 def test_decision_records_are_appended() -> None:
     """FLOW-004: ids are assigned once and never renumbered.
 
