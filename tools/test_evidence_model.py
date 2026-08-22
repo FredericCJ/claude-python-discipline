@@ -12,8 +12,10 @@ from discipline_core import Force, Rule
 from evidence_model import (
     EvidenceParseError,
     MigrationDisposition,
+    ObservationKind,
     VerificationState,
     load_evidence,
+    load_observations,
     validate_evidence,
     verification_state,
 )
@@ -109,18 +111,20 @@ def rule(
     *,
     mechanisms: tuple[str, ...] = ("auto:mypy",),
     superseded_by: str | None = None,
+    force: Force = Force.BINDING,
 ) -> Rule:
     """Build the normative half of a joined test record.
 
     @param mechanisms heading mechanisms
     @param superseded_by replacement id for a retired fixture
+    @param force normative or historical force tag
     @return normative rule
     """
     return Rule(
         rule_id="TYPE-001",
         module_id="law/TYPE",
         title="Keep the core typed",
-        force=Force.BINDING,
+        force=force,
         mechanisms=mechanisms,
         statement="The core MUST remain typed.",
         why="Unchecked values hide defects.",
@@ -183,6 +187,46 @@ def test_unknown_fields_are_rejected(tmp_path: Path) -> None:
         load_evidence(write_payload(tmp_path / "evidence.json", payload))
 
 
+def test_field_observations_are_typed_and_reproducible(tmp_path: Path) -> None:
+    """An observation ID resolves to a bounded claim and named evidence location."""
+    payload = {
+        "schema_version": 1,
+        "observations": {
+            "V4E-001": {
+                "classification": "mechanism_defect",
+                "claim": "The configured scan root was ignored.",
+                "evidence_kind": "reproduced",
+                "observed_in": ["adopter at abc123"],
+                "reproduction": "Run the declared gate from the adopter root.",
+                "scope": "one adopter repository",
+                "source": "audit/A-001",
+            }
+        },
+    }
+    registry = load_observations(write_payload(tmp_path / "observations.json", payload))
+    assert registry.observations["V4E-001"].evidence_kind is ObservationKind.REPRODUCED
+
+
+def test_field_observation_requires_a_location(tmp_path: Path) -> None:
+    """An unlocated anecdote cannot satisfy a field-evidence reference."""
+    payload = {
+        "schema_version": 1,
+        "observations": {
+            "V4E-001": {
+                "classification": "mechanism_defect",
+                "claim": "The configured scan root was ignored.",
+                "evidence_kind": "observed",
+                "observed_in": [],
+                "reproduction": None,
+                "scope": "one adopter repository",
+                "source": "audit/A-001",
+            }
+        },
+    }
+    with pytest.raises(EvidenceParseError, match="at least one evidence location"):
+        load_observations(write_payload(tmp_path / "observations.json", payload))
+
+
 def test_capabilities_use_configuration_key_grammar(tmp_path: Path) -> None:
     """Capability names are valid TOML-style identifiers before activation exists."""
     payload = valid_payload()
@@ -231,7 +275,7 @@ def test_retirement_preserves_the_id_and_removes_strategies(tmp_path: Path) -> N
     assert isinstance(migration, dict)
     migration["disposition"] = MigrationDisposition.SUPERSEDED
     registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
-    retired = rule(mechanisms=(), superseded_by="TYPE-002")
+    retired = rule(mechanisms=(), superseded_by="TYPE-002", force=Force.RETIRED)
     assert validate_evidence(registry, [retired], set()) == []
     assert verification_state(retired, registry.rules["TYPE-001"]) is VerificationState.RETIRED
 
@@ -244,7 +288,7 @@ def test_withdrawal_without_a_replacement_is_representable(tmp_path: Path) -> No
     assert isinstance(migration, dict)
     migration["disposition"] = MigrationDisposition.RETIRED
     registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
-    withdrawn = rule(mechanisms=())
+    withdrawn = rule(mechanisms=(), force=Force.RETIRED)
     assert validate_evidence(registry, [withdrawn], set()) == []
     assert verification_state(withdrawn, registry.rules["TYPE-001"]) is VerificationState.RETIRED
 
@@ -257,7 +301,7 @@ def test_replacement_disposition_requires_a_successor(tmp_path: Path) -> None:
     assert isinstance(migration, dict)
     migration["disposition"] = MigrationDisposition.SUPERSEDED
     registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
-    findings = validate_evidence(registry, [rule(mechanisms=())], set())
+    findings = validate_evidence(registry, [rule(mechanisms=(), force=Force.RETIRED)], set())
     assert [finding.code for finding in findings] == ["E007"]
 
 

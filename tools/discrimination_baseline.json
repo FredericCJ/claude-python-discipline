@@ -1,7 +1,7 @@
 {
   "generated_by": "tools/discrimination_gate.py --update-baseline",
   "note": "D -- rules with at least one mutation observed provoking them. May rise, never fall. The entries are in enforce/discrimination.py and are meant to be read; the count alone says nothing about whether they are good.",
-  "count": 49,
+  "count": 57,
   "rules": [
     "ALLOC-002",
     "ALLOC-004",
@@ -33,6 +33,14 @@
     "ERR-009",
     "ERR-013",
     "ERR-016",
+    "EVID-001",
+    "EVID-002",
+    "EVID-003",
+    "EVID-004",
+    "EVID-005",
+    "EVID-006",
+    "EVID-007",
+    "EVID-008",
     "FLOW-002",
     "FLOW-008",
     "TEAMS-002",
@@ -54,5 +62,5 @@
     "TYPE-013"
   ],
   "gap": 93,
-  "why": "v3.1 Phase 3: sixteen mutations harvested from the fitness suites' own negative cases, which were mutations in all but name -- transcribed to point DISCIPLINE_REFERENCE at the damaged tree and require the TAGGED function to fail, which is stronger than the sibling assertion they came from. The baseline gains a gap ceiling: D rising is not on its own progress, since a release adding four decided rules and one mutation raises D by one and widens the gap by three."
+  "why": "witness all eight v4 EVID claim-contract invariants"
 }

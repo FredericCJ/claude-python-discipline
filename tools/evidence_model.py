@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final, Never, TypeVar, cast
 
-from discipline_core import REPO_ROOT, mechanism_is_implemented
+from discipline_core import REPO_ROOT, Force, mechanism_is_implemented
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -30,10 +30,14 @@ if TYPE_CHECKING:
 ## The authored registry. It is deliberately not generated: evidence judgments
 ## must be reviewed rather than inferred from the existence of a checker.
 EVIDENCE_PATH: Final = REPO_ROOT / "discipline" / "meta" / "evidence.json"
+## Reproducible adopter and audit observations referenced by rule evidence.
+OBSERVATIONS_PATH: Final = REPO_ROOT / "discipline" / "meta" / "observations.json"
 
 ## Capability names become configuration keys later in v4, so constrain their
 ## spelling before any adopter can depend on an ambiguous form.
 _CAPABILITY = re.compile(r"^[a-z][a-z0-9_]*$")
+## Stable field-evidence identifiers are versioned independently from rule ids.
+_OBSERVATION_ID = re.compile(r"^V[0-9]+E-[0-9]{3}$")
 
 ## Type variable preserving the concrete string-enum class passed to `_enum`.
 _EnumT = TypeVar("_EnumT", bound=StrEnum)
@@ -113,6 +117,36 @@ class MigrationDisposition(StrEnum):
     RETIRED = "retired"
     ## The rule first appears in v4.
     NEW = "new"
+
+
+class ObservationClassification(StrEnum):
+    """Which kind of defect or fact one field observation establishes."""
+
+    ## The normative statement itself caused or preserved the failure.
+    DOCTRINE_DEFECT = "doctrine_defect"
+    ## The checker disagreed with the proposition it claimed to decide.
+    MECHANISM_DEFECT = "mechanism_defect"
+    ## The adopter violated a sound local obligation.
+    PROJECT_DEFECT = "project_defect"
+    ## The adopter's local contract was missing or internally inconsistent.
+    SPECIFICATION_DEFECT = "specification_defect"
+    ## Versioned behavior of a tool, without a normative conclusion.
+    TOOL_FACT = "tool_fact"
+    ## A required verdict cannot be produced on the named platform.
+    UNSUPPORTED_PLATFORM_FACT = "unsupported_platform_fact"
+
+
+class ObservationKind(StrEnum):
+    """How an observation was obtained without upgrading it to proof."""
+
+    ## Captured during an adopter change or audit.
+    OBSERVED = "observed"
+    ## Repeated from a named commit and command.
+    REPRODUCED = "reproduced"
+    ## Checked directly against a pinned tool version.
+    VERIFIED_TOOL_FACT = "verified_tool_fact"
+    ## Human synthesis across records, explicitly not an executable reproduction.
+    MANUAL_SYNTHESIS = "manual_synthesis"
 
 
 class VerificationState(StrEnum):
@@ -235,6 +269,38 @@ class EvidenceRegistry:
 
 
 @dataclass(frozen=True, slots=True)
+class FieldObservation:
+    """One named result from an adopter, audit, or tool reproduction."""
+
+    ## Stable identifier used by rule evidence.
+    observation_id: str
+    ## Defect/fact category assigned during evidence triage.
+    classification: ObservationClassification
+    ## Bounded statement the observation supports.
+    claim: str
+    ## How the result was obtained.
+    evidence_kind: ObservationKind
+    ## Named commits, ledgers, or audits in which it was seen.
+    observed_in: tuple[str, ...]
+    ## Repeatable action, absent only for explicitly manual synthesis.
+    reproduction: str | None
+    ## Repository-local boundary within which the observation applies.
+    scope: str
+    ## Authored source from which this packaged record was transcribed.
+    source: str
+
+
+@dataclass(frozen=True, slots=True)
+class ObservationRegistry:
+    """The complete authored field-evidence registry."""
+
+    ## Parser contract version.
+    schema_version: int
+    ## Every observation keyed by its stable evidence id.
+    observations: Mapping[str, FieldObservation]
+
+
+@dataclass(frozen=True, slots=True)
 class EvidenceFinding:
     """One semantic mismatch between the registry and the rule corpus."""
 
@@ -281,6 +347,75 @@ def load_evidence(path: Path = EVIDENCE_PATH) -> EvidenceRegistry:
     for rule_id, value in raw_rules.items():
         parsed[rule_id] = _rule_evidence(rule_id, value)
     return EvidenceRegistry(schema_version=version, rules=parsed)
+
+
+def load_observations(path: Path = OBSERVATIONS_PATH) -> ObservationRegistry:
+    """Read and structurally validate the named field observations.
+
+    @param path JSON registry to read
+    @return typed observations addressable by stable evidence id
+    @throws EvidenceParseError when JSON or a field violates the contract
+    """
+    try:
+        raw: object = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as problem:
+        raise EvidenceParseError(str(path), str(problem)) from problem
+    root = _mapping(raw, "observations")
+    _exact_fields(root, {"schema_version", "observations"}, "observations")
+    version = _integer(root["schema_version"], "observations.schema_version")
+    if version != 1:
+        _invalid("observations.schema_version", f"expected 1, got {version}")
+    records = _mapping(root["observations"], "observations.observations")
+    parsed: dict[str, FieldObservation] = {}
+    for observation_id, value in records.items():
+        parsed[observation_id] = _field_observation(observation_id, value)
+    return ObservationRegistry(schema_version=version, observations=parsed)
+
+
+def _field_observation(observation_id: str, value: object) -> FieldObservation:
+    """Parse one field observation with its reproduction boundary intact.
+
+    @param observation_id stable id supplied by the registry key
+    @param value untrusted JSON value beneath that key
+    @return typed observation
+    """
+    where = f"observations.{observation_id}"
+    if _OBSERVATION_ID.fullmatch(observation_id) is None:
+        _invalid(where, "expected V<major>E-NNN")
+    record = _mapping(value, where)
+    _exact_fields(
+        record,
+        {
+            "classification",
+            "claim",
+            "evidence_kind",
+            "observed_in",
+            "reproduction",
+            "scope",
+            "source",
+        },
+        where,
+    )
+    locations = _strings(record["observed_in"], f"{where}.observed_in")
+    if not locations:
+        _invalid(f"{where}.observed_in", "at least one evidence location is required")
+    reproduction = record["reproduction"]
+    if reproduction is not None:
+        reproduction = _nonempty(reproduction, f"{where}.reproduction")
+    return FieldObservation(
+        observation_id=observation_id,
+        classification=_enum(
+            ObservationClassification,
+            record["classification"],
+            f"{where}.classification",
+        ),
+        claim=_nonempty(record["claim"], f"{where}.claim"),
+        evidence_kind=_enum(ObservationKind, record["evidence_kind"], f"{where}.evidence_kind"),
+        observed_in=locations,
+        reproduction=reproduction,
+        scope=_nonempty(record["scope"], f"{where}.scope"),
+        source=_nonempty(record["source"], f"{where}.source"),
+    )
 
 
 def _rule_evidence(rule_id: str, value: object) -> RuleEvidence:
@@ -414,12 +549,14 @@ def validate_evidence(
     registry: EvidenceRegistry,
     rules: Sequence[Rule],
     discriminated: AbstractSet[str],
+    observation_ids: AbstractSet[str] | None = None,
 ) -> list[EvidenceFinding]:
     """Check cross-record semantics the structural parser cannot know.
 
     @param registry parsed evidence layer
     @param rules normative rules to join by stable id
     @param discriminated rule ids with a witnessed must-reject case
+    @param observation_ids resolvable field-evidence ids, when the registry is available
     @return every mismatch in stable rule-id order
     """
     normative = {rule.rule_id: rule for rule in rules}
@@ -434,7 +571,7 @@ def validate_evidence(
     for rule_id in sorted(normative.keys() & registry.rules.keys()):
         rule = normative[rule_id]
         evidence = registry.rules[rule_id]
-        findings.extend(_validate_record(rule, evidence, discriminated))
+        findings.extend(_validate_record(rule, evidence, discriminated, observation_ids))
     return findings
 
 
@@ -442,23 +579,20 @@ def _validate_record(
     rule: Rule,
     evidence: RuleEvidence,
     discriminated: AbstractSet[str],
+    observation_ids: AbstractSet[str] | None,
 ) -> list[EvidenceFinding]:
     """Validate one joined normative/evidence pair.
 
     @param rule normative source record
     @param evidence evidence record with the same id
     @param discriminated rule ids witnessed rejecting a mutation
+    @param observation_ids resolvable field-evidence ids, or None when unavailable
     @return semantic mismatches for this pair
     """
     findings: list[EvidenceFinding] = []
-    disposition = evidence.migration.disposition
-    retired = disposition in {
-        MigrationDisposition.SUPERSEDED,
-        MigrationDisposition.CONSOLIDATED,
-        MigrationDisposition.RETIRED,
-    }
     if not evidence.warrants:
         findings.append(EvidenceFinding("E003", rule.rule_id, "rule names no warrant"))
+    findings.extend(_unresolved_observations(evidence, observation_ids))
     declared = Counter(rule.mechanisms)
     evidenced = Counter(strategy.mechanism for strategy in evidence.strategies)
     if declared != evidenced:
@@ -469,19 +603,7 @@ def _validate_record(
                 f"strategy mechanisms {dict(evidenced)} do not match heading {dict(declared)}",
             )
         )
-    if retired and evidence.strategies:
-        findings.append(EvidenceFinding("E005", rule.rule_id, "retired rule has strategies"))
-    if rule.superseded_by is not None and not retired:
-        findings.append(
-            EvidenceFinding("E006", rule.rule_id, "heading has a successor but migration is active")
-        )
-    if rule.superseded_by is None and disposition in {
-        MigrationDisposition.SUPERSEDED,
-        MigrationDisposition.CONSOLIDATED,
-    }:
-        findings.append(
-            EvidenceFinding("E007", rule.rule_id, "replacement disposition names no successor")
-        )
+    findings.extend(_retirement_findings(rule, evidence))
     for strategy in evidence.strategies:
         if strategy.is_automated and strategy.must_reject is None:
             findings.append(
@@ -505,6 +627,60 @@ def _validate_record(
                 )
             )
     return findings
+
+
+def _retirement_findings(rule: Rule, evidence: RuleEvidence) -> list[EvidenceFinding]:
+    """Keep force, strategies, disposition, and successor history consistent.
+
+    @param rule normative or historical heading
+    @param evidence migration and strategy record joined to that heading
+    @return every retirement/supersession mismatch
+    """
+    disposition = evidence.migration.disposition
+    retired = disposition in {
+        MigrationDisposition.SUPERSEDED,
+        MigrationDisposition.CONSOLIDATED,
+        MigrationDisposition.RETIRED,
+    }
+    findings: list[EvidenceFinding] = []
+    if retired and evidence.strategies:
+        findings.append(EvidenceFinding("E005", rule.rule_id, "retired rule has strategies"))
+    if retired is not (rule.force is Force.RETIRED):
+        findings.append(
+            EvidenceFinding(
+                "E006", rule.rule_id, "retired force and migration disposition disagree"
+            )
+        )
+    if rule.superseded_by is not None and not retired:
+        findings.append(
+            EvidenceFinding("E006", rule.rule_id, "heading has a successor but migration is active")
+        )
+    if rule.superseded_by is None and disposition in {
+        MigrationDisposition.SUPERSEDED,
+        MigrationDisposition.CONSOLIDATED,
+    }:
+        findings.append(
+            EvidenceFinding("E007", rule.rule_id, "replacement disposition names no successor")
+        )
+    return findings
+
+
+def _unresolved_observations(
+    evidence: RuleEvidence, observation_ids: AbstractSet[str] | None
+) -> list[EvidenceFinding]:
+    """Report field-evidence references only when a registry was supplied.
+
+    @param evidence rule record carrying zero or more observation IDs
+    @param observation_ids complete resolvable ID set, or None for legacy callers
+    @return one finding per unresolved reference
+    """
+    if observation_ids is None:
+        return []
+    return [
+        EvidenceFinding("E011", evidence.rule_id, f"observation {observation} does not resolve")
+        for observation in evidence.observations
+        if observation not in observation_ids
+    ]
 
 
 def verification_state(

@@ -4400,7 +4400,7 @@
         "component"
       ],
       "capabilities": [],
-      "failure_mode": "This is the axiom the whole discipline rests on. A binding rule nothing checks degrades to the same failure mode as a verification that passes vacuously.",
+      "failure_mode": "A mechanism can exist while its proposition, residual, platform support, applicability, or counterexample remains undeclared.",
       "warrants": [
         {
           "source": "source:SP",
@@ -4413,8 +4413,8 @@
           "mechanism": "fitness:test_binding_rules_have_mechanisms",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_binding_rules_have_mechanisms passes against the repository artifacts and behavioral cases selected by that test.",
-          "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_binding_rules_have_mechanisms; it does not establish every behavior in the normative statement.",
+          "proposition": "Every binding generated rule names a check, at least one mechanism, and one structurally complete evidence strategy per mechanism.",
+          "residual": "Structural declaration and mechanism resolution do not prove that each strategy decides the full normative claim or has just passed.",
           "must_pass": "command:`pytest enforce/fitness/test_meta.py::test_binding_rules_have_mechanisms`",
           "must_reject": "pending:FLOW-006",
           "platforms": [
@@ -4437,7 +4437,7 @@
         "component"
       ],
       "capabilities": [],
-      "failure_mode": "A check never observed to fail has not been shown to check anything, and its silence is indistinguishable from correctness.",
+      "failure_mode": "A checker never observed rejecting its exact proposition is compatible with an implementation that always accepts.",
       "warrants": [
         {
           "source": "source:SP",
@@ -4450,8 +4450,8 @@
           "mechanism": "fitness:test_checks_can_fail",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_checks_can_fail passes against the repository artifacts and behavioral cases selected by that test.",
-          "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_checks_can_fail; it does not establish every behavior in the normative statement.",
+          "proposition": "Every repository-local AST checker has a companion proof-of-failure test and the validator's diagnostics appear in negative tests.",
+          "residual": "This inherited proxy does not yet prove a must-reject case for every exact strategy, external tool, behavioral verifier, or platform.",
           "must_pass": "command:`pytest enforce/fitness/test_meta.py::test_checks_can_fail`",
           "must_reject": "pending:FLOW-007",
           "platforms": [
@@ -4646,7 +4646,7 @@
         "component"
       ],
       "capabilities": [],
-      "failure_mode": "Full ceremony applied indiscriminately trains people to route around it, which costs more than the ceremony saved.",
+      "failure_mode": "An out-of-scope lightweight escape hatch lets a consequential governed repository relabel itself instead of satisfying its obligations.",
       "warrants": [
         {
           "source": "source:SP",
@@ -4658,8 +4658,8 @@
       "observations": [],
       "migration": {
         "source": "v3.3.0",
-        "disposition": "unchanged",
-        "guidance": "No adopter edit is required by this rule record."
+        "disposition": "retired",
+        "guidance": "No lightweight profile replaces this rule; use the discipline only for a consequential application repository or one component repository."
       }
     },
     "LEARN-001": {
@@ -6551,6 +6551,222 @@
         "source": "v3.3.0",
         "disposition": "unchanged",
         "guidance": "No adopter edit is required by this rule record."
+      }
+    },
+    "EVID-001": {
+      "units": ["application", "component"],
+      "capabilities": [],
+      "failure_mode": "A rule, rationale, or verifier can disappear or drift while an old stable ID still appears to resolve.",
+      "warrants": [
+        {"source": "source:SP", "relation": "supports", "confidence": "high"}
+      ],
+      "strategies": [
+        {
+          "mechanism": "fitness:test_evidence_registry_joins_rules",
+          "kind": "behavioral",
+          "relation": "direct",
+          "proposition": "The normative stable-ID set and evidence-record key set are equal.",
+          "residual": "Set equality does not establish the quality of a rule or its evidence.",
+          "must_pass": "command:`pytest enforce/fitness/test_evidence.py::test_evidence_registry_joins_rules`",
+          "must_reject": "discrimination:EVID-001",
+          "platforms": ["windows", "linux"],
+          "not_applicable": "never while the discipline contains normative rules"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Add one evidence record when adding a local rule and retain it when retiring that ID."
+      }
+    },
+    "EVID-002": {
+      "units": ["application", "component"],
+      "capabilities": [],
+      "failure_mode": "A mechanism name can be mistaken for a decision about a broader condition it never observes.",
+      "warrants": [
+        {"source": "source:SP", "relation": "supports", "confidence": "high"}
+      ],
+      "strategies": [
+        {
+          "mechanism": "fitness:test_strategy_claims_are_explicit",
+          "kind": "behavioral",
+          "relation": "direct",
+          "proposition": "Every heading mechanism has one structurally complete and kind-compatible strategy record.",
+          "residual": "Structural completeness does not prove that the proposition is the best verifier for the normative rule.",
+          "must_pass": "command:`pytest enforce/fitness/test_evidence.py::test_strategy_claims_are_explicit`",
+          "must_reject": "discrimination:EVID-002",
+          "platforms": ["windows", "linux"],
+          "not_applicable": "never for an active binding rule"
+        }
+      ],
+      "observations": ["V3E-004"],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Replace mechanism-only declarations with exact observable, residual, platform, and applicability records."
+      }
+    },
+    "EVID-003": {
+      "units": ["application", "component"],
+      "capabilities": [],
+      "failure_mode": "A generated projection can erase a proxy label or residual and silently present correlation as proof.",
+      "warrants": [
+        {"source": "source:SP", "relation": "supports", "confidence": "high"}
+      ],
+      "strategies": [
+        {
+          "mechanism": "fitness:test_proxy_claims_preserve_residuals",
+          "kind": "generated-drift",
+          "relation": "direct",
+          "proposition": "Generated rule records preserve each authored strategy's mechanism, relation, and residual exactly.",
+          "residual": "Lossless projection does not establish that an authored residual is complete.",
+          "must_pass": "command:`pytest enforce/fitness/test_evidence.py::test_proxy_claims_preserve_residuals`",
+          "must_reject": "discrimination:EVID-003",
+          "platforms": ["windows", "linux"],
+          "not_applicable": "never while generated rule views are shipped"
+        }
+      ],
+      "observations": ["V3E-004", "V3E-008"],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Review proxy residuals instead of treating a passing checker as the whole semantic claim."
+      }
+    },
+    "EVID-004": {
+      "units": ["application", "component"],
+      "capabilities": [],
+      "failure_mode": "A declared negative case can receive credit without any verifier ever rejecting it.",
+      "warrants": [
+        {"source": "source:TD", "relation": "supports", "confidence": "high"}
+      ],
+      "strategies": [
+        {
+          "mechanism": "fitness:test_rejection_credit_is_witnessed",
+          "kind": "behavioral",
+          "relation": "direct",
+          "proposition": "Every strategy labeled with discrimination credit belongs to an ID loaded from the repository's mutation matrix.",
+          "residual": "The inherited rule-keyed matrix cannot yet attribute a rejection to one exact strategy when a rule names several.",
+          "must_pass": "command:`pytest enforce/fitness/test_evidence.py::test_rejection_credit_is_witnessed`",
+          "must_reject": "discrimination:EVID-004",
+          "platforms": ["windows", "linux"],
+          "not_applicable": "never for an automated strategy"
+        }
+      ],
+      "observations": ["V3E-005"],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Treat pending rejection labels as debt until an executable matrix entry witnesses them."
+      }
+    },
+    "EVID-005": {
+      "units": ["application", "component"],
+      "capabilities": [],
+      "failure_mode": "A build-time presence census can be consumed as a successful project-gate result.",
+      "warrants": [
+        {"source": "source:SE", "relation": "supports", "confidence": "high"}
+      ],
+      "strategies": [
+        {
+          "mechanism": "fitness:test_generated_rules_publish_no_gate_outcome",
+          "kind": "generated-drift",
+          "relation": "direct",
+          "proposition": "Generated rule records use only verifier-availability states and contain no execution-outcome field.",
+          "residual": "Consumers can still misuse an availability state unless their own schema preserves the distinction.",
+          "must_pass": "command:`pytest enforce/fitness/test_evidence.py::test_generated_rules_publish_no_gate_outcome`",
+          "must_reject": "discrimination:EVID-005",
+          "platforms": ["windows", "linux"],
+          "not_applicable": "never while generated rule views are shipped"
+        }
+      ],
+      "observations": ["V3E-005", "V3E-006"],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Consume verification.state as availability and obtain pass/fail only from a named gate execution."
+      }
+    },
+    "EVID-006": {
+      "units": ["application", "component"],
+      "capabilities": [],
+      "failure_mode": "An unqualified citation can be presented as support even when it only motivates or limits a rule.",
+      "warrants": [
+        {"source": "source:SP", "relation": "supports", "confidence": "high"}
+      ],
+      "strategies": [
+        {
+          "mechanism": "fitness:test_warrants_are_typed",
+          "kind": "behavioral",
+          "relation": "direct",
+          "proposition": "Every rule record contains at least one structurally typed warrant with a non-empty source.",
+          "residual": "Typed relation and confidence do not independently verify the cited source's argument.",
+          "must_pass": "command:`pytest enforce/fitness/test_evidence.py::test_warrants_are_typed`",
+          "must_reject": "discrimination:EVID-006",
+          "platforms": ["windows", "linux"],
+          "not_applicable": "never for a normative rule"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Classify each source as support, motivation, limit, or observation and state confidence."
+      }
+    },
+    "EVID-007": {
+      "units": ["application", "component"],
+      "capabilities": [],
+      "failure_mode": "An anecdotal adopter claim cannot be located, reproduced, scoped, or challenged.",
+      "warrants": [
+        {"source": "source:TD", "relation": "supports", "confidence": "high"}
+      ],
+      "strategies": [
+        {
+          "mechanism": "fitness:test_field_observations_resolve",
+          "kind": "behavioral",
+          "relation": "direct",
+          "proposition": "Every cited observation resolves and every observation without a reproduction is labeled manual synthesis.",
+          "residual": "Registry resolution does not reproduce an external adopter or prove generality beyond its stated scope.",
+          "must_pass": "command:`pytest enforce/fitness/test_evidence.py::test_field_observations_resolve`",
+          "must_reject": "discrimination:EVID-007",
+          "platforms": ["windows", "linux"],
+          "not_applicable": "never when a rule cites field evidence"
+        }
+      ],
+      "observations": ["V3E-008"],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Replace free-form adopter anecdotes with stable observation records."
+      }
+    },
+    "EVID-008": {
+      "units": ["application", "component"],
+      "capabilities": [],
+      "failure_mode": "Deleting or repurposing a stable ID silently changes historical diagnostics, baselines, and waivers.",
+      "warrants": [
+        {"source": "source:SP", "relation": "supports", "confidence": "high"}
+      ],
+      "strategies": [
+        {
+          "mechanism": "fitness:test_rule_migrations_are_total",
+          "kind": "behavioral",
+          "relation": "direct",
+          "proposition": "Every record has migration guidance and every historical disposition agrees with strategy removal and successor metadata.",
+          "residual": "A structurally consistent migration can still give inadequate human guidance.",
+          "must_pass": "command:`pytest enforce/fitness/test_evidence.py::test_rule_migrations_are_total`",
+          "must_reject": "discrimination:EVID-008",
+          "platforms": ["windows", "linux"],
+          "not_applicable": "never while stable rule IDs are public API"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Use clarified only for preserved meaning; otherwise retain the old heading and name supersession, consolidation, or retirement."
       }
     }
   }

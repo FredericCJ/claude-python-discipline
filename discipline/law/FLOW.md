@@ -2,7 +2,7 @@
 id: law/FLOW
 kind: law
 title: How a Change Is Made
-tokens: 2233
+tokens: 2256
 load_when:
   - "definition of done"
   - "before i commit"
@@ -80,22 +80,21 @@ Where a decision was contested, the objection and its resolution MUST be recorde
 
 ## Every rule earns its keep
 
-### FLOW-006 · A rule without a mechanism is not binding  [BINDING] [fitness:test_binding_rules_have_mechanisms]
-A rule tagged binding MUST name a runnable mechanism. One that cannot is advisory, with a
-written statement of why no mechanism exists.
-- **Why** This is the axiom the whole discipline rests on. A binding rule nothing checks
-  degrades to the same failure mode as a verification that passes vacuously.
+### FLOW-006 · Binding rules declare exact strategies  [BINDING] [fitness:test_binding_rules_have_mechanisms]
+A binding rule MUST name a runnable strategy whose evidence record states the exact
+observable proposition, kind, residual, platforms, applicability, and discrimination case.
+- **Why** A mechanism's presence says neither what it decides nor what remains wrong after
+  it accepts, so presence alone cannot make a semantic obligation verifiable.
 - **Check** `pytest enforce/fitness/test_meta.py::test_binding_rules_have_mechanisms`
-- **See** [meta/SCHEMA]
+- **See** [meta/SCHEMA] · [EVID-002]
 
-### FLOW-007 · No check may pass vacuously  [BINDING] [fitness:test_checks_can_fail]
-Every check MUST have a companion test proving it fails when its condition is violated. A
-check whose success signal is empty output MUST first be shown able to produce a failing
-one, in the environment it runs in.
-- **Why** A check never observed to fail has not been shown to check anything, and its
-  silence is indistinguishable from correctness.
+### FLOW-007 · Every automated proposition rejects a counterexample  [BINDING] [fitness:test_checks_can_fail]
+Each automated strategy MUST name a conformant reference and a concrete counterexample,
+then be observed rejecting that counterexample by the diagnostic it claims.
+- **Why** A checker never observed to reject its exact proposition is compatible with an
+  implementation that always accepts, regardless of how plausible its code looks.
 - **Check** `pytest enforce/fitness/test_meta.py::test_checks_can_fail`
-- **See** [law/TEST]
+- **See** [law/TEST] · [EVID-004]
 
 ### FLOW-008 · Deviations from an advisory rule are recorded in the change  [BINDING] [check:deviation_recorded]
 Departing from an advisory rule MUST be justified in the commit message or the decision
@@ -149,10 +148,9 @@ deviation with its identifier. A failing test is reported as failing.
   partial result up to a complete one poisons every decision built on it.
 - **Check** `python -m checks.deviation_recorded`
 
-### FLOW-013 · Scale ceremony to reuse ambition, not to line count  [ADVISORY]
-For a genuinely single-use script, the cascade SHOULD be compressed — and the compression
-stated.
-- **No mechanism** Reuse ambition is an intention about the future that no check can read
-  from the present code.
-- **Why** Full ceremony applied indiscriminately trains people to route around it, which
-  costs more than the ceremony saved.
+### FLOW-013 · Scale ceremony to reuse ambition, not to line count  [RETIRED]
+Retired in v4 because disposable scripts and lightweight profiles are outside the
+discipline's consequential, long-lived application-or-component scope.
+- **Why** Keeping an out-of-scope escape hatch inside the kernel makes applicability
+  ambiguous and lets a governed repository relabel itself instead of satisfying the rules.
+- **See** [meta/SCOPE]

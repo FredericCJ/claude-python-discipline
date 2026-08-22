@@ -10,13 +10,13 @@ decay: none
 
 # Rule Index
 
-183 rules across 13 modules. Grep this file for a rule id, then open only the module that owns it.
+191 rules across 14 modules. Grep this file for a rule id, then open only the module that owns it.
 
 **The columns are different claims.** `Force` is the normative obligation. `Verifier` says what strategy is available, never that it passed. `Relation` says whether the observable proposition is the rule itself or only a proxy. `Rejection` records whether the current matrix has watched the rule reject a counterexample. `Platforms`, `Residual`, and `Field` state where the claim is supported, what can remain wrong, and what named adopters observed.
 
 **A proxy cannot decide its parent semantic rule.** Passing its proposition establishes only the stated syntax or behavior and leaves the printed residual. `rule-level witnessed` is deliberately weaker than v4's target: the inherited matrix proves that some strategy rejected a case for that rule, but cannot yet attribute the rejection to one exact strategy.
 
-14 of 155 binding rules lack an available declared strategy. 49 of 155 rules with automated strategies have inherited rule-level rejection evidence. 168 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
+14 of 163 binding rules lack an available declared strategy. 57 of 163 rules with automated strategies have inherited rule-level rejection evidence. 168 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
 
 ## Modules
 
@@ -36,11 +36,12 @@ decay: none
 | [law/DOC](law/DOC.md) | law | 2367 | 14 | docstring, documentation comment, doxygen, @param, @return, document this function |
 | [law/EFCT](law/EFCT.md) | law | 2286 | 16 | write a file, mutation, state machine, transaction, rollback, dry run |
 | [law/ERR](law/ERR.md) | law | 2609 | 16 | raise, except, Result, error type, exception hierarchy, validation |
-| [law/FLOW](law/FLOW.md) | law | 2233 | 13 | definition of done, before i commit, what should i do first, ADR, decision record, review |
+| [law/EVID](law/EVID.md) | law | 1288 | 8 | why is this a rule, verification strategy, mechanism, proxy, residual, discrimination |
+| [law/FLOW](law/FLOW.md) | law | 2256 | 13 | definition of done, before i commit, what should i do first, ADR, decision record, review |
 | [law/LEARN](law/LEARN.md) | law | 1888 | 12 | learning, record what i learned, session memory, why did this fail before, calibration, promote a learning |
 | [law/TEST](law/TEST.md) | law | 2786 | 19 | write a test, pytest, fixture, hypothesis, property test, mutation |
 | [law/TYPE](law/TYPE.md) | law | 2144 | 15 | type hint, mypy, pyright, Protocol, generic, dataclass |
-| [ops/ALLOC](ops/ALLOC.md) | ops | 2213 | 10 | dispatch a subagent, which model, how much effort, delegate, escalate, sub-agent |
+| [ops/ALLOC](ops/ALLOC.md) | ops | 2145 | 10 | dispatch a subagent, which model, how much effort, delegate, escalate, sub-agent |
 | [ops/teams](ops/teams.md) | ops | 2592 | 6 | agent team, teammate, subagent definition, spawn an agent, task list, slash command |
 
 ## Rules
@@ -188,6 +189,19 @@ decay: none
 | `ERR-015` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_no_unhandled_escape;… | none | No unhandled exception reaches the process boundary |
 | `ERR-016` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_fault_containment; it… | none | A fault is contained at the boundary that detected it |
 
+### law/EVID
+
+| Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
+|---|---|---|---|---|---|---|---|---|
+| `EVID-001` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Set equality does not establish the quality of a rule or its evidence. | none | Every rule owns one evidence record |
+| `EVID-002` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Structural completeness does not prove that the proposition is the best verifier for the normat… | `V3E-004` | Every strategy states its observable |
+| `EVID-003` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Lossless projection does not establish that an authored residual is complete. | `V3E-004`, `V3E-008` | Proxy claims retain their residual |
+| `EVID-004` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | The inherited rule-keyed matrix cannot yet attribute a rejection to one exact strategy when a r… | `V3E-005` | Declarations earn no rejection credit |
+| `EVID-005` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Consumers can still misuse an availability state unless their own schema preserves the distinct… | `V3E-005`, `V3E-006` | Build views publish no gate outcome |
+| `EVID-006` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Typed relation and confidence do not independently verify the cited source's argument. | none | Warrants state relation and confidence |
+| `EVID-007` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Registry resolution does not reproduce an external adopter or prove generality beyond its state… | `V3E-008` | Field observations resolve to records |
+| `EVID-008` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | A structurally consistent migration can still give inadequate human guidance. | none | Stable IDs preserve migration history |
+
 ### law/FLOW
 
 | Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
@@ -197,14 +211,14 @@ decay: none
 | `FLOW-003` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_decisions_recorded; i… | none | A structural decision is recorded before it is relied upon |
 | `FLOW-004` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_decision_records_are_… | none | Decision records are appended, never rewritten |
 | `FLOW-005` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_overruled_objections_… | none | Overruled objections are recorded, not discarded |
-| `FLOW-006` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_binding_rules_have_me… | none | A rule without a mechanism is not binding |
-| `FLOW-007` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_checks_can_fail; it d… | none | No check may pass vacuously |
+| `FLOW-006` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Structural declaration and mechanism resolution do not prove that each strategy decides the ful… | none | Binding rules declare exact strategies |
+| `FLOW-007` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | This inherited proxy does not yet prove a must-reject case for every exact strategy, external t… | none | Every automated proposition rejects a counterexample |
 | `FLOW-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:deviation_recorded; it does… | none | Deviations from an advisory rule are recorded in the change |
 | `FLOW-009` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_gate_suite_defined; i… | `V3E-006` | The gates pass before a change is offered |
 | `FLOW-010` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | New behaviour arrives with its obligations discharged |
 | `FLOW-011` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_envelope_conforms; it… | none | The diagnosis is checked, not assumed |
 | `FLOW-012` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:deviation_recorded; it does… | none | Report what happened, including what did not |
-| `FLOW-013` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Scale ceremony to reuse ambition, not to line count |
+| `FLOW-013` | RETIRED | `retired` | n/a | n/a | n/a | n/a | none | Scale ceremony to reuse ambition, not to line count |
 
 ### law/LEARN
 
@@ -278,7 +292,7 @@ decay: none
 | `ALLOC-005` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does n… | none | Escalation rules beat the mechanical permit |
 | `ALLOC-006` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does n… | none | Sharpen the contract before raising the tier |
 | `ALLOC-007` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does n… | none | Split before upgrading |
-| `ALLOC-008` | ADVISORY | `retired` | n/a | n/a | n/a | n/a | none | A restriction is not lifted by an instruction |
+| `ALLOC-008` | RETIRED | `retired` | n/a | n/a | n/a | n/a | none | A restriction is not lifted by an instruction |
 | `ALLOC-009` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does n… | none | Misclassification belongs to the coordinator |
 | `ALLOC-010` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:allocation_declared; it does… | none | The gate's tier follows the risk under test |
 

@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "observations": {
+    "V3E-001": {
+      "classification": "mechanism_defect",
+      "claim": "The vendored aggregate runner ignored adopter layer declarations, producing false findings and silently narrower scans.",
+      "evidence_kind": "observed",
+      "observed_in": [
+        "console-sink .agent/learning/ledger.jsonl L-0002",
+        "signal-invocator .agent/learning/ledger.jsonl L-0005 and L-0007",
+        "sim-scheduler .agent/learning/ledger.jsonl L-0003"
+      ],
+      "reproduction": "Compare mapped-layer per-check invocation with the aggregate checks command over the same standalone repository.",
+      "scope": "one adopter repository",
+      "source": "roadmap/from-3.2-to-4.0/evidence/findings.json"
+    },
+    "V3E-002": {
+      "classification": "doctrine_defect",
+      "claim": "The transitive foreign-import ban conflicted with repository-local shell wiring of a real adapter.",
+      "evidence_kind": "observed",
+      "observed_in": [
+        "console-sink .agent/learning/ledger.jsonl L-0003"
+      ],
+      "reproduction": "Forbid indirect foreign imports from the shell and then import the owning real adapter at the local wiring root.",
+      "scope": "one adopter repository",
+      "source": "roadmap/from-3.2-to-4.0/evidence/findings.json"
+    },
+    "V3E-003": {
+      "classification": "mechanism_defect",
+      "claim": "The fixed exception-code grammar rejected hyphens already published by a component contract.",
+      "evidence_kind": "observed",
+      "observed_in": [
+        "console-sink .agent/learning/ledger.jsonl L-0008"
+      ],
+      "reproduction": "Run the exception-code check against a namespaced leaf such as consink.render.terminal-lost.",
+      "scope": "one adopter repository",
+      "source": "roadmap/from-3.2-to-4.0/evidence/findings.json"
+    },
+    "V3E-004": {
+      "classification": "mechanism_defect",
+      "claim": "A wildcard-ending inline code span could abort Doxygen parsing while the documentation-style proxy accepted it.",
+      "evidence_kind": "observed",
+      "observed_in": [
+        "sim-scheduler .agent/learning/ledger.jsonl L-0004"
+      ],
+      "reproduction": "Render a documentation block containing a backtick-delimited package wildcard with Doxygen 1.10.0.",
+      "scope": "one adopter repository",
+      "source": "roadmap/from-3.2-to-4.0/evidence/findings.json"
+    },
+    "V3E-005": {
+      "classification": "unsupported_platform_fact",
+      "claim": "mutmut 3.3.1 imports the Unix-only resource module before argument parsing and cannot produce a Windows verdict.",
+      "evidence_kind": "verified_tool_fact",
+      "observed_in": [
+        "discipline environment.yml at 17cdd5d",
+        "python-doctrine-test CLAUDE.md at bad79af",
+        "signal-invocator .agent/learning/ledger.jsonl L-0008"
+      ],
+      "reproduction": "Import or invoke mutmut 3.3.1 on Windows.",
+      "scope": "mechanism portability",
+      "source": "roadmap/from-3.2-to-4.0/evidence/findings.json"
+    },
+    "V3E-006": {
+      "classification": "project_defect",
+      "claim": "sim-scheduler's documented bare mypy invocation had no target and exited 2 while explicit repository roots passed.",
+      "evidence_kind": "reproduced",
+      "observed_in": [
+        "sim-scheduler at 7c02d27f5e0e9ce19bd64920e4d2d2ec1ea4be5d"
+      ],
+      "reproduction": "Run python -m mypy, then python -m mypy src tests tools, from the named standalone commit.",
+      "scope": "one adopter repository",
+      "source": "roadmap/from-3.2-to-4.0/evidence/findings.json"
+    },
+    "V3E-007": {
+      "classification": "tool_fact",
+      "claim": "Windows loopback buffering did not deterministically provoke wire-level backpressure while injection at the owned socket seam did.",
+      "evidence_kind": "observed",
+      "observed_in": [
+        "sine-generator .agent/learning/ledger.jsonl L-0001"
+      ],
+      "reproduction": "Attempt to saturate a stalled Windows loopback consumer, then inject TimeoutError at the adapter socket seam.",
+      "scope": "one adopter repository",
+      "source": "roadmap/from-3.2-to-4.0/evidence/findings.json"
+    },
+    "V3E-008": {
+      "classification": "doctrine_defect",
+      "claim": "Universal comment-presence and physical real/fake/faulty shape rules multiplied ceremony without establishing semantic discrimination.",
+      "evidence_kind": "manual_synthesis",
+      "observed_in": [
+        "four v3.2 component adoptions summarized in the v4 roadmap"
+      ],
+      "reproduction": null,
+      "scope": "one adopter repository",
+      "source": "roadmap/from-3.2-to-4.0/evidence/findings.json"
+    }
+  }
+}

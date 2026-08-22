@@ -40,10 +40,12 @@ from discipline_core import (
 from evidence_model import (
     DecisionRelation,
     EvidenceRegistry,
+    ObservationRegistry,
     RuleEvidence,
     VerificationState,
     discrimination_covered,
     load_evidence,
+    load_observations,
     verification_state,
 )
 
@@ -272,6 +274,15 @@ def registry_for(root: Path) -> EvidenceRegistry:
     @return structurally validated evidence records
     """
     return load_evidence(root / "discipline" / "meta" / "evidence.json")
+
+
+def observations_for(root: Path) -> ObservationRegistry:
+    """Load the authored field observations belonging to one corpus.
+
+    @param root repository whose generated views are being built
+    @return structurally validated observation records
+    """
+    return load_observations(root / "discipline" / "meta" / "observations.json")
 
 
 def statuses_for(
@@ -543,6 +554,7 @@ def build_rules_json(documents: Sequence[Document], root: Path) -> Artifact:
     """
     rules = _sorted_rules(documents)
     registry = registry_for(root)
+    observation_registry = observations_for(root)
     status = statuses_for(rules, root, registry)
     payload = {
         "generated_by": "tools/build_index.py",
@@ -564,6 +576,18 @@ def build_rules_json(documents: Sequence[Document], root: Path) -> Artifact:
             for doc in sorted(documents, key=lambda d: d.doc_id)
             if doc.doc_id
         ],
+        "field_observations": {
+            observation_id: {
+                "classification": str(observation.classification),
+                "claim": observation.claim,
+                "evidence_kind": str(observation.evidence_kind),
+                "observed_in": list(observation.observed_in),
+                "reproduction": observation.reproduction,
+                "scope": observation.scope,
+                "source": observation.source,
+            }
+            for observation_id, observation in sorted(observation_registry.observations.items())
+        },
         "rules": [
             _rule_payload(rule, registry.rules[rule.rule_id], status[rule.rule_id], root)
             for rule in rules

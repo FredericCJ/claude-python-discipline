@@ -2,7 +2,7 @@
 id: meta/SCHEMA
 kind: meta
 title: Document Format Specification
-tokens: 3706
+tokens: 3861
 load_when: ["authoring a rule", "new module", "front-matter", "rule id", "validate"]
 decay: none
 ---
@@ -143,6 +143,7 @@ Exactly one per rule.
 | `[BINDING]` | Violation is a defect. **The default.** | at least one mechanism tag and a `**Check**` line |
 | `[ADVISORY]` | A strong default; departure needs a reason recorded in the change. | a `**No mechanism**` line stating why none is possible |
 | `[OPEN]` | Blocked on an undecided question. Cannot be `[BINDING]`. | an entry in `meta/OPEN.md` naming what it blocks |
+| `[RETIRED]` | Historical ID with no current normative force. | no mechanism, `Check`, or `No mechanism`; migration disposition and optional successor |
 
 Untagged prose in a `law` file is framing, not a rule, and carries no force.
 
@@ -210,6 +211,12 @@ Every record carries exactly:
 - `strategies`: exactly one entry per heading mechanism;
 - `observations`: adopter or audit evidence IDs, never an unlabeled anecdote; and
 - `migration`: source version, controlled disposition, and adopter guidance.
+
+`meta/observations.json` resolves every field-evidence ID independently from the rule
+records that cite it. Each observation states a defect/fact classification, bounded claim,
+evidence kind, named evidence locations, reproduction (or explicit manual synthesis),
+repository-local scope, and the source from which the packaged record was transcribed.
+Observation presence does not prove generality beyond that scope.
 
 Each strategy carries `mechanism`, `kind`, `relation`, `proposition`, `residual`,
 `must_pass`, `must_reject`, `platforms`, and `not_applicable`. Kinds are `static`, `tool`,

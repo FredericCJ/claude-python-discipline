@@ -299,6 +299,19 @@ def test_v024_overlong_title_warns(tmp_path: Path) -> None:
     assert all(f.severity is Severity.WARN for f in findings if f.code == "V024")  # type: ignore[attr-defined]
 
 
+def test_v025_retired_rule_carries_no_active_mechanism(tmp_path: Path) -> None:
+    """A historical ID cannot continue to look like an executable obligation."""
+    module(
+        tmp_path,
+        body="""\
+        ### TYPE-001 · Historical rule  [RETIRED] [auto:mypy]
+        Retired after its subject left scope.
+        - **Check** `mypy --strict src/`
+        """,
+    )
+    assert "V025" in codes(run_on(tmp_path))
+
+
 def test_v030_advisory_without_a_justification(tmp_path: Path) -> None:
     """Demoting a rule to advice costs an argument for why no machine could decide it."""
     module(
@@ -538,7 +551,8 @@ def test_rules_json_separates_verification_from_normative_force() -> None:
     path = REPO_ROOT / "discipline" / "rules.json"
     if not path.exists():
         pytest.skip("discipline/rules.json not built; run tools/build_index.py")
-    rules = json.loads(path.read_text(encoding="utf-8"))["rules"]
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    rules = payload["rules"]
     vocabulary = {str(value) for value in VerificationState}
     unknown = {
         rule["id"]: rule.get("verification", {}).get("state")
@@ -550,6 +564,12 @@ def test_rules_json_separates_verification_from_normative_force() -> None:
     assert all("mechanically_enforced" not in rule for rule in rules)
     assert all(rule["verification"].get("strategies") is not None for rule in rules)
     assert all("failure_mode" in rule and "migration" in rule for rule in rules)
+    observations = payload["field_observations"]
+    referenced = {observation for rule in rules for observation in rule["field_observations"]}
+    assert referenced <= set(observations)
+    assert all(
+        "claim" in observation and "scope" in observation for observation in observations.values()
+    )
 
 
 def test_index_md_carries_the_distinct_evidence_columns() -> None:

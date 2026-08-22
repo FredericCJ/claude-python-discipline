@@ -78,8 +78,10 @@ def iter_check_modules() -> Iterator[Path]:
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         if any(
             isinstance(node, ast.ClassDef)
-            and any(isinstance(b, ast.Name) and b.id in
-                    {"Check", "ModuleCheck", "TextCheck"} for b in node.bases)
+            and any(
+                isinstance(b, ast.Name) and b.id in {"Check", "ModuleCheck", "TextCheck"}
+                for b in node.bases
+            )
             for node in ast.walk(tree)
         ):
             yield path
@@ -100,7 +102,8 @@ def names_defined_in(directory: Path) -> set[str]:
         except SyntaxError:
             continue
         found |= {
-            node.name for node in ast.walk(tree)
+            node.name
+            for node in ast.walk(tree)
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
         }
     return found
@@ -111,18 +114,47 @@ def names_defined_in(directory: Path) -> set[str]:
 
 @decides("FLOW-006")
 def test_binding_rules_have_mechanisms() -> None:
-    """FLOW-006: a rule tagged binding names a mechanism and a check command.
+    """FLOW-006: binding rules name complete strategy records.
 
-    This is the axiom's own enforcement. A binding rule with nothing behind it
-    degrades to exactly the failure the discipline was built to remove -- a
-    requirement everyone believes is enforced and nothing decides.
+    Presence remains necessary but is no longer presented as sufficient. The
+    generated contract must join each heading tag to one exact proposition,
+    residual, platform set, applicability condition, and discrimination case.
     """
-    unbacked = [
-        rule["id"] for rule in load_rules()
-        if rule["force"] == "BINDING" and not (rule["mechanisms"] and rule["check"])
-    ]
+    unbacked: list[str] = []
+    for rule in load_rules():
+        if rule["force"] != "BINDING":
+            continue
+        mechanisms = rule.get("mechanisms")
+        verification = rule.get("verification")
+        strategies = verification.get("strategies") if isinstance(verification, dict) else None
+        complete = isinstance(strategies, list) and all(
+            isinstance(strategy, dict)
+            and all(
+                strategy.get(field)
+                for field in (
+                    "mechanism",
+                    "kind",
+                    "relation",
+                    "proposition",
+                    "residual",
+                    "must_pass",
+                    "platforms",
+                    "not_applicable",
+                )
+            )
+            and strategy.get("must_reject") is not None
+            for strategy in strategies
+        )
+        joined = (
+            isinstance(mechanisms, list)
+            and isinstance(strategies, list)
+            and sorted(str(item) for item in mechanisms)
+            == sorted(str(strategy.get("mechanism")) for strategy in strategies)
+        )
+        if not (mechanisms and rule.get("check") and complete and joined):
+            unbacked.append(str(rule["id"]))
     assert unbacked == [], (
-        f"{len(unbacked)} binding rule(s) name no mechanism or no check: "
+        f"{len(unbacked)} binding rule(s) lack a complete joined strategy: "
         f"{', '.join(str(r) for r in unbacked[:10])}"
     )
 
@@ -134,7 +166,8 @@ def test_advisory_rules_justify_themselves() -> None:
     that quietly opted out of the axiom.
     """
     unjustified = [
-        rule["id"] for rule in load_rules()
+        rule["id"]
+        for rule in load_rules()
         if rule["force"] == "ADVISORY" and not rule["no_mechanism"]
     ]
     assert unjustified == [], (
@@ -176,14 +209,9 @@ def test_validator_checks_can_fail() -> None:
     """
     source = (REPO_ROOT / "tools" / "validate.py").read_text(encoding="utf-8")
     emitted = sorted(set(_finding_codes(source)))
-    proofs = "".join(
-        path.read_text(encoding="utf-8")
-        for path in REPO_ROOT.glob("tools/test_*.py")
-    )
+    proofs = "".join(path.read_text(encoding="utf-8") for path in REPO_ROOT.glob("tools/test_*.py"))
     unproven = [code for code in emitted if code not in proofs]
-    assert unproven == [], (
-        f"validator code(s) never driven by a test: {', '.join(unproven)}"
-    )
+    assert unproven == [], f"validator code(s) never driven by a test: {', '.join(unproven)}"
 
 
 def _finding_codes(source: str) -> Iterator[str]:
@@ -262,8 +290,14 @@ def test_every_gate_entry_is_runnable(name: str, command: tuple[str, ...]) -> No
     # default codec raised on ruff's own output, so the gate died deciding
     # nothing -- exactly the failure this test exists to catch.
     finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv, no shell
-        command, capture_output=True, text=True, encoding="utf-8", errors="replace",
-        cwd=REPO_ROOT, check=False, timeout=180,
+        command,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        cwd=REPO_ROOT,
+        check=False,
+        timeout=180,
     )
     assert finished.returncode in (0, 1), (
         f"gate entry {name!r} exited {finished.returncode}, which means it failed to run "
@@ -284,16 +318,18 @@ def test_the_workflow_mirrors_the_gate() -> None:
     if not workflow.exists():
         pytest.skip("no CI workflow in this tree")
     text = workflow.read_text(encoding="utf-8")
-    steps = re.findall(r'- name: "Gate \d+/\d+ -- (?P<name>[^"]+)"\n\s+run: (?P<run>.+)',
-                       text)
+    steps = re.findall(r'- name: "Gate \d+/\d+ -- (?P<name>[^"]+)"\n\s+run: (?P<run>.+)', text)
     assert [name for name, _ in steps] == [name for name, _ in GATE], (
         "the workflow's step names have drifted from the GATE tuple"
     )
     for (_, run), (name, command) in zip(steps, GATE, strict=True):
         # The workflow says `python`; the tuple says this interpreter. Compare the
         # arguments, which is where a real divergence would show.
-        expected = " ".join(("python", *command[1:])) if command[0] == sys.executable \
+        expected = (
+            " ".join(("python", *command[1:]))
+            if command[0] == sys.executable
             else " ".join(command)
+        )
         assert run.strip() == expected, (
             f"gate entry {name!r} runs {expected!r} but the workflow runs {run.strip()!r}"
         )
@@ -312,10 +348,12 @@ def doxygen_executable() -> str | None:
     @return the path to run, or None when doxygen cannot be found at all
     """
     root = Path(sys.executable).parent
-    for candidate in (root / "Library" / "bin" / "doxygen.exe",
-                      root / "doxygen.exe",
-                      root / "bin" / "doxygen",
-                      root / "doxygen"):
+    for candidate in (
+        root / "Library" / "bin" / "doxygen.exe",
+        root / "doxygen.exe",
+        root / "bin" / "doxygen",
+        root / "doxygen",
+    ):
         if candidate.is_file():
             return str(candidate)
     return shutil.which("doxygen")
@@ -367,8 +405,13 @@ def test_doxygen_version_matches_recorded() -> None:
 
     result = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
         (executable, "--version"),
-        capture_output=True, text=True, encoding="utf-8", errors="replace",
-        cwd=REPO_ROOT, check=False, timeout=30,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        cwd=REPO_ROOT,
+        check=False,
+        timeout=30,
     )
     if result.returncode != 0:
         pytest.skip(f"{executable} did not report a version")
@@ -410,9 +453,7 @@ def test_completion_hook_enforces_the_gate() -> None:
     `core.hooksPath` at it, so a push runs the gate without anyone choosing to.
     """
     hook = REPO_ROOT / "enforce" / "templates" / "hooks" / "pre-push"
-    assert hook.is_file(), (
-        "no pre-push hook ships, so the verification obligation is a request"
-    )
+    assert hook.is_file(), "no pre-push hook ships, so the verification obligation is a request"
     text = hook.read_text(encoding="utf-8")
     assert "gate.py" in text, (
         "the pre-push hook does not run the gate, so a change can be offered "
@@ -423,9 +464,7 @@ def test_completion_hook_enforces_the_gate() -> None:
         "reports and returns zero is a slower way of not checking"
     )
     installer = (REPO_ROOT / "tools" / "integrate.py").read_text(encoding="utf-8")
-    assert "hooksPath" in installer, (
-        "nothing installs the hook, so it ships and never runs"
-    )
+    assert "hooksPath" in installer, "nothing installs the hook, so it ships and never runs"
 
 
 def test_a_hook_that_does_not_run_the_gate_is_caught(tmp_path: Path) -> None:

@@ -24,6 +24,9 @@ def write_evidence(root: Path, payload: dict[str, object]) -> Path:
     path = root / "discipline" / "meta" / "evidence.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    (path.parent / "observations.json").write_text(
+        json.dumps({"schema_version": 1, "observations": {}}), encoding="utf-8"
+    )
     return path
 
 
@@ -96,3 +99,16 @@ def test_a_witnessed_complete_record_is_silent(tmp_path: Path) -> None:
     write_evidence(tmp_path, payload)
     write_matrix(tmp_path, "TYPE-001")
     assert evidence_findings(tmp_path) == []
+
+
+def test_v109_rejects_an_observation_that_does_not_resolve(tmp_path: Path) -> None:
+    """Field evidence must be a packaged record, not an anecdotal string."""
+    payload = valid_payload()
+    evidence = payload["rules"]
+    assert isinstance(evidence, dict)
+    sole = evidence["TYPE-001"]
+    assert isinstance(sole, dict)
+    sole["observations"] = ["V4E-999"]
+    write_evidence(tmp_path, payload)
+    write_matrix(tmp_path, "TYPE-001")
+    assert [finding.code for finding in evidence_findings(tmp_path)] == ["V109"]

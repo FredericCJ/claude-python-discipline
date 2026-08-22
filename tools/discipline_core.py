@@ -32,9 +32,7 @@ ENFORCE_DIR: Final = REPO_ROOT / "enforce"
 EXAMPLES_DIR: Final = DISCIPLINE_DIR / "examples"
 
 ## Files written by ``build_index.py``; excluded from authored-content checks.
-GENERATED_NAMES: Final[frozenset[str]] = frozenset(
-    {"INDEX.md", "rules.json", "ENFORCEMENT.md"}
-)
+GENERATED_NAMES: Final[frozenset[str]] = frozenset({"INDEX.md", "rules.json", "ENFORCEMENT.md"})
 
 ## Ceilings from SCHEMA.md section 2, keyed by file stem with ``*`` as the fallback.
 ## Exceeding one is an error and not a warning: the budget is what lets an agent
@@ -84,6 +82,8 @@ class Force(StrEnum):
     ## Blocked on an undecided question, so it can never also be binding. Obliges an
     ## entry in ``meta/OPEN.md`` naming what the open question blocks.
     OPEN = "OPEN"
+    ## Historical stable ID with no current normative force or active mechanism.
+    RETIRED = "RETIRED"
 
 
 class Enforcement(StrEnum):
@@ -158,7 +158,8 @@ def rules_claimed_by(check: str, root: Path = REPO_ROOT) -> frozenset[str] | Non
             continue
         if isinstance(node.value, (ast.Tuple, ast.List)):
             return frozenset(
-                element.value for element in node.value.elts
+                element.value
+                for element in node.value.elts
                 if isinstance(element, ast.Constant) and isinstance(element.value, str)
             )
     return None
@@ -215,19 +216,20 @@ def _declared_on(node: ast.FunctionDef | ast.AsyncFunctionDef) -> set[str]:
         if not isinstance(decorator, ast.Call):
             continue
         target = decorator.func
-        name = (target.attr if isinstance(target, ast.Attribute)
-                else getattr(target, "id", ""))
+        name = target.attr if isinstance(target, ast.Attribute) else getattr(target, "id", "")
         if name != "decides":
             continue
         ids |= {
-            argument.value for argument in decorator.args
+            argument.value
+            for argument in decorator.args
             if isinstance(argument, ast.Constant) and isinstance(argument.value, str)
         }
     return ids
 
 
-def mechanism_is_implemented(mechanism: str, root: Path = REPO_ROOT,
-                             rule_id: str | None = None) -> bool | None:
+def mechanism_is_implemented(
+    mechanism: str, root: Path = REPO_ROOT, rule_id: str | None = None
+) -> bool | None:
     """Whether a mechanism tag points at something that decides this rule.
 
     The single implementation in the repository. ``validate.py`` reports the False
@@ -280,8 +282,9 @@ def mechanism_is_implemented(mechanism: str, root: Path = REPO_ROOT,
     return None
 
 
-def enforcement_of(mechanisms: Sequence[str], root: Path = REPO_ROOT,
-                   rule_id: str | None = None) -> Enforcement:
+def enforcement_of(
+    mechanisms: Sequence[str], root: Path = REPO_ROOT, rule_id: str | None = None
+) -> Enforcement:
     """Classify a rule's mechanism set into one status an agent can act on.
 
     Absence dominates: one missing mechanism makes the whole rule ``UNBUILT``,
@@ -331,14 +334,25 @@ _FIELD = re.compile(
 
 ## A cross-reference target: a rule, a module, or a section of one.
 ## ``[TYPE-012]`` / ``[law/TYPE]`` / ``[fact/py-typing#strict-flags]``
-_XREF = re.compile(r"\[(?P<target>(?:[A-Z][A-Z0-9]{1,7}-\d{3})|(?:[a-z]+/[A-Za-z0-9_-]+(?:#[a-z0-9-]+)?))\]")
+_XREF = re.compile(
+    r"\[(?P<target>(?:[A-Z][A-Z0-9]{1,7}-\d{3})|(?:[a-z]+/[A-Za-z0-9_-]+(?:#[a-z0-9-]+)?))\]"
+)
 
 ## The tools whose versions belong in a dated ``fact`` file and nowhere else.
 ## Naming them explicitly is what keeps an ordinary number in prose from reading
 ## as a pin.
 _PINNED_TOOLS: Final = (
-    "mypy", "pyright", "ruff", "pytest", "hypothesis", "coverage",
-    "mutmut", "pydantic", "python", "cpython", "import-linter",
+    "mypy",
+    "pyright",
+    "ruff",
+    "pytest",
+    "hypothesis",
+    "coverage",
+    "mutmut",
+    "pydantic",
+    "python",
+    "cpython",
+    "import-linter",
 )
 ## A version literal close enough to a tool name to be a pin. The gap is capped at
 ## 24 characters and stops at a newline or a period, so a number in the next clause

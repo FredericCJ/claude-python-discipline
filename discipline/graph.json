@@ -1133,6 +1133,14 @@
    }
   },
   {
+   "id": "mech:fitness:test_evidence_registry_joins_rules",
+   "type": "mechanism",
+   "label": "fitness:test_evidence_registry_joins_rules",
+   "attrs": {
+    "family": "fitness"
+   }
+  },
+  {
    "id": "mech:fitness:test_exit_codes",
    "type": "mechanism",
    "label": "fitness:test_exit_codes",
@@ -1165,9 +1173,25 @@
    }
   },
   {
+   "id": "mech:fitness:test_field_observations_resolve",
+   "type": "mechanism",
+   "label": "fitness:test_field_observations_resolve",
+   "attrs": {
+    "family": "fitness"
+   }
+  },
+  {
    "id": "mech:fitness:test_gate_suite_defined",
    "type": "mechanism",
    "label": "fitness:test_gate_suite_defined",
+   "attrs": {
+    "family": "fitness"
+   }
+  },
+  {
+   "id": "mech:fitness:test_generated_rules_publish_no_gate_outcome",
+   "type": "mechanism",
+   "label": "fitness:test_generated_rules_publish_no_gate_outcome",
    "attrs": {
     "family": "fitness"
    }
@@ -1253,6 +1277,14 @@
    }
   },
   {
+   "id": "mech:fitness:test_proxy_claims_preserve_residuals",
+   "type": "mechanism",
+   "label": "fitness:test_proxy_claims_preserve_residuals",
+   "attrs": {
+    "family": "fitness"
+   }
+  },
+  {
    "id": "mech:fitness:test_regeneration_stable",
    "type": "mechanism",
    "label": "fitness:test_regeneration_stable",
@@ -1261,9 +1293,25 @@
    }
   },
   {
+   "id": "mech:fitness:test_rejection_credit_is_witnessed",
+   "type": "mechanism",
+   "label": "fitness:test_rejection_credit_is_witnessed",
+   "attrs": {
+    "family": "fitness"
+   }
+  },
+  {
    "id": "mech:fitness:test_retrieval_is_reproducible",
    "type": "mechanism",
    "label": "fitness:test_retrieval_is_reproducible",
+   "attrs": {
+    "family": "fitness"
+   }
+  },
+  {
+   "id": "mech:fitness:test_rule_migrations_are_total",
+   "type": "mechanism",
+   "label": "fitness:test_rule_migrations_are_total",
    "attrs": {
     "family": "fitness"
    }
@@ -1280,6 +1328,14 @@
    "id": "mech:fitness:test_single_writer",
    "type": "mechanism",
    "label": "fitness:test_single_writer",
+   "attrs": {
+    "family": "fitness"
+   }
+  },
+  {
+   "id": "mech:fitness:test_strategy_claims_are_explicit",
+   "type": "mechanism",
+   "label": "fitness:test_strategy_claims_are_explicit",
    "attrs": {
     "family": "fitness"
    }
@@ -1304,6 +1360,14 @@
    "id": "mech:fitness:test_unit_layer_is_pure",
    "type": "mechanism",
    "label": "fitness:test_unit_layer_is_pure",
+   "attrs": {
+    "family": "fitness"
+   }
+  },
+  {
+   "id": "mech:fitness:test_warrants_are_typed",
+   "type": "mechanism",
+   "label": "fitness:test_warrants_are_typed",
    "attrs": {
     "family": "fitness"
    }
@@ -1510,11 +1574,23 @@
    }
   },
   {
+   "id": "law/EVID",
+   "type": "module",
+   "label": "Claims and Verification Evidence",
+   "path": "discipline/law/EVID.md",
+   "tokens": 1288,
+   "attrs": {
+    "decay": "none",
+    "kind": "law",
+    "python": ">=3.11"
+   }
+  },
+  {
    "id": "law/FLOW",
    "type": "module",
    "label": "How a Change Is Made",
    "path": "discipline/law/FLOW.md",
-   "tokens": 2233,
+   "tokens": 2256,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1617,7 +1693,7 @@
    "type": "module",
    "label": "Document Format Specification",
    "path": "discipline/meta/SCHEMA.md",
-   "tokens": 3706,
+   "tokens": 3861,
    "attrs": {
     "decay": "none",
     "kind": "meta"
@@ -1639,7 +1715,7 @@
    "type": "module",
    "label": "Workload Allocation",
    "path": "discipline/ops/ALLOC.md",
-   "tokens": 2213,
+   "tokens": 2145,
    "attrs": {
     "decay": "months",
     "kind": "ops",
@@ -1742,7 +1818,7 @@
    "path": "discipline/ops/ALLOC.md:139",
    "tokens": 58,
    "attrs": {
-    "force": "ADVISORY",
+    "force": "RETIRED",
     "module": "ops/ALLOC"
    }
   },
@@ -1750,7 +1826,7 @@
    "id": "ALLOC-009",
    "type": "rule",
    "label": "Misclassification belongs to the coordinator",
-   "path": "discipline/ops/ALLOC.md:153",
+   "path": "discipline/ops/ALLOC.md:150",
    "tokens": 52,
    "attrs": {
     "force": "BINDING",
@@ -1761,7 +1837,7 @@
    "id": "ALLOC-010",
    "type": "rule",
    "label": "The gate's tier follows the risk under test",
-   "path": "discipline/ops/ALLOC.md:162",
+   "path": "discipline/ops/ALLOC.md:159",
    "tokens": 65,
    "attrs": {
     "force": "BINDING",
@@ -2957,6 +3033,94 @@
    }
   },
   {
+   "id": "EVID-001",
+   "type": "rule",
+   "label": "Every rule owns one evidence record",
+   "path": "discipline/law/EVID.md:30",
+   "tokens": 37,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/EVID"
+   }
+  },
+  {
+   "id": "EVID-002",
+   "type": "rule",
+   "label": "Every strategy states its observable",
+   "path": "discipline/law/EVID.md:38",
+   "tokens": 44,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/EVID"
+   }
+  },
+  {
+   "id": "EVID-003",
+   "type": "rule",
+   "label": "Proxy claims retain their residual",
+   "path": "discipline/law/EVID.md:46",
+   "tokens": 33,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/EVID"
+   }
+  },
+  {
+   "id": "EVID-004",
+   "type": "rule",
+   "label": "Declarations earn no rejection credit",
+   "path": "discipline/law/EVID.md:54",
+   "tokens": 44,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/EVID"
+   }
+  },
+  {
+   "id": "EVID-005",
+   "type": "rule",
+   "label": "Build views publish no gate outcome",
+   "path": "discipline/law/EVID.md:62",
+   "tokens": 45,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/EVID"
+   }
+  },
+  {
+   "id": "EVID-006",
+   "type": "rule",
+   "label": "Warrants state relation and confidence",
+   "path": "discipline/law/EVID.md:72",
+   "tokens": 40,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/EVID"
+   }
+  },
+  {
+   "id": "EVID-007",
+   "type": "rule",
+   "label": "Field observations resolve to records",
+   "path": "discipline/law/EVID.md:80",
+   "tokens": 45,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/EVID"
+   }
+  },
+  {
+   "id": "EVID-008",
+   "type": "rule",
+   "label": "Stable IDs preserve migration history",
+   "path": "discipline/law/EVID.md:87",
+   "tokens": 49,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/EVID"
+   }
+  },
+  {
    "id": "FLOW-001",
    "type": "rule",
    "label": "The contract is written before the implementation",
@@ -3014,9 +3178,9 @@
   {
    "id": "FLOW-006",
    "type": "rule",
-   "label": "A rule without a mechanism is not binding",
+   "label": "Binding rules declare exact strategies",
    "path": "discipline/law/FLOW.md:83",
-   "tokens": 36,
+   "tokens": 47,
    "attrs": {
     "force": "BINDING",
     "module": "law/FLOW"
@@ -3025,9 +3189,9 @@
   {
    "id": "FLOW-007",
    "type": "rule",
-   "label": "No check may pass vacuously",
+   "label": "Every automated proposition rejects a counterexample",
    "path": "discipline/law/FLOW.md:91",
-   "tokens": 58,
+   "tokens": 44,
    "attrs": {
     "force": "BINDING",
     "module": "law/FLOW"
@@ -3037,7 +3201,7 @@
    "id": "FLOW-008",
    "type": "rule",
    "label": "Deviations from an advisory rule are recorded in the change",
-   "path": "discipline/law/FLOW.md:100",
+   "path": "discipline/law/FLOW.md:99",
    "tokens": 33,
    "attrs": {
     "force": "BINDING",
@@ -3048,7 +3212,7 @@
    "id": "FLOW-009",
    "type": "rule",
    "label": "The gates pass before a change is offered",
-   "path": "discipline/law/FLOW.md:114",
+   "path": "discipline/law/FLOW.md:113",
    "tokens": 71,
    "attrs": {
     "force": "BINDING",
@@ -3059,7 +3223,7 @@
    "id": "FLOW-010",
    "type": "rule",
    "label": "New behaviour arrives with its obligations discharged",
-   "path": "discipline/law/FLOW.md:122",
+   "path": "discipline/law/FLOW.md:121",
    "tokens": 51,
    "attrs": {
     "force": "ADVISORY",
@@ -3070,7 +3234,7 @@
    "id": "FLOW-011",
    "type": "rule",
    "label": "The diagnosis is checked, not assumed",
-   "path": "discipline/law/FLOW.md:136",
+   "path": "discipline/law/FLOW.md:135",
    "tokens": 57,
    "attrs": {
     "force": "BINDING",
@@ -3081,7 +3245,7 @@
    "id": "FLOW-012",
    "type": "rule",
    "label": "Report what happened, including what did not",
-   "path": "discipline/law/FLOW.md:145",
+   "path": "discipline/law/FLOW.md:144",
    "tokens": 43,
    "attrs": {
     "force": "BINDING",
@@ -3092,10 +3256,10 @@
    "id": "FLOW-013",
    "type": "rule",
    "label": "Scale ceremony to reuse ambition, not to line count",
-   "path": "discipline/law/FLOW.md:152",
-   "tokens": 26,
+   "path": "discipline/law/FLOW.md:151",
+   "tokens": 41,
    "attrs": {
-    "force": "ADVISORY",
+    "force": "RETIRED",
     "module": "law/FLOW"
    }
   },
@@ -4125,6 +4289,22 @@
    }
   },
   {
+   "id": "trigger:glob:discipline/**/*",
+   "type": "trigger",
+   "label": "discipline/**/*",
+   "attrs": {
+    "kind": "glob"
+   }
+  },
+  {
+   "id": "trigger:glob:enforce/**/*",
+   "type": "trigger",
+   "label": "enforce/**/*",
+   "attrs": {
+    "kind": "glob"
+   }
+  },
+  {
    "id": "trigger:glob:pyproject.toml",
    "type": "trigger",
    "label": "pyproject.toml",
@@ -4501,6 +4681,14 @@
    }
   },
   {
+   "id": "trigger:kw:discrimination",
+   "type": "trigger",
+   "label": "discrimination",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:dispatch a subagent",
    "type": "trigger",
    "label": "dispatch a subagent",
@@ -4712,6 +4900,14 @@
    "id": "trigger:kw:faulty adapter",
    "type": "trigger",
    "label": "faulty adapter",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:field evidence",
+   "type": "trigger",
+   "label": "field evidence",
    "attrs": {
     "kind": "keyword"
    }
@@ -4949,6 +5145,14 @@
    }
   },
   {
+   "id": "trigger:kw:mechanism",
+   "type": "trigger",
+   "label": "mechanism",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:migration",
    "type": "trigger",
    "label": "migration",
@@ -5117,6 +5321,14 @@
    }
   },
   {
+   "id": "trigger:kw:proxy",
+   "type": "trigger",
+   "label": "proxy",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:public api",
    "type": "trigger",
    "label": "public API",
@@ -5224,6 +5436,14 @@
    "id": "trigger:kw:requirements",
    "type": "trigger",
    "label": "requirements",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:residual",
+   "type": "trigger",
+   "label": "residual",
    "attrs": {
     "kind": "keyword"
    }
@@ -5381,6 +5601,14 @@
    }
   },
   {
+   "id": "trigger:kw:supersede a rule",
+   "type": "trigger",
+   "label": "supersede a rule",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:suppress",
    "type": "trigger",
    "label": "suppress",
@@ -5517,6 +5745,14 @@
    }
   },
   {
+   "id": "trigger:kw:verification strategy",
+   "type": "trigger",
+   "label": "verification strategy",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:versioning",
    "type": "trigger",
    "label": "versioning",
@@ -5640,6 +5876,14 @@
    "id": "trigger:kw:why did this fail before",
    "type": "trigger",
    "label": "why did this fail before",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:why is this a rule",
+   "type": "trigger",
+   "label": "why is this a rule",
    "attrs": {
     "kind": "keyword"
    }
@@ -6370,6 +6614,48 @@
   },
   {
    "type": "cites",
+   "src": "EVID-001",
+   "dst": "meta/SCHEMA",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "EVID-002",
+   "dst": "FLOW-006",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "EVID-003",
+   "dst": "FLOW-007",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "EVID-004",
+   "dst": "TEST-015",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "EVID-005",
+   "dst": "FLOW-009",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "EVID-006",
+   "dst": "meta/PROVENANCE",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "EVID-008",
+   "dst": "FLOW-004",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
    "src": "FLOW-001",
    "dst": "frame/spec",
    "origin": "derived"
@@ -6395,7 +6681,19 @@
   {
    "type": "cites",
    "src": "FLOW-006",
+   "dst": "EVID-002",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "FLOW-006",
    "dst": "meta/SCHEMA",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "FLOW-007",
+   "dst": "EVID-004",
    "origin": "derived"
   },
   {
@@ -6414,6 +6712,12 @@
    "type": "cites",
    "src": "FLOW-011",
    "dst": "law/DIAG",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "FLOW-013",
+   "dst": "meta/SCOPE",
    "origin": "derived"
   },
   {
@@ -7212,6 +7516,54 @@
    "type": "contains",
    "src": "law/ERR",
    "dst": "ERR-016",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/EVID",
+   "dst": "EVID-001",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/EVID",
+   "dst": "EVID-002",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/EVID",
+   "dst": "EVID-003",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/EVID",
+   "dst": "EVID-004",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/EVID",
+   "dst": "EVID-005",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/EVID",
+   "dst": "EVID-006",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/EVID",
+   "dst": "EVID-007",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/EVID",
+   "dst": "EVID-008",
    "origin": "derived"
   },
   {
@@ -8352,6 +8704,54 @@
    "type": "enforced_by",
    "src": "ERR-016",
    "dst": "mech:fitness:test_fault_containment",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "EVID-001",
+   "dst": "mech:fitness:test_evidence_registry_joins_rules",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "EVID-002",
+   "dst": "mech:fitness:test_strategy_claims_are_explicit",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "EVID-003",
+   "dst": "mech:fitness:test_proxy_claims_preserve_residuals",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "EVID-004",
+   "dst": "mech:fitness:test_rejection_credit_is_witnessed",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "EVID-005",
+   "dst": "mech:fitness:test_generated_rules_publish_no_gate_outcome",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "EVID-006",
+   "dst": "mech:fitness:test_warrants_are_typed",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "EVID-007",
+   "dst": "mech:fitness:test_field_observations_resolve",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "EVID-008",
+   "dst": "mech:fitness:test_rule_migrations_are_total",
    "origin": "derived"
   },
   {
@@ -10030,6 +10430,150 @@
   },
   {
    "type": "grounds_on",
+   "src": "EVID-001",
+   "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-001",
+   "dst": "meta/PROVENANCE",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-001",
+   "dst": "meta/SCHEMA",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-002",
+   "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-002",
+   "dst": "meta/PROVENANCE",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-002",
+   "dst": "meta/SCHEMA",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-003",
+   "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-003",
+   "dst": "meta/PROVENANCE",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-003",
+   "dst": "meta/SCHEMA",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-004",
+   "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-004",
+   "dst": "meta/PROVENANCE",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-004",
+   "dst": "meta/SCHEMA",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-005",
+   "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-005",
+   "dst": "meta/PROVENANCE",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-005",
+   "dst": "meta/SCHEMA",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-006",
+   "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-006",
+   "dst": "meta/PROVENANCE",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-006",
+   "dst": "meta/SCHEMA",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-007",
+   "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-007",
+   "dst": "meta/PROVENANCE",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-007",
+   "dst": "meta/SCHEMA",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-008",
+   "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-008",
+   "dst": "meta/PROVENANCE",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "EVID-008",
+   "dst": "meta/SCHEMA",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
    "src": "FLOW-001",
    "dst": "fact/py-testing",
    "origin": "derived"
@@ -10672,6 +11216,24 @@
   },
   {
    "type": "grounds_on",
+   "src": "law/EVID",
+   "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "law/EVID",
+   "dst": "meta/PROVENANCE",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "law/EVID",
+   "dst": "meta/SCHEMA",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
    "src": "law/FLOW",
    "dst": "fact/py-testing",
    "origin": "derived"
@@ -10806,6 +11368,18 @@
    "type": "requires",
    "src": "law/ERR",
    "dst": "law/ARCH",
+   "origin": "derived"
+  },
+  {
+   "type": "requires",
+   "src": "law/EVID",
+   "dst": "law/FLOW",
+   "origin": "derived"
+  },
+  {
+   "type": "requires",
+   "src": "law/EVID",
+   "dst": "law/TEST",
    "origin": "derived"
   },
   {
@@ -12284,6 +12858,66 @@
    "type": "triggered_by",
    "src": "law/ERR",
    "dst": "trigger:kw:validation",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/EVID",
+   "dst": "trigger:glob:discipline/**/*",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/EVID",
+   "dst": "trigger:glob:enforce/**/*",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/EVID",
+   "dst": "trigger:kw:discrimination",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/EVID",
+   "dst": "trigger:kw:field evidence",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/EVID",
+   "dst": "trigger:kw:mechanism",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/EVID",
+   "dst": "trigger:kw:proxy",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/EVID",
+   "dst": "trigger:kw:residual",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/EVID",
+   "dst": "trigger:kw:supersede a rule",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/EVID",
+   "dst": "trigger:kw:verification strategy",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/EVID",
+   "dst": "trigger:kw:why is this a rule",
    "origin": "derived"
   },
   {

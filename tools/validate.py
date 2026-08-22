@@ -46,6 +46,7 @@ from evidence_model import (
     EvidenceParseError,
     discrimination_covered,
     load_evidence,
+    load_observations,
     validate_evidence,
 )
 
@@ -241,9 +242,17 @@ class Layout:
     def evidence(self) -> Path:
         """The authored normative-to-observable evidence join.
 
-        @return the registry validated by V100-V108
+        @return the registry validated by V100-V109
         """
         return self.discipline / "meta" / "evidence.json"
+
+    @property
+    def observations(self) -> Path:
+        """The authored field observations referenced by rule evidence.
+
+        @return registry whose IDs V109 resolves
+        """
+        return self.discipline / "meta" / "observations.json"
 
     def rel(self, path: Path) -> str:
         """Render a location for display, anchored at `root`.
@@ -381,7 +390,7 @@ def check_genre_constraints(doc: Document, layout: Layout) -> Iterator[Finding]:
 
 
 def check_rules(documents: Sequence[Document], layout: Layout) -> Iterator[Finding]:
-    """V020-V024 -- rule identity, and the mechanism-first axiom.
+    """V020-V025 -- rule identity, active strategies, and historical IDs.
 
     Cross-document by necessity: an id collides only against the rest of the
     corpus, and the first definition wins so the report names a stable culprit.
@@ -446,6 +455,18 @@ def check_rules(documents: Sequence[Document], layout: Layout) -> Iterator[Findi
                     line=rule.line,
                     message=f"{rule.rule_id}: title is {len(rule.title)} chars (limit 60)",
                     remediation="Shorten it; the heading is the whole rule surface an agent greps.",
+                )
+            if rule.force is Force.RETIRED and (rule.mechanisms or rule.check or rule.no_mechanism):
+                yield Finding(
+                    code="V025",
+                    severity=Severity.ERROR,
+                    path=_relpath(layout, doc),
+                    line=rule.line,
+                    message=f"{rule.rule_id}: [RETIRED] carries an active mechanism field",
+                    remediation=(
+                        "Remove mechanism tags, Check, and No mechanism; retain only "
+                        "history, rationale, references, and an optional successor."
+                    ),
                 )
 
 
@@ -1206,13 +1227,18 @@ _EVIDENCE_CODES: Final[dict[str, tuple[str, Severity, str]]] = {
         Severity.ERROR,
         "Use a mechanism kind compatible with the heading tag.",
     ),
+    "E011": (
+        "V109",
+        Severity.ERROR,
+        "Add the named observation to meta/observations.json or remove the reference.",
+    ),
 }
 
 
 def check_evidence(
     documents: Sequence[Document], layout: Layout, *, required: bool | None = None
 ) -> Iterator[Finding]:
-    """V100-V108 -- evidence records join honestly to every stable rule id.
+    """V100-V109 -- evidence records join honestly to every stable rule id.
 
     V107 remains a warning while the frozen v3 discrimination debt is removed;
     unlike the old V098 count, it counts exact rule/mechanism strategies. Every
@@ -1251,9 +1277,33 @@ def check_evidence(
             remediation="Repair the named field to match meta/SCHEMA.md section 4.",
         )
         return
+    observation_ids: frozenset[str] | None = None
+    if layout.observations.is_file():
+        try:
+            observations = load_observations(layout.observations)
+            observation_ids = frozenset(observations.observations)
+        except EvidenceParseError as problem:
+            yield Finding(
+                code="V109",
+                severity=Severity.ERROR,
+                path=layout.rel(layout.observations),
+                line=1,
+                message=str(problem),
+                remediation="Repair the named field to match meta/SCHEMA.md section 4.",
+            )
+    elif required:
+        yield Finding(
+            code="V109",
+            severity=Severity.ERROR,
+            path=layout.rel(layout.observations),
+            line=1,
+            message="the field-observation registry is missing",
+            remediation="Create discipline/meta/observations.json with every cited ID.",
+        )
+
     rules = [rule for document in documents for rule in document.rules]
     covered = discrimination_covered(layout.root) or frozenset()
-    mismatches = validate_evidence(registry, rules, covered)
+    mismatches = validate_evidence(registry, rules, covered, observation_ids)
     unwitnessed = [finding for finding in mismatches if finding.code == "E009"]
     for mismatch in (finding for finding in mismatches if finding.code != "E009"):
         code, severity, remediation = _EVIDENCE_CODES[mismatch.code]

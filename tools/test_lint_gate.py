@@ -74,24 +74,25 @@ def test_every_protected_code_names_a_rule_mechanism() -> None:
     Three places may tie a code to a rule, and a code needs only one of them. A
     mechanism tag is the narrowest -- `DOC-006` is tagged `auto:ruff:D205` while
     its `Check` line names D205, D400 and D415, and all three decide it. That
-    `Check` line is what `ENFORCEMENT.md` renders, which is why it counts here.
+    authored `Check` line survives in `rules.json`, which is why it counts here.
     """
     rules = json.loads(
-        (lint_gate.REPO_ROOT / "discipline" / "rules.json").read_text(encoding="utf-8"))
+        (lint_gate.REPO_ROOT / "discipline" / "rules.json").read_text(encoding="utf-8")
+    )
     tagged = {
         mechanism.rsplit(":", 1)[-1]
         for rule in rules["rules"]
         for mechanism in rule.get("mechanisms", [])
         if mechanism.startswith("auto:ruff:")
     }
-    template = (lint_gate.REPO_ROOT / "enforce" / "templates"
-                / "pyproject.toml").read_text(encoding="utf-8")
-    enforcement = (lint_gate.REPO_ROOT / "enforce"
-                   / "ENFORCEMENT.md").read_text(encoding="utf-8")
+    template = (lint_gate.REPO_ROOT / "enforce" / "templates" / "pyproject.toml").read_text(
+        encoding="utf-8"
+    )
+    checks = "\n".join(str(rule.get("check") or "") for rule in rules["rules"])
     for code in lint_gate.PROTECTED:
-        assert code in tagged or code in template or code in enforcement, (
+        assert code in tagged or code in template or code in checks, (
             f"{code} is protected but nothing ties it to a rule -- no mechanism tag, "
-            f"no mention in the template, none in ENFORCEMENT.md. Either wire it to a "
+            f"no mention in the template, none in a rule Check. Either wire it to a "
             f"rule or stop protecting it; an unexplained guard is taste in disguise."
         )
 

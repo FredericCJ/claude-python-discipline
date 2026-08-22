@@ -4,12 +4,12 @@
 
 This ledger keeps unlike claims unlike. A rule can be normatively binding while its verifier is absent; a verifier can exist while deciding only a proxy; a proxy can pass while its residual remains true; and a successful adopter does not prove universal benefit. No state below is a project-gate outcome.
 
-- **155** binding rules; **14** lack an available declared strategy.
-- **28** advisory rules and **0** open rules.
-- **168** exact strategy records: **0** direct and **168** proxy claims.
-- **49/155** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
-- **10/183** rules carry named field observations.
-- **90/90** named mechanisms resolve locally or delegate explicitly; **0** local mechanisms are absent.
+- **163** binding rules; **14** lack an available declared strategy.
+- **26** advisory rules and **0** open rules.
+- **176** exact strategy records: **8** direct and **168** proxy claims.
+- **57/163** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
+- **15/191** rules carry named field observations.
+- **98/98** named mechanisms resolve locally or delegate explicitly; **0** local mechanisms are absent.
 
 ## Verifier-state census
 
@@ -17,13 +17,13 @@ Measured against this tree, not copied from the rule heading. `discipline/rules.
 
 | State | Rules | Means |
 |---|---|---|
-| `local-verifier` | 106 | repository-local code observes every strategy |
+| `local-verifier` | 114 | repository-local code observes every strategy |
 | `external-verifier` | 27 | every strategy delegates to a configured tool |
 | `mixed-verifiers` | 8 | several verifier kinds contribute |
 | `structured-review` | 0 | judgment is recorded in a checked review artifact |
 | `unbuilt` | 14 | at least one named local verifier is absent |
-| `undeclared` | 27 | the active rule has no strategy record |
-| `retired` | 1 | the stable id remains only for history |
+| `undeclared` | 26 | the active rule has no strategy record |
+| `retired` | 2 | the stable id remains only for history |
 
 ## External tool integration
 
@@ -69,7 +69,7 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `ALLOC-005` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement. | Escalation rules beat the mechanical permit |
 | `ALLOC-006` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement. | Sharpen the contract before raising the tier |
 | `ALLOC-007` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement. | Split before upgrading |
-| `ALLOC-008` | ADVISORY | `retired` | n/a | n/a | n/a | none | n/a | A restriction is not lifted by an instruction |
+| `ALLOC-008` | RETIRED | `retired` | n/a | n/a | n/a | none | n/a | A restriction is not lifted by an instruction |
 | `ALLOC-009` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement. | Misclassification belongs to the coordinator |
 | `ALLOC-010` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:allocation_declared; it does not establish the full semantic benefit of the normative statement. | The gate's tier follows the risk under test |
 | `API-001` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_contract_documented; it does not establish every behavior in the normative statement. | A contract states more than a signature |
@@ -180,19 +180,27 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `ERR-014` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | Expected failure and contract violation are distinguished |
 | `ERR-015` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_no_unhandled_escape; it does not establish every behavior in the normative statement. | No unhandled exception reaches the process boundary |
 | `ERR-016` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_fault_containment; it does not establish every behavior in the normative statement. | A fault is contained at the boundary that detected it |
+| `EVID-001` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | none | Set equality does not establish the quality of a rule or its evidence. | Every rule owns one evidence record |
+| `EVID-002` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | `V3E-004` | Structural completeness does not prove that the proposition is the best verifier for the normative rule. | Every strategy states its observable |
+| `EVID-003` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | `V3E-004`, `V3E-008` | Lossless projection does not establish that an authored residual is complete. | Proxy claims retain their residual |
+| `EVID-004` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | `V3E-005` | The inherited rule-keyed matrix cannot yet attribute a rejection to one exact strategy when a rule names several. | Declarations earn no rejection credit |
+| `EVID-005` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | `V3E-005`, `V3E-006` | Consumers can still misuse an availability state unless their own schema preserves the distinction. | Build views publish no gate outcome |
+| `EVID-006` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | none | Typed relation and confidence do not independently verify the cited source's argument. | Warrants state relation and confidence |
+| `EVID-007` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | `V3E-008` | Registry resolution does not reproduce an external adopter or prove generality beyond its stated scope. | Field observations resolve to records |
+| `EVID-008` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | none | A structurally consistent migration can still give inadequate human guidance. | Stable IDs preserve migration history |
 | `FLOW-001` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | The contract is written before the implementation |
 | `FLOW-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:oracle_declared; it does not establish the full semantic benefit of the normative statement. | Test obligations are named before tests are written |
 | `FLOW-003` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_decisions_recorded; it does not establish every behavior in the normative statement. | A structural decision is recorded before it is relied upon |
 | `FLOW-004` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_decision_records_are_appended; it does not establish every behavior in the normative statement. | Decision records are appended, never rewritten |
 | `FLOW-005` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_overruled_objections_are_kept; it does not establish every behavior in the normative statement. | Overruled objections are recorded, not discarded |
-| `FLOW-006` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_binding_rules_have_mechanisms; it does not establish every behavior in the normative statement. | A rule without a mechanism is not binding |
-| `FLOW-007` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_checks_can_fail; it does not establish every behavior in the normative statement. | No check may pass vacuously |
+| `FLOW-006` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Structural declaration and mechanism resolution do not prove that each strategy decides the full normative claim or has just passed. | Binding rules declare exact strategies |
+| `FLOW-007` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | This inherited proxy does not yet prove a must-reject case for every exact strategy, external tool, behavioral verifier, or platform. | Every automated proposition rejects a counterexample |
 | `FLOW-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:deviation_recorded; it does not establish the full semantic benefit of the normative statement. | Deviations from an advisory rule are recorded in the change |
 | `FLOW-009` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | `V3E-006` | Passing covers only the cases and artifact shapes encoded by fitness:test_gate_suite_defined; it does not establish every behavior in the normative statement. | The gates pass before a change is offered |
 | `FLOW-010` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | New behaviour arrives with its obligations discharged |
 | `FLOW-011` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_envelope_conforms; it does not establish every behavior in the normative statement. | The diagnosis is checked, not assumed |
 | `FLOW-012` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:deviation_recorded; it does not establish the full semantic benefit of the normative statement. | Report what happened, including what did not |
-| `FLOW-013` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | Scale ceremony to reuse ambition, not to line count |
+| `FLOW-013` | RETIRED | `retired` | n/a | n/a | n/a | none | n/a | Scale ceremony to reuse ambition, not to line count |
 | `LEARN-001` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:session_recorded; it does not establish the full semantic benefit of the normative statement. | A session records what it learned before reporting done |
 | `LEARN-002` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:learn; it does not establish the full semantic benefit of the normative statement. | A learning states a claim, an action and a trigger |
 | `LEARN-003` | BINDING | `mixed-verifiers` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:learn; it does not establish the full semantic benefit of the normative statement.; Passing covers only the cases… | Credentials never enter the ledger |
@@ -252,7 +260,7 @@ These remain normative obligations, but the declared verifier is absent or missi
 |---|---|
 | `auto` | 40 |
 | `check` | 73 |
-| `fitness` | 55 |
+| `fitness` | 63 |
 
 ## Advisory rationale
 
@@ -260,7 +268,6 @@ Each advisory rule records why its semantic conclusion is not reduced to an auto
 
 | Rule | Why no mechanism exists | Title |
 |---|---|---|
-| `ALLOC-008` | The heading survives only to reserve the id, which is never reused. It is `[ADVISORY]` rather than deleted because a citation in an old review comment or an old error payload must still land somewhere that says what happened. | A restriction is not lifted by an instruction |
 | `API-008` | `test_structured_output` claimed this rule and asserts the entry point emits JSON carrying a schema version. That is output, not self-description: nothing checks the surface can enumerate its own operations, arguments and error codes. A check asserting the entry point offers a description command whose output lists every operation would close it -- once the reference has one to check against. | The surface is self-describing |
 | `API-011` | Renaming is a change between two versions and a check sees one. `test_codes_are_stable` claimed this rule and asserts codes are namespaced and mutually distinct, both of which hold of a code renamed this morning. A committed snapshot of the published codes, ratcheted the way `tools/lint_baseline.json` is, would close it: removing or renaming one would then fail against the recorded set. | Error codes and result variants are versioned surface |
 | `API-013` | Compatibility resting on a stated policy is a claim about a document. `test_schema_versioned` claimed this rule while asserting a version constant exists, which is [API-010] and not this. A policy has nowhere to live yet; naming a location for it, as `overrides/allocation.toml` is named for the tier mapping, would give a check something to read and close this. | Compatibility is not inherited from parser tolerance |
@@ -279,7 +286,6 @@ Each advisory rule records why its semantic conclusion is not reduced to an auto
 | `ERR-014` | Whether a given failure is *conceptually* expected or a contract violation is a judgement about intent. `check:error_channels` named this rule and never reported it, and its docstring said the rule keeps a reviewer for exactly this reason. Retagged rather than left claiming a gate that would never fire. | Expected failure and contract violation are distinguished |
 | `FLOW-001` | The rule is about *when* the contract was written, and a tree carries no record of the order its files came to exist in. `test_contract_documented` claimed this rule while asserting only that a docstring was present -- which is equally true of a contract written afterwards to describe what was built, the exact failure the **Why** above names. What IS mechanized is the adjacent [API-001]: the contract states its terms. A commit-scoped check reading which files a change introduced, and in which order, would close this. | The contract is written before the implementation |
 | `FLOW-010` | The rule is about what arrives *with* a change, and a static tree shows what is there now rather than what landed together. `test_layers_populated` claimed it and counts named tests per layer, which a repository holding one thorough component and ten bare ones satisfies. Per-component completeness is mechanized where the component is a port -- [ARCH-008], [ARCH-009] -- and nowhere else. A check reading the diff for a new module without its obligations would close this. | New behaviour arrives with its obligations discharged |
-| `FLOW-013` | Reuse ambition is an intention about the future that no check can read from the present code. | Scale ceremony to reuse ambition, not to line count |
 | `LEARN-012` | Whether a claim is the right size is a judgment about what a future reader will need; the trigger requirement in [LEARN-002] mechanizes only that it can be found at all. | Prefer the smallest true entry |
 | `TEAMS-004` | Whether a second, independent pass happened is a fact about dispatch history, not about the tree, and nothing in the repository can read it. | Documentation is written in one stage, verified in another |
 | `TEAMS-005` | The instruction is in a dispatch, and its effect is a judgment about whether a claim was tested rather than admired; neither is inspectable after the fact. | A verifier refutes claims; it does not improve prose |

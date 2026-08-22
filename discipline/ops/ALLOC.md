@@ -2,7 +2,7 @@
 id: ops/ALLOC
 kind: ops
 title: Workload Allocation
-tokens: 2213
+tokens: 2145
 load_when:
   - "dispatch a subagent"
   - "which model"
@@ -136,7 +136,7 @@ running the whole at a high tier.
   agent, and the contract survives the task.
 - **Check** `python -m checks.dispatch_recorded`
 
-### ALLOC-008 · A restriction is not lifted by an instruction  [ADVISORY]
+### ALLOC-008 · A restriction is not lifted by an instruction  [RETIRED]
 Retired as a duplicate. The obligation is [TEAMS-002], word for word in substance: a
 dispatch cannot grant a capability the receiving agent does not hold, and that agent must
 not achieve the effect by other means.
@@ -145,9 +145,6 @@ not achieve the effect by other means.
   each believes they have the whole of it, and a finding cites whichever the check's author
   reached for first.
 - **Superseded by** TEAMS-002
-- **No mechanism** The heading survives only to reserve the id, which is never reused. It
-  is `[ADVISORY]` rather than deleted because a citation in an old review comment or an old
-  error payload must still land somewhere that says what happened.
 - **See** [ops/teams]
 
 ### ALLOC-009 · Misclassification belongs to the coordinator  [BINDING] [check:dispatch_recorded]
