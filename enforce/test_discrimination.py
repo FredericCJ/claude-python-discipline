@@ -115,6 +115,22 @@ def test_the_base_is_one_of_the_known_kinds() -> None:
         )
 
 
+def test_every_entry_chooses_one_observation_mode() -> None:
+    """A rejection cannot be credited simultaneously through different oracles."""
+    for mutation in discrimination.MUTATIONS:
+        modes = sum(bool(value) for value in (mutation.node, mutation.proof, mutation.tool))
+        assert modes <= 1, f"{mutation.rule_id} declares {modes} observation modes"
+        assert bool(mutation.tool) is bool(mutation.diagnostic), (
+            f"{mutation.rule_id} must pair an external tool with its exact diagnostic"
+        )
+        if mutation.proof:
+            assert not mutation.drop, f"{mutation.rule_id} proof also drops fixture paths"
+            assert not mutation.write, f"{mutation.rule_id} proof also writes fixture paths"
+            assert not mutation.replace, (
+                f"{mutation.rule_id} duplicates damage already owned by {mutation.proof}"
+            )
+
+
 def discrimination_root() -> Path:
     """Where the generated rule index lives.
 

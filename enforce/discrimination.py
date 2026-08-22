@@ -81,6 +81,11 @@ class Mutation:
     ## Both kinds are the same claim -- *this mechanism rejects this thing* -- and
     ## they differ only in how the rejection is observed.
     node: str = ""
+    ## A pytest node that directly constructs a violating input, invokes the
+    ## named mechanism, and asserts this exact rule diagnostic. Unlike `node`,
+    ## the proof passes when rejection is observed; no duplicated fixture damage
+    ## is needed in this table because the cited test contains the mutation.
+    proof: str = ""
     ## The tool that must report this mutation, for a rule decided by an `auto:`
     ## tag rather than by a check or a fitness test. One of `TOOLS`. Twenty-seven
     ## binding rules are decided by a configured tool alone, and until this field

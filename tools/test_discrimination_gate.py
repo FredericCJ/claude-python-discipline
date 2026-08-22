@@ -55,6 +55,15 @@ _HOLLOW = discrimination.Mutation(
               "from __future__ import annotations\n\n# a comment"),),
 )
 
+## A companion-test entry; the cited test owns its violating input and assertion.
+_PROOF = discrimination.Mutation(
+    rule_id="DOC-001",
+    summary="a companion constructs an undocumented function",
+    source=("The proof mode delegates fixture construction to a test that asserts "
+            "the exact DOC-001 diagnostic rather than duplicating it in the table."),
+    proof="enforce/checks/test_doc_checks.py::test_an_undocumented_module_fires",
+)
+
 
 def test_a_true_claim_passes(monkeypatch: pytest.MonkeyPatch) -> None:
     """The positive case: a mutation that provokes its rule is counted.
@@ -80,6 +89,30 @@ def test_a_claim_that_provokes_nothing_fails(monkeypatch: pytest.MonkeyPatch) ->
     assert status == discrimination_gate.EXIT_FAILED
     assert provoked == set()
     assert "ARCH-002" in complaints[0]
+
+
+def test_a_passing_companion_proof_is_credited(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A direct proof test earns rejection credit only when it passes.
+
+    @param monkeypatch isolates proof execution from a subprocess in this unit case
+    """
+    monkeypatch.setattr(discrimination, "MUTATIONS", (_PROOF,))
+    monkeypatch.setattr(discrimination_gate, "proof_passes", lambda _node: True)
+    status, complaints, provoked = discrimination_gate.run()
+    assert status == discrimination_gate.EXIT_OK, complaints
+    assert provoked == {"DOC-001"}
+
+
+def test_a_failing_companion_proof_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A named test is not evidence when it no longer observes rejection.
+
+    @param monkeypatch isolates proof execution from a subprocess in this unit case
+    """
+    monkeypatch.setattr(discrimination, "MUTATIONS", (_PROOF,))
+    monkeypatch.setattr(discrimination_gate, "proof_passes", lambda _node: False)
+    status, _, provoked = discrimination_gate.run()
+    assert status == discrimination_gate.EXIT_FAILED
+    assert provoked == set()
 
 
 def test_a_mutation_naming_a_missing_path_is_reported(

@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "review_id": "v4_security_slice_adversarial_acceptance",
-  "reviewed_commit": "356fc08680e010127fc72697ad321e07ded765d7",
+  "reviewed_commit": "375b08871a9cd69af9d426ec6d6c7008cbd073d8",
   "scope": {
     "algorithm": "sha256",
-    "digest": "sha256:cc40b101a2af0e2f3f9c52019758a9558fa1483f05b37032d4d2fba06d90eb63",
+    "digest": "sha256:c659c1d434dddcfdf2bf989466fa424d0c964ff5cae4e87b42d9587d43c07040",
     "file_count": 281,
     "categories": [
       "project_declaration",

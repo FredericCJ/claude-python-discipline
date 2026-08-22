@@ -196,6 +196,32 @@ def fails_against(node: str, root: Path, *, repository: bool = False) -> bool:
     return finished.returncode != 0
 
 
+def proof_passes(node: str) -> bool:
+    """Whether a companion test observes its declared rule rejecting a fixture.
+
+    A proof node constructs its own violating subject and asserts the exact rule
+    diagnostic, so success is the witnessed rejection. This complements `node`,
+    where a fitness mechanism is expected to fail against table-supplied damage.
+
+    @param node pytest node id of the direct proof-of-failure case
+    @return True only when pytest executes that proof successfully
+    """
+    environment = dict(os.environ)
+    environment.pop("DISCIPLINE_REFERENCE", None)
+    finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
+        (sys.executable, "-m", "pytest", "-q", "-p", "no:randomly", "-x", node),
+        cwd=REPO_ROOT,
+        env=environment,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+        timeout=600,
+    )
+    return finished.returncode == 0
+
+
 def _ruff_codes(root: Path) -> set[str]:
     """Every ruff code reported over one tree.
 
@@ -292,6 +318,8 @@ def provoke(mutation: discrimination.Mutation, workspace: Path) -> set[str]:
     @return the rule ids observed rejecting the damaged tree
     @throws FileNotFoundError when a path named for damage is not there
     """
+    if mutation.proof:
+        return {mutation.rule_id} if proof_passes(mutation.proof) else set()
     root = damaged(mutation, workspace)
     if mutation.tool:
         return {mutation.rule_id} if emits(mutation, root) else set()
