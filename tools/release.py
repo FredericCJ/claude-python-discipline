@@ -78,6 +78,7 @@ DOCUMENT_SOURCES: Final[tuple[str, ...]] = ("packaging", ".")
 REQUIRED_MEMBERS: Final[tuple[str, ...]] = (
     ".agent/tools/integrate.py",
     ".agent/discipline/KERNEL.md",
+    ".agent/skills/python-discipline/SKILL.md",
     ".agent/INTEGRATION.md",
     ".agent/MANIFEST.json",
     ".agent/requirements.txt",

@@ -104,6 +104,24 @@ def test_the_manifest_names_every_upstream_file(target: Path) -> None:
     )
 
 
+def test_install_carries_one_shared_agent_skill_source(target: Path) -> None:
+    """Vendoring stages one skill without writing either host discovery root.
+
+    Integration owns files outside `.agent/`; the vendor owns the canonical
+    source it will copy. Keeping that boundary means installing files cannot
+    silently replace a repository's existing Claude Code or Codex skill.
+
+    @param target an empty repository
+    """
+    _install(target)
+    source = SOURCE / "skills" / "python-discipline" / "SKILL.md"
+    installed = target / ".agent" / "skills" / "python-discipline" / "SKILL.md"
+
+    assert installed.read_bytes() == source.read_bytes()
+    assert not (target / ".claude").exists()
+    assert not (target / ".agents").exists()
+
+
 def test_the_manifest_excludes_build_products(target: Path) -> None:
     """A version stamp that moves when somebody runs the tests is not a stamp.
 

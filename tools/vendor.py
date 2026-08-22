@@ -9,6 +9,7 @@ Layout in the target::
       discipline/   upstream-owned, replaced wholesale on update
       enforce/      upstream-owned
       tools/        upstream-owned, the navigator and the learning CLI
+      skills/       upstream-owned, the shared Claude Code and Codex skill source
       learning/     PROJECT-OWNED, created once and never overwritten
       overrides/    PROJECT-OWNED, local waivers
       MANIFEST.json content hashes of everything upstream-owned
@@ -43,7 +44,7 @@ if TYPE_CHECKING:
 RELEASE: Final = "v3.2.0"
 
 ## Copied on every install and replaced wholesale. Nothing here is project-owned.
-UPSTREAM: Final[tuple[str, ...]] = ("discipline", "enforce", "tools")
+UPSTREAM: Final[tuple[str, ...]] = ("discipline", "enforce", "tools", "skills")
 
 ## Root-level files copied alongside the upstream directories. INTEGRATION.md is
 ## what an agent reads when told to wire the discipline into a repository;
