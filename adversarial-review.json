@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "review_id": "v4_security_slice_adversarial_acceptance",
-  "reviewed_commit": "37b38e6fc330551dc67880da78130cc5e3db30a8",
+  "reviewed_commit": "9343194bb23f7098720accaf6e2a82990bfcd263",
   "scope": {
     "algorithm": "sha256",
-    "digest": "sha256:e77ed761ac7c5d1bab94b0b9b629030b9bc96deff20dd1a1331433baff43c268",
+    "digest": "sha256:a1662496459e56f4b02020e565103acf2e7e9abc7faa7dfd3dc0591c613cfd1d",
     "file_count": 281,
     "categories": [
       "project_declaration",
@@ -139,6 +139,17 @@
       "evidence": "tools/test_project_gate.py::test_external_adapters_bind_config_and_non_empty_targets",
       "owner": "project_gate_maintainer",
       "review_trigger": "Review again whenever a tool changes configuration discovery, target semantics, report format, module entry point, or supported platform."
+    },
+    {
+      "id": "import_graph_assumed_src_root",
+      "category": "architecture",
+      "severity": "high",
+      "statement": "The import-contract wrapper hard-coded src even though v4 declarations admit explicit source roots, so a nonstandard layout could be checked against no package or an unintended importable package.",
+      "disposition": "resolved",
+      "resolution": "Pass every declared import root explicitly, place only resolved repository-local roots on sys.path, refuse parent or sibling escape before import-linter starts, and retain the legacy src default only for direct wrapper compatibility.",
+      "evidence": "tools/test_toolchain_gates.py::test_a_declared_nonstandard_source_root_is_used",
+      "owner": "import_contract_gate_maintainer",
+      "review_trigger": "Review again whenever source-root declaration, editable installation, namespace package discovery, or import-linter graph construction changes."
     },
     {
       "id": "release_gate_debt",

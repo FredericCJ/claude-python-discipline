@@ -25,15 +25,13 @@ from __future__ import annotations
 import importlib
 import shutil
 import sys
-from typing import TYPE_CHECKING, Final
+from pathlib import Path
+from typing import Final
 
 import pytest
 
 import import_gate
 import type_gate
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 ## The reference package both gates are pointed at.
 REFERENCE: Final = import_gate.DEFAULT_ROOT
@@ -120,6 +118,37 @@ def test_a_missing_configuration_is_not_silence() -> None:
     with pytest.raises(FileNotFoundError):
         import_gate.check(REFERENCE, "no-such-file.toml",
                           import_gate.MINIMUM_CONTRACTS)
+
+
+def test_a_declared_nonstandard_source_root_is_used(tree: Path) -> None:
+    """Import contracts resolve from the adopter's declared root, not only src.
+
+    @param tree writable reference copy
+    """
+    (tree / "src").rename(tree / "code")
+
+    status, line = import_gate.check(
+        tree,
+        import_gate.DEFAULT_CONFIG,
+        import_gate.MINIMUM_CONTRACTS,
+        source_roots=(Path("code"),),
+    )
+
+    assert status == import_gate.EXIT_OK, line
+
+
+def test_an_escaping_source_root_is_refused(tree: Path) -> None:
+    """The import graph cannot borrow packages from a parent or sibling.
+
+    @param tree writable reference copy
+    """
+    with pytest.raises(import_gate.SourceRootError, match="escape"):
+        import_gate.check(
+            tree,
+            import_gate.DEFAULT_CONFIG,
+            import_gate.MINIMUM_CONTRACTS,
+            source_roots=(Path(".."),),
+        )
 
 
 # The type gate.

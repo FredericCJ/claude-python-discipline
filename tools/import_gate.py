@@ -29,8 +29,13 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from types import ModuleType
 
 ## The repository root, one level up from `tools/`.
 REPO_ROOT: Final = Path(__file__).resolve().parent.parent
@@ -61,7 +66,25 @@ EXIT_OK: Final = 0
 EXIT_BROKEN: Final = 1
 
 
-def check(root: Path, config: str, minimum: int) -> tuple[int, str]:
+class SourceRootError(ValueError):
+    """A configured import root would read outside the governed repository."""
+
+    def __init__(self, root: Path, sources: Sequence[Path]) -> None:
+        """Name the refused root and values in one actionable diagnostic.
+
+        @param root governed repository root
+        @param sources configured repository-relative values
+        """
+        values = ", ".join(str(source) for source in sources)
+        super().__init__(f"source roots escape {root}: {values}")
+
+
+def check(
+    root: Path,
+    config: str,
+    minimum: int,
+    source_roots: Sequence[Path] | None = None,
+) -> tuple[int, str]:
     """Run every contract in `config` against the package rooted at `root`.
 
     import-linter resolves `root_packages` by import, so `root/src` must be on
@@ -72,6 +95,7 @@ def check(root: Path, config: str, minimum: int) -> tuple[int, str]:
     @param root the directory holding `src/` and the contract file
     @param config the contract file's name, relative to `root`
     @param minimum how many contracts must be evaluated for the verdict to count
+    @param source_roots repository-relative import roots, or src when omitted
     @return the exit status, and the line to print
     @throws FileNotFoundError when the contract file is absent, because a missing
         config is the one case where reporting "nothing broken" would be a lie
@@ -80,11 +104,16 @@ def check(root: Path, config: str, minimum: int) -> tuple[int, str]:
     if not configuration.is_file():
         raise FileNotFoundError(configuration)
 
-    source = root / "src"
-    evicted: dict[str, object] = {}
+    sources = tuple(source_roots or (Path("src"),))
+    exact_root = root.resolve()
+    resolved_sources = tuple((exact_root / source).resolve() for source in sources)
+    if any(not source.is_relative_to(exact_root) for source in resolved_sources):
+        raise SourceRootError(exact_root, sources)
+    evicted: dict[str, ModuleType] = {}
     previous_path = list(sys.path)
     previous_directory = Path.cwd()
-    sys.path.insert(0, str(source))
+    for source in reversed(resolved_sources):
+        sys.path.insert(0, str(source))
     os.chdir(root)
     try:
         # A private name, deliberately. import-linter exposes no public way to
@@ -109,7 +138,7 @@ def check(root: Path, config: str, minimum: int) -> tuple[int, str]:
         # USER_OPTION_READERS; without the type registration every contract
         # raises NoSuchContractType. Both are at least loud, unlike the silent
         # success `python -m importlinter.cli` produces.
-        configure()
+        configure()  # type: ignore[no-untyped-call]  # private untyped tool API
         options = read_user_options(config_filename=config)
         _register_contract_types(options)
         evicted = _evict(options.session_options.get("root_packages", ()))
@@ -133,7 +162,7 @@ def check(root: Path, config: str, minimum: int) -> tuple[int, str]:
     return EXIT_OK, f"import contracts: {len(results)} kept, 0 broken"
 
 
-def _evict(roots: object) -> dict[str, object]:
+def _evict(roots: object) -> dict[str, ModuleType]:
     """Remove the named packages from `sys.modules`, returning what was removed.
 
     import-linter builds its graph by importing the root packages, and an import
@@ -153,9 +182,13 @@ def _evict(roots: object) -> dict[str, object]:
     @return each evicted module name against the module object, for restoring
     """
     if isinstance(roots, str):
-        roots = (roots,)
-    names = tuple(str(name) for name in roots or ())
-    evicted = {
+        values: Iterable[object] = (roots,)
+    elif isinstance(roots, Iterable):
+        values = roots
+    else:
+        values = ()
+    names = tuple(str(name) for name in values)
+    evicted: dict[str, ModuleType] = {
         name: module for name, module in sys.modules.items()
         if any(name == root or name.startswith(f"{root}.") for root in names)
     }
@@ -190,6 +223,13 @@ def main(argv: list[str] | None = None) -> int:
                         help="the contract file, relative to --root")
     parser.add_argument("--minimum", type=int, default=MINIMUM_CONTRACTS,
                         help="how many contracts must be evaluated")
+    parser.add_argument(
+        "--source-root",
+        action="append",
+        type=Path,
+        dest="source_roots",
+        help="repository-relative import root; repeat for multiple roots",
+    )
     arguments = parser.parse_args(argv)
 
     root = arguments.root
@@ -204,9 +244,17 @@ def main(argv: list[str] | None = None) -> int:
         root = DEFAULT_ROOT
 
     try:
-        status, line = check(root, arguments.config, arguments.minimum)
+        status, line = check(
+            root,
+            arguments.config,
+            arguments.minimum,
+            arguments.source_roots,
+        )
     except FileNotFoundError as absent:
         print(f"import contracts: no configuration at {absent}", file=sys.stderr)
+        return EXIT_BROKEN
+    except SourceRootError as problem:
+        print(f"import contracts: invalid target: {problem}", file=sys.stderr)
         return EXIT_BROKEN
     print(line, file=sys.stderr if status else sys.stdout)
     return status
