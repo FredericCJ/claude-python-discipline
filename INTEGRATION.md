@@ -12,6 +12,11 @@ Integration puts the shared pointer into `CLAUDE.md` and `AGENTS.md` and exposes
 vendored skill through both native discovery paths. The resulting repository can be used by
 Claude Code, Codex, or both without installing two disciplines.
 
+One integrated bundle governs this repository only. The repository declares either a
+complete application or one independently developed component; a component's parent,
+sibling repositories, wiring and whole-application verification remain out of scope. See
+`.agent/discipline/meta/SCOPE.md` after installation.
+
 ## The procedure
 
 ```bash

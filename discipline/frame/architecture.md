@@ -2,7 +2,7 @@
 id: frame/architecture
 kind: frame
 title: Architectural Vocabulary and Paradigms
-tokens: 2197
+tokens: 2338
 load_when:
   - "which paradigm"
   - "tradeoff"
@@ -26,12 +26,18 @@ where the two appear to disagree, the law wins.
 Reason from first principles. This exists to make that reasoning legible and to surface
 tradeoffs that are easy to forget under time pressure.
 
+The vocabulary applies inside the one repository governed by [meta/SCOPE]. A repository is
+either a complete application or one component; a multi-component parent and sibling
+repositories are not an additional architectural altitude in this corpus.
+
 ---
 
 ## Vocabulary
 
-- **Component** — a unit with one stated responsibility, a defined interface, and an
-  independent lifecycle in testing.
+- **Component** — the one governed repository when it participates in a larger
+  application: one stated responsibility, a defined counterpart-neutral interface and an
+  independent lifecycle in testing. Internal modules do not become separately governed
+  components.
 - **Interface / contract** — the observable surface: inputs, outputs, invariants, error
   modes, ordering constraints. An interface is the decision a component has frozen.
 - **Invariant** — a property that must hold at a named boundary. Invariants are design
@@ -111,8 +117,9 @@ half of itself. State invariants at the interface even when the language cannot 
 them — a documented invariant is better than an unstated one.
 
 **Observability.** Logs are structured and correlated; unstructured logs do not survive
-production. State transitions are loggable events. Between components, the boundary
-crossing is worth recording: inputs after validation, outputs, and duration.
+production. State transitions are loggable events. At an external port, the governed
+unit's validated input, output and duration are worth recording without naming or
+diagnosing a counterpart implementation.
 
 ## Testability patterns
 
@@ -129,12 +136,12 @@ concurrency, and I/O ordering. Each is controllable; each is expensive to retrof
 
 ## Debuggability patterns
 
-**Fault isolation topology.** Ask, for each component, what happens to its neighbours when
-it fails. Circuit breakers, bulkheads and timeouts are the standard answers, and each
-implies a contract change.
+**Fault isolation boundary.** Ask what the governed unit promises at each port when a local
+operation or external role fails. Timeouts and containment are contract terms; the
+counterpart's reaction and the larger application's topology are outside this analysis.
 
-**Observable boundaries.** A failure that crosses three components silently is three times
-harder to attribute than one that is recorded at each crossing.
+**Observable boundaries.** A failure crossing the governed unit's boundary silently is
+harder to attribute than one recorded with the local role, operation and contract.
 
 **Error context accretion.** Errors should acquire context as they propagate, not lose it.
 The mechanics are in [law/DIAG]; the principle is that the innermost cause and the

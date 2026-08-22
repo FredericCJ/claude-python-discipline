@@ -2,7 +2,7 @@
 id: meta/KERNEL
 kind: meta
 title: Discipline Kernel
-tokens: 1815
+tokens: 1910
 load_when: ["python", "discipline", "how should i", "what are the rules"]
 decay: none
 ---
@@ -35,6 +35,12 @@ diagnose unaided.
 Rules ship with the mechanism that decides them. `[ADVISORY]` means no mechanism was found,
 carries a written justification, and counts as a defect. **A rule nothing checks is not
 binding in practice, whatever its tag claims.**
+
+## Scope
+
+One installation governs exactly one repository: either a complete application or one
+independently developed component. A component owns its contracts and local behavior, not
+its counterparts, parent repository or whole-application integration. See [meta/SCOPE].
 
 ## Always true
 
@@ -77,6 +83,7 @@ an API name, a task verb.
 | dispatching a subagent, choosing tier and effort | `ops/ALLOC` |
 | a term used two ways — `coverage`, `atomic`, double names | `meta/GLOSSARY` |
 | "why was this decided?", two sources disagree | `meta/CONFLICTS` |
+| application vs component, parent repository, scope boundary | `meta/SCOPE` |
 | authoring or editing a rule | `meta/SCHEMA` |
 
 **Negative routing.** A typo fix, a comment, a rename that changes no contract, a

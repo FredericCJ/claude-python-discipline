@@ -1,10 +1,16 @@
 # Python Engineering Discipline
 
-One discipline for robust Python, packaged once for Claude Code and Codex to load,
-navigate and enforce.
+One discipline for consequential, potentially long-lived Python, packaged once for Claude
+Code and Codex to load, navigate and enforce.
+
+One installation governs exactly one repository: either a complete application or one
+independently developed component of a larger application. For a component, the discipline
+governs its contracts and locally owned behavior; a parent repository, counterpart wiring
+and whole-application verification are out of scope. The complete boundary is
+`discipline/meta/SCOPE.md`.
 
 Agents start at **`discipline/KERNEL.md`** (~1,800 tokens). It carries the thesis, the
-fifteen always-apply invariants, a router table, and the two commands that replace reading
+always-apply invariants, a router table, and the two commands that replace reading
 speculatively. Everything else is loaded on demand.
 
 ## Why it is shaped this way
@@ -123,7 +129,7 @@ discipline/
   fact/              py-typing py-testing py-errors py-logging   (dated)
   frame/             architecture spec
   ops/               ALLOC teams
-  meta/              SCHEMA GLOSSARY CONFLICTS OPEN PROVENANCE edges.yaml
+  meta/              SCOPE SCHEMA GLOSSARY CONFLICTS OPEN PROVENANCE edges.yaml
 enforce/
   templates/         copied into a consuming project, never live here
     pyproject.toml   ruff / mypy / pyright / pytest / coverage / mutmut

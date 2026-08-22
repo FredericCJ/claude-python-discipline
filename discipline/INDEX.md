@@ -27,8 +27,8 @@ decay: none
 | [fact/py-logging](fact/py-logging.md) | fact | 1509 | 0 | log level, getLogger, basicConfig, NullHandler, handler, formatter |
 | [fact/py-testing](fact/py-testing.md) | fact | 1423 | 0 | pytest version, fixture scope, hypothesis, coverage tool, mutation tool, pytest plugin |
 | [fact/py-typing](fact/py-typing.md) | fact | 1549 | 0 | mypy flags, pyright config, strict mode, Protocol, TypedDict, PEP 695 |
-| [frame/architecture](frame/architecture.md) | frame | 2197 | 0 | which paradigm, tradeoff, refactoring, legacy code, coupling, cohesion |
-| [frame/spec](frame/spec.md) | frame | 1865 | 0 | write a spec, requirements, elicitation, design document, traceability, reusability |
+| [frame/architecture](frame/architecture.md) | frame | 2338 | 0 | which paradigm, tradeoff, refactoring, legacy code, coupling, cohesion |
+| [frame/spec](frame/spec.md) | frame | 1972 | 0 | write a spec, requirements, elicitation, design document, traceability, reusability |
 | [law/API](law/API.md) | law | 2445 | 15 | public API, contract, versioning, breaking change, CLI, JSON output |
 | [law/ARCH](law/ARCH.md) | law | 2719 | 17 | new module, package layout, port, adapter, hexagonal, dependency injection |
 | [law/DEP](law/DEP.md) | law | 2111 | 14 | add a dependency, third party library, lockfile, environment, code generation, generated file |

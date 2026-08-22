@@ -1408,7 +1408,7 @@
    "type": "module",
    "label": "Architectural Vocabulary and Paradigms",
    "path": "discipline/frame/architecture.md",
-   "tokens": 2197,
+   "tokens": 2338,
    "attrs": {
     "decay": "none",
     "kind": "frame"
@@ -1419,7 +1419,7 @@
    "type": "module",
    "label": "Specification Discipline",
    "path": "discipline/frame/spec.md",
-   "tokens": 1865,
+   "tokens": 1972,
    "attrs": {
     "decay": "none",
     "kind": "frame"
@@ -1584,7 +1584,7 @@
    "type": "module",
    "label": "Discipline Kernel",
    "path": "discipline/KERNEL.md",
-   "tokens": 1815,
+   "tokens": 1910,
    "attrs": {
     "decay": "none",
     "kind": "meta"
@@ -1618,6 +1618,17 @@
    "label": "Document Format Specification",
    "path": "discipline/meta/SCHEMA.md",
    "tokens": 3014,
+   "attrs": {
+    "decay": "none",
+    "kind": "meta"
+   }
+  },
+  {
+   "id": "meta/SCOPE",
+   "type": "module",
+   "label": "Governed Repository Scope",
+   "path": "discipline/meta/SCOPE.md",
+   "tokens": 706,
    "attrs": {
     "decay": "none",
     "kind": "meta"
@@ -4218,6 +4229,14 @@
    }
   },
   {
+   "id": "trigger:kw:application repository",
+   "type": "trigger",
+   "label": "application repository",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:assert_never",
    "type": "trigger",
    "label": "assert_never",
@@ -4309,6 +4328,14 @@
    "id": "trigger:kw:cohesion",
    "type": "trigger",
    "label": "cohesion",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:component repository",
+   "type": "trigger",
+   "label": "component repository",
    "attrs": {
     "kind": "keyword"
    }
@@ -4930,6 +4957,14 @@
    }
   },
   {
+   "id": "trigger:kw:multi-component",
+   "type": "trigger",
+   "label": "multi-component",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:mutation",
    "type": "trigger",
    "label": "mutation",
@@ -4997,6 +5032,14 @@
    "id": "trigger:kw:package layout",
    "type": "trigger",
    "label": "package layout",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:parent repository",
+   "type": "trigger",
+   "label": "parent repository",
    "attrs": {
     "kind": "keyword"
    }
@@ -5237,6 +5280,14 @@
    "id": "trigger:kw:schema version",
    "type": "trigger",
    "label": "schema version",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:scope",
+   "type": "trigger",
+   "label": "scope",
    "attrs": {
     "kind": "keyword"
    }
@@ -12623,6 +12674,36 @@
    "type": "triggered_by",
    "src": "meta/SCHEMA",
    "dst": "trigger:kw:validate",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "meta/SCOPE",
+   "dst": "trigger:kw:application repository",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "meta/SCOPE",
+   "dst": "trigger:kw:component repository",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "meta/SCOPE",
+   "dst": "trigger:kw:multi-component",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "meta/SCOPE",
+   "dst": "trigger:kw:parent repository",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "meta/SCOPE",
+   "dst": "trigger:kw:scope",
    "origin": "derived"
   },
   {

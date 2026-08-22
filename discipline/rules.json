@@ -144,7 +144,7 @@
       "id": "frame/architecture",
       "kind": "frame",
       "title": "Architectural Vocabulary and Paradigms",
-      "tokens": 2197,
+      "tokens": 2338,
       "load_when": [
         "which paradigm",
         "tradeoff",
@@ -167,7 +167,7 @@
       "id": "frame/spec",
       "kind": "frame",
       "title": "Specification Discipline",
-      "tokens": 1865,
+      "tokens": 1972,
       "load_when": [
         "write a spec",
         "requirements",
@@ -514,7 +514,7 @@
       "id": "meta/KERNEL",
       "kind": "meta",
       "title": "Discipline Kernel",
-      "tokens": 1815,
+      "tokens": 1910,
       "load_when": [
         "python",
         "discipline",
@@ -577,6 +577,24 @@
       "verified": null,
       "decay": "none",
       "path": "discipline/meta/SCHEMA.md"
+    },
+    {
+      "id": "meta/SCOPE",
+      "kind": "meta",
+      "title": "Governed Repository Scope",
+      "tokens": 706,
+      "load_when": [
+        "application repository",
+        "component repository",
+        "multi-component",
+        "parent repository",
+        "scope"
+      ],
+      "requires": [],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/meta/SCOPE.md"
     },
     {
       "id": "ops/ALLOC",

@@ -21,6 +21,13 @@ Read `discipline/KERNEL.md` first. Do not read modules under `discipline/law/`, 
 `frame/`, or `ops/` speculatively. The kernel routes the task and every module declares
 its measured token cost.
 
+## Governed unit
+
+One installation governs exactly one repository containing either a complete application
+or one independently developed component. For a component, its contracts and locally
+owned behavior are in scope; counterpart repositories, parent wiring and whole-application
+verification are not. Read `discipline/meta/SCOPE.md` when that boundary is relevant.
+
 ## Prime Directive
 
 > **A failure must be machine-diagnosable and machine-repairable.** An agent meeting a
@@ -77,6 +84,7 @@ Read only what the task needs.
 | coordinating several agents, team mechanics | `discipline/ops/teams.md` |
 | a term used two ways | `discipline/meta/GLOSSARY.md` |
 | why something was decided, or two sources disagree | `discipline/meta/CONFLICTS.md` |
+| application vs component, parent repository, scope boundary | `discipline/meta/SCOPE.md` |
 | authoring or editing a rule | `discipline/meta/SCHEMA.md` |
 
 For a typo, comment, or rename that changes no contract, read nothing further. Grep

@@ -2,7 +2,7 @@
 id: frame/spec
 kind: frame
 title: Specification Discipline
-tokens: 1865
+tokens: 1972
 load_when:
   - "write a spec"
   - "requirements"
@@ -23,6 +23,11 @@ how to reason, not a set of rules. The binding obligations that come out of it l
 The source document this is drawn from carried the corpus's only genuine per-rule
 identifiers, and its structure is preserved here because it was already the best-organized
 material in the set.
+
+This frame specifies the one repository governed by [meta/SCOPE]: either a complete
+application or one independently developed component. For a component, the incoming
+contract is the top of the local cascade; allocating and verifying the wider application
+belongs elsewhere.
 
 ---
 
@@ -51,8 +56,8 @@ contains no assertions and no test bodies.
 Three altitudes, one direction of flow, two directions of pressure:
 
 ```text
-needs  ->  system requirements  ->  architecture  ->  design specs
-                    <-  falsification pressure  <-
+needs or incoming contract  ->  repository requirements  ->  architecture  ->  design specs
+                                      <-  falsification pressure  <-
 ```
 
 **Falsification before acceptance.** No downstream role accepts an upstream artifact until
@@ -62,9 +67,9 @@ designer tries to break the architecture — a component that will not decompose
 too loose to implement against, a coupling that blocks standalone reuse, a seam that cannot
 be tested. Silent assent is a failure; so is theatrical dissent.
 
-**Allocation completeness.** Every requirement allocates to at least one component; every
-component justifies itself by at least one requirement. No orphan requirements, no
-unjustified components.
+**Allocation completeness.** Every repository requirement allocates to at least one local
+module or boundary, and every local module or boundary traces to a requirement or
+architectural decision. Cross-repository allocation is outside this frame.
 
 **Requirements are solution-free.** A requirement that names a mechanism has already made
 the architect's decision, and usually made it worse.
@@ -131,9 +136,9 @@ deferring it is how a suite ends up testing the seams that happened to be easy.
 
 ## G. Output and traceability
 
-The spine runs **requirement -> component -> design spec -> verification**, navigable in
-both directions. A reader should be able to answer "why does this component exist?" and
-"what verifies this requirement?" without guessing.
+The spine runs **repository requirement -> local boundary/module -> design spec ->
+verification**, navigable in both directions. A reader should be able to answer "why does
+this local element exist?" and "what verifies this requirement?" without guessing.
 
 Required artifacts:
 
