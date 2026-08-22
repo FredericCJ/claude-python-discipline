@@ -6,9 +6,10 @@
     python .agent/tools/integrate.py --remove      # take it back out cleanly
 
 Vendoring puts the discipline in `.agent/`. Nothing there is loaded by an agent
-session on its own: what an agent reads first is `CLAUDE.md`, `AGENTS.md` and the
-permission settings. This writes a **managed block** into those, so the discipline
-is announced rather than merely present.
+session on its own: what an agent reads first is `CLAUDE.md` or `AGENTS.md`, plus
+skills below its native discovery root. This writes a **managed block** into both
+instruction files and exposes the same vendored skill through `.claude/skills/`
+and `.agents/skills/`, so the discipline is announced rather than merely present.
 
 Two situations, one mechanism:
 
@@ -47,6 +48,7 @@ from __future__ import annotations
 
 import argparse
 import difflib
+import hashlib
 import json
 import re
 import subprocess
@@ -73,6 +75,15 @@ BLOCK_RE: Final = re.compile(
 ## Markdown files that an agent session reads without being told to.
 MARKDOWN_TARGETS: Final[tuple[str, ...]] = ("CLAUDE.md", "AGENTS.md")
 
+## The one skill source inside the vendored bundle. Both host entry points are
+## exact copies of this file and both route back into `.agent/discipline/`.
+SKILL_SOURCE_PATH: Final = "skills/python-discipline/SKILL.md"
+## Repository-local discovery paths for Claude Code and Codex respectively.
+SKILL_TARGETS: Final[tuple[str, ...]] = (
+    ".claude/skills/python-discipline/SKILL.md",
+    ".agents/skills/python-discipline/SKILL.md",
+)
+
 ## Where Claude Code keeps project-shared settings.
 SETTINGS_PATH: Final = ".claude/settings.json"
 
@@ -83,7 +94,7 @@ SETTINGS_PATH: Final = ".claude/settings.json"
 RECORD_NAME: Final = "integration-record.json"
 
 ## The record format's version, so a later shape can be told apart from this one.
-RECORD_VERSION: Final = 1
+RECORD_VERSION: Final = 2
 
 ## Narrow, read-or-verify invocations the discipline's own tooling needs. Nothing
 ## here writes to the repository except the learning ledger, which is the point.
@@ -124,6 +135,8 @@ class Kind(StrEnum):
     MERGE = "merge"
     ## Our contribution is taken back out, leaving the rest.
     REMOVE = "remove"
+    ## A whole file created by the discipline is safely deleted.
+    DELETE = "delete"
     ## Nothing to do; recorded anyway so the plan accounts for every target.
     SKIP = "skip"
 
@@ -145,11 +158,11 @@ class Action:
 
     @property
     def changes(self) -> bool:
-        """Whether applying this action would alter the file.
+        """Whether applying this action would alter or delete the file.
 
-        @return True when before and after differ
+        @return True when before and after differ or the action is a deletion
         """
-        return self.before != self.after
+        return self.kind is Kind.DELETE or self.before != self.after
 
     def diff(self, root: Path) -> str:
         """A unified diff of the change, for the dry run.
@@ -177,6 +190,8 @@ class Plan:
     actions: list[Action] = field(default_factory=list)
     ## Advisory notes; none of these block an apply.
     warnings: list[str] = field(default_factory=list)
+    ## Conflicts that prevent a complete integration but do not authorise overwriting.
+    problems: list[str] = field(default_factory=list)
 
     @property
     def changing(self) -> list[Action]:
@@ -384,13 +399,14 @@ def recorded_separator(record: dict[str, object] | None, name: str) -> str | Non
 def empty_record() -> dict[str, object]:
     """Build the record as it reads when nothing is installed.
 
-    @return a record claiming no permission entry, no ignore entry and no block
+    @return a record claiming no permission, ignore, markdown, or skill contribution
     """
     return {
         "record_version": RECORD_VERSION,
         "permissions_added": [],
         "gitignore_added": [],
         "markdown": {},
+        "skills": {},
     }
 
 
@@ -408,6 +424,187 @@ def _merged(record: dict[str, object] | None, key: str, newly: Sequence[str]) ->
     """
     kept = list(recorded_entries(record, key) or ())
     return [*kept, *(entry for entry in newly if entry not in kept)]
+
+
+def _skills_record(record: dict[str, object] | None) -> dict[str, dict[str, object]]:
+    """Recover per-path ownership and digests for native skill entry points.
+
+    Invalid entries grant no deletion or replacement authority and are ignored.
+    This is the same conservative rule used for a missing record: unexplained
+    files belong to the project.
+
+    @param record the install record as it stands, or None
+    @return valid path-to-entry mappings, empty when none can be trusted
+    """
+    raw = (record or {}).get("skills")
+    if not isinstance(raw, dict):
+        return {}
+    return {
+        str(path): dict(entry)
+        for path, entry in raw.items()
+        if isinstance(path, str) and isinstance(entry, dict)
+    }
+
+
+def _content_digest(text: str) -> str:
+    """A short digest used to distinguish our skill file from a local edit.
+
+    @param text exact decoded file contents, line endings included
+    @return the first 16 hexadecimal characters of its SHA-256
+    """
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
+
+
+def _skill_ownership(entry: dict[str, object] | None) -> tuple[bool, str | None]:
+    """Read the authority an integration-record skill entry grants.
+
+    @param entry one path's record, or None when the path was never recorded
+    @return whether this installer created it, and the digest it wrote
+    """
+    if entry is None:
+        return False, None
+    digest = entry.get("digest")
+    return entry.get("created") is True, digest if isinstance(digest, str) else None
+
+
+def _install_skill_action(
+    path: Path, relative: str, source: str, source_digest: str,
+    entry: dict[str, object] | None,
+) -> tuple[Action, dict[str, object], str | None]:
+    """Plan one native skill install or safe upgrade.
+
+    @param path the host discovery path
+    @param relative its repository-relative display and record key
+    @param source exact contents of the shared vendored skill
+    @param source_digest digest of `source`
+    @param entry prior ownership and digest, if recorded
+    @return the action, next record entry, and a blocking problem if any
+    """
+    if path.is_symlink() or (path.exists() and not path.is_file()):
+        reason = "a non-regular path already occupies the skill entry point; left untouched"
+        action = Action(Kind.SKIP, path, "", "", reason)
+        next_entry = dict(entry) if entry is not None else {"created": False, "digest": ""}
+        problem = f"cannot install the shared skill at {relative}: {reason}"
+        return action, next_entry, problem
+    if not path.is_file():
+        action = Action(
+            Kind.CREATE, path, "", source,
+            "creating the native entry point from the shared vendored skill",
+        )
+        return action, {"created": True, "digest": source_digest}, None
+
+    before = read_preserving(path)
+    created, expected = _skill_ownership(entry)
+    if before == source:
+        action = Action(
+            Kind.SKIP, path, before, before,
+            "native skill already matches the shared vendored source",
+        )
+        return action, {"created": created, "digest": source_digest}, None
+    if created and expected is not None and _content_digest(before) == expected:
+        action = Action(
+            Kind.REPLACE, path, before, source,
+            "updating the unchanged skill file created by this install",
+        )
+        return action, {"created": True, "digest": source_digest}, None
+
+    reason = (
+        "recorded skill was locally modified; left untouched" if created
+        else "an unowned skill already exists at this path; left untouched"
+    )
+    action = Action(Kind.SKIP, path, before, before, reason)
+    next_entry = (dict(entry) if entry is not None else
+                  {"created": False, "digest": _content_digest(before)})
+    return action, next_entry, f"cannot install the shared skill at {relative}: {reason}"
+
+
+def _remove_skill_action(
+    path: Path, relative: str, entry: dict[str, object] | None,
+) -> tuple[Action, list[str]]:
+    """Plan removal of one native skill only when its provenance is intact.
+
+    @param path the host discovery path
+    @param relative its repository-relative display and record key
+    @param entry prior ownership and digest, if recorded
+    @return the action and any conservative-removal warning
+    """
+    if path.is_symlink() or (path.exists() and not path.is_file()):
+        action = Action(
+            Kind.SKIP, path, "", "",
+            "non-regular skill entry point is project-owned; left untouched",
+        )
+        return action, [f"{relative} is not a regular file and was not removed"]
+    if not path.is_file():
+        return Action(Kind.SKIP, path, "", "", "skill file absent"), []
+
+    before = read_preserving(path)
+    created, expected = _skill_ownership(entry)
+    if not created:
+        action = Action(
+            Kind.SKIP, path, before, before,
+            "skill file was not created by this install; left untouched",
+        )
+        warning = (f"no {RECORD_NAME} ownership for {relative}; left it in place"
+                   if entry is None else "")
+        return action, [warning] if warning else []
+    if expected is None or _content_digest(before) != expected:
+        action = Action(
+            Kind.SKIP, path, before, before,
+            "skill file changed after integration; left untouched",
+        )
+        return action, [
+            (f"{relative} differs from the copy this install wrote; it now "
+             "belongs to the project and was not removed"),
+        ]
+    return Action(
+        Kind.DELETE, path, before, "",
+        "unchanged skill file created by this install",
+    ), []
+
+
+def _skill_actions(
+    root: Path, agent_dir: str, record: dict[str, object] | None, *, remove: bool,
+) -> tuple[list[Action], dict[str, dict[str, object]], list[str], list[str]]:
+    """Plan safe copies of the shared skill into both host discovery roots.
+
+    @param root the consuming repository root
+    @param agent_dir where the canonical vendored skill lives
+    @param record the prior integration record, or None
+    @param remove whether to uninstall instead of expose the skill
+    @return actions, next skill record, advisory warnings, and blocking conflicts
+    """
+    source_path = root / agent_dir / SKILL_SOURCE_PATH
+    installed = _skills_record(record)
+    wanted = dict(installed)
+    actions: list[Action] = []
+    warnings: list[str] = []
+    problems: list[str] = []
+
+    if not remove and not source_path.is_file():
+        warnings.append(
+            f"no shared skill found at {agent_dir}/{SKILL_SOURCE_PATH}; "
+            "native Claude Code and Codex skill entry points were not planned"
+        )
+        return actions, wanted, warnings, problems
+
+    source = "" if remove else read_preserving(source_path)
+    source_digest = "" if remove else _content_digest(source)
+    for relative in SKILL_TARGETS:
+        path = root / relative
+        entry = installed.get(relative)
+        if remove:
+            action, notes = _remove_skill_action(path, relative, entry)
+            actions.append(action)
+            warnings.extend(notes)
+            continue
+        action, next_entry, problem = _install_skill_action(
+            path, relative, source, source_digest, entry,
+        )
+        actions.append(action)
+        wanted[relative] = next_entry
+        if problem is not None:
+            problems.append(problem)
+    return actions, wanted, warnings, problems
 
 
 # ----------------------------------------------------------------- the plan
@@ -441,6 +638,13 @@ def build_plan(root: Path, agent_dir: str, *, remove: bool = False,
         if not remove and action.kind is Kind.INSERT:
             installed[name] = {"separator": _separator(action.before)}
 
+    skill_actions, installed_skills, skill_notes, skill_problems = _skill_actions(
+        root, agent_dir, record, remove=remove,
+    )
+    plan.actions += skill_actions
+    plan.warnings += skill_notes
+    plan.problems += skill_problems
+
     settings, settings_notes = _settings_action(
         root / SETTINGS_PATH, remove=remove,
         added=recorded_entries(record, "permissions_added"))
@@ -457,6 +661,7 @@ def build_plan(root: Path, agent_dir: str, *, remove: bool = False,
         "gitignore_added": _merged(record, "gitignore_added",
                                    absent_ignores(ignores.before)),
         "markdown": installed,
+        "skills": installed_skills,
     })
 
     if not remove and not _is_git_repository(root):
@@ -797,13 +1002,17 @@ def _is_git_repository(root: Path) -> bool:
 
 
 def apply(plan: Plan) -> list[Action]:
-    """Write every changing action. The plan is not recomputed here.
+    """Apply every changing action. The plan is not recomputed here.
 
     @param plan the plan to apply
-    @return the actions that were written
+    @return the actions that were written or deleted
     """
     written: list[Action] = []
     for action in plan.changing:
+        if action.kind is Kind.DELETE:
+            action.path.unlink()
+            written.append(action)
+            continue
         action.path.parent.mkdir(parents=True, exist_ok=True)
         write_preserving(action.path, action.after)
         written.append(action)
@@ -827,6 +1036,8 @@ def render_plan(plan: Plan, root: Path, *, show_diff: bool) -> Iterator[str]:
                         for line in action.diff(root).splitlines())
     for warning in plan.warnings:
         yield f"\n   warning: {warning}"
+    for problem in plan.problems:
+        yield f"\n   ERROR: {problem}"
 
 
 # ---------------------------------------------------------------------- main
@@ -939,16 +1150,18 @@ def main(argv: Sequence[str] | None = None) -> int:
         stale = plan.changing
         for line in render_plan(plan, root, show_diff=False):
             print(line)
-        print(f"\n{len(stale)} file(s) out of step." if stale
+        out = len(stale) + len(plan.problems)
+        print(f"\n{len(stale)} file(s) out of step, "
+              f"{len(plan.problems)} blocking conflict(s)." if out
               else "\nagent configuration is in step with the discipline.")
-        return 1 if stale else 0
+        return 1 if out else 0
 
     if args.dry_run:
         print("PLAN (nothing written)\n")
         for line in render_plan(plan, root, show_diff=True):
             print(line)
         print(f"\n{len(plan.changing)} file(s) would change. Re-run without --dry-run to apply.")
-        return 0
+        return 1 if plan.problems else 0
 
     for line in render_plan(plan, root, show_diff=False):
         print(line)
@@ -957,7 +1170,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(f"\ndiscipline {verb} {len(written)} file(s).")
     if not args.remove and written:
         print("Start a fresh agent session so the new configuration is loaded.")
-    return 0
+    return 1 if plan.problems else 0
 
 
 if __name__ == "__main__":

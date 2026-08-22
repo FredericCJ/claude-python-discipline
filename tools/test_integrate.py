@@ -44,6 +44,15 @@ EXISTING_CLAUDE: str = EXISTING_LF.decode()
 ## two apart, which is the whole reason the install record exists.
 SHARED_PERMISSION: str = "Bash(pytest:*)"
 
+## A small but valid vendored skill used to exercise both native discovery roots.
+SHARED_SKILL: str = """---
+name: python-discipline
+description: Shared fixture discipline.
+---
+
+Read `.agent/discipline/KERNEL.md`.
+"""
+
 
 @pytest.fixture
 def repo(tmp_path: Path) -> Path:
@@ -104,6 +113,29 @@ def write_settings(root: Path, allow: list[str]) -> Path:
     return path
 
 
+def write_vendored_skill(root: Path, text: str = SHARED_SKILL) -> Path:
+    """Seed the one skill source an installed v3.3 bundle carries.
+
+    @param root the repository root
+    @param text exact skill contents
+    @return the vendored source path
+    """
+    path = root / ".agent" / "skills" / "python-discipline" / "SKILL.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8", newline="")
+    return path
+
+
+def native_skill(root: Path, host: str) -> Path:
+    """Resolve one host's repository-local skill entry point.
+
+    @param root the repository root
+    @param host either `.claude` or `.agents`
+    @return that host's SKILL.md path
+    """
+    return root / host / "skills" / "python-discipline" / "SKILL.md"
+
+
 # ------------------------------------------------------------------ greenfield
 
 
@@ -156,6 +188,117 @@ def test_derived_paths_are_ignored(repo: Path) -> None:
     text = (repo / ".gitignore").read_text(encoding="utf-8")
     assert ".agent/learning/learning.db" in text
     assert "build/doc/" in text
+
+
+def test_greenfield_installs_the_same_skill_for_claude_and_codex(repo: Path) -> None:
+    """Both native entry points are exact copies of one vendored source.
+
+    @param repo an otherwise empty repository with a vendored discipline
+    """
+    source = write_vendored_skill(repo)
+
+    assert run(repo) == 0
+
+    for host in (".claude", ".agents"):
+        assert native_skill(repo, host).read_bytes() == source.read_bytes()
+    record = json.loads(
+        (repo / ".agent" / integrate.RECORD_NAME).read_text(encoding="utf-8")
+    )
+    assert set(record["skills"]) == set(integrate.SKILL_TARGETS)
+    assert all(entry["created"] for entry in record["skills"].values())
+
+
+def test_a_vendor_upgrade_updates_both_unchanged_native_skills(repo: Path) -> None:
+    """A new shared source replaces only files the prior integration wrote.
+
+    @param repo an otherwise empty repository with a vendored discipline
+    """
+    source = write_vendored_skill(repo)
+    assert run(repo) == 0
+    upgraded = SHARED_SKILL + "\nUpgrade marker.\n"
+    source.write_text(upgraded, encoding="utf-8", newline="")
+
+    assert run(repo) == 0
+
+    for host in (".claude", ".agents"):
+        assert native_skill(repo, host).read_text(encoding="utf-8") == upgraded
+
+
+def test_an_existing_native_skill_is_reported_and_never_overwritten(repo: Path) -> None:
+    """An unrecorded name collision blocks that host without deleting its file.
+
+    @param repo an otherwise empty repository with a vendored discipline
+    """
+    source = write_vendored_skill(repo)
+    existing = native_skill(repo, ".agents")
+    existing.parent.mkdir(parents=True)
+    existing.write_bytes(b"project-owned\r\n")
+
+    assert run(repo) == 1
+
+    assert existing.read_bytes() == b"project-owned\r\n"
+    assert native_skill(repo, ".claude").read_bytes() == source.read_bytes()
+    plan = integrate.build_plan(repo, ".agent")
+    assert any(".agents/skills/python-discipline/SKILL.md" in item
+               for item in plan.problems)
+    assert run(repo, "--check") == 1
+
+
+def test_a_directory_at_the_skill_path_blocks_without_crashing(repo: Path) -> None:
+    """A non-file collision stays intact and the other host can still integrate.
+
+    @param repo an otherwise empty repository with a vendored discipline
+    """
+    source = write_vendored_skill(repo)
+    collision = native_skill(repo, ".agents")
+    collision.mkdir(parents=True)
+
+    assert run(repo) == 1
+
+    assert collision.is_dir()
+    assert native_skill(repo, ".claude").read_bytes() == source.read_bytes()
+
+
+def test_remove_deletes_only_unchanged_skill_files_it_created(repo: Path) -> None:
+    """A locally edited native skill survives while its unchanged twin is removed.
+
+    @param repo an otherwise empty repository with a vendored discipline
+    """
+    write_vendored_skill(repo)
+    assert run(repo) == 0
+    codex = native_skill(repo, ".agents")
+    codex.write_bytes(codex.read_bytes() + b"\nlocal edit\n")
+
+    assert run(repo, "--remove") == 0
+
+    assert not native_skill(repo, ".claude").exists()
+    assert codex.read_bytes().endswith(b"local edit\n")
+    record = json.loads(
+        (repo / ".agent" / integrate.RECORD_NAME).read_text(encoding="utf-8")
+    )
+    assert record["skills"] == {}
+
+
+def test_skill_integration_is_idempotent(repo: Path) -> None:
+    """A second apply changes neither host entry point nor the record.
+
+    @param repo an otherwise empty repository with a vendored discipline
+    """
+    write_vendored_skill(repo)
+    assert run(repo) == 0
+    snapshot = {
+        path.relative_to(repo).as_posix(): path.read_bytes()
+        for path in repo.rglob("*") if path.is_file()
+    }
+
+    plan = integrate.build_plan(repo, ".agent")
+    assert plan.changing == []
+    assert plan.problems == []
+    assert run(repo) == 0
+    assert snapshot == {
+        path.relative_to(repo).as_posix(): path.read_bytes()
+        for path in repo.rglob("*") if path.is_file()
+    }
 
 
 # ------------------------------------------------------------------- versioning
