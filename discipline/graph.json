@@ -1619,7 +1619,7 @@
    "type": "module",
    "label": "Documentation Comments",
    "path": "discipline/law/DOC.md",
-   "tokens": 2367,
+   "tokens": 2392,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -2863,7 +2863,7 @@
    "type": "rule",
    "label": "A project declares which engine reads its documentation",
    "path": "discipline/law/DOC.md:156",
-   "tokens": 44,
+   "tokens": 70,
    "attrs": {
     "force": "BINDING",
     "module": "law/DOC"

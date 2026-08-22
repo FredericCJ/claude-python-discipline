@@ -59,11 +59,25 @@ def rules_fired(check: Check, path: Path) -> set[str]:
     @param path the file to run it over
     @return every rule id reported, empty when the file conforms
     """
-    check.declaration = project.Declaration(doc_engine="doxygen")
+    check.declaration = project.Declaration(
+        doc_engine="doxygen", doc_engine_declared=True,
+    )
     return {f.rule_id for f in check.run([path])}
 
 
 # ------------------------------------------------------------------- coverage
+
+
+def test_an_undeclared_documentation_engine_fires_once(tmp_path: Path) -> None:
+    """DOC-014: a direct fallback is diagnostic, never a narrower green scan.
+
+    @param tmp_path pytest's per-test repository
+    """
+    path = write(tmp_path, '"""A documented module."""\n')
+    check = DocCoverageCheck()
+    check.declaration = project.DEFAULT
+    findings = check.run([path])
+    assert [item.diagnostic_id for item in findings] == ["DOC_ENGINE_UNDECLARED"]
 
 
 def test_an_undocumented_module_fires(tmp_path: Path) -> None:

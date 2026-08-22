@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "review_id": "v4_security_slice_adversarial_acceptance",
-  "reviewed_commit": "730d9ac36366668c41c55907e1f3a08b0fac105b",
+  "reviewed_commit": "c3f9103cee936b439362f175d477882d203c6b03",
   "scope": {
     "algorithm": "sha256",
-    "digest": "sha256:07f92f8b56fa2c12931afe9d138fdea31a93544d649b014fdfd9370f715878c6",
+    "digest": "sha256:a403443af87b388049b5a217b2b3c66fb8961ada5c91a58a9b76ac309e8272b6",
     "file_count": 279,
     "categories": [
       "project_declaration",
@@ -119,10 +119,21 @@
       "review_trigger": "Review again whenever a semantic-only rule acquires a syntax mechanism or the discrimination census changes its definition of a mechanical claim."
     },
     {
+      "id": "implicit_documentation_engine_narrowed_gate",
+      "category": "test_oracles",
+      "severity": "high",
+      "statement": "A missing doc_engine field was converted to none, silently deactivating Doxygen-specific rules, while DOC-014 claimed the field was mandatory; DOC-008 also emitted real findings without listing its own rule ID.",
+      "disposition": "resolved",
+      "resolution": "Require an explicit closed doc_engine value in every v4 declaration, retain an emitting diagnostic fallback only for direct legacy checks, register DOC-008 in doc_style, and witness both failures in the discrimination matrix.",
+      "evidence": "enforce/checks/test_doc_checks.py::test_an_undeclared_documentation_engine_fires_once",
+      "owner": "project_declaration_maintainer",
+      "review_trigger": "Review again whenever declaration defaults, documentation engines, doc_style predicates, or aggregate-gate configuration loading changes."
+    },
+    {
       "id": "release_gate_debt",
       "category": "test_oracles",
       "severity": "high",
-      "statement": "The repository still records four unbuilt mechanisms and 92 mechanical claims without witnessed rejection, so this development snapshot cannot support a v4.0 release verdict.",
+      "statement": "The repository still records two unbuilt mechanisms and 92 mechanical claims without witnessed rejection, so this development snapshot cannot support a v4.0 release verdict.",
       "disposition": "accepted_risk",
       "resolution": "Acceptance is limited to the current gate-rebuild workstream as a base for continued implementation; the roadmap makes zero unbuilt mechanisms and zero rejection gap mandatory before release.",
       "evidence": "roadmap/from-3.2-to-4.0/README.md",

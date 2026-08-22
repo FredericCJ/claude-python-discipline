@@ -1,7 +1,7 @@
 {
   "generated_by": "tools/discrimination_gate.py --update-baseline",
   "note": "D -- rules with at least one mutation observed provoking them. May rise, never fall. The entries are in enforce/discrimination.py and are meant to be read; the count alone says nothing about whether they are good.",
-  "count": 72,
+  "count": 74,
   "rules": [
     "ALLOC-002",
     "ALLOC-004",
@@ -28,6 +28,8 @@
     "DIAG-012",
     "DOC-001",
     "DOC-006",
+    "DOC-008",
+    "DOC-014",
     "EFCT-001",
     "EFCT-002",
     "EFCT-006",
@@ -77,5 +79,5 @@
     "TYPE-013"
   ],
   "gap": 92,
-  "why": "Witness SEC-003 scope freshness and SEC-004 reviewer separation failures."
+  "why": "Witness DOC-008 prose type restatement and DOC-014 undeclared-engine failures."
 }

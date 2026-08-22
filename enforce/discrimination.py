@@ -550,6 +550,29 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             ),
         ),
     ),
+    Mutation(
+        rule_id="DOC-008",
+        summary="a parameter's signature type is repeated in its prose contract",
+        source=(
+            "DOC-008's exact syntax predicate: an @param record repeats the "
+            "annotated int type in parentheses instead of stating only meaning."
+        ),
+        replace=((
+            "src/refpkg/domain/model.py",
+            "@param epoch_seconds whole seconds since the Unix epoch",
+            "@param epoch_seconds (int) whole seconds since the Unix epoch",
+        ),),
+    ),
+    Mutation(
+        rule_id="DOC-014",
+        summary="a source tree has no explicit documentation-engine declaration",
+        source=(
+            "DOC-014's direct declaration predicate: a direct check fallback "
+            "must report that engine-specific obligations are undecided."
+        ),
+        base="empty",
+        write=(("src/pkg/module.py", '"""A documented probe module."""\n'),),
+    ),
     # ---------------------------------------------------------------- law/TEST
     Mutation(
         rule_id="TEST-004",

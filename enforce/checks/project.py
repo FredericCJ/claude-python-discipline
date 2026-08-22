@@ -228,6 +228,8 @@ class Declaration:
     foreign_ownership: Mapping[str, PurePosixPath] = field(default_factory=dict)
     ## Documentation comment syntax selected by the repository.
     doc_engine: str = "none"
+    ## Whether the repository explicitly selected that syntax rather than using fallback.
+    doc_engine_declared: bool = False
     ## Whether this repository deliberately projects every teaching artifact.
     pedagogical_full_projection: bool = False
     ## The project file this declaration was parsed from.
@@ -346,6 +348,25 @@ class Declaration:
         """
         return capability in self.capabilities
 
+    def _documentation_notes(self) -> tuple[str, ...]:
+        """Visible consequences of the engine declaration in force.
+
+        @return undeclared and engine-specific narrowing notes
+        """
+        notes: list[str] = []
+        if not self.doc_engine_declared:
+            notes.append(
+                "DISC-PROJECT-007 doc_engine is undeclared; direct checks use 'none', "
+                "but a v4 project gate must refuse this repository"
+            )
+        if self.doc_engine != "doxygen":
+            notes.append(
+                f"DOC-002 and DOC-007 are inactive: doc_engine is {self.doc_engine!r}, "
+                "so the @param and ## forms are not required. DOC-001 and DOC-003 "
+                "still require every required contract element to be documented."
+            )
+        return tuple(notes)
+
     def narrowed(self) -> tuple[str, ...]:
         """Facts a direct check invocation could not decide from this declaration.
 
@@ -392,12 +413,7 @@ class Declaration:
                 "DISC-PROJECT-016 capabilities are undeclared; additive local "
                 "operational obligations are undecided"
             )
-        if self.doc_engine != "doxygen":
-            notes.append(
-                f"DOC-002 and DOC-007 are inactive: doc_engine is {self.doc_engine!r}, "
-                "so the @param and ## forms are not required. DOC-001 and DOC-003 "
-                "still require every required contract element to be documented."
-            )
+        notes.extend(self._documentation_notes())
         return tuple(notes)
 
 
@@ -769,6 +785,29 @@ def _parse_adversarial_review(
     return review
 
 
+def _parse_doc_engine(table: Mapping[str, object], path: Path) -> str:
+    """Parse one explicit documentation syntax selection.
+
+    @param table decoded discipline declaration
+    @param path declaring project file
+    @return doxygen, sphinx, or none
+    """
+    raw = table.get("doc_engine")
+    if raw is None:
+        _reject(
+            "DISC-PROJECT-007", path,
+            "doc_engine is required and must be doxygen, sphinx, or none",
+        )
+    engine = str(raw)
+    if engine not in DOC_ENGINES:
+        known = ", ".join(sorted(DOC_ENGINES))
+        _reject(
+            "DISC-PROJECT-007", path,
+            f"doc_engine {engine!r} is not one of {known}",
+        )
+    return engine
+
+
 def parse(path: Path) -> Declaration:
     """Read one v4 declaration, refusing missing and unknown values.
 
@@ -802,13 +841,7 @@ def parse(path: Path) -> Declaration:
     architecture = _parse_architecture(table, path)
     contract_conformance = _parse_contract_conformance(table, path)
     capabilities = _parse_capabilities(table, path)
-    engine = str(table.get("doc_engine", "none"))
-    if engine not in DOC_ENGINES:
-        known = ", ".join(sorted(DOC_ENGINES))
-        _reject(
-            "DISC-PROJECT-007", path,
-            f"doc_engine {engine!r} is not one of {known}",
-        )
+    engine = _parse_doc_engine(table, path)
 
     projection = table.get("pedagogical_full_projection", False)
     if not isinstance(projection, bool):
@@ -848,6 +881,7 @@ def parse(path: Path) -> Declaration:
             table, path, roots, roles, boundaries,
         ),
         doc_engine=engine,
+        doc_engine_declared=True,
         pedagogical_full_projection=projection,
         source=path.resolve(),
     )

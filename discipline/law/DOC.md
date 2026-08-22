@@ -2,7 +2,7 @@
 id: law/DOC
 kind: law
 title: Documentation Comments
-tokens: 2367
+tokens: 2392
 load_when:
   - "docstring"
   - "documentation comment"
@@ -155,7 +155,8 @@ sentence rather than a padded block.
 
 ### DOC-014 · A project declares which engine reads its documentation  [BINDING] [check:doc_coverage]
 A project MUST declare its documentation engine in `[tool.agent-discipline]`. An
-undeclared project is held to [DOC-001] and [DOC-003] alone, and every run says so.
+undeclared v4 project MUST be refused. A direct legacy invocation retains `none` only as
+a conspicuous diagnostic fallback and MUST emit DOC-014 rather than a narrower green run.
 - **Why** [DOC-002] and [DOC-007] name one engine's punctuation. Demanding it of a project
   documenting in another produced 1,064 findings of form against 18 of substance, which is
   how a check stops being read; leaving it undeclared and silent is worse, because a

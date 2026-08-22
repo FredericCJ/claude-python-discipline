@@ -4,10 +4,10 @@
 
 This ledger keeps unlike claims unlike. A rule can be normatively binding while its verifier is absent; a verifier can exist while deciding only a proxy; a proxy can pass while its residual remains true; and a successful adopter does not prove universal benefit. No state below is a project-gate outcome.
 
-- **176** binding rules; **4** lack an available declared strategy.
+- **176** binding rules; **2** lack an available declared strategy.
 - **26** advisory rules and **0** open rules.
-- **192** exact strategy records: **29** direct and **163** proxy claims.
-- **71/166** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
+- **192** exact strategy records: **30** direct and **162** proxy claims.
+- **73/166** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
 - **21/212** rules carry named field observations.
 - **103/103** named mechanisms resolve locally or delegate explicitly; **0** local mechanisms are absent.
 
@@ -17,11 +17,11 @@ Measured against this tree, not copied from the rule heading. `discipline/rules.
 
 | State | Rules | Means |
 |---|---|---|
-| `local-verifier` | 127 | repository-local code observes every strategy |
+| `local-verifier` | 129 | repository-local code observes every strategy |
 | `external-verifier` | 24 | every strategy delegates to a configured tool |
 | `mixed-verifiers` | 11 | several verifier kinds contribute |
 | `structured-review` | 10 | judgment is recorded in a checked review artifact |
-| `unbuilt` | 4 | at least one named local verifier is absent |
+| `unbuilt` | 2 | at least one named local verifier is absent |
 | `undeclared` | 26 | the active rule has no strategy record |
 | `retired` | 10 | the stable id remains only for history |
 
@@ -44,8 +44,6 @@ These remain normative obligations, but the declared verifier is absent or missi
 | Rule | Verifier | Mechanism | Title |
 |---|---|---|---|
 | `DOC-003` | `unbuilt` | `auto:ruff:D100` `check:doc_coverage` | Documentation is present whether or not it is generated |
-| `DOC-008` | `unbuilt` | `check:doc_style` | Types are not restated in prose |
-| `DOC-014` | `unbuilt` | `check:doc_coverage` | A project declares which engine reads its documentation |
 | `FLOW-012` | `unbuilt` | `check:deviation_recorded` | Report what happened, including what did not |
 
 ## Rule evidence
@@ -139,13 +137,13 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `DOC-005` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:doxygen; it does not establish the full semantic benefit of the normative statement. | Docstrings are parsed as documentation, not text |
 | `DOC-006` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:ruff:D205; it does not establish the full semantic benefit of the normative statement. | A brief statement comes first |
 | `DOC-007` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:doc_coverage; it does not establish the full semantic benefit of the normative statement. | Every parameter, result and raised exception is documented |
-| `DOC-008` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:doc_style; it does not establish the full semantic benefit of the normative statement. | Types are not restated in prose |
+| `DOC-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing does not detect every custom, qualified, aliased, natural-language, or differently formatted type restatement, and cannot decide whether prose and a signature duplicate th… | Types are not restated in prose |
 | `DOC-009` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:doc_style; it does not establish the full semantic benefit of the normative statement. | Documentation states the contract, not the mechanism |
 | `DOC-010` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | `V3E-004` | Passing excludes only the configured patterns implemented by auto:doxygen; it does not establish the full semantic benefit of the normative statement. | A Doxygen run produces no warnings |
 | `DOC-011` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:doxygen; it does not establish the full semantic benefit of the normative statement. | The documentation check generates output |
 | `DOC-012` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:generated_provenance; it does not establish the full semantic benefit of the normative statement. | Generated documentation is not committed |
 | `DOC-013` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | Prefer one sentence that earns its place |
-| `DOC-014` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | `V3E-001` | Passing excludes only the configured patterns implemented by check:doc_coverage; it does not establish the full semantic benefit of the normative statement. | A project declares which engine reads its documentation |
+| `DOC-014` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | `V3E-001` | A declared engine can still be misconfigured, absent from the gate environment, or unable to parse the project's actual documentation syntax; the project gate owns those configura… | A project declares which engine reads its documentation |
 | `EFCT-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes configured direct imports of effect-capable APIs; it does not prove that every call through a port is sequenced or recovered correctly. | Foreign effects stay behind ports |
 | `EFCT-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:explicit_effects; it does not establish the full semantic benefit of the normative statement. | Time, randomness and environment enter through ports |
 | `EFCT-003` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_determinism; it does not establish every behavior in the normative statement. | Determinism is the default |

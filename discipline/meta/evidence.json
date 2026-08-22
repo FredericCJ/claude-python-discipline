@@ -3118,10 +3118,10 @@
           "mechanism": "check:doc_style",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:doc_style emits a finding tagged DOC-008 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
-          "residual": "Passing excludes only the configured patterns implemented by check:doc_style; it does not establish the full semantic benefit of the normative statement.",
+          "proposition": "check:doc_style emits DOC-008 when a docstring or Doxygen hash block restates one of the configured common parameter or return types in the recognized @param/@return forms.",
+          "residual": "Passing does not detect every custom, qualified, aliased, natural-language, or differently formatted type restatement, and cannot decide whether prose and a signature duplicate the same semantic constraint.",
           "must_pass": "command:`python -m checks.doc_style`",
-          "must_reject": "pending:DOC-008",
+          "must_reject": "discrimination:DOC-008",
           "platforms": [
             "windows",
             "linux"
@@ -3326,11 +3326,11 @@
         {
           "mechanism": "check:doc_coverage",
           "kind": "static",
-          "relation": "proxy",
-          "proposition": "check:doc_coverage emits a finding tagged DOC-014 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
-          "residual": "Passing excludes only the configured patterns implemented by check:doc_coverage; it does not establish the full semantic benefit of the normative statement.",
+          "relation": "direct",
+          "proposition": "The v4 declaration parser requires one explicit doc_engine value from the closed doxygen, sphinx, or none set, and check:doc_coverage emits DOC_ENGINE_UNDECLARED once when a direct legacy fallback has no declaration.",
+          "residual": "A declared engine can still be misconfigured, absent from the gate environment, or unable to parse the project's actual documentation syntax; the project gate owns those configuration and execution probes.",
           "must_pass": "command:`python -m checks.doc_coverage`, which prints the declaration it found and every rule that declaration leaves inactive",
-          "must_reject": "pending:DOC-014",
+          "must_reject": "discrimination:DOC-014",
           "platforms": [
             "windows",
             "linux"
@@ -3342,9 +3342,9 @@
         "V3E-001"
       ],
       "migration": {
-        "source": "v3.3.0",
-        "disposition": "unchanged",
-        "guidance": "No adopter edit is required by this rule record."
+        "source": "v4.0.0",
+        "disposition": "clarified",
+        "guidance": "Set doc_engine explicitly during migration, including none; v4 no longer treats field absence as a silent none declaration."
       }
     },
     "EFCT-001": {

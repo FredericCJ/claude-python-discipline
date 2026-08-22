@@ -32,11 +32,12 @@ def declare(tmp_path: Path, body: str) -> Path:
     return path
 
 
-def v4(*, extra: str = "", tables: str = "") -> str:
+def v4(*, extra: str = "", tables: str = "", doc_engine: str = "none") -> str:
     """A minimal complete declaration with optional fields and child tables.
 
     @param extra scalar entries in the main declaration table
     @param tables complete child-table text
+    @param doc_engine explicit documentation syntax selection
     @return TOML suitable for ``declare``
     """
     return f"""
@@ -48,6 +49,7 @@ def v4(*, extra: str = "", tables: str = "") -> str:
         operational_model = "operational-model.json"
         security_model = "security-model.json"
         adversarial_review = "adversarial-review.json"
+        doc_engine = "{doc_engine}"
         {extra}
 
         [tool.agent-discipline.capabilities]
@@ -393,6 +395,16 @@ def test_source_roots_cannot_escape_or_name_the_repository(
 # ------------------------------------------------------------ the doc engine
 
 
+def test_a_missing_engine_is_refused_not_defaulted(tmp_path: Path) -> None:
+    """A v4 gate cannot silently deactivate engine-specific documentation checks.
+
+    @param tmp_path fixture repository
+    """
+    body = v4().replace('        doc_engine = "none"\n', "", 1)
+    with pytest.raises(ValueError, match="DISC-PROJECT-007"):
+        project.parse(declare(tmp_path, body))
+
+
 @pytest.mark.parametrize("engine", ["doxygen", "sphinx", "none"])
 def test_each_known_engine_is_accepted(tmp_path: Path, engine: str) -> None:
     """The three recognized documentation syntaxes remain explicit.
@@ -400,7 +412,7 @@ def test_each_known_engine_is_accepted(tmp_path: Path, engine: str) -> None:
     @param tmp_path fixture repository
     @param engine engine under test
     """
-    found = project.parse(declare(tmp_path, v4(extra=f'doc_engine = "{engine}"')))
+    found = project.parse(declare(tmp_path, v4(doc_engine=engine)))
     assert found.doc_engine == engine
 
 
@@ -409,7 +421,7 @@ def test_an_unknown_engine_is_refused_not_ignored(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
-    path = declare(tmp_path, v4(extra='doc_engine = "doxy"'))
+    path = declare(tmp_path, v4(doc_engine="doxy"))
     with pytest.raises(ValueError, match="DISC-PROJECT-007"):
         project.parse(path)
 
@@ -419,7 +431,7 @@ def test_doxygen_narrows_nothing(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
-    found = project.parse(declare(tmp_path, v4(extra='doc_engine = "doxygen"')))
+    found = project.parse(declare(tmp_path, v4(doc_engine="doxygen")))
     assert found.narrowed() == ()
 
 
@@ -431,7 +443,7 @@ def test_the_declaration_is_found_from_a_nested_path(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
-    declare(tmp_path, v4(extra='doc_engine = "sphinx"'))
+    declare(tmp_path, v4(doc_engine="sphinx"))
     nested = tmp_path / "src/pkg/domain"
     nested.mkdir(parents=True)
     assert project.load(nested).doc_engine == "sphinx"
@@ -444,7 +456,7 @@ def test_a_nearer_project_without_the_table_blocks_parent_inheritance(
 
     @param tmp_path parent fixture containing a nested component checkout
     """
-    declare(tmp_path, v4(extra='doc_engine = "doxygen"'))
+    declare(tmp_path, v4(doc_engine="doxygen"))
     component = tmp_path / "component"
     component.mkdir()
     declare(component, '[project]\nname="component"\n')
@@ -474,7 +486,7 @@ def test_the_nearest_project_may_be_named_explicitly(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
-    local = declare(tmp_path, v4(extra='doc_engine = "sphinx"'))
+    local = declare(tmp_path, v4(doc_engine="sphinx"))
     source = tmp_path / "src"
     source.mkdir()
     assert project.load(source, local).doc_engine == "sphinx"

@@ -33,6 +33,7 @@ contract_conformance = "contract-conformance.json"
 operational_model = "operational-model.json"
 security_model = "security-model.json"
 adversarial_review = "adversarial-review.json"
+doc_engine = "none"
 adapter_boundaries = [
     "src/pkg/adapters/clock",
     "src/pkg/adapters/files",

@@ -46,7 +46,7 @@ contract_conformance = "contract-conformance.json" # implementations and test ev
 operational_model = "operational-model.json" # lifecycle, budgets, outcomes, platforms
 security_model = "security-model.json" # local trust boundaries and data handling
 adversarial_review = "adversarial-review.json" # content-bound semantic acceptance
-doc_engine = "doxygen"             # doxygen | sphinx | none.  Absent => none.
+doc_engine = "doxygen"             # doxygen | sphinx | none. Required explicitly.
 pedagogical_full_projection = false
 adapter_boundaries = [
     "src/package/adapters/http",

@@ -16,7 +16,7 @@ decay: none
 
 **A proxy cannot decide its parent semantic rule.** Passing its proposition establishes only the stated syntax or behavior and leaves the printed residual. `rule-level witnessed` is deliberately weaker than v4's target: the inherited matrix proves that some strategy rejected a case for that rule, but cannot yet attribute the rejection to one exact strategy.
 
-4 of 176 binding rules lack an available declared strategy. 71 of 166 rules with automated strategies have inherited rule-level rejection evidence. 163 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
+2 of 176 binding rules lack an available declared strategy. 73 of 166 rules with automated strategies have inherited rule-level rejection evidence. 162 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
 
 ## Modules
 
@@ -34,7 +34,7 @@ decay: none
 | [law/ARCH-PORTS](law/ARCH-PORTS.md) | law | 841 | 6 | new port, boundary contract, adapter substitute, fake adapter, fault schedule, contract suite |
 | [law/DEP](law/DEP.md) | law | 2111 | 14 | add a dependency, third party library, lockfile, environment, code generation, generated file |
 | [law/DIAG](law/DIAG.md) | law | 2634 | 16 | exception, traceback, logging, error message, error code, correlation id |
-| [law/DOC](law/DOC.md) | law | 2367 | 14 | docstring, documentation comment, doxygen, @param, @return, document this function |
+| [law/DOC](law/DOC.md) | law | 2392 | 14 | docstring, documentation comment, doxygen, @param, @return, document this function |
 | [law/EFCT](law/EFCT.md) | law | 2408 | 16 | write a file, mutation, state machine, transaction, rollback, dry run |
 | [law/ERR](law/ERR.md) | law | 2629 | 16 | raise, except, Result, error type, exception hierarchy, validation |
 | [law/EVID](law/EVID.md) | law | 1288 | 8 | why is this a rule, verification strategy, mechanism, proxy, residual, discrimination |
@@ -155,13 +155,13 @@ decay: none
 | `DOC-005` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:doxygen; it does not establis… | none | Docstrings are parsed as documentation, not text |
 | `DOC-006` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:ruff:D205; it does not establ… | none | A brief statement comes first |
 | `DOC-007` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:doc_coverage; it does not es… | none | Every parameter, result and raised exception is documented |
-| `DOC-008` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:doc_style; it does not estab… | none | Types are not restated in prose |
+| `DOC-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing does not detect every custom, qualified, aliased, natural-language, or differently form… | none | Types are not restated in prose |
 | `DOC-009` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:doc_style; it does not estab… | none | Documentation states the contract, not the mechanism |
 | `DOC-010` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:doxygen; it does not establis… | `V3E-004` | A Doxygen run produces no warnings |
 | `DOC-011` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:doxygen; it does not establis… | none | The documentation check generates output |
 | `DOC-012` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:generated_provenance; it doe… | none | Generated documentation is not committed |
 | `DOC-013` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Prefer one sentence that earns its place |
-| `DOC-014` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:doc_coverage; it does not es… | `V3E-001` | A project declares which engine reads its documentation |
+| `DOC-014` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | A declared engine can still be misconfigured, absent from the gate environment, or unable to pa… | `V3E-001` | A project declares which engine reads its documentation |
 
 ### law/EFCT
 

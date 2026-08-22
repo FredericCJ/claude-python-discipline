@@ -1,8 +1,9 @@
 """Every element carries a documentation comment, including the ones with no docstring slot.
 
 Enforces DOC-001 (modules, classes, callables), DOC-002 (module constants, class
-attributes, dataclass fields, enum members) and DOC-003 (checked in the ordinary
-gate, not in a documentation job).
+attributes, dataclass fields, enum members), DOC-007 (Doxygen parameter/result
+records), and DOC-014 (the engine selection is explicit). DOC-003 is the separate
+gate obligation that schedules this mechanism outside a documentation-build job.
 
 The division of labour matters. ruff's D1 rules see docstrings and nothing else;
 Doxygen sees both forms but only runs where it is installed. This check is the
@@ -19,7 +20,7 @@ from typing import TYPE_CHECKING
 from . import Finding, ModuleCheck, main
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Iterator, Sequence
     from pathlib import Path
 
 ## Names that carry no contract of their own and are documented by their owner.
@@ -41,11 +42,33 @@ class DocCoverageCheck(ModuleCheck):
     ## Invoked as `python -m checks.doc_coverage`.
     name = "doc_coverage"
     ## The law/DOC rules this check decides.
-    ## Narrowed to what this check can actually REPORT. DOC-003
-    ## were named here and never emitted, so they counted as `mechanized` while
-    ## being decided by nothing -- and this module's own docstring said so in
-    ## prose. `V080` rises as a result, which is the true number.
-    rules = ("DOC-001", "DOC-002", "DOC-007")
+    ## DOC-003 belongs to the gate that schedules this mechanism; the remaining
+    ## ids are predicates this class itself can report.
+    rules = ("DOC-001", "DOC-002", "DOC-007", "DOC-014")
+
+    def run(self, paths: Sequence[Path]) -> list[Finding]:
+        """Report an undeclared engine once, then inspect documentation content.
+
+        @param paths project source files or roots
+        @return declaration finding followed by element findings
+        """
+        findings = super().run(paths)
+        if self.declaration.doc_engine_declared or not paths:
+            return findings
+        subject = self.declaration.source or paths[0]
+        if subject.is_dir():
+            subject /= "pyproject.toml"
+        return [
+            Finding(
+                "DOC-014", subject, 1,
+                "project declares no documentation engine",
+                "Set doc_engine explicitly to doxygen, sphinx, or none in "
+                "[tool.agent-discipline]. An implicit default can silently "
+                "deactivate engine-specific checks.",
+                diagnostic_id="DOC_ENGINE_UNDECLARED",
+            ),
+            *findings,
+        ]
 
     def visit_module(self, tree: ast.Module, path: Path, _layer: str) -> Iterator[Finding]:
         """Yield one finding per undocumented element in `tree`.
@@ -211,9 +234,9 @@ def _parameter_names(node: ast.FunctionDef | ast.AsyncFunctionDef) -> Iterator[s
     for arg in (*args.posonlyargs, *args.args, *args.kwonlyargs):
         if arg.arg not in {"self", "cls"}:
             yield arg.arg
-    for arg in (args.vararg, args.kwarg):
-        if arg is not None:
-            yield arg.arg
+    for variadic in (args.vararg, args.kwarg):
+        if variadic is not None:
+            yield variadic.arg
 
 
 def _returns_a_value(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
