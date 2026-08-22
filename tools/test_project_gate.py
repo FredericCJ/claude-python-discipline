@@ -130,7 +130,11 @@ def _configured_tool_project(tmp_path: Path) -> Path:
             "typeCheckingMode = 'strict'\n"
             "include = ['src']\n"
             "\n[tool.pytest.ini_options]\n"
-            "testpaths = ['tests']\n",
+            "testpaths = ['tests']\n"
+            "\n[tool.agent-discipline-gate]\n"
+            "import_contracts = 'importlinter.toml'\n"
+            "doxyfile = 'Doxyfile'\n"
+            "documentation_root = 'docs'\n",
         )
     tests = root / "tests"
     tests.mkdir(exist_ok=True)
@@ -154,9 +158,14 @@ def _configured_tool_project(tmp_path: Path) -> Path:
             '{"summary":{"filesAnalyzed":26,"errorCount":0}}',
             "src",
         ),
+        (
+            project_gate.IMPORT_CONTRACTS_STEP,
+            "import contracts: 9 kept, 0 broken\n",
+            "src",
+        ),
         (project_gate.PYTEST_STEP, "1 passed in 0.01s\n", "tests"),
     ],
-    ids=("ruff", "mypy", "pyright", "pytest"),
+    ids=("ruff", "mypy", "pyright", "import-contracts", "pytest"),
 )
 def test_external_adapters_bind_config_and_non_empty_targets(
     tmp_path: Path,
@@ -198,7 +207,7 @@ def test_external_adapters_bind_config_and_non_empty_targets(
     assert result.subjects > 0
     assert result.tool == f"{adapter.distribution} test"
     assert result.configuration[0].path == "pyproject.toml"
-    assert str(root / "pyproject.toml") in commands[0].command
+    assert any(str(root) in argument for argument in commands[0].command)
     assert target in commands[0].command
 
 
@@ -251,3 +260,131 @@ def test_pytest_all_skipped_report_is_not_green(
 
     assert result.status is project_gate.Status.FAIL
     assert result.diagnostic_id == "GATE-PYTEST-004_NO_EXECUTION"
+
+
+def _write_doxyfile(root: Path, source: str = "src") -> None:
+    """Write the minimal Doxygen posture the adapter consumes.
+
+    @param root configured repository root
+    @param source INPUT value
+    """
+    (root / "Doxyfile").write_text(
+        f"INPUT = {source}\n"
+        "FILE_PATTERNS = *.py\n"
+        "WARN_AS_ERROR = FAIL_ON_WARNINGS\n"
+        "GENERATE_HTML = YES\n",
+        encoding="utf-8",
+    )
+
+
+def test_explicit_none_documentation_is_validly_inapplicable(tmp_path: Path) -> None:
+    """Only an explicit none declaration can remove the generation step."""
+    root = _configured_tool_project(tmp_path)
+    project_file = root / "pyproject.toml"
+    project_file.write_text(
+        project_file.read_text(encoding="utf-8").replace(
+            'doc_engine = "doxygen"',
+            'doc_engine = "none"',
+        ),
+        encoding="utf-8",
+    )
+
+    result = project_gate.run(
+        root,
+        steps=(project_gate.DocumentationAdapter(),),
+    ).outcomes[1]
+
+    assert result.status is project_gate.Status.NOT_APPLICABLE
+    assert result.green
+    assert not result.required
+
+
+def test_missing_doxyfile_is_a_configuration_failure(tmp_path: Path) -> None:
+    """A declared Doxygen engine cannot pass without its local configuration."""
+    root = _configured_tool_project(tmp_path)
+
+    result = project_gate.run(
+        root,
+        steps=(project_gate.DocumentationAdapter(),),
+    ).outcomes[1]
+
+    assert result.status is project_gate.Status.FAIL
+    assert result.diagnostic_id == "GATE-DOCUMENTATION-001_CONFIGURATION"
+    assert "Doxyfile" in result.summary
+
+
+def test_doxygen_input_cannot_escape_to_a_parent(tmp_path: Path) -> None:
+    """Documentation generation cannot borrow an external repository tree."""
+    root = _configured_tool_project(tmp_path)
+    _write_doxyfile(root, "../peer")
+
+    result = project_gate.run(
+        root,
+        steps=(project_gate.DocumentationAdapter(),),
+    ).outcomes[1]
+
+    assert result.status is project_gate.Status.FAIL
+    assert result.diagnostic_id == "GATE-DOCUMENTATION-001_CONFIGURATION"
+    assert "escapes" in result.summary
+
+
+def test_doxygen_pass_requires_generated_source_pages(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A clean process counts only after output corroborates every Python input."""
+    root = _configured_tool_project(tmp_path)
+    _write_doxyfile(root)
+
+    def execute(
+        _executable: str,
+        plan: project_gate.DoxygenPlan,
+        _context: project_gate.GateContext,
+    ) -> project_gate.DocumentationExecution:
+        """Return one generated page per probed source file.
+
+        @param _executable resolved native tool
+        @param plan configuration-probed subject set
+        @param _context governed repository
+        @return successful corroborated generation
+        """
+        process = project_gate.CommandExecution(0, "", 1)
+        return project_gate.DocumentationExecution(process, plan.subjects)
+
+    monkeypatch.setattr(project_gate, "_native_executable", lambda _name: "doxygen")
+    monkeypatch.setattr(project_gate, "_native_version", lambda _path: "1.10.0")
+    monkeypatch.setattr(project_gate, "_execute_doxygen", execute)
+
+    result = project_gate.run(
+        root,
+        steps=(project_gate.DocumentationAdapter(),),
+    ).outcomes[1]
+
+    assert result.status is project_gate.Status.PASS
+    assert result.subjects >= 20
+    assert result.tool == "doxygen 1.10.0"
+
+
+def test_doxygen_zero_output_is_not_green(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Doxygen returning zero after filtering every file is a vacuous failure."""
+    root = _configured_tool_project(tmp_path)
+    _write_doxyfile(root)
+    monkeypatch.setattr(project_gate, "_native_executable", lambda _name: "doxygen")
+    monkeypatch.setattr(project_gate, "_native_version", lambda _path: "1.10.0")
+    monkeypatch.setattr(
+        project_gate,
+        "_execute_doxygen",
+        lambda _executable, _plan, _context: project_gate.DocumentationExecution(
+            project_gate.CommandExecution(0, "", 1),
+            0,
+        ),
+    )
+
+    result = project_gate.run(
+        root,
+        steps=(project_gate.DocumentationAdapter(),),
+    ).outcomes[1]
+
+    assert result.status is project_gate.Status.FAIL
+    assert result.diagnostic_id == "GATE-DOCUMENTATION-004_NO_OUTPUT"

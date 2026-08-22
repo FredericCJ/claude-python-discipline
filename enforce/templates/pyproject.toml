@@ -85,6 +85,18 @@ shell = ["src/package/__init__.py", "src/package/shell"]
 import_name = "httpx"
 owner = "src/package/adapters/http"
 
+# --------------------------------------------------------------- project gate
+#
+# Files consumed by external mechanisms are named explicitly. The gate never
+# searches an ancestor or sibling for these and refuses any path that escapes
+# this repository. ``documentation_root`` is consulted only for Sphinx; keeping
+# it present makes a later engine change explicit rather than discovery-driven.
+
+[tool.agent-discipline-gate]
+import_contracts = "importlinter.toml"
+doxyfile = "Doxyfile"
+documentation_root = "docs"
+
 # ---------------------------------------------------------------------------- ruff
 
 [tool.ruff]

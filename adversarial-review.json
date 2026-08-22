@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "review_id": "v4_security_slice_adversarial_acceptance",
-  "reviewed_commit": "9343194bb23f7098720accaf6e2a82990bfcd263",
+  "reviewed_commit": "4a4ce4dff00f453a15b5ad4b140f820ff7f06b4a",
   "scope": {
     "algorithm": "sha256",
-    "digest": "sha256:a1662496459e56f4b02020e565103acf2e7e9abc7faa7dfd3dc0591c613cfd1d",
+    "digest": "sha256:34d4a746906705d355c04904eff7b64b14196afe9b40f750c0dfff03d5572c46",
     "file_count": 281,
     "categories": [
       "project_declaration",
@@ -150,6 +150,17 @@
       "evidence": "tools/test_toolchain_gates.py::test_a_declared_nonstandard_source_root_is_used",
       "owner": "import_contract_gate_maintainer",
       "review_trigger": "Review again whenever source-root declaration, editable installation, namespace package discovery, or import-linter graph construction changes."
+    },
+    {
+      "id": "documentation_exit_zero_without_product",
+      "category": "test_oracles",
+      "severity": "high",
+      "statement": "A documentation subprocess can exit zero after its configured inputs are filtered out, while an absent or implicitly narrowed engine can suppress the subprocess entirely.",
+      "disposition": "resolved",
+      "resolution": "Require an explicit engine declaration, bind Doxygen INPUT to the exact declared source roots and Sphinx to one local documentation root, enforce warning-as-error posture, run into ephemeral output, and count generated pages before accepting the process exit status.",
+      "evidence": "tools/test_project_gate.py::test_doxygen_zero_output_is_not_green",
+      "owner": "documentation_gate_maintainer",
+      "review_trigger": "Review again whenever an engine, input grammar, output generator, warning policy, or documentation source-root convention changes."
     },
     {
       "id": "release_gate_debt",

@@ -21,6 +21,8 @@ import importlib.metadata
 import json
 import platform
 import re
+import shlex
+import shutil
 import subprocess  # ruff: ignore[suspicious-subprocess-import]
 import sys
 import tempfile
@@ -531,6 +533,28 @@ class Evaluation:
     output: str = ""
 
 
+@dataclass(frozen=True, slots=True)
+class DoxygenPlan:
+    """Configuration-probed Doxygen build inputs."""
+
+    ## Local Doxyfile.
+    configuration_file: Path
+    ## Project table and Doxyfile bindings.
+    configuration: tuple[ConfigurationUse, ...]
+    ## Declared Python source count expected to generate source pages.
+    subjects: int
+
+
+@dataclass(frozen=True, slots=True)
+class DocumentationExecution:
+    """Documentation process observation plus generated page count."""
+
+    ## Bounded process observation.
+    process: CommandExecution
+    ## Generated HTML pages proving the tool did more than parse configuration.
+    pages: int
+
+
 def _probe_error(field: str, detail: str) -> ConfigurationProbeError:
     """Build a typed configuration refusal without raising inside parsing loops.
 
@@ -621,6 +645,46 @@ def _project_configuration(
         sha256=context.declaration_use.sha256,
         fields=tuple(fields),
     )
+
+
+def _relative_configuration_file(
+    context: GateContext,
+    value: object,
+    field: str,
+    consumed_fields: Sequence[str],
+) -> tuple[Path, ConfigurationUse]:
+    """Resolve one configured file without ancestor or sibling discovery.
+
+    @param context exact governed repository
+    @param value decoded path value
+    @param field dotted field carrying the path
+    @param consumed_fields fields read from the target file
+    @return absolute file and content-bound use record
+    @throws ConfigurationProbeError when the value escapes or is absent
+    """
+    if not isinstance(value, str) or not value.strip():
+        raise _probe_error(field, "expected a non-empty repository-relative file")
+    raw = Path(value)
+    candidate = (context.root / raw).resolve()
+    if raw.is_absolute() or not candidate.is_relative_to(context.root):
+        raise _probe_error(field, f"file {value!r} escapes the governed repository")
+    if not candidate.is_file():
+        raise _probe_error(field, f"file {value!r} does not exist")
+    use = ConfigurationUse(
+        path=candidate.relative_to(context.root).as_posix(),
+        sha256=_digest(candidate),
+        fields=tuple(consumed_fields),
+    )
+    return candidate, use
+
+
+def _gate_table(context: GateContext) -> Mapping[str, object]:
+    """Required project-gate configuration distinct from the doctrine declaration.
+
+    @param context decoded exact-root project file
+    @return ``tool.agent-discipline-gate`` table
+    """
+    return _table(context.pyproject, ("tool", "agent-discipline-gate"))
 
 
 def _require_value(
@@ -791,6 +855,539 @@ def _prepare_pytest(context: GateContext) -> PreparedCommand:
         failure_diagnostic="GATE-PYTEST-003_FAILURE",
         subject_label="test files",
     )
+
+
+def _import_root_present(
+    context: GateContext, package: str, source_roots: Sequence[str], field: str,
+) -> None:
+    """Require an import-linter root package to exist under a declared source root.
+
+    @param context exact governed repository
+    @param package dotted root-package name
+    @param source_roots explicit local import roots
+    @param field configuration field carrying the package
+    @throws ConfigurationProbeError when no local package matches
+    """
+    relative = Path(*package.split("."))
+    if any(
+        ((context.root / source / relative).is_dir()
+         or (context.root / source / relative).with_suffix(".py").is_file())
+        for source in source_roots
+    ):
+        return
+    raise _probe_error(
+        field,
+        f"root package {package!r} is absent from declared source roots {source_roots}",
+    )
+
+
+def _prepare_import_contracts(context: GateContext) -> PreparedCommand:
+    """Bind import-linter to its declared config, contracts, and source roots.
+
+    @param context exact governed repository
+    @return explicit portable wrapper command
+    """
+    gate = _gate_table(context)
+    config, config_use = _relative_configuration_file(
+        context,
+        gate.get("import_contracts"),
+        "tool.agent-discipline-gate.import_contracts",
+        ("tool.importlinter.root_packages", "tool.importlinter.contracts"),
+    )
+    try:
+        document = cast(
+            "Mapping[str, object]",
+            tomllib.loads(config.read_text(encoding="utf-8")),
+        )
+    except (OSError, tomllib.TOMLDecodeError) as problem:
+        raise _probe_error(config_use.path, f"cannot parse TOML: {problem}") from problem
+    table = _table(document, ("tool", "importlinter"))
+    packages = _string_list(
+        table.get("root_packages"),
+        "tool.importlinter.root_packages",
+    )
+    contracts_field = "tool.importlinter.contracts"
+    contracts = table.get("contracts")
+    if not isinstance(contracts, list) or not contracts:
+        raise _probe_error(
+            contracts_field,
+            "expected one or more contract tables",
+        )
+    if not all(isinstance(contract, Mapping) for contract in contracts):
+        raise _probe_error(contracts_field, "every contract must be a table")
+    source_roots = _declared_source_targets(context)
+    for package in packages:
+        _import_root_present(
+            context,
+            package,
+            source_roots,
+            "tool.importlinter.root_packages",
+        )
+    gate_use = _project_configuration(
+        context,
+        ("tool.agent-discipline-gate.import_contracts", "tool.agent-discipline.source_roots"),
+    )
+    source_arguments = tuple(
+        item
+        for source in source_roots
+        for item in ("--source-root", source)
+    )
+    return PreparedCommand(
+        command=(
+            sys.executable,
+            str(BUNDLE_ROOT / "tools" / "import_gate.py"),
+            "--root",
+            str(context.root),
+            "--config",
+            config.relative_to(context.root).as_posix(),
+            "--minimum",
+            str(len(contracts)),
+            *source_arguments,
+        ),
+        configuration=(gate_use, config_use),
+        subjects=len(contracts),
+        failure_diagnostic="GATE-IMPORT-CONTRACTS-003_BROKEN",
+        subject_label="import contracts",
+    )
+
+
+## Doxygen assignments consumed by the gate are deliberately narrow and exact.
+_DOXYGEN_ASSIGNMENT: Final = re.compile(
+    r"^\s*([A-Z][A-Z0-9_]*)\s*=\s*(.*?)\s*$",
+    re.MULTILINE,
+)
+
+
+def _doxygen_values(text: str, key: str, field: str) -> tuple[str, ...]:
+    """Read one single-line Doxygen assignment.
+
+    @param text Doxyfile contents
+    @param key assignment name
+    @param field diagnostic field name
+    @return shell-like tokens after the equals sign
+    @throws ConfigurationProbeError when absent, repeated, or malformed
+    """
+    matches = [match.group(2) for match in _DOXYGEN_ASSIGNMENT.finditer(text)
+               if match.group(1) == key]
+    if len(matches) != 1:
+        raise _probe_error(field, f"expected exactly one {key} assignment")
+    try:
+        values = tuple(shlex.split(matches[0], comments=True, posix=True))
+    except ValueError as problem:
+        raise _probe_error(field, f"cannot parse {key}: {problem}") from problem
+    if not values:
+        raise _probe_error(field, f"{key} has no value")
+    return values
+
+
+def _prepare_doxygen(context: GateContext) -> DoxygenPlan:
+    """Bind Doxygen to the declared source roots and warning posture.
+
+    @param context exact governed repository
+    @return configuration-probed build plan
+    """
+    gate = _gate_table(context)
+    doxyfile, doxyfile_use = _relative_configuration_file(
+        context,
+        gate.get("doxyfile"),
+        "tool.agent-discipline-gate.doxyfile",
+        ("INPUT", "FILE_PATTERNS", "WARN_AS_ERROR", "GENERATE_HTML"),
+    )
+    text = doxyfile.read_text(encoding="utf-8")
+    input_field = "Doxyfile.INPUT"
+    inputs, subjects = _local_targets(
+        context,
+        _doxygen_values(text, "INPUT", input_field),
+        input_field,
+    )
+    declared = _declared_source_targets(context)
+    if set(inputs) != set(declared):
+        raise _probe_error(
+            input_field,
+            f"expected declared source roots {declared}, found {inputs}",
+        )
+    patterns_field = "Doxyfile.FILE_PATTERNS"
+    patterns = _doxygen_values(text, "FILE_PATTERNS", patterns_field)
+    if "*.py" not in patterns:
+        raise _probe_error(patterns_field, "*.py is required")
+    warning_field = "Doxyfile.WARN_AS_ERROR"
+    warnings = _doxygen_values(text, "WARN_AS_ERROR", warning_field)
+    if warnings != ("FAIL_ON_WARNINGS",):
+        raise _probe_error(warning_field, "expected FAIL_ON_WARNINGS")
+    html_field = "Doxyfile.GENERATE_HTML"
+    html = _doxygen_values(text, "GENERATE_HTML", html_field)
+    if html != ("YES",):
+        raise _probe_error(html_field, "expected YES")
+    gate_use = _project_configuration(
+        context,
+        (
+            "tool.agent-discipline.doc_engine",
+            "tool.agent-discipline.source_roots",
+            "tool.agent-discipline-gate.doxyfile",
+        ),
+    )
+    return DoxygenPlan(doxyfile, (gate_use, doxyfile_use), subjects)
+
+
+def _native_executable(name: str) -> str | None:
+    """Resolve one native tool on the active environment path.
+
+    @param name executable basename
+    @return absolute or launchable path, or None
+    """
+    return shutil.which(name)
+
+
+def _native_version(executable: str) -> str:
+    """Obtain a bounded native-tool version string.
+
+    @param executable resolved tool path
+    @return first non-empty version line
+    @throws CommandExecutionError when the probe fails
+    """
+    try:
+        finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
+            (executable, "--version"),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+            timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired) as problem:
+        raise CommandExecutionError(str(problem)) from problem
+    if finished.returncode != 0:
+        raise CommandExecutionError(_tail(finished.stdout + finished.stderr))
+    return _last_line(finished.stdout + finished.stderr)
+
+
+def _execute_doxygen(
+    executable: str, plan: DoxygenPlan, context: GateContext,
+) -> DocumentationExecution:
+    """Run Doxygen into the ephemeral workspace and count generated source pages.
+
+    @param executable resolved native tool
+    @param plan configuration-probed Doxygen inputs
+    @param context exact governed repository and scratch directory
+    @return process observation and generated page count
+    @throws CommandExecutionError when the process cannot complete
+    """
+    output = context.scratch / "doxygen"
+    configuration = (
+        plan.configuration_file.read_text(encoding="utf-8")
+        + f"\nOUTPUT_DIRECTORY = {output.as_posix()}\n"
+    )
+    started = time.perf_counter()
+    try:
+        finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
+            (executable, "-"),
+            cwd=context.root,
+            input=configuration,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+            timeout=600,
+        )
+    except (OSError, subprocess.TimeoutExpired) as problem:
+        raise CommandExecutionError(str(problem)) from problem
+    duration = round((time.perf_counter() - started) * 1000)
+    process = CommandExecution(
+        finished.returncode,
+        finished.stdout + finished.stderr,
+        duration,
+    )
+    return DocumentationExecution(process, len(list(output.rglob("*_source.html"))))
+
+
+def _documentation_configuration_failure(
+    context: GateContext, rules: tuple[str, ...], problem: ConfigurationProbeError,
+) -> StepResult:
+    """Render a documentation configuration-load failure.
+
+    @param context exact governed repository
+    @param rules documentation generation rules
+    @param problem field-specific refusal
+    @return red result
+    """
+    use = _project_configuration(context, (problem.field,))
+    return StepResult(
+        step_id="documentation",
+        rules=rules,
+        status=Status.FAIL,
+        required=True,
+        diagnostic_id="GATE-DOCUMENTATION-001_CONFIGURATION",
+        summary=str(problem),
+        configuration=(use,),
+    )
+
+
+def _run_doxygen_documentation(
+    context: GateContext, rules: tuple[str, ...],
+) -> StepResult:
+    """Run the configured Doxygen gate with version and output probes.
+
+    @param context exact governed repository
+    @param rules documentation generation rules
+    @return explicit Doxygen outcome
+    """
+    try:
+        plan = _prepare_doxygen(context)
+    except ConfigurationProbeError as problem:
+        return _documentation_configuration_failure(context, rules, problem)
+    executable = _native_executable("doxygen")
+    if executable is None:
+        return StepResult(
+            step_id="documentation",
+            rules=rules,
+            status=Status.UNSUPPORTED,
+            required=True,
+            diagnostic_id="GATE-DOCUMENTATION-002_TOOL",
+            summary="doc_engine is doxygen but no doxygen executable is available",
+            configuration=plan.configuration,
+            subjects=plan.subjects,
+            supported_platforms=("Windows", "Linux"),
+        )
+    version = "unknown"
+    try:
+        version = _native_version(executable)
+        execution = _execute_doxygen(executable, plan, context)
+    except CommandExecutionError as problem:
+        return StepResult(
+            step_id="documentation",
+            rules=rules,
+            status=Status.FAIL,
+            required=True,
+            diagnostic_id="GATE-DOCUMENTATION-006_EXECUTION",
+            summary=f"doxygen did not complete: {problem}",
+            command=(executable, "-"),
+            configuration=plan.configuration,
+            subjects=plan.subjects,
+            tool=f"doxygen {version}",
+        )
+    process = execution.process
+    if process.returncode != 0:
+        return StepResult(
+            step_id="documentation",
+            rules=rules,
+            status=Status.FAIL,
+            required=True,
+            diagnostic_id="GATE-DOCUMENTATION-003_BUILD",
+            summary="Doxygen reported warnings or generation failure",
+            command=(executable, "-"),
+            configuration=plan.configuration,
+            subjects=plan.subjects,
+            tool=f"doxygen {version}",
+            duration_ms=process.duration_ms,
+            output=_tail(process.output),
+        )
+    if execution.pages < plan.subjects:
+        return StepResult(
+            step_id="documentation",
+            rules=rules,
+            status=Status.FAIL,
+            required=True,
+            diagnostic_id="GATE-DOCUMENTATION-004_NO_OUTPUT",
+            summary=(
+                f"Doxygen generated {execution.pages} source page(s) for "
+                f"{plan.subjects} configured Python file(s)"
+            ),
+            command=(executable, "-"),
+            configuration=plan.configuration,
+            subjects=plan.subjects,
+            tool=f"doxygen {version}",
+            duration_ms=process.duration_ms,
+            output=_tail(process.output),
+        )
+    return StepResult(
+        step_id="documentation",
+        rules=rules,
+        status=Status.PASS,
+        required=True,
+        diagnostic_id=None,
+        summary=f"Doxygen generated {execution.pages} source page(s) without warnings",
+        command=(executable, "-"),
+        configuration=plan.configuration,
+        subjects=plan.subjects,
+        tool=f"doxygen {version}",
+        duration_ms=process.duration_ms,
+    )
+
+
+def _prepare_sphinx(context: GateContext) -> tuple[PreparedCommand, Path]:
+    """Bind Sphinx to one local source directory and configuration file.
+
+    @param context exact governed repository
+    @return prepared command and ephemeral output directory
+    """
+    gate = _gate_table(context)
+    field = "tool.agent-discipline-gate.documentation_root"
+    roots, _python_subjects = _local_targets(
+        context,
+        _string_list(gate.get("documentation_root"), field),
+        field,
+    )
+    if len(roots) != 1:
+        raise _probe_error(field, "Sphinx requires exactly one documentation root")
+    source = context.root / roots[0]
+    config = source / "conf.py"
+    if not config.is_file():
+        raise _probe_error(field, f"{roots[0]}/conf.py does not exist")
+    authored = sum(
+        1
+        for suffix in ("*.rst", "*.md")
+        for path in source.rglob(suffix)
+        if path.is_file()
+    )
+    if authored == 0:
+        raise _probe_error(field, "documentation root contains no .rst or .md source")
+    output = context.scratch / "sphinx"
+    gate_use = _project_configuration(
+        context,
+        ("tool.agent-discipline.doc_engine", field),
+    )
+    config_use = ConfigurationUse(
+        path=config.relative_to(context.root).as_posix(),
+        sha256=_digest(config),
+        fields=("Sphinx configuration module",),
+    )
+    command = PreparedCommand(
+        command=(
+            sys.executable,
+            "-m",
+            "sphinx",
+            "-W",
+            "--keep-going",
+            "-b",
+            "html",
+            roots[0],
+            str(output),
+        ),
+        configuration=(gate_use, config_use),
+        subjects=authored,
+        failure_diagnostic="GATE-DOCUMENTATION-003_BUILD",
+        subject_label="documentation sources",
+    )
+    return command, output
+
+
+def _run_sphinx_documentation(
+    context: GateContext, rules: tuple[str, ...],
+) -> StepResult:
+    """Run the configured Sphinx gate and require generated HTML.
+
+    @param context exact governed repository
+    @param rules documentation generation rules
+    @return explicit Sphinx outcome
+    """
+    try:
+        command, output = _prepare_sphinx(context)
+    except ConfigurationProbeError as problem:
+        return _documentation_configuration_failure(context, rules, problem)
+    try:
+        version = _distribution_version("Sphinx")
+    except importlib.metadata.PackageNotFoundError:
+        return StepResult(
+            step_id="documentation",
+            rules=rules,
+            status=Status.UNSUPPORTED,
+            required=True,
+            diagnostic_id="GATE-DOCUMENTATION-002_TOOL",
+            summary="doc_engine is sphinx but the Sphinx distribution is unavailable",
+            command=command.command,
+            configuration=command.configuration,
+            subjects=command.subjects,
+        )
+    try:
+        execution = _execute(command, context.root)
+    except CommandExecutionError as problem:
+        return StepResult(
+            step_id="documentation",
+            rules=rules,
+            status=Status.FAIL,
+            required=True,
+            diagnostic_id="GATE-DOCUMENTATION-006_EXECUTION",
+            summary=f"Sphinx did not complete: {problem}",
+            command=command.command,
+            configuration=command.configuration,
+            subjects=command.subjects,
+            tool=f"Sphinx {version}",
+        )
+    pages = len(list(output.rglob("*.html")))
+    if execution.returncode != 0 or pages == 0:
+        diagnostic = (
+            command.failure_diagnostic
+            if execution.returncode != 0
+            else "GATE-DOCUMENTATION-004_NO_OUTPUT"
+        )
+        return StepResult(
+            step_id="documentation",
+            rules=rules,
+            status=Status.FAIL,
+            required=True,
+            diagnostic_id=diagnostic,
+            summary=f"Sphinx returned {execution.returncode} and generated {pages} HTML page(s)",
+            command=command.command,
+            configuration=command.configuration,
+            subjects=command.subjects,
+            tool=f"Sphinx {version}",
+            duration_ms=execution.duration_ms,
+            output=_tail(execution.output),
+        )
+    return StepResult(
+        step_id="documentation",
+        rules=rules,
+        status=Status.PASS,
+        required=True,
+        diagnostic_id=None,
+        summary=f"Sphinx generated {pages} HTML page(s) without warnings",
+        command=command.command,
+        configuration=command.configuration,
+        subjects=command.subjects,
+        tool=f"Sphinx {version}",
+        duration_ms=execution.duration_ms,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class DocumentationAdapter:
+    """Capability-aware adapter for none, Doxygen, and Sphinx projects."""
+
+    ## Stable report identity.
+    step_id: str = "documentation"
+    ## Doxygen/Sphinx generation predicates named by binding rules.
+    rules: tuple[str, ...] = ("DOC-005", "DOC-010", "DOC-011")
+
+    def __call__(self, context: GateContext) -> StepResult:
+        """Apply the declared engine without narrowing silently.
+
+        @param context exact governed repository
+        @return explicit build, inapplicability, or support outcome
+        """
+        if context.declaration.doc_engine == "none":
+            return StepResult(
+                step_id=self.step_id,
+                rules=self.rules,
+                status=Status.NOT_APPLICABLE,
+                required=False,
+                diagnostic_id="GATE-DOCUMENTATION-000_NOT_APPLICABLE",
+                summary="doc_engine is explicitly none; generated documentation is not required",
+                configuration=(context.declaration_use,),
+            )
+        if platform.system() not in {"Windows", "Linux"}:
+            return StepResult(
+                step_id=self.step_id,
+                rules=self.rules,
+                status=Status.UNSUPPORTED,
+                required=True,
+                diagnostic_id="GATE-DOCUMENTATION-005_PLATFORM",
+                summary=f"documentation builds are not release-supported on {platform.system()}",
+            )
+        if context.declaration.doc_engine == "doxygen":
+            return _run_doxygen_documentation(context, self.rules)
+        return _run_sphinx_documentation(context, self.rules)
 
 
 def _execute(command: PreparedCommand, root: Path) -> CommandExecution:
@@ -1069,6 +1666,11 @@ MYPY_RULES: Final = (
 PYRIGHT_RULES: Final = ("ERR-002", "TYPE-001")
 ## Pytest execution activates the configured timeout, randomization, and socket controls.
 PYTEST_RULES: Final = ("TEST-003", "TEST-017")
+## Import-linter predicates presently named by binding rules.
+IMPORT_CONTRACT_RULES: Final = (
+    "API-004", "ARCH-001", "ARCH-002", "ARCH-003", "DEP-001", "EFCT-001",
+    "EFCT-012",
+)
 
 ## Canonical Ruff adapter.
 RUFF_STEP: Final = ConfiguredToolAdapter(
@@ -1086,6 +1688,14 @@ PYRIGHT_STEP: Final = ConfiguredToolAdapter(
 PYTEST_STEP: Final = ConfiguredToolAdapter(
     "pytest", PYTEST_RULES, "pytest", _prepare_pytest, _pytest_evaluation,
 )
+## Canonical import-linter adapter using the portable API wrapper.
+IMPORT_CONTRACTS_STEP: Final = ConfiguredToolAdapter(
+    "import-contracts",
+    IMPORT_CONTRACT_RULES,
+    "import-linter",
+    _prepare_import_contracts,
+    _ordinary_evaluation,
+)
 
 
 ## The adopter-facing gate grows by adding adapters here, never by local wrappers.
@@ -1094,6 +1704,8 @@ DEFAULT_STEPS: Final[tuple[StepAdapter, ...]] = (
     RUFF_STEP,
     MYPY_STEP,
     PYRIGHT_STEP,
+    IMPORT_CONTRACTS_STEP,
+    DocumentationAdapter(),
     PYTEST_STEP,
 )
 
