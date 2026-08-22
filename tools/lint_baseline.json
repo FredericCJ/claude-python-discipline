@@ -1,8 +1,8 @@
 {
  "generated_by": "tools/lint_gate.py --update-baseline",
  "note": "Ratchet ceiling for gate step 1. lint_gate.py fails when a (file, code) pair appears that is not recorded here, or when the total rises. Move it with `python tools/lint_gate.py --update-baseline --why \"...\"`, never by hand -- the pairs must stay exactly what the tool itself measured. A code in lint_gate.PROTECTED is refused before this file is consulted.",
- "count": 113,
- "why": "Phase 6: 114 -> 113. The unused-function-argument in tools/test_check_env.py went away with the argument; no finding was suppressed.",
+ "count": 97,
+ "why": "v4 generated evidence views remove legacy status rendering and reduce renderer lint debt",
  "pairs": [
   [
    "enforce/checks/__init__.py",
@@ -47,26 +47,6 @@
   [
    "tools/build_graph.py",
    "E501"
-  ],
-  [
-   "tools/build_index.py",
-   "E501"
-  ],
-  [
-   "tools/build_index.py",
-   "FURB171"
-  ],
-  [
-   "tools/build_index.py",
-   "ISC004"
-  ],
-  [
-   "tools/build_index.py",
-   "PLR0914"
-  ],
-  [
-   "tools/build_index.py",
-   "PLR2004"
   ],
   [
    "tools/build_provenance.py",

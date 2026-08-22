@@ -9,8 +9,10 @@ beneficial.
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import re
+import sys
 from collections import Counter
 from dataclasses import dataclass
 from enum import StrEnum
@@ -403,9 +405,7 @@ def _migration(value: object, where: str) -> Migration:
     _exact_fields(record, {"source", "disposition", "guidance"}, where)
     return Migration(
         source=_nonempty(record["source"], f"{where}.source"),
-        disposition=_enum(
-            MigrationDisposition, record["disposition"], f"{where}.disposition"
-        ),
+        disposition=_enum(MigrationDisposition, record["disposition"], f"{where}.disposition"),
         guidance=_nonempty(record["guidance"], f"{where}.guidance"),
     )
 
@@ -541,6 +541,44 @@ def verification_state(
     return state
 
 
+def discrimination_covered(root: Path = REPO_ROOT) -> frozenset[str] | None:
+    """Load the witnessed rule ids from one repository's own mutation matrix.
+
+    The module is imported by path rather than by name. A vendored or synthetic
+    corpus must never receive credit from whichever ``discrimination`` module
+    happens to be importable in the caller's environment. ``None`` means there
+    is no trustworthy matrix; an empty set means a matrix loaded and witnessed
+    no rules.
+
+    @param root repository whose matrix supplies the evidence
+    @return witnessed stable ids, or None when the matrix is absent or malformed
+    """
+    source = root / "enforce" / "discrimination.py"
+    if not source.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("_discipline_discrimination", source)
+    if spec is None or spec.loader is None:
+        return None
+    discrimination = importlib.util.module_from_spec(spec)
+    # ``dataclass(slots=True)`` resolves the defining module during execution.
+    sys.modules[spec.name] = discrimination
+    try:
+        spec.loader.exec_module(discrimination)
+        getter: object = getattr(discrimination, "covered", None)
+        if not callable(getter):
+            return None
+        result: object = getter()
+    except Exception:  # ruff: ignore[blind-except] - authored matrix is input
+        return None
+    finally:
+        sys.modules.pop(spec.name, None)
+    if not isinstance(result, (set, frozenset)) or not all(
+        isinstance(item, str) for item in result
+    ):
+        return None
+    return frozenset(result)
+
+
 def _expected_kind(mechanism: str) -> frozenset[MechanismKind]:
     """Mechanism kinds compatible with one heading tag.
 
@@ -594,8 +632,7 @@ def _strings(value: object, where: str) -> tuple[str, ...]:
     @throws EvidenceParseError when an entry is empty, non-string, or repeated
     """
     values = tuple(
-        _nonempty(item, f"{where}[{index}]")
-        for index, item in enumerate(_sequence(value, where))
+        _nonempty(item, f"{where}[{index}]") for index, item in enumerate(_sequence(value, where))
     )
     if len(values) != len(set(values)):
         _invalid(where, "entries must be unique")

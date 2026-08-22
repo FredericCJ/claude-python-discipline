@@ -12,11 +12,11 @@ decay: none
 
 183 rules across 13 modules. Grep this file for a rule id, then open only the module that owns it.
 
-**Force is a claim; Status is a measurement.** `Force` is what the rule's heading declares. `Status` is what this tree was found to contain when the index was built: `mechanized` -- every named mechanism was found here; `external` -- nothing is missing but a configured tool or a reviewer settles it; `review` -- a person decides it, and no gate will ever report it; `unbuilt` -- a named check or fitness function does not exist; `unmechanized` -- the rule names no mechanism at all. A row marked **(!)** is binding and mechanically undecided: treat it as an obligation, not as something the gate will catch for you.
+**The columns are different claims.** `Force` is the normative obligation. `Verifier` says what strategy is available, never that it passed. `Relation` says whether the observable proposition is the rule itself or only a proxy. `Rejection` records whether the current matrix has watched the rule reject a counterexample. `Platforms`, `Residual`, and `Field` state where the claim is supported, what can remain wrong, and what named adopters observed.
 
-**`mechanized` says a mechanism exists, not that it decides the whole rule.** The measurement is presence on disk; how completely a check covers the sentence above it is a judgement no build can make. `ARCH-012` is the worked example: `check:no_test_branches` is real and runs, and it matches a closed list of test signals, so `if os.environ.get("PYTEST_CURRENT_TEST")` -- the canonical pytest detector -- passes it, as does any indirection through a module constant. Read a `mechanized` row as *something will catch the obvious cases*, and the rule's own text as what you actually owe.
+**A proxy cannot decide its parent semantic rule.** Passing its proposition establishes only the stated syntax or behavior and leaves the printed residual. `rule-level witnessed` is deliberately weaker than v4's target: the inherited matrix proves that some strategy rejected a case for that rule, but cannot yet attribute the rejection to one exact strategy.
 
-14 of 155 binding rules are not mechanically decided. `enforce/ENFORCEMENT.md` names the mechanisms still to build.
+14 of 155 binding rules lack an available declared strategy. 49 of 155 rules with automated strategies have inherited rule-level rejection evidence. 168 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
 
 ## Modules
 
@@ -47,248 +47,248 @@ decay: none
 
 ### law/API
 
-| Rule | Force | Status | Mechanism | Title |
-|---|---|---|---|---|
-| `API-001` | BINDING | `mechanized` | `fitness:test_contract_documented` | A contract states more than a signature |
-| `API-002` | BINDING | `mechanized` | `fitness:test_contract_documented` | The implementation is not the contract |
-| `API-003` | BINDING | `mechanized` | `check:single_wiring_point` | Public operations speak the domain, not the store |
-| `API-004` | BINDING | `external` | `auto:import-linter` | The persistent representation is private |
-| `API-005` | BINDING | `mechanized` | `fitness:test_structured_output` | Structured output is the primary interface |
-| `API-006` | BINDING | `mechanized` | `fitness:test_structured_output` | Human output renders the same result object |
-| `API-007` | BINDING | `mechanized` | `fitness:test_exit_codes` | Exit status is part of the contract |
-| `API-008` | ADVISORY | `unmechanized` | — | The surface is self-describing |
-| `API-009` | BINDING | `mechanized` | `fitness:test_agent_parity` | Automation gets no relaxed validation |
-| `API-010` | BINDING | `mechanized` | `fitness:test_schema_versioned` | Every published payload carries a schema version |
-| `API-011` | ADVISORY | `unmechanized` | — | Error codes and result variants are versioned surface |
-| `API-012` | BINDING | `mechanized` | `fitness:test_migrations` | A format change ships with a migration and its test |
-| `API-013` | ADVISORY | `unmechanized` | — | Compatibility is not inherited from parser tolerance |
-| `API-014` | ADVISORY | `unmechanized` | — | Prefer additive change |
-| `API-015` | ADVISORY | `unmechanized` | — | The delivered artifact is what gets tested |
+| Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
+|---|---|---|---|---|---|---|---|---|
+| `API-001` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_contract_documented;… | none | A contract states more than a signature |
+| `API-002` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_contract_documented;… | none | The implementation is not the contract |
+| `API-003` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:single_wiring_point; it does… | none | Public operations speak the domain, not the store |
+| `API-004` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | none | The persistent representation is private |
+| `API-005` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_structured_output; it… | none | Structured output is the primary interface |
+| `API-006` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_structured_output; it… | none | Human output renders the same result object |
+| `API-007` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_exit_codes; it does n… | none | Exit status is part of the contract |
+| `API-008` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | The surface is self-describing |
+| `API-009` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_agent_parity; it does… | none | Automation gets no relaxed validation |
+| `API-010` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_schema_versioned; it… | none | Every published payload carries a schema version |
+| `API-011` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Error codes and result variants are versioned surface |
+| `API-012` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_migrations; it does n… | none | A format change ships with a migration and its test |
+| `API-013` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Compatibility is not inherited from parser tolerance |
+| `API-014` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Prefer additive change |
+| `API-015` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | The delivered artifact is what gets tested |
 
 ### law/ARCH
 
-| Rule | Force | Status | Mechanism | Title |
-|---|---|---|---|---|
-| `ARCH-001` | BINDING | `external` | `auto:import-linter` | Dependencies point inward only |
-| `ARCH-002` | BINDING | `external` | `auto:import-linter` `check:domain_purity` | The domain imports nothing that can perform I/O |
-| `ARCH-003` | BINDING | `external` | `auto:import-linter` | No adapter imports another adapter |
-| `ARCH-004` | BINDING | `external` | `auto:import-linter` | Each foreign dependency is imported in exactly one module |
-| `ARCH-005` | BINDING | `mechanized` | `check:explicit_effects` | Effects are named in the signature |
-| `ARCH-006` | BINDING | `external` | `auto:mypy` | Domain functions are total or return a typed result |
-| `ARCH-007` | BINDING | `mechanized` | `fitness:test_every_port_is_a_protocol` | Every port is a Protocol with a published contract |
-| `ARCH-008` | BINDING | `mechanized` | `fitness:test_port_triad` | Every port has a real, a fake and a faulty adapter |
-| `ARCH-009` | BINDING | `mechanized` | `fitness:test_contract_suite_per_adapter` | One contract suite runs against every adapter |
-| `ARCH-010` | BINDING | `mechanized` | `fitness:test_port_justification` | A port earns its place from a stated justification |
-| `ARCH-011` | BINDING | `mechanized` | `check:single_wiring_point` | Adapters are selected at one composition root |
-| `ARCH-012` | BINDING | `mechanized` | `check:no_test_branches` | No test-mode branch in production code |
-| `ARCH-013` | BINDING | `mechanized` | `check:domain_purity` | Framework and transport types stay out of the domain |
-| `ARCH-014` | BINDING | `unbuilt` **(!)** | `check:domain_purity` | Translation between representations is explicit |
-| `ARCH-015` | BINDING | `mechanized` | `check:no_magic_in_domain` | Metaprogramming leaves the four questions answerable |
-| `ARCH-016` | BINDING | `external` | `auto:ruff:C901` | Module complexity stays within budget |
-| `ARCH-017` | ADVISORY | `unmechanized` | — | Prefer the direct call to the abstraction |
+| Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
+|---|---|---|---|---|---|---|---|---|
+| `ARCH-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | none | Dependencies point inward only |
+| `ARCH-002` | BINDING | `mixed-verifiers` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | none | The domain imports nothing that can perform I/O |
+| `ARCH-003` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | none | No adapter imports another adapter |
+| `ARCH-004` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | `V3E-002` | Each foreign dependency is imported in exactly one module |
+| `ARCH-005` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:explicit_effects; it does no… | none | Effects are named in the signature |
+| `ARCH-006` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | Domain functions are total or return a typed result |
+| `ARCH-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_every_port_is_a_proto… | none | Every port is a Protocol with a published contract |
+| `ARCH-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_port_triad; it does n… | `V3E-008` | Every port has a real, a fake and a faulty adapter |
+| `ARCH-009` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_contract_suite_per_ad… | `V3E-008` | One contract suite runs against every adapter |
+| `ARCH-010` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_port_justification; i… | none | A port earns its place from a stated justification |
+| `ARCH-011` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:single_wiring_point; it does… | none | Adapters are selected at one composition root |
+| `ARCH-012` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:no_test_branches; it does no… | none | No test-mode branch in production code |
+| `ARCH-013` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:domain_purity; it does not e… | none | Framework and transport types stay out of the domain |
+| `ARCH-014` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:domain_purity; it does not e… | none | Translation between representations is explicit |
+| `ARCH-015` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:no_magic_in_domain; it does… | none | Metaprogramming leaves the four questions answerable |
+| `ARCH-016` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:ruff:C901; it does not establ… | none | Module complexity stays within budget |
+| `ARCH-017` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Prefer the direct call to the abstraction |
 
 ### law/DEP
 
-| Rule | Force | Status | Mechanism | Title |
-|---|---|---|---|---|
-| `DEP-001` | BINDING | `external` | `auto:import-linter` | The domain depends on the standard library only |
-| `DEP-002` | BINDING | `mechanized` | `fitness:test_dependency_position` | A dependency is judged by its architectural position |
-| `DEP-003` | ADVISORY | `unmechanized` | — | An adapter owns its dependency's failure modes |
-| `DEP-004` | ADVISORY | `unmechanized` | — | Do not reimplement a solved, specified problem |
-| `DEP-005` | BINDING | `mechanized` | `fitness:test_environment_locked` | The environment is locked by content hash |
-| `DEP-006` | BINDING | `mechanized` | `fitness:test_environment_locked` | A command verifies the environment matches the lock |
-| `DEP-007` | BINDING | `mechanized` | `check:generated_provenance` | Generated files carry a provenance header |
-| `DEP-008` | BINDING | `mechanized` | `check:generated_provenance` | Generated output contains no timestamp |
-| `DEP-009` | BINDING | `mechanized` | `fitness:test_regeneration_stable` | Regeneration is idempotent and byte-stable |
-| `DEP-010` | BINDING | `mechanized` | `fitness:test_regeneration_stable` | Drift between model and output fails the build |
-| `DEP-011` | BINDING | `mechanized` | `fitness:test_regeneration_stable` | Generated output is committed |
-| `DEP-012` | BINDING | `external` | `auto:integrate` | A vendored discipline is announced, not merely present |
-| `DEP-013` | BINDING | `external` | `auto:integrate` `fitness:test_an_existing_block_is_replaced_not_duplicated` | The announcement is generated, never hand-edited |
-| `DEP-014` | BINDING | `mechanized` | `fitness:test_a_dry_run_writes_nothing` | Configuration is changed by plan, then apply |
+| Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
+|---|---|---|---|---|---|---|---|---|
+| `DEP-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | none | The domain depends on the standard library only |
+| `DEP-002` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_dependency_position;… | none | A dependency is judged by its architectural position |
+| `DEP-003` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | An adapter owns its dependency's failure modes |
+| `DEP-004` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Do not reimplement a solved, specified problem |
+| `DEP-005` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_environment_locked; i… | none | The environment is locked by content hash |
+| `DEP-006` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_environment_locked; i… | none | A command verifies the environment matches the lock |
+| `DEP-007` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:generated_provenance; it doe… | none | Generated files carry a provenance header |
+| `DEP-008` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:generated_provenance; it doe… | none | Generated output contains no timestamp |
+| `DEP-009` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_regeneration_stable;… | none | Regeneration is idempotent and byte-stable |
+| `DEP-010` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_regeneration_stable;… | none | Drift between model and output fails the build |
+| `DEP-011` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_regeneration_stable;… | none | Generated output is committed |
+| `DEP-012` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:integrate; it does not establ… | none | A vendored discipline is announced, not merely present |
+| `DEP-013` | BINDING | `mixed-verifiers` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:integrate; it does not establ… | none | The announcement is generated, never hand-edited |
+| `DEP-014` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_a_dry_run_writes_noth… | none | Configuration is changed by plan, then apply |
 
 ### law/DIAG
 
-| Rule | Force | Status | Mechanism | Title |
-|---|---|---|---|---|
-| `DIAG-001` | BINDING | `mechanized` | `fitness:test_envelope_conforms` | Every escaping error produces a valid envelope |
-| `DIAG-002` | BINDING | `mechanized` | `check:exception_has_code` | Every custom exception carries a stable code |
-| `DIAG-003` | BINDING | `mechanized` | `check:exception_has_code` | Error detail is carried in attributes, not interpolated away |
-| `DIAG-004` | ADVISORY | `unmechanized` | — | A code is a public contract |
-| `DIAG-005` | BINDING | `mechanized` | `check:raise_from` | Every cross-layer re-raise uses explicit chaining |
-| `DIAG-006` | BINDING | `mechanized` | `check:raise_from` | Context is accreted with notes, not by re-wrapping |
-| `DIAG-007` | BINDING | `mechanized` | `check:raise_from` | Suppressing the cause requires a stated reason |
-| `DIAG-008` | BINDING | `external` | `auto:ruff:BLE001` `check:raise_from` | Exceptions are never silently swallowed |
-| `DIAG-009` | BINDING | `mechanized` | `check:assert_usage` | Assertions are not validation |
-| `DIAG-010` | BINDING | `mechanized` | `check:log_once` | Each exception is logged once, at its handling boundary |
-| `DIAG-011` | BINDING | `mechanized` | `check:library_logging` | Library code configures no logging |
-| `DIAG-012` | BINDING | `external` | `auto:ruff:G004` | Log arguments are deferred, never pre-formatted |
-| `DIAG-013` | ADVISORY | `unmechanized` | — | A correlation identifier ties a failure to its trace |
-| `DIAG-014` | BINDING | `mechanized` | `check:redaction` | Secrets and personal data never reach a log or an envelope |
-| `DIAG-015` | BINDING | `external` | `auto:ruff:G004` `check:log_once` | Structured fields, not sentences |
-| `DIAG-016` | ADVISORY | `unmechanized` | — | State transitions are observable |
+| Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
+|---|---|---|---|---|---|---|---|---|
+| `DIAG-001` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_envelope_conforms; it… | none | Every escaping error produces a valid envelope |
+| `DIAG-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:exception_has_code; it does… | `V3E-003` | Every custom exception carries a stable code |
+| `DIAG-003` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:exception_has_code; it does… | none | Error detail is carried in attributes, not interpolated away |
+| `DIAG-004` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | A code is a public contract |
+| `DIAG-005` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:raise_from; it does not esta… | none | Every cross-layer re-raise uses explicit chaining |
+| `DIAG-006` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:raise_from; it does not esta… | none | Context is accreted with notes, not by re-wrapping |
+| `DIAG-007` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:raise_from; it does not esta… | none | Suppressing the cause requires a stated reason |
+| `DIAG-008` | BINDING | `mixed-verifiers` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:ruff:BLE001; it does not esta… | none | Exceptions are never silently swallowed |
+| `DIAG-009` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:assert_usage; it does not es… | none | Assertions are not validation |
+| `DIAG-010` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:log_once; it does not establ… | none | Each exception is logged once, at its handling boundary |
+| `DIAG-011` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:library_logging; it does not… | `V3E-001` | Library code configures no logging |
+| `DIAG-012` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:ruff:G004; it does not establ… | none | Log arguments are deferred, never pre-formatted |
+| `DIAG-013` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | A correlation identifier ties a failure to its trace |
+| `DIAG-014` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:redaction; it does not estab… | none | Secrets and personal data never reach a log or an envelope |
+| `DIAG-015` | BINDING | `mixed-verifiers` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:ruff:G004; it does not establ… | none | Structured fields, not sentences |
+| `DIAG-016` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | State transitions are observable |
 
 ### law/DOC
 
-| Rule | Force | Status | Mechanism | Title |
-|---|---|---|---|---|
-| `DOC-001` | BINDING | `external` | `auto:ruff:D100` `check:doc_coverage` | Every module, class, function and method is documented |
-| `DOC-002` | BINDING | `mechanized` | `check:doc_coverage` | Every named value is documented |
-| `DOC-003` | BINDING | `unbuilt` **(!)** | `auto:ruff:D100` `check:doc_coverage` | Documentation is present whether or not it is generated |
-| `DOC-004` | BINDING | `mechanized` | `check:doc_style` | Documentation lives in docstrings wherever Python has a slot |
-| `DOC-005` | BINDING | `external` | `auto:doxygen` | Docstrings are parsed as documentation, not text |
-| `DOC-006` | BINDING | `external` | `auto:ruff:D205` | A brief statement comes first |
-| `DOC-007` | BINDING | `mechanized` | `check:doc_coverage` | Every parameter, result and raised exception is documented |
-| `DOC-008` | BINDING | `unbuilt` **(!)** | `check:doc_style` | Types are not restated in prose |
-| `DOC-009` | BINDING | `mechanized` | `check:doc_style` | Documentation states the contract, not the mechanism |
-| `DOC-010` | BINDING | `external` | `auto:doxygen` | A Doxygen run produces no warnings |
-| `DOC-011` | BINDING | `external` | `auto:doxygen` | The documentation check generates output |
-| `DOC-012` | BINDING | `mechanized` | `check:generated_provenance` | Generated documentation is not committed |
-| `DOC-013` | ADVISORY | `unmechanized` | — | Prefer one sentence that earns its place |
-| `DOC-014` | BINDING | `unbuilt` **(!)** | `check:doc_coverage` | A project declares which engine reads its documentation |
+| Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
+|---|---|---|---|---|---|---|---|---|
+| `DOC-001` | BINDING | `mixed-verifiers` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:ruff:D100; it does not establ… | none | Every module, class, function and method is documented |
+| `DOC-002` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:doc_coverage; it does not es… | none | Every named value is documented |
+| `DOC-003` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:ruff:D100; it does not establ… | none | Documentation is present whether or not it is generated |
+| `DOC-004` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:doc_style; it does not estab… | none | Documentation lives in docstrings wherever Python has a slot |
+| `DOC-005` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:doxygen; it does not establis… | none | Docstrings are parsed as documentation, not text |
+| `DOC-006` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:ruff:D205; it does not establ… | none | A brief statement comes first |
+| `DOC-007` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:doc_coverage; it does not es… | none | Every parameter, result and raised exception is documented |
+| `DOC-008` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:doc_style; it does not estab… | none | Types are not restated in prose |
+| `DOC-009` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:doc_style; it does not estab… | none | Documentation states the contract, not the mechanism |
+| `DOC-010` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:doxygen; it does not establis… | `V3E-004` | A Doxygen run produces no warnings |
+| `DOC-011` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:doxygen; it does not establis… | none | The documentation check generates output |
+| `DOC-012` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:generated_provenance; it doe… | none | Generated documentation is not committed |
+| `DOC-013` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Prefer one sentence that earns its place |
+| `DOC-014` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:doc_coverage; it does not es… | `V3E-001` | A project declares which engine reads its documentation |
 
 ### law/EFCT
 
-| Rule | Force | Status | Mechanism | Title |
-|---|---|---|---|---|
-| `EFCT-001` | BINDING | `external` | `auto:import-linter` | Effects are performed only in shell and adapters |
-| `EFCT-002` | BINDING | `mechanized` | `check:explicit_effects` | Time, randomness and environment enter through ports |
-| `EFCT-003` | BINDING | `mechanized` | `fitness:test_determinism` | Determinism is the default |
-| `EFCT-004` | BINDING | `unbuilt` **(!)** | `check:plan_apply` | Mutating operations are commands, not raw writes |
-| `EFCT-005` | BINDING | `mechanized` | `check:plan_apply` | Destructive operations plan before they apply |
-| `EFCT-006` | BINDING | `mechanized` | `fitness:test_dry_run_matches_apply` | A dry run is the pipeline truncated, never a second path |
-| `EFCT-007` | BINDING | `mechanized` | `fitness:test_interruption_recovers` | A multi-effect apply is journalled |
-| `EFCT-008` | BINDING | `mechanized` | `check:atomicity_qualified` | Atomicity claims are qualified |
-| `EFCT-009` | BINDING | `mechanized` | `fitness:test_what_is_not_guaranteed_is_stated` | What is not guaranteed is stated |
-| `EFCT-010` | BINDING | `mechanized` | `check:plan_apply` | State transitions are explicit and closed |
-| `EFCT-011` | BINDING | `unbuilt` **(!)** | `check:plan_apply` | Illegal transitions are refused before any effect |
-| `EFCT-012` | BINDING | `external` | `auto:import-linter` | Persistent state has exactly one owning path |
-| `EFCT-013` | BINDING | `mechanized` | `fitness:test_concurrency_documented` | Concurrency is introduced only with stated semantics |
-| `EFCT-014` | BINDING | `mechanized` | `fitness:test_concurrency_documented` | Shared mutable state is guarded by a stated lock order |
-| `EFCT-015` | BINDING | `mechanized` | `fitness:test_single_writer` | Writer exclusion is enforced; contention is a result |
-| `EFCT-016` | ADVISORY | `unmechanized` | — | Prefer the sequential design |
+| Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
+|---|---|---|---|---|---|---|---|---|
+| `EFCT-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | none | Effects are performed only in shell and adapters |
+| `EFCT-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:explicit_effects; it does no… | none | Time, randomness and environment enter through ports |
+| `EFCT-003` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_determinism; it does… | none | Determinism is the default |
+| `EFCT-004` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:plan_apply; it does not esta… | none | Mutating operations are commands, not raw writes |
+| `EFCT-005` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:plan_apply; it does not esta… | none | Destructive operations plan before they apply |
+| `EFCT-006` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_dry_run_matches_apply… | none | A dry run is the pipeline truncated, never a second path |
+| `EFCT-007` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_interruption_recovers… | none | A multi-effect apply is journalled |
+| `EFCT-008` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:atomicity_qualified; it does… | none | Atomicity claims are qualified |
+| `EFCT-009` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_what_is_not_guarantee… | none | What is not guaranteed is stated |
+| `EFCT-010` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:plan_apply; it does not esta… | none | State transitions are explicit and closed |
+| `EFCT-011` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:plan_apply; it does not esta… | none | Illegal transitions are refused before any effect |
+| `EFCT-012` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | none | Persistent state has exactly one owning path |
+| `EFCT-013` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_concurrency_documente… | none | Concurrency is introduced only with stated semantics |
+| `EFCT-014` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_concurrency_documente… | none | Shared mutable state is guarded by a stated lock order |
+| `EFCT-015` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_single_writer; it doe… | none | Writer exclusion is enforced; contention is a result |
+| `EFCT-016` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Prefer the sequential design |
 
 ### law/ERR
 
-| Rule | Force | Status | Mechanism | Title |
-|---|---|---|---|---|
-| `ERR-001` | BINDING | `mechanized` | `check:error_channels` | Exactly two propagation channels exist |
-| `ERR-002` | BINDING | `external` | `auto:mypy` `auto:pyright` | Result unions are exhaustively handled |
-| `ERR-003` | BINDING | `unbuilt` **(!)** | `check:error_channels` | Conversion between channels happens at one named seam |
-| `ERR-004` | BINDING | `mechanized` | `check:error_channels` | A layer produces only its own error family |
-| `ERR-005` | BINDING | `external` | `auto:mypy` | A new variant is declared at its definition site |
-| `ERR-006` | BINDING | `mechanized` | `check:exception_shape` | Exceptions form one narrow hierarchy under a package base |
-| `ERR-007` | ADVISORY | `unmechanized` | — | Define an exception only when a caller must distinguish it |
-| `ERR-008` | BINDING | `external` | `auto:ruff:BLE001` | Catch narrowly |
-| `ERR-009` | BINDING | `external` | `auto:ruff:TRY300` | The `try` body holds only what can fail |
-| `ERR-010` | BINDING | `mechanized` | `check:exception_shape` | Grouped failures propagate as a group |
-| `ERR-011` | ADVISORY | `unmechanized` | — | Parse at the boundary; do not validate in the interior |
-| `ERR-012` | BINDING | `mechanized` | `check:assert_usage` | Boundary validation survives optimized bytecode |
-| `ERR-013` | BINDING | `mechanized` | `check:boundary_parsing` | Try the operation rather than pre-checking the world |
-| `ERR-014` | ADVISORY | `unmechanized` | — | Expected failure and contract violation are distinguished |
-| `ERR-015` | BINDING | `mechanized` | `fitness:test_no_unhandled_escape` | No unhandled exception reaches the process boundary |
-| `ERR-016` | BINDING | `mechanized` | `fitness:test_fault_containment` | A fault is contained at the boundary that detected it |
+| Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
+|---|---|---|---|---|---|---|---|---|
+| `ERR-001` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:error_channels; it does not… | none | Exactly two propagation channels exist |
+| `ERR-002` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | Result unions are exhaustively handled |
+| `ERR-003` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:error_channels; it does not… | none | Conversion between channels happens at one named seam |
+| `ERR-004` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:error_channels; it does not… | none | A layer produces only its own error family |
+| `ERR-005` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | A new variant is declared at its definition site |
+| `ERR-006` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:exception_shape; it does not… | none | Exceptions form one narrow hierarchy under a package base |
+| `ERR-007` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Define an exception only when a caller must distinguish it |
+| `ERR-008` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:ruff:BLE001; it does not esta… | none | Catch narrowly |
+| `ERR-009` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:ruff:TRY300; it does not esta… | none | The `try` body holds only what can fail |
+| `ERR-010` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:exception_shape; it does not… | none | Grouped failures propagate as a group |
+| `ERR-011` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Parse at the boundary; do not validate in the interior |
+| `ERR-012` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:assert_usage; it does not es… | none | Boundary validation survives optimized bytecode |
+| `ERR-013` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:boundary_parsing; it does no… | none | Try the operation rather than pre-checking the world |
+| `ERR-014` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Expected failure and contract violation are distinguished |
+| `ERR-015` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_no_unhandled_escape;… | none | No unhandled exception reaches the process boundary |
+| `ERR-016` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_fault_containment; it… | none | A fault is contained at the boundary that detected it |
 
 ### law/FLOW
 
-| Rule | Force | Status | Mechanism | Title |
-|---|---|---|---|---|
-| `FLOW-001` | ADVISORY | `unmechanized` | — | The contract is written before the implementation |
-| `FLOW-002` | BINDING | `mechanized` | `check:oracle_declared` | Test obligations are named before tests are written |
-| `FLOW-003` | BINDING | `mechanized` | `fitness:test_decisions_recorded` | A structural decision is recorded before it is relied upon |
-| `FLOW-004` | BINDING | `mechanized` | `fitness:test_decision_records_are_appended` | Decision records are appended, never rewritten |
-| `FLOW-005` | BINDING | `mechanized` | `fitness:test_overruled_objections_are_kept` | Overruled objections are recorded, not discarded |
-| `FLOW-006` | BINDING | `mechanized` | `fitness:test_binding_rules_have_mechanisms` | A rule without a mechanism is not binding |
-| `FLOW-007` | BINDING | `mechanized` | `fitness:test_checks_can_fail` | No check may pass vacuously |
-| `FLOW-008` | BINDING | `mechanized` | `check:deviation_recorded` | Deviations from an advisory rule are recorded in the change |
-| `FLOW-009` | BINDING | `mechanized` | `fitness:test_gate_suite_defined` | The gates pass before a change is offered |
-| `FLOW-010` | ADVISORY | `unmechanized` | — | New behaviour arrives with its obligations discharged |
-| `FLOW-011` | BINDING | `mechanized` | `fitness:test_envelope_conforms` | The diagnosis is checked, not assumed |
-| `FLOW-012` | BINDING | `unbuilt` **(!)** | `check:deviation_recorded` | Report what happened, including what did not |
-| `FLOW-013` | ADVISORY | `unmechanized` | — | Scale ceremony to reuse ambition, not to line count |
+| Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
+|---|---|---|---|---|---|---|---|---|
+| `FLOW-001` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | The contract is written before the implementation |
+| `FLOW-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:oracle_declared; it does not… | none | Test obligations are named before tests are written |
+| `FLOW-003` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_decisions_recorded; i… | none | A structural decision is recorded before it is relied upon |
+| `FLOW-004` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_decision_records_are_… | none | Decision records are appended, never rewritten |
+| `FLOW-005` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_overruled_objections_… | none | Overruled objections are recorded, not discarded |
+| `FLOW-006` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_binding_rules_have_me… | none | A rule without a mechanism is not binding |
+| `FLOW-007` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_checks_can_fail; it d… | none | No check may pass vacuously |
+| `FLOW-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:deviation_recorded; it does… | none | Deviations from an advisory rule are recorded in the change |
+| `FLOW-009` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_gate_suite_defined; i… | `V3E-006` | The gates pass before a change is offered |
+| `FLOW-010` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | New behaviour arrives with its obligations discharged |
+| `FLOW-011` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_envelope_conforms; it… | none | The diagnosis is checked, not assumed |
+| `FLOW-012` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:deviation_recorded; it does… | none | Report what happened, including what did not |
+| `FLOW-013` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Scale ceremony to reuse ambition, not to line count |
 
 ### law/LEARN
 
-| Rule | Force | Status | Mechanism | Title |
-|---|---|---|---|---|
-| `LEARN-001` | BINDING | `mechanized` | `check:session_recorded` | A session records what it learned before reporting done |
-| `LEARN-002` | BINDING | `external` | `auto:learn` | A learning states a claim, an action and a trigger |
-| `LEARN-003` | BINDING | `external` | `auto:learn` `fitness:test_a_credential_is_refused` | Credentials never enter the ledger |
-| `LEARN-004` | BINDING | `mechanized` | `check:learning_scope` | A learning is scoped by who it is about |
-| `LEARN-005` | BINDING | `mechanized` | `check:ledger_append_only` | A contradicted learning is refuted, never deleted |
-| `LEARN-006` | BINDING | `mechanized` | `fitness:test_the_database_is_reconstructible_from_the_ledger` | The ledger and its index do not drift |
-| `LEARN-007` | BINDING | `mechanized` | `fitness:test_retrieval_is_reproducible` | Retrieval is deterministic |
-| `LEARN-008` | BINDING | `mechanized` | `fitness:test_confidence_decays_with_time` | Confidence decays, and staleness is shown |
-| `LEARN-009` | BINDING | `mechanized` | `check:promotion_due` | A learning that can be checked becomes a check |
-| `LEARN-010` | BINDING | `mechanized` | `check:learning_size` | The active set is triaged before it outgrows its ceiling |
-| `LEARN-011` | BINDING | `external` | `auto:learn` | A parameter change is recorded with its reason |
-| `LEARN-012` | ADVISORY | `unmechanized` | — | Prefer the smallest true entry |
+| Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
+|---|---|---|---|---|---|---|---|---|
+| `LEARN-001` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:session_recorded; it does no… | none | A session records what it learned before reporting done |
+| `LEARN-002` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:learn; it does not establish… | none | A learning states a claim, an action and a trigger |
+| `LEARN-003` | BINDING | `mixed-verifiers` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:learn; it does not establish… | none | Credentials never enter the ledger |
+| `LEARN-004` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:learning_scope; it does not… | none | A learning is scoped by who it is about |
+| `LEARN-005` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:ledger_append_only; it does… | none | A contradicted learning is refuted, never deleted |
+| `LEARN-006` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_the_database_is_recon… | none | The ledger and its index do not drift |
+| `LEARN-007` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_retrieval_is_reproduc… | none | Retrieval is deterministic |
+| `LEARN-008` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_confidence_decays_wit… | none | Confidence decays, and staleness is shown |
+| `LEARN-009` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:promotion_due; it does not e… | none | A learning that can be checked becomes a check |
+| `LEARN-010` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:learning_size; it does not e… | none | The active set is triaged before it outgrows its ceiling |
+| `LEARN-011` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:learn; it does not establish… | none | A parameter change is recorded with its reason |
+| `LEARN-012` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Prefer the smallest true entry |
 
 ### law/TEST
 
-| Rule | Force | Status | Mechanism | Title |
-|---|---|---|---|---|
-| `TEST-001` | BINDING | `mechanized` | `fitness:test_unit_layer_is_pure` | Unit tests touch no external resource |
-| `TEST-002` | BINDING | `mechanized` | `fitness:test_layers_populated` | Each test layer exists and is populated |
-| `TEST-003` | BINDING | `external` | `auto:pytest-timeout` | Per-test time is budgeted and enforced |
-| `TEST-004` | BINDING | `mechanized` | `check:oracle_declared` | Every test module declares its oracle |
-| `TEST-005` | BINDING | `mechanized` | `fitness:test_contract_suite_per_adapter` | One contract suite runs against every adapter |
-| `TEST-006` | BINDING | `mechanized` | `fitness:test_contract_suite_per_adapter` | A fake that can drift from the real adapter is worthless |
-| `TEST-007` | BINDING | `mechanized` | `fitness:test_property_suites_are_generated` | Stated invariants have property suites |
-| `TEST-008` | BINDING | `mechanized` | `fitness:test_goldens_reviewed` | Golden files are reviewed, never merely regenerated |
-| `TEST-009` | BINDING | `mechanized` | `fitness:test_fault_schedules_are_data` | Fault injection is data, not bespoke classes |
-| `TEST-010` | BINDING | `mechanized` | `fitness:test_fault_catalogue` | The fault catalogue is covered per port |
-| `TEST-011` | BINDING | `mechanized` | `fitness:test_fault_containment` | Propagation and containment are tested, not assumed |
-| `TEST-012` | BINDING | `mechanized` | `fitness:test_interruption_recovers` | Interruption is tested at every effect boundary |
-| `TEST-013` | BINDING | `external` | `auto:mutmut` | Mutation score is gated on the core |
-| `TEST-014` | BINDING | `mechanized` | `check:compound_gate` | Compound decisions are decomposed and tabulated |
-| `TEST-015` | BINDING | `mechanized` | `fitness:test_checks_can_fail` | Every check has a proof-of-failure companion |
-| `TEST-016` | BINDING | `mechanized` | `check:test_weakening` | A test that weakens must say so |
-| `TEST-017` | BINDING | `external` | `auto:pytest-randomly` `auto:pytest-socket` | Tests are order-independent and network-isolated |
-| `TEST-018` | BINDING | `mechanized` | `fitness:test_no_rerun_dismissal` | A flaky failure is a defect in the harness |
-| `TEST-019` | ADVISORY | `unmechanized` | — | Test names state the behaviour |
+| Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
+|---|---|---|---|---|---|---|---|---|
+| `TEST-001` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_unit_layer_is_pure; i… | none | Unit tests touch no external resource |
+| `TEST-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_layers_populated; it… | none | Each test layer exists and is populated |
+| `TEST-003` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:pytest-timeout; it does not e… | none | Per-test time is budgeted and enforced |
+| `TEST-004` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:oracle_declared; it does not… | none | Every test module declares its oracle |
+| `TEST-005` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_contract_suite_per_ad… | none | One contract suite runs against every adapter |
+| `TEST-006` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_contract_suite_per_ad… | none | A fake that can drift from the real adapter is worthless |
+| `TEST-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_property_suites_are_g… | none | Stated invariants have property suites |
+| `TEST-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_goldens_reviewed; it… | none | Golden files are reviewed, never merely regenerated |
+| `TEST-009` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_fault_schedules_are_d… | `V3E-007` | Fault injection is data, not bespoke classes |
+| `TEST-010` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_fault_catalogue; it d… | none | The fault catalogue is covered per port |
+| `TEST-011` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_fault_containment; it… | none | Propagation and containment are tested, not assumed |
+| `TEST-012` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_interruption_recovers… | none | Interruption is tested at every effect boundary |
+| `TEST-013` | BINDING | `external-verifier` | `proxy` | `pending` | `linux` | Passing excludes only the configured patterns implemented by auto:mutmut; it does not establish… | `V3E-005` | Mutation score is gated on the core |
+| `TEST-014` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:compound_gate; it does not e… | none | Compound decisions are decomposed and tabulated |
+| `TEST-015` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_checks_can_fail; it d… | none | Every check has a proof-of-failure companion |
+| `TEST-016` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:test_weakening; it does not… | none | A test that weakens must say so |
+| `TEST-017` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:pytest-randomly; it does not… | none | Tests are order-independent and network-isolated |
+| `TEST-018` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_no_rerun_dismissal; i… | none | A flaky failure is a defect in the harness |
+| `TEST-019` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Test names state the behaviour |
 
 ### law/TYPE
 
-| Rule | Force | Status | Mechanism | Title |
-|---|---|---|---|---|
-| `TYPE-001` | BINDING | `external` | `auto:mypy` `auto:pyright` | Two checkers, both strict, both pinned |
-| `TYPE-002` | BINDING | `external` | `auto:mypy` `check:domain_purity` | The domain carries no `Any` |
-| `TYPE-003` | BINDING | `external` | `auto:mypy` `auto:ruff:PGH003` | Escape hatches are narrow, justified and counted |
-| `TYPE-004` | BINDING | `unbuilt` **(!)** | `check:domain_purity` | Distinct concepts are distinct types |
-| `TYPE-005` | BINDING | `mechanized` | `check:boundary_parsing` | A constrained type is a wrapper with a parsing constructor |
-| `TYPE-006` | BINDING | `external` | `auto:mypy` `check:domain_purity` | Closed sets are enumerations |
-| `TYPE-007` | BINDING | `mechanized` | `check:domain_purity` | Domain values are frozen and slotted |
-| `TYPE-008` | BINDING | `mechanized` | `check:domain_purity` | Signatures take read-only collection types |
-| `TYPE-009` | BINDING | `mechanized` | `fitness:test_every_port_is_a_protocol` | Ports are structural protocols |
-| `TYPE-010` | BINDING | `mechanized` | `check:boundary_parsing` | Runtime protocol checks are not contract checks |
-| `TYPE-011` | ADVISORY | `unmechanized` | — | What the checker cannot enforce is enforced at runtime |
-| `TYPE-012` | ADVISORY | `unmechanized` | — | Signature or docstring, by who can enforce it |
-| `TYPE-013` | BINDING | `external` | `auto:mypy` | Conversions are explicit |
-| `TYPE-014` | BINDING | `unbuilt` **(!)** | `check:domain_purity` | Immutability is declared, and not mistaken for a guarantee |
-| `TYPE-015` | ADVISORY | `unmechanized` | — | Type sophistication stays proportionate |
+| Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
+|---|---|---|---|---|---|---|---|---|
+| `TYPE-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | Two checkers, both strict, both pinned |
+| `TYPE-002` | BINDING | `mixed-verifiers` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | The domain carries no `Any` |
+| `TYPE-003` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | Escape hatches are narrow, justified and counted |
+| `TYPE-004` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:domain_purity; it does not e… | none | Distinct concepts are distinct types |
+| `TYPE-005` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:boundary_parsing; it does no… | none | A constrained type is a wrapper with a parsing constructor |
+| `TYPE-006` | BINDING | `mixed-verifiers` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | Closed sets are enumerations |
+| `TYPE-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:domain_purity; it does not e… | none | Domain values are frozen and slotted |
+| `TYPE-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:domain_purity; it does not e… | none | Signatures take read-only collection types |
+| `TYPE-009` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_every_port_is_a_proto… | none | Ports are structural protocols |
+| `TYPE-010` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:boundary_parsing; it does no… | none | Runtime protocol checks are not contract checks |
+| `TYPE-011` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | What the checker cannot enforce is enforced at runtime |
+| `TYPE-012` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Signature or docstring, by who can enforce it |
+| `TYPE-013` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | Conversions are explicit |
+| `TYPE-014` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:domain_purity; it does not e… | none | Immutability is declared, and not mistaken for a guarantee |
+| `TYPE-015` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Type sophistication stays proportionate |
 
 ### ops/ALLOC
 
-| Rule | Force | Status | Mechanism | Title |
-|---|---|---|---|---|
-| `ALLOC-001` | BINDING | `mechanized` | `check:no_model_names` | Refer to the tier, never to a model |
-| `ALLOC-002` | BINDING | `mechanized` | `check:dispatch_recorded` | Score before dispatching, and record the score |
-| `ALLOC-003` | BINDING | `mechanized` | `check:dispatch_recorded` | Named categories force escalation regardless of score |
-| `ALLOC-004` | BINDING | `mechanized` | `check:dispatch_recorded` | A single signal at 3 raises the floor |
-| `ALLOC-005` | BINDING | `unbuilt` **(!)** | `check:dispatch_recorded` | Escalation rules beat the mechanical permit |
-| `ALLOC-006` | BINDING | `unbuilt` **(!)** | `check:dispatch_recorded` | Sharpen the contract before raising the tier |
-| `ALLOC-007` | BINDING | `unbuilt` **(!)** | `check:dispatch_recorded` | Split before upgrading |
-| `ALLOC-008` | ADVISORY | `unmechanized` | — | A restriction is not lifted by an instruction |
-| `ALLOC-009` | BINDING | `unbuilt` **(!)** | `check:dispatch_recorded` | Misclassification belongs to the coordinator |
-| `ALLOC-010` | BINDING | `mechanized` | `check:allocation_declared` | The gate's tier follows the risk under test |
+| Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
+|---|---|---|---|---|---|---|---|---|
+| `ALLOC-001` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:no_model_names; it does not… | none | Refer to the tier, never to a model |
+| `ALLOC-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does n… | none | Score before dispatching, and record the score |
+| `ALLOC-003` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does n… | none | Named categories force escalation regardless of score |
+| `ALLOC-004` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does n… | none | A single signal at 3 raises the floor |
+| `ALLOC-005` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does n… | none | Escalation rules beat the mechanical permit |
+| `ALLOC-006` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does n… | none | Sharpen the contract before raising the tier |
+| `ALLOC-007` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does n… | none | Split before upgrading |
+| `ALLOC-008` | ADVISORY | `retired` | n/a | n/a | n/a | n/a | none | A restriction is not lifted by an instruction |
+| `ALLOC-009` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does n… | none | Misclassification belongs to the coordinator |
+| `ALLOC-010` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:allocation_declared; it does… | none | The gate's tier follows the risk under test |
 
 ### ops/teams
 
-| Rule | Force | Status | Mechanism | Title |
-|---|---|---|---|---|
-| `TEAMS-001` | BINDING | `mechanized` | `check:dispatch_recorded` | A dispatch states the contract, not the intention |
-| `TEAMS-002` | BINDING | `mechanized` | `check:dispatch_recorded` | A restriction is never lifted by an instruction |
-| `TEAMS-003` | BINDING | `mechanized` | `fitness:test_completion_hook_enforces_the_gate` | Verification runs as a gate, not as a request |
-| `TEAMS-004` | ADVISORY | `unmechanized` | — | Documentation is written in one stage, verified in another |
-| `TEAMS-005` | ADVISORY | `unmechanized` | — | A verifier refutes claims; it does not improve prose |
-| `TEAMS-006` | ADVISORY | `unmechanized` | — | Presence and truth need separate mechanisms |
+| Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
+|---|---|---|---|---|---|---|---|---|
+| `TEAMS-001` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does n… | none | A dispatch states the contract, not the intention |
+| `TEAMS-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does n… | none | A restriction is never lifted by an instruction |
+| `TEAMS-003` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_completion_hook_enfor… | none | Verification runs as a gate, not as a request |
+| `TEAMS-004` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Documentation is written in one stage, verified in another |
+| `TEAMS-005` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | A verifier refutes claims; it does not improve prose |
+| `TEAMS-006` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Presence and truth need separate mechanisms |

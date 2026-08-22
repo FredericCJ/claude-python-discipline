@@ -2,7 +2,7 @@
 id: meta/SCHEMA
 kind: meta
 title: Document Format Specification
-tokens: 3014
+tokens: 3706
 load_when: ["authoring a rule", "new module", "front-matter", "rule id", "validate"]
 decay: none
 ---
@@ -126,8 +126,9 @@ Domain modules MUST NOT use `Any`, explicit or implicit.
 - **`<ID>`** — `<MODULE>-<NNN>`, where `MODULE` is the file's front-matter `id` suffix
   and `NNN` is a zero-padded three-digit ordinal. `TYPE-012`, `DIAG-004`, `ARCH-031`.
 - IDs are **assigned once and never reused, never renumbered**. Deleting a rule leaves a
-  gap; superseding one adds a `**Superseded by**` line and keeps the heading. Positional
-  references are what the source corpus used, and they broke; IDs are the fix.
+  gap; superseding one adds a `**Superseded by**` line, keeps the heading, and records a
+  migration disposition in `meta/evidence.json`. Positional references are what the
+  source corpus used, and they broke; IDs are the fix.
 - IDs appear in review comments, commit messages, waiver comments, and in the
   `rule_ids` field of the diagnostic envelope. Treat them as public API.
 - **`<imperative title>`** — states the rule, not the topic. "Domain code carries no
@@ -190,7 +191,50 @@ belongs in `examples/`, linked from `See`.
 corpus leaned on 110 lowercase "should"s and, as a result, nothing in it was
 mechanically distinguishable as mandatory.
 
-## 4. Epistemic tags (`fact` and `ops` only)
+## 4. Rule evidence registry
+
+`meta/evidence.json` is authored evidence joined one-to-one to the stable IDs in law and
+ops. Markdown states the normative claim. The registry separately states why that claim
+is plausible, what a mechanism can decide, and what remains possible after it accepts.
+`validate.py` rejects a missing or orphan record and any disagreement with the mechanism
+tags on the heading.
+
+Every record carries exactly:
+
+- `units`: one or both of `application` and `component`;
+- `capabilities`: local capability keys that activate the rule, or an empty array for an
+  unconditional rule;
+- `failure_mode`: the consequence the normative rule is intended to prevent or contain;
+- `warrants`: one or more sources, each with a `supports`, `motivates`, `limits`, or
+  `observed-in` relation and explicit `high`, `medium`, or `low` confidence;
+- `strategies`: exactly one entry per heading mechanism;
+- `observations`: adopter or audit evidence IDs, never an unlabeled anecdote; and
+- `migration`: source version, controlled disposition, and adopter guidance.
+
+Each strategy carries `mechanism`, `kind`, `relation`, `proposition`, `residual`,
+`must_pass`, `must_reject`, `platforms`, and `not_applicable`. Kinds are `static`, `tool`,
+`behavioral`, `generated-drift`, and `structured-review`. A relation is `direct` only
+when the proposition is the normative condition itself; otherwise it is `proxy`, and the
+residual says what semantic claim it does not decide.
+
+Every automated strategy names a conformant reference and a deliberate case it must
+reject. A `must_reject` label earns no credit until the discrimination gate witnesses the
+mechanism reject it. Structured review instead verifies the review artifact's commit,
+scope, freshness, reviewer, objections, conclusion, and residual; artifact integrity does
+not make the judgment mechanically correct.
+
+Generated views describe verifier availability as `local-verifier`, `external-verifier`,
+`mixed-verifiers`, `structured-review`, `unbuilt`, `undeclared`, or `retired`. Those are
+strategy states, not gate outcomes. Only an executed project gate may report `pass`,
+`fail`, `not-applicable`, `unsupported`, or `not-run` for a particular repository and
+platform.
+
+Retiring a rule never deletes or repurposes its ID. Its heading remains resolvable, its
+strategies are removed, `Superseded by` identifies the replacement when one exists, and
+the registry disposition is `superseded`, `consolidated`, or `retired` with migration
+guidance.
+
+## 5. Epistemic tags (`fact` and `ops` only)
 
 Claims in a `fact` or `ops` file carry a status tag, because these genres decay and a
 reader has to know which claims to re-verify first.
@@ -209,7 +253,7 @@ A third scheme exists in the corpus — `STATED` / `INFERRED` / `ASSUMED` /
 rule inside `frame/spec` about how to tag *your own* specifications, and conflating the
 two is the mis-citation this format is written to prevent.
 
-## 5. Cross-references
+## 6. Cross-references
 
 | Form | Target |
 |---|---|
@@ -223,13 +267,13 @@ Every reference resolves, or the validator fails. **References to files outside
 references to documents that do not exist, 73 of them to a single PROPOSAL.md, and that
 is the failure mode this rule exists to prevent.
 
-## 6. Generated files
+## 7. Generated files
 
 `INDEX.md`, `rules.json` and `enforce/ENFORCEMENT.md` are written by
 `tools/build_index.py` and carry a provenance header. Editing them by hand is an error;
 the next build silently discards the edit. Change the source module and rebuild.
 
-## 7. Glossary discipline
+## 8. Glossary discipline
 
 Terms defined in `meta/GLOSSARY.md` have exactly one meaning across the corpus. Several
 are *banned in bare form* because the sources used them in incompatible senses —

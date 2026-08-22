@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
-import importlib.util
 import json
 import re
 import sys
@@ -42,6 +41,12 @@ from discipline_core import (
     mechanism_is_implemented,
     parse_document,
     prose_of,
+)
+from evidence_model import (
+    EvidenceParseError,
+    discrimination_covered,
+    load_evidence,
+    validate_evidence,
 )
 
 if TYPE_CHECKING:
@@ -227,6 +232,14 @@ class Layout:
             to enforce and passes every document
         """
         return self.discipline / "meta" / "GLOSSARY.md"
+
+    @property
+    def evidence(self) -> Path:
+        """The authored normative-to-observable evidence join.
+
+        @return the registry validated by V100-V108
+        """
+        return self.discipline / "meta" / "evidence.json"
 
     def rel(self, path: Path) -> str:
         """Render a location for display, anchored at `root`.
@@ -1096,34 +1109,11 @@ def check_discrimination_gap(documents: Sequence[Document],
     @param layout the tree they were read from
     @return at most one finding, naming how many decided rules nobody has watched
     """
-    # Loaded from the tree under validation BY PATH, never by import name. A
-    # plain `import discrimination` resolves to whichever copy is first on
-    # sys.path, which -- when the validator is run against a scratch corpus from
-    # a session that has already imported the real one -- is the repository's own
-    # matrix. The gap would then be computed for one tree and reported against
-    # another, and the first version of this function did exactly that.
-    source = layout.root / "enforce" / "discrimination.py"
-    if not source.is_file():
+    covered = discrimination_covered(layout.root)
+    if covered is None:
         # An adopter may have vendored the corpus without the matrix. Reporting a
         # gap that cannot be computed would be worse than reporting nothing.
         return
-    spec = importlib.util.spec_from_file_location("_discrimination", source)
-    if spec is None or spec.loader is None:
-        return
-    discrimination = importlib.util.module_from_spec(spec)
-    # Registered before execution because `@dataclass(slots=True)` rebuilds the
-    # class and resolves `sys.modules[cls.__module__]` to do it. Without this the
-    # load dies with `'NoneType' object has no attribute '__dict__'`, which names
-    # neither the module nor the cause.
-    sys.modules[spec.name] = discrimination
-    try:
-        spec.loader.exec_module(discrimination)
-    except Exception:  # ruff: ignore[blind-except] - a corpus file, not ours
-        return
-    finally:
-        sys.modules.pop(spec.name, None)
-
-    covered = discrimination.covered()
     gap = sorted(
         rule.rule_id
         for doc in documents for rule in doc.rules
@@ -1150,6 +1140,148 @@ def check_discrimination_gap(documents: Sequence[Document],
             "yes."
         ),
     )
+
+
+## Structural model findings against their stable validator code, severity, and
+## actionable repair. E009 is handled separately as the temporary v3 debt ratchet.
+_EVIDENCE_CODES: Final[dict[str, tuple[str, Severity, str]]] = {
+    "E001": (
+        "V101",
+        Severity.ERROR,
+        "Add the stable id to discipline/meta/evidence.json before publishing the rule.",
+    ),
+    "E002": (
+        "V102",
+        Severity.ERROR,
+        "Remove the orphan record or restore its retired normative heading.",
+    ),
+    "E003": (
+        "V103",
+        Severity.ERROR,
+        "Cite at least one source or adopter observation with relation and confidence.",
+    ),
+    "E004": (
+        "V104",
+        Severity.ERROR,
+        "Describe every heading mechanism exactly once and no mechanism absent from it.",
+    ),
+    "E005": (
+        "V105",
+        Severity.ERROR,
+        "Remove active strategies from the retired record.",
+    ),
+    "E006": (
+        "V105",
+        Severity.ERROR,
+        "Classify the retired id as superseded, consolidated, or retired.",
+    ),
+    "E007": (
+        "V105",
+        Severity.ERROR,
+        "Keep the rule active or add a resolvable Superseded by field to its heading.",
+    ),
+    "E008": (
+        "V106",
+        Severity.ERROR,
+        "Name a concrete must-reject case for every automated strategy.",
+    ),
+    "E010": (
+        "V108",
+        Severity.ERROR,
+        "Use a mechanism kind compatible with the heading tag.",
+    ),
+}
+
+
+def check_evidence(
+    documents: Sequence[Document], layout: Layout, *, required: bool | None = None
+) -> Iterator[Finding]:
+    """V100-V108 -- evidence records join honestly to every stable rule id.
+
+    V107 remains a warning while the frozen v3 discrimination debt is removed;
+    unlike the old V098 count, it counts exact rule/mechanism strategies. Every
+    structural omission or dishonest join is an error immediately.
+
+    @param documents parsed normative corpus
+    @param layout tree carrying the authored registry and mutation matrix
+    @param required whether absence is a defect; defaults true for this repository
+        and false for synthetic or legacy trees
+    @return structural, join, retirement, kind, and discrimination findings
+    """
+    if required is None:
+        required = layout.root == REPO_ROOT
+    if not layout.evidence.is_file():
+        if required:
+            yield Finding(
+                code="V100",
+                severity=Severity.ERROR,
+                path=layout.rel(layout.evidence),
+                line=1,
+                message="the v4 evidence registry is missing",
+                remediation=(
+                    "Create discipline/meta/evidence.json and record every stable rule id."
+                ),
+            )
+        return
+    try:
+        registry = load_evidence(layout.evidence)
+    except EvidenceParseError as problem:
+        yield Finding(
+            code="V100",
+            severity=Severity.ERROR,
+            path=layout.rel(layout.evidence),
+            line=1,
+            message=str(problem),
+            remediation="Repair the named field to match meta/SCHEMA.md section 4.",
+        )
+        return
+    rules = [rule for document in documents for rule in document.rules]
+    covered = discrimination_covered(layout.root) or frozenset()
+    mismatches = validate_evidence(registry, rules, covered)
+    unwitnessed = [finding for finding in mismatches if finding.code == "E009"]
+    for mismatch in (finding for finding in mismatches if finding.code != "E009"):
+        code, severity, remediation = _EVIDENCE_CODES[mismatch.code]
+        yield Finding(
+            code=code,
+            severity=severity,
+            path=layout.rel(layout.evidence),
+            line=_evidence_line(layout.evidence, mismatch.rule_id),
+            message=f"{mismatch.rule_id}: {mismatch.message}",
+            remediation=remediation,
+        )
+    if unwitnessed:
+        named = ", ".join(
+            f"{finding.rule_id} {finding.message.split()[0]}"
+            for finding in unwitnessed[:GAP_NAMED]
+        )
+        yield Finding(
+            code="V107",
+            severity=Severity.WARN,
+            path=layout.rel(layout.evidence),
+            line=1,
+            message=(
+                f"{len(unwitnessed)} automated strategy or strategies have no witnessed "
+                f"rejection: {named}{' ...' if len(unwitnessed) > GAP_NAMED else ''}"
+            ),
+            remediation=(
+                "Replace each pending:<rule> marker with a concrete matrix case and run "
+                "python tools/discrimination_gate.py."
+            ),
+        )
+
+
+def _evidence_line(path: Path, rule_id: str) -> int:
+    """Locate a rule key in the pretty-printed registry for clickable findings.
+
+    @param path evidence registry
+    @param rule_id stable id to locate
+    @return one-based line, or 1 when the key cannot be found
+    """
+    needle = f'"{rule_id}": {{'
+    for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if needle in line:
+            return number
+    return 1
 
 
 def check_learning(layout: Layout) -> Iterator[Finding]:
@@ -1261,6 +1393,7 @@ def run(layout: Layout = DEFAULT_LAYOUT) -> list[Finding]:
         findings.extend(check_front_matter(doc, schema, layout))
         findings.extend(check_genre_constraints(doc, layout))
     findings.extend(check_rules(documents, layout))
+    findings.extend(check_evidence(documents, layout))
     findings.extend(check_ledgers(documents, layout))
     findings.extend(check_xrefs(documents, layout))
     findings.extend(check_budgets(documents, layout))

@@ -8,8 +8,8 @@ Writes four things, none of which may be edited by hand:
   budget before it reads;
 * ``discipline/INDEX.md``   -- one line per rule, for scanning;
 * ``discipline/rules.json`` -- the same data for ``grep`` and ``jq``;
-* ``enforce/ENFORCEMENT.md`` -- every rule against the mechanism that decides it,
-  plus the unenforceable surface, so the axiom's cost is visible.
+* ``enforce/ENFORCEMENT.md`` -- every rule against its distinct normative,
+  decidable, discrimination, portability, residual, and field-evidence claims.
 
 ``--check`` writes nothing and exits non-zero if anything is stale, which is the
 form to run in CI.
@@ -29,15 +29,22 @@ from typing import TYPE_CHECKING, Final
 from discipline_core import (
     REPO_ROOT,
     Document,
-    Enforcement,
     Force,
     Kind,
     ParseError,
     Rule,
     count_tokens,
-    enforcement_of,
     mechanism_is_implemented,
     parse_document,
+)
+from evidence_model import (
+    DecisionRelation,
+    EvidenceRegistry,
+    RuleEvidence,
+    VerificationState,
+    discrimination_covered,
+    load_evidence,
+    verification_state,
 )
 
 if TYPE_CHECKING:
@@ -52,6 +59,18 @@ GENERATED_BANNER: Final = (
 ## The only line this tool edits inside a hand-written module; everything else it
 ## produces is a whole file it owns and overwrites.
 _TOKENS_LINE = re.compile(r"^tokens:\s*\d+\s*$", re.MULTILINE)
+## Token estimates are deliberately approximate; rewriting for tiny tokenizer
+## variation would churn every generated artifact without changing load choices.
+_TOKEN_DRIFT: Final = 2
+## Shared wide table headings kept out of renderer literals so the Python source
+## remains readable while the generated Markdown remains one physical row.
+_INDEX_RULE_HEADER: Final = (
+    "| Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |"
+)
+## Same evidence dimensions in the detailed ledger's preferred column order.
+_LEDGER_RULE_HEADER: Final = (
+    "| Rule | Force | Verifier | Relation | Rejection | Platforms | Field | Residual | Title |"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,6 +104,38 @@ class Artifact:
         self.path.write_text(self.text, encoding="utf-8")
 
 
+@dataclass(frozen=True, slots=True)
+class EvidenceCensus:
+    """The aggregate facts rendered above the per-rule evidence table."""
+
+    ## Rules grouped by normative force.
+    binding: tuple[Rule, ...]
+    ## Advisory rules retained for the rationale section.
+    advisory: tuple[Rule, ...]
+    ## Open rules retained for the blocked-decision section.
+    open_rules: tuple[Rule, ...]
+    ## Declared mechanism tags and the local subset that cannot be resolved.
+    named_mechanisms: frozenset[str]
+    ## Local mechanism tags whose implementation cannot be resolved.
+    pending_mechanisms: tuple[str, ...]
+    ## Binding rules whose declared strategy is missing or not built.
+    unavailable: tuple[Rule, ...]
+    ## VerificationState value against number of rules in that state.
+    state_counts: Counter[str]
+    ## Strategy relation and evidence totals.
+    strategy_count: int
+    ## Strategies whose proposition directly decides their stated claim.
+    direct_count: int
+    ## Strategies whose proposition leaves a broader semantic claim unresolved.
+    proxy_count: int
+    ## Rules carrying at least one machine-executed strategy.
+    automated_rule_count: int
+    ## Automated rules credited by the inherited rule-keyed mutation matrix.
+    witnessed_rule_count: int
+    ## Rules connected to one or more named adopter observations.
+    observed_rule_count: int
+
+
 def load(root: Path) -> list[Document]:
     """Parse every corpus document, reporting a bad file instead of raising on it.
 
@@ -97,7 +148,7 @@ def load(root: Path) -> list[Document]:
     """
     documents: list[Document] = []
     for path in sorted((root / "discipline").rglob("*.md")):
-        if path.name in {"INDEX.md"}:
+        if path.name == "INDEX.md":
             continue
         try:
             documents.append(parse_document(path))
@@ -124,16 +175,14 @@ def refresh_tokens(documents: Sequence[Document], *, write: bool) -> list[Path]:
         measured = count_tokens(text)
         declared = doc.front_matter.get("tokens")
         # Rewriting changes length, so converge rather than assume one pass.
-        if isinstance(declared, int) and abs(declared - measured) <= 2:
+        if isinstance(declared, int) and abs(declared - measured) <= _TOKEN_DRIFT:
             continue
         stale.append(doc.path)
         if not write:
             continue
         updated = text
         for _ in range(4):
-            candidate = _TOKENS_LINE.sub(
-                f"tokens: {count_tokens(updated)}", updated, count=1
-            )
+            candidate = _TOKENS_LINE.sub(f"tokens: {count_tokens(updated)}", updated, count=1)
             if candidate == updated:
                 break
             updated = candidate
@@ -157,14 +206,14 @@ EXTERNAL_TOOLS: Final[dict[str, str]] = {
     "mypy": "types",
     "pyright": "types",
     "mutmut": "NOT RUN -- mutmut 3.3.1 does an unconditional `import resource` at "
-              "module scope, and `resource` is Unix-only. It raises "
-              "ModuleNotFoundError on Windows before parsing an argument, so it "
-              "cannot be pinned or wired here. TEST-013 is delegated and undecided.",
+    "module scope, and `resource` is Unix-only. It raises "
+    "ModuleNotFoundError on Windows before parsing an argument, so it "
+    "cannot be pinned or wired here. TEST-013 is delegated and undecided.",
 }
 
 
 def _external_tool_section() -> list[str]:
-    """The table of external tools against the gate step that runs each.
+    """Render external tool strategies against their repository integration.
 
     @return the rendered lines
     @throws ValueError when a tool claims a gate entry that `GATE` does not carry,
@@ -174,7 +223,8 @@ def _external_tool_section() -> list[str]:
 
     entries = {name for name, _ in gate.GATE}
     unknown = [
-        f"{tool} -> {where}" for tool, where in EXTERNAL_TOOLS.items()
+        f"{tool} -> {where}"
+        for tool, where in EXTERNAL_TOOLS.items()
         if not where.startswith("NOT RUN") and where not in entries
     ]
     if unknown:
@@ -182,11 +232,13 @@ def _external_tool_section() -> list[str]:
         raise ValueError(message)
 
     lines = [
-        "## External mechanisms, and whether this repository runs them",
+        "## External tool integration",
         "",
-        ("`external` says a configured tool decides the rule. It does not say the "
-         "tool ever runs. Four of the rows below were `external` while their tool "
-         "ran nowhere in this tree, which is indistinguishable from unenforced."),
+        (
+            "An `external-verifier` state says the strategy delegates a proposition to "
+            "a tool. This independent table says whether this repository's gate actually "
+            "invokes that tool; availability and an executed pass remain different facts."
+        ),
         "",
         "| Tool | Run by this repository's gate |",
         "|---|---|",
@@ -213,36 +265,116 @@ def _sorted_rules(documents: Sequence[Document]) -> list[Rule]:
     )
 
 
-def statuses_for(rules: Sequence[Rule], root: Path) -> dict[str, Enforcement]:
-    """Measure every rule's enforcement status against the tree as it stands.
+def registry_for(root: Path) -> EvidenceRegistry:
+    """Load the authored evidence registry belonging to one corpus.
 
-    One pass shared by all three artifacts, so `INDEX.md`, `rules.json` and
-    `ENFORCEMENT.md` can never disagree about which rules are actually decided --
-    the disagreement being the whole reason the measurement is centralised in
-    `discipline_core` rather than reimplemented per artifact.
-
-    @param rules the corpus rules, in any order
-    @param root the repository root the mechanisms are resolved against
-    @return each rule id against its status
+    @param root repository whose generated views are being built
+    @return structurally validated evidence records
     """
-    return {rule.rule_id: enforcement_of(rule.mechanisms, root, rule.rule_id)
-            for rule in rules}
+    return load_evidence(root / "discipline" / "meta" / "evidence.json")
 
 
-def _status_cell(rule: Rule, status: Enforcement) -> str:
-    """Render one rule's status for a table, loud when the tag overstates it.
+def statuses_for(
+    rules: Sequence[Rule], root: Path, registry: EvidenceRegistry
+) -> dict[str, VerificationState]:
+    """Describe verifier availability without reporting an unexecuted outcome.
 
-    The vocabulary word is always present so the column stays greppable; the
-    marker is added only for the case a reader must not skim past -- a rule that
-    reads as binding and that nothing decides.
+    One pass shared by all generated views prevents one artifact from calling a
+    strategy available while another calls it absent. A state never means that
+    the strategy passed; only the project gate can report that runtime fact.
 
-    @param rule the rule the status belongs to, read for its force tag
-    @param status the measured status
-    @return the cell text
+    @param rules corpus rules, in any order
+    @param root repository the local mechanism paths are resolved against
+    @param registry evidence joined to every stable rule id
+    @return each rule id against its verifier-availability state
     """
-    if rule.force is Force.BINDING and not status.is_mechanical:
+    return {
+        rule.rule_id: verification_state(rule, registry.rules[rule.rule_id], root) for rule in rules
+    }
+
+
+def _status_cell(rule: Rule, status: VerificationState) -> str:
+    """Render one verifier state, marking absent strategies on binding rules.
+
+    @param rule normative rule the state belongs to
+    @param status verifier availability, never an execution result
+    @return greppable state with a loud marker only for absence or missing code
+    """
+    if rule.force is Force.BINDING and status in {
+        VerificationState.UNBUILT,
+        VerificationState.UNDECLARED,
+    }:
         return f"`{status}` **(!)**"
     return f"`{status}`"
+
+
+def _relations(evidence: RuleEvidence) -> str:
+    """Render the direct/proxy relations represented by a rule's strategies.
+
+    @param evidence authored strategies for one rule
+    @return distinct relation labels, or not-applicable when there are no strategies
+    """
+    relations = sorted({str(strategy.relation) for strategy in evidence.strategies})
+    return ", ".join(f"`{relation}`" for relation in relations) or "n/a"
+
+
+def _platforms(evidence: RuleEvidence) -> str:
+    """Render the declared supported-platform union for a rule.
+
+    @param evidence authored strategies for one rule
+    @return distinct supported platform labels
+    """
+    platforms = sorted({
+        platform for strategy in evidence.strategies for platform in strategy.platforms
+    })
+    return ", ".join(f"`{platform}`" for platform in platforms) or "n/a"
+
+
+def _discrimination(rule: Rule, evidence: RuleEvidence, covered: frozenset[str] | None) -> str:
+    """Render the evidence actually earned by the current mutation matrix.
+
+    The v3 matrix is keyed by rule, so it can witness that at least one strategy
+    rejected a case but cannot identify which strategy did so. The wording keeps
+    that coarse evidence distinct from the proposition-level matrix v4 requires.
+
+    @param rule normative rule whose id keys the inherited matrix
+    @param evidence strategies that determine whether rejection is required
+    @param covered rule ids loaded from the inherited matrix, or None if absent
+    @return precise label for the available discrimination evidence
+    """
+    automated = [strategy for strategy in evidence.strategies if strategy.is_automated]
+    if not automated:
+        return "n/a"
+    if covered is None:
+        return "`unknown`"
+    if rule.rule_id in covered:
+        return "`rule-level witnessed`"
+    return "`pending`"
+
+
+def _residual(evidence: RuleEvidence, *, limit: int = 96) -> str:
+    """Render a compact but substantive residual for the scanning index.
+
+    @param evidence authored strategies carrying residual claims
+    @param limit maximum rendered characters before an ellipsis
+    @return escaped residual text suitable for a Markdown table cell
+    """
+    residuals = [strategy.residual.replace("|", "\\|") for strategy in evidence.strategies]
+    if not residuals:
+        return "n/a"
+    text = "; ".join(residuals)
+    if len(text) <= limit:
+        return text
+    return f"{text[: limit - 1].rstrip()}…"
+
+
+def _observations(evidence: RuleEvidence) -> str:
+    """Render field-evidence IDs without turning their count into a quality score.
+
+    @param evidence authored observation links
+    @return observation identifiers or an explicit absence
+    """
+    return ", ".join(f"`{item}`" for item in evidence.observations) or "none"
 
 
 def build_index(documents: Sequence[Document], root: Path) -> Artifact:
@@ -254,20 +386,38 @@ def build_index(documents: Sequence[Document], root: Path) -> Artifact:
     row has to stay scannable. Meta documents are left out of the catalogue: they
     describe the corpus rather than govern code.
 
-    Each rule row carries its measured enforcement status beside its force tag,
-    because the two are different facts and a reader given only the tag will read
-    it as a guarantee. The count of rules that are binding and not mechanised is
-    stated at the top rather than left to be summed from the tables.
+    Each rule row keeps normative force, verifier availability, claim relation,
+    witnessed rejection, portability, residual, and field evidence in distinct
+    columns. None of those facts is allowed to stand in for another.
 
     @param documents the parsed corpus
     @param root the repository root, fixing both the destination and the links
     @return the intended path and contents; nothing is written
     """
     rules = _sorted_rules(documents)
-    status = statuses_for(rules, root)
-    overstated = sum(
-        1 for r in rules
-        if r.force is Force.BINDING and not status[r.rule_id].is_mechanical
+    registry = registry_for(root)
+    status = statuses_for(rules, root, registry)
+    covered = discrimination_covered(root)
+    unavailable = sum(
+        1
+        for r in rules
+        if r.force is Force.BINDING
+        and status[r.rule_id]
+        in {
+            VerificationState.UNBUILT,
+            VerificationState.UNDECLARED,
+        }
+    )
+    automated = [
+        rule
+        for rule in rules
+        if any(strategy.is_automated for strategy in registry.rules[rule.rule_id].strategies)
+    ]
+    witnessed = 0 if covered is None else sum(rule.rule_id in covered for rule in automated)
+    proxies = sum(
+        strategy.relation is DecisionRelation.PROXY
+        for evidence in registry.rules.values()
+        for strategy in evidence.strategies
     )
     by_module: defaultdict[str, list[Rule]] = defaultdict(list)
     for rule in rules:
@@ -286,33 +436,35 @@ def build_index(documents: Sequence[Document], root: Path) -> Artifact:
         "",
         "# Rule Index",
         "",
-        f"{len(rules)} rules across {len(by_module)} modules. "
-        "Grep this file for a rule id, then open only the module that owns it.",
-        "",
-        "**Force is a claim; Status is a measurement.** `Force` is what the rule's "
-        "heading declares. `Status` is what this tree was found to contain when the "
-        "index was built: `mechanized` -- every named mechanism was found here; "
-        "`external` -- nothing is missing but a configured tool or a reviewer settles "
-        "it; `review` -- a person decides it, and no gate will ever report it; "
-        "`unbuilt` -- a named check or fitness function does not exist; "
-        "`unmechanized` -- the rule names no mechanism at all. A row marked **(!)** "
-        "is binding and mechanically undecided: treat it as an obligation, not as "
-        "something the gate will catch for you.",
-        "",
         (
-            "**`mechanized` says a mechanism exists, not that it decides the whole "
-            "rule.** The measurement is presence on disk; how completely a check covers "
-            "the sentence above it is a judgement no build can make. `ARCH-012` is the "
-            "worked example: `check:no_test_branches` is real and runs, and it matches a "
-            'closed list of test signals, so `if os.environ.get("PYTEST_CURRENT_TEST")` '
-            "-- the canonical pytest detector -- passes it, as does any indirection "
-            "through a module constant. Read a `mechanized` row as *something will catch "
-            "the obvious cases*, and the rule's own text as what you actually owe."
+            f"{len(rules)} rules across {len(by_module)} modules. "
+            "Grep this file for a rule id, then open only the module that owns it."
         ),
         "",
-        f"{overstated} of {sum(1 for r in rules if r.force is Force.BINDING)} binding "
-        "rules are not mechanically decided. `enforce/ENFORCEMENT.md` names the "
-        "mechanisms still to build.",
+        (
+            "**The columns are different claims.** `Force` is the normative obligation. "
+            "`Verifier` says what strategy is available, never that it passed. `Relation` "
+            "says whether the observable proposition is the rule itself or only a proxy. "
+            "`Rejection` records whether the current matrix has watched the rule reject a "
+            "counterexample. `Platforms`, `Residual`, and `Field` state where the claim is "
+            "supported, what can remain wrong, and what named adopters observed."
+        ),
+        "",
+        (
+            "**A proxy cannot decide its parent semantic rule.** Passing its proposition "
+            "establishes only the stated syntax or behavior and leaves the printed "
+            "residual. `rule-level witnessed` is deliberately weaker than v4's target: "
+            "the inherited matrix proves that some strategy rejected a case for that "
+            "rule, but cannot yet attribute the rejection to one exact strategy."
+        ),
+        "",
+        (
+            f"{unavailable} of {sum(1 for r in rules if r.force is Force.BINDING)} binding "
+            "rules lack an available declared strategy. "
+            f"{witnessed} of {len(automated)} rules with automated strategies have inherited "
+            f"rule-level rejection evidence. {proxies} strategy claims are explicitly proxy "
+            "claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger."
+        ),
         "",
     ]
 
@@ -321,7 +473,12 @@ def build_index(documents: Sequence[Document], root: Path) -> Artifact:
         key=lambda d: (str(d.kind), d.doc_id),
     )
     if catalogue:
-        lines += ["## Modules", "", "| Module | Kind | Tokens | Rules | Load when |", "|---|---|---|---|---|"]
+        lines += [
+            "## Modules",
+            "",
+            "| Module | Kind | Tokens | Rules | Load when |",
+            "|---|---|---|---|---|",
+        ]
         for doc in catalogue:
             keywords = doc.front_matter.get("load_when")
             hint = ", ".join(str(k) for k in keywords[:6]) if isinstance(keywords, list) else ""
@@ -337,15 +494,17 @@ def build_index(documents: Sequence[Document], root: Path) -> Artifact:
             lines += [
                 f"### {module_id}",
                 "",
-                "| Rule | Force | Status | Mechanism | Title |",
-                "|---|---|---|---|---|",
+                _INDEX_RULE_HEADER,
+                "|---|---|---|---|---|---|---|---|---|",
             ]
             for rule in module_rules:
-                mechanisms = " ".join(f"`{m}`" for m in rule.mechanisms) or "—"
+                evidence = registry.rules[rule.rule_id]
                 lines.append(
                     f"| `{rule.rule_id}` | {rule.force} | "
                     f"{_status_cell(rule, status[rule.rule_id])} | "
-                    f"{mechanisms} | {rule.title} |"
+                    f"{_relations(evidence)} | {_discrimination(rule, evidence, covered)} | "
+                    f"{_platforms(evidence)} | {_residual(evidence)} | "
+                    f"{_observations(evidence)} | {rule.title} |"
                 )
             lines.append("")
 
@@ -373,18 +532,18 @@ def build_rules_json(documents: Sequence[Document], root: Path) -> Artifact:
     question can be answered without falling back to reading the module. Each
     rule keeps its file and line, which is what makes an answer citable.
 
-    Each rule also carries `enforcement`, measured rather than declared: it says
-    whether the mechanisms the heading names were actually found in this tree.
-    `mechanisms` is what the author wrote; `enforcement` is what is there. A
-    consumer asking "is this rule enforced" must read the second, and a rule that
-    is `BINDING` with an `enforcement` other than `mechanized` or `external` is
-    binding in name only.
+    The evidence registry is merged losslessly under each rule. Normative force,
+    verifier availability, exact observable propositions, discrimination cases,
+    portability, residuals, warrants, observations, and migration remain separate
+    fields so a consumer cannot accidentally turn one into a verdict about another.
 
     @param documents the parsed corpus
     @param root the repository root, for the relative paths in the payload
     @return the intended path and contents; nothing is written
     """
-    status = statuses_for(_sorted_rules(documents), root)
+    rules = _sorted_rules(documents)
+    registry = registry_for(root)
+    status = statuses_for(rules, root, registry)
     payload = {
         "generated_by": "tools/build_index.py",
         "modules": [
@@ -406,24 +565,8 @@ def build_rules_json(documents: Sequence[Document], root: Path) -> Artifact:
             if doc.doc_id
         ],
         "rules": [
-            {
-                "id": rule.rule_id,
-                "module": rule.module_id,
-                "title": rule.title,
-                "force": str(rule.force),
-                "mechanisms": list(rule.mechanisms),
-                "enforcement": str(status[rule.rule_id]),
-                "mechanically_enforced": status[rule.rule_id].is_mechanical,
-                "statement": rule.statement,
-                "why": rule.why,
-                "check": rule.check,
-                "no_mechanism": rule.no_mechanism,
-                "see": list(rule.see),
-                "superseded_by": rule.superseded_by,
-                "path": rule.path.relative_to(root).as_posix(),
-                "line": rule.line,
-            }
-            for rule in _sorted_rules(documents)
+            _rule_payload(rule, registry.rules[rule.rule_id], status[rule.rule_id], root)
+            for rule in rules
         ],
     }
     return Artifact(
@@ -432,150 +575,313 @@ def build_rules_json(documents: Sequence[Document], root: Path) -> Artifact:
     )
 
 
-def build_enforcement(documents: Sequence[Document], root: Path) -> Artifact:
-    """Render `enforce/ENFORCEMENT.md`, where the axiom's cost is made visible.
+def _rule_payload(
+    rule: Rule,
+    evidence: RuleEvidence,
+    state: VerificationState,
+    root: Path,
+) -> dict[str, object]:
+    """Merge one normative rule and its complete evidence record.
 
-    A binding rule counts as enforced only when some machine decides it -- every
-    named mechanism resolving to something on disk, or to a configured tool's own
-    rule. A rule naming none counts as unenforced, and so does one whose only
-    mechanism is `review`: judgment is a mechanism in the corpus's grammar but it
-    is not one that fails a gate, and counting it as enforced would overstate the
-    very number this file exists to keep honest. A mechanism that does not exist is
-    listed by name in its own table instead of being quietly totalled as built. The
-    advisory section is the admitted unenforceable surface, and an entry there with
-    no stated reason is printed as unjustified.
+    @param rule normative Markdown record
+    @param evidence authored epistemic and verification claims for the same id
+    @param state verifier availability measured against this repository
+    @param root repository root used to make the source path relative
+    @return JSON-shaped record without collapsing distinct claims
+    """
+    return {
+        "id": rule.rule_id,
+        "module": rule.module_id,
+        "title": rule.title,
+        "force": str(rule.force),
+        "mechanisms": list(rule.mechanisms),
+        "statement": rule.statement,
+        "why": rule.why,
+        "check": rule.check,
+        "no_mechanism": rule.no_mechanism,
+        "see": list(rule.see),
+        "superseded_by": rule.superseded_by,
+        "path": rule.path.relative_to(root).as_posix(),
+        "line": rule.line,
+        "applicability": {
+            "units": [str(unit) for unit in evidence.units],
+            "capabilities": list(evidence.capabilities),
+        },
+        "failure_mode": evidence.failure_mode,
+        "warrants": [
+            {
+                "source": warrant.source,
+                "relation": str(warrant.relation),
+                "confidence": str(warrant.confidence),
+            }
+            for warrant in evidence.warrants
+        ],
+        "verification": {
+            "state": str(state),
+            "strategies": [
+                {
+                    "mechanism": strategy.mechanism,
+                    "kind": str(strategy.kind),
+                    "relation": str(strategy.relation),
+                    "proposition": strategy.proposition,
+                    "residual": strategy.residual,
+                    "must_pass": strategy.must_pass,
+                    "must_reject": strategy.must_reject,
+                    "platforms": list(strategy.platforms),
+                    "not_applicable": strategy.not_applicable,
+                }
+                for strategy in evidence.strategies
+            ],
+        },
+        "field_observations": list(evidence.observations),
+        "migration": {
+            "source": evidence.migration.source,
+            "disposition": str(evidence.migration.disposition),
+            "guidance": evidence.migration.guidance,
+        },
+    }
+
+
+def _evidence_census(
+    rules: Sequence[Rule],
+    root: Path,
+    registry: EvidenceRegistry,
+    states: dict[str, VerificationState],
+    covered: frozenset[str] | None,
+) -> EvidenceCensus:
+    """Compute summary values once without obscuring the renderer.
+
+    @param rules sorted normative corpus
+    @param root repository against which local mechanisms resolve
+    @param registry evidence records joined to the rules
+    @param states verifier availability by stable rule id
+    @param covered rule-level mutations inherited from the v3 matrix
+    @return all counts and subsets shown in the generated ledger
+    """
+    binding = tuple(rule for rule in rules if rule.force is Force.BINDING)
+    named = frozenset(mechanism for rule in rules for mechanism in rule.mechanisms)
+    pending = tuple(
+        sorted(
+            mechanism for mechanism in named if mechanism_is_implemented(mechanism, root) is False
+        )
+    )
+    strategies = tuple(
+        strategy for evidence in registry.rules.values() for strategy in evidence.strategies
+    )
+    automated = tuple(
+        rule
+        for rule in rules
+        if any(strategy.is_automated for strategy in registry.rules[rule.rule_id].strategies)
+    )
+    proxy_count = sum(strategy.relation is DecisionRelation.PROXY for strategy in strategies)
+    return EvidenceCensus(
+        binding=binding,
+        advisory=tuple(rule for rule in rules if rule.force is Force.ADVISORY),
+        open_rules=tuple(rule for rule in rules if rule.force is Force.OPEN),
+        named_mechanisms=named,
+        pending_mechanisms=pending,
+        unavailable=tuple(
+            rule
+            for rule in binding
+            if states[rule.rule_id] in {VerificationState.UNBUILT, VerificationState.UNDECLARED}
+        ),
+        state_counts=Counter(str(states[rule.rule_id]) for rule in rules),
+        strategy_count=len(strategies),
+        direct_count=len(strategies) - proxy_count,
+        proxy_count=proxy_count,
+        automated_rule_count=len(automated),
+        witnessed_rule_count=(
+            0 if covered is None else sum(rule.rule_id in covered for rule in automated)
+        ),
+        observed_rule_count=sum(
+            bool(evidence.observations) for evidence in registry.rules.values()
+        ),
+    )
+
+
+def build_enforcement(documents: Sequence[Document], root: Path) -> Artifact:
+    """Render the complete rule-evidence census for human review.
+
+    The historical filename remains part of the package API, but its v4 contents
+    no longer flatten mechanism presence into semantic assurance. The ledger
+    separates force, verifier availability, direct/proxy relation, inherited
+    rule-level rejection evidence, platform support, field observations, and the
+    residual left by each strategy.
 
     @param documents the parsed corpus
     @param root the repository root, fixing the destination and locating mechanisms
     @return the intended path and contents; nothing is written
     """
     rules = _sorted_rules(documents)
-    status = statuses_for(rules, root)
-    binding = [r for r in rules if r.force is Force.BINDING]
-    advisory = [r for r in rules if r.force is Force.ADVISORY]
-    open_rules = [r for r in rules if r.force is Force.OPEN]
-    named = {m for r in rules for m in r.mechanisms}
-    pending = sorted(m for m in named if mechanism_is_implemented(m, root) is False)
-    built = len(named) - len(pending)
-    enforced = sum(1 for r in binding if status[r.rule_id].is_mechanical)
-    overstated = [r for r in binding if not status[r.rule_id].is_mechanical]
-    share = f"{enforced / len(binding):.0%}" if binding else "n/a"
-    census = Counter(str(status[r.rule_id]) for r in rules)
+    registry = registry_for(root)
+    status = statuses_for(rules, root, registry)
+    covered = discrimination_covered(root)
+    census = _evidence_census(rules, root, registry, status, covered)
 
     lines = [
         GENERATED_BANNER,
         "",
-        "# Enforcement",
+        "# Verification Evidence",
         "",
-        "Every rule against the mechanism that decides it. The corpus's own standard is "
-        "that a rule nothing checks is not binding in practice, whatever its tag says, so "
-        "this table is where that claim is either kept or exposed.",
+        (
+            "This ledger keeps unlike claims unlike. A rule can be normatively binding while "
+            "its verifier is absent; a verifier can exist while deciding only a proxy; a "
+            "proxy can pass while its residual remains true; and a successful adopter does "
+            "not prove universal benefit. No state below is a project-gate outcome."
+        ),
         "",
-        f"- **{len(binding)}** binding rules; **{enforced}** are decided by something "
-        f"that runs ({share}). The other **{len(overstated)}** read as binding and are "
-        "not mechanically decided.",
-        f"- **{len(advisory)}** advisory rules -- the unenforceable surface, listed below with reasons.",
-        f"- **{len(open_rules)}** rules blocked on an open decision.",
-        f"- **{built}/{len(named)}** named mechanisms are built; **{len(pending)}** are "
-        "declared but not yet implemented.",
+        (
+            f"- **{len(census.binding)}** binding rules; "
+            f"**{len(census.unavailable)}** lack an available "
+            "declared strategy."
+        ),
+        (
+            f"- **{len(census.advisory)}** advisory rules and "
+            f"**{len(census.open_rules)}** open rules."
+        ),
+        (
+            f"- **{census.strategy_count}** exact strategy records: "
+            f"**{census.direct_count}** direct and **{census.proxy_count}** proxy claims."
+        ),
+        (
+            f"- **{census.witnessed_rule_count}/{census.automated_rule_count}** rules "
+            "with automated strategies have "
+            "inherited rule-level rejection evidence; v4 still owes strategy-level attribution."
+        ),
+        f"- **{census.observed_rule_count}/{len(rules)}** rules carry named field observations.",
+        (
+            f"- **{len(census.named_mechanisms) - len(census.pending_mechanisms)}/"
+            f"{len(census.named_mechanisms)}** named mechanisms resolve locally or delegate "
+            f"explicitly; **{len(census.pending_mechanisms)}** local mechanisms are absent."
+        ),
         "",
-        "## Status census",
+        "## Verifier-state census",
         "",
-        "Measured against this tree, not declared. `discipline/rules.json` carries the "
-        "same value per rule as `enforcement`, and `discipline/INDEX.md` shows it in the "
-        "`Status` column.",
+        (
+            "Measured against this tree, not copied from the rule heading. "
+            "`discipline/rules.json` carries the same value under `verification.state`, and "
+            "`discipline/INDEX.md` shows it in the `Verifier` column."
+        ),
         "",
-        "| Status | Rules | Means |",
+        "| State | Rules | Means |",
         "|---|---|---|",
-        f"| `mechanized` | {census['mechanized']} | every named mechanism was found here |",
-        f"| `external` | {census['external']} | nothing missing, but a configured tool or "
-        "a reviewer settles it |",
-        f"| `review` | {census['review']} | a person decides it; no gate will report it |",
-        f"| `unbuilt` | {census['unbuilt']} | a named check or fitness function does not exist |",
-        f"| `unmechanized` | {census['unmechanized']} | the rule names no mechanism at all |",
+        (
+            f"| `local-verifier` | {census.state_counts['local-verifier']} | "
+            "repository-local code observes every strategy |"
+        ),
+        (
+            f"| `external-verifier` | {census.state_counts['external-verifier']} | "
+            "every strategy delegates to a configured tool |"
+        ),
+        (
+            f"| `mixed-verifiers` | {census.state_counts['mixed-verifiers']} | "
+            "several verifier kinds contribute |"
+        ),
+        (
+            f"| `structured-review` | {census.state_counts['structured-review']} | "
+            "judgment is recorded in a checked review artifact |"
+        ),
+        (
+            f"| `unbuilt` | {census.state_counts['unbuilt']} | "
+            "at least one named local verifier is absent |"
+        ),
+        (
+            f"| `undeclared` | {census.state_counts['undeclared']} | "
+            "the active rule has no strategy record |"
+        ),
+        (
+            f"| `retired` | {census.state_counts['retired']} | "
+            "the stable id remains only for history |"
+        ),
         "",
     ]
 
     lines += _external_tool_section()
 
-    if overstated:
+    if census.unavailable:
         lines += [
-            "## Binding but not mechanically decided",
+            "## Binding rules without an available strategy",
             "",
-            "These read as obligations a gate will catch, and no gate will. Until the "
-            "mechanism exists, each is enforced only by whoever remembers it.",
+            (
+                "These remain normative obligations, but the declared verifier is absent or "
+                "missing. They cannot contribute to a green release verdict."
+            ),
             "",
-            "| Rule | Status | Mechanism | Title |",
+            "| Rule | Verifier | Mechanism | Title |",
             "|---|---|---|---|",
         ]
-        for rule in overstated:
+        for rule in census.unavailable:
             mechanisms = " ".join(f"`{m}`" for m in rule.mechanisms) or "—"
             lines.append(
                 f"| `{rule.rule_id}` | `{status[rule.rule_id]}` | {mechanisms} | {rule.title} |"
             )
         lines.append("")
 
-    if pending:
+    if census.pending_mechanisms:
         lines += [
-            "> **Mechanisms still to build.** Listed rather than assumed closed: a rule "
-            "whose mechanism does not exist is binding in name only. `tools/validate.py` "
-            "reports each as `V080`.",
+            (
+                "> **Mechanisms still to build.** Listed rather than assumed closed: a rule "
+                "whose verifier does not exist cannot report a violation. `tools/validate.py` "
+                "reports each absent declaration as `V080`."
+            ),
             "",
             "| Mechanism | Rules |",
             "|---|---|",
         ]
-        for mechanism in pending:
-            owners = ", ".join(
-                f"`{r.rule_id}`" for r in rules if mechanism in r.mechanisms
-            )
+        for mechanism in census.pending_mechanisms:
+            owners = ", ".join(f"`{r.rule_id}`" for r in rules if mechanism in r.mechanisms)
             lines.append(f"| `{mechanism}` | {owners} |")
         lines.append("")
 
-    if binding:
+    if rules:
         lines += [
-            "## Binding",
+            "## Rule evidence",
             "",
-            "| Rule | Status | Mechanism | Check | Title |",
-            "|---|---|---|---|---|",
+            _LEDGER_RULE_HEADER,
+            "|---|---|---|---|---|---|---|---|---|",
         ]
-        for rule in binding:
-            mechanisms = " ".join(f"`{m}`" for m in rule.mechanisms) or "—"
+        for rule in rules:
+            evidence = registry.rules[rule.rule_id]
             lines.append(
-                f"| `{rule.rule_id}` | {_status_cell(rule, status[rule.rule_id])} | "
-                f"{mechanisms} | {rule.check or '—'} | {rule.title} |"
+                f"| `{rule.rule_id}` | {rule.force} | "
+                f"{_status_cell(rule, status[rule.rule_id])} | {_relations(evidence)} | "
+                f"{_discrimination(rule, evidence, covered)} | {_platforms(evidence)} | "
+                f"{_observations(evidence)} | {_residual(evidence, limit=180)} | "
+                f"{rule.title} |"
             )
         lines.append("")
 
-        counts = Counter(m.split(":", 1)[0] for r in binding for m in r.mechanisms)
+        counts = Counter(m.split(":", 1)[0] for r in rules for m in r.mechanisms)
         lines += ["### Mechanisms in use", "", "| Kind | Rules |", "|---|---|"]
         lines += [f"| `{kind}` | {n} |" for kind, n in sorted(counts.items())]
         lines.append("")
 
-    if advisory:
+    if census.advisory:
         lines += [
-            "## Advisory -- the unenforceable surface",
+            "## Advisory rationale",
             "",
-            "Each of these was tried against a mechanism and could not be reduced to one. "
-            "Drive this list toward zero; an entry that has become checkable should be "
-            "retagged rather than left here.",
+            (
+                "Each advisory rule records why its semantic conclusion is not reduced to an "
+                "automated proposition. That reason is review input, not a waiver."
+            ),
             "",
             "| Rule | Why no mechanism exists | Title |",
             "|---|---|---|",
         ]
-        for rule in advisory:
+        for rule in census.advisory:
             lines.append(
                 f"| `{rule.rule_id}` | {rule.no_mechanism or '**unjustified**'} | {rule.title} |"
             )
         lines.append("")
 
-    if open_rules:
+    if census.open_rules:
         lines += [
             "## Blocked on an open decision",
             "",
             "| Rule | Title |",
             "|---|---|",
         ]
-        lines += [f"| `{r.rule_id}` | {r.title} |" for r in open_rules]
+        lines += [f"| `{r.rule_id}` | {r.title} |" for r in census.open_rules]
         lines.append("")
 
     return Artifact(root / "enforce" / "ENFORCEMENT.md", "\n".join(lines).rstrip() + "\n")

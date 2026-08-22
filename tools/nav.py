@@ -65,39 +65,36 @@ class Hit:
     reason: str
     ## A rule's declared force; absent for nodes that carry no force.
     force: str | None = None
-    ## The measured enforcement status from `discipline/rules.json`, or None when
-    ## the node is not a rule or the index has not been built. Force is what the
-    ## rule claims; this is what was found on disk, and the two disagree often
-    ## enough that printing the first alone misleads.
-    enforcement: str | None = None
+    ## The verifier-availability state from `discipline/rules.json`, or None when
+    ## the node is not a rule or the index has not been built. This is distinct
+    ## from force and from an executed project-gate outcome.
+    verification: str | None = None
     ## Reading cost copied off the node, and zero means unmeasured rather than
     ## free: nothing here distinguishes a costless node from an uncosted one.
     tokens: int = 0
 
 
-## Enforcement statuses under which no machine reports a violation, each against
-## the words printed beside the force tag. A rule tagged `BINDING` and carrying
-## one of these reads as enforced and is not, which is the single thing this
-## navigator must never let an agent walk past. Statuses absent from this map are
-## the enforced ones and print their force tag plain.
-_UNENFORCED: Final[Mapping[str, str]] = {
-    "unbuilt": "NOT YET MECHANIZED",
-    "unmechanized": "NOTHING CHECKS IT",
-    "review": "REVIEW ONLY",
+## Verifier states that need a caveat beside normative force. Available automated
+## strategies print the force plain; review remains visible because a checked
+## artifact is not a machine verdict on the semantic conclusion.
+_VERIFICATION_CAVEAT: Final[Mapping[str, str]] = {
+    "unbuilt": "VERIFIER NOT BUILT",
+    "undeclared": "NO VERIFICATION STRATEGY",
+    "structured-review": "STRUCTURED REVIEW",
+    "retired": "RETIRED",
 }
 
 
 @lru_cache(maxsize=4)
-def enforcement_index(root: Path) -> Mapping[str, str]:
-    """Rule id against measured enforcement status, read from `rules.json`.
+def verification_index(root: Path) -> Mapping[str, str]:
+    """Rule id against verifier availability, read from `rules.json`.
 
-    Overlaid here rather than carried in the graph: the status is a fact about the
-    working tree at build time, and `build_index.py` is what measures it. A missing
-    or unreadable index leaves every answer merely unannotated -- the navigator
-    still answers, it simply cannot say whether a rule is decided.
+    Overlaid rather than carried in the graph because the state is measured from
+    the working tree at build time. A missing or unreadable index leaves answers
+    unannotated; it never fabricates availability or a gate outcome.
 
     @param root the repository root whose generated index is read
-    @return the mapping, empty when the index is absent or malformed
+    @return state by stable id, empty when the index is absent or malformed
     """
     path = root / "discipline" / "rules.json"
     try:
@@ -105,39 +102,44 @@ def enforcement_index(root: Path) -> Mapping[str, str]:
     except (OSError, ValueError):
         return {}
     rules = payload.get("rules", []) if isinstance(payload, dict) else []
-    return {
-        rule["id"]: rule["enforcement"]
-        for rule in rules
-        if isinstance(rule, dict) and "id" in rule and "enforcement" in rule
-    }
+    found: dict[str, str] = {}
+    for rule in rules:
+        if not isinstance(rule, dict) or not isinstance(rule.get("id"), str):
+            continue
+        verification = rule.get("verification")
+        if not isinstance(verification, dict):
+            continue
+        state = verification.get("state")
+        if isinstance(state, str):
+            found[rule["id"]] = state
+    return found
 
 
 def annotate(hits: Iterable[Hit], root: Path) -> list[Hit]:
-    """Attach each rule's measured enforcement status to the answer.
+    """Attach each rule's verifier-availability state to the answer.
 
     @param hits the answer records to annotate, in the order they will be shown
     @param root the repository root whose generated index supplies the statuses
     @return the same records in the same order, rules carrying their status
     """
-    index = enforcement_index(root)
-    return [replace(hit, enforcement=index.get(hit.id)) for hit in hits]
+    index = verification_index(root)
+    return [replace(hit, verification=index.get(hit.id)) for hit in hits]
 
 
-def force_tag(force: str | None, enforcement: str | None) -> str:
-    """Render a rule's obligation and whether anything actually decides it.
+def force_tag(force: str | None, verification: str | None) -> str:
+    """Render a rule's obligation beside verifier availability.
 
-    The unenforced case is spelled out in words rather than marked with a symbol,
-    because the reader this protects is an agent skimming output: `[BINDING]` and
-    `[BINDING - NOT YET MECHANIZED]` cannot be confused, whereas a punctuation mark
-    can be dropped without the sentence changing meaning.
+    A caveat is spelled out rather than reduced to punctuation because a reader
+    skimming output must not turn normative force into a guarantee that some gate
+    step exists. This function still never reports whether a step passed.
 
     @param force the declared force, or None on a node that carries none
-    @param enforcement the measured status, or None when it was not available
+    @param verification verifier availability, or None when it was not available
     @return the bracketed tag, or the empty string when there is no force to show
     """
     if not force:
         return ""
-    caveat = _UNENFORCED.get(enforcement or "")
+    caveat = _VERIFICATION_CAVEAT.get(verification or "")
     return f"[{force} - {caveat}]" if caveat else f"[{force}]"
 
 
@@ -217,7 +219,10 @@ def _seed_by_layer(graph: Graph, parts: Sequence[str], found: dict[str, Hit]) ->
 
 
 def _seed_test_law(
-    graph: Graph, path: str, parts: Sequence[str], found: dict[str, Hit],
+    graph: Graph,
+    path: str,
+    parts: Sequence[str],
+    found: dict[str, Hit],
 ) -> None:
     """Claim the whole testing law for a file that is a test.
 
@@ -349,9 +354,39 @@ def _seed_by_mechanism(graph: Graph, lowered: str, found: dict[str, Hit]) -> Non
 ## Words too common to carry a topic. Dropped from both sides before a keyword is
 ## compared, so `a`, `this` and `the` cannot make up a keyword's overlap.
 _STOPWORDS: Final[frozenset[str]] = frozenset({
-    "a", "an", "the", "this", "that", "these", "it", "its", "is", "are", "was",
-    "be", "to", "for", "of", "in", "on", "at", "and", "or", "my", "i", "we",
-    "do", "does", "did", "how", "should", "would", "can", "with", "some", "any",
+    "a",
+    "an",
+    "the",
+    "this",
+    "that",
+    "these",
+    "it",
+    "its",
+    "is",
+    "are",
+    "was",
+    "be",
+    "to",
+    "for",
+    "of",
+    "in",
+    "on",
+    "at",
+    "and",
+    "or",
+    "my",
+    "i",
+    "we",
+    "do",
+    "does",
+    "did",
+    "how",
+    "should",
+    "would",
+    "can",
+    "with",
+    "some",
+    "any",
 })
 
 
@@ -484,7 +519,9 @@ def _gather_seeds(graph: Graph, args: argparse.Namespace) -> dict[str, Hit]:
 
 
 def _module_relevance(
-    graph: Graph, rules: Sequence[Hit], modules: Sequence[Hit],
+    graph: Graph,
+    rules: Sequence[Hit],
+    modules: Sequence[Hit],
 ) -> dict[str, tuple[int, int]]:
     """Rank the modules worth reading, by nearness and then by how much they carry.
 
@@ -595,7 +632,8 @@ def _learnings_for(args: argparse.Namespace, selected: Sequence[str]) -> list[st
         return []
     try:
         found = learn.retrieve(
-            store, connection,
+            store,
+            connection,
             file=getattr(args, "file", None),
             error=getattr(args, "error", None),
             task=getattr(args, "task", None),
@@ -603,10 +641,7 @@ def _learnings_for(args: argparse.Namespace, selected: Sequence[str]) -> list[st
         )
     finally:
         connection.close()
-    return [
-        f"{c.id} [{c.status} {c.effective:.2f}] {c.claim} -> {c.action}"
-        for c in found
-    ]
+    return [f"{c.id} [{c.status} {c.effective:.2f}] {c.claim} -> {c.action}" for c in found]
 
 
 def _force_rank(force: str | None) -> int:
@@ -693,8 +728,7 @@ def _read_envelope(source: str | None) -> dict[str, object]:
     """
     if source is None:
         return {}
-    raw = sys.stdin.read() if str(source) == "-" else Path(source).read_text(
-        encoding="utf-8")
+    raw = sys.stdin.read() if str(source) == "-" else Path(source).read_text(encoding="utf-8")
     try:
         parsed = json.loads(raw)
     except json.JSONDecodeError as broken:
@@ -703,8 +737,7 @@ def _read_envelope(source: str | None) -> dict[str, object]:
     return parsed if isinstance(parsed, dict) else {}
 
 
-def _diagnostic_seeds(graph: Graph, envelope: dict[str, object],
-                      text: str) -> dict[str, Hit]:
+def _diagnostic_seeds(graph: Graph, envelope: dict[str, object], text: str) -> dict[str, Hit]:
     """Which rules the failure implicates, preferring what it named outright.
 
     An id the envelope carries is evidence, not a guess, so it seeds at zero hops
@@ -726,31 +759,31 @@ def _diagnostic_seeds(graph: Graph, envelope: dict[str, object],
     if found:
         return found
 
-    prose = " ".join(str(envelope.get(field, "")) for field in
-                     ("code", "operation", "expected", "actual", "notes"))
+    prose = " ".join(
+        str(envelope.get(field, ""))
+        for field in ("code", "operation", "expected", "actual", "notes")
+    )
     for hit in seeds_for_error(graph, f"{text} {prose}".strip()):
         found.setdefault(hit.id, hit)
     return found
 
 
-def _rule_answer(hit: Hit, node: Node, rule: object, enforcement: str | None,
-                 ) -> dict[str, object]:
+def _rule_answer(hit: Hit, node: Node, rule: object, verification: str | None) -> dict[str, object]:
     """One rule laid out as an answer: what it says, why, and what decides it.
 
     @param hit how the rule was reached
     @param node its graph node, carrying the force tag and reading cost
     @param rule its parsed form, carrying the words
-    @param enforcement the measured status, so a binding rule nothing decides
-        does not read as a guarantee
+    @param verification measured verifier availability, kept separate from force
     @return the fields a caller needs to act without opening the module
     """
     return {
         "id": hit.id,
-        "title": rule.title,          # type: ignore[attr-defined]
-        "force": force_tag(node.attr("force"), enforcement),
+        "title": rule.title,  # type: ignore[attr-defined]
+        "force": force_tag(node.attr("force"), verification),
         "statement": rule.statement,  # type: ignore[attr-defined]
-        "why": rule.why,              # type: ignore[attr-defined]
-        "check": rule.check,          # type: ignore[attr-defined]
+        "why": rule.why,  # type: ignore[attr-defined]
+        "check": rule.check,  # type: ignore[attr-defined]
         "module": node.attr("module"),
         "open": openable(node.path),
         "tokens": node.tokens,
@@ -788,7 +821,7 @@ def cmd_diagnose(graph: Graph, args: argparse.Namespace) -> dict[str, object]:
     root = Path(args.root).resolve()
     found = _diagnostic_seeds(graph, envelope, text)
     parsed = rules_by_id(root)
-    status = enforcement_index(root)
+    status = verification_index(root)
 
     implicated: list[dict[str, object]] = []
     for hit in sorted(found.values(), key=lambda h: (h.hops, h.id)):
@@ -814,10 +847,9 @@ def cmd_rule(graph: Graph, args: argparse.Namespace) -> dict[str, object]:
     Both directions are reported: what a rule cites is half the picture, and
     what cites it is the other half.
 
-    The declared force is reported beside the measured enforcement status, and a
-    rule that binds while nothing decides it also gets a `warning` field saying so
-    in a sentence -- the force tag alone has been read as a guarantee, and it is
-    not one.
+    The declared force is reported beside verifier availability. A binding rule
+    with no strategy or an absent verifier also gets a sentence-level warning,
+    because the force tag alone must not be read as a gate guarantee.
 
     @param graph the discipline graph
     @param args the parsed `rule` arguments, carrying the id to look up
@@ -825,10 +857,8 @@ def cmd_rule(graph: Graph, args: argparse.Namespace) -> dict[str, object]:
     @throws SystemExit when the graph holds no node with that id
     """
     node = _require(graph, args.id)
-    enforcement = enforcement_index(Path(getattr(args, "root", REPO_ROOT)).resolve()).get(
-        node.id
-    )
-    caveat = _UNENFORCED.get(enforcement or "")
+    verification = verification_index(Path(getattr(args, "root", REPO_ROOT)).resolve()).get(node.id)
+    caveat = _VERIFICATION_CAVEAT.get(verification or "")
     out: dict[str, list[str]] = {}
     for edge in graph.out_edges(node.id):
         out.setdefault(str(edge.type), []).append(_describe(graph, edge.dst, edge))
@@ -840,10 +870,10 @@ def cmd_rule(graph: Graph, args: argparse.Namespace) -> dict[str, object]:
         "label": node.label,
         "type": str(node.type),
         "force": node.attr("force"),
-        "enforcement": enforcement,
+        "verification": verification,
         "warning": (
-            f"{node.id} {force_tag(node.attr('force'), enforcement)}"
-            f" - {caveat.lower()}; nothing in the gate will report a violation"
+            f"{node.id} {force_tag(node.attr('force'), verification)}"
+            f" - {caveat.lower()}; this is verifier availability, not a pass result"
             if caveat and node.attr("force")
             else None
         ),
@@ -872,8 +902,12 @@ def cmd_neighbors(graph: Graph, args: argparse.Namespace) -> dict[str, object]:
         "depth": args.depth,
         "types": args.type or "all",
         "nodes": [
-            {"id": nid, "hops": hops, "label": graph.nodes[nid].label,
-             "type": str(graph.nodes[nid].type)}
+            {
+                "id": nid,
+                "hops": hops,
+                "label": graph.nodes[nid].label,
+                "type": str(graph.nodes[nid].type),
+            }
             for nid, hops in sorted(reached.items(), key=lambda kv: (kv[1], kv[0]))
             if nid != args.id
         ],
@@ -887,9 +921,8 @@ def cmd_applies(graph: Graph, args: argparse.Namespace) -> dict[str, object]:
     an agent wants the obligations rather than a reading plan. The path need not
     exist; only its shape decides the answer.
 
-    Each rule carries its measured enforcement status alongside its force, so a
-    caller reading the obligations can tell which of them anything will actually
-    catch.
+    Each rule carries verifier availability alongside force, so a caller can see
+    whether any strategy is available without mistaking that fact for a pass.
 
     @param graph the discipline graph
     @param args the parsed `applies` arguments, carrying the path
@@ -921,16 +954,21 @@ def cmd_why(graph: Graph, args: argparse.Namespace) -> dict[str, object]:
     return {
         "id": node.id,
         "label": node.label,
-        "resolved_by": [_describe(graph, e.dst, e)
-                        for e in graph.out_edges(node.id, [EdgeType.RESOLVED_BY])],
-        "blocked_by": [_describe(graph, e.dst, e)
-                       for e in graph.out_edges(node.id, [EdgeType.BLOCKED_BY])],
-        "grounds_on": [_describe(graph, e.dst, e)
-                       for e in graph.out_edges(node.id, [EdgeType.GROUNDS_ON])],
-        "tensions_with": [_describe(graph, e.dst, e)
-                          for e in graph.out_edges(node.id, [EdgeType.TENSIONS_WITH])],
-        "derives_from": [_describe(graph, e.dst, e)
-                         for e in graph.out_edges(node.id, [EdgeType.DERIVES_FROM])],
+        "resolved_by": [
+            _describe(graph, e.dst, e) for e in graph.out_edges(node.id, [EdgeType.RESOLVED_BY])
+        ],
+        "blocked_by": [
+            _describe(graph, e.dst, e) for e in graph.out_edges(node.id, [EdgeType.BLOCKED_BY])
+        ],
+        "grounds_on": [
+            _describe(graph, e.dst, e) for e in graph.out_edges(node.id, [EdgeType.GROUNDS_ON])
+        ],
+        "tensions_with": [
+            _describe(graph, e.dst, e) for e in graph.out_edges(node.id, [EdgeType.TENSIONS_WITH])
+        ],
+        "derives_from": [
+            _describe(graph, e.dst, e) for e in graph.out_edges(node.id, [EdgeType.DERIVES_FROM])
+        ],
     }
 
 
@@ -959,8 +997,7 @@ def cmd_path(graph: Graph, args: argparse.Namespace) -> dict[str, object]:
         "to": args.dst,
         "found": found is not None,
         "steps": [
-            {"type": str(e.type), "src": e.src, "dst": e.dst, "note": e.note}
-            for e in (found or [])
+            {"type": str(e.type), "src": e.src, "dst": e.dst, "note": e.note} for e in (found or [])
         ],
     }
 
@@ -1005,9 +1042,7 @@ def cmd_stats(graph: Graph, args: argparse.Namespace) -> dict[str, object]:
     @return the node and edge census, the reachable fraction, and the ids of any
         rules the walk never arrives at
     """
-    unreachable = graph.unreachable_from(
-        _kernel_seeds(graph), NodeType.RULE, depth=args.depth
-    )
+    unreachable = graph.unreachable_from(_kernel_seeds(graph), NodeType.RULE, depth=args.depth)
     total = len(graph.of_type(NodeType.RULE))
     nodes: dict[str, int] = {}
     for node in graph.nodes.values():
@@ -1079,7 +1114,7 @@ def _render_context(payload: dict[str, object]) -> list[str]:
     suffix = f" of {total} - raise --max-rules to see the rest" if shown < total else ""
     lines = [f"RULES ({shown}{suffix})"]
     for rule in payload["rules"]:  # type: ignore[union-attr]
-        tag = force_tag(rule["force"], rule.get("enforcement"))
+        tag = force_tag(rule["force"], rule.get("verification"))
         lines.append(f"  {rule['id']:<10} {tag:<32} {rule['label']}")
         lines.append(f"  {'':<10} {'':<32} ~ {rule['reason']}")
     lines.append("")
@@ -1109,11 +1144,11 @@ def _render_applies(payload: dict[str, object]) -> list[str]:
     lines = [f"{payload['path']}  ({len(rules)} rules)"]  # type: ignore[arg-type]
     for rule in rules:  # type: ignore[union-attr]
         lines.append(
-            f"  {rule['id']:<10} {force_tag(rule['force'], rule.get('enforcement')):<32}"
+            f"  {rule['id']:<10} "
+            f"{force_tag(rule['force'], rule.get('verification')):<32}"
             f" {rule['label']}   ~ {rule['reason']}"
         )
-    lines += [f"  {module['id']:<20} ~ {module['reason']}"
-              for module in payload["modules"]]  # type: ignore[union-attr]
+    lines += [f"  {module['id']:<20} ~ {module['reason']}" for module in payload["modules"]]  # type: ignore[union-attr]
     return lines
 
 
@@ -1177,8 +1212,11 @@ def _render_diagnose(payload: dict[str, object]) -> list[str]:
 
     rules = payload.get("rules") or []
     if not rules:
-        lines += ["", "no rule in the corpus matched this output.",
-                  "Add a signature to enforce/signals.toml if this shape recurs."]
+        lines += [
+            "",
+            "no rule in the corpus matched this output.",
+            "Add a signature to enforce/signals.toml if this shape recurs.",
+        ]
         return lines
 
     lines.append("")
@@ -1192,8 +1230,7 @@ def _render_diagnose(payload: dict[str, object]) -> list[str]:
         if rule.get("check"):
             lines.append(f"    check  {rule['check']}")
         lines += [f"    open   {rule['open']}  ({rule['module']})", ""]
-    lines.append(
-        f"COST  {payload['tokens']} tok -- {len(rules)} rule(s), read in full")
+    lines.append(f"COST  {payload['tokens']} tok -- {len(rules)} rule(s), read in full")
     if payload.get("unresolved"):
         named = ", ".join(payload["unresolved"])  # type: ignore[arg-type]
         lines.append(f"UNRESOLVED  {named} -- named by the envelope, absent here")
@@ -1256,8 +1293,7 @@ def build_parser() -> argparse.ArgumentParser:
     nb.add_argument("--depth", type=int, default=1)
     nb.add_argument("--undirected", action="store_true")
 
-    dg = sub.add_parser("diagnose",
-                        help="what broke, against which rule, and what to do")
+    dg = sub.add_parser("diagnose", help="what broke, against which rule, and what to do")
     dg.add_argument("--envelope", help="a serialized diagnostic envelope, or - for stdin")
     dg.add_argument("--error", help="raw error text, when there is no envelope")
 
@@ -1308,8 +1344,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     graph = load_graph(args.root.resolve())
     payload = COMMANDS[args.command](graph, args)
-    print(json.dumps(payload, indent=1, ensure_ascii=False) if args.json
-          else render(args.command, payload))
+    print(
+        json.dumps(payload, indent=1, ensure_ascii=False)
+        if args.json
+        else render(args.command, payload)
+    )
     return 0
 
 

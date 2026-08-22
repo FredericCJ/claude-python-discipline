@@ -20,6 +20,7 @@ import pytest
 
 import nav
 from discipline_core import REPO_ROOT, Enforcement, enforcement_of, mechanism_is_implemented
+from evidence_model import VerificationState
 from validate import (
     Layout,
     Severity,
@@ -447,9 +448,7 @@ def mechanism_resolvers() -> Iterator[tuple[str, str]]:
             for node in ast.walk(tree):
                 if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                     continue
-                source = ast.get_source_segment(
-                    path.read_text(encoding="utf-8"), node
-                ) or ""
+                source = ast.get_source_segment(path.read_text(encoding="utf-8"), node) or ""
                 if '"checks"' in source and '"fitness"' in source and "exists()" in source:
                     yield path.relative_to(REPO_ROOT).as_posix(), node.name
 
@@ -534,63 +533,73 @@ def test_an_unverifiable_mechanism_is_none_not_false(tmp_path: Path) -> None:
     assert mechanism_is_implemented("check:absent", root) is False
 
 
-def test_rules_json_publishes_a_status_for_every_rule() -> None:
-    """The generated contract carries the field its consumers are told to read."""
+def test_rules_json_separates_verification_from_normative_force() -> None:
+    """The generated contract carries complete evidence without a synthetic verdict."""
     path = REPO_ROOT / "discipline" / "rules.json"
     if not path.exists():
         pytest.skip("discipline/rules.json not built; run tools/build_index.py")
     rules = json.loads(path.read_text(encoding="utf-8"))["rules"]
-    vocabulary = {str(value) for value in Enforcement}
-    unknown = {r["id"]: r.get("enforcement") for r in rules
-               if r.get("enforcement") not in vocabulary}
+    vocabulary = {str(value) for value in VerificationState}
+    unknown = {
+        rule["id"]: rule.get("verification", {}).get("state")
+        for rule in rules
+        if rule.get("verification", {}).get("state") not in vocabulary
+    }
     assert unknown == {}, unknown
-    disagreeing = [
-        r["id"] for r in rules
-        if r["mechanically_enforced"] is not Enforcement(r["enforcement"]).is_mechanical
-    ]
-    assert disagreeing == [], disagreeing
+    assert all("enforcement" not in rule for rule in rules)
+    assert all("mechanically_enforced" not in rule for rule in rules)
+    assert all(rule["verification"].get("strategies") is not None for rule in rules)
+    assert all("failure_mode" in rule and "migration" in rule for rule in rules)
 
 
-def test_index_md_carries_the_status_column() -> None:
-    """An agent grepping the index sees the measurement beside the claim."""
+def test_index_md_carries_the_distinct_evidence_columns() -> None:
+    """An agent grepping the index cannot confuse force with verifier evidence."""
     path = REPO_ROOT / "discipline" / "INDEX.md"
     if not path.exists():
         pytest.skip("discipline/INDEX.md not built; run tools/build_index.py")
     text = path.read_text(encoding="utf-8")
-    assert "| Rule | Force | Status | Mechanism | Title |" in text
+    assert (
+        "| Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |"
+    ) in text
     assert "`unbuilt`" in text
+    assert "`proxy`" in text
+    assert "rule-level witnessed" in text
 
 
-def test_nav_renders_a_binding_unbuilt_rule_distinguishably() -> None:
+def test_nav_renders_a_binding_unbuilt_verifier_distinguishably() -> None:
     """The whole point, at the surface an agent actually reads.
 
     Two rules alike in force and unlike in whether anything decides them must not
     render alike, or the navigator has reproduced the defect it was meant to fix.
     """
-    enforced = {
-        "id": "ARCH-001", "label": "governed", "type": "rule", "hops": 0,
-        "reason": "governs domain/", "force": "BINDING", "enforcement": "mechanized",
+    available = {
+        "id": "ARCH-001",
+        "label": "governed",
+        "type": "rule",
+        "hops": 0,
+        "reason": "governs domain/",
+        "force": "BINDING",
+        "verification": "local-verifier",
     }
-    unbuilt = {**enforced, "id": "ARCH-008", "enforcement": "unbuilt"}
-    rendered = nav.render("applies", {"path": "p.py", "rules": [enforced, unbuilt],
-                                      "modules": []})
+    unbuilt = {**available, "id": "ARCH-008", "verification": "unbuilt"}
+    rendered = nav.render("applies", {"path": "p.py", "rules": [available, unbuilt], "modules": []})
     assert "ARCH-008" in rendered
-    assert "[BINDING - NOT YET MECHANIZED]" in rendered
+    assert "[BINDING - VERIFIER NOT BUILT]" in rendered
     lines = {row.split()[0]: row for row in rendered.splitlines() if row.startswith("  ")}
     assert lines["ARCH-001"] != lines["ARCH-008"].replace("ARCH-008", "ARCH-001")
-    assert "NOT YET MECHANIZED" not in lines["ARCH-001"]
+    assert "VERIFIER NOT BUILT" not in lines["ARCH-001"]
 
 
-def test_nav_warns_on_a_binding_rule_nothing_decides() -> None:
-    """`nav rule` states the gap in a sentence, not only as a status word."""
+def test_nav_warns_on_a_binding_rule_without_a_verifier() -> None:
+    """`nav rule` states the availability gap without fabricating a result."""
     path = REPO_ROOT / "discipline" / "rules.json"
     if not path.exists():
         pytest.skip("discipline/rules.json not built; run tools/build_index.py")
-    index = nav.enforcement_index(REPO_ROOT)
-    assert index, "rules.json carried no enforcement statuses"
-    assert nav.force_tag("BINDING", "unbuilt") == "[BINDING - NOT YET MECHANIZED]"
-    assert nav.force_tag("BINDING", "mechanized") == "[BINDING]"
-    assert nav.force_tag("BINDING", "review") == "[BINDING - REVIEW ONLY]"
+    index = nav.verification_index(REPO_ROOT)
+    assert index, "rules.json carried no verifier states"
+    assert nav.force_tag("BINDING", "unbuilt") == "[BINDING - VERIFIER NOT BUILT]"
+    assert nav.force_tag("BINDING", "local-verifier") == "[BINDING]"
+    assert nav.force_tag("BINDING", "structured-review") == ("[BINDING - STRUCTURED REVIEW]")
     assert not nav.force_tag(None, "unbuilt")
 
 
@@ -628,9 +637,7 @@ def test_a_hand_raised_count_is_refused(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize("payload", [{"pairs": []}, {"count": 0}, {}])
-def test_a_baseline_missing_a_field_is_refused(
-    tmp_path: Path, payload: dict[str, object]
-) -> None:
+def test_a_baseline_missing_a_field_is_refused(tmp_path: Path, payload: dict[str, object]) -> None:
     """A half-written baseline is named as one, not raised as a KeyError.
 
     @param tmp_path pytest's per-test temporary directory
@@ -790,11 +797,18 @@ def test_v097_notices_a_loop_that_only_writes(tmp_path: Path) -> None:
     ledger.parent.mkdir(parents=True, exist_ok=True)
     ledger.write_text(
         "\n".join(
-            json.dumps({"seq": n, "kind": "learn", "id": f"L-{n:04d}",
-                        "session": "S-1", "ts": "2026-08-19T00:00:00+00:00",
-                        "actor": "agent", "payload": {}})
+            json.dumps({
+                "seq": n,
+                "kind": "learn",
+                "id": f"L-{n:04d}",
+                "session": "S-1",
+                "ts": "2026-08-19T00:00:00+00:00",
+                "actor": "agent",
+                "payload": {},
+            })
             for n in range(1, 21)
-        ) + "\n",
+        )
+        + "\n",
         encoding="utf-8",
     )
     assert "V097" in codes(run_on(tmp_path))
@@ -812,15 +826,27 @@ def test_v097_is_silent_once_outcomes_are_reported(tmp_path: Path) -> None:
     ledger = tmp_path / "learning" / "ledger.jsonl"
     ledger.parent.mkdir(parents=True, exist_ok=True)
     events = [
-        {"seq": n, "kind": "learn", "id": f"L-{n:04d}", "session": "S-1",
-         "ts": "2026-08-19T00:00:00+00:00", "actor": "agent", "payload": {}}
+        {
+            "seq": n,
+            "kind": "learn",
+            "id": f"L-{n:04d}",
+            "session": "S-1",
+            "ts": "2026-08-19T00:00:00+00:00",
+            "actor": "agent",
+            "payload": {},
+        }
         for n in range(1, 11)
     ] + [
-        {"seq": 20 + n, "kind": "use", "id": f"L-{n:04d}", "session": "S-1",
-         "ts": "2026-08-19T00:00:00+00:00", "actor": "agent",
-         "payload": {"outcome": "helped"}}
+        {
+            "seq": 20 + n,
+            "kind": "use",
+            "id": f"L-{n:04d}",
+            "session": "S-1",
+            "ts": "2026-08-19T00:00:00+00:00",
+            "actor": "agent",
+            "payload": {"outcome": "helped"},
+        }
         for n in range(1, 4)
     ]
-    ledger.write_text("\n".join(json.dumps(e) for e in events) + "\n",
-                      encoding="utf-8")
+    ledger.write_text("\n".join(json.dumps(e) for e in events) + "\n", encoding="utf-8")
     assert "V097" not in codes(run_on(tmp_path))
