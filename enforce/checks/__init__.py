@@ -45,6 +45,9 @@ class Finding:
     message: str
     ## What to do instead, citing the rule that says so where one applies.
     remediation: str
+    ## Stable mechanism-specific diagnostic. The rule id states the obligation;
+    ## this id distinguishes independently actionable failure predicates under it.
+    diagnostic_id: str | None = None
 
     def render(self, root: Path | None = None) -> str:
         """Format the finding as a diagnostic line with its remedy beneath.
@@ -62,8 +65,12 @@ class Finding:
                 shown = self.path.relative_to(root)
             except ValueError:
                 pass
+        identity = (
+            self.rule_id if self.diagnostic_id is None
+            else f"{self.rule_id}/{self.diagnostic_id}"
+        )
         return (
-            f"{shown.as_posix()}:{self.line}: {self.rule_id} {self.message}\n"
+            f"{shown.as_posix()}:{self.line}: {identity} {self.message}\n"
             f"    -> {self.remediation}"
         )
 

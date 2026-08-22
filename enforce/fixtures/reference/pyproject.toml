@@ -14,7 +14,7 @@
 
 [tool.agent-discipline]
 unit = "application"
-source_roots = ["src/refpkg"]
+source_roots = ["src"]
 doc_engine = "doxygen"
 
 [tool.agent-discipline.roles]
@@ -22,4 +22,4 @@ domain = ["src/refpkg/domain"]
 application = ["src/refpkg/app"]
 ports = ["src/refpkg/ports"]
 adapters = ["src/refpkg/adapters"]
-shell = ["src/refpkg/shell"]
+shell = ["src/refpkg/__init__.py", "src/refpkg/shell"]

@@ -4,12 +4,12 @@
 
 This ledger keeps unlike claims unlike. A rule can be normatively binding while its verifier is absent; a verifier can exist while deciding only a proxy; a proxy can pass while its residual remains true; and a successful adopter does not prove universal benefit. No state below is a project-gate outcome.
 
-- **163** binding rules; **14** lack an available declared strategy.
+- **164** binding rules; **14** lack an available declared strategy.
 - **26** advisory rules and **0** open rules.
-- **176** exact strategy records: **8** direct and **168** proxy claims.
-- **57/163** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
-- **15/191** rules carry named field observations.
-- **98/98** named mechanisms resolve locally or delegate explicitly; **0** local mechanisms are absent.
+- **177** exact strategy records: **9** direct and **168** proxy claims.
+- **58/164** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
+- **16/192** rules carry named field observations.
+- **99/99** named mechanisms resolve locally or delegate explicitly; **0** local mechanisms are absent.
 
 ## Verifier-state census
 
@@ -17,7 +17,7 @@ Measured against this tree, not copied from the rule heading. `discipline/rules.
 
 | State | Rules | Means |
 |---|---|---|
-| `local-verifier` | 114 | repository-local code observes every strategy |
+| `local-verifier` | 115 | repository-local code observes every strategy |
 | `external-verifier` | 27 | every strategy delegates to a configured tool |
 | `mixed-verifiers` | 8 | several verifier kinds contribute |
 | `structured-review` | 0 | judgment is recorded in a checked review artifact |
@@ -104,6 +104,7 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `ARCH-015` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:no_magic_in_domain; it does not establish the full semantic benefit of the normative statement. | Metaprogramming leaves the four questions answerable |
 | `ARCH-016` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:ruff:C901; it does not establish the full semantic benefit of the normative statement. | Module complexity stays within budget |
 | `ARCH-017` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | Prefer the direct call to the abstraction |
+| `ARCH-018` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | `V3E-001` | Passing proves path coverage only; it cannot establish that a human assigned each file to the semantically correct role. | Every production source has one declared role |
 | `DEP-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:import-linter; it does not establish the full semantic benefit of the normative statement. | The domain depends on the standard library only |
 | `DEP-002` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_dependency_position; it does not establish every behavior in the normative statement. | A dependency is judged by its architectural position |
 | `DEP-003` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | An adapter owns its dependency's failure modes |
@@ -259,7 +260,7 @@ These remain normative obligations, but the declared verifier is absent or missi
 | Kind | Rules |
 |---|---|
 | `auto` | 40 |
-| `check` | 73 |
+| `check` | 74 |
 | `fitness` | 63 |
 
 ## Advisory rationale

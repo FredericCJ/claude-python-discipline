@@ -815,6 +815,17 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         ),
     ),
     Mutation(
+        rule_id="ARCH-018",
+        summary="a new production source directory has no declared role",
+        source=(
+            "The v3 declaration defect observed in three component adopters: "
+            "an unknown source path was silently skipped by layer-scoped checks. "
+            "The mutation writes valid Python under source_roots but outside all "
+            "five explicit role paths."
+        ),
+        write=(("src/refpkg/services/orphan.py", '"""Unowned policy."""\n'),),
+    ),
+    Mutation(
         rule_id="EFCT-001",
         summary="the app opens a socket, performing an effect outside the shell",
         source=(

@@ -51,6 +51,7 @@ if str(REPO_ROOT / "enforce") not in sys.path:
 # These three sit below the path insert above deliberately: they live under
 # `enforce/`, which is not importable until that line has run.
 import discrimination  # ruff: ignore[module-import-not-at-top-of-file]
+from checks import project  # ruff: ignore[module-import-not-at-top-of-file]
 from checks.__main__ import discover  # ruff: ignore[module-import-not-at-top-of-file]
 from fixtures import broken_copy, reference_root  # ruff: ignore[module-import-not-at-top-of-file]
 
@@ -88,8 +89,10 @@ def findings_for(tree: Path, targets: Sequence[str]) -> set[str]:
     """
     paths = [tree / target for target in targets]
     present = [path for path in paths if path.exists()]
+    declaration = project.load(tree)
     reported: set[str] = set()
     for check in discover():
+        check.declaration = declaration
         reported.update(finding.rule_id for finding in check.run(present))
     return reported
 

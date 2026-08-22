@@ -973,6 +973,16 @@
    }
   },
   {
+   "id": "mech:check:source_roles",
+   "type": "mechanism",
+   "label": "check:source_roles",
+   "path": "enforce/checks/source_roles.py",
+   "attrs": {
+    "family": "check",
+    "implemented": "true"
+   }
+  },
+  {
    "id": "mech:check:test_weakening",
    "type": "mechanism",
    "label": "check:test_weakening",
@@ -1506,7 +1516,7 @@
    "type": "module",
    "label": "Architecture and Coupling",
    "path": "discipline/law/ARCH.md",
-   "tokens": 2719,
+   "tokens": 2921,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -2193,6 +2203,17 @@
    "tokens": 38,
    "attrs": {
     "force": "ADVISORY",
+    "module": "law/ARCH"
+   }
+  },
+  {
+   "id": "ARCH-018",
+   "type": "rule",
+   "label": "Every production source has one declared role",
+   "path": "discipline/law/ARCH.md:190",
+   "tokens": 90,
+   "attrs": {
+    "force": "BINDING",
     "module": "law/ARCH"
    }
   },
@@ -6392,6 +6413,18 @@
   },
   {
    "type": "cites",
+   "src": "ARCH-018",
+   "dst": "ARCH-001",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "ARCH-018",
+   "dst": "EVID-003",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
    "src": "DEP-001",
    "dst": "law/ARCH",
    "origin": "derived"
@@ -7060,6 +7093,12 @@
    "type": "contains",
    "src": "law/ARCH",
    "dst": "ARCH-017",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/ARCH",
+   "dst": "ARCH-018",
    "origin": "derived"
   },
   {
@@ -8276,6 +8315,12 @@
   },
   {
    "type": "enforced_by",
+   "src": "ARCH-018",
+   "dst": "mech:check:source_roles",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
    "src": "DEP-001",
    "dst": "mech:auto:import-linter",
    "origin": "derived"
@@ -9405,6 +9450,18 @@
   {
    "type": "grounds_on",
    "src": "ARCH-017",
+   "dst": "fact/py-typing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "ARCH-018",
+   "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "ARCH-018",
    "dst": "fact/py-typing",
    "origin": "derived"
   },

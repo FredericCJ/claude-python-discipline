@@ -2,7 +2,7 @@
 id: law/ARCH
 kind: law
 title: Architecture and Coupling
-tokens: 2719
+tokens: 2921
 load_when:
   - "new module"
   - "package layout"
@@ -186,3 +186,14 @@ substitution, observation or containment — not for symmetry.
   justification list in [ARCH-010] mechanizes the part of it that can be.
 - **Why** Layers added without a stated purpose are indistinguishable from layers added
   by habit, and each one lengthens every trace.
+
+### ARCH-018 · Every production source has one declared role  [BINDING] [check:source_roles]
+Every Python file beneath a declared production source root MUST match exactly one
+repository-relative `domain`, `application`, `ports`, `adapters`, or `shell` role path.
+An absent source root and an unmapped source file are failures, never empty successful
+walks. Ports are contract declarations and are not a fifth executable layer.
+- **Why** A layer-scoped mechanism cannot decide anything about a file it silently calls
+  `unknown`. An explicit path partition turns that silence into a local, actionable defect
+  without claiming that the declared role is semantically correct.
+- **Check** `python -m checks.source_roles`
+- **See** [ARCH-001] · [EVID-003]

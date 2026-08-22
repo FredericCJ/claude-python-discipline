@@ -51,7 +51,7 @@ domain = ["src/package/domain"]
 application = ["src/package/app"]
 ports = ["src/package/ports"]
 adapters = ["src/package/adapters"]
-shell = ["src/package/shell"]
+shell = ["src/package/__init__.py", "src/package/shell"]
 
 # ---------------------------------------------------------------------------- ruff
 

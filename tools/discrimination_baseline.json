@@ -1,7 +1,7 @@
 {
   "generated_by": "tools/discrimination_gate.py --update-baseline",
   "note": "D -- rules with at least one mutation observed provoking them. May rise, never fall. The entries are in enforce/discrimination.py and are meant to be read; the count alone says nothing about whether they are good.",
-  "count": 57,
+  "count": 58,
   "rules": [
     "ALLOC-002",
     "ALLOC-004",
@@ -18,6 +18,7 @@
     "ARCH-013",
     "ARCH-015",
     "ARCH-016",
+    "ARCH-018",
     "DEP-001",
     "DIAG-002",
     "DIAG-008",
@@ -62,5 +63,5 @@
     "TYPE-013"
   ],
   "gap": 93,
-  "why": "witness all eight v4 EVID claim-contract invariants"
+  "why": "Add the witnessed rejection for an unmapped production source path under ARCH-018."
 }

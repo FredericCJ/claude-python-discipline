@@ -214,7 +214,7 @@
       "id": "law/ARCH",
       "kind": "law",
       "title": "Architecture and Coupling",
-      "tokens": 2719,
+      "tokens": 2921,
       "load_when": [
         "new module",
         "package layout",
@@ -3080,6 +3080,68 @@
         "source": "v3.3.0",
         "disposition": "unchanged",
         "guidance": "No adopter edit is required by this rule record."
+      }
+    },
+    {
+      "id": "ARCH-018",
+      "module": "law/ARCH",
+      "title": "Every production source has one declared role",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:source_roles"
+      ],
+      "statement": "Every Python file beneath a declared production source root MUST match exactly one repository-relative `domain`, `application`, `ports`, `adapters`, or `shell` role path. An absent source root and an unmapped source file are failures, never empty successful walks. Ports are contract declarations and are not a fifth executable layer.",
+      "why": "A layer-scoped mechanism cannot decide anything about a file it silently calls `unknown`. An explicit path partition turns that silence into a local, actionable defect without claiming that the declared role is semantically correct.",
+      "check": "`python -m checks.source_roles`",
+      "no_mechanism": null,
+      "see": [
+        "ARCH-001",
+        "EVID-003"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 190,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "A production directory that resolves to no known layer is silently skipped by every layer-scoped checker and makes a narrower scan indistinguishable from conformance.",
+      "warrants": [
+        {
+          "source": "source:SE",
+          "relation": "supports",
+          "confidence": "high"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:source_roles",
+            "kind": "static",
+            "relation": "direct",
+            "proposition": "Every Python file beneath every declared source_root exists and matches exactly one declared repository-relative architectural role path.",
+            "residual": "Passing proves path coverage only; it cannot establish that a human assigned each file to the semantically correct role.",
+            "must_pass": "fixture:enforce/fixtures/reference",
+            "must_reject": "discrimination:ARCH-018",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never for a declared v4 governed repository"
+          }
+        ]
+      },
+      "field_observations": [
+        "V3E-001"
+      ],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Declare all production import roots and map every contained Python path under [tool.agent-discipline.roles]."
       }
     },
     {
