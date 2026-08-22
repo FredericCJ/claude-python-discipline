@@ -106,8 +106,8 @@ def test_contract_documented() -> None:
 
     What is checked here is the mechanical subset: every argument named, and the
     result stated unless the signature returns None. Ordering, idempotency and
-    concurrency are prose that lives in the module docstring, and
-    `test_every_port_is_a_protocol` holds that to `CONTRACT_TOPICS`.
+    concurrency are canonical operation terms in `architecture.json`, joined to
+    term evidence by `checks.contract_conformance`.
     """
     package = package_root(reference_root())
     methods = protocol_methods(package)

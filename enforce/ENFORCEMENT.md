@@ -4,12 +4,12 @@
 
 This ledger keeps unlike claims unlike. A rule can be normatively binding while its verifier is absent; a verifier can exist while deciding only a proxy; a proxy can pass while its residual remains true; and a successful adopter does not prove universal benefit. No state below is a project-gate outcome.
 
-- **168** binding rules; **14** lack an available declared strategy.
+- **164** binding rules; **14** lack an available declared strategy.
 - **26** advisory rules and **0** open rules.
-- **183** exact strategy records: **15** direct and **168** proxy claims.
-- **62/168** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
-- **18/197** rules carry named field observations.
-- **101/101** named mechanisms resolve locally or delegate explicitly; **0** local mechanisms are absent.
+- **179** exact strategy records: **16** direct and **163** proxy claims.
+- **59/164** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
+- **20/200** rules carry named field observations.
+- **98/98** named mechanisms resolve locally or delegate explicitly; **0** local mechanisms are absent.
 
 ## Verifier-state census
 
@@ -17,13 +17,13 @@ Measured against this tree, not copied from the rule heading. `discipline/rules.
 
 | State | Rules | Means |
 |---|---|---|
-| `local-verifier` | 120 | repository-local code observes every strategy |
+| `local-verifier` | 116 | repository-local code observes every strategy |
 | `external-verifier` | 24 | every strategy delegates to a configured tool |
 | `mixed-verifiers` | 10 | several verifier kinds contribute |
 | `structured-review` | 0 | judgment is recorded in a checked review artifact |
 | `unbuilt` | 14 | at least one named local verifier is absent |
 | `undeclared` | 26 | the active rule has no strategy record |
-| `retired` | 3 | the stable id remains only for history |
+| `retired` | 10 | the stable id remains only for history |
 
 ## External tool integration
 
@@ -93,10 +93,10 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `ARCH-004` | RETIRED | `retired` | n/a | n/a | n/a | `V3E-002` | n/a | Each foreign dependency has one importer module |
 | `ARCH-005` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:explicit_effects; it does not establish the full semantic benefit of the normative statement. | Effects are named in the signature |
 | `ARCH-006` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement. | Domain functions are total or return a typed result |
-| `ARCH-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_every_port_is_a_protocol; it does not establish every behavior in the normative statement. | Every port is a Protocol with a published contract |
-| `ARCH-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | `V3E-008` | Passing covers only the cases and artifact shapes encoded by fitness:test_port_triad; it does not establish every behavior in the normative statement. | Every port has a real, a fake and a faulty adapter |
-| `ARCH-009` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | `V3E-008` | Passing covers only the cases and artifact shapes encoded by fitness:test_contract_suite_per_adapter; it does not establish every behavior in the normative statement. | One contract suite runs against every adapter |
-| `ARCH-010` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_port_justification; it does not establish every behavior in the normative statement. | A port earns its place from a stated justification |
+| `ARCH-007` | RETIRED | `retired` | n/a | n/a | n/a | none | n/a | Every port is a Protocol with a published contract |
+| `ARCH-008` | RETIRED | `retired` | n/a | n/a | n/a | `V3E-008` | n/a | Every port has a real, a fake and a faulty adapter |
+| `ARCH-009` | RETIRED | `retired` | n/a | n/a | n/a | `V3E-008` | n/a | One contract suite runs against every adapter |
+| `ARCH-010` | RETIRED | `retired` | n/a | n/a | n/a | none | n/a | A port earns its place from a stated justification |
 | `ARCH-011` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:single_wiring_point; it does not establish the full semantic benefit of the normative statement. | Adapters are selected at one local wiring root |
 | `ARCH-012` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:no_test_branches; it does not establish the full semantic benefit of the normative statement. | No test-mode branch in production code |
 | `ARCH-013` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement. | Framework and transport types stay out of the domain |
@@ -110,6 +110,8 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `ARCH-021` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | none | Passing verifies record structure and the declaration join; it cannot decide whether the named volatility is real or the boundary would actually absorb the scenario. | Boundaries hide named volatile decisions |
 | `ARCH-022` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | none | Passing proves the records are complete in form and internally joined; behavioral tests and review must establish that runtime behavior agrees with them. | Four local architecture views stay complete |
 | `ARCH-023` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | A neutral-looking identifier can still be a disguised counterpart name, and lexical passing cannot prove the prose makes no implementation assumption; structured adversarial revie… | Component contracts name roles, never peers |
+| `ARCH-024` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | none | Source form and symbol resolution do not prove structural method-signature compatibility or any implementation behavior; strict generated type witnesses and executed suites own th… | Boundary representation is explicit and locally resolvable |
+| `ARCH-025` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | `V3E-008` | A capability label and resolvable class do not establish that control is deterministic or a scheduled fault actually fires; the referenced fault cases and adversarial execution mu… | Conformance evidence names capabilities, not a file triad |
 | `DEP-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:import-linter; it does not establish the full semantic benefit of the normative statement. | The domain depends on the standard library only |
 | `DEP-002` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_dependency_position; it does not establish every behavior in the normative statement. | A dependency is judged by its architectural position |
 | `DEP-003` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | An adapter owns its dependency's failure modes |
@@ -229,8 +231,8 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `TEST-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_layers_populated; it does not establish every behavior in the normative statement. | Each test layer exists and is populated |
 | `TEST-003` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:pytest-timeout; it does not establish the full semantic benefit of the normative statement. | Per-test time is budgeted and enforced |
 | `TEST-004` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:oracle_declared; it does not establish the full semantic benefit of the normative statement. | Every test module declares its oracle |
-| `TEST-005` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_contract_suite_per_adapter; it does not establish every behavior in the normative statement. | One contract suite runs against every adapter |
-| `TEST-006` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_contract_suite_per_adapter; it does not establish every behavior in the normative statement. | A fake that can drift from the real adapter is worthless |
+| `TEST-005` | RETIRED | `retired` | n/a | n/a | n/a | none | n/a | One contract suite runs against every adapter |
+| `TEST-006` | RETIRED | `retired` | n/a | n/a | n/a | none | n/a | A fake that can drift from the real adapter is worthless |
 | `TEST-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_property_suites_are_generated; it does not establish every behavior in the normative statement. | Stated invariants have property suites |
 | `TEST-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_goldens_reviewed; it does not establish every behavior in the normative statement. | Golden files are reviewed, never merely regenerated |
 | `TEST-009` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | `V3E-007` | Passing covers only the cases and artifact shapes encoded by fitness:test_fault_schedules_are_data; it does not establish every behavior in the normative statement. | Fault injection is data, not bespoke classes |
@@ -244,6 +246,7 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `TEST-017` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:pytest-randomly; it does not establish the full semantic benefit of the normative statement.; Passing excludes on… | Tests are order-independent and network-isolated |
 | `TEST-018` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_no_rerun_dismissal; it does not establish every behavior in the normative statement. | A flaky failure is a defect in the harness |
 | `TEST-019` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | Test names state the behaviour |
+| `TEST-020` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | `V3E-008` | Source spelling and path existence do not prove pytest collects or passes a node, that a parameter selects the claimed implementation, or that an assertion decides the cited term;… | Contract suites cover implementations and observable terms |
 | `TYPE-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement.; Passing excludes only the conf… | Two checkers, both strict, both pinned |
 | `TYPE-002` | BINDING | `mixed-verifiers` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement.; Passing excludes only the conf… | The domain carries no `Any` |
 | `TYPE-003` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement.; Passing excludes only the conf… | Escape hatches are narrow, justified and counted |
@@ -252,7 +255,7 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `TYPE-006` | BINDING | `mixed-verifiers` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement.; Passing excludes only the conf… | Closed sets are enumerations |
 | `TYPE-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement. | Domain values are frozen and slotted |
 | `TYPE-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement. | Signatures take read-only collection types |
-| `TYPE-009` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_every_port_is_a_protocol; it does not establish every behavior in the normative statement. | Ports are structural protocols |
+| `TYPE-009` | RETIRED | `retired` | n/a | n/a | n/a | none | n/a | Ports are structural protocols |
 | `TYPE-010` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:boundary_parsing; it does not establish the full semantic benefit of the normative statement. | Runtime protocol checks are not contract checks |
 | `TYPE-011` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | What the checker cannot enforce is enforced at runtime |
 | `TYPE-012` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | Signature or docstring, by who can enforce it |
@@ -265,8 +268,8 @@ These remain normative obligations, but the declared verifier is absent or missi
 | Kind | Rules |
 |---|---|
 | `auto` | 39 |
-| `check` | 81 |
-| `fitness` | 63 |
+| `check` | 84 |
+| `fitness` | 56 |
 
 ## Advisory rationale
 
@@ -279,7 +282,7 @@ Each advisory rule records why its semantic conclusion is not reduced to an auto
 | `API-013` | Compatibility resting on a stated policy is a claim about a document. `test_schema_versioned` claimed this rule while asserting a version constant exists, which is [API-010] and not this. A policy has nowhere to live yet; naming a location for it, as `overrides/allocation.toml` is named for the tier mapping, would give a check something to read and close this. | Compatibility is not inherited from parser tolerance |
 | `API-014` | Whether a change is genuinely additive in meaning, rather than only in shape, is a semantic judgment; [API-011] mechanizes the cases that can be detected. | Prefer additive change |
 | `API-015` | `test_delivered_boundary` claimed this rule and asserts `release.py` builds through the installer -- a different proposition. The rule is about end-to-end tests running the installed entry point as a separate process. The reference's integration layer starts no subprocess, so there is nothing to check against. A check asserting that layer invokes the entry point and asserts on its exit status and its parsed output would close this, once the reference carries one. | The delivered artifact is what gets tested |
-| `ARCH-017` | Whether a boundary is *meaningful* is a design judgment; the closed justification list in [ARCH-010] mechanizes the part of it that can be. | Prefer the direct call to the abstraction |
+| `ARCH-017` | Whether a boundary is *meaningful* is a design judgment; [ARCH-021] checks only that a volatile decision and concrete change scenario were actually recorded. | Prefer the direct call to the abstraction |
 | `DEP-003` | `test_fault_catalogue` claimed this rule and asserts a faulty adapter file exists for every port. The rule's two obligations -- that the adapter STATES which faults it can produce, and that it TRANSLATES them into the infrastructure error family -- are both unchecked. The second is mechanizable: an adapter letting a vendor exception cross its own boundary is visible to an AST check, and [ERR-004] is the neighbouring rule that would host it. | An adapter owns its dependency's failure modes |
 | `DEP-004` | Recognizing that a hand-rolled routine reimplements a standard is a judgment about intent that no check can make from the code. | Do not reimplement a solved, specified problem |
 | `DIAG-004` | The same gap as [API-011], which states this rule almost word for word. `test_codes_are_stable` claimed both and detects neither a rename nor a removal. A committed snapshot of the code set, ratcheted, would close both at once. | A code is a public contract |
@@ -291,7 +294,7 @@ Each advisory rule records why its semantic conclusion is not reduced to an auto
 | `ERR-011` | The rule's deeper claim -- that validation happens at the boundary rather than scattered through the interior -- needs to know which values crossed a boundary, and an AST check cannot see that. `check:boundary_parsing` named this rule for a year and never once reported it; its own docstring said so. What IS mechanized is the adjacent, narrower [ERR-013] and [TYPE-005]. | Parse at the boundary; do not validate in the interior |
 | `ERR-014` | Whether a given failure is *conceptually* expected or a contract violation is a judgement about intent. `check:error_channels` named this rule and never reported it, and its docstring said the rule keeps a reviewer for exactly this reason. Retagged rather than left claiming a gate that would never fire. | Expected failure and contract violation are distinguished |
 | `FLOW-001` | The rule is about *when* the contract was written, and a tree carries no record of the order its files came to exist in. `test_contract_documented` claimed this rule while asserting only that a docstring was present -- which is equally true of a contract written afterwards to describe what was built, the exact failure the **Why** above names. What IS mechanized is the adjacent [API-001]: the contract states its terms. A commit-scoped check reading which files a change introduced, and in which order, would close this. | The contract is written before the implementation |
-| `FLOW-010` | The rule is about what arrives *with* a change, and a static tree shows what is there now rather than what landed together. `test_layers_populated` claimed it and counts named tests per layer, which a repository holding one thorough component and ten bare ones satisfies. Per-component completeness is mechanized where the component is a port -- [ARCH-008], [ARCH-009] -- and nowhere else. A check reading the diff for a new module without its obligations would close this. | New behaviour arrives with its obligations discharged |
+| `FLOW-010` | The rule is about what arrives *with* a change, and a static tree shows what is there now rather than what landed together. `test_layers_populated` claimed it and counts named tests per layer, which a repository holding one thorough component and ten bare ones satisfies. Per-component completeness is mechanized where the component is a port -- [ARCH-025], [TEST-020] -- and nowhere else. A check reading the diff for a new module without its obligations would close this. | New behaviour arrives with its obligations discharged |
 | `LEARN-012` | Whether a claim is the right size is a judgment about what a future reader will need; the trigger requirement in [LEARN-002] mechanizes only that it can be found at all. | Prefer the smallest true entry |
 | `TEAMS-004` | Whether a second, independent pass happened is a fact about dispatch history, not about the tree, and nothing in the repository can read it. | Documentation is written in one stage, verified in another |
 | `TEAMS-005` | The instruction is in a dispatch, and its effect is a judgment about whether a claim was tested rather than admired; neither is inspectable after the fact. | A verifier refutes claims; it does not improve prose |

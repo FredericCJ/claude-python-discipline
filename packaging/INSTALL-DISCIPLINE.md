@@ -42,7 +42,7 @@ python .agent/tools/migrate_v4.py --root . --unit application --apply
 
 Use `--unit component` for one component repository. Preview writes nothing; apply changes
 only the contiguous discipline declaration tables and refuses ambiguous role or foreign
-dependency ownership. Semantic `architecture.json` content is intentionally not guessed.
+dependency ownership. Semantic architecture and conformance content is not guessed.
 
 Then start a fresh agent session, so the new configuration is loaded.
 

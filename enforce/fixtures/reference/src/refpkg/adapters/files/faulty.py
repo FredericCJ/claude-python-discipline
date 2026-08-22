@@ -6,7 +6,7 @@ gone and the rest present. Nothing else can produce that state on demand, and
 `EFCT-007`'s journalling requirement is unfalsifiable without it.
 
 Healthy mode -- an empty schedule -- passes the shared contract suite unchanged
-(`ARCH-009`).
+(`TEST-020`).
 """
 
 from __future__ import annotations

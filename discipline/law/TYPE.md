@@ -2,7 +2,7 @@
 id: law/TYPE
 kind: law
 title: Typing and Contracts
-tokens: 2144
+tokens: 2171
 load_when:
   - "type hint"
   - "mypy"
@@ -100,12 +100,14 @@ the callee does not own.
 
 ## Boundaries and contracts
 
-### TYPE-009 · Ports are structural protocols  [BINDING] [fitness:test_every_port_is_a_protocol]
-A port MUST be declared as a `Protocol`, so an adapter conforms by shape rather than by
-inheriting from the core.
-- **Why** Nominal inheritance would make every adapter import the core, reversing the
-  dependency direction the architecture depends on.
-- **Check** `pytest enforce/fitness/test_ports.py::test_every_port_is_a_protocol`
+### TYPE-009 · Ports are structural protocols  [RETIRED]
+Retired because structural and nominal typing can both preserve inward dependencies when
+the boundary contract is owned by the ports role. The repository now declares its form
+and the conformance mechanism checks that source matches it.
+- **Why** The v3 rationale incorrectly treated an adapter importing an inward port
+  contract as dependency reversal. The relevant property is direction and typed
+  conformance, not structural typing alone.
+- **Superseded by** ARCH-024
 - **See** [law/ARCH]
 
 ### TYPE-010 · Runtime protocol checks are not contract checks  [BINDING] [check:boundary_parsing]

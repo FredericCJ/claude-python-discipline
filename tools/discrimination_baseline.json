@@ -1,7 +1,7 @@
 {
   "generated_by": "tools/discrimination_gate.py --update-baseline",
   "note": "D -- rules with at least one mutation observed provoking them. May rise, never fall. The entries are in enforce/discrimination.py and are meant to be read; the count alone says nothing about whether they are good.",
-  "count": 63,
+  "count": 60,
   "rules": [
     "ALLOC-002",
     "ALLOC-004",
@@ -10,10 +10,6 @@
     "ARCH-002",
     "ARCH-003",
     "ARCH-004",
-    "ARCH-007",
-    "ARCH-008",
-    "ARCH-009",
-    "ARCH-010",
     "ARCH-012",
     "ARCH-013",
     "ARCH-015",
@@ -24,6 +20,8 @@
     "ARCH-021",
     "ARCH-022",
     "ARCH-023",
+    "ARCH-024",
+    "ARCH-025",
     "DEP-001",
     "DIAG-002",
     "DIAG-008",
@@ -53,20 +51,19 @@
     "TEST-001",
     "TEST-002",
     "TEST-004",
-    "TEST-005",
     "TEST-007",
     "TEST-008",
     "TEST-009",
     "TEST-010",
     "TEST-014",
+    "TEST-020",
     "TYPE-001",
     "TYPE-002",
     "TYPE-003",
     "TYPE-007",
     "TYPE-008",
-    "TYPE-009",
     "TYPE-013"
   ],
-  "gap": 93,
-  "why": "Witness unit-model drift, missing local views, and peer identity leakage for ARCH-021 through ARCH-023."
+  "gap": 92,
+  "why": "Retired six v3 physical port-form identities and replaced them with three independently discriminated v4 representation, capability, and term-trace propositions."
 }

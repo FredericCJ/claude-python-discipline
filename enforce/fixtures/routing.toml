@@ -34,8 +34,8 @@ why = "ARCH carries 'where does this code go' -- the same question, none of the 
 
 [[task]]
 query = "how do I test an adapter against its port"
-expect = ["law/TEST", "law/ARCH"]
-why = "Two modules is right here: the contract suite is ARCH-009 and the layers are TEST."
+expect = ["law/TEST", "law/ARCH-PORTS"]
+why = "TEST-020 and ARCH-025 define the shared suite and semantic implementation evidence."
 
 [[task]]
 query = "I need to delete some files safely"
@@ -57,7 +57,7 @@ why = "A paradigm tradeoff is grounding, not law. frame/ prescribes nothing and 
 [[task]]
 query = "the type checker is complaining about a protocol"
 expect = ["law/TYPE"]
-why = "Ports are structural protocols, TYPE-009."
+why = "Protocol checking remains typing work even though ARCH-024 makes representation local."
 
 [[task]]
 query = "writing the docstring for this function"
@@ -126,5 +126,5 @@ why = "A test module declares its oracle, whatever else it does."
 
 [[file]]
 path = "src/pkg/ports/clock.py"
-expect = ["ARCH-007"]
-why = "Every port is a Protocol with a published contract."
+expect = ["ARCH-024"]
+why = "Every internal boundary has an explicit, locally resolvable representation."

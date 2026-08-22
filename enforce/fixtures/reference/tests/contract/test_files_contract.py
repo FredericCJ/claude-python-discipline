@@ -1,4 +1,4 @@
-"""Contract suite for the `FileStore` port, run unchanged against all three adapters.
+"""Contract suite for `FileStore`, run unchanged across registered implementations.
 
 **Oracle: the port's published contract** (`TEST-004`). Every assertion here
 restates a clause from the docstring of `refpkg.ports.files`, including the ones

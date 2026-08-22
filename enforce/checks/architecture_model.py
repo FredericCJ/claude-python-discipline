@@ -463,8 +463,11 @@ def parse(path: Path) -> ArchitectureModel:
     _exact(root, fields, "$")
     if root["schema_version"] != 1:
         _fail("ARCH022_MODEL_SCHEMA", "$.schema_version", "expected 1")
+    raw_unit = root["unit"]
+    if not isinstance(raw_unit, str):
+        _fail("ARCH021_UNIT_MISMATCH", "$.unit", "expected application or component")
     try:
-        unit = UnitKind(root["unit"])
+        unit = UnitKind(raw_unit)
     except ValueError:
         _fail("ARCH021_UNIT_MISMATCH", "$.unit", "expected application or component")
     decisions = tuple(

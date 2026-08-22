@@ -1,1 +1,1 @@
-"""The file store port's triad: real, fake and faulty (`ARCH-008`)."""
+"""File-store implementations registered by semantic capability (`ARCH-025`)."""

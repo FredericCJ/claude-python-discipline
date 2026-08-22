@@ -2,7 +2,7 @@
 id: meta/OPEN
 kind: meta
 title: Open Decisions
-tokens: 3966
+tokens: 3836
 load_when: ["open question", "undecided", "which tool", "pin a version"]
 decay: none
 ---
@@ -73,27 +73,15 @@ that means anything is now checked, and that was the half this record called una
 
 ### OPEN-007 · Documentation comments on every element, for Doxygen
 
-**This reverses a decision this repository previously made and justified.**
-`enforce/templates/pyproject.toml` used to ignore the missing-module-docstring rules, with the
-reason: *"a blanket requirement produces ceremonial docstrings that say nothing, which is
-worse than none."* That objection is real, and it is not answered by pretending it is not.
+This reverses an earlier exemption for supposedly ceremonial comments. Every element now
+carries a useful documentation comment; [DOC-009] rejects identifier restatement and
+[DOC-013] asks for accuracy instead of padding.
 
-The requirement is now universal: every element carries a documentation comment, written for
-a full-featured Doxygen, present whether or not documentation is ever generated. The ceremony
-objection is answered by rules rather than by an exemption — [DOC-009] rejects documentation
-that merely restates the identifier, and [DOC-013] asks for one accurate sentence rather than
-a padded block. A rule against filler is a better answer than a licence to omit.
+*Consequences:* use docstrings where Python has a slot and `##` blocks where it does not.
+Engine details live in [fact/doxygen]. The rendered tree is not committed: the source
+comment is the reviewable artifact, and generated bulk obscures review.
 
-*Consequences:* docstrings where Python has a slot, `##` blocks where it does not — a `##`
-block on a function would be invisible to `help()`, so it is prohibited there. The engine
-settings this needs, and why each is what it is, are in [fact/doxygen]; no pydocstyle
-convention is set, because one would demand section headings Doxygen cannot read. The
-rendered tree is **not** committed — the one deliberate exception to [DEP-011], recorded as a
-tension because it is one: the reviewable artefact is the comment in the source, and a large
-generated tree in every diff is how reviewers learn to wave generated output through.
-
-*Cost, stated plainly:* this repository's own code did not comply when the decision was taken
-— 441 findings. The mechanisms are in place so the gap cannot grow.
+The repository initially carried 441 findings. The mechanisms keep that gap from growing.
 
 ### OPEN-008 · The Doxygen form is declared, not assumed
 
@@ -124,6 +112,16 @@ documentation gate quietly stopped deciding two of its four rules.
 *Same shape, same fix:* `ARCH-001`'s four layer names had the identical defect. A project
 naming its layers otherwise had every layer-scoped check skip its files while reporting
 clean. The layer mapping lives in the same declaration.
+
+### OPEN-020 · Contract evidence is semantic, representation is explicit
+
+**Taken for v4.** The v3 real/fake/faulty file triad and universal structural `Protocol`
+shape are retired. Each internal contract now selects structural or nominal typing,
+registers real, controllable and scheduled-fault capabilities, and traces its operation
+terms to one shared suite. One implementation may provide both test capabilities.
+
+*Consequence:* filenames and class count decide nothing; [ARCH-024], [ARCH-025], and
+[TEST-020] decide the locally observable properties.
 
 ---
 

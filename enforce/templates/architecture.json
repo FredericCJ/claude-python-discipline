@@ -36,6 +36,28 @@
           "timeout": "State the local deadline and terminal outcome."
         }
       ]
+    },
+    {
+      "id": "transport_port",
+      "direction": "internal",
+      "role": "message_transport",
+      "version": "1",
+      "source": "local",
+      "provenance": null,
+      "operations": [
+        {
+          "name": "send",
+          "inputs": "One validated domain message and correlation identifier.",
+          "outputs": "Typed delivery acceptance.",
+          "errors": [
+            "transport_unavailable"
+          ],
+          "ordering": "State whether accepted messages preserve call order.",
+          "idempotency": "State duplicate-send semantics.",
+          "concurrency": "State serialization or interleaving semantics.",
+          "timeout": "State the local deadline and terminal outcome."
+        }
+      ]
     }
   ],
   "resources": [],

@@ -2,7 +2,7 @@
 id: law/TEST
 kind: law
 title: Systematic Testing and Oracles
-tokens: 2786
+tokens: 2987
 load_when:
   - "write a test"
   - "pytest"
@@ -80,20 +80,18 @@ property, differential, golden, or example.
   wrote this", which locks in the defect instead of detecting it.
 - **Check** `python -m checks.oracle_declared`
 
-### TEST-005 · One contract suite runs against every adapter  [BINDING] [fitness:test_contract_suite_per_adapter]
-The port's contract is the oracle for all of its adapters, and the same suite runs against
-real, fake, and faulty-in-healthy-mode without modification.
-- **Why** This is the strongest oracle available: it tests against the published promise
-  rather than against an implementation.
-- **Check** `pytest enforce/fitness/test_ports.py::test_contract_suite_per_adapter`
+### TEST-005 · One contract suite runs against every adapter  [RETIRED]
+Consolidated into [TEST-020], which registers semantic implementation roles and traces
+individual operation terms instead of searching a suite for three filename words.
+- **Why** Retaining both statements would count one observable proposition twice.
+- **Superseded by** TEST-020
 - **See** [law/ARCH]
 
-### TEST-006 · A fake that can drift from the real adapter is worthless  [BINDING] [fitness:test_contract_suite_per_adapter]
-Any behaviour a fake exhibits that the real adapter does not MUST be caught by the shared
-contract suite.
-- **Why** Every unit test standing on a drifting fake is worth exactly as little as the
-  fake, and none of them will say so.
-- **Check** `pytest enforce/fitness/test_ports.py::test_contract_suite_per_adapter`
+### TEST-006 · A fake that can drift from the real adapter is worthless  [RETIRED]
+Consolidated into [TEST-020]. The concern remains binding; the v3 id carried no proposition
+separable from the shared-suite rule and had no independent rejection witness.
+- **Why** One mechanism and one failure mode should have one normative identity.
+- **Superseded by** TEST-020
 
 ### TEST-007 · Stated invariants have property suites  [BINDING] [fitness:test_property_suites_are_generated]
 Round-trip, idempotence, involution, ordering and closure properties MUST be expressed as
@@ -202,3 +200,16 @@ A test name SHOULD say what must hold, not restate the implementation or number 
 - **No mechanism** Whether a name describes behaviour or mechanism is a reading judgment;
   a pattern check would accept any sufficiently long name.
 - **Why** The name is what an agent reads first in a failure report, and often all it gets.
+
+### TEST-020 · Contract suites cover implementations and observable terms  [BINDING] [check:contract_conformance]
+Each internal contract MUST name one local suite that executes unchanged for every
+registered real and test implementation. Every successful operation, declared error,
+ordering term, idempotency term, concurrency term, and timeout term MUST trace to an exact
+local test node; a semantic term that truly makes no promise MAY instead carry an explicit
+non-applicability rationale. Success and declared errors are never non-applicable.
+- **Why** A shared suite prevents substitute drift only when every substitute is selected,
+  while term-level traceability prevents a broad “contract tested” label from hiding an
+  untested failure or ordering promise.
+- **Check** `python -m checks.contract_conformance`; the project gate executes every
+  declared suite and rejects an uncollected node
+- **See** [ARCH-025] · [TEST-004] · [EVID-003]

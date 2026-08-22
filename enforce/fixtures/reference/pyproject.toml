@@ -16,6 +16,7 @@
 unit = "application"
 source_roots = ["src"]
 architecture = "architecture.json"
+contract_conformance = "contract-conformance.json"
 doc_engine = "doxygen"
 adapter_boundaries = [
     "src/refpkg/adapters/clock",

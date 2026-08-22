@@ -16,8 +16,8 @@ This decorator is the missing half. It gives a fitness function the same thing a
 check has -- a written list of what it decides, beside the code that decides it,
 where the two drift apart under review rather than silently.
 
-    @decides("ARCH-009", "TEST-005", "TEST-006")
-    def test_contract_suite_per_adapter() -> None:
+    @decides("ARCH-024", "ARCH-025", "TEST-020")
+    def test_reference_contract_conformance() -> None:
 
 **Nothing at runtime depends on it.** The function is returned unchanged, so a
 decorated test runs exactly as it did before and pytest collects it identically.

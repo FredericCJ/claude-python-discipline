@@ -1,11 +1,11 @@
-"""Contract suite for the `Clock` port, run unchanged against all three adapters.
+"""Contract suite for `Clock`, run unchanged across registered implementations.
 
 **Oracle: the port's published contract** (`TEST-004`). Not the implementation --
 these assertions come from the docstring of `refpkg.ports.clock`, and any adapter
 satisfying them is substitutable for any other.
 
-`ARCH-009` requires exactly this: one suite, parameterised over real, fake and
-faulty-in-healthy-mode. A fake tested by its own separate suite can drift from
+`TEST-020` requires exactly this: one suite, parameterised over every registered
+implementation. A substitute tested by its own separate suite can drift from
 the real adapter without anything failing, and every unit test standing on that
 fake is then worth as little as the fake.
 
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 ## Every adapter for this port, named for the failure message. The faulty one
-## appears in healthy mode, which is what `ARCH-009` demands and what stops it
+## appears in healthy mode, which is what `TEST-020` demands and what stops it
 ## from being a second implementation nobody holds to the contract.
 ADAPTERS: tuple[tuple[str, Callable[[], Clock]], ...] = (
     ("real", SystemClock),

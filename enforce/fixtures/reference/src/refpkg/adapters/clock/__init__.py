@@ -1,1 +1,1 @@
-"""The clock port's triad: real, fake and faulty (`ARCH-008`)."""
+"""Clock implementations registered by semantic capability (`ARCH-025`)."""

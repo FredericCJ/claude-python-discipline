@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "contracts": [],
+  "contract_absence": "The discipline repository has no internal runtime port; it builds and validates a published archive through repository-local tooling."
+}

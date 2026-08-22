@@ -56,7 +56,7 @@ gitignored, and drift between them is a validation error.
 ```bash
 python tools/nav.py context --file src/pkg/adapters/fs.py --error "..."
 python tools/nav.py applies src/pkg/domain/outline.py     # 15 rules govern this file
-python tools/nav.py why ARCH-008                          # CONF-007 gave it this shape
+python tools/nav.py why ARCH-025                          # V3E-008 changed its shape
 python tools/learn.py retrieve --file P --error E
 python tools/learn.py record --kind diagnostic --claim "..." --action "..." --trigger ...
 python tools/learn.py calibrate                           # is any of this working?
@@ -125,7 +125,7 @@ discipline/
   INDEX.md           generated: one line per rule
   rules.json         generated: the same, for jq
   graph.json         generated: the navigation multigraph
-  law/               ARCH TYPE ERR DIAG EFCT TEST API DEP FLOW LEARN
+  law/               ARCH ARCH-PORTS TYPE ERR DIAG EFCT TEST API DEP FLOW LEARN
   fact/              py-typing py-testing py-errors py-logging   (dated)
   frame/             architecture spec
   ops/               ALLOC teams
@@ -167,9 +167,10 @@ write-free, prints the exact diff, and keeps every byte outside the contiguous
 `[tool.agent-discipline]` table family. Apply is refused when production source has no
 inferable role, when an old `ARCH-004` technology has several candidate owners, or when a
 source root escapes this repository. The tool deliberately does not invent
-`architecture.json`: its warning remains until a human authors the volatile decisions,
-contracts, resources, and recoveries from the shipped template. Running `--apply` again is
-a no-op.
+`architecture.json` or `contract-conformance.json`: its warning remains until a human
+authors the volatile decisions, contracts, resources, recoveries, implementation
+capabilities, and test traces from the shipped templates. Running `--apply` again is a
+no-op.
 
 ## Working on the discipline itself
 

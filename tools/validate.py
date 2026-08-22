@@ -419,14 +419,25 @@ def check_rules(documents: Sequence[Document], layout: Layout) -> Iterator[Findi
             else:
                 seen[rule.rule_id] = rule
 
-            if rule.prefix != doc.module_name.upper():
+            partitioned = doc.module_name.upper().startswith(f"{doc.rule_prefix}-")
+            prefix_allowed = (
+                rule.prefix == doc.rule_prefix
+                and ("rule_prefix" not in doc.front_matter or partitioned)
+            )
+            if not prefix_allowed:
                 yield Finding(
                     code="V021",
                     severity=Severity.ERROR,
                     path=_relpath(layout, doc),
                     line=rule.line,
-                    message=f"{rule.rule_id}: prefix does not match module '{doc.module_name}'",
-                    remediation=f"Use {doc.module_name.upper()}-NNN, or move the rule to its module.",
+                    message=(
+                        f"{rule.rule_id}: prefix does not match module "
+                        f"'{doc.module_name}' or its declared partition prefix"
+                    ),
+                    remediation=(
+                        f"Use {doc.module_name.upper()}-NNN, move the rule, or declare "
+                        "rule_prefix only in a PREFIX-SUBJECT partition."
+                    ),
                 )
 
             if rule.force is Force.BINDING and not rule.check:

@@ -10,13 +10,13 @@ decay: none
 
 # Rule Index
 
-197 rules across 14 modules. Grep this file for a rule id, then open only the module that owns it.
+200 rules across 15 modules. Grep this file for a rule id, then open only the module that owns it.
 
 **The columns are different claims.** `Force` is the normative obligation. `Verifier` says what strategy is available, never that it passed. `Relation` says whether the observable proposition is the rule itself or only a proxy. `Rejection` records whether the current matrix has watched the rule reject a counterexample. `Platforms`, `Residual`, and `Field` state where the claim is supported, what can remain wrong, and what named adopters observed.
 
 **A proxy cannot decide its parent semantic rule.** Passing its proposition establishes only the stated syntax or behavior and leaves the printed residual. `rule-level witnessed` is deliberately weaker than v4's target: the inherited matrix proves that some strategy rejected a case for that rule, but cannot yet attribute the rejection to one exact strategy.
 
-14 of 168 binding rules lack an available declared strategy. 62 of 168 rules with automated strategies have inherited rule-level rejection evidence. 168 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
+14 of 164 binding rules lack an available declared strategy. 59 of 164 rules with automated strategies have inherited rule-level rejection evidence. 163 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
 
 ## Modules
 
@@ -30,17 +30,18 @@ decay: none
 | [frame/architecture](frame/architecture.md) | frame | 2338 | 0 | which paradigm, tradeoff, refactoring, legacy code, coupling, cohesion |
 | [frame/spec](frame/spec.md) | frame | 1972 | 0 | write a spec, requirements, elicitation, design document, traceability, reusability |
 | [law/API](law/API.md) | law | 2445 | 15 | public API, contract, versioning, breaking change, CLI, JSON output |
-| [law/ARCH](law/ARCH.md) | law | 3950 | 23 | new module, package layout, port, adapter, hexagonal, dependency injection |
+| [law/ARCH](law/ARCH.md) | law | 3343 | 19 | new module, package layout, port, adapter, hexagonal, dependency injection |
+| [law/ARCH-PORTS](law/ARCH-PORTS.md) | law | 841 | 6 | new port, boundary contract, adapter substitute, fake adapter, fault schedule, contract suite |
 | [law/DEP](law/DEP.md) | law | 2111 | 14 | add a dependency, third party library, lockfile, environment, code generation, generated file |
 | [law/DIAG](law/DIAG.md) | law | 2634 | 16 | exception, traceback, logging, error message, error code, correlation id |
 | [law/DOC](law/DOC.md) | law | 2367 | 14 | docstring, documentation comment, doxygen, @param, @return, document this function |
 | [law/EFCT](law/EFCT.md) | law | 2362 | 16 | write a file, mutation, state machine, transaction, rollback, dry run |
 | [law/ERR](law/ERR.md) | law | 2609 | 16 | raise, except, Result, error type, exception hierarchy, validation |
 | [law/EVID](law/EVID.md) | law | 1288 | 8 | why is this a rule, verification strategy, mechanism, proxy, residual, discrimination |
-| [law/FLOW](law/FLOW.md) | law | 2256 | 13 | definition of done, before i commit, what should i do first, ADR, decision record, review |
+| [law/FLOW](law/FLOW.md) | law | 2259 | 13 | definition of done, before i commit, what should i do first, ADR, decision record, review |
 | [law/LEARN](law/LEARN.md) | law | 1888 | 12 | learning, record what i learned, session memory, why did this fail before, calibration, promote a learning |
-| [law/TEST](law/TEST.md) | law | 2786 | 19 | write a test, pytest, fixture, hypothesis, property test, mutation |
-| [law/TYPE](law/TYPE.md) | law | 2144 | 15 | type hint, mypy, pyright, Protocol, generic, dataclass |
+| [law/TEST](law/TEST.md) | law | 2987 | 20 | write a test, pytest, fixture, hypothesis, property test, mutation |
+| [law/TYPE](law/TYPE.md) | law | 2171 | 15 | type hint, mypy, pyright, Protocol, generic, dataclass |
 | [ops/ALLOC](ops/ALLOC.md) | ops | 2145 | 10 | dispatch a subagent, which model, how much effort, delegate, escalate, sub-agent |
 | [ops/teams](ops/teams.md) | ops | 2592 | 6 | agent team, teammate, subagent definition, spawn an agent, task list, slash command |
 
@@ -76,10 +77,6 @@ decay: none
 | `ARCH-004` | RETIRED | `retired` | n/a | n/a | n/a | n/a | `V3E-002` | Each foreign dependency has one importer module |
 | `ARCH-005` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:explicit_effects; it does no… | none | Effects are named in the signature |
 | `ARCH-006` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | Domain functions are total or return a typed result |
-| `ARCH-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_every_port_is_a_proto… | none | Every port is a Protocol with a published contract |
-| `ARCH-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_port_triad; it does n… | `V3E-008` | Every port has a real, a fake and a faulty adapter |
-| `ARCH-009` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_contract_suite_per_ad… | `V3E-008` | One contract suite runs against every adapter |
-| `ARCH-010` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_port_justification; i… | none | A port earns its place from a stated justification |
 | `ARCH-011` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:single_wiring_point; it does… | none | Adapters are selected at one local wiring root |
 | `ARCH-012` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:no_test_branches; it does no… | none | No test-mode branch in production code |
 | `ARCH-013` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:domain_purity; it does not e… | none | Framework and transport types stay out of the domain |
@@ -93,6 +90,17 @@ decay: none
 | `ARCH-021` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Passing verifies record structure and the declaration join; it cannot decide whether the named… | none | Boundaries hide named volatile decisions |
 | `ARCH-022` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Passing proves the records are complete in form and internally joined; behavioral tests and rev… | none | Four local architecture views stay complete |
 | `ARCH-023` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | A neutral-looking identifier can still be a disguised counterpart name, and lexical passing can… | none | Component contracts name roles, never peers |
+
+### law/ARCH-PORTS
+
+| Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
+|---|---|---|---|---|---|---|---|---|
+| `ARCH-007` | RETIRED | `retired` | n/a | n/a | n/a | n/a | none | Every port is a Protocol with a published contract |
+| `ARCH-008` | RETIRED | `retired` | n/a | n/a | n/a | n/a | `V3E-008` | Every port has a real, a fake and a faulty adapter |
+| `ARCH-009` | RETIRED | `retired` | n/a | n/a | n/a | n/a | `V3E-008` | One contract suite runs against every adapter |
+| `ARCH-010` | RETIRED | `retired` | n/a | n/a | n/a | n/a | none | A port earns its place from a stated justification |
+| `ARCH-024` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Source form and symbol resolution do not prove structural method-signature compatibility or any… | none | Boundary representation is explicit and locally resolvable |
+| `ARCH-025` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | A capability label and resolvable class do not establish that control is deterministic or a sch… | `V3E-008` | Conformance evidence names capabilities, not a file triad |
 
 ### law/DEP
 
@@ -251,8 +259,8 @@ decay: none
 | `TEST-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_layers_populated; it… | none | Each test layer exists and is populated |
 | `TEST-003` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:pytest-timeout; it does not e… | none | Per-test time is budgeted and enforced |
 | `TEST-004` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:oracle_declared; it does not… | none | Every test module declares its oracle |
-| `TEST-005` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_contract_suite_per_ad… | none | One contract suite runs against every adapter |
-| `TEST-006` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_contract_suite_per_ad… | none | A fake that can drift from the real adapter is worthless |
+| `TEST-005` | RETIRED | `retired` | n/a | n/a | n/a | n/a | none | One contract suite runs against every adapter |
+| `TEST-006` | RETIRED | `retired` | n/a | n/a | n/a | n/a | none | A fake that can drift from the real adapter is worthless |
 | `TEST-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_property_suites_are_g… | none | Stated invariants have property suites |
 | `TEST-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_goldens_reviewed; it… | none | Golden files are reviewed, never merely regenerated |
 | `TEST-009` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_fault_schedules_are_d… | `V3E-007` | Fault injection is data, not bespoke classes |
@@ -266,6 +274,7 @@ decay: none
 | `TEST-017` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:pytest-randomly; it does not… | none | Tests are order-independent and network-isolated |
 | `TEST-018` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_no_rerun_dismissal; i… | none | A flaky failure is a defect in the harness |
 | `TEST-019` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Test names state the behaviour |
+| `TEST-020` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Source spelling and path existence do not prove pytest collects or passes a node, that a parame… | `V3E-008` | Contract suites cover implementations and observable terms |
 
 ### law/TYPE
 
@@ -279,7 +288,7 @@ decay: none
 | `TYPE-006` | BINDING | `mixed-verifiers` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | Closed sets are enumerations |
 | `TYPE-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:domain_purity; it does not e… | none | Domain values are frozen and slotted |
 | `TYPE-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:domain_purity; it does not e… | none | Signatures take read-only collection types |
-| `TYPE-009` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_every_port_is_a_proto… | none | Ports are structural protocols |
+| `TYPE-009` | RETIRED | `retired` | n/a | n/a | n/a | n/a | none | Ports are structural protocols |
 | `TYPE-010` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:boundary_parsing; it does no… | none | Runtime protocol checks are not contract checks |
 | `TYPE-011` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | What the checker cannot enforce is enforced at runtime |
 | `TYPE-012` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Signature or docstring, by who can enforce it |

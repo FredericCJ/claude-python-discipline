@@ -29,6 +29,7 @@ def declared_tree(
 unit = "{unit}"
 source_roots = ["src"]
 architecture = "architecture.json"
+contract_conformance = "contract-conformance.json"
 adapter_boundaries = [
     "src/pkg/adapters/clock",
     "src/pkg/adapters/files",

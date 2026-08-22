@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "contract_absence": null,
+  "contracts": [
+    {
+      "id": "transport_port",
+      "module": "package.ports.transport",
+      "symbol": "Transport",
+      "representation": "structural",
+      "implementations": [
+        {
+          "id": "real_transport",
+          "module": "package.adapters.transport.real",
+          "symbol": "RealTransport",
+          "kind": "real",
+          "capabilities": [],
+          "parameter": "real"
+        },
+        {
+          "id": "controlled_transport",
+          "module": "package.adapters.transport.controlled",
+          "symbol": "ControlledTransport",
+          "kind": "test",
+          "capabilities": [
+            "controllable",
+            "scheduled_fault"
+          ],
+          "parameter": "controlled"
+        }
+      ],
+      "suite": "tests/contract/test_transport_contract.py",
+      "evidence": [
+        {
+          "operation": "send",
+          "term": "success",
+          "error": null,
+          "test": "tests/contract/test_transport_contract.py::test_send_delivers_one_message",
+          "not_applicable": null
+        },
+        {
+          "operation": "send",
+          "term": "error",
+          "error": "transport_unavailable",
+          "test": "tests/fault/test_transport.py::test_send_translates_scheduled_failure",
+          "not_applicable": null
+        },
+        {
+          "operation": "send",
+          "term": "ordering",
+          "error": null,
+          "test": "tests/contract/test_transport_contract.py::test_send_preserves_declared_order",
+          "not_applicable": null
+        },
+        {
+          "operation": "send",
+          "term": "idempotency",
+          "error": null,
+          "test": "tests/contract/test_transport_contract.py::test_duplicate_semantics_match_contract",
+          "not_applicable": null
+        },
+        {
+          "operation": "send",
+          "term": "concurrency",
+          "error": null,
+          "test": "tests/contract/test_transport_contract.py::test_concurrent_send_matches_contract",
+          "not_applicable": null
+        },
+        {
+          "operation": "send",
+          "term": "timeout",
+          "error": null,
+          "test": "tests/fault/test_transport.py::test_send_stops_at_local_deadline",
+          "not_applicable": null
+        }
+      ]
+    }
+  ]
+}

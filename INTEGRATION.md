@@ -163,7 +163,8 @@ Select `component` only when this checkout is one independently testable compone
 migrator preserves configuration outside `[tool.agent-discipline]`, converts legacy role
 aliases and unambiguous `ARCH-004` ownership, refuses paths outside this checkout, and is
 idempotent. It cannot decide the unit kind, the meaning of a boundary, or the contents of
-`architecture.json`; those remain explicit authoring work rather than inferred prose.
+`architecture.json` and `contract-conformance.json`; those remain explicit authoring work
+rather than inferred prose.
 
 ## After integrating
 

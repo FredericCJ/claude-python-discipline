@@ -1,6 +1,6 @@
 """The faulty clock: the same contract, failing on a schedule.
 
-`ARCH-008` requires this unconditionally, with no "if the port has meaningful
+`ARCH-025` requires scheduled-fault evidence, with no "if the port has meaningful
 failure modes" qualifier. A clock looks like it cannot fail, which is exactly why
 it needs one: the port judged to have no failure mode is the port whose failure
 is discovered in production.

@@ -526,6 +526,7 @@ def _render_declaration(
         f"unit = {_toml_string(draft.unit)}",
         f"source_roots = {_toml_array(draft.roots)}",
         'architecture = "architecture.json"',
+        'contract_conformance = "contract-conformance.json"',
         f"doc_engine = {_toml_string(draft.doc_engine)}",
         f"pedagogical_full_projection = {str(draft.pedagogical).lower()}",
     ]
@@ -615,7 +616,8 @@ def _draft(
         Diagnostic(
             "MIGRATE-V4-007_ARCHITECTURE_AUTHORING_REQUIRED",
             "warning",
-            "author architecture.json from the v4 template; semantic decisions are never inferred",
+            "author architecture.json and contract-conformance.json from the v4 templates; "
+            "semantic decisions and test capabilities are never inferred",
         )
     )
     return DeclarationDraft(
@@ -642,7 +644,12 @@ def plan(root: Path, unit: str | None) -> MigrationPlan:
     text = before.decode("utf-8")
     document = tomllib.loads(text)
     table = _declaration_table(document)
-    if all(key in table for key in ("unit", "source_roots", "architecture", "roles")):
+    if all(
+        key in table
+        for key in (
+            "unit", "source_roots", "architecture", "contract_conformance", "roles",
+        )
+    ):
         return MigrationPlan(governed, project_file, before, before, ())
     draft, diagnostics = _draft(governed, document, table, unit)
 

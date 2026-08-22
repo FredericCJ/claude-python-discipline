@@ -44,6 +44,7 @@ def v4(*, extra: str = "", tables: str = "") -> str:
         unit = "application"
         source_roots = ["src/pkg"]
         architecture = "architecture.json"
+        contract_conformance = "contract-conformance.json"
         {extra}
         {tables}
     """
@@ -92,7 +93,7 @@ def test_a_missing_unit_is_refused(tmp_path: Path) -> None:
     """
     path = declare(
         tmp_path,
-        '[tool.agent-discipline]\nsource_roots=["src"]\narchitecture="architecture.json"\n',
+        '[tool.agent-discipline]\nsource_roots=["src"]\narchitecture="architecture.json"\ncontract_conformance="contract-conformance.json"\n',
     )
     with pytest.raises(ValueError, match="DISC-PROJECT-001"):
         project.parse(path)
@@ -105,7 +106,7 @@ def test_an_unknown_unit_is_refused(tmp_path: Path) -> None:
     """
     path = declare(
         tmp_path,
-        '[tool.agent-discipline]\nunit="system"\nsource_roots=["src"]\narchitecture="architecture.json"\n',
+        '[tool.agent-discipline]\nunit="system"\nsource_roots=["src"]\narchitecture="architecture.json"\ncontract_conformance="contract-conformance.json"\n',
     )
     with pytest.raises(ValueError, match="DISC-PROJECT-002"):
         project.parse(path)
@@ -121,6 +122,19 @@ def test_a_missing_architecture_record_is_refused(tmp_path: Path) -> None:
         '[tool.agent-discipline]\nunit="application"\nsource_roots=["src"]\n',
     )
     with pytest.raises(ValueError, match="DISC-PROJECT-014"):
+        project.parse(path)
+
+
+def test_a_missing_contract_conformance_registry_is_refused(tmp_path: Path) -> None:
+    """Implementation evidence cannot silently disappear from the project gate.
+
+    @param tmp_path fixture repository
+    """
+    path = declare(
+        tmp_path,
+        '[tool.agent-discipline]\nunit="application"\nsource_roots=["src"]\narchitecture="architecture.json"\n',
+    )
+    with pytest.raises(ValueError, match="DISC-PROJECT-015"):
         project.parse(path)
 
 
@@ -261,7 +275,7 @@ def test_source_roots_cannot_escape_or_name_the_repository(
     """
     path = declare(
         tmp_path,
-        f'[tool.agent-discipline]\nunit="component"\nsource_roots=["{bad}"]\narchitecture="architecture.json"\n',
+        f'[tool.agent-discipline]\nunit="component"\nsource_roots=["{bad}"]\narchitecture="architecture.json"\ncontract_conformance="contract-conformance.json"\n',
     )
     with pytest.raises(ValueError, match="DISC-PROJECT-004"):
         project.parse(path)

@@ -249,6 +249,38 @@ def test_v021_prefix_does_not_match_module(tmp_path: Path) -> None:
     assert "V021" in codes(run_on(tmp_path))
 
 
+def test_v021_accepts_an_explicit_family_partition(tmp_path: Path) -> None:
+    """A large rule family can split documents without renumbering public ids."""
+    path = module(
+        tmp_path,
+        name="TYPE-BOUNDARIES",
+        body=CONFORMANT_RULE,
+    )
+    path.write_text(
+        path.read_text(encoding="utf-8").replace(
+            "kind: law\n", "kind: law\nrule_prefix: TYPE\n",
+        ),
+        encoding="utf-8",
+    )
+    assert "V021" not in codes(run_on(tmp_path))
+
+
+def test_v021_rejects_a_partition_prefix_unrelated_to_its_module(tmp_path: Path) -> None:
+    """rule_prefix cannot become an arbitrary cross-module placement alias."""
+    path = module(
+        tmp_path,
+        name="ERR-BOUNDARIES",
+        body=CONFORMANT_RULE,
+    )
+    path.write_text(
+        path.read_text(encoding="utf-8").replace(
+            "kind: law\n", "kind: law\nrule_prefix: TYPE\n",
+        ),
+        encoding="utf-8",
+    )
+    assert "V021" in codes(run_on(tmp_path))
+
+
 def test_v022_binding_without_a_check(tmp_path: Path) -> None:
     """Binding without naming the command that decides it is an unenforceable claim."""
     module(

@@ -2,7 +2,7 @@
 id: meta/KERNEL
 kind: meta
 title: Discipline Kernel
-tokens: 1923
+tokens: 1939
 load_when: ["python", "discipline", "how should i", "what are the rules"]
 decay: none
 ---
@@ -47,7 +47,7 @@ its counterparts, parent repository or whole-application integration. See [meta/
 1. Source dependencies point toward policy; every production file has one role. `ARCH-001/018`
 2. One adapter boundary owns each technology; the local shell wires it. `ARCH-011/020`
 3. Application policy invokes injected ports, never concrete adapters. `ARCH-005/019`, `EFCT-001`
-4. Port substitutes share one observable contract and scheduled fault evidence. `ARCH-007/008/009`
+4. Boundary substitutes share one term-traced contract and scheduled-fault evidence. `ARCH-024/025`, `TEST-020`
 5. Two error channels only: typed results for contract outcomes, raised for the exceptional. `ERR-001`
 6. Result unions are exhaustively narrowed to `Never`. `ERR-002`
 7. A layer produces only its own error family. `ERR-004`
@@ -68,7 +68,7 @@ an API name, a task verb.
 
 | Task involves | Load |
 |---|---|
-| module layout, ports, adapters, import errors, coupling | `law/ARCH` |
+| module layout, ports, adapters, import errors, coupling | `law/ARCH` + `law/ARCH-PORTS` |
 | type hints, `Any`, `Protocol`, generics, a checker complaint | `law/TYPE` + `fact/py-typing` |
 | raising, catching, result unions, validation, error taxonomy | `law/ERR` + `fact/py-errors` |
 | tracebacks, error codes, logging, correlation, diagnosis | `law/DIAG` + `fact/py-logging` |
@@ -134,7 +134,8 @@ More specific beats more general. Contradictions are resolved once in `meta/CONF
 
 Gates pass — format, lint, both checkers, import contracts, custom checks, and the unit,
 contract, integration and fault suites. New behaviour arrives with its contract, its tests
-and, for a port, its three adapters and both suites. For any change touching an error path,
+and, for a port, its registered implementations, shared suite and fault evidence. For any
+change touching an error path,
 **the envelope was inspected**: code, layer, expected, actual, remediation — enough to
 locate and fix the fault without reading the source. Report what was verified, what was
 skipped and why, and any deviation by rule id. A failing test is reported as failing.

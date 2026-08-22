@@ -1,12 +1,12 @@
 """The file store port: listing, describing and deleting, behind one contract.
 
-**Justification (`ARCH-010`): testing the core against a fake, fault injection,
-and controlling a specific effect.** Deletion is irreversible, so the ability to
+**Boundary decision (`ARCH-021`): control destructive storage and its failure.**
+Deletion is irreversible, so the ability to
 run the whole pipeline against an in-memory store is what makes the destructive
 path testable at all; and a store that fails halfway through a deletion is the
 case that decides whether `EFCT-007`'s journalling actually works.
 
-Contract, enforced against every adapter by one shared suite (`ARCH-009`):
+Contract, enforced against every registered implementation by [TEST-020]:
 
 * `entries()` returns every entry currently in the store, in **path order**, so
   two calls with no intervening change return the same sequence.

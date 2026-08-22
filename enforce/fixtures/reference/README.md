@@ -3,8 +3,8 @@
 A stale-file pruner, about 700 lines, written to the discipline. It exists for
 three jobs, in order of how much each is worth:
 
-1. **The positive case for the fitness tests.** `fitness:test_port_triad`,
-   `test_contract_suite_per_adapter`, `test_layers_populated` and the rest need a
+1. **The positive case for the fitness tests.** `test_reference_contract_conformance`,
+   `test_layers_populated` and the rest need a
    conformant tree to run against. This is it. Their proof-of-failure cases come
    from `broken_copy`, which takes this tree and breaks exactly one thing.
 2. **A target for the tools that had none.** `mypy --strict`, `pyright` and
@@ -49,10 +49,10 @@ irreversible, so plan-then-apply is not a ceremony here but the only safe design
 | `ARCH-019` app names no adapter | `dependency_boundaries`; the app imports only ports |
 | `ARCH-020` one technology-owning boundary | `time` is owned by `adapters/clock`; local shell wiring remains valid |
 | `ARCH-005` effects are named in the signature | `app/prune.py` — both ports are parameters |
-| `ARCH-007` ports are Protocols with a stated contract | `ports/clock.py`, `ports/files.py` docstrings |
-| `ARCH-008` the real/fake/faulty triad | `adapters/clock/`, `adapters/files/` — three each, unconditionally |
-| `ARCH-009` one contract suite per adapter | `tests/contract/` — parameterised over all three, faulty in healthy mode |
-| `ARCH-010` a port earns its place | the **Justification** paragraph opening each port |
+| `ARCH-021/022` decisions and interaction terms are canonical | `architecture.json` |
+| `ARCH-024` boundary representation is explicit | `contract-conformance.json` joins both structural port classes |
+| `ARCH-025` implementation capabilities replace a triad rule | real, controllable, and scheduled-fault records per internal contract |
+| `TEST-020` one suite and total term trace | both suites select every registered implementation; registry points to each term's case |
 | `ARCH-011` one composition root | `shell/composition.py`; contract 7 proves the app cannot reach an adapter |
 | `ERR-001` two channels only | refusals are returned; the exceptional is raised |
 | `ERR-002` unions narrowed to `Never` | `domain/plan.py::narrow` |
@@ -85,7 +85,7 @@ was all it took.
 `adapters/`, and `ARCH-001` immediately caught `app/prune.py` importing them: the
 app must catch an adapter failure to report an interrupted apply. The import was
 the symptom; the cause was that a failure mode had been filed as an
-implementation detail when `ARCH-007` says a port states its error modes. They
+implementation detail when `ARCH-022` says a port states its error modes. They
 now live in `ports/errors.py`, and the app catches a contract's failure without
 knowing that adapters exist.
 

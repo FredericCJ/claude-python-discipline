@@ -1,0 +1,212 @@
+{
+  "schema_version": 1,
+  "contract_absence": null,
+  "contracts": [
+    {
+      "id": "clock_port",
+      "module": "refpkg.ports.clock",
+      "symbol": "Clock",
+      "representation": "structural",
+      "implementations": [
+        {
+          "id": "system_clock",
+          "module": "refpkg.adapters.clock.real",
+          "symbol": "SystemClock",
+          "kind": "real",
+          "capabilities": [],
+          "parameter": "real"
+        },
+        {
+          "id": "fake_clock",
+          "module": "refpkg.adapters.clock.fake",
+          "symbol": "FakeClock",
+          "kind": "test",
+          "capabilities": [
+            "controllable"
+          ],
+          "parameter": "fake"
+        },
+        {
+          "id": "faulty_clock",
+          "module": "refpkg.adapters.clock.faulty",
+          "symbol": "FaultyClock",
+          "kind": "test",
+          "capabilities": [
+            "controllable",
+            "scheduled_fault"
+          ],
+          "parameter": "faulty-healthy"
+        }
+      ],
+      "suite": "tests/contract/test_clock_contract.py",
+      "evidence": [
+        {
+          "operation": "now",
+          "term": "success",
+          "error": null,
+          "test": "tests/contract/test_clock_contract.py::test_now_returns_an_instant_at_or_after_the_epoch",
+          "not_applicable": null
+        },
+        {
+          "operation": "now",
+          "term": "error",
+          "error": "clock_unavailable",
+          "test": "tests/fault/test_containment.py::test_a_clock_fault_surfaces_as_the_adapter_family",
+          "not_applicable": null
+        },
+        {
+          "operation": "now",
+          "term": "ordering",
+          "error": null,
+          "test": "tests/contract/test_clock_contract.py::test_now_is_non_decreasing",
+          "not_applicable": null
+        },
+        {
+          "operation": "now",
+          "term": "idempotency",
+          "error": null,
+          "test": null,
+          "not_applicable": "The clock is intentionally time-varying; the ordering clause states the stable observable term."
+        },
+        {
+          "operation": "now",
+          "term": "concurrency",
+          "error": null,
+          "test": null,
+          "not_applicable": "The port owns no shared mutable state or serialization behavior."
+        },
+        {
+          "operation": "now",
+          "term": "timeout",
+          "error": null,
+          "test": null,
+          "not_applicable": "The contract promises one host read without retry and no wall-time deadline."
+        }
+      ]
+    },
+    {
+      "id": "file_store_port",
+      "module": "refpkg.ports.files",
+      "symbol": "FileStore",
+      "representation": "structural",
+      "implementations": [
+        {
+          "id": "local_file_store",
+          "module": "refpkg.adapters.files.real",
+          "symbol": "LocalFileStore",
+          "kind": "real",
+          "capabilities": [],
+          "parameter": "real"
+        },
+        {
+          "id": "memory_file_store",
+          "module": "refpkg.adapters.files.fake",
+          "symbol": "MemoryFileStore",
+          "kind": "test",
+          "capabilities": [
+            "controllable"
+          ],
+          "parameter": "fake"
+        },
+        {
+          "id": "faulty_file_store",
+          "module": "refpkg.adapters.files.faulty",
+          "symbol": "FaultyFileStore",
+          "kind": "test",
+          "capabilities": [
+            "controllable",
+            "scheduled_fault"
+          ],
+          "parameter": "faulty-healthy"
+        }
+      ],
+      "suite": "tests/contract/test_files_contract.py",
+      "evidence": [
+        {
+          "operation": "entries",
+          "term": "success",
+          "error": null,
+          "test": "tests/contract/test_files_contract.py::test_entries_are_returned_in_path_order",
+          "not_applicable": null
+        },
+        {
+          "operation": "entries",
+          "term": "error",
+          "error": "store_unavailable",
+          "test": "tests/fault/test_containment.py::test_a_store_fault_during_listing_surfaces_as_the_adapter_family",
+          "not_applicable": null
+        },
+        {
+          "operation": "entries",
+          "term": "ordering",
+          "error": null,
+          "test": "tests/contract/test_files_contract.py::test_entries_are_returned_in_path_order",
+          "not_applicable": null
+        },
+        {
+          "operation": "entries",
+          "term": "idempotency",
+          "error": null,
+          "test": "tests/contract/test_files_contract.py::test_entries_is_stable_between_calls",
+          "not_applicable": null
+        },
+        {
+          "operation": "entries",
+          "term": "concurrency",
+          "error": null,
+          "test": null,
+          "not_applicable": "The contract explicitly promises no cross-process isolation."
+        },
+        {
+          "operation": "entries",
+          "term": "timeout",
+          "error": null,
+          "test": null,
+          "not_applicable": "The contract promises no traversal deadline."
+        },
+        {
+          "operation": "delete",
+          "term": "success",
+          "error": null,
+          "test": "tests/contract/test_files_contract.py::test_delete_removes_exactly_one_entry",
+          "not_applicable": null
+        },
+        {
+          "operation": "delete",
+          "term": "error",
+          "error": "store_unavailable",
+          "test": "tests/contract/test_files_contract.py::test_deleting_an_absent_path_is_an_error",
+          "not_applicable": null
+        },
+        {
+          "operation": "delete",
+          "term": "ordering",
+          "error": null,
+          "test": null,
+          "not_applicable": "Application orchestration owns ordering across individual delete calls."
+        },
+        {
+          "operation": "delete",
+          "term": "idempotency",
+          "error": null,
+          "test": "tests/contract/test_files_contract.py::test_deleting_an_absent_path_is_an_error",
+          "not_applicable": null
+        },
+        {
+          "operation": "delete",
+          "term": "concurrency",
+          "error": null,
+          "test": null,
+          "not_applicable": "The contract explicitly promises no cross-process exclusion."
+        },
+        {
+          "operation": "delete",
+          "term": "timeout",
+          "error": null,
+          "test": null,
+          "not_applicable": "The contract promises one deletion attempt and no wall-time deadline."
+        }
+      ]
+    }
+  ]
+}

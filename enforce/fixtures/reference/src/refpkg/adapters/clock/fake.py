@@ -2,7 +2,7 @@
 
 A fake, not a mock. It implements the contract rather than recording calls, so
 the same suite that holds `SystemClock` to the contract holds this one
-(`ARCH-009`, `TEST-006`). A fake that can drift from its real counterpart without
+(`TEST-020`). A test substitute that can drift from its real counterpart without
 a test failing is worthless, and every unit test standing on it is worth as
 little -- which is why the shared suite is the point and this class is not.
 """

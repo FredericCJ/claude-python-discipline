@@ -11,6 +11,10 @@
       "type": "string",
       "pattern": "^(law|fact|frame|ops|meta|examples)/[A-Za-z][A-Za-z0-9-]{1,23}$"
     },
+    "rule_prefix": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]{1,7}$"
+    },
     "kind": {
       "enum": ["law", "fact", "frame", "ops", "meta"]
     },

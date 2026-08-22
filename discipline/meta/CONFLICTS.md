@@ -2,7 +2,7 @@
 id: meta/CONFLICTS
 kind: meta
 title: Conflict Ledger
-tokens: 3250
+tokens: 3295
 load_when: ["contradiction", "which source wins", "why was this decided", "precedence"]
 decay: none
 ---
@@ -114,7 +114,7 @@ swapped without touching the rule.
 | Id | Conflict | Sources | Resolution |
 |---|---|---|---|
 | CONF-007 | Faulty adapters for "important" ports vs every port unconditionally | SG / SE | Unconditional. A port judged to have no failure mode is the one whose failure is found in production. |
-| CONF-008 | Contract suites for "every important port" vs every port | SG / SE | Every port, against real, fake and faulty-in-healthy-mode. |
+| CONF-008 | Contract suites for "every important port" vs every port | SG / SE | Superseded in v4: every declared internal contract registers real, controllable and scheduled-fault capabilities under one term-traced suite; no physical triad is required. |
 | CONF-009 | `FaultSchedule(fail_write=3)` keyword form vs the structured `rules=(...)` form | SG / SE, TD | Structured form only; `SE` already declared the keyword form retired and incompatible. |
 | CONF-010 | Port justification list of 9 items vs 8 | SG / SE | 8, and the list is closed and mandatory. The dropped ninth ("decoupling the domain from infrastructure") was subsumed. |
 | CONF-011 | Techniques as a menu ("not every technique everywhere") vs each one binding with a CI gate | SG / SE, TD | Binding, with gates. A menu of verification techniques is how a suite ends up with none of them. |
@@ -140,7 +140,7 @@ swapped without touching the rule.
 | CONF-031 | "Grounding, not a rulebook" disclaimers alongside hard mandates ("reject on sight", "treat any deviation as a spec violation") | AR, ET, LO, SP / TY | Dissolved by genre: mandates live in `law/`, grounding in `frame/`. No document has to be both. |
 | CONF-032 | Error-context accretion stated without sources vs with them | AR / ET | `ET`'s sourced version, plus its preference for `add_note` over re-wrapping. |
 | CONF-033 | Boundary-crossing logging triple and unconditional state-transition logging vs cost discipline | AR / LO | Kept, scoped to debug level and guarded, so the cost rule is not violated. |
-| CONF-034 | Four vocabularies for one reuse objective (`atomic/integrated reusability`, goal3, reusability discipline, cohesion) | SP, LO, ET, AR | One vocabulary in `meta/GLOSSARY.md`; reuse is proved by the port triad and its shared contract suite, not asserted. |
+| CONF-034 | Four vocabularies for one reuse objective (`atomic/integrated reusability`, goal3, reusability discipline, cohesion) | SP, LO, ET, AR | One vocabulary in `meta/GLOSSARY.md`; substitution evidence is the declared boundary representation, registered capabilities and shared contract suite, not a file triad. |
 | CONF-035 | Agent-teams mechanics decaying in months, mixed with doctrine that decays in years or not at all | AT / rest | Separated into `ops/`, with `verified:` and `decay: months`, so its staleness is visible instead of inherited. |
 
 ---

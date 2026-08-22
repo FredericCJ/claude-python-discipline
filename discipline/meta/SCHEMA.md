@@ -2,7 +2,7 @@
 id: meta/SCHEMA
 kind: meta
 title: Document Format Specification
-tokens: 3861
+tokens: 3961
 load_when: ["authoring a rule", "new module", "front-matter", "rule id", "validate"]
 decay: none
 ---
@@ -43,8 +43,9 @@ YAML, first thing in the file, delimited by `---`.
 
 ```yaml
 ---
-id: law/TYPE                   # required. "<kind>/<NAME>", NAME is [A-Z][A-Z0-9]{1,7}
+id: law/TYPE                   # required. "<kind>/<NAME>"
 kind: law                      # required. law | fact | frame | ops | meta
+rule_prefix: TYPE              # optional only for a TYPE-SUBJECT family partition
 title: Typing & Contracts      # required. Human-readable, <= 60 chars
 tokens: 1840                   # required. Measured; written by build_index.py. 0 in a new file.
 load_when:                     # required for law/fact/frame/ops. Router keywords, lowercase.
@@ -66,6 +67,10 @@ python: ">=3.11"               # optional. PEP 440 specifier.
 same corpus yields the same number on every machine with nothing to install. It is a
 budgeting hint, accurate to a few percent against a byte-pair encoder; it is not a
 contract, and no rule is decided by its exact value.
+
+**`rule_prefix:`** splits a large family without renumbering ids. It is valid only in a
+`<PREFIX>-<SUBJECT>` module: `law/ARCH-PORTS` may declare `ARCH`. Ordinary modules derive
+their prefix from `id`. This partitions documents; it creates no family or placement alias.
 
 **`load_when:`** is the router's keyword index. Terms should be what an agent would
 actually have in hand at the moment it needs the module — error messages, API names,
@@ -123,8 +128,9 @@ Domain modules MUST NOT use `Any`, explicit or implicit.
 ### <ID> · <imperative title>  <force tag> [<mechanism tag> ...]
 ```
 
-- **`<ID>`** — `<MODULE>-<NNN>`, where `MODULE` is the file's front-matter `id` suffix
-  and `NNN` is a zero-padded three-digit ordinal. `TYPE-012`, `DIAG-004`, `ARCH-031`.
+- **`<ID>`** — `<PREFIX>-<NNN>`, where `PREFIX` is the file's front-matter `id` suffix
+  or its explicit partition `rule_prefix`, and `NNN` is a zero-padded three-digit
+  ordinal. `TYPE-012`, `DIAG-004`, `ARCH-031`.
 - IDs are **assigned once and never reused, never renumbered**. Deleting a rule leaves a
   gap; superseding one adds a `**Superseded by**` line, keeps the heading, and records a
   migration disposition in `meta/evidence.json`. Positional references are what the

@@ -218,7 +218,7 @@ def test_an_adapter_file_reaches_the_adapter_rules(graph: Graph) -> None:
     same as no answer at all.
     """
     found = _rule_ids(nav.cmd_context(graph, _ns(file="src/pkg/adapters/fs.py")))
-    assert {"ARCH-003", "ARCH-008", "ARCH-020", "DEP-003"} <= found
+    assert {"ARCH-003", "ARCH-020", "ARCH-025", "DEP-003", "TEST-020"} <= found
     assert "TYPE-002" not in found, "a domain-only rule must not govern an adapter"
 
 
@@ -258,8 +258,8 @@ def test_what_do_i_run_for_a_rule(graph: Graph) -> None:
 
 def test_why_a_rule_has_its_shape(graph: Graph) -> None:
     """The conflict that settled a rule stays attached to it, so it is not relitigated."""
-    payload = nav.cmd_why(graph, argparse.Namespace(id="ARCH-008", root=REPO_ROOT))
-    assert any("CONF-007" in entry for entry in payload["resolved_by"])  # type: ignore[union-attr]
+    payload = nav.cmd_why(graph, argparse.Namespace(id="ARCH-025", root=REPO_ROOT))
+    assert any("OPEN-020" in entry for entry in payload["resolved_by"])  # type: ignore[union-attr]
 
 
 def test_an_open_rule_names_what_blocks_it(graph: Graph) -> None:
@@ -299,7 +299,7 @@ def test_context_is_reproducible(graph: Graph) -> None:
 def test_a_path_between_two_rules_is_found(graph: Graph) -> None:
     """Two related rules are connected by some chain, in one direction or the other."""
     payload = nav.cmd_path(
-        graph, argparse.Namespace(src="ARCH-008", dst="ARCH-009", root=REPO_ROOT)
+        graph, argparse.Namespace(src="ARCH-024", dst="TEST-020", root=REPO_ROOT)
     )
     assert payload["found"]
 

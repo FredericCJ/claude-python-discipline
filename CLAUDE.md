@@ -19,7 +19,7 @@ Prefer the navigator to reading speculatively:
 ```bash
 python tools/nav.py context --file P --error E --task T   # what to read, and its cost
 python tools/nav.py applies src/pkg/adapters/fs.py        # which rules govern this file
-python tools/nav.py why ARCH-008                          # which decision shaped it
+python tools/nav.py why ARCH-025                          # which decision shaped it
 python tools/learn.py retrieve --file P --error E         # what earlier sessions found
 ```
 

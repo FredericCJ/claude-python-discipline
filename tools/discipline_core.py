@@ -480,6 +480,20 @@ class Document:
         return self.doc_id.split("/", 1)[-1] if "/" in self.doc_id else self.doc_id
 
     @property
+    def rule_prefix(self) -> str:
+        """The rule-id prefix owned by this module or declared partition.
+
+        A large family may be physically partitioned as ``ARCH-PORTS`` while
+        retaining stable ``ARCH-NNN`` identities. The optional front-matter
+        value makes that exception explicit; ordinary modules derive it from
+        their own identity as before.
+
+        @return uppercase rule prefix
+        """
+        raw = self.front_matter.get("rule_prefix")
+        return raw if isinstance(raw, str) else self.module_name.upper()
+
+    @property
     def relpath(self) -> str:
         """Location in the form a finding should quote, identical on every platform.
 

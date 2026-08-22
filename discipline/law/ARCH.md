@@ -2,7 +2,7 @@
 id: law/ARCH
 kind: law
 title: Architecture and Coupling
-tokens: 3950
+tokens: 3343
 load_when:
   - "new module"
   - "package layout"
@@ -99,44 +99,6 @@ result union whose error arm the caller is forced to handle.
 - **Check** `mypy --strict` with exhaustiveness on the result union
 - **See** [law/ERR]
 
----
-
-## Ports and swappability
-
-### ARCH-007 · Every port is a Protocol with a published contract  [BINDING] [fitness:test_every_port_is_a_protocol]
-A boundary the core crosses MUST be expressed as a `Protocol` under `ports/`, with its
-inputs, outputs, error modes, ordering constraints and idempotency stated.
-- **Why** The contract is the oracle every adapter is tested against; without it there is
-  nothing for a fake to be faithful to.
-- **Check** `pytest enforce/fitness/test_ports.py::test_every_port_is_a_protocol`
-- **See** [ARCH-008] · [law/TEST]
-
-### ARCH-008 · Every port has a real, a fake and a faulty adapter  [BINDING] [fitness:test_port_triad]
-Unconditionally, with no "if it has meaningful failure modes" qualifier.
-- **Why** The port judged to have no failure mode is the one whose failure is discovered
-  in production. Swappability is proved by three implementations, not asserted by one.
-- **Check** `pytest enforce/fitness/test_ports.py::test_port_triad`
-
-### ARCH-009 · One contract suite runs against every adapter  [BINDING] [fitness:test_contract_suite_per_adapter]
-The port's suite MUST run against the real adapter, the fake, and the faulty adapter in
-healthy mode, unchanged.
-- **Why** A fake that can drift from its real counterpart without a test failing is
-  worthless, and every unit test standing on it is worth as little.
-- **Check** `pytest enforce/fitness/test_ports.py::test_contract_suite_per_adapter`
-
-### ARCH-010 · A port earns its place from a stated justification  [BINDING] [fitness:test_port_justification]
-Every port MUST name, in its module docstring, which of these it claims: replacing the
-implementation without touching the core; testing the core against a fake; a named
-behavioural contract; controlling a specific effect; fault injection; observing an
-interaction; isolating the core from an unstable external technology; supporting more than
-one real adapter.
-- **Why** Without a closed list, "port" degrades into wrapping standard-library calls,
-  and the boundary stops meaning anything.
-- **Check** `pytest enforce/fitness/test_ports.py::test_port_justification`
-
-Pure serialization, path computation and hashing are not ports on purity grounds alone.
-They become ports only under a listed justification.
-
 ### ARCH-011 · Adapters are selected at one local wiring root  [BINDING] [check:single_wiring_point]
 Concrete adapters MUST be chosen in a single repository-local wiring module in `shell`.
 No other module may select a concrete adapter class. This root does not assemble sibling
@@ -186,8 +148,8 @@ No function may exceed the configured cyclomatic complexity budget.
 ### ARCH-017 · Prefer the direct call to the abstraction  [ADVISORY]
 An abstraction SHOULD be introduced when it creates a boundary for specification,
 substitution, observation or containment — not for symmetry.
-- **No mechanism** Whether a boundary is *meaningful* is a design judgment; the closed
-  justification list in [ARCH-010] mechanizes the part of it that can be.
+- **No mechanism** Whether a boundary is *meaningful* is a design judgment; [ARCH-021]
+  checks only that a volatile decision and concrete change scenario were actually recorded.
 - **Why** Layers added without a stated purpose are indistinguishable from layers added
   by habit, and each one lengthens every trace.
 
@@ -230,7 +192,7 @@ intended to absorb.
   boundary exists and supplies a falsifiable change against which its cohesion can be
   reviewed.
 - **Check** `python -m checks.architecture_model`
-- **See** [ARCH-010] · [EVID-004]
+- **See** [ARCH-017] · [EVID-004]
 
 ### ARCH-022 · Four local architecture views stay complete  [BINDING] [check:architecture_model]
 The canonical architecture record MUST contain this repository's boundary operations and

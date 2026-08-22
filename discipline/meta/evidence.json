@@ -1093,7 +1093,7 @@
         "component"
       ],
       "capabilities": [],
-      "failure_mode": "The contract is the oracle every adapter is tested against; without it there is nothing for a fake to be faithful to.",
+      "failure_mode": "The v3 rule combined contract completeness with one prescribed Python representation, so neither claim had an independent identity.",
       "warrants": [
         {
           "source": "source:SE",
@@ -1101,27 +1101,12 @@
           "confidence": "medium"
         }
       ],
-      "strategies": [
-        {
-          "mechanism": "fitness:test_every_port_is_a_protocol",
-          "kind": "behavioral",
-          "relation": "proxy",
-          "proposition": "fitness:test_every_port_is_a_protocol passes against the repository artifacts and behavioral cases selected by that test.",
-          "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_every_port_is_a_protocol; it does not establish every behavior in the normative statement.",
-          "must_pass": "command:`pytest enforce/fitness/test_ports.py::test_every_port_is_a_protocol`",
-          "must_reject": "discrimination:ARCH-007",
-          "platforms": [
-            "windows",
-            "linux"
-          ],
-          "not_applicable": "never while this rule is active for the governed repository"
-        }
-      ],
+      "strategies": [],
       "observations": [],
       "migration": {
         "source": "v3.3.0",
-        "disposition": "unchanged",
-        "guidance": "No adopter edit is required by this rule record."
+        "disposition": "superseded",
+        "guidance": "Move contract terms to architecture.json and declare structural or nominal boundary representation under ARCH-024."
       }
     },
     "ARCH-008": {
@@ -1130,7 +1115,7 @@
         "component"
       ],
       "capabilities": [],
-      "failure_mode": "The port judged to have no failure mode is the one whose failure is discovered in production. Swappability is proved by three implementations, not asserted by one.",
+      "failure_mode": "A physical real/fake/faulty triad can multiply classes without proving controlled state, scheduled failure, or shared behavioral conformance.",
       "warrants": [
         {
           "source": "source:SE",
@@ -1138,29 +1123,14 @@
           "confidence": "medium"
         }
       ],
-      "strategies": [
-        {
-          "mechanism": "fitness:test_port_triad",
-          "kind": "behavioral",
-          "relation": "proxy",
-          "proposition": "fitness:test_port_triad passes against the repository artifacts and behavioral cases selected by that test.",
-          "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_port_triad; it does not establish every behavior in the normative statement.",
-          "must_pass": "command:`pytest enforce/fitness/test_ports.py::test_port_triad`",
-          "must_reject": "discrimination:ARCH-008",
-          "platforms": [
-            "windows",
-            "linux"
-          ],
-          "not_applicable": "never while this rule is active for the governed repository"
-        }
-      ],
+      "strategies": [],
       "observations": [
         "V3E-008"
       ],
       "migration": {
         "source": "v3.3.0",
-        "disposition": "clarified",
-        "guidance": "Review the clarified v4 wording and update local evidence if its observable claim changed."
+        "disposition": "superseded",
+        "guidance": "Register semantic real, controllable, and scheduled-fault capabilities under ARCH-025; one test implementation may combine the latter two."
       }
     },
     "ARCH-009": {
@@ -1169,7 +1139,7 @@
         "component"
       ],
       "capabilities": [],
-      "failure_mode": "A fake that can drift from its real counterpart without a test failing is worthless, and every unit test standing on it is worth as little.",
+      "failure_mode": "The same shared-suite obligation appeared under several ids while no record traced individual contract terms and errors to cases.",
       "warrants": [
         {
           "source": "source:SE",
@@ -1177,29 +1147,14 @@
           "confidence": "medium"
         }
       ],
-      "strategies": [
-        {
-          "mechanism": "fitness:test_contract_suite_per_adapter",
-          "kind": "behavioral",
-          "relation": "proxy",
-          "proposition": "fitness:test_contract_suite_per_adapter passes against the repository artifacts and behavioral cases selected by that test.",
-          "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_contract_suite_per_adapter; it does not establish every behavior in the normative statement.",
-          "must_pass": "command:`pytest enforce/fitness/test_ports.py::test_contract_suite_per_adapter`",
-          "must_reject": "discrimination:ARCH-009",
-          "platforms": [
-            "windows",
-            "linux"
-          ],
-          "not_applicable": "never while this rule is active for the governed repository"
-        }
-      ],
+      "strategies": [],
       "observations": [
         "V3E-008"
       ],
       "migration": {
         "source": "v3.3.0",
-        "disposition": "clarified",
-        "guidance": "Review the clarified v4 wording and update local evidence if its observable claim changed."
+        "disposition": "consolidated",
+        "guidance": "Replace the v3 suite-name convention with the TEST-020 registry and operation-term trace."
       }
     },
     "ARCH-010": {
@@ -1208,7 +1163,7 @@
         "component"
       ],
       "capabilities": [],
-      "failure_mode": "Without a closed list, \"port\" degrades into wrapping standard-library calls, and the boundary stops meaning anything.",
+      "failure_mode": "A closed docstring phrase list accepted generic replacement claims that did not identify the volatile decision or change a boundary absorbs.",
       "warrants": [
         {
           "source": "source:SE",
@@ -1216,27 +1171,12 @@
           "confidence": "medium"
         }
       ],
-      "strategies": [
-        {
-          "mechanism": "fitness:test_port_justification",
-          "kind": "behavioral",
-          "relation": "proxy",
-          "proposition": "fitness:test_port_justification passes against the repository artifacts and behavioral cases selected by that test.",
-          "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_port_justification; it does not establish every behavior in the normative statement.",
-          "must_pass": "command:`pytest enforce/fitness/test_ports.py::test_port_justification`",
-          "must_reject": "discrimination:ARCH-010",
-          "platforms": [
-            "windows",
-            "linux"
-          ],
-          "not_applicable": "never while this rule is active for the governed repository"
-        }
-      ],
+      "strategies": [],
       "observations": [],
       "migration": {
         "source": "v3.3.0",
-        "disposition": "unchanged",
-        "guidance": "No adopter edit is required by this rule record."
+        "disposition": "superseded",
+        "guidance": "Record volatile decisions and concrete change scenarios in architecture.json under ARCH-021."
       }
     },
     "ARCH-011": {
@@ -1708,6 +1648,87 @@
         "source": "v4.0.0",
         "disposition": "new",
         "guidance": "Replace peer names and endpoints with contract roles; retain external snapshot provenance as source role, version, and digest only."
+      }
+    },
+    "ARCH-024": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "An implicit or unresolved boundary representation lets declared contracts drift away from the source types implementations actually satisfy.",
+      "warrants": [
+        {
+          "source": "source:SE",
+          "relation": "supports",
+          "confidence": "high"
+        },
+        {
+          "source": "source:TY",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:contract_conformance",
+          "kind": "static",
+          "relation": "direct",
+          "proposition": "Internal architecture contract ids and conformance ids are equal; each record resolves one local boundary class whose Protocol or abstract nominal form matches the declared representation, and nominal implementation classes name that base.",
+          "residual": "Source form and symbol resolution do not prove structural method-signature compatibility or any implementation behavior; strict generated type witnesses and executed suites own those separate propositions.",
+          "must_pass": "fixture:reference contract-conformance registry",
+          "must_reject": "discrimination:ARCH-024",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "never; an explicit justified empty internal-contract registry is still checked"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Create contract-conformance.json, join every internal architecture contract, and declare structural or nominal representation explicitly."
+      }
+    },
+    "ARCH-025": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "Three physical adapter files can exist while controlled state, scheduled failure, or real implementation coverage remains absent or inert.",
+      "warrants": [
+        {
+          "source": "source:SE",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:contract_conformance",
+          "kind": "static",
+          "relation": "proxy",
+          "proposition": "Each internal contract registry resolves at least one real class and test classes whose declared capability union contains controllable and scheduled_fault; one class may carry both.",
+          "residual": "A capability label and resolvable class do not establish that control is deterministic or a scheduled fault actually fires; the referenced fault cases and adversarial execution must discriminate those behaviors.",
+          "must_pass": "fixture:reference contract-conformance registry",
+          "must_reject": "discrimination:ARCH-025",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "the canonical architecture model has no internal contracts and the registry carries a non-empty absence rationale"
+        }
+      ],
+      "observations": [
+        "V3E-008"
+      ],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Replace real/fake/faulty filename assertions with real, controllable, and scheduled-fault capability records; combine test capabilities when one implementation provides both."
       }
     },
     "DEP-001": {
@@ -5676,7 +5697,7 @@
         "component"
       ],
       "capabilities": [],
-      "failure_mode": "This is the strongest oracle available: it tests against the published promise rather than against an implementation.",
+      "failure_mode": "The v3 shared-suite rule duplicated ARCH-009 and inferred adapter coverage by searching for physical triad names.",
       "warrants": [
         {
           "source": "source:TD",
@@ -5684,27 +5705,12 @@
           "confidence": "medium"
         }
       ],
-      "strategies": [
-        {
-          "mechanism": "fitness:test_contract_suite_per_adapter",
-          "kind": "behavioral",
-          "relation": "proxy",
-          "proposition": "fitness:test_contract_suite_per_adapter passes against the repository artifacts and behavioral cases selected by that test.",
-          "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_contract_suite_per_adapter; it does not establish every behavior in the normative statement.",
-          "must_pass": "command:`pytest enforce/fitness/test_ports.py::test_contract_suite_per_adapter`",
-          "must_reject": "discrimination:TEST-005",
-          "platforms": [
-            "windows",
-            "linux"
-          ],
-          "not_applicable": "never while this rule is active for the governed repository"
-        }
-      ],
+      "strategies": [],
       "observations": [],
       "migration": {
         "source": "v3.3.0",
-        "disposition": "unchanged",
-        "guidance": "No adopter edit is required by this rule record."
+        "disposition": "consolidated",
+        "guidance": "Replace physical triad-name assertions with the TEST-020 implementation registry and shared suite."
       }
     },
     "TEST-006": {
@@ -5713,7 +5719,7 @@
         "component"
       ],
       "capabilities": [],
-      "failure_mode": "Every unit test standing on a drifting fake is worth exactly as little as the fake, and none of them will say so.",
+      "failure_mode": "The v3 fake-drift rule had no proposition separable from the shared-suite rule and no independent rejection witness.",
       "warrants": [
         {
           "source": "source:TD",
@@ -5721,27 +5727,12 @@
           "confidence": "medium"
         }
       ],
-      "strategies": [
-        {
-          "mechanism": "fitness:test_contract_suite_per_adapter",
-          "kind": "behavioral",
-          "relation": "proxy",
-          "proposition": "fitness:test_contract_suite_per_adapter passes against the repository artifacts and behavioral cases selected by that test.",
-          "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_contract_suite_per_adapter; it does not establish every behavior in the normative statement.",
-          "must_pass": "command:`pytest enforce/fitness/test_ports.py::test_contract_suite_per_adapter`",
-          "must_reject": "pending:TEST-006",
-          "platforms": [
-            "windows",
-            "linux"
-          ],
-          "not_applicable": "never while this rule is active for the governed repository"
-        }
-      ],
+      "strategies": [],
       "observations": [],
       "migration": {
         "source": "v3.3.0",
-        "disposition": "unchanged",
-        "guidance": "No adopter edit is required by this rule record."
+        "disposition": "consolidated",
+        "guidance": "Use TEST-020 as the sole shared-suite and substitute-drift obligation."
       }
     },
     "TEST-007": {
@@ -6227,6 +6218,50 @@
         "guidance": "No adopter edit is required by this rule record."
       }
     },
+    "TEST-020": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "A broad contract-suite label can hide an unselected substitute or an untested error, ordering, idempotency, concurrency, or timeout term.",
+      "warrants": [
+        {
+          "source": "source:TD",
+          "relation": "supports",
+          "confidence": "high"
+        },
+        {
+          "source": "source:SE",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:contract_conformance",
+          "kind": "static",
+          "relation": "proxy",
+          "proposition": "Every registered implementation has a unique parameter spelling present in one existing local suite, and every operation success, declared error, ordering, idempotency, concurrency, and timeout key has exactly one confined test node or permitted non-applicability rationale.",
+          "residual": "Source spelling and path existence do not prove pytest collects or passes a node, that a parameter selects the claimed implementation, or that an assertion decides the cited term; the project gate executes collection and suites, while adversarial review owns oracle quality.",
+          "must_pass": "fixture:reference contract-conformance registry",
+          "must_reject": "discrimination:TEST-020",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "the canonical architecture model has no internal contracts and the registry carries a non-empty absence rationale"
+        }
+      ],
+      "observations": [
+        "V3E-008"
+      ],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Consolidate ARCH-009, TEST-005, and TEST-006 into one registry: name the shared suite, all implementation parameters, and evidence for every contract term."
+      }
+    },
     "TYPE-001": {
       "units": [
         "application",
@@ -6585,7 +6620,7 @@
         "component"
       ],
       "capabilities": [],
-      "failure_mode": "Nominal inheritance would make every adapter import the core, reversing the dependency direction the architecture depends on.",
+      "failure_mode": "The v3 rationale confused an allowed inward adapter-to-port import with dependency reversal and prescribed structural typing universally.",
       "warrants": [
         {
           "source": "source:TY",
@@ -6593,27 +6628,12 @@
           "confidence": "medium"
         }
       ],
-      "strategies": [
-        {
-          "mechanism": "fitness:test_every_port_is_a_protocol",
-          "kind": "behavioral",
-          "relation": "proxy",
-          "proposition": "fitness:test_every_port_is_a_protocol passes against the repository artifacts and behavioral cases selected by that test.",
-          "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_every_port_is_a_protocol; it does not establish every behavior in the normative statement.",
-          "must_pass": "command:`pytest enforce/fitness/test_ports.py::test_every_port_is_a_protocol`",
-          "must_reject": "discrimination:TYPE-009",
-          "platforms": [
-            "windows",
-            "linux"
-          ],
-          "not_applicable": "never while this rule is active for the governed repository"
-        }
-      ],
+      "strategies": [],
       "observations": [],
       "migration": {
         "source": "v3.3.0",
-        "disposition": "unchanged",
-        "guidance": "No adopter edit is required by this rule record."
+        "disposition": "superseded",
+        "guidance": "Declare structural or nominal form per boundary and satisfy ARCH-024 instead of converting every boundary to Protocol."
       }
     },
     "TYPE-010": {

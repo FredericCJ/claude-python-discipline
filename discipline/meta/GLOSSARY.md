@@ -2,7 +2,7 @@
 id: meta/GLOSSARY
 kind: meta
 title: Glossary
-tokens: 1280
+tokens: 1308
 load_when: ["terminology", "what does this mean", "define", "ambiguous term"]
 decay: none
 ---
@@ -69,8 +69,9 @@ vocabulary**; Meszaros' terms are mapped onto it and not used on their own.
 
 ### port
 
-A `Protocol` naming a boundary the core may cross. Every port has a published contract, a
-contract suite, and at least three adapters (real, fake, faulty).
+A typed boundary the core may cross. Its repository declares structural or nominal form,
+registers a real implementation plus controllable and scheduled-fault test capabilities,
+and runs one term-traced contract suite across every registered implementation.
 
 ### seam
 

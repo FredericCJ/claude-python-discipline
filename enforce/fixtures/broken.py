@@ -7,11 +7,12 @@ stopped testing anything.
 
 So there is one conformant tree -- `reference/` -- and `broken_copy`, which
 copies it and breaks exactly one thing. A negative case then reads as the
-sentence it is testing: *drop the faulty adapter and `test_port_triad` must
-fire*. Nothing broken is ever committed, so pytest cannot collect it and no
+sentence it is testing: *remove scheduled-fault capability and
+`test_reference_contract_conformance` must fire*. Nothing broken is ever
+committed, so pytest cannot collect it and no
 reader can mistake it for an example.
 
-    root = broken_copy(tmp_path, drop=["src/refpkg/adapters/clock/faulty.py"])
+    root = broken_copy(tmp_path, replace=[("contract-conformance.json", old, new)])
 """
 
 from __future__ import annotations

@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 class FaultSchedule:
     """Which calls to a faulty adapter fail, and what they report when they do.
 
-    An empty schedule is the healthy case, which is deliberate: `ARCH-009`
+    An empty schedule is the healthy case, which is deliberate: `TEST-020`
     requires the shared contract suite to run against the faulty adapter *in
     healthy mode*, and that is only possible if healthy is a configuration of the
     same object rather than a different object.

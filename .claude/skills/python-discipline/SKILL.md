@@ -50,7 +50,7 @@ practice, whatever its tag claims.
 1. Dependencies point inward; the domain imports nothing that can perform I/O. `ARCH-001/002`
 2. One adapter boundary owns each foreign technology; the local shell wires it. `ARCH-020`
 3. Application policy invokes effects through injected ports, never concrete adapters. `ARCH-019`, `EFCT-001`
-4. Every port has real + fake + faulty adapters and one shared contract suite. `ARCH-007/008/009`
+4. Boundary form is explicit; real, controllable, and scheduled-fault evidence shares one term-traced suite. `ARCH-024/025`, `TEST-020`
 5. Two error channels only: typed results for contract outcomes, raised for the exceptional. `ERR-001`
 6. Result unions are exhaustively narrowed to `Never`. `ERR-002`
 7. A layer produces only its own error family. `ERR-004`
@@ -69,7 +69,7 @@ Read only what the task needs.
 
 | Task involves | Read below `<bundle-root>` |
 |---|---|
-| module layout, ports, adapters, import errors, coupling | `discipline/law/ARCH.md` |
+| module layout, ports, adapters, import errors, coupling | `discipline/law/ARCH.md` + `discipline/law/ARCH-PORTS.md` |
 | type hints, `Any`, `Protocol`, generics, a checker complaint | `discipline/law/TYPE.md` + `discipline/fact/py-typing.md` |
 | raising, catching, result unions, validation, error taxonomy | `discipline/law/ERR.md` + `discipline/fact/py-errors.md` |
 | tracebacks, error codes, logging, correlation, diagnosis | `discipline/law/DIAG.md` + `discipline/fact/py-logging.md` |
@@ -96,7 +96,7 @@ Prefer the navigator to speculative reading:
 ```bash
 python <bundle-root>/tools/nav.py context --file P --error E --task T
 python <bundle-root>/tools/nav.py applies P
-python <bundle-root>/tools/nav.py why ARCH-008
+python <bundle-root>/tools/nav.py why ARCH-025
 python <bundle-root>/tools/learn.py retrieve --file P --error E
 ```
 

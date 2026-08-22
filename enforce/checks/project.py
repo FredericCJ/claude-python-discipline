@@ -175,6 +175,8 @@ class Declaration:
     source_roots: tuple[PurePosixPath, ...] = ()
     ## Canonical local architecture record relative to the repository root.
     architecture: PurePosixPath | None = None
+    ## Contract implementation and behavioral-evidence registry.
+    contract_conformance: PurePosixPath | None = None
     ## Canonical role name to repository-relative directory paths.
     role_paths: Mapping[str, tuple[PurePosixPath, ...]] = field(default_factory=dict)
     ## Independently substitutable boundaries inside the broader adapters role.
@@ -259,6 +261,15 @@ class Declaration:
             return None
         return self.root / Path(self.architecture.as_posix())
 
+    def contract_conformance_path(self) -> Path | None:
+        """The declared conformance registry as an absolute local path.
+
+        @return local JSON path, or None for the undeclared direct-check fallback
+        """
+        if self.root is None or self.contract_conformance is None:
+            return None
+        return self.root / Path(self.contract_conformance.as_posix())
+
     def narrowed(self) -> tuple[str, ...]:
         """Facts a direct check invocation could not decide from this declaration.
 
@@ -279,6 +290,11 @@ class Declaration:
             notes.append(
                 "DISC-PROJECT-014 architecture is undeclared; local design views "
                 "are undecided"
+            )
+        if self.contract_conformance is None:
+            notes.append(
+                "DISC-PROJECT-015 contract_conformance is undeclared; typed "
+                "implementation and shared-suite evidence are undecided"
             )
         if self.doc_engine != "doxygen":
             notes.append(
@@ -522,6 +538,32 @@ def _parse_architecture(table: Mapping[str, object], path: Path) -> PurePosixPat
     return architecture
 
 
+def _parse_contract_conformance(
+    table: Mapping[str, object], path: Path,
+) -> PurePosixPath:
+    """Parse the local contract-conformance registry path.
+
+    @param table the ``tool.agent-discipline`` table
+    @param path declaring project file
+    @return validated repository-relative JSON path
+    """
+    raw = table.get("contract_conformance")
+    if raw is None:
+        _reject(
+            "DISC-PROJECT-015", path,
+            "contract_conformance is required and must name the local JSON registry",
+        )
+    conformance = _relative_path(
+        raw, field_name="contract_conformance", source=path,
+    )
+    if conformance.suffix != ".json":
+        _reject(
+            "DISC-PROJECT-015", path,
+            "contract_conformance must name a repository-local JSON registry",
+        )
+    return conformance
+
+
 def parse(path: Path) -> Declaration:
     """Read one v4 declaration, refusing missing and unknown values.
 
@@ -553,6 +595,7 @@ def parse(path: Path) -> Declaration:
         table.get("source_roots"), field_name="source_roots", source=path
     )
     architecture = _parse_architecture(table, path)
+    contract_conformance = _parse_contract_conformance(table, path)
     engine = str(table.get("doc_engine", "none"))
     if engine not in DOC_ENGINES:
         known = ", ".join(sorted(DOC_ENGINES))
@@ -587,6 +630,7 @@ def parse(path: Path) -> Declaration:
         unit=unit,
         source_roots=roots,
         architecture=architecture,
+        contract_conformance=contract_conformance,
         role_paths=roles,
         adapter_boundaries=boundaries,
         layers=layers,

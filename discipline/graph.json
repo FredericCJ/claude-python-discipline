@@ -512,6 +512,15 @@
    }
   },
   {
+   "id": "OPEN-020",
+   "type": "decision",
+   "label": "Contract evidence is semantic, representation is explicit",
+   "path": "discipline/meta/OPEN.md",
+   "attrs": {
+    "ledger": "meta/OPEN"
+   }
+  },
+  {
    "id": "layer:adapters",
    "type": "layer",
    "label": "adapters"
@@ -727,6 +736,16 @@
    "type": "mechanism",
    "label": "check:compound_gate",
    "path": "enforce/checks/compound_gate.py",
+   "attrs": {
+    "family": "check",
+    "implemented": "true"
+   }
+  },
+  {
+   "id": "mech:check:contract_conformance",
+   "type": "mechanism",
+   "label": "check:contract_conformance",
+   "path": "enforce/checks/contract_conformance.py",
    "attrs": {
     "family": "check",
     "implemented": "true"
@@ -1091,14 +1110,6 @@
    }
   },
   {
-   "id": "mech:fitness:test_contract_suite_per_adapter",
-   "type": "mechanism",
-   "label": "fitness:test_contract_suite_per_adapter",
-   "attrs": {
-    "family": "fitness"
-   }
-  },
-  {
    "id": "mech:fitness:test_decision_records_are_appended",
    "type": "mechanism",
    "label": "fitness:test_decision_records_are_appended",
@@ -1150,14 +1161,6 @@
    "id": "mech:fitness:test_environment_locked",
    "type": "mechanism",
    "label": "fitness:test_environment_locked",
-   "attrs": {
-    "family": "fitness"
-   }
-  },
-  {
-   "id": "mech:fitness:test_every_port_is_a_protocol",
-   "type": "mechanism",
-   "label": "fitness:test_every_port_is_a_protocol",
    "attrs": {
     "family": "fitness"
    }
@@ -1278,22 +1281,6 @@
    "id": "mech:fitness:test_overruled_objections_are_kept",
    "type": "mechanism",
    "label": "fitness:test_overruled_objections_are_kept",
-   "attrs": {
-    "family": "fitness"
-   }
-  },
-  {
-   "id": "mech:fitness:test_port_justification",
-   "type": "mechanism",
-   "label": "fitness:test_port_justification",
-   "attrs": {
-    "family": "fitness"
-   }
-  },
-  {
-   "id": "mech:fitness:test_port_triad",
-   "type": "mechanism",
-   "label": "fitness:test_port_triad",
    "attrs": {
     "family": "fitness"
    }
@@ -1424,9 +1411,9 @@
   {
    "id": "examples/port-triad",
    "type": "module",
-   "label": "A Port and Its Three Adapters",
+   "label": "Contract Conformance Without a File Triad",
    "path": "discipline/examples/port-triad.md",
-   "tokens": 1569,
+   "tokens": 1211,
    "attrs": {
     "decay": "none",
     "kind": "meta"
@@ -1536,7 +1523,19 @@
    "type": "module",
    "label": "Architecture and Coupling",
    "path": "discipline/law/ARCH.md",
-   "tokens": 3950,
+   "tokens": 3343,
+   "attrs": {
+    "decay": "none",
+    "kind": "law",
+    "python": ">=3.11"
+   }
+  },
+  {
+   "id": "law/ARCH-PORTS",
+   "type": "module",
+   "label": "Boundary Contracts and Conformance",
+   "path": "discipline/law/ARCH-PORTS.md",
+   "tokens": 841,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1620,7 +1619,7 @@
    "type": "module",
    "label": "How a Change Is Made",
    "path": "discipline/law/FLOW.md",
-   "tokens": 2256,
+   "tokens": 2259,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1644,7 +1643,7 @@
    "type": "module",
    "label": "Systematic Testing and Oracles",
    "path": "discipline/law/TEST.md",
-   "tokens": 2786,
+   "tokens": 2987,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1656,7 +1655,7 @@
    "type": "module",
    "label": "Typing and Contracts",
    "path": "discipline/law/TYPE.md",
-   "tokens": 2144,
+   "tokens": 2171,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1668,7 +1667,7 @@
    "type": "module",
    "label": "Conflict Ledger",
    "path": "discipline/meta/CONFLICTS.md",
-   "tokens": 3250,
+   "tokens": 3295,
    "attrs": {
     "decay": "none",
     "kind": "meta"
@@ -1679,7 +1678,7 @@
    "type": "module",
    "label": "Glossary",
    "path": "discipline/meta/GLOSSARY.md",
-   "tokens": 1280,
+   "tokens": 1308,
    "attrs": {
     "decay": "none",
     "kind": "meta"
@@ -1690,7 +1689,7 @@
    "type": "module",
    "label": "Discipline Kernel",
    "path": "discipline/KERNEL.md",
-   "tokens": 1923,
+   "tokens": 1939,
    "attrs": {
     "decay": "none",
     "kind": "meta"
@@ -1701,7 +1700,7 @@
    "type": "module",
    "label": "Open Decisions",
    "path": "discipline/meta/OPEN.md",
-   "tokens": 3966,
+   "tokens": 3836,
    "attrs": {
     "decay": "none",
     "kind": "meta"
@@ -1723,7 +1722,7 @@
    "type": "module",
    "label": "Document Format Specification",
    "path": "discipline/meta/SCHEMA.md",
-   "tokens": 3861,
+   "tokens": 3961,
    "attrs": {
     "decay": "none",
     "kind": "meta"
@@ -2109,51 +2108,51 @@
    "id": "ARCH-007",
    "type": "rule",
    "label": "Every port is a Protocol with a published contract",
-   "path": "discipline/law/ARCH.md:106",
-   "tokens": 44,
+   "path": "discipline/law/ARCH-PORTS.md:28",
+   "tokens": 23,
    "attrs": {
-    "force": "BINDING",
-    "module": "law/ARCH"
+    "force": "RETIRED",
+    "module": "law/ARCH-PORTS"
    }
   },
   {
    "id": "ARCH-008",
    "type": "rule",
    "label": "Every port has a real, a fake and a faulty adapter",
-   "path": "discipline/law/ARCH.md:114",
-   "tokens": 19,
+   "path": "discipline/law/ARCH-PORTS.md:34",
+   "tokens": 24,
    "attrs": {
-    "force": "BINDING",
-    "module": "law/ARCH"
+    "force": "RETIRED",
+    "module": "law/ARCH-PORTS"
    }
   },
   {
    "id": "ARCH-009",
    "type": "rule",
    "label": "One contract suite runs against every adapter",
-   "path": "discipline/law/ARCH.md:120",
-   "tokens": 30,
+   "path": "discipline/law/ARCH-PORTS.md:39",
+   "tokens": 22,
    "attrs": {
-    "force": "BINDING",
-    "module": "law/ARCH"
+    "force": "RETIRED",
+    "module": "law/ARCH-PORTS"
    }
   },
   {
    "id": "ARCH-010",
    "type": "rule",
    "label": "A port earns its place from a stated justification",
-   "path": "discipline/law/ARCH.md:127",
-   "tokens": 98,
+   "path": "discipline/law/ARCH-PORTS.md:44",
+   "tokens": 24,
    "attrs": {
-    "force": "BINDING",
-    "module": "law/ARCH"
+    "force": "RETIRED",
+    "module": "law/ARCH-PORTS"
    }
   },
   {
    "id": "ARCH-011",
    "type": "rule",
    "label": "Adapters are selected at one local wiring root",
-   "path": "discipline/law/ARCH.md:140",
+   "path": "discipline/law/ARCH.md:102",
    "tokens": 63,
    "attrs": {
     "force": "BINDING",
@@ -2164,7 +2163,7 @@
    "id": "ARCH-012",
    "type": "rule",
    "label": "No test-mode branch in production code",
-   "path": "discipline/law/ARCH.md:152",
+   "path": "discipline/law/ARCH.md:114",
    "tokens": 35,
    "attrs": {
     "force": "BINDING",
@@ -2175,7 +2174,7 @@
    "id": "ARCH-013",
    "type": "rule",
    "label": "Framework and transport types stay out of the domain",
-   "path": "discipline/law/ARCH.md:159",
+   "path": "discipline/law/ARCH.md:121",
    "tokens": 43,
    "attrs": {
     "force": "BINDING",
@@ -2186,7 +2185,7 @@
    "id": "ARCH-014",
    "type": "rule",
    "label": "Translation between representations is explicit",
-   "path": "discipline/law/ARCH.md:166",
+   "path": "discipline/law/ARCH.md:128",
    "tokens": 44,
    "attrs": {
     "force": "BINDING",
@@ -2197,7 +2196,7 @@
    "id": "ARCH-015",
    "type": "rule",
    "label": "Metaprogramming leaves the four questions answerable",
-   "path": "discipline/law/ARCH.md:173",
+   "path": "discipline/law/ARCH.md:135",
    "tokens": 45,
    "attrs": {
     "force": "BINDING",
@@ -2208,7 +2207,7 @@
    "id": "ARCH-016",
    "type": "rule",
    "label": "Module complexity stays within budget",
-   "path": "discipline/law/ARCH.md:180",
+   "path": "discipline/law/ARCH.md:142",
    "tokens": 18,
    "attrs": {
     "force": "BINDING",
@@ -2219,7 +2218,7 @@
    "id": "ARCH-017",
    "type": "rule",
    "label": "Prefer the direct call to the abstraction",
-   "path": "discipline/law/ARCH.md:186",
+   "path": "discipline/law/ARCH.md:148",
    "tokens": 38,
    "attrs": {
     "force": "ADVISORY",
@@ -2230,7 +2229,7 @@
    "id": "ARCH-018",
    "type": "rule",
    "label": "Every production source has one declared role",
-   "path": "discipline/law/ARCH.md:194",
+   "path": "discipline/law/ARCH.md:156",
    "tokens": 90,
    "attrs": {
     "force": "BINDING",
@@ -2241,7 +2240,7 @@
    "id": "ARCH-019",
    "type": "rule",
    "label": "Application code names no concrete adapter",
-   "path": "discipline/law/ARCH.md:205",
+   "path": "discipline/law/ARCH.md:167",
    "tokens": 53,
    "attrs": {
     "force": "BINDING",
@@ -2252,7 +2251,7 @@
    "id": "ARCH-020",
    "type": "rule",
    "label": "One adapter boundary owns each technology",
-   "path": "discipline/law/ARCH.md:214",
+   "path": "discipline/law/ARCH.md:176",
    "tokens": 84,
    "attrs": {
     "force": "BINDING",
@@ -2263,7 +2262,7 @@
    "id": "ARCH-021",
    "type": "rule",
    "label": "Boundaries hide named volatile decisions",
-   "path": "discipline/law/ARCH.md:224",
+   "path": "discipline/law/ARCH.md:186",
    "tokens": 75,
    "attrs": {
     "force": "BINDING",
@@ -2274,7 +2273,7 @@
    "id": "ARCH-022",
    "type": "rule",
    "label": "Four local architecture views stay complete",
-   "path": "discipline/law/ARCH.md:235",
+   "path": "discipline/law/ARCH.md:197",
    "tokens": 111,
    "attrs": {
     "force": "BINDING",
@@ -2285,11 +2284,33 @@
    "id": "ARCH-023",
    "type": "rule",
    "label": "Component contracts name roles, never peers",
-   "path": "discipline/law/ARCH.md:247",
+   "path": "discipline/law/ARCH.md:209",
    "tokens": 94,
    "attrs": {
     "force": "BINDING",
     "module": "law/ARCH"
+   }
+  },
+  {
+   "id": "ARCH-024",
+   "type": "rule",
+   "label": "Boundary representation is explicit and locally resolvable",
+   "path": "discipline/law/ARCH-PORTS.md:51",
+   "tokens": 92,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/ARCH-PORTS"
+   }
+  },
+  {
+   "id": "ARCH-025",
+   "type": "rule",
+   "label": "Conformance evidence names capabilities, not a file triad",
+   "path": "discipline/law/ARCH-PORTS.md:61",
+   "tokens": 70,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/ARCH-PORTS"
    }
   },
   {
@@ -3320,7 +3341,7 @@
    "type": "rule",
    "label": "New behaviour arrives with its obligations discharged",
    "path": "discipline/law/FLOW.md:121",
-   "tokens": 51,
+   "tokens": 54,
    "attrs": {
     "force": "ADVISORY",
     "module": "law/FLOW"
@@ -3606,9 +3627,9 @@
    "type": "rule",
    "label": "One contract suite runs against every adapter",
    "path": "discipline/law/TEST.md:83",
-   "tokens": 41,
+   "tokens": 45,
    "attrs": {
-    "force": "BINDING",
+    "force": "RETIRED",
     "module": "law/TEST"
    }
   },
@@ -3616,10 +3637,10 @@
    "id": "TEST-006",
    "type": "rule",
    "label": "A fake that can drift from the real adapter is worthless",
-   "path": "discipline/law/TEST.md:91",
-   "tokens": 28,
+   "path": "discipline/law/TEST.md:90",
+   "tokens": 46,
    "attrs": {
-    "force": "BINDING",
+    "force": "RETIRED",
     "module": "law/TEST"
    }
   },
@@ -3627,7 +3648,7 @@
    "id": "TEST-007",
    "type": "rule",
    "label": "Stated invariants have property suites",
-   "path": "discipline/law/TEST.md:98",
+   "path": "discipline/law/TEST.md:96",
    "tokens": 41,
    "attrs": {
     "force": "BINDING",
@@ -3638,7 +3659,7 @@
    "id": "TEST-008",
    "type": "rule",
    "label": "Golden files are reviewed, never merely regenerated",
-   "path": "discipline/law/TEST.md:105",
+   "path": "discipline/law/TEST.md:103",
    "tokens": 39,
    "attrs": {
     "force": "BINDING",
@@ -3649,7 +3670,7 @@
    "id": "TEST-009",
    "type": "rule",
    "label": "Fault injection is data, not bespoke classes",
-   "path": "discipline/law/TEST.md:116",
+   "path": "discipline/law/TEST.md:114",
    "tokens": 51,
    "attrs": {
     "force": "BINDING",
@@ -3660,7 +3681,7 @@
    "id": "TEST-010",
    "type": "rule",
    "label": "The fault catalogue is covered per port",
-   "path": "discipline/law/TEST.md:125",
+   "path": "discipline/law/TEST.md:123",
    "tokens": 61,
    "attrs": {
     "force": "BINDING",
@@ -3671,7 +3692,7 @@
    "id": "TEST-011",
    "type": "rule",
    "label": "Propagation and containment are tested, not assumed",
-   "path": "discipline/law/TEST.md:133",
+   "path": "discipline/law/TEST.md:131",
    "tokens": 42,
    "attrs": {
     "force": "BINDING",
@@ -3682,7 +3703,7 @@
    "id": "TEST-012",
    "type": "rule",
    "label": "Interruption is tested at every effect boundary",
-   "path": "discipline/law/TEST.md:141",
+   "path": "discipline/law/TEST.md:139",
    "tokens": 38,
    "attrs": {
     "force": "BINDING",
@@ -3693,7 +3714,7 @@
    "id": "TEST-013",
    "type": "rule",
    "label": "Mutation score is gated on the core",
-   "path": "discipline/law/TEST.md:153",
+   "path": "discipline/law/TEST.md:151",
    "tokens": 40,
    "attrs": {
     "force": "BINDING",
@@ -3704,7 +3725,7 @@
    "id": "TEST-014",
    "type": "rule",
    "label": "Compound decisions are decomposed and tabulated",
-   "path": "discipline/law/TEST.md:161",
+   "path": "discipline/law/TEST.md:159",
    "tokens": 54,
    "attrs": {
     "force": "BINDING",
@@ -3715,7 +3736,7 @@
    "id": "TEST-015",
    "type": "rule",
    "label": "Every check has a proof-of-failure companion",
-   "path": "discipline/law/TEST.md:169",
+   "path": "discipline/law/TEST.md:167",
    "tokens": 36,
    "attrs": {
     "force": "BINDING",
@@ -3726,7 +3747,7 @@
    "id": "TEST-016",
    "type": "rule",
    "label": "A test that weakens must say so",
-   "path": "discipline/law/TEST.md:176",
+   "path": "discipline/law/TEST.md:174",
    "tokens": 42,
    "attrs": {
     "force": "BINDING",
@@ -3737,7 +3758,7 @@
    "id": "TEST-017",
    "type": "rule",
    "label": "Tests are order-independent and network-isolated",
-   "path": "discipline/law/TEST.md:187",
+   "path": "discipline/law/TEST.md:185",
    "tokens": 25,
    "attrs": {
     "force": "BINDING",
@@ -3748,7 +3769,7 @@
    "id": "TEST-018",
    "type": "rule",
    "label": "A flaky failure is a defect in the harness",
-   "path": "discipline/law/TEST.md:194",
+   "path": "discipline/law/TEST.md:192",
    "tokens": 46,
    "attrs": {
     "force": "BINDING",
@@ -3759,10 +3780,21 @@
    "id": "TEST-019",
    "type": "rule",
    "label": "Test names state the behaviour",
-   "path": "discipline/law/TEST.md:200",
+   "path": "discipline/law/TEST.md:198",
    "tokens": 24,
    "attrs": {
     "force": "ADVISORY",
+    "module": "law/TEST"
+   }
+  },
+  {
+   "id": "TEST-020",
+   "type": "rule",
+   "label": "Contract suites cover implementations and observable terms",
+   "path": "discipline/law/TEST.md:204",
+   "tokens": 117,
+   "attrs": {
+    "force": "BINDING",
     "module": "law/TEST"
    }
   },
@@ -3859,9 +3891,9 @@
    "type": "rule",
    "label": "Ports are structural protocols",
    "path": "discipline/law/TYPE.md:103",
-   "tokens": 31,
+   "tokens": 64,
    "attrs": {
-    "force": "BINDING",
+    "force": "RETIRED",
     "module": "law/TYPE"
    }
   },
@@ -3869,7 +3901,7 @@
    "id": "TYPE-010",
    "type": "rule",
    "label": "Runtime protocol checks are not contract checks",
-   "path": "discipline/law/TYPE.md:111",
+   "path": "discipline/law/TYPE.md:113",
    "tokens": 43,
    "attrs": {
     "force": "BINDING",
@@ -3880,7 +3912,7 @@
    "id": "TYPE-011",
    "type": "rule",
    "label": "What the checker cannot enforce is enforced at runtime",
-   "path": "discipline/law/TYPE.md:118",
+   "path": "discipline/law/TYPE.md:120",
    "tokens": 68,
    "attrs": {
     "force": "ADVISORY",
@@ -3891,7 +3923,7 @@
    "id": "TYPE-012",
    "type": "rule",
    "label": "Signature or docstring, by who can enforce it",
-   "path": "discipline/law/TYPE.md:129",
+   "path": "discipline/law/TYPE.md:131",
    "tokens": 49,
    "attrs": {
     "force": "ADVISORY",
@@ -3902,7 +3934,7 @@
    "id": "TYPE-013",
    "type": "rule",
    "label": "Conversions are explicit",
-   "path": "discipline/law/TYPE.md:139",
+   "path": "discipline/law/TYPE.md:141",
    "tokens": 35,
    "attrs": {
     "force": "BINDING",
@@ -3913,7 +3945,7 @@
    "id": "TYPE-014",
    "type": "rule",
    "label": "Immutability is declared, and not mistaken for a guarantee",
-   "path": "discipline/law/TYPE.md:145",
+   "path": "discipline/law/TYPE.md:147",
    "tokens": 38,
    "attrs": {
     "force": "BINDING",
@@ -3924,7 +3956,7 @@
    "id": "TYPE-015",
    "type": "rule",
    "label": "Type sophistication stays proportionate",
-   "path": "discipline/law/TYPE.md:152",
+   "path": "discipline/law/TYPE.md:154",
    "tokens": 30,
    "attrs": {
     "force": "ADVISORY",
@@ -4375,6 +4407,22 @@
    }
   },
   {
+   "id": "trigger:glob:architecture.json",
+   "type": "trigger",
+   "label": "architecture.json",
+   "attrs": {
+    "kind": "glob"
+   }
+  },
+  {
+   "id": "trigger:glob:contract-conformance.json",
+   "type": "trigger",
+   "label": "contract-conformance.json",
+   "attrs": {
+    "kind": "glob"
+   }
+  },
+  {
    "id": "trigger:glob:discipline/**/*",
    "type": "trigger",
    "label": "discipline/**/*",
@@ -4442,6 +4490,14 @@
    "id": "trigger:kw:adapter",
    "type": "trigger",
    "label": "adapter",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:adapter substitute",
+   "type": "trigger",
+   "label": "adapter substitute",
    "attrs": {
     "kind": "keyword"
    }
@@ -4530,6 +4586,14 @@
    "id": "trigger:kw:before i commit",
    "type": "trigger",
    "label": "before i commit",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:boundary contract",
+   "type": "trigger",
+   "label": "boundary contract",
    "attrs": {
     "kind": "keyword"
    }
@@ -4975,6 +5039,14 @@
    }
   },
   {
+   "id": "trigger:kw:fault schedule",
+   "type": "trigger",
+   "label": "fault schedule",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:fault schedule example",
    "type": "trigger",
    "label": "fault schedule example",
@@ -5290,6 +5362,14 @@
    "id": "trigger:kw:new module",
    "type": "trigger",
    "label": "new module",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:new port",
+   "type": "trigger",
+   "label": "new port",
    "attrs": {
     "kind": "keyword"
    }
@@ -6070,42 +6150,6 @@
   },
   {
    "type": "applies_to",
-   "src": "ARCH-007",
-   "dst": "layer:adapters",
-   "origin": "declared"
-  },
-  {
-   "type": "applies_to",
-   "src": "ARCH-007",
-   "dst": "layer:ports",
-   "origin": "declared"
-  },
-  {
-   "type": "applies_to",
-   "src": "ARCH-008",
-   "dst": "layer:adapters",
-   "origin": "declared"
-  },
-  {
-   "type": "applies_to",
-   "src": "ARCH-009",
-   "dst": "layer:adapters",
-   "origin": "declared"
-  },
-  {
-   "type": "applies_to",
-   "src": "ARCH-010",
-   "dst": "layer:adapters",
-   "origin": "declared"
-  },
-  {
-   "type": "applies_to",
-   "src": "ARCH-010",
-   "dst": "layer:ports",
-   "origin": "declared"
-  },
-  {
-   "type": "applies_to",
    "src": "ARCH-011",
    "dst": "layer:shell",
    "origin": "declared"
@@ -6149,6 +6193,48 @@
   {
    "type": "applies_to",
    "src": "ARCH-020",
+   "dst": "layer:adapters",
+   "origin": "declared"
+  },
+  {
+   "type": "applies_to",
+   "src": "ARCH-021",
+   "dst": "layer:ports",
+   "origin": "declared"
+  },
+  {
+   "type": "applies_to",
+   "src": "ARCH-022",
+   "dst": "layer:ports",
+   "origin": "declared"
+  },
+  {
+   "type": "applies_to",
+   "src": "ARCH-024",
+   "dst": "artifact:enforce/templates/pyproject.toml",
+   "origin": "declared"
+  },
+  {
+   "type": "applies_to",
+   "src": "ARCH-024",
+   "dst": "layer:adapters",
+   "origin": "declared"
+  },
+  {
+   "type": "applies_to",
+   "src": "ARCH-024",
+   "dst": "layer:ports",
+   "origin": "declared"
+  },
+  {
+   "type": "applies_to",
+   "src": "ARCH-025",
+   "dst": "artifact:enforce/templates/pyproject.toml",
+   "origin": "declared"
+  },
+  {
+   "type": "applies_to",
+   "src": "ARCH-025",
    "dst": "layer:adapters",
    "origin": "declared"
   },
@@ -6316,12 +6402,6 @@
   },
   {
    "type": "applies_to",
-   "src": "TEST-005",
-   "dst": "layer:adapters",
-   "origin": "declared"
-  },
-  {
-   "type": "applies_to",
    "src": "TEST-010",
    "dst": "layer:adapters",
    "origin": "declared"
@@ -6330,6 +6410,18 @@
    "type": "applies_to",
    "src": "TEST-017",
    "dst": "artifact:enforce/templates/pyproject.toml",
+   "origin": "declared"
+  },
+  {
+   "type": "applies_to",
+   "src": "TEST-020",
+   "dst": "artifact:enforce/templates/pyproject.toml",
+   "origin": "declared"
+  },
+  {
+   "type": "applies_to",
+   "src": "TEST-020",
+   "dst": "layer:adapters",
    "origin": "declared"
   },
   {
@@ -6384,12 +6476,6 @@
    "type": "applies_to",
    "src": "TYPE-008",
    "dst": "layer:domain",
-   "origin": "declared"
-  },
-  {
-   "type": "applies_to",
-   "src": "TYPE-009",
-   "dst": "layer:ports",
    "origin": "declared"
   },
   {
@@ -6485,13 +6571,7 @@
   {
    "type": "cites",
    "src": "ARCH-007",
-   "dst": "ARCH-008",
-   "origin": "derived"
-  },
-  {
-   "type": "cites",
-   "src": "ARCH-007",
-   "dst": "law/TEST",
+   "dst": "ARCH-022",
    "origin": "derived"
   },
   {
@@ -6545,7 +6625,7 @@
   {
    "type": "cites",
    "src": "ARCH-021",
-   "dst": "ARCH-010",
+   "dst": "ARCH-017",
    "origin": "derived"
   },
   {
@@ -6576,6 +6656,30 @@
    "type": "cites",
    "src": "ARCH-023",
    "dst": "meta/SCOPE",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "ARCH-024",
+   "dst": "ARCH-022",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "ARCH-024",
+   "dst": "law/TYPE",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "ARCH-025",
+   "dst": "EVID-003",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "ARCH-025",
+   "dst": "TEST-020",
    "origin": "derived"
   },
   {
@@ -7042,6 +7146,24 @@
   },
   {
    "type": "cites",
+   "src": "TEST-020",
+   "dst": "ARCH-025",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "TEST-020",
+   "dst": "EVID-003",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "TEST-020",
+   "dst": "TEST-004",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
    "src": "TYPE-001",
    "dst": "law/TEST",
    "origin": "derived"
@@ -7199,30 +7321,6 @@
   {
    "type": "contains",
    "src": "law/ARCH",
-   "dst": "ARCH-007",
-   "origin": "derived"
-  },
-  {
-   "type": "contains",
-   "src": "law/ARCH",
-   "dst": "ARCH-008",
-   "origin": "derived"
-  },
-  {
-   "type": "contains",
-   "src": "law/ARCH",
-   "dst": "ARCH-009",
-   "origin": "derived"
-  },
-  {
-   "type": "contains",
-   "src": "law/ARCH",
-   "dst": "ARCH-010",
-   "origin": "derived"
-  },
-  {
-   "type": "contains",
-   "src": "law/ARCH",
    "dst": "ARCH-011",
    "origin": "derived"
   },
@@ -7296,6 +7394,42 @@
    "type": "contains",
    "src": "law/ARCH",
    "dst": "ARCH-023",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/ARCH-PORTS",
+   "dst": "ARCH-007",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/ARCH-PORTS",
+   "dst": "ARCH-008",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/ARCH-PORTS",
+   "dst": "ARCH-009",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/ARCH-PORTS",
+   "dst": "ARCH-010",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/ARCH-PORTS",
+   "dst": "ARCH-024",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/ARCH-PORTS",
+   "dst": "ARCH-025",
    "origin": "derived"
   },
   {
@@ -8068,6 +8202,12 @@
   },
   {
    "type": "contains",
+   "src": "law/TEST",
+   "dst": "TEST-020",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
    "src": "law/TYPE",
    "dst": "TYPE-001",
    "origin": "derived"
@@ -8458,30 +8598,6 @@
   },
   {
    "type": "enforced_by",
-   "src": "ARCH-007",
-   "dst": "mech:fitness:test_every_port_is_a_protocol",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
-   "src": "ARCH-008",
-   "dst": "mech:fitness:test_port_triad",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
-   "src": "ARCH-009",
-   "dst": "mech:fitness:test_contract_suite_per_adapter",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
-   "src": "ARCH-010",
-   "dst": "mech:fitness:test_port_justification",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
    "src": "ARCH-011",
    "dst": "mech:check:single_wiring_point",
    "origin": "derived"
@@ -8550,6 +8666,18 @@
    "type": "enforced_by",
    "src": "ARCH-023",
    "dst": "mech:check:architecture_model",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "ARCH-024",
+   "dst": "mech:check:contract_conformance",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "ARCH-025",
+   "dst": "mech:check:contract_conformance",
    "origin": "derived"
   },
   {
@@ -9208,18 +9336,6 @@
   },
   {
    "type": "enforced_by",
-   "src": "TEST-005",
-   "dst": "mech:fitness:test_contract_suite_per_adapter",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
-   "src": "TEST-006",
-   "dst": "mech:fitness:test_contract_suite_per_adapter",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
    "src": "TEST-007",
    "dst": "mech:fitness:test_property_suites_are_generated",
    "origin": "derived"
@@ -9298,6 +9414,12 @@
   },
   {
    "type": "enforced_by",
+   "src": "TEST-020",
+   "dst": "mech:check:contract_conformance",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
    "src": "TYPE-001",
    "dst": "mech:auto:mypy",
    "origin": "derived"
@@ -9366,12 +9488,6 @@
    "type": "enforced_by",
    "src": "TYPE-008",
    "dst": "mech:check:domain_purity",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
-   "src": "TYPE-009",
-   "dst": "mech:fitness:test_every_port_is_a_protocol",
    "origin": "derived"
   },
   {
@@ -9557,49 +9673,73 @@
   {
    "type": "grounds_on",
    "src": "ARCH-007",
-   "dst": "fact/py-testing",
+   "dst": "law/ARCH",
    "origin": "derived"
   },
   {
    "type": "grounds_on",
    "src": "ARCH-007",
-   "dst": "fact/py-typing",
+   "dst": "law/TEST",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "ARCH-007",
+   "dst": "law/TYPE",
    "origin": "derived"
   },
   {
    "type": "grounds_on",
    "src": "ARCH-008",
-   "dst": "fact/py-testing",
+   "dst": "law/ARCH",
    "origin": "derived"
   },
   {
    "type": "grounds_on",
    "src": "ARCH-008",
-   "dst": "fact/py-typing",
+   "dst": "law/TEST",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "ARCH-008",
+   "dst": "law/TYPE",
    "origin": "derived"
   },
   {
    "type": "grounds_on",
    "src": "ARCH-009",
-   "dst": "fact/py-testing",
+   "dst": "law/ARCH",
    "origin": "derived"
   },
   {
    "type": "grounds_on",
    "src": "ARCH-009",
-   "dst": "fact/py-typing",
+   "dst": "law/TEST",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "ARCH-009",
+   "dst": "law/TYPE",
    "origin": "derived"
   },
   {
    "type": "grounds_on",
    "src": "ARCH-010",
-   "dst": "fact/py-testing",
+   "dst": "law/ARCH",
    "origin": "derived"
   },
   {
    "type": "grounds_on",
    "src": "ARCH-010",
-   "dst": "fact/py-typing",
+   "dst": "law/TEST",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "ARCH-010",
+   "dst": "law/TYPE",
    "origin": "derived"
   },
   {
@@ -9756,6 +9896,42 @@
    "type": "grounds_on",
    "src": "ARCH-023",
    "dst": "fact/py-typing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "ARCH-024",
+   "dst": "law/ARCH",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "ARCH-024",
+   "dst": "law/TEST",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "ARCH-024",
+   "dst": "law/TYPE",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "ARCH-025",
+   "dst": "law/ARCH",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "ARCH-025",
+   "dst": "law/TEST",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "ARCH-025",
+   "dst": "law/TYPE",
    "origin": "derived"
   },
   {
@@ -11302,6 +11478,18 @@
   },
   {
    "type": "grounds_on",
+   "src": "TEST-020",
+   "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "TEST-020",
+   "dst": "fact/py-typing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
    "src": "TYPE-001",
    "dst": "fact/py-testing",
    "origin": "derived"
@@ -11500,6 +11688,24 @@
   },
   {
    "type": "grounds_on",
+   "src": "law/ARCH-PORTS",
+   "dst": "law/ARCH",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "law/ARCH-PORTS",
+   "dst": "law/TEST",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "law/ARCH-PORTS",
+   "dst": "law/TYPE",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
    "src": "law/DEP",
    "dst": "fact/py-testing",
    "origin": "derived"
@@ -11620,14 +11826,26 @@
   },
   {
    "type": "precedes",
-   "src": "ARCH-007",
-   "dst": "ARCH-008",
+   "src": "ARCH-021",
+   "dst": "ARCH-022",
    "origin": "declared"
   },
   {
    "type": "precedes",
-   "src": "ARCH-008",
-   "dst": "ARCH-009",
+   "src": "ARCH-022",
+   "dst": "ARCH-024",
+   "origin": "declared"
+  },
+  {
+   "type": "precedes",
+   "src": "ARCH-024",
+   "dst": "ARCH-025",
+   "origin": "declared"
+  },
+  {
+   "type": "precedes",
+   "src": "ARCH-025",
+   "dst": "TEST-020",
    "origin": "declared"
   },
   {
@@ -11800,6 +12018,24 @@
   },
   {
    "type": "resolved_by",
+   "src": "ARCH-024",
+   "dst": "OPEN-020",
+   "origin": "declared"
+  },
+  {
+   "type": "resolved_by",
+   "src": "ARCH-025",
+   "dst": "CONF-008",
+   "origin": "declared"
+  },
+  {
+   "type": "resolved_by",
+   "src": "ARCH-025",
+   "dst": "OPEN-020",
+   "origin": "declared"
+  },
+  {
+   "type": "resolved_by",
    "src": "DEP-005",
    "dst": "OPEN-001",
    "origin": "declared"
@@ -11956,6 +12192,18 @@
   },
   {
    "type": "resolved_by",
+   "src": "TEST-020",
+   "dst": "CONF-008",
+   "origin": "declared"
+  },
+  {
+   "type": "resolved_by",
+   "src": "TEST-020",
+   "dst": "OPEN-020",
+   "origin": "declared"
+  },
+  {
+   "type": "resolved_by",
    "src": "TYPE-001",
    "dst": "OPEN-005",
    "origin": "declared"
@@ -11980,8 +12228,50 @@
   },
   {
    "type": "supersedes",
+   "src": "ARCH-021",
+   "dst": "ARCH-010",
+   "origin": "derived"
+  },
+  {
+   "type": "supersedes",
+   "src": "ARCH-024",
+   "dst": "ARCH-007",
+   "origin": "derived"
+  },
+  {
+   "type": "supersedes",
+   "src": "ARCH-024",
+   "dst": "TYPE-009",
+   "origin": "derived"
+  },
+  {
+   "type": "supersedes",
+   "src": "ARCH-025",
+   "dst": "ARCH-008",
+   "origin": "derived"
+  },
+  {
+   "type": "supersedes",
    "src": "TEAMS-002",
    "dst": "ALLOC-008",
+   "origin": "derived"
+  },
+  {
+   "type": "supersedes",
+   "src": "TEST-020",
+   "dst": "ARCH-009",
+   "origin": "derived"
+  },
+  {
+   "type": "supersedes",
+   "src": "TEST-020",
+   "dst": "TEST-005",
+   "origin": "derived"
+  },
+  {
+   "type": "supersedes",
+   "src": "TEST-020",
+   "dst": "TEST-006",
    "origin": "derived"
   },
   {
@@ -12000,17 +12290,10 @@
   },
   {
    "type": "tensions_with",
-   "src": "ARCH-007",
-   "dst": "ARCH-017",
-   "origin": "declared",
-   "note": "Prefer the direct call, but every boundary the core crosses is a port. The closed justification list in ARCH-010 is where the line is drawn."
-  },
-  {
-   "type": "tensions_with",
    "src": "ARCH-017",
-   "dst": "ARCH-007",
+   "dst": "ARCH-021",
    "origin": "declared",
-   "note": "Prefer the direct call, but every boundary the core crosses is a port. The closed justification list in ARCH-010 is where the line is drawn."
+   "note": "Prefer the direct call, but retain a boundary when a named volatile decision and change scenario justify it. ARCH-021 is where that line is drawn."
   },
   {
    "type": "tensions_with",
@@ -12018,6 +12301,13 @@
    "dst": "DEP-004",
    "origin": "declared",
    "note": "Do not reimplement a solved problem, yet every foreign dependency is coupling. Taking the library is right; giving one adapter boundary direct ownership is how."
+  },
+  {
+   "type": "tensions_with",
+   "src": "ARCH-021",
+   "dst": "ARCH-017",
+   "origin": "declared",
+   "note": "Prefer the direct call, but retain a boundary when a named volatile decision and change scenario justify it. ARCH-021 is where that line is drawn."
   },
   {
    "type": "tensions_with",
@@ -12914,6 +13204,60 @@
    "type": "triggered_by",
    "src": "law/ARCH",
    "dst": "trigger:kw:where does this code go",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/ARCH-PORTS",
+   "dst": "trigger:glob:**/*.py",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/ARCH-PORTS",
+   "dst": "trigger:glob:architecture.json",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/ARCH-PORTS",
+   "dst": "trigger:glob:contract-conformance.json",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/ARCH-PORTS",
+   "dst": "trigger:kw:adapter substitute",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/ARCH-PORTS",
+   "dst": "trigger:kw:boundary contract",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/ARCH-PORTS",
+   "dst": "trigger:kw:contract suite",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/ARCH-PORTS",
+   "dst": "trigger:kw:fake adapter",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/ARCH-PORTS",
+   "dst": "trigger:kw:fault schedule",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/ARCH-PORTS",
+   "dst": "trigger:kw:new port",
    "origin": "derived"
   },
   {

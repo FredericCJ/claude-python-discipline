@@ -2,7 +2,7 @@
 id: law/FLOW
 kind: law
 title: How a Change Is Made
-tokens: 2256
+tokens: 2259
 load_when:
   - "definition of done"
   - "before i commit"
@@ -120,7 +120,7 @@ recorded for the touched modules, and the mutation gate runs on touched core mod
 
 ### FLOW-010 · New behaviour arrives with its obligations discharged  [ADVISORY]
 A new component arrives with its contract, its unit tests, and — if it is a port — its
-three adapters, its contract suite and its fault suite. A new invariant arrives with its
+registered implementations, conformance suite and fault evidence. A new invariant arrives with its
 property test.
 - **Why** The suite is complete at every commit or at none; "tests to follow" is where
   they stop following.
@@ -128,7 +128,7 @@ property test.
   shows what is there now rather than what landed together. `test_layers_populated`
   claimed it and counts named tests per layer, which a repository holding one thorough
   component and ten bare ones satisfies. Per-component completeness is mechanized where
-  the component is a port -- [ARCH-008], [ARCH-009] -- and nowhere else. A check reading
+  the component is a port -- [ARCH-025], [TEST-020] -- and nowhere else. A check reading
   the diff for a new module without its obligations would close this.
 - **See** [law/ARCH]
 

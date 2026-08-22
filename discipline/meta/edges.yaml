@@ -17,13 +17,12 @@ version: 1
 # information and would make `nav applies` useless.
 applies_to:
   ports:
-    # A port lives in `ports/`, and these are the rules a reader opening one
-    # needs. ARCH-007 was declared against `adapters` alone, so `nav applies
-    # src/pkg/ports/clock.py` -- the most obvious query anyone would make about a
-    # port -- returned nothing about ports at all. Found by the routing oracle.
-    - ARCH-007   # every port is a Protocol with a published contract
-    - ARCH-010   # a port earns its place from a stated justification
-    - TYPE-009   # ports are structural protocols
+    # A boundary class is governed by its canonical architecture and
+    # conformance records. Representation is selected explicitly rather than
+    # inferred from the directory name.
+    - ARCH-021   # every internal boundary hides a named volatile decision
+    - ARCH-022   # interaction terms live in the canonical architecture model
+    - ARCH-024   # representation is declared and locally resolvable
   domain:
     - ARCH-002   # imports nothing that can perform I/O
     - ARCH-006   # total or returns a typed result
@@ -47,14 +46,12 @@ applies_to:
   adapters:
     - ARCH-003   # no adapter imports another adapter
     - ARCH-020   # each technology has one owning adapter boundary
-    - ARCH-007   # every port is a Protocol with a contract
-    - ARCH-008   # real, fake and faulty
-    - ARCH-009   # one contract suite against every adapter
-    - ARCH-010   # a port names its justification
+    - ARCH-024   # implementation shape matches the declared representation
+    - ARCH-025   # real, controllable and scheduled-fault capabilities exist
     - ERR-004    # produces only InfrastructureError
     - DEP-002    # judged by architectural position
     - DEP-003    # owns its dependency's failure modes
-    - TEST-005   # contract suite is the oracle
+    - TEST-020   # one suite traces every declared contract term
     - TEST-010   # fault catalogue per port
   shell:
     - ARCH-011   # single composition root
@@ -72,10 +69,10 @@ applies_to:
 # once instead of applying one rule and discovering the other in review.
 # Symmetric in meaning; the builder adds the reverse edge.
 tensions_with:
-  - pair: [ARCH-017, ARCH-007]
+  - pair: [ARCH-017, ARCH-021]
     note: >-
-      Prefer the direct call, but every boundary the core crosses is a port.
-      The closed justification list in ARCH-010 is where the line is drawn.
+      Prefer the direct call, but retain a boundary when a named volatile
+      decision and change scenario justify it. ARCH-021 is where that line is drawn.
   - pair: [TYPE-015, TYPE-004]
     note: >-
       Type sophistication stays proportionate, yet every concept gets its own
@@ -127,8 +124,10 @@ precedes:
   - [FLOW-011, FLOW-012]   # inspect, then report
   - [EFCT-005, EFCT-006]   # plan exists before a dry run can truncate it
   - [EFCT-010, EFCT-011]   # the table exists before a transition can be refused
-  - [ARCH-007, ARCH-008]   # the port exists before its adapters
-  - [ARCH-008, ARCH-009]   # the adapters exist before the shared suite
+  - [ARCH-021, ARCH-022]   # hiding decision before interaction terms
+  - [ARCH-022, ARCH-024]   # contract terms before representation
+  - [ARCH-024, ARCH-025]   # representation before implementation capabilities
+  - [ARCH-025, TEST-020]   # implementations before shared-suite evidence
   - [TEST-004, TEST-013]   # the oracle is declared before mutation judges it
 
 # -------------------------------------------------------------- resolved_by
@@ -149,10 +148,13 @@ resolved_by:
   ARCH-008: [CONF-007]
   ARCH-009: [CONF-008]
   ARCH-010: [CONF-010]
+  ARCH-024: [OPEN-020]
+  ARCH-025: [CONF-008, OPEN-020]
   ARCH-015: [CONF-014]
   TYPE-005: [CONF-015]
   TYPE-006: [CONF-015]
   TEST-006: [CONF-018]
+  TEST-020: [CONF-008, OPEN-020]
   TEST-009: [CONF-009]
   TEST-013: [CONF-023, OPEN-003]
   TEST-017: [CONF-020, OPEN-004]
@@ -180,7 +182,7 @@ blocked_by:
 artifacts:
   enforce/templates/pyproject.toml:
     label: Canonical tool configuration
-    rules: [TYPE-001, TYPE-002, TYPE-003, ARCH-016, ARCH-018, ARCH-020, DIAG-008, DIAG-012, TEST-003, TEST-017]
+    rules: [TYPE-001, TYPE-002, TYPE-003, ARCH-016, ARCH-018, ARCH-020, ARCH-024, ARCH-025, DIAG-008, DIAG-012, TEST-003, TEST-017, TEST-020]
   enforce/importlinter.toml:
     label: Architecture contracts
     rules: [ARCH-001, ARCH-002, ARCH-003, EFCT-001, EFCT-012, DEP-001, API-004]

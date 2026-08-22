@@ -6,7 +6,7 @@ implied: `app.prune` has to catch an adapter failure to report an interrupted
 apply, so it was importing `refpkg.adapters` -- an outward import, from a layer
 that is supposed to know nothing about implementations.
 
-The import was a symptom. `ARCH-007` requires a port to state its **error modes**
+The import was a symptom. `ARCH-022` requires a port to state its **error modes**
 alongside its inputs and outputs, which means a failure type is part of the
 contract and not of any one implementation of it. Declared here, every adapter
 raises the same type and the core catches it without knowing that adapters exist.
@@ -52,7 +52,7 @@ class PortError(Exception):
     ## guessing. `DIAG-001`'s envelope has carried a `rule_ids` field since it was
     ## published; until something populated it, the field was specified, shipped
     ## and dead, and the last hop of the Prime Directive stayed manual.
-    rule_ids: tuple[str, ...] = ("ERR-004", "ARCH-008")
+    rule_ids: tuple[str, ...] = ("ERR-004", "ARCH-025")
 
     def __init__(self, port: str, operation: str, detail: str) -> None:
         """Record which contract was crossed, doing what, and what went wrong.

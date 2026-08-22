@@ -42,6 +42,7 @@
 unit = "application"              # application | component
 source_roots = ["src"]
 architecture = "architecture.json" # canonical local decisions/contracts/views
+contract_conformance = "contract-conformance.json" # implementations and test evidence
 doc_engine = "doxygen"             # doxygen | sphinx | none.  Absent => none.
 pedagogical_full_projection = false
 adapter_boundaries = [
@@ -238,7 +239,7 @@ addopts = [
 ]
 markers = [
     "unit: pure domain, no external resource (TEST-001)",
-    "contract: one port, run against every adapter (TEST-005)",
+    "contract: one boundary contract, run against every registered implementation (TEST-020)",
     "integration: one real external technology",
     "fault: faulty adapters driven by fault schedules (TEST-009)",
     "property: generated inputs (TEST-007)",

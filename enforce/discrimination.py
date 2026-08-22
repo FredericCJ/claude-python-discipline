@@ -1147,117 +1147,50 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             ),
         ),
     ),
-    # ------------------------------------------------- harvested fitness cases
+    # --------------------------------------- boundary-conformance model cases
     #
-    # Twenty-two negative-case functions already existed across eleven suites --
-    # `test_a_missing_faulty_adapter_is_caught` and its kin -- each building a
-    # `broken_copy` and asserting the damage is visible. They were mutations in
-    # all but name, so these entries are TRANSCRIBED rather than invented.
-    #
-    # The transcription is strictly stronger than the test it came from. A
-    # negative case re-implements the assertion beside the real one and asserts
-    # the damage landed; these point `DISCIPLINE_REFERENCE` at the damaged tree
-    # and require THE TAGGED FUNCTION ITSELF to fail. A suite whose negative case
-    # passes while the function it guards would not have noticed is exactly the
-    # gap this matrix exists to close.
+    # These mutations damage the canonical v4 registry, then invoke the checker
+    # through the same aggregate discovery path an adopter uses. Each isolates
+    # one proposition: source representation, capability union, or shared-suite
+    # parameter coverage.
     Mutation(
-        rule_id="TYPE-009",
-        summary="a port publishes an ordinary class instead of a Protocol",
+        rule_id="ARCH-024",
+        summary="a structural boundary is relabeled nominal without changing source",
         source=(
-            "Transcribed from `test_a_port_without_a_protocol_is_caught`. "
-            "TYPE-009's whole content is that conformance is structural: an "
-            "adapter satisfying a base class must import the core to do it."
+            "ARCH-024's exact representation predicate: the registry selects "
+            "nominal while Clock still derives from Protocol."
         ),
-        node="enforce/fitness/test_ports.py::test_every_port_is_a_protocol",
-        write=(
-            (
-                "src/refpkg/ports/clock.py",
-                ('"""A port with no contract."""\n\n\nclass Clock:\n    """Not a Protocol."""\n'),
-            ),
-        ),
+        replace=((
+            "contract-conformance.json",
+            '"representation": "structural"',
+            '"representation": "nominal"',
+        ),),
     ),
     Mutation(
-        rule_id="ARCH-007",
-        summary="a port is a Protocol whose docstring states no contract at all",
+        rule_id="ARCH-025",
+        summary="one internal contract loses all scheduled-fault capability",
         source=(
-            "The other half of `test_every_port_is_a_protocol`, given its own "
-            "damage so the two rules it decides are discriminated separately. "
-            "ARCH-007 asks for the terms, not merely the shape."
+            "ARCH-025 permits one test implementation to combine capabilities "
+            "but still requires scheduled failure to remain observable."
         ),
-        node="enforce/fitness/test_ports.py::test_every_port_is_a_protocol",
-        write=(
-            (
-                "src/refpkg/ports/clock.py",
-                (
-                    '"""A port that says nothing about its terms."""\n\n'
-                    "from typing import Protocol\n\n\nclass Clock(Protocol):\n"
-                    '    """A clock."""\n'
-                ),
-            ),
-        ),
+        replace=((
+            "contract-conformance.json",
+            '"controllable",\n            "scheduled_fault"',
+            '"controllable"',
+        ),),
     ),
     Mutation(
-        rule_id="ARCH-008",
-        summary="a port loses its faulty adapter",
+        rule_id="TEST-020",
+        summary="a registered implementation names no parameter in its shared suite",
         source=(
-            "Transcribed from `test_a_missing_faulty_adapter_is_caught`, and "
-            "the case an UNCONDITIONAL rule exists to catch: the faulty "
-            "adapter is the one people argue is unnecessary."
+            "TEST-020's exact registry predicate: every implementation parameter "
+            "must be visible in the one declared suite."
         ),
-        node="enforce/fitness/test_ports.py::test_port_triad",
-        drop=("src/refpkg/adapters/clock/faulty.py",),
-    ),
-    Mutation(
-        rule_id="ARCH-009",
-        summary="the contract suite exercises the fake and neither other adapter",
-        source=(
-            "Transcribed from `test_a_suite_covering_one_adapter_is_caught`. "
-            "A suite run against the fake alone tests the fake."
-        ),
-        node="enforce/fitness/test_ports.py::test_contract_suite_per_adapter",
-        write=(
-            (
-                "tests/contract/test_clock_contract.py",
-                (
-                    '"""Tests. Oracle: contract."""\n\n\ndef test_it():\n'
-                    '    """Only the fake."""\n    assert True\n'
-                ),
-            ),
-        ),
-    ),
-    Mutation(
-        rule_id="TEST-005",
-        summary="a port has no contract suite at all",
-        source=(
-            "TEST-005 states ARCH-009 almost word for word, so it is given "
-            "DIFFERENT damage rather than a duplicate entry: the suite is "
-            "absent rather than narrow. Two rules this alike are a "
-            "supersession candidate, and recording both mutations is what "
-            "makes the overlap visible."
-        ),
-        node="enforce/fitness/test_ports.py::test_contract_suite_per_adapter",
-        drop=("tests/contract/test_clock_contract.py",),
-    ),
-    Mutation(
-        rule_id="ARCH-010",
-        summary="a port names none of the eight reasons it might exist",
-        source=(
-            "Transcribed from `test_a_port_with_no_justification_is_caught`. "
-            "A port with no stated justification is an indirection nobody can "
-            "argue with, which is how a codebase acquires ports it does not "
-            "need."
-        ),
-        node="enforce/fitness/test_ports.py::test_port_justification",
-        write=(
-            (
-                "src/refpkg/ports/clock.py",
-                (
-                    '"""A port that says nothing about why it exists."""\n\n'
-                    "from typing import Protocol\n\n\nclass Clock(Protocol):\n"
-                    '    """A clock.\n\n    Raises an error on failure.\n    """\n'
-                ),
-            ),
-        ),
+        replace=((
+            "contract-conformance.json",
+            '"parameter": "faulty-healthy"',
+            '"parameter": "not-in-suite"',
+        ),),
     ),
     Mutation(
         rule_id="EFCT-015",
