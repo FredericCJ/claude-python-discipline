@@ -1614,6 +1614,335 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             ),
         ),
     ),
+    # ------------------------------------------- direct companion-test proofs
+    #
+    # These tests own their violating snippets and assert the exact rule ID
+    # emitted by the named mechanism. Referencing them avoids copying a second,
+    # drifting version of the same mutation into this table.
+    Mutation(
+        rule_id="ALLOC-001",
+        summary="a doctrine document names a concrete model",
+        source=(
+            "The companion inserts a model name into governed prose and asserts "
+            "that no_model_names emits ALLOC-001 for that exact textual leak."
+        ),
+        proof="enforce/checks/test_ledger_checks.py::test_a_model_named_in_prose_fires",
+    ),
+    Mutation(
+        rule_id="ALLOC-003",
+        summary="a named dispatch category understates its computed tier",
+        source=(
+            "The companion supplies a category below its mechanical score and "
+            "asserts the distinct ALLOC-003 diagnostic, not merely any dispatch finding."
+        ),
+        proof="enforce/checks/test_phase2_checks.py::test_a_named_category_below_t2_fires",
+    ),
+    Mutation(
+        rule_id="TEAMS-001",
+        summary="a dispatch record states no verifiable contract",
+        source=(
+            "The companion removes the concrete dispatch contract and asserts "
+            "TEAMS-001, exercising the rule's verifiable-assignment predicate."
+        ),
+        proof="enforce/checks/test_phase2_checks.py::test_a_dispatch_with_no_contract_fires",
+    ),
+    Mutation(
+        rule_id="API-003",
+        summary="a public signature exposes a concrete storage type",
+        source=(
+            "The companion puts a storage implementation in a public operation's "
+            "signature and asserts API-003 from the single-wiring-point checker."
+        ),
+        proof="enforce/checks/test_phase2_checks.py::test_a_storage_type_in_a_public_signature_fires",
+    ),
+    Mutation(
+        rule_id="ARCH-005",
+        summary="application policy reaches directly for a system clock",
+        source=(
+            "The companion makes application code acquire time ambiently and "
+            "asserts ARCH-005, the explicit-effect acquisition diagnostic."
+        ),
+        proof="enforce/checks/test_phase2_checks.py::test_the_app_reaching_for_a_clock_fires",
+    ),
+    Mutation(
+        rule_id="ARCH-011",
+        summary="application policy imports a concrete adapter",
+        source=(
+            "The companion reverses the application-to-adapter boundary and "
+            "asserts ARCH-011 rather than crediting a generic import failure."
+        ),
+        proof="enforce/checks/test_phase2_checks.py::test_the_app_importing_an_adapter_fires",
+    ),
+    Mutation(
+        rule_id="DOC-002",
+        summary="a module constant has no documentation block",
+        source=(
+            "The companion declares Doxygen, creates an undocumented named value, "
+            "and asserts the exact DOC-002 documentation-coverage finding."
+        ),
+        proof="enforce/checks/test_doc_checks.py::test_an_undocumented_module_constant_fires",
+    ),
+    Mutation(
+        rule_id="DOC-004",
+        summary="a hash block substitutes for a callable docstring",
+        source=(
+            "The companion documents a docstring-capable element with a hash block "
+            "and asserts DOC-004, the form violation the rule describes."
+        ),
+        proof="enforce/checks/test_doc_checks.py::test_a_hash_block_where_a_docstring_belongs_fires",
+    ),
+    Mutation(
+        rule_id="DOC-007",
+        summary="a callable docstring omits one parameter",
+        source=(
+            "The companion supplies an otherwise documented function, omits one "
+            "parameter record, and asserts DOC-007 from doc_coverage."
+        ),
+        proof="enforce/checks/test_doc_checks.py::test_an_undocumented_parameter_fires",
+    ),
+    Mutation(
+        rule_id="DOC-009",
+        summary="documentation merely restates the element name",
+        source=(
+            "The companion uses self-describing prose with no contract content and "
+            "asserts DOC-009, directly exercising doc_style's detectable proxy."
+        ),
+        proof="enforce/checks/test_doc_checks.py::test_documentation_that_restates_the_name_fires",
+    ),
+    Mutation(
+        rule_id="DIAG-003",
+        summary="an exception formats detail into prose only",
+        source=(
+            "The companion defines an exception whose data is irretrievably "
+            "formatted into text and asserts the DIAG-003 structural diagnostic."
+        ),
+        proof="enforce/checks/test_phase2_checks.py::test_an_exception_that_only_formats_fires",
+    ),
+    Mutation(
+        rule_id="DIAG-005",
+        summary="a translated exception drops its causal chain",
+        source=(
+            "The companion raises a replacement error without `from` and asserts "
+            "DIAG-005, the exact cause-preservation syntax predicate."
+        ),
+        proof="enforce/checks/test_checks.py::test_raise_without_from_fires",
+    ),
+    Mutation(
+        rule_id="DIAG-007",
+        summary="cause suppression carries no documented reason",
+        source=(
+            "The companion uses `raise ... from None` without the required local "
+            "justification and asserts the distinct DIAG-007 finding."
+        ),
+        proof="enforce/checks/test_checks.py::test_from_none_without_reason_fires",
+    ),
+    Mutation(
+        rule_id="DIAG-010",
+        summary="one layer logs a failure and then re-raises it",
+        source=(
+            "The companion logs inside an exception handler before re-raising and "
+            "asserts DIAG-010, witnessing duplicate-incident detection."
+        ),
+        proof="enforce/checks/test_safety_checks.py::test_logging_and_reraising_fires",
+    ),
+    Mutation(
+        rule_id="DIAG-011",
+        summary="library code configures the process logging policy",
+        source=(
+            "The companion calls logging configuration from library-shaped code "
+            "and asserts DIAG-011, the shell-ownership predicate."
+        ),
+        proof="enforce/checks/test_phase2_checks.py::test_library_code_configuring_logging_fires",
+    ),
+    Mutation(
+        rule_id="DIAG-014",
+        summary="a value named as a secret is passed to a logger",
+        source=(
+            "The companion routes a secret-classified identifier to logging and "
+            "asserts DIAG-014, the static redaction-boundary proxy."
+        ),
+        proof="enforce/checks/test_safety_checks.py::test_a_secret_passed_to_a_logger_fires",
+    ),
+    Mutation(
+        rule_id="DIAG-015",
+        summary="a logging call interpolates an exception eagerly",
+        source=(
+            "The companion formats the exception into the log string and asserts "
+            "DIAG-015, preserving the exact structured-logging predicate."
+        ),
+        proof="enforce/checks/test_safety_checks.py::test_interpolating_the_exception_fires",
+    ),
+    Mutation(
+        rule_id="ERR-001",
+        summary="one operation mixes an explicit result union with raised failure",
+        source=(
+            "The companion gives a callable both a typed result channel and a raise "
+            "path, then asserts ERR-001 for the mixed-channel ambiguity."
+        ),
+        proof="enforce/checks/test_phase2_checks.py::test_a_result_union_that_also_raises_fires",
+    ),
+    Mutation(
+        rule_id="ERR-004",
+        summary="a governed layer raises an unowned built-in exception",
+        source=(
+            "The companion raises a bare built-in from layer code and asserts "
+            "ERR-004, the rule-specific ownership diagnostic."
+        ),
+        proof="enforce/checks/test_phase2_checks.py::test_a_layer_raising_a_bare_builtin_fires",
+    ),
+    Mutation(
+        rule_id="ERR-006",
+        summary="a public exception sits outside the project hierarchy",
+        source=(
+            "The companion defines a project exception outside its declared root "
+            "hierarchy and asserts ERR-006 from exception_shape."
+        ),
+        proof="enforce/checks/test_phase2_checks.py::test_an_exception_outside_the_hierarchy_fires",
+    ),
+    Mutation(
+        rule_id="ERR-010",
+        summary="only the first of several collected failures is raised",
+        source=(
+            "The companion accumulates several failures but raises one element and "
+            "asserts ERR-010, directly witnessing lost aggregate diagnostics."
+        ),
+        proof="enforce/checks/test_phase2_checks.py::test_raising_one_of_several_collected_failures_fires",
+    ),
+    Mutation(
+        rule_id="ERR-012",
+        summary="an assertion validates caller-controlled input",
+        source=(
+            "The companion asserts over a parameter and requires ERR-012, the "
+            "exact boundary-validation misuse rather than any assertion finding."
+        ),
+        proof="enforce/checks/test_checks.py::test_assert_on_a_parameter_fires",
+    ),
+    Mutation(
+        rule_id="TYPE-005",
+        summary="NewType is presented as runtime boundary validation",
+        source=(
+            "The companion uses NewType where construction cannot enforce the "
+            "stated constraint and asserts TYPE-005 from boundary_parsing."
+        ),
+        proof="enforce/checks/test_safety_checks.py::test_newtype_fires",
+    ),
+    Mutation(
+        rule_id="TYPE-010",
+        summary="isinstance against a protocol substitutes shape for parsing",
+        source=(
+            "The companion treats a runtime protocol check as boundary validation "
+            "and asserts TYPE-010, the exact shallow-shape predicate."
+        ),
+        proof="enforce/checks/test_safety_checks.py::test_isinstance_against_a_protocol_fires",
+    ),
+    Mutation(
+        rule_id="TYPE-006",
+        summary="a domain Literal union substitutes for a semantic value type",
+        source=(
+            "The companion places a primitive Literal union in the domain and "
+            "asserts TYPE-006 from the domain-purity mechanism."
+        ),
+        proof="enforce/checks/test_checks.py::test_domain_literal_union_fires",
+    ),
+    Mutation(
+        rule_id="EFCT-005",
+        summary="application code performs destructive work without a plan gate",
+        source=(
+            "The companion performs an ungated destructive call in application "
+            "policy and asserts EFCT-005 from the plan/apply checker."
+        ),
+        proof="enforce/checks/test_phase2_checks.py::test_ungated_destruction_in_the_app_fires",
+    ),
+    Mutation(
+        rule_id="EFCT-008",
+        summary="documentation makes an unqualified atomicity claim",
+        source=(
+            "The companion writes a bare atomicity guarantee without boundary or "
+            "failure qualification and asserts EFCT-008."
+        ),
+        proof="enforce/checks/test_ledger_checks.py::test_a_bare_atomicity_claim_fires",
+    ),
+    Mutation(
+        rule_id="EFCT-010",
+        summary="state is compared to an open string value",
+        source=(
+            "The companion branches on a stringly state rather than a closed type "
+            "and asserts EFCT-010 from plan_apply."
+        ),
+        proof="enforce/checks/test_phase2_checks.py::test_a_state_compared_to_a_string_fires",
+    ),
+    Mutation(
+        rule_id="DEP-007",
+        summary="a generated artifact names no generator",
+        source=(
+            "The companion marks a committed file as generated without provenance "
+            "and asserts DEP-007 from generated_provenance."
+        ),
+        proof="enforce/checks/test_ledger_checks.py::test_a_generated_file_naming_no_generator_fires",
+    ),
+    Mutation(
+        rule_id="DEP-008",
+        summary="a generated artifact carries a generation timestamp",
+        source=(
+            "The companion adds an ambient generation stamp and asserts DEP-008, "
+            "the byte-instability predicate implemented by generated_provenance."
+        ),
+        proof="enforce/checks/test_ledger_checks.py::test_a_generation_stamp_fires",
+    ),
+    Mutation(
+        rule_id="LEARN-001",
+        summary="a completed session records no learning outcome",
+        source=(
+            "The companion supplies a session with no record and asserts LEARN-001 "
+            "from the session-recorded check."
+        ),
+        proof="enforce/checks/test_ledger_checks.py::test_a_session_that_recorded_nothing_fires",
+    ),
+    Mutation(
+        rule_id="LEARN-004",
+        summary="a learning entry states no applicability scope",
+        source=(
+            "The companion writes an unscoped learning and asserts LEARN-004, the "
+            "exact retrievability-boundary diagnostic."
+        ),
+        proof="enforce/checks/test_ledger_checks.py::test_an_unscoped_learning_fires",
+    ),
+    Mutation(
+        rule_id="LEARN-005",
+        summary="the append-only ledger contains a sequence gap",
+        source=(
+            "The companion creates a missing sequence number and asserts LEARN-005, "
+            "witnessing append-only identity continuity."
+        ),
+        proof="enforce/checks/test_ledger_checks.py::test_a_gap_in_the_sequence_fires",
+    ),
+    Mutation(
+        rule_id="LEARN-009",
+        summary="a verified high-confidence learning remains unpromoted",
+        source=(
+            "The companion puts an eligible verified learning over the promotion "
+            "threshold and asserts LEARN-009 from promotion_due."
+        ),
+        proof="enforce/checks/test_ledger_checks.py::test_a_verified_learning_over_the_bar_fires",
+    ),
+    Mutation(
+        rule_id="LEARN-010",
+        summary="the active learning set exceeds its declared bound",
+        source=(
+            "The companion builds an oversized active set and asserts LEARN-010, "
+            "the finite-context budget enforced by learning_size."
+        ),
+        proof="enforce/checks/test_ledger_checks.py::test_an_oversized_active_set_fires",
+    ),
+    Mutation(
+        rule_id="TEST-016",
+        summary="a skipped test supplies no reason",
+        source=(
+            "The companion adds an unexplained skip and asserts TEST-016, one of "
+            "the rule's explicit silent-weakening shapes."
+        ),
+        proof="enforce/checks/test_ledger_checks.py::test_a_skip_without_a_reason_fires",
+    ),
 )
 
 
