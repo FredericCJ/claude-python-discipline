@@ -4,8 +4,8 @@
   "reviewed_commit": "c3f9103cee936b439362f175d477882d203c6b03",
   "scope": {
     "algorithm": "sha256",
-    "digest": "sha256:a403443af87b388049b5a217b2b3c66fb8961ada5c91a58a9b76ac309e8272b6",
-    "file_count": 279,
+    "digest": "sha256:fe1e04ef7d0a9485278a967c7be8f8b9a1644a0a1143114b63f01c43354de786",
+    "file_count": 281,
     "categories": [
       "project_declaration",
       "canonical_models",
