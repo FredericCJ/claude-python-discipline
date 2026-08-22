@@ -9,7 +9,7 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 | Status | Count |
 |---|---|
 | active | 5 |
-| candidate | 100 |
+| candidate | 101 |
 | superseded | 1 |
 
 ## active
@@ -916,6 +916,15 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `glob:enforce/importlinter.toml`
 - **About** ARCH-004
 - **Verify** `python tools/discrimination_gate.py`
+
+### L-0107 · A multi-host discipline needs one vendored skill authority; .claude and .agents copies are integration outputs whose replacement and removal require recorded ownership and content digests.
+
+- **Do** Author skills/python-discipline/SKILL.md, mirror it during discipline maintenance, vendor it once under .agent/skills, and let integrate.py manage each host path only when its record proves ownership.
+- **Kind** procedure · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-22
+- **Triggers** `glob:skills/python-discipline/**`, `glob:tools/integrate.py`
+- **About** FLOW-009
+- **Verify** `python tools/build_skill_mirror.py --check; python -m pytest tools/test_integrate.py -q`
 
 ## superseded
 

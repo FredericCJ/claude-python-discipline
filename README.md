@@ -1,6 +1,7 @@
 # Python Engineering Discipline
 
-One discipline for robust Python, built for agents to load, navigate and enforce.
+One discipline for robust Python, packaged once for Claude Code and Codex to load,
+navigate and enforce.
 
 Agents start at **`discipline/KERNEL.md`** (~1,800 tokens). It carries the thesis, the
 fifteen always-apply invariants, a router table, and the two commands that replace reading
@@ -70,16 +71,26 @@ python .agent/tools/integrate.py              # announce it in CLAUDE.md / AGENT
 
 Two steps, because they have different blast radii. **Vendoring** writes only inside
 `.agent/`. **Integration** writes files the project owns — `CLAUDE.md`, `AGENTS.md`,
-`.claude/settings.json`, `.gitignore` — so it is plan-then-apply, and `--dry-run`
-truncates the same code path rather than predicting it from a second one.
+`.claude/settings.json`, `.gitignore`, and the two native skill entry points — so it is
+plan-then-apply, and `--dry-run` truncates the same code path rather than predicting it
+from a second one.
+
+The package carries **one** authored skill at
+`.agent/skills/python-discipline/SKILL.md`. Integration exposes that file byte for byte at
+`.claude/skills/python-discipline/SKILL.md` for Claude Code and
+`.agents/skills/python-discipline/SKILL.md` for Codex. Both skills route into the same
+`.agent/discipline/` corpus; there is no Claude ruleset and Codex ruleset to drift apart.
+This is also safe when both agents work in the same repository: their discovery paths are
+different, while their instructions and mechanisms are shared.
 
 Integration manages one delimited block. A repository with no configuration gets a minimal
 file carrying the block and nothing else; a repository that already has one gets the block
 appended with **every byte outside the markers preserved**. Running it twice changes
 nothing the second time, `--check` reports a missing or stale block for a consuming
-repository's own gate, and `--remove` takes the block, the permission entries and the
-ignore lines back out. `.agent/INTEGRATION.md` is what an agent reads when told to wire it
-in.
+repository's own gate, and `--remove` takes back only the configuration and unchanged skill
+files that the integration record proves it created. A pre-existing or locally edited skill
+is reported and left untouched; the other host can still be integrated safely.
+`.agent/INTEGRATION.md` is what an agent reads when told to wire it in.
 
 ```bash
 python tools/vendor.py check   ../some-repo   # local edits to read-only files
@@ -94,11 +105,11 @@ non-empty, scans every member for absolute paths and credential shapes, and emit
 byte-reproducible zip whose members are `.agent/` plus `INSTALL-DISCIPLINE.md` and the
 release notes. Unzipped at a repository root it lands exactly where `integrate.py` expects.
 
-`.agent/discipline/`, `.agent/enforce/` and `.agent/tools/` are upstream-owned and replaced
-wholesale on update. `.agent/learning/` and `.agent/overrides/` are project-owned and never
-touched. A content-hash manifest makes a local edit to a read-only file visible rather than
-silently carried, and `harvest` exports `scope: discipline` findings as a report plus
-proposed rule text for review.
+`.agent/discipline/`, `.agent/enforce/`, `.agent/tools/` and `.agent/skills/` are
+upstream-owned and replaced wholesale on update. `.agent/learning/` and
+`.agent/overrides/` are project-owned and never touched. A content-hash manifest makes a
+local edit to a read-only file visible rather than silently carried, and `harvest` exports
+`scope: discipline` findings as a report plus proposed rule text for review.
 
 ## Layout
 
@@ -107,7 +118,6 @@ discipline/
   KERNEL.md          always loaded: thesis, invariants, router, precedence
   INDEX.md           generated: one line per rule
   rules.json         generated: the same, for jq
-  KERNEL.md          also the navigator card and the learning loop
   graph.json         generated: the navigation multigraph
   law/               ARCH TYPE ERR DIAG EFCT TEST API DEP FLOW LEARN
   fact/              py-typing py-testing py-errors py-logging   (dated)
@@ -123,10 +133,13 @@ enforce/
 learning/            schema.sql  config.toml  ledger.jsonl  INDEX.md  calibration.md
 tools/               validate.py build_index.py build_graph.py nav.py learn.py
                      vendor.py integrate.py harvest.py build_provenance.py release.py
+skills/python-discipline/
+  SKILL.md            the one authored Claude Code and Codex skill entry point
 packaging/           INSTALL-DISCIPLINE.md, the archive-root pointer for adopters
 INTEGRATION.md       what an agent reads when told to wire the discipline in
 sources/             the eleven originals, frozen and superseded
-.claude/skills/python-discipline/   the same discipline as a Claude Code skill
+.claude/skills/python-discipline/   generated Claude Code discovery copy
+.agents/skills/python-discipline/   generated Codex discovery copy
 ```
 
 ## Using it in a project
@@ -144,6 +157,7 @@ Requires the conda environment named `claude`.
 python tools/build_index.py       # refresh tokens:, INDEX.md, rules.json, ENFORCEMENT.md
 python tools/build_graph.py       # then the graph, which reads those token counts
 python tools/build_provenance.py  # regenerate the source-section ledger
+python tools/build_skill_mirror.py # mirror the one skill into both host discovery roots
 python tools/validate.py          # must exit 0
 python -m pytest -q
 ```
@@ -168,11 +182,12 @@ Stated here rather than discovered later, because the axiom cuts both ways.
   Of the twenty that surfaced: one was a duplicate and was retired, one was built, four
   were retagged `[ADVISORY]` because no machine can decide them, and **14 remain binding
   and unbuilt** — which is what this number is for. `enforce/ENFORCEMENT.md` carries the
-  census; 164 binding rules, 19 advisory, 115 mechanized.
+  current census: 155 binding rules, 28 advisory, 106 mechanized and 35 external.
 - **A mechanism existing is not a mechanism discriminating.** `D` counts rules observed
-  rejecting a concrete thing: **20 of 164**. The other 144 have a mechanism nobody has
-  watched work. `ARCH-013` is why this is measured — `mechanized` its whole life, and it
-  reported nothing against four real domains modelled entirely in pydantic.
+  rejecting a concrete thing: **49**. `V098` reports another 93 binding rules whose named
+  mechanism nobody has watched work. `ARCH-013` is why this is measured — `mechanized` its
+  whole life, and it reported nothing against four real domains modelled entirely in
+  pydantic.
 - **Provenance is at document granularity.** All 324 source sections are accounted for, but
   that proves no document was dropped, not that every individual claim survived.
 - **This repository's own Python carries 113 residual lint findings**, ratcheted. Under
@@ -185,7 +200,7 @@ Stated here rather than discovered later, because the axiom cuts both ways.
   held by `tools/lint_baseline.json` — the exact `(file, code)` pairs, so raising one
   integer cannot switch the gate off, and **no ruff code that decides a binding rule may
   enter it**, checked before the baseline is consulted at all.
-- **The documentation gate does not prove documentation is *true*.** All 135 covered files
+- **The documentation gate does not prove documentation is *true*.** All 139 covered files
   pass presence, style and behaviour-preservation, but a reviewer pass over an earlier
   version of the same files found roughly 90 claims that were confidently false about the
   code they described. Those were never itemized, and that list has still not been
@@ -194,9 +209,9 @@ Stated here rather than discovered later, because the axiom cuts both ways.
   What has been re-checked since is narrower and worth stating exactly: the numeric claims
   in this file, which have now been found stale twice — both times by the work that made
   them stale, and both times only because somebody went looking.
-- **The learning database holds 102 learnings and 3 reported outcomes**, so retrieval
-  precision is a real number — 67% — on a sample far too small to act on, and two
-  learning has been promoted. The loop closed for the first time when a validation batch
+- **The learning database holds 107 learnings and 9 reported outcomes**, so retrieval
+  precision is a real number — 89% — on a sample far too small to act on, and no learning
+  has yet been promoted. The loop closed for the first time when a validation batch
   retrieved before running and reported after; nothing yet *prompts* that, so it remains a
   habit rather than a mechanism, and a habit is what `V096` exists because nobody keeps.
 
