@@ -1,21 +1,21 @@
-"""Regenerate the skill's reference mirror from `discipline/`.
+"""Mirror the canonical skill into Claude Code and Codex discovery roots.
 
     python tools/build_skill_mirror.py [--check] [--root PATH]
 
-`.claude/skills/python-discipline/references/` is a byte-for-byte copy of
-`discipline/`, read by an agent session that has loaded the `python-discipline`
-skill instead of the corpus directly. Until this tool existed the copy was made
-by hand and drifted -- a stale conflict-id vocabulary in one file, a stale token
-count and a missing cross-reference in another. This tool removes the hand step:
-the mirror is now exactly what a walk of `discipline/` produces, and nothing
-under `references/` may be edited directly.
+`skills/python-discipline/` is the one authored skill. Both supported hosts need
+their own repository-local discovery path, so this builder makes exact mirrors
+at `.claude/skills/python-discipline/` and
+`.agents/skills/python-discipline/`. Keeping one source is load-bearing: Claude
+Code and Codex must not receive two disciplines that merely started alike.
 
-`SKILL.md` itself -- the skill's frontmatter and routing prose, one directory up
-from `references/` -- is hand-authored, adapted from the corpus rather than
-copied from it, and this tool never touches it.
+The skill routes into the repository's canonical `discipline/` tree (or the
+vendored `.agent/discipline/` tree) instead of carrying another copy of the
+corpus. Earlier releases mirrored the whole corpus below the Claude skill's
+`references/`; that made the skill Claude-specific and left a second body of
+rules to keep current. Orphan removal deliberately retires that old mirror.
 
-``--check`` writes nothing and exits non-zero if the mirror is stale or carries
-a file the corpus no longer has, which is the form to run in CI.
+``--check`` writes nothing and exits non-zero if either host mirror is stale or
+carries a file the canonical skill no longer has, which is the form run in CI.
 """
 
 from __future__ import annotations
@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import sys
 from dataclasses import dataclass
+from itertools import starmap
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
@@ -32,121 +33,112 @@ if TYPE_CHECKING:
 ## Anchor for the default root, derived from this file rather than the working
 ## directory, so the tool behaves the same however it was invoked.
 REPO_ROOT: Final = Path(__file__).resolve().parent.parent
-## The corpus this tool mirrors from. Never written to.
-SOURCE_DIR_NAME: Final = "discipline"
-## Where the mirror lives, relative to the repository root.
-DEST_DIR_PARTS: Final = (".claude", "skills", "python-discipline", "references")
+## The one authored skill tree, relative to the repository root.
+SOURCE_DIR_PARTS: Final = ("skills", "python-discipline")
+## Host-specific discovery roots generated from the same authored skill.
+DEST_DIRS_PARTS: Final[tuple[tuple[str, ...], ...]] = (
+    (".claude", "skills", "python-discipline"),
+    (".agents", "skills", "python-discipline"),
+)
 
-## Heads the console summary so a human running this by hand knows the direction
-## of the copy without reading the source.
-_CHECK_BANNER: Final = "skill mirror (discipline/ -> .claude/skills/python-discipline/references/)"
+## Heads the console summary so a human knows every copy direction without
+## reading the source.
+_CHECK_BANNER: Final = (
+    "skill mirrors (skills/python-discipline/ -> "
+    ".claude/skills/python-discipline/ + .agents/skills/python-discipline/)"
+)
 
 
 @dataclass(frozen=True, slots=True)
 class Artifact:
-    """One mirrored file and the bytes it should contain.
+    """One mirrored file and the bytes it should contain."""
 
-    Mirrors the `Artifact` shape in `tools/build_index.py` deliberately: the two
-    tools follow the same generated-artifact shape, so a reader who knows one
-    knows the other. The two names are kept out of a single code span on
-    purpose -- Doxygen 1.10.0 reads `path::Name` as an explicit link request and
-    fails the documentation build when it cannot resolve it.
-    """
-
-    ## Where the file belongs in the mirror, absolute.
+    ## Where the file belongs in a host discovery tree, absolute.
     path: Path
-    ## Its full intended contents, exactly as read from the source file.
-    text: str
+    ## Its full intended contents, exactly as read from the canonical skill.
+    content: bytes
 
     def is_stale(self) -> bool:
-        """Whether what is on disk differs from what was just read from the source.
-
-        A file that does not exist counts as stale, so a fresh checkout reports
-        work to do rather than agreement.
+        """Whether what is on disk differs from the canonical skill.
 
         @return True when writing would change the tree
         """
-        if not self.path.exists():
-            return True
-        return self.path.read_text(encoding="utf-8") != self.text
+        return not self.path.is_file() or self.path.read_bytes() != self.content
 
     def write(self) -> None:
-        """Put the text on disk, creating any parent directory it needs.
-
-        Unconditional. Staleness is the caller's question; this leaves the file
-        in the intended state either way.
-        """
+        """Put the bytes on disk, creating any parent directory they need."""
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(self.text, encoding="utf-8")
+        self.path.write_bytes(self.content)
 
 
 def source_files(source_dir: Path) -> list[Path]:
-    """Every file under the corpus, in a stable order.
+    """Every file under the canonical skill, in stable order.
 
-    @param source_dir `discipline/`, absolute
-    @return the corpus's files, sorted so the mirror's write order is deterministic
+    @param source_dir the authored `skills/python-discipline/` directory
+    @return the canonical skill files, sorted for deterministic output
     """
-    return sorted(p for p in source_dir.rglob("*") if p.is_file())
+    return sorted(path for path in source_dir.rglob("*") if path.is_file())
 
 
 def build_artifacts(source_dir: Path, dest_dir: Path) -> list[Artifact]:
-    """One `Artifact` per corpus file, addressed at its mirrored path.
+    """One artifact per canonical skill file for one host.
 
-    The mirror's shape is the corpus's shape: every relative path under
-    `discipline/` reappears, unchanged, under `references/`. Nothing is
-    filtered, renamed or rewritten -- a selective mirror is exactly the kind of
-    human judgement call that drifts, which is what a hand-copied duplicate
-    already proved.
-
-    @param source_dir `discipline/`, absolute
-    @param dest_dir the mirror root, absolute
-    @return one artifact per corpus file
+    @param source_dir the authored skill directory
+    @param dest_dir one host's generated discovery directory
+    @return one exact-copy artifact per source file
     """
     return [
-        Artifact(dest_dir / path.relative_to(source_dir), path.read_text(encoding="utf-8"))
+        Artifact(dest_dir / path.relative_to(source_dir), path.read_bytes())
         for path in source_files(source_dir)
     ]
 
 
 def orphaned_files(source_dir: Path, dest_dir: Path) -> list[Path]:
-    """Files under the mirror that no longer correspond to anything in the corpus.
+    """Files in a host mirror with no canonical counterpart.
 
-    A file removed from `discipline/` must not go on being served from the
-    mirror; left alone it would be indistinguishable from a current rule.
+    A retired file must not remain discoverable by one host after the other has
+    stopped receiving it. This also removes the pre-v3.3 `references/` corpus
+    mirror after the canonical skill becomes a router into `discipline/`.
 
-    @param source_dir `discipline/`, absolute
-    @param dest_dir the mirror root, absolute
-    @return mirrored files with no source counterpart, sorted
+    @param source_dir the authored skill directory
+    @param dest_dir one host's generated discovery directory
+    @return generated files with no source counterpart, sorted
     """
     if not dest_dir.exists():
         return []
-    wanted = {p.relative_to(source_dir) for p in source_files(source_dir)}
+    wanted = {path.relative_to(source_dir) for path in source_files(source_dir)}
     return sorted(
-        p for p in dest_dir.rglob("*")
-        if p.is_file() and p.relative_to(dest_dir) not in wanted
+        path
+        for path in dest_dir.rglob("*")
+        if path.is_file() and path.relative_to(dest_dir) not in wanted
     )
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Regenerate the mirror, or under `--check` only report staleness.
+    """Regenerate both mirrors, or only report their staleness.
 
     @param argv command-line arguments, defaulting to `sys.argv`
     @return 0 on success, 1 when `--check` finds anything out of date
     """
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    parser = argparse.ArgumentParser(description="Regenerate the skill's discipline mirror.")
+    parser = argparse.ArgumentParser(description="Regenerate both agent skill mirrors.")
     parser.add_argument("--check", action="store_true", help="report staleness, write nothing")
     parser.add_argument("--root", type=Path, default=REPO_ROOT, help="repository root")
     args = parser.parse_args(argv)
     root = args.root.resolve()
 
-    source_dir = root / SOURCE_DIR_NAME
-    dest_dir = root.joinpath(*DEST_DIR_PARTS)
-
-    artifacts = build_artifacts(source_dir, dest_dir)
-    stale = [a for a in artifacts if a.is_stale()]
-    orphans = orphaned_files(source_dir, dest_dir)
+    source_dir = root.joinpath(*SOURCE_DIR_PARTS)
+    dest_dirs = list(starmap(root.joinpath, DEST_DIRS_PARTS))
+    artifacts: list[Artifact] = []
+    for dest_dir in dest_dirs:
+        artifacts.extend(build_artifacts(source_dir, dest_dir))
+    stale = [artifact for artifact in artifacts if artifact.is_stale()]
+    orphans = [
+        orphan
+        for dest_dir in dest_dirs
+        for orphan in orphaned_files(source_dir, dest_dir)
+    ]
 
     if args.check:
         for artifact in stale:
@@ -163,7 +155,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     for orphan in orphans:
         orphan.unlink()
     print(
-        f"wrote {len(artifacts)} mirrored file(s); "
+        f"wrote {len(artifacts)} mirrored file(s) across {len(dest_dirs)} agent roots; "
         f"{len(stale)} were stale, {len(orphans)} orphan(s) removed."
     )
     return 0

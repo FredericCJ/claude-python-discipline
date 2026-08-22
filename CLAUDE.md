@@ -49,15 +49,16 @@ The corpus validates itself. After any edit under `discipline/`:
 ```bash
 python tools/build_index.py         # refresh tokens:, INDEX.md, rules.json, ENFORCEMENT.md
 python tools/build_graph.py         # then the graph, which reads those token counts
-python tools/build_skill_mirror.py  # then the mirror, which copies what both produced
+python tools/build_skill_mirror.py  # then both agent-native skill entry points
 python tools/validate.py            # must exit 0
 python -m pytest -q
 ```
 
 Order matters: `build_index` rewrites the `tokens:` field that `build_graph` reads, and the
-skill mirror copies the output of both. Omitting `build_skill_mirror` leaves a stale mirror
-that passes every command above and fails the gate's fifth step — this sequence was missing
-it until a pass over the claims in this file ran them.
+skill builder copies the one authored skill under `skills/` into both `.claude/skills/`
+and `.agents/skills/`. Omitting it leaves a stale host entry point that passes every command
+above and fails the gate's fifth step — this sequence was missing it until a pass over the
+claims in this file ran them.
 
 The whole gate is eleven steps, defined once in `tools/gate.py::GATE`, and `python
 tools/gate.py` runs all of them and names the ones that failed. `tools/release.py` runs the

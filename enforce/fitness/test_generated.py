@@ -31,13 +31,16 @@ from decides import decides
 ## The repository root, three levels up from this file.
 REPO_ROOT: Final = Path(__file__).resolve().parent.parent.parent
 
-## Each generator against the artefacts it owns. The `--check` form writes
+## Each generator against representative artefacts it owns. The `--check` form writes
 ## nothing and exits non-zero when what is on disk differs from what it would
 ## produce, which is `DEP-010` made runnable.
 GENERATORS: Final[tuple[tuple[str, tuple[str, ...]], ...]] = (
     ("index", ("discipline/INDEX.md", "discipline/rules.json", "enforce/ENFORCEMENT.md")),
     ("graph", ("discipline/graph.json",)),
-    ("skill_mirror", (".claude/skills/python-discipline/references/KERNEL.md",)),
+    ("skill_mirror", (
+        ".claude/skills/python-discipline/SKILL.md",
+        ".agents/skills/python-discipline/SKILL.md",
+    )),
 )
 
 ## How the three builders are invoked.

@@ -80,7 +80,8 @@ prompt says:
    `discipline/graph.json`, `enforce/ENFORCEMENT.md`, `discipline/meta/PROVENANCE.md`,
    `learning/INDEX.md`, `learning/calibration.md`, `tools/v080_baseline.json`,
    `tools/doc_baseline.json`, the `tokens:` front-matter field, and everything under
-   `.claude/skills/python-discipline/references/`. Change the source and rebuild.
+   `.claude/skills/python-discipline/` or `.agents/skills/python-discipline/`. Change
+   `skills/python-discipline/` and rebuild.
 3. **Report what happened, including what did not** (`FLOW-012`). A failing gate is reported
    as failing, with its exit code. Skipped work is named, with why.
 4. **Record what the session learned before reporting done** (`LEARN-001`), or say plainly
