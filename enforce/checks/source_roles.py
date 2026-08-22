@@ -22,7 +22,9 @@ if TYPE_CHECKING:
 class SourceRolesCheck(Check):
     """Prove that no declared production source path is silently unclassified."""
 
+    ## Mechanism token declared by ARCH-018.
     name = "source_roles"
+    ## Exact normative claim this checker can report.
     rules = ("ARCH-018",)
 
     def run(self, _paths: Sequence[Path]) -> list[Finding]:

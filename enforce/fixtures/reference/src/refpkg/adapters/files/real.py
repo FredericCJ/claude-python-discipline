@@ -1,7 +1,7 @@
 """The real file store: the one module in this package that touches a disk.
 
-`ARCH-004` -- `pathlib` and the filesystem are imported here and nowhere else in
-`refpkg`. Every `OSError` the platform can raise is caught at this boundary and
+`ARCH-020` -- filesystem effects are owned by this adapter boundary. Every
+`OSError` the platform can raise is caught here and
 translated into `StoreUnavailable` before it crosses inward (`ERR-004`), with
 `raise ... from` so the original cause survives in the chain (`DIAG-005`).
 

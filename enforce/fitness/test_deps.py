@@ -35,9 +35,9 @@ ENVIRONMENT: Final = REPO_ROOT / "environment.yml"
 ## a comment, which is the distinction `DEP-006` exists to draw.
 VERIFIER: Final = REPO_ROOT / "tools" / "check_env.py"
 
-## Layers permitted to import a third-party package. `ARCH-004` corners each
-## dependency in one adapter; `DEP-002` is the same claim read as a question
-## about position rather than about count.
+## Layers permitted to import a third-party package. `ARCH-020` separately
+## corners a technology in one adapter boundary; `DEP-002` asks only whether a
+## dependency has been pushed out of policy code.
 MAY_DEPEND: Final[frozenset[str]] = frozenset({"adapters", "shell"})
 
 ## Modules that ship with Python and so are not dependencies to position.
@@ -123,7 +123,7 @@ def test_dependency_position() -> None:
     """DEP-002: a dependency is judged by where it sits, not by whether it is good.
 
     The core may import the standard library and itself. Anything else belongs to
-    an adapter, where its blast radius is one module and its failure modes have
+    an adapter, where its blast radius is one boundary and its failure modes have
     an owner.
     """
     root = reference_root()

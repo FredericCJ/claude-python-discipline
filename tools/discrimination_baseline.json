@@ -1,7 +1,7 @@
 {
   "generated_by": "tools/discrimination_gate.py --update-baseline",
   "note": "D -- rules with at least one mutation observed provoking them. May rise, never fall. The entries are in enforce/discrimination.py and are meant to be read; the count alone says nothing about whether they are good.",
-  "count": 58,
+  "count": 60,
   "rules": [
     "ALLOC-002",
     "ALLOC-004",
@@ -19,6 +19,8 @@
     "ARCH-015",
     "ARCH-016",
     "ARCH-018",
+    "ARCH-019",
+    "ARCH-020",
     "DEP-001",
     "DIAG-002",
     "DIAG-008",
@@ -63,5 +65,5 @@
     "TYPE-013"
   ],
   "gap": 93,
-  "why": "Add the witnessed rejection for an unmapped production source path under ARCH-018."
+  "why": "Witness separate application-to-adapter and foreign-owner boundary diagnostics for ARCH-019 and ARCH-020."
 }

@@ -1,6 +1,6 @@
 """Decide `law/ARCH`'s layering contracts by running import-linter.
 
-`ARCH-001` through `ARCH-004` and `ARCH-011` are tagged `external`: the rule names
+Several `ARCH-*` rules retain an external import-linter strategy: the rule names
 a mechanism, and the mechanism is a configured tool rather than a check written
 here. Until this file existed the tool ran nowhere, so five binding rules were
 decided by a config file nobody executed.

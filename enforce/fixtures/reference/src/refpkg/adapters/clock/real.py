@@ -1,9 +1,8 @@
 """The real clock: the one module in this package that reads wall time.
 
-`ARCH-004` -- a foreign dependency appears in exactly one adapter. `time` is
-imported here and nowhere else in `refpkg`, so the blast radius of the process
-clock is this file, and a stack frame naming it is unambiguous about where the
-non-determinism entered.
+`ARCH-020` -- the clock adapter boundary owns direct imports of `time`. The
+repository-local shell may import this adapter for wiring without becoming a
+second technology owner, so the clock still has one containment boundary.
 """
 
 from __future__ import annotations

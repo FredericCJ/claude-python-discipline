@@ -218,7 +218,7 @@ def test_an_adapter_file_reaches_the_adapter_rules(graph: Graph) -> None:
     same as no answer at all.
     """
     found = _rule_ids(nav.cmd_context(graph, _ns(file="src/pkg/adapters/fs.py")))
-    assert {"ARCH-003", "ARCH-004", "ARCH-008", "DEP-003"} <= found
+    assert {"ARCH-003", "ARCH-008", "ARCH-020", "DEP-003"} <= found
     assert "TYPE-002" not in found, "a domain-only rule must not govern an adapter"
 
 

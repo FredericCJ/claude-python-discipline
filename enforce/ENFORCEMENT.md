@@ -4,12 +4,12 @@
 
 This ledger keeps unlike claims unlike. A rule can be normatively binding while its verifier is absent; a verifier can exist while deciding only a proxy; a proxy can pass while its residual remains true; and a successful adopter does not prove universal benefit. No state below is a project-gate outcome.
 
-- **164** binding rules; **14** lack an available declared strategy.
+- **165** binding rules; **14** lack an available declared strategy.
 - **26** advisory rules and **0** open rules.
-- **177** exact strategy records: **9** direct and **168** proxy claims.
-- **58/164** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
-- **16/192** rules carry named field observations.
-- **99/99** named mechanisms resolve locally or delegate explicitly; **0** local mechanisms are absent.
+- **180** exact strategy records: **13** direct and **167** proxy claims.
+- **59/165** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
+- **18/194** rules carry named field observations.
+- **100/100** named mechanisms resolve locally or delegate explicitly; **0** local mechanisms are absent.
 
 ## Verifier-state census
 
@@ -17,13 +17,13 @@ Measured against this tree, not copied from the rule heading. `discipline/rules.
 
 | State | Rules | Means |
 |---|---|---|
-| `local-verifier` | 115 | repository-local code observes every strategy |
-| `external-verifier` | 27 | every strategy delegates to a configured tool |
-| `mixed-verifiers` | 8 | several verifier kinds contribute |
+| `local-verifier` | 117 | repository-local code observes every strategy |
+| `external-verifier` | 24 | every strategy delegates to a configured tool |
+| `mixed-verifiers` | 10 | several verifier kinds contribute |
 | `structured-review` | 0 | judgment is recorded in a checked review artifact |
 | `unbuilt` | 14 | at least one named local verifier is absent |
 | `undeclared` | 26 | the active rule has no strategy record |
-| `retired` | 2 | the stable id remains only for history |
+| `retired` | 3 | the stable id remains only for history |
 
 ## External tool integration
 
@@ -87,17 +87,17 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `API-013` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | Compatibility is not inherited from parser tolerance |
 | `API-014` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | Prefer additive change |
 | `API-015` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | The delivered artifact is what gets tested |
-| `ARCH-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:import-linter; it does not establish the full semantic benefit of the normative statement. | Dependencies point inward only |
+| `ARCH-001` | BINDING | `mixed-verifiers` | `direct`, `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:import-linter; it does not establish the full semantic benefit of the normative statement.; Passing decides direc… | Source dependencies point toward policy |
 | `ARCH-002` | BINDING | `mixed-verifiers` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:import-linter; it does not establish the full semantic benefit of the normative statement.; Passing excludes only… | The domain imports nothing that can perform I/O |
-| `ARCH-003` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:import-linter; it does not establish the full semantic benefit of the normative statement. | No adapter imports another adapter |
-| `ARCH-004` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | `V3E-002` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not establish the full semantic benefit of the normative statement. | Each foreign dependency is imported in exactly one module |
+| `ARCH-003` | BINDING | `mixed-verifiers` | `direct`, `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:import-linter; it does not establish the full semantic benefit of the normative statement.; Passing does not dete… | Adapter boundaries remain independent |
+| `ARCH-004` | RETIRED | `retired` | n/a | n/a | n/a | `V3E-002` | n/a | Each foreign dependency has one importer module |
 | `ARCH-005` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:explicit_effects; it does not establish the full semantic benefit of the normative statement. | Effects are named in the signature |
 | `ARCH-006` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement. | Domain functions are total or return a typed result |
 | `ARCH-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_every_port_is_a_protocol; it does not establish every behavior in the normative statement. | Every port is a Protocol with a published contract |
 | `ARCH-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | `V3E-008` | Passing covers only the cases and artifact shapes encoded by fitness:test_port_triad; it does not establish every behavior in the normative statement. | Every port has a real, a fake and a faulty adapter |
 | `ARCH-009` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | `V3E-008` | Passing covers only the cases and artifact shapes encoded by fitness:test_contract_suite_per_adapter; it does not establish every behavior in the normative statement. | One contract suite runs against every adapter |
 | `ARCH-010` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_port_justification; it does not establish every behavior in the normative statement. | A port earns its place from a stated justification |
-| `ARCH-011` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:single_wiring_point; it does not establish the full semantic benefit of the normative statement. | Adapters are selected at one composition root |
+| `ARCH-011` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:single_wiring_point; it does not establish the full semantic benefit of the normative statement. | Adapters are selected at one local wiring root |
 | `ARCH-012` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:no_test_branches; it does not establish the full semantic benefit of the normative statement. | No test-mode branch in production code |
 | `ARCH-013` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement. | Framework and transport types stay out of the domain |
 | `ARCH-014` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement. | Translation between representations is explicit |
@@ -105,6 +105,8 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `ARCH-016` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:ruff:C901; it does not establish the full semantic benefit of the normative statement. | Module complexity stays within budget |
 | `ARCH-017` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | Prefer the direct call to the abstraction |
 | `ARCH-018` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | `V3E-001` | Passing proves path coverage only; it cannot establish that a human assigned each file to the semantically correct role. | Every production source has one declared role |
+| `ARCH-019` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | `V3E-002` | Passing does not detect dynamic imports or prove that an injected object actually satisfies the declared port's behavior. | Application code names no concrete adapter |
+| `ARCH-020` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | `V3E-002` | Passing covers registered direct Python imports; capability inference must separately detect undeclared technology, and runtime plugin lookup remains a review subject. | One adapter boundary owns each technology |
 | `DEP-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:import-linter; it does not establish the full semantic benefit of the normative statement. | The domain depends on the standard library only |
 | `DEP-002` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_dependency_position; it does not establish every behavior in the normative statement. | A dependency is judged by its architectural position |
 | `DEP-003` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | An adapter owns its dependency's failure modes |
@@ -149,7 +151,7 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `DOC-012` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:generated_provenance; it does not establish the full semantic benefit of the normative statement. | Generated documentation is not committed |
 | `DOC-013` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | Prefer one sentence that earns its place |
 | `DOC-014` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | `V3E-001` | Passing excludes only the configured patterns implemented by check:doc_coverage; it does not establish the full semantic benefit of the normative statement. | A project declares which engine reads its documentation |
-| `EFCT-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:import-linter; it does not establish the full semantic benefit of the normative statement. | Effects are performed only in shell and adapters |
+| `EFCT-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes configured direct imports of effect-capable APIs; it does not prove that every call through a port is sequenced or recovered correctly. | Foreign effects stay behind ports |
 | `EFCT-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:explicit_effects; it does not establish the full semantic benefit of the normative statement. | Time, randomness and environment enter through ports |
 | `EFCT-003` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_determinism; it does not establish every behavior in the normative statement. | Determinism is the default |
 | `EFCT-004` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:plan_apply; it does not establish the full semantic benefit of the normative statement. | Mutating operations are commands, not raw writes |
@@ -259,8 +261,8 @@ These remain normative obligations, but the declared verifier is absent or missi
 
 | Kind | Rules |
 |---|---|
-| `auto` | 40 |
-| `check` | 74 |
+| `auto` | 39 |
+| `check` | 78 |
 | `fitness` | 63 |
 
 ## Advisory rationale

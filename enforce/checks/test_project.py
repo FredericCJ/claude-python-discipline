@@ -178,6 +178,61 @@ def test_overlapping_roles_are_refused(tmp_path: Path) -> None:
         project.parse(path)
 
 
+def test_foreign_import_has_one_adapter_owner(tmp_path: Path) -> None:
+    """A technology import is registered against a boundary, not one module.
+
+    @param tmp_path fixture repository
+    """
+    found = project.parse(declare(tmp_path, v4(tables="""
+        [tool.agent-discipline.roles]
+        adapters = ["src/pkg/adapters"]
+
+        [[tool.agent-discipline.foreign_dependencies]]
+        import_name = "httpx"
+        owner = "src/pkg/adapters/http"
+    """)))
+    assert found.foreign_ownership["httpx"].as_posix() == "src/pkg/adapters/http"
+
+
+def test_duplicate_foreign_import_owners_are_refused(tmp_path: Path) -> None:
+    """One import root cannot have two direct owners.
+
+    @param tmp_path fixture repository
+    """
+    path = declare(tmp_path, v4(tables="""
+        [tool.agent-discipline.roles]
+        adapters = ["src/pkg/adapters"]
+
+        [[tool.agent-discipline.foreign_dependencies]]
+        import_name = "httpx"
+        owner = "src/pkg/adapters/http"
+
+        [[tool.agent-discipline.foreign_dependencies]]
+        import_name = "httpx"
+        owner = "src/pkg/adapters/backup_http"
+    """))
+    with pytest.raises(ValueError, match="DISC-PROJECT-011"):
+        project.parse(path)
+
+
+def test_foreign_owner_outside_adapters_is_refused(tmp_path: Path) -> None:
+    """The shell selects adapters but never becomes the direct technology owner.
+
+    @param tmp_path fixture repository
+    """
+    path = declare(tmp_path, v4(tables="""
+        [tool.agent-discipline.roles]
+        adapters = ["src/pkg/adapters"]
+        shell = ["src/pkg/shell"]
+
+        [[tool.agent-discipline.foreign_dependencies]]
+        import_name = "httpx"
+        owner = "src/pkg/shell"
+    """))
+    with pytest.raises(ValueError, match="DISC-PROJECT-012"):
+        project.parse(path)
+
+
 @pytest.mark.parametrize("bad", ["../peer", "/absolute", "C:/peer", "./"])
 def test_source_roots_cannot_escape_or_name_the_repository(
     tmp_path: Path, bad: str,

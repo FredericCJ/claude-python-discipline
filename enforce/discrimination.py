@@ -826,6 +826,37 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         write=(("src/refpkg/services/orphan.py", '"""Unowned policy."""\n'),),
     ),
     Mutation(
+        rule_id="ARCH-019",
+        summary="application orchestration imports a concrete clock adapter",
+        source=(
+            "The application may invoke effects through an injected port but may "
+            "not select its implementation. This mutation crosses that exact seam "
+            "without importing the foreign clock technology directly."
+        ),
+        replace=((
+            "src/refpkg/app/prune.py",
+            "from __future__ import annotations",
+            (
+                "from __future__ import annotations\n\n"
+                "from refpkg.adapters.clock.real import SystemClock"
+            ),
+        ),),
+    ),
+    Mutation(
+        rule_id="ARCH-020",
+        summary="the files adapter directly imports technology owned by the clock adapter",
+        source=(
+            "The v4 successor to ARCH-004 permits several importer modules inside "
+            "one boundary and shell's transitive reach, while requiring a second "
+            "adapter boundary's direct import to fail by its own diagnostic."
+        ),
+        replace=((
+            "src/refpkg/adapters/files/real.py",
+            "from __future__ import annotations",
+            "from __future__ import annotations\n\nimport time",
+        ),),
+    ),
+    Mutation(
         rule_id="EFCT-001",
         summary="the app opens a socket, performing an effect outside the shell",
         source=(

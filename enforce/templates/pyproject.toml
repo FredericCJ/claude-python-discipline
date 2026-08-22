@@ -43,6 +43,10 @@ unit = "application"              # application | component
 source_roots = ["src"]
 doc_engine = "doxygen"             # doxygen | sphinx | none.  Absent => none.
 pedagogical_full_projection = false
+adapter_boundaries = [
+    "src/package/adapters/http",
+    "src/package/adapters/storage",
+]
 
 [tool.agent-discipline.roles]
 # Replace `package` with the distribution's import package. Paths, rather than
@@ -52,6 +56,14 @@ application = ["src/package/app"]
 ports = ["src/package/ports"]
 adapters = ["src/package/adapters"]
 shell = ["src/package/__init__.py", "src/package/shell"]
+
+# Every third-party or system technology directly imported by production code
+# is registered against one owning adapter boundary. Several modules inside that
+# boundary may use it; every direct import outside it fails ARCH-020. The local
+# shell may import the adapter and therefore reach the technology transitively.
+[[tool.agent-discipline.foreign_dependencies]]
+import_name = "httpx"
+owner = "src/package/adapters/http"
 
 # ---------------------------------------------------------------------------- ruff
 

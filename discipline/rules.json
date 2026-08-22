@@ -214,7 +214,7 @@
       "id": "law/ARCH",
       "kind": "law",
       "title": "Architecture and Coupling",
-      "tokens": 2921,
+      "tokens": 3448,
       "load_when": [
         "new module",
         "package layout",
@@ -317,7 +317,7 @@
       "id": "law/EFCT",
       "kind": "law",
       "title": "Effects, State and Time",
-      "tokens": 2286,
+      "tokens": 2362,
       "load_when": [
         "write a file",
         "mutation",
@@ -542,7 +542,7 @@
       "id": "meta/KERNEL",
       "kind": "meta",
       "title": "Discipline Kernel",
-      "tokens": 1910,
+      "tokens": 1923,
       "load_when": [
         "python",
         "discipline",
@@ -2100,21 +2100,22 @@
     {
       "id": "ARCH-001",
       "module": "law/ARCH",
-      "title": "Dependencies point inward only",
+      "title": "Source dependencies point toward policy",
       "force": "BINDING",
       "mechanisms": [
+        "check:dependency_boundaries",
         "auto:import-linter"
       ],
-      "statement": "Each layer MUST import only from layers beneath it: `shell` to `adapters` to `app` to `domain`. `domain` imports nothing from the others. A project MAY map its own directory names onto these four in `[tool.agent-discipline]`; it MUST NOT add a fifth.",
-      "why": "An inward-only graph is what lets a stack trace's deepest frame name the layer that owns the fault. The names are canonical because the *order* is what carries the meaning; a layer outside that order has no defined direction to point in.",
-      "check": "`lint-imports --config enforce/importlinter.toml` contract `ARCH-001 layers point inward` · `python tools/import_gate.py`",
+      "statement": "The domain MUST depend only on domain policy. Ports MAY depend on domain vocabulary. Application code MAY depend on domain and ports. Adapters MAY depend on domain and ports. The repository-local shell MAY depend on every role. A dependency in the reverse direction MUST fail. The more specific adapter-selection and adapter-independence cases are [ARCH-019] and [ARCH-003].",
+      "why": "Direction toward policy keeps a technology or process decision from becoming a prerequisite of the rule it serves, while ports let application orchestration invoke effects without importing their implementations.",
+      "check": "`python -m checks.dependency_boundaries` · `lint-imports --config enforce/importlinter.toml` · `python tools/import_gate.py`",
       "no_mechanism": null,
       "see": [
         "DOC-014"
       ],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 44,
+      "line": 48,
       "applicability": {
         "units": [
           "application",
@@ -2122,7 +2123,7 @@
         ],
         "capabilities": []
       },
-      "failure_mode": "An inward-only graph is what lets a stack trace's deepest frame name the layer that owns the fault. The names are canonical because the *order* is what carries the meaning; a layer outside that order has no defined direction to point in.",
+      "failure_mode": "An outward source edge makes policy depend on technology or process setup, so a failure can no longer be attributed to the declared role without following that coupling.",
       "warrants": [
         {
           "source": "source:SE",
@@ -2131,7 +2132,7 @@
         }
       ],
       "verification": {
-        "state": "external-verifier",
+        "state": "mixed-verifiers",
         "strategies": [
           {
             "mechanism": "auto:import-linter",
@@ -2146,6 +2147,20 @@
               "linux"
             ],
             "not_applicable": "never while this rule is active for the governed repository"
+          },
+          {
+            "mechanism": "check:dependency_boundaries",
+            "kind": "static",
+            "relation": "direct",
+            "proposition": "No direct local import crosses outward from domain, ports, application, or adapters under the declared repository-relative role paths; adapter-selection and cross-adapter edges are reported separately.",
+            "residual": "Passing decides direct Python imports only; runtime service lookup, plugin loading, and semantically misplaced declarations remain outside this strategy.",
+            "must_pass": "fixture:enforce/fixtures/reference",
+            "must_reject": "discrimination:ARCH-001",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never for a declared v4 governed repository"
           }
         ]
       },
@@ -2175,7 +2190,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 59,
+      "line": 64,
       "applicability": {
         "units": [
           "application",
@@ -2234,19 +2249,20 @@
     {
       "id": "ARCH-003",
       "module": "law/ARCH",
-      "title": "No adapter imports another adapter",
+      "title": "Adapter boundaries remain independent",
       "force": "BINDING",
       "mechanisms": [
+        "check:dependency_boundaries",
         "auto:import-linter"
       ],
-      "statement": "Adapter modules MUST be independent of one another. Composition happens in `shell`, never between adapters.",
+      "statement": "One adapter boundary MUST NOT import another adapter boundary. Several cooperating modules inside one declared adapter boundary are allowed. Composition happens in the repository-local shell, never between independent adapters.",
       "why": "Independent adapters mean a misbehaving one cannot contaminate a healthy one, which is the property the fault tests exist to demonstrate.",
-      "check": "`lint-imports --config enforce/importlinter.toml` contract `ARCH-003 adapters are independent` · `python tools/import_gate.py`",
+      "check": "`python -m checks.dependency_boundaries` · `lint-imports --config enforce/importlinter.toml` contract `ARCH-003 adapters are independent` · `python tools/import_gate.py`",
       "no_mechanism": null,
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 68,
+      "line": 73,
       "applicability": {
         "units": [
           "application",
@@ -2263,7 +2279,7 @@
         }
       ],
       "verification": {
-        "state": "external-verifier",
+        "state": "mixed-verifiers",
         "strategies": [
           {
             "mechanism": "auto:import-linter",
@@ -2278,34 +2294,47 @@
               "linux"
             ],
             "not_applicable": "never while this rule is active for the governed repository"
+          },
+          {
+            "mechanism": "check:dependency_boundaries",
+            "kind": "static",
+            "relation": "direct",
+            "proposition": "No direct local import crosses between two distinct first-level boundaries beneath a declared adapters role path.",
+            "residual": "Passing does not detect runtime plugin lookup or decide whether several modules grouped inside one adapter boundary are cohesive.",
+            "must_pass": "fixture:enforce/fixtures/reference",
+            "must_reject": "discrimination:ARCH-003",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "fewer than two adapter boundaries exist"
           }
         ]
       },
       "field_observations": [],
       "migration": {
         "source": "v3.3.0",
-        "disposition": "unchanged",
-        "guidance": "No adopter edit is required by this rule record."
+        "disposition": "clarified",
+        "guidance": "Declare independently substitutable adapter boundary paths; shared adapter support may remain outside them."
       }
     },
     {
       "id": "ARCH-004",
       "module": "law/ARCH",
-      "title": "Each foreign dependency is imported in exactly one module",
-      "force": "BINDING",
-      "mechanisms": [
-        "auto:import-linter"
-      ],
-      "statement": "A third-party or system-level dependency MUST appear in the import graph of exactly one adapter module.",
-      "why": "This is what \"push coupling to the very edge\" means operationally: a library reachable from two places has two possible blast radii and no single owner.",
-      "check": "`lint-imports --config enforce/importlinter.toml` contract `ARCH-004 foreign dependencies are cornered` · `python tools/import_gate.py`",
+      "title": "Each foreign dependency has one importer module",
+      "force": "RETIRED",
+      "mechanisms": [],
+      "statement": "Retired because a single module is a physical form, not the intended ownership property, and because a transitive ban on the local shell contradicted its wiring responsibility. One adapter *boundary* now owns all direct imports while shell-to-adapter reach is valid.",
+      "why": "Retaining the id makes old findings resolvable without preserving the defective one-file prescription or silently changing what historical citations meant.",
+      "check": null,
       "no_mechanism": null,
       "see": [
-        "ARCH-010"
+        "ARCH-011",
+        "EVID-005"
       ],
-      "superseded_by": null,
+      "superseded_by": "ARCH-020",
       "path": "discipline/law/ARCH.md",
-      "line": 75,
+      "line": 81,
       "applicability": {
         "units": [
           "application",
@@ -2313,7 +2342,7 @@
         ],
         "capabilities": []
       },
-      "failure_mode": "This is what \"push coupling to the very edge\" means operationally: a library reachable from two places has two possible blast radii and no single owner.",
+      "failure_mode": "The v3 one-importer-module form confused physical layout with ownership and its transitive shell ban contradicted repository-local adapter wiring.",
       "warrants": [
         {
           "source": "source:SE",
@@ -2322,31 +2351,16 @@
         }
       ],
       "verification": {
-        "state": "external-verifier",
-        "strategies": [
-          {
-            "mechanism": "auto:import-linter",
-            "kind": "tool",
-            "relation": "proxy",
-            "proposition": "auto:import-linter reports no diagnostic corresponding to ARCH-004 under the repository configuration and declared scan roots.",
-            "residual": "Passing excludes only the configured patterns implemented by auto:import-linter; it does not establish the full semantic benefit of the normative statement.",
-            "must_pass": "command:`lint-imports --config enforce/importlinter.toml` contract `ARCH-004 foreign dependencies are cornered` · `python tools/import_gate.py`",
-            "must_reject": "discrimination:ARCH-004",
-            "platforms": [
-              "windows",
-              "linux"
-            ],
-            "not_applicable": "never while this rule is active for the governed repository"
-          }
-        ]
+        "state": "retired",
+        "strategies": []
       },
       "field_observations": [
         "V3E-002"
       ],
       "migration": {
         "source": "v3.3.0",
-        "disposition": "clarified",
-        "guidance": "Review the clarified v4 wording and update local evidence if its observable claim changed."
+        "disposition": "superseded",
+        "guidance": "Replace per-module and transitive shell bans with a declared owning adapter boundary under ARCH-020."
       }
     },
     {
@@ -2364,7 +2378,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 83,
+      "line": 90,
       "applicability": {
         "units": [
           "application",
@@ -2423,7 +2437,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 91,
+      "line": 98,
       "applicability": {
         "units": [
           "application",
@@ -2483,7 +2497,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 102,
+      "line": 109,
       "applicability": {
         "units": [
           "application",
@@ -2540,7 +2554,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 110,
+      "line": 117,
       "applicability": {
         "units": [
           "application",
@@ -2599,7 +2613,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 116,
+      "line": 123,
       "applicability": {
         "units": [
           "application",
@@ -2658,7 +2672,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 123,
+      "line": 130,
       "applicability": {
         "units": [
           "application",
@@ -2703,19 +2717,19 @@
     {
       "id": "ARCH-011",
       "module": "law/ARCH",
-      "title": "Adapters are selected at one composition root",
+      "title": "Adapters are selected at one local wiring root",
       "force": "BINDING",
       "mechanisms": [
         "check:single_wiring_point"
       ],
-      "statement": "Concrete adapters MUST be chosen in a single wiring module in `shell`. No other module may name a concrete adapter class.",
+      "statement": "Concrete adapters MUST be chosen in a single repository-local wiring module in `shell`. No other module may select a concrete adapter class. This root does not assemble sibling repositories or define a larger application's topology.",
       "why": "Replaceability that requires edits in several places is not replaceability; the single root is what makes substitution in a test identical to substitution in production.",
       "check": "`python -m checks.single_wiring_point`",
       "no_mechanism": null,
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 137,
+      "line": 144,
       "applicability": {
         "units": [
           "application",
@@ -2772,7 +2786,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 148,
+      "line": 156,
       "applicability": {
         "units": [
           "application",
@@ -2829,7 +2843,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 155,
+      "line": 163,
       "applicability": {
         "units": [
           "application",
@@ -2886,7 +2900,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 162,
+      "line": 170,
       "applicability": {
         "units": [
           "application",
@@ -2943,7 +2957,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 169,
+      "line": 177,
       "applicability": {
         "units": [
           "application",
@@ -3000,7 +3014,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 176,
+      "line": 184,
       "applicability": {
         "units": [
           "application",
@@ -3055,7 +3069,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 182,
+      "line": 190,
       "applicability": {
         "units": [
           "application",
@@ -3100,7 +3114,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 190,
+      "line": 198,
       "applicability": {
         "units": [
           "application",
@@ -3142,6 +3156,132 @@
         "source": "v4.0.0",
         "disposition": "new",
         "guidance": "Declare all production import roots and map every contained Python path under [tool.agent-discipline.roles]."
+      }
+    },
+    {
+      "id": "ARCH-019",
+      "module": "law/ARCH",
+      "title": "Application code names no concrete adapter",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:dependency_boundaries"
+      ],
+      "statement": "Application orchestration MUST invoke effects only through injected port contracts and MUST NOT directly import an adapter implementation. Adapter selection belongs to the repository-local shell.",
+      "why": "This is the precise dependency-inversion seam. It permits the application to cause effects while keeping policy independent of the technology that realizes them.",
+      "check": "`python -m checks.dependency_boundaries`",
+      "no_mechanism": null,
+      "see": [
+        "ARCH-005",
+        "ARCH-011",
+        "EFCT-001"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 209,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "Application orchestration that imports a concrete adapter couples policy sequencing to one technology and makes production substitution differ from test substitution.",
+      "warrants": [
+        {
+          "source": "source:SE",
+          "relation": "supports",
+          "confidence": "high"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:dependency_boundaries",
+            "kind": "static",
+            "relation": "direct",
+            "proposition": "No application-role Python module directly imports a local module assigned to the adapters role.",
+            "residual": "Passing does not detect dynamic imports or prove that an injected object actually satisfies the declared port's behavior.",
+            "must_pass": "fixture:enforce/fixtures/reference",
+            "must_reject": "discrimination:ARCH-019",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never for a declared v4 governed repository"
+          }
+        ]
+      },
+      "field_observations": [
+        "V3E-002"
+      ],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Move concrete adapter imports from application code to the repository-local shell and inject a typed port."
+      }
+    },
+    {
+      "id": "ARCH-020",
+      "module": "law/ARCH",
+      "title": "One adapter boundary owns each technology",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:dependency_boundaries"
+      ],
+      "statement": "Every declared third-party or system technology import MUST have exactly one owning adapter boundary. Production code outside that boundary MUST NOT import the technology directly. Several modules inside the owner MAY import it, and the local shell MAY reach it transitively by importing the selected adapter.",
+      "why": "Boundary ownership gives a foreign technology one containment and translation site without forcing an adapter into one file or making valid local wiring impossible.",
+      "check": "`python -m checks.dependency_boundaries`",
+      "no_mechanism": null,
+      "see": [
+        "ARCH-003",
+        "ARCH-011",
+        "DEP-002"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 218,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "Direct imports of one technology from several boundaries create several translation and failure-containment sites, while a one-file restriction creates ceremony and rejects valid local wiring.",
+      "warrants": [
+        {
+          "source": "source:SE",
+          "relation": "supports",
+          "confidence": "high"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:dependency_boundaries",
+            "kind": "static",
+            "relation": "direct",
+            "proposition": "Every direct import of a registered foreign import root occurs at or beneath its one declared owning adapter boundary path.",
+            "residual": "Passing covers registered direct Python imports; capability inference must separately detect undeclared technology, and runtime plugin lookup remains a review subject.",
+            "must_pass": "fixture:enforce/fixtures/reference",
+            "must_reject": "discrimination:ARCH-020",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "the repository imports no foreign or system technology in production code"
+          }
+        ]
+      },
+      "field_observations": [
+        "V3E-002"
+      ],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Replace ARCH-004 per-module contracts with one foreign_dependencies record per import root and owning adapter boundary."
       }
     },
     {
@@ -5673,17 +5813,19 @@
     {
       "id": "EFCT-001",
       "module": "law/EFCT",
-      "title": "Effects are performed only in shell and adapters",
+      "title": "Foreign effects stay behind ports",
       "force": "BINDING",
       "mechanisms": [
         "auto:import-linter"
       ],
-      "statement": "Domain and app code MUST NOT perform an effect. They compute a description of one.",
-      "why": "A pure core means a domain test needs no environment and a domain failure implicates no environment.",
+      "statement": "Domain code MUST perform no effects. Application orchestration MAY invoke effects through injected ports, but MUST NOT import a foreign API or perform its I/O directly. Adapters perform foreign technology effects; the repository-local shell owns process setup, final rendering and escape handling.",
+      "why": "The domain remains a pure policy oracle while application code can sequence real work without knowing the technology or representation that performs it.",
       "check": "`lint-imports --config enforce/importlinter.toml` contract `ARCH-002 domain is pure` · `python tools/import_gate.py`",
       "no_mechanism": null,
       "see": [
-        "law/ARCH"
+        "ARCH-005",
+        "ARCH-019",
+        "ARCH-020"
       ],
       "superseded_by": null,
       "path": "discipline/law/EFCT.md",
@@ -5695,7 +5837,7 @@
         ],
         "capabilities": []
       },
-      "failure_mode": "A pure core means a domain test needs no environment and a domain failure implicates no environment.",
+      "failure_mode": "Direct I/O in policy code makes orchestration depend on an environment and technology; forbidding injected port invocation instead would make useful application sequencing impossible.",
       "warrants": [
         {
           "source": "source:SE",
@@ -5711,7 +5853,7 @@
             "kind": "tool",
             "relation": "proxy",
             "proposition": "auto:import-linter reports no diagnostic corresponding to EFCT-001 under the repository configuration and declared scan roots.",
-            "residual": "Passing excludes only the configured patterns implemented by auto:import-linter; it does not establish the full semantic benefit of the normative statement.",
+            "residual": "Passing excludes configured direct imports of effect-capable APIs; it does not prove that every call through a port is sequenced or recovered correctly.",
             "must_pass": "command:`lint-imports --config enforce/importlinter.toml` contract `ARCH-002 domain is pure` · `python tools/import_gate.py`",
             "must_reject": "discrimination:EFCT-001",
             "platforms": [
@@ -5744,7 +5886,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/EFCT.md",
-      "line": 45,
+      "line": 48,
       "applicability": {
         "units": [
           "application",
@@ -5803,7 +5945,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/EFCT.md",
-      "line": 52,
+      "line": 55,
       "applicability": {
         "units": [
           "application",
@@ -5860,7 +6002,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/EFCT.md",
-      "line": 65,
+      "line": 68,
       "applicability": {
         "units": [
           "application",
@@ -5917,7 +6059,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/EFCT.md",
-      "line": 72,
+      "line": 75,
       "applicability": {
         "units": [
           "application",
@@ -5974,7 +6116,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/EFCT.md",
-      "line": 81,
+      "line": 84,
       "applicability": {
         "units": [
           "application",
@@ -6031,7 +6173,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/EFCT.md",
-      "line": 88,
+      "line": 91,
       "applicability": {
         "units": [
           "application",
@@ -6090,7 +6232,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/EFCT.md",
-      "line": 95,
+      "line": 98,
       "applicability": {
         "units": [
           "application",
@@ -6147,7 +6289,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/EFCT.md",
-      "line": 104,
+      "line": 107,
       "applicability": {
         "units": [
           "application",
@@ -6204,7 +6346,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/EFCT.md",
-      "line": 116,
+      "line": 119,
       "applicability": {
         "units": [
           "application",
@@ -6263,7 +6405,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/EFCT.md",
-      "line": 123,
+      "line": 126,
       "applicability": {
         "units": [
           "application",
@@ -6322,7 +6464,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/EFCT.md",
-      "line": 131,
+      "line": 134,
       "applicability": {
         "units": [
           "application",
@@ -6379,7 +6521,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/EFCT.md",
-      "line": 143,
+      "line": 146,
       "applicability": {
         "units": [
           "application",
@@ -6436,7 +6578,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/EFCT.md",
-      "line": 150,
+      "line": 153,
       "applicability": {
         "units": [
           "application",
@@ -6495,7 +6637,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/EFCT.md",
-      "line": 157,
+      "line": 160,
       "applicability": {
         "units": [
           "application",
@@ -6550,7 +6692,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/EFCT.md",
-      "line": 165,
+      "line": 168,
       "applicability": {
         "units": [
           "application",

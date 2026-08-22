@@ -42,10 +42,12 @@ irreversible, so plan-then-apply is not a ceremony here but the only safe design
 
 | Rule | Where |
 |---|---|
-| `ARCH-001` dependencies point inward | `importlinter.toml`, contract 1 — checked, not asserted |
+| `ARCH-001` dependencies point toward policy | `dependency_boundaries`; legacy import contract 1 |
 | `ARCH-002` the domain imports nothing I/O-capable | contracts 2 and 3; `domain/` imports `dataclasses` and its own siblings |
 | `ARCH-003` adapters are independent | contract 4 |
-| `ARCH-004` one importer per foreign dependency | contracts 5 and 6: `time` in `clock/real.py`, `pathlib` in `files/real.py` |
+| `ARCH-018` every source has one role | explicit source roots and role paths in `pyproject.toml` |
+| `ARCH-019` app names no adapter | `dependency_boundaries`; the app imports only ports |
+| `ARCH-020` one technology-owning boundary | `time` is owned by `adapters/clock`; local shell wiring remains valid |
 | `ARCH-005` effects are named in the signature | `app/prune.py` — both ports are parameters |
 | `ARCH-007` ports are Protocols with a stated contract | `ports/clock.py`, `ports/files.py` docstrings |
 | `ARCH-008` the real/fake/faulty triad | `adapters/clock/`, `adapters/files/` — three each, unconditionally |
@@ -87,11 +89,10 @@ implementation detail when `ARCH-007` says a port states its error modes. They
 now live in `ports/errors.py`, and the app catches a contract's failure without
 knowing that adapters exist.
 
-**`ARCH-004` cannot bind the composition root.** The contract forbidding `time`
-outside the clock adapter failed on `shell/composition.py`, which reaches `time`
-transitively because wiring an adapter means importing it. A rule forbidding that
-would make `ARCH-011` impossible to satisfy at the same time. The contract now
-exempts the composition root, and says why.
+**The retired `ARCH-004` could not bind the composition root.** Its contract
+forbidding transitive reach to `time` failed on `shell/composition.py`, because
+wiring an adapter means importing it. `ARCH-020` checks direct ownership instead:
+the shell can select `SystemClock`, while only the clock boundary imports `time`.
 
 ## Running it
 

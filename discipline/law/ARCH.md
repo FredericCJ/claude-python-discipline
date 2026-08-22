@@ -2,7 +2,7 @@
 id: law/ARCH
 kind: law
 title: Architecture and Coupling
-tokens: 2921
+tokens: 3448
 load_when:
   - "new module"
   - "package layout"
@@ -21,40 +21,45 @@ python: ">=3.11"
 
 # Architecture and Coupling
 
-Hexagonal, with a functional core and an imperative shell. Not a preference: it is what
-makes a fault's origin follow from its layer, so an error can be localized without
-reading the code that produced it.
-
-Four layers, dependencies pointing inward only:
+Hexagonal, with pure policy and foreign effects behind typed contracts. The governed
+repository declares five roles, four of which contain executable policy or mechanisms:
 
 ```text
-shell        process entry, exit codes, effect execution
-  |
-adapters     the ONLY place a foreign dependency may be imported
-  |
-app          orchestration over the domain; no direct I/O
-  |
-domain       pure logic; total or Result-returning
+shell          repository-local wiring, process lifecycle, final escape handling
+  | \
+  |  adapters  foreign technology effects and representation translation
+  |     |
+  +-- app      policy sequencing and recovery through injected ports
+        |
+      domain   pure values, invariants, decisions and typed outcomes
+
+ports          typed contracts used by app and implemented by adapters
 ```
+
+Ports are declarations, not a fifth rung in an executable stack. Application code may
+invoke injected ports; it cannot name their concrete adapters or the foreign APIs behind
+them. The shell selects adapters locally. Nothing here describes wiring to another
+repository.
 
 ---
 
 ## Layer boundaries
 
-### ARCH-001 · Dependencies point inward only  [BINDING] [auto:import-linter]
-Each layer MUST import only from layers beneath it: `shell` to `adapters` to `app` to
-`domain`. `domain` imports nothing from the others. A project MAY map its own directory
-names onto these four in `[tool.agent-discipline]`; it MUST NOT add a fifth.
-- **Why** An inward-only graph is what lets a stack trace's deepest frame name the layer
-  that owns the fault. The names are canonical because the *order* is what carries the
-  meaning; a layer outside that order has no defined direction to point in.
-- **Check** `lint-imports --config enforce/importlinter.toml` contract `ARCH-001 layers point inward` · `python tools/import_gate.py`
+### ARCH-001 · Source dependencies point toward policy  [BINDING] [check:dependency_boundaries] [auto:import-linter]
+The domain MUST depend only on domain policy. Ports MAY depend on domain vocabulary.
+Application code MAY depend on domain and ports. Adapters MAY depend on domain and ports.
+The repository-local shell MAY depend on every role. A dependency in the reverse
+direction MUST fail. The more specific adapter-selection and adapter-independence cases
+are [ARCH-019] and [ARCH-003].
+- **Why** Direction toward policy keeps a technology or process decision from becoming a
+  prerequisite of the rule it serves, while ports let application orchestration invoke
+  effects without importing their implementations.
+- **Check** `python -m checks.dependency_boundaries` · `lint-imports --config enforce/importlinter.toml` · `python tools/import_gate.py`
 - **See** [DOC-014]
 
-The four names are how every layer-scoped mechanism finds its subject. A project laying its
-code out as `services/` and `composition/` without declaring the mapping has those files
-resolve to no layer at all, and every such check skips them **while reporting clean** —
-which is why the declaration is a rule and not a convenience.
+The role paths are how every role-scoped mechanism finds its subject. [ARCH-018] makes
+their completeness a separate decidable claim; dependency direction cannot be credited
+for files the declaration omitted.
 
 ### ARCH-002 · The domain imports nothing that can perform I/O  [BINDING] [auto:import-linter] [check:domain_purity]
 Modules under `domain/` MUST NOT import any I/O-capable module — filesystem, network,
@@ -65,20 +70,22 @@ transitively.
 - **Check** `lint-imports --config enforce/importlinter.toml` contract `ARCH-002 domain is pure` · `python tools/import_gate.py` · `python -m checks.domain_purity`
 - **See** [ARCH-006] · [law/DIAG]
 
-### ARCH-003 · No adapter imports another adapter  [BINDING] [auto:import-linter]
-Adapter modules MUST be independent of one another. Composition happens in `shell`, never
-between adapters.
+### ARCH-003 · Adapter boundaries remain independent  [BINDING] [check:dependency_boundaries] [auto:import-linter]
+One adapter boundary MUST NOT import another adapter boundary. Several cooperating modules
+inside one declared adapter boundary are allowed. Composition happens in the
+repository-local shell, never between independent adapters.
 - **Why** Independent adapters mean a misbehaving one cannot contaminate a healthy one,
   which is the property the fault tests exist to demonstrate.
-- **Check** `lint-imports --config enforce/importlinter.toml` contract `ARCH-003 adapters are independent` · `python tools/import_gate.py`
+- **Check** `python -m checks.dependency_boundaries` · `lint-imports --config enforce/importlinter.toml` contract `ARCH-003 adapters are independent` · `python tools/import_gate.py`
 
-### ARCH-004 · Each foreign dependency is imported in exactly one module  [BINDING] [auto:import-linter]
-A third-party or system-level dependency MUST appear in the import graph of exactly one
-adapter module.
-- **Why** This is what "push coupling to the very edge" means operationally: a library
-  reachable from two places has two possible blast radii and no single owner.
-- **Check** `lint-imports --config enforce/importlinter.toml` contract `ARCH-004 foreign dependencies are cornered` · `python tools/import_gate.py`
-- **See** [ARCH-010]
+### ARCH-004 · Each foreign dependency has one importer module  [RETIRED]
+Retired because a single module is a physical form, not the intended ownership property,
+and because a transitive ban on the local shell contradicted its wiring responsibility.
+One adapter *boundary* now owns all direct imports while shell-to-adapter reach is valid.
+- **Why** Retaining the id makes old findings resolvable without preserving the defective
+  one-file prescription or silently changing what historical citations meant.
+- **Superseded by** ARCH-020
+- **See** [ARCH-011] · [EVID-005]
 
 ### ARCH-005 · Effects are named in the signature  [BINDING] [check:explicit_effects]
 A function that performs an effect MUST receive the port that performs it as a parameter.
@@ -134,9 +141,10 @@ Serialization, path computation and hashing are *not* ports on purity grounds al
 are pure functions and belong in the domain. They become ports only when one of the eight
 justifications applies, most often containment of an unstable external format.
 
-### ARCH-011 · Adapters are selected at one composition root  [BINDING] [check:single_wiring_point]
-Concrete adapters MUST be chosen in a single wiring module in `shell`. No other module may
-name a concrete adapter class.
+### ARCH-011 · Adapters are selected at one local wiring root  [BINDING] [check:single_wiring_point]
+Concrete adapters MUST be chosen in a single repository-local wiring module in `shell`.
+No other module may select a concrete adapter class. This root does not assemble sibling
+repositories or define a larger application's topology.
 - **Why** Replaceability that requires edits in several places is not replaceability; the
   single root is what makes substitution in a test identical to substitution in production.
 - **Check** `python -m checks.single_wiring_point`
@@ -197,3 +205,22 @@ walks. Ports are contract declarations and are not a fifth executable layer.
   without claiming that the declared role is semantically correct.
 - **Check** `python -m checks.source_roles`
 - **See** [ARCH-001] · [EVID-003]
+
+### ARCH-019 · Application code names no concrete adapter  [BINDING] [check:dependency_boundaries]
+Application orchestration MUST invoke effects only through injected port contracts and
+MUST NOT directly import an adapter implementation. Adapter selection belongs to the
+repository-local shell.
+- **Why** This is the precise dependency-inversion seam. It permits the application to
+  cause effects while keeping policy independent of the technology that realizes them.
+- **Check** `python -m checks.dependency_boundaries`
+- **See** [ARCH-005] · [ARCH-011] · [EFCT-001]
+
+### ARCH-020 · One adapter boundary owns each technology  [BINDING] [check:dependency_boundaries]
+Every declared third-party or system technology import MUST have exactly one owning
+adapter boundary. Production code outside that boundary MUST NOT import the technology
+directly. Several modules inside the owner MAY import it, and the local shell MAY reach it
+transitively by importing the selected adapter.
+- **Why** Boundary ownership gives a foreign technology one containment and translation
+  site without forcing an adapter into one file or making valid local wiring impossible.
+- **Check** `python -m checks.dependency_boundaries`
+- **See** [ARCH-003] · [ARCH-011] · [DEP-002]

@@ -30,6 +30,7 @@ accepted only when it is that nearest file.
 
 from __future__ import annotations
 
+import re
 import tomllib
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -43,7 +44,9 @@ if TYPE_CHECKING:
 class UnitKind(StrEnum):
     """The two repository shapes governed by the discipline."""
 
+    ## Repository owning the complete delivered application.
     APPLICATION = "application"
+    ## One independently testable component repository.
     COMPONENT = "component"
 
 
@@ -73,6 +76,7 @@ def _reject(diagnostic_id: str, source: Path, detail: str) -> Never:
     @param diagnostic_id durable code identifying the rejected proposition
     @param source project file carrying the invalid value
     @param detail human-readable explanation and remediation clue
+    @return never; this helper always raises
     @throws DeclarationError unconditionally
     """
     raise DeclarationError(diagnostic_id, source, detail)
@@ -88,10 +92,16 @@ ROLE_TO_LAYER: Final[dict[str, str]] = {
     "adapters": "adapters",
     "shell": "shell",
 }
+## Public declaration role names, in stable presentation order.
 CANONICAL_ROLES: Final[tuple[str, ...]] = tuple(ROLE_TO_LAYER)
+## Legacy internal layer values consumed by v3 AST checks.
 CANONICAL_LAYERS: Final[tuple[str, ...]] = tuple(ROLE_TO_LAYER.values())
+## Documentation syntaxes whose form rules the corpus understands.
 DOC_ENGINES: Final[frozenset[str]] = frozenset({"doxygen", "sphinx", "none"})
+## TOML table name beneath ``tool``.
 TABLE: Final = "agent-discipline"
+## One top-level Python import identifier, excluding dotted module paths.
+IMPORT_ROOT: Final = re.compile(r"^[A-Za-z_]\w*$")
 
 
 def _relative_path(raw: object, *, field_name: str, source: Path) -> PurePosixPath:
@@ -165,10 +175,17 @@ class Declaration:
     source_roots: tuple[PurePosixPath, ...] = ()
     ## Canonical role name to repository-relative directory paths.
     role_paths: Mapping[str, tuple[PurePosixPath, ...]] = field(default_factory=dict)
+    ## Independently substitutable boundaries inside the broader adapters role.
+    adapter_boundaries: tuple[PurePosixPath, ...] = ()
     ## Legacy v3 segment aliases, retained only for migration and direct fixtures.
     layers: Mapping[str, str] = field(default_factory=dict)
+    ## Import root to its one repository-relative owning adapter boundary.
+    foreign_ownership: Mapping[str, PurePosixPath] = field(default_factory=dict)
+    ## Documentation comment syntax selected by the repository.
     doc_engine: str = "none"
+    ## Whether this repository deliberately projects every teaching artifact.
     pedagogical_full_projection: bool = False
+    ## The project file this declaration was parsed from.
     source: Path | None = None
 
     @property
@@ -256,6 +273,7 @@ class Declaration:
         return tuple(notes)
 
 
+## Conspicuously incomplete fallback used only by direct legacy check calls.
 DEFAULT: Final = Declaration()
 
 
@@ -350,6 +368,122 @@ def _parse_roles(
     return parsed
 
 
+def _parse_foreign_ownership(
+    table: Mapping[str, object],
+    path: Path,
+    roots: tuple[PurePosixPath, ...],
+    roles: Mapping[str, tuple[PurePosixPath, ...]],
+    boundaries: tuple[PurePosixPath, ...],
+) -> dict[str, PurePosixPath]:
+    """Parse direct foreign-import ownership records.
+
+    @param table the ``tool.agent-discipline`` table
+    @param path declaring project file
+    @param roots declared production roots
+    @param roles validated role paths
+    @param boundaries declared independently substitutable adapter boundaries
+    @return import root to its single owning adapter path
+    @throws DeclarationError when an import or owner is ambiguous or misplaced
+    """
+    raw_records = table.get("foreign_dependencies") or []
+    if not isinstance(raw_records, list):
+        _reject(
+            "DISC-PROJECT-010", path,
+            "foreign_dependencies must be an array of TOML tables",
+        )
+    parsed: dict[str, PurePosixPath] = {}
+    adapter_paths = roles.get("adapters", ())
+    for index, raw_record in enumerate(raw_records):
+        if not isinstance(raw_record, dict):
+            _reject(
+                "DISC-PROJECT-010", path,
+                f"foreign_dependencies[{index}] must be a TOML table",
+            )
+        unknown = set(raw_record) - {"import_name", "owner"}
+        if unknown:
+            _reject(
+                "DISC-PROJECT-010", path,
+                f"foreign_dependencies[{index}] has unknown fields "
+                f"{', '.join(sorted(unknown))}",
+            )
+        import_name = raw_record.get("import_name")
+        if not isinstance(import_name, str) or IMPORT_ROOT.fullmatch(import_name) is None:
+            _reject(
+                "DISC-PROJECT-011", path,
+                f"foreign_dependencies[{index}].import_name must be one Python import root",
+            )
+        if import_name in parsed:
+            _reject(
+                "DISC-PROJECT-011", path,
+                f"foreign import {import_name!r} has more than one owner",
+            )
+        owner = _relative_path(
+            raw_record.get("owner"),
+            field_name=f"foreign_dependencies[{index}].owner",
+            source=path,
+        )
+        if not any(owner == adapter or owner.is_relative_to(adapter) for adapter in adapter_paths):
+            _reject(
+                "DISC-PROJECT-012", path,
+                f"owner {owner} for {import_name!r} is not inside a declared adapter role",
+            )
+        if boundaries and not any(
+            owner == boundary or owner.is_relative_to(boundary) for boundary in boundaries
+        ):
+            _reject(
+                "DISC-PROJECT-012", path,
+                f"owner {owner} for {import_name!r} is not inside a declared "
+                "adapter boundary",
+            )
+        if not any(owner == root or owner.is_relative_to(root) for root in roots):
+            _reject(
+                "DISC-PROJECT-012", path,
+                f"owner {owner} for {import_name!r} lies outside source_roots",
+            )
+        parsed[import_name] = owner
+    return parsed
+
+
+def _parse_adapter_boundaries(
+    table: Mapping[str, object],
+    path: Path,
+    roles: Mapping[str, tuple[PurePosixPath, ...]],
+) -> tuple[PurePosixPath, ...]:
+    """Parse the independently substitutable boundaries inside adapters.
+
+    @param table the ``tool.agent-discipline`` table
+    @param path declaring project file
+    @param roles validated role paths
+    @return declared adapter boundary paths, possibly empty for v3 migration
+    @throws DeclarationError when a boundary lies outside or overlaps another
+    """
+    raw = table.get("adapter_boundaries")
+    if raw is None:
+        return ()
+    boundaries = _path_tuple(raw, field_name="adapter_boundaries", source=path)
+    adapter_paths = roles.get("adapters", ())
+    for boundary in boundaries:
+        if not any(
+            boundary == adapter or boundary.is_relative_to(adapter)
+            for adapter in adapter_paths
+        ):
+            _reject(
+                "DISC-PROJECT-013", path,
+                f"adapter boundary {boundary} lies outside the adapters role",
+            )
+        overlaps = [
+            other for other in boundaries
+            if other != boundary
+            and (boundary.is_relative_to(other) or other.is_relative_to(boundary))
+        ]
+        if overlaps:
+            _reject(
+                "DISC-PROJECT-013", path,
+                f"adapter boundary {boundary} overlaps {', '.join(map(str, overlaps))}",
+            )
+    return boundaries
+
+
 def parse(path: Path) -> Declaration:
     """Read one v4 declaration, refusing missing and unknown values.
 
@@ -408,11 +542,17 @@ def parse(path: Path) -> Declaration:
             )
         layers[str(segment)] = str(target)
 
+    roles = _parse_roles(table, path, roots)
+    boundaries = _parse_adapter_boundaries(table, path, roles)
     return Declaration(
         unit=unit,
         source_roots=roots,
-        role_paths=_parse_roles(table, path, roots),
+        role_paths=roles,
+        adapter_boundaries=boundaries,
         layers=layers,
+        foreign_ownership=_parse_foreign_ownership(
+            table, path, roots, roles, boundaries,
+        ),
         doc_engine=engine,
         pedagogical_full_projection=projection,
         source=path.resolve(),

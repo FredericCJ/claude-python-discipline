@@ -1,1 +1,1 @@
-"""The only layer permitted to import a foreign dependency (`ARCH-004`)."""
+"""Foreign technology boundaries and their shared pure support (`ARCH-020`)."""

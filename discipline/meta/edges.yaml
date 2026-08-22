@@ -43,9 +43,10 @@ applies_to:
   app:
     - ERR-004
     - EFCT-001
+    - ARCH-019   # invokes ports, never concrete adapters
   adapters:
     - ARCH-003   # no adapter imports another adapter
-    - ARCH-004   # each foreign dependency in exactly one module
+    - ARCH-020   # each technology has one owning adapter boundary
     - ARCH-007   # every port is a Protocol with a contract
     - ARCH-008   # real, fake and faulty
     - ARCH-009   # one contract suite against every adapter
@@ -83,10 +84,11 @@ tensions_with:
     note: >-
       Log every state transition, but never pay for a message the level will
       discard. Transitions are logged at debug with deferred arguments.
-  - pair: [DEP-004, ARCH-004]
+  - pair: [DEP-004, ARCH-020]
     note: >-
       Do not reimplement a solved problem, yet every foreign dependency is
-      coupling. Taking the library is right; taking it into one adapter is how.
+      coupling. Taking the library is right; giving one adapter boundary direct
+      ownership is how.
   - pair: [API-014, API-011]
     note: >-
       Prefer additive change, but adding a variant to a published union is
@@ -178,10 +180,10 @@ blocked_by:
 artifacts:
   enforce/templates/pyproject.toml:
     label: Canonical tool configuration
-    rules: [TYPE-001, TYPE-002, TYPE-003, ARCH-016, DIAG-008, DIAG-012, TEST-003, TEST-017]
+    rules: [TYPE-001, TYPE-002, TYPE-003, ARCH-016, ARCH-018, ARCH-020, DIAG-008, DIAG-012, TEST-003, TEST-017]
   enforce/importlinter.toml:
     label: Architecture contracts
-    rules: [ARCH-001, ARCH-002, ARCH-003, ARCH-004, EFCT-001, EFCT-012, DEP-001, API-004]
+    rules: [ARCH-001, ARCH-002, ARCH-003, EFCT-001, EFCT-012, DEP-001, API-004]
   enforce/Doxyfile:
     label: Documentation engine configuration
     rules: [DOC-005, DOC-007, DOC-010, DOC-011]

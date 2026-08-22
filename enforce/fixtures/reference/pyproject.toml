@@ -16,6 +16,10 @@
 unit = "application"
 source_roots = ["src"]
 doc_engine = "doxygen"
+adapter_boundaries = [
+    "src/refpkg/adapters/clock",
+    "src/refpkg/adapters/files",
+]
 
 [tool.agent-discipline.roles]
 domain = ["src/refpkg/domain"]
@@ -23,3 +27,7 @@ application = ["src/refpkg/app"]
 ports = ["src/refpkg/ports"]
 adapters = ["src/refpkg/adapters"]
 shell = ["src/refpkg/__init__.py", "src/refpkg/shell"]
+
+[[tool.agent-discipline.foreign_dependencies]]
+import_name = "time"
+owner = "src/refpkg/adapters/clock"

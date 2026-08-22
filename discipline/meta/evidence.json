@@ -842,7 +842,7 @@
         "component"
       ],
       "capabilities": [],
-      "failure_mode": "An inward-only graph is what lets a stack trace's deepest frame name the layer that owns the fault. The names are canonical because the *order* is what carries the meaning; a layer outside that order has no defined direction to point in.",
+      "failure_mode": "An outward source edge makes policy depend on technology or process setup, so a failure can no longer be attributed to the declared role without following that coupling.",
       "warrants": [
         {
           "source": "source:SE",
@@ -864,6 +864,20 @@
             "linux"
           ],
           "not_applicable": "never while this rule is active for the governed repository"
+        },
+        {
+          "mechanism": "check:dependency_boundaries",
+          "kind": "static",
+          "relation": "direct",
+          "proposition": "No direct local import crosses outward from domain, ports, application, or adapters under the declared repository-relative role paths; adapter-selection and cross-adapter edges are reported separately.",
+          "residual": "Passing decides direct Python imports only; runtime service lookup, plugin loading, and semantically misplaced declarations remain outside this strategy.",
+          "must_pass": "fixture:enforce/fixtures/reference",
+          "must_reject": "discrimination:ARCH-001",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "never for a declared v4 governed repository"
         }
       ],
       "observations": [],
@@ -952,13 +966,27 @@
             "linux"
           ],
           "not_applicable": "never while this rule is active for the governed repository"
+        },
+        {
+          "mechanism": "check:dependency_boundaries",
+          "kind": "static",
+          "relation": "direct",
+          "proposition": "No direct local import crosses between two distinct first-level boundaries beneath a declared adapters role path.",
+          "residual": "Passing does not detect runtime plugin lookup or decide whether several modules grouped inside one adapter boundary are cohesive.",
+          "must_pass": "fixture:enforce/fixtures/reference",
+          "must_reject": "discrimination:ARCH-003",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "fewer than two adapter boundaries exist"
         }
       ],
       "observations": [],
       "migration": {
         "source": "v3.3.0",
-        "disposition": "unchanged",
-        "guidance": "No adopter edit is required by this rule record."
+        "disposition": "clarified",
+        "guidance": "Declare independently substitutable adapter boundary paths; shared adapter support may remain outside them."
       }
     },
     "ARCH-004": {
@@ -967,7 +995,7 @@
         "component"
       ],
       "capabilities": [],
-      "failure_mode": "This is what \"push coupling to the very edge\" means operationally: a library reachable from two places has two possible blast radii and no single owner.",
+      "failure_mode": "The v3 one-importer-module form confused physical layout with ownership and its transitive shell ban contradicted repository-local adapter wiring.",
       "warrants": [
         {
           "source": "source:SE",
@@ -975,29 +1003,14 @@
           "confidence": "medium"
         }
       ],
-      "strategies": [
-        {
-          "mechanism": "auto:import-linter",
-          "kind": "tool",
-          "relation": "proxy",
-          "proposition": "auto:import-linter reports no diagnostic corresponding to ARCH-004 under the repository configuration and declared scan roots.",
-          "residual": "Passing excludes only the configured patterns implemented by auto:import-linter; it does not establish the full semantic benefit of the normative statement.",
-          "must_pass": "command:`lint-imports --config enforce/importlinter.toml` contract `ARCH-004 foreign dependencies are cornered` · `python tools/import_gate.py`",
-          "must_reject": "discrimination:ARCH-004",
-          "platforms": [
-            "windows",
-            "linux"
-          ],
-          "not_applicable": "never while this rule is active for the governed repository"
-        }
-      ],
+      "strategies": [],
       "observations": [
         "V3E-002"
       ],
       "migration": {
         "source": "v3.3.0",
-        "disposition": "clarified",
-        "guidance": "Review the clarified v4 wording and update local evidence if its observable claim changed."
+        "disposition": "superseded",
+        "guidance": "Replace per-module and transitive shell bans with a declared owning adapter boundary under ARCH-020."
       }
     },
     "ARCH-005": {
@@ -1507,6 +1520,84 @@
         "source": "v4.0.0",
         "disposition": "new",
         "guidance": "Declare all production import roots and map every contained Python path under [tool.agent-discipline.roles]."
+      }
+    },
+    "ARCH-019": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "Application orchestration that imports a concrete adapter couples policy sequencing to one technology and makes production substitution differ from test substitution.",
+      "warrants": [
+        {
+          "source": "source:SE",
+          "relation": "supports",
+          "confidence": "high"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:dependency_boundaries",
+          "kind": "static",
+          "relation": "direct",
+          "proposition": "No application-role Python module directly imports a local module assigned to the adapters role.",
+          "residual": "Passing does not detect dynamic imports or prove that an injected object actually satisfies the declared port's behavior.",
+          "must_pass": "fixture:enforce/fixtures/reference",
+          "must_reject": "discrimination:ARCH-019",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "never for a declared v4 governed repository"
+        }
+      ],
+      "observations": [
+        "V3E-002"
+      ],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Move concrete adapter imports from application code to the repository-local shell and inject a typed port."
+      }
+    },
+    "ARCH-020": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "Direct imports of one technology from several boundaries create several translation and failure-containment sites, while a one-file restriction creates ceremony and rejects valid local wiring.",
+      "warrants": [
+        {
+          "source": "source:SE",
+          "relation": "supports",
+          "confidence": "high"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:dependency_boundaries",
+          "kind": "static",
+          "relation": "direct",
+          "proposition": "Every direct import of a registered foreign import root occurs at or beneath its one declared owning adapter boundary path.",
+          "residual": "Passing covers registered direct Python imports; capability inference must separately detect undeclared technology, and runtime plugin lookup remains a review subject.",
+          "must_pass": "fixture:enforce/fixtures/reference",
+          "must_reject": "discrimination:ARCH-020",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "the repository imports no foreign or system technology in production code"
+        }
+      ],
+      "observations": [
+        "V3E-002"
+      ],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Replace ARCH-004 per-module contracts with one foreign_dependencies record per import root and owning adapter boundary."
       }
     },
     "DEP-001": {
@@ -3131,7 +3222,7 @@
         "component"
       ],
       "capabilities": [],
-      "failure_mode": "A pure core means a domain test needs no environment and a domain failure implicates no environment.",
+      "failure_mode": "Direct I/O in policy code makes orchestration depend on an environment and technology; forbidding injected port invocation instead would make useful application sequencing impossible.",
       "warrants": [
         {
           "source": "source:SE",
@@ -3145,7 +3236,7 @@
           "kind": "tool",
           "relation": "proxy",
           "proposition": "auto:import-linter reports no diagnostic corresponding to EFCT-001 under the repository configuration and declared scan roots.",
-          "residual": "Passing excludes only the configured patterns implemented by auto:import-linter; it does not establish the full semantic benefit of the normative statement.",
+          "residual": "Passing excludes configured direct imports of effect-capable APIs; it does not prove that every call through a port is sequenced or recovered correctly.",
           "must_pass": "command:`lint-imports --config enforce/importlinter.toml` contract `ARCH-002 domain is pure` · `python tools/import_gate.py`",
           "must_reject": "discrimination:EFCT-001",
           "platforms": [

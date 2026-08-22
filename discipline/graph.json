@@ -723,6 +723,16 @@
    }
   },
   {
+   "id": "mech:check:dependency_boundaries",
+   "type": "mechanism",
+   "label": "check:dependency_boundaries",
+   "path": "enforce/checks/dependency_boundaries.py",
+   "attrs": {
+    "family": "check",
+    "implemented": "true"
+   }
+  },
+  {
    "id": "mech:check:deviation_recorded",
    "type": "mechanism",
    "label": "check:deviation_recorded",
@@ -1516,7 +1526,7 @@
    "type": "module",
    "label": "Architecture and Coupling",
    "path": "discipline/law/ARCH.md",
-   "tokens": 2921,
+   "tokens": 3448,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1564,7 +1574,7 @@
    "type": "module",
    "label": "Effects, State and Time",
    "path": "discipline/law/EFCT.md",
-   "tokens": 2286,
+   "tokens": 2362,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1670,7 +1680,7 @@
    "type": "module",
    "label": "Discipline Kernel",
    "path": "discipline/KERNEL.md",
-   "tokens": 1910,
+   "tokens": 1923,
    "attrs": {
     "decay": "none",
     "kind": "meta"
@@ -2022,9 +2032,9 @@
   {
    "id": "ARCH-001",
    "type": "rule",
-   "label": "Dependencies point inward only",
-   "path": "discipline/law/ARCH.md:44",
-   "tokens": 68,
+   "label": "Source dependencies point toward policy",
+   "path": "discipline/law/ARCH.md:48",
+   "tokens": 101,
    "attrs": {
     "force": "BINDING",
     "module": "law/ARCH"
@@ -2034,7 +2044,7 @@
    "id": "ARCH-002",
    "type": "rule",
    "label": "The domain imports nothing that can perform I/O",
-   "path": "discipline/law/ARCH.md:59",
+   "path": "discipline/law/ARCH.md:64",
    "tokens": 48,
    "attrs": {
     "force": "BINDING",
@@ -2044,9 +2054,9 @@
   {
    "id": "ARCH-003",
    "type": "rule",
-   "label": "No adapter imports another adapter",
-   "path": "discipline/law/ARCH.md:68",
-   "tokens": 29,
+   "label": "Adapter boundaries remain independent",
+   "path": "discipline/law/ARCH.md:73",
+   "tokens": 61,
    "attrs": {
     "force": "BINDING",
     "module": "law/ARCH"
@@ -2055,11 +2065,11 @@
   {
    "id": "ARCH-004",
    "type": "rule",
-   "label": "Each foreign dependency is imported in exactly one module",
-   "path": "discipline/law/ARCH.md:75",
-   "tokens": 28,
+   "label": "Each foreign dependency has one importer module",
+   "path": "discipline/law/ARCH.md:81",
+   "tokens": 72,
    "attrs": {
-    "force": "BINDING",
+    "force": "RETIRED",
     "module": "law/ARCH"
    }
   },
@@ -2067,7 +2077,7 @@
    "id": "ARCH-005",
    "type": "rule",
    "label": "Effects are named in the signature",
-   "path": "discipline/law/ARCH.md:83",
+   "path": "discipline/law/ARCH.md:90",
    "tokens": 56,
    "attrs": {
     "force": "BINDING",
@@ -2078,7 +2088,7 @@
    "id": "ARCH-006",
    "type": "rule",
    "label": "Domain functions are total or return a typed result",
-   "path": "discipline/law/ARCH.md:91",
+   "path": "discipline/law/ARCH.md:98",
    "tokens": 40,
    "attrs": {
     "force": "BINDING",
@@ -2089,7 +2099,7 @@
    "id": "ARCH-007",
    "type": "rule",
    "label": "Every port is a Protocol with a published contract",
-   "path": "discipline/law/ARCH.md:102",
+   "path": "discipline/law/ARCH.md:109",
    "tokens": 44,
    "attrs": {
     "force": "BINDING",
@@ -2100,7 +2110,7 @@
    "id": "ARCH-008",
    "type": "rule",
    "label": "Every port has a real, a fake and a faulty adapter",
-   "path": "discipline/law/ARCH.md:110",
+   "path": "discipline/law/ARCH.md:117",
    "tokens": 19,
    "attrs": {
     "force": "BINDING",
@@ -2111,7 +2121,7 @@
    "id": "ARCH-009",
    "type": "rule",
    "label": "One contract suite runs against every adapter",
-   "path": "discipline/law/ARCH.md:116",
+   "path": "discipline/law/ARCH.md:123",
    "tokens": 30,
    "attrs": {
     "force": "BINDING",
@@ -2122,7 +2132,7 @@
    "id": "ARCH-010",
    "type": "rule",
    "label": "A port earns its place from a stated justification",
-   "path": "discipline/law/ARCH.md:123",
+   "path": "discipline/law/ARCH.md:130",
    "tokens": 98,
    "attrs": {
     "force": "BINDING",
@@ -2132,9 +2142,9 @@
   {
    "id": "ARCH-011",
    "type": "rule",
-   "label": "Adapters are selected at one composition root",
-   "path": "discipline/law/ARCH.md:137",
-   "tokens": 33,
+   "label": "Adapters are selected at one local wiring root",
+   "path": "discipline/law/ARCH.md:144",
+   "tokens": 63,
    "attrs": {
     "force": "BINDING",
     "module": "law/ARCH"
@@ -2144,7 +2154,7 @@
    "id": "ARCH-012",
    "type": "rule",
    "label": "No test-mode branch in production code",
-   "path": "discipline/law/ARCH.md:148",
+   "path": "discipline/law/ARCH.md:156",
    "tokens": 35,
    "attrs": {
     "force": "BINDING",
@@ -2155,7 +2165,7 @@
    "id": "ARCH-013",
    "type": "rule",
    "label": "Framework and transport types stay out of the domain",
-   "path": "discipline/law/ARCH.md:155",
+   "path": "discipline/law/ARCH.md:163",
    "tokens": 43,
    "attrs": {
     "force": "BINDING",
@@ -2166,7 +2176,7 @@
    "id": "ARCH-014",
    "type": "rule",
    "label": "Translation between representations is explicit",
-   "path": "discipline/law/ARCH.md:162",
+   "path": "discipline/law/ARCH.md:170",
    "tokens": 44,
    "attrs": {
     "force": "BINDING",
@@ -2177,7 +2187,7 @@
    "id": "ARCH-015",
    "type": "rule",
    "label": "Metaprogramming leaves the four questions answerable",
-   "path": "discipline/law/ARCH.md:169",
+   "path": "discipline/law/ARCH.md:177",
    "tokens": 45,
    "attrs": {
     "force": "BINDING",
@@ -2188,7 +2198,7 @@
    "id": "ARCH-016",
    "type": "rule",
    "label": "Module complexity stays within budget",
-   "path": "discipline/law/ARCH.md:176",
+   "path": "discipline/law/ARCH.md:184",
    "tokens": 18,
    "attrs": {
     "force": "BINDING",
@@ -2199,7 +2209,7 @@
    "id": "ARCH-017",
    "type": "rule",
    "label": "Prefer the direct call to the abstraction",
-   "path": "discipline/law/ARCH.md:182",
+   "path": "discipline/law/ARCH.md:190",
    "tokens": 38,
    "attrs": {
     "force": "ADVISORY",
@@ -2210,8 +2220,30 @@
    "id": "ARCH-018",
    "type": "rule",
    "label": "Every production source has one declared role",
-   "path": "discipline/law/ARCH.md:190",
+   "path": "discipline/law/ARCH.md:198",
    "tokens": 90,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/ARCH"
+   }
+  },
+  {
+   "id": "ARCH-019",
+   "type": "rule",
+   "label": "Application code names no concrete adapter",
+   "path": "discipline/law/ARCH.md:209",
+   "tokens": 53,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/ARCH"
+   }
+  },
+  {
+   "id": "ARCH-020",
+   "type": "rule",
+   "label": "One adapter boundary owns each technology",
+   "path": "discipline/law/ARCH.md:218",
+   "tokens": 84,
    "attrs": {
     "force": "BINDING",
     "module": "law/ARCH"
@@ -2704,9 +2736,9 @@
   {
    "id": "EFCT-001",
    "type": "rule",
-   "label": "Effects are performed only in shell and adapters",
+   "label": "Foreign effects stay behind ports",
    "path": "discipline/law/EFCT.md:38",
-   "tokens": 22,
+   "tokens": 80,
    "attrs": {
     "force": "BINDING",
     "module": "law/EFCT"
@@ -2716,7 +2748,7 @@
    "id": "EFCT-002",
    "type": "rule",
    "label": "Time, randomness and environment enter through ports",
-   "path": "discipline/law/EFCT.md:45",
+   "path": "discipline/law/EFCT.md:48",
    "tokens": 33,
    "attrs": {
     "force": "BINDING",
@@ -2727,7 +2759,7 @@
    "id": "EFCT-003",
    "type": "rule",
    "label": "Determinism is the default",
-   "path": "discipline/law/EFCT.md:52",
+   "path": "discipline/law/EFCT.md:55",
    "tokens": 50,
    "attrs": {
     "force": "BINDING",
@@ -2738,7 +2770,7 @@
    "id": "EFCT-004",
    "type": "rule",
    "label": "Mutating operations are commands, not raw writes",
-   "path": "discipline/law/EFCT.md:65",
+   "path": "discipline/law/EFCT.md:68",
    "tokens": 39,
    "attrs": {
     "force": "BINDING",
@@ -2749,7 +2781,7 @@
    "id": "EFCT-005",
    "type": "rule",
    "label": "Destructive operations plan before they apply",
-   "path": "discipline/law/EFCT.md:72",
+   "path": "discipline/law/EFCT.md:75",
    "tokens": 47,
    "attrs": {
     "force": "BINDING",
@@ -2760,7 +2792,7 @@
    "id": "EFCT-006",
    "type": "rule",
    "label": "A dry run is the pipeline truncated, never a second path",
-   "path": "discipline/law/EFCT.md:81",
+   "path": "discipline/law/EFCT.md:84",
    "tokens": 35,
    "attrs": {
     "force": "BINDING",
@@ -2771,7 +2803,7 @@
    "id": "EFCT-007",
    "type": "rule",
    "label": "A multi-effect apply is journalled",
-   "path": "discipline/law/EFCT.md:88",
+   "path": "discipline/law/EFCT.md:91",
    "tokens": 48,
    "attrs": {
     "force": "BINDING",
@@ -2782,7 +2814,7 @@
    "id": "EFCT-008",
    "type": "rule",
    "label": "Atomicity claims are qualified",
-   "path": "discipline/law/EFCT.md:95",
+   "path": "discipline/law/EFCT.md:98",
    "tokens": 50,
    "attrs": {
     "force": "BINDING",
@@ -2793,7 +2825,7 @@
    "id": "EFCT-009",
    "type": "rule",
    "label": "What is not guaranteed is stated",
-   "path": "discipline/law/EFCT.md:104",
+   "path": "discipline/law/EFCT.md:107",
    "tokens": 56,
    "attrs": {
     "force": "BINDING",
@@ -2804,7 +2836,7 @@
    "id": "EFCT-010",
    "type": "rule",
    "label": "State transitions are explicit and closed",
-   "path": "discipline/law/EFCT.md:116",
+   "path": "discipline/law/EFCT.md:119",
    "tokens": 30,
    "attrs": {
     "force": "BINDING",
@@ -2815,7 +2847,7 @@
    "id": "EFCT-011",
    "type": "rule",
    "label": "Illegal transitions are refused before any effect",
-   "path": "discipline/law/EFCT.md:123",
+   "path": "discipline/law/EFCT.md:126",
    "tokens": 41,
    "attrs": {
     "force": "BINDING",
@@ -2826,7 +2858,7 @@
    "id": "EFCT-012",
    "type": "rule",
    "label": "Persistent state has exactly one owning path",
-   "path": "discipline/law/EFCT.md:131",
+   "path": "discipline/law/EFCT.md:134",
    "tokens": 41,
    "attrs": {
     "force": "BINDING",
@@ -2837,7 +2869,7 @@
    "id": "EFCT-013",
    "type": "rule",
    "label": "Concurrency is introduced only with stated semantics",
-   "path": "discipline/law/EFCT.md:143",
+   "path": "discipline/law/EFCT.md:146",
    "tokens": 36,
    "attrs": {
     "force": "BINDING",
@@ -2848,7 +2880,7 @@
    "id": "EFCT-014",
    "type": "rule",
    "label": "Shared mutable state is guarded by a stated lock order",
-   "path": "discipline/law/EFCT.md:150",
+   "path": "discipline/law/EFCT.md:153",
    "tokens": 25,
    "attrs": {
     "force": "BINDING",
@@ -2859,7 +2891,7 @@
    "id": "EFCT-015",
    "type": "rule",
    "label": "Writer exclusion is enforced; contention is a result",
-   "path": "discipline/law/EFCT.md:157",
+   "path": "discipline/law/EFCT.md:160",
    "tokens": 47,
    "attrs": {
     "force": "BINDING",
@@ -2870,7 +2902,7 @@
    "id": "EFCT-016",
    "type": "rule",
    "label": "Prefer the sequential design",
-   "path": "discipline/law/EFCT.md:165",
+   "path": "discipline/law/EFCT.md:168",
    "tokens": 28,
    "attrs": {
     "force": "ADVISORY",
@@ -4234,16 +4266,6 @@
    "attrs": {
     "kind": "error",
     "tool": "pytest"
-   }
-  },
-  {
-   "id": "trigger:err:foreign dependencies are cornered",
-   "type": "trigger",
-   "label": "foreign dependencies are cornered",
-   "attrs": {
-    "kind": "error",
-    "tool": "import-linter",
-    "contract": "ARCH-004 foreign dependencies are cornered"
    }
   },
   {
@@ -5999,18 +6021,6 @@
   },
   {
    "type": "applies_to",
-   "src": "ARCH-004",
-   "dst": "artifact:enforce/importlinter.toml",
-   "origin": "declared"
-  },
-  {
-   "type": "applies_to",
-   "src": "ARCH-004",
-   "dst": "layer:adapters",
-   "origin": "declared"
-  },
-  {
-   "type": "applies_to",
    "src": "ARCH-006",
    "dst": "layer:domain",
    "origin": "declared"
@@ -6073,6 +6083,30 @@
    "type": "applies_to",
    "src": "ARCH-016",
    "dst": "artifact:enforce/templates/pyproject.toml",
+   "origin": "declared"
+  },
+  {
+   "type": "applies_to",
+   "src": "ARCH-018",
+   "dst": "artifact:enforce/templates/pyproject.toml",
+   "origin": "declared"
+  },
+  {
+   "type": "applies_to",
+   "src": "ARCH-019",
+   "dst": "layer:app",
+   "origin": "declared"
+  },
+  {
+   "type": "applies_to",
+   "src": "ARCH-020",
+   "dst": "artifact:enforce/templates/pyproject.toml",
+   "origin": "declared"
+  },
+  {
+   "type": "applies_to",
+   "src": "ARCH-020",
+   "dst": "layer:adapters",
    "origin": "declared"
   },
   {
@@ -6390,7 +6424,13 @@
   {
    "type": "cites",
    "src": "ARCH-004",
-   "dst": "ARCH-010",
+   "dst": "ARCH-011",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "ARCH-004",
+   "dst": "EVID-005",
    "origin": "derived"
   },
   {
@@ -6421,6 +6461,42 @@
    "type": "cites",
    "src": "ARCH-018",
    "dst": "EVID-003",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "ARCH-019",
+   "dst": "ARCH-005",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "ARCH-019",
+   "dst": "ARCH-011",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "ARCH-019",
+   "dst": "EFCT-001",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "ARCH-020",
+   "dst": "ARCH-003",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "ARCH-020",
+   "dst": "ARCH-011",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "ARCH-020",
+   "dst": "DEP-002",
    "origin": "derived"
   },
   {
@@ -6552,7 +6628,19 @@
   {
    "type": "cites",
    "src": "EFCT-001",
-   "dst": "law/ARCH",
+   "dst": "ARCH-005",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "EFCT-001",
+   "dst": "ARCH-019",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "EFCT-001",
+   "dst": "ARCH-020",
    "origin": "derived"
   },
   {
@@ -7099,6 +7187,18 @@
    "type": "contains",
    "src": "law/ARCH",
    "dst": "ARCH-018",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/ARCH",
+   "dst": "ARCH-019",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/ARCH",
+   "dst": "ARCH-020",
    "origin": "derived"
   },
   {
@@ -8219,6 +8319,12 @@
   },
   {
    "type": "enforced_by",
+   "src": "ARCH-001",
+   "dst": "mech:check:dependency_boundaries",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
    "src": "ARCH-002",
    "dst": "mech:auto:import-linter",
    "origin": "derived"
@@ -8237,8 +8343,8 @@
   },
   {
    "type": "enforced_by",
-   "src": "ARCH-004",
-   "dst": "mech:auto:import-linter",
+   "src": "ARCH-003",
+   "dst": "mech:check:dependency_boundaries",
    "origin": "derived"
   },
   {
@@ -8317,6 +8423,18 @@
    "type": "enforced_by",
    "src": "ARCH-018",
    "dst": "mech:check:source_roles",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "ARCH-019",
+   "dst": "mech:check:dependency_boundaries",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "ARCH-020",
+   "dst": "mech:check:dependency_boundaries",
    "origin": "derived"
   },
   {
@@ -9462,6 +9580,30 @@
   {
    "type": "grounds_on",
    "src": "ARCH-018",
+   "dst": "fact/py-typing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "ARCH-019",
+   "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "ARCH-019",
+   "dst": "fact/py-typing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "ARCH-020",
+   "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "ARCH-020",
    "dst": "fact/py-typing",
    "origin": "derived"
   },
@@ -11681,6 +11823,12 @@
   },
   {
    "type": "supersedes",
+   "src": "ARCH-020",
+   "dst": "ARCH-004",
+   "origin": "derived"
+  },
+  {
+   "type": "supersedes",
    "src": "TEAMS-002",
    "dst": "ALLOC-008",
    "origin": "derived"
@@ -11701,13 +11849,6 @@
   },
   {
    "type": "tensions_with",
-   "src": "ARCH-004",
-   "dst": "DEP-004",
-   "origin": "declared",
-   "note": "Do not reimplement a solved problem, yet every foreign dependency is coupling. Taking the library is right; taking it into one adapter is how."
-  },
-  {
-   "type": "tensions_with",
    "src": "ARCH-007",
    "dst": "ARCH-017",
    "origin": "declared",
@@ -11722,10 +11863,17 @@
   },
   {
    "type": "tensions_with",
-   "src": "DEP-004",
-   "dst": "ARCH-004",
+   "src": "ARCH-020",
+   "dst": "DEP-004",
    "origin": "declared",
-   "note": "Do not reimplement a solved problem, yet every foreign dependency is coupling. Taking the library is right; taking it into one adapter is how."
+   "note": "Do not reimplement a solved problem, yet every foreign dependency is coupling. Taking the library is right; giving one adapter boundary direct ownership is how."
+  },
+  {
+   "type": "tensions_with",
+   "src": "DEP-004",
+   "dst": "ARCH-020",
+   "origin": "declared",
+   "note": "Do not reimplement a solved problem, yet every foreign dependency is coupling. Taking the library is right; giving one adapter boundary direct ownership is how."
   },
   {
    "type": "tensions_with",
@@ -11847,12 +11995,6 @@
    "type": "triggered_by",
    "src": "ARCH-003",
    "dst": "trigger:err:adapters are independent",
-   "origin": "derived"
-  },
-  {
-   "type": "triggered_by",
-   "src": "ARCH-004",
-   "dst": "trigger:err:foreign dependencies are cornered",
    "origin": "derived"
   },
   {

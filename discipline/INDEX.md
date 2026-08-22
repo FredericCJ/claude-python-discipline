@@ -10,13 +10,13 @@ decay: none
 
 # Rule Index
 
-192 rules across 14 modules. Grep this file for a rule id, then open only the module that owns it.
+194 rules across 14 modules. Grep this file for a rule id, then open only the module that owns it.
 
 **The columns are different claims.** `Force` is the normative obligation. `Verifier` says what strategy is available, never that it passed. `Relation` says whether the observable proposition is the rule itself or only a proxy. `Rejection` records whether the current matrix has watched the rule reject a counterexample. `Platforms`, `Residual`, and `Field` state where the claim is supported, what can remain wrong, and what named adopters observed.
 
 **A proxy cannot decide its parent semantic rule.** Passing its proposition establishes only the stated syntax or behavior and leaves the printed residual. `rule-level witnessed` is deliberately weaker than v4's target: the inherited matrix proves that some strategy rejected a case for that rule, but cannot yet attribute the rejection to one exact strategy.
 
-14 of 164 binding rules lack an available declared strategy. 58 of 164 rules with automated strategies have inherited rule-level rejection evidence. 168 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
+14 of 165 binding rules lack an available declared strategy. 59 of 165 rules with automated strategies have inherited rule-level rejection evidence. 167 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
 
 ## Modules
 
@@ -30,11 +30,11 @@ decay: none
 | [frame/architecture](frame/architecture.md) | frame | 2338 | 0 | which paradigm, tradeoff, refactoring, legacy code, coupling, cohesion |
 | [frame/spec](frame/spec.md) | frame | 1972 | 0 | write a spec, requirements, elicitation, design document, traceability, reusability |
 | [law/API](law/API.md) | law | 2445 | 15 | public API, contract, versioning, breaking change, CLI, JSON output |
-| [law/ARCH](law/ARCH.md) | law | 2921 | 18 | new module, package layout, port, adapter, hexagonal, dependency injection |
+| [law/ARCH](law/ARCH.md) | law | 3448 | 20 | new module, package layout, port, adapter, hexagonal, dependency injection |
 | [law/DEP](law/DEP.md) | law | 2111 | 14 | add a dependency, third party library, lockfile, environment, code generation, generated file |
 | [law/DIAG](law/DIAG.md) | law | 2634 | 16 | exception, traceback, logging, error message, error code, correlation id |
 | [law/DOC](law/DOC.md) | law | 2367 | 14 | docstring, documentation comment, doxygen, @param, @return, document this function |
-| [law/EFCT](law/EFCT.md) | law | 2286 | 16 | write a file, mutation, state machine, transaction, rollback, dry run |
+| [law/EFCT](law/EFCT.md) | law | 2362 | 16 | write a file, mutation, state machine, transaction, rollback, dry run |
 | [law/ERR](law/ERR.md) | law | 2609 | 16 | raise, except, Result, error type, exception hierarchy, validation |
 | [law/EVID](law/EVID.md) | law | 1288 | 8 | why is this a rule, verification strategy, mechanism, proxy, residual, discrimination |
 | [law/FLOW](law/FLOW.md) | law | 2256 | 13 | definition of done, before i commit, what should i do first, ADR, decision record, review |
@@ -70,17 +70,17 @@ decay: none
 
 | Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
 |---|---|---|---|---|---|---|---|---|
-| `ARCH-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | none | Dependencies point inward only |
+| `ARCH-001` | BINDING | `mixed-verifiers` | `direct`, `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | none | Source dependencies point toward policy |
 | `ARCH-002` | BINDING | `mixed-verifiers` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | none | The domain imports nothing that can perform I/O |
-| `ARCH-003` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | none | No adapter imports another adapter |
-| `ARCH-004` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | `V3E-002` | Each foreign dependency is imported in exactly one module |
+| `ARCH-003` | BINDING | `mixed-verifiers` | `direct`, `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | none | Adapter boundaries remain independent |
+| `ARCH-004` | RETIRED | `retired` | n/a | n/a | n/a | n/a | `V3E-002` | Each foreign dependency has one importer module |
 | `ARCH-005` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:explicit_effects; it does no… | none | Effects are named in the signature |
 | `ARCH-006` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | Domain functions are total or return a typed result |
 | `ARCH-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_every_port_is_a_proto… | none | Every port is a Protocol with a published contract |
 | `ARCH-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_port_triad; it does n… | `V3E-008` | Every port has a real, a fake and a faulty adapter |
 | `ARCH-009` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_contract_suite_per_ad… | `V3E-008` | One contract suite runs against every adapter |
 | `ARCH-010` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_port_justification; i… | none | A port earns its place from a stated justification |
-| `ARCH-011` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:single_wiring_point; it does… | none | Adapters are selected at one composition root |
+| `ARCH-011` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:single_wiring_point; it does… | none | Adapters are selected at one local wiring root |
 | `ARCH-012` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:no_test_branches; it does no… | none | No test-mode branch in production code |
 | `ARCH-013` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:domain_purity; it does not e… | none | Framework and transport types stay out of the domain |
 | `ARCH-014` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:domain_purity; it does not e… | none | Translation between representations is explicit |
@@ -88,6 +88,8 @@ decay: none
 | `ARCH-016` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:ruff:C901; it does not establ… | none | Module complexity stays within budget |
 | `ARCH-017` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Prefer the direct call to the abstraction |
 | `ARCH-018` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Passing proves path coverage only; it cannot establish that a human assigned each file to the s… | `V3E-001` | Every production source has one declared role |
+| `ARCH-019` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Passing does not detect dynamic imports or prove that an injected object actually satisfies the… | `V3E-002` | Application code names no concrete adapter |
+| `ARCH-020` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Passing covers registered direct Python imports; capability inference must separately detect un… | `V3E-002` | One adapter boundary owns each technology |
 
 ### law/DEP
 
@@ -152,7 +154,7 @@ decay: none
 
 | Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
 |---|---|---|---|---|---|---|---|---|
-| `EFCT-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | none | Effects are performed only in shell and adapters |
+| `EFCT-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes configured direct imports of effect-capable APIs; it does not prove that every… | none | Foreign effects stay behind ports |
 | `EFCT-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:explicit_effects; it does no… | none | Time, randomness and environment enter through ports |
 | `EFCT-003` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_determinism; it does… | none | Determinism is the default |
 | `EFCT-004` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:plan_apply; it does not esta… | none | Mutating operations are commands, not raw writes |

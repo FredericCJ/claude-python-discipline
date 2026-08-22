@@ -2,7 +2,7 @@
 id: meta/KERNEL
 kind: meta
 title: Discipline Kernel
-tokens: 1910
+tokens: 1923
 load_when: ["python", "discipline", "how should i", "what are the rules"]
 decay: none
 ---
@@ -44,10 +44,10 @@ its counterparts, parent repository or whole-application integration. See [meta/
 
 ## Always true
 
-1. Dependencies point inward; the domain imports nothing that can perform I/O. `ARCH-001/002`
-2. A foreign dependency is imported in exactly one adapter. `ARCH-004`
-3. Effects are parameters, never reached for. `ARCH-005`, `EFCT-002`
-4. Every port has real + fake + faulty adapters and one shared contract suite. `ARCH-007/008/009`
+1. Source dependencies point toward policy; every production file has one role. `ARCH-001/018`
+2. One adapter boundary owns each technology; the local shell wires it. `ARCH-011/020`
+3. Application policy invokes injected ports, never concrete adapters. `ARCH-005/019`, `EFCT-001`
+4. Port substitutes share one observable contract and scheduled fault evidence. `ARCH-007/008/009`
 5. Two error channels only: typed results for contract outcomes, raised for the exceptional. `ERR-001`
 6. Result unions are exhaustively narrowed to `Never`. `ERR-002`
 7. A layer produces only its own error family. `ERR-004`

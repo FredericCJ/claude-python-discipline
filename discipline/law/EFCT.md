@@ -2,7 +2,7 @@
 id: law/EFCT
 kind: law
 title: Effects, State and Time
-tokens: 2286
+tokens: 2362
 load_when:
   - "write a file"
   - "mutation"
@@ -35,12 +35,15 @@ never a single function that decides and acts.
 
 ## Explicit effects
 
-### EFCT-001 · Effects are performed only in shell and adapters  [BINDING] [auto:import-linter]
-Domain and app code MUST NOT perform an effect. They compute a description of one.
-- **Why** A pure core means a domain test needs no environment and a domain failure
-  implicates no environment.
+### EFCT-001 · Foreign effects stay behind ports  [BINDING] [auto:import-linter]
+Domain code MUST perform no effects. Application orchestration MAY invoke effects through
+injected ports, but MUST NOT import a foreign API or perform its I/O directly. Adapters
+perform foreign technology effects; the repository-local shell owns process setup, final
+rendering and escape handling.
+- **Why** The domain remains a pure policy oracle while application code can sequence real
+  work without knowing the technology or representation that performs it.
 - **Check** `lint-imports --config enforce/importlinter.toml` contract `ARCH-002 domain is pure` · `python tools/import_gate.py`
-- **See** [law/ARCH]
+- **See** [ARCH-005] · [ARCH-019] · [ARCH-020]
 
 ### EFCT-002 · Time, randomness and environment enter through ports  [BINDING] [check:explicit_effects]
 The wall clock, random sources, environment variables and process identity MUST be reached

@@ -114,7 +114,7 @@ Domain modules MUST NOT use `Any`, explicit or implicit.
 - **Why** `Any` erases the guarantee the diagnostic envelope's `value` and `expected`
   fields depend on.
 - **Check** `mypy --strict --disallow-any-explicit src/` · fitness `test_no_any_in_domain`
-- **See** [fact/py-typing#strict-flags] · [TYPE-013] · [ARCH-004]
+- **See** [fact/py-typing#strict-flags] · [TYPE-013] · [ARCH-020]
 ```
 
 ### 3.1 The heading line
