@@ -1,6 +1,6 @@
 # A Python engineering discipline was unzipped here
 
-**Release v3.2.0.** The archive placed one directory at the root of this repository:
+**Release v3.3.0.** The archive placed one directory at the root of this repository:
 
 ```
 .agent/
@@ -88,7 +88,7 @@ overwritten by the next update.
 **This file has done its job — delete it.** Nothing references it, and re-running the
 integrator does not need it.
 
-`RELEASE-NOTES-v1.0.0.md` beside it is worth reading once before you rely on the discipline:
+`RELEASE-NOTES-v3.3.0.md` beside it is worth reading once before you rely on the discipline:
 it states what is mechanically enforced and, more usefully, what is not. Delete it too when
 you have.
 

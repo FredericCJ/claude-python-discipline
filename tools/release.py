@@ -1,6 +1,6 @@
 """Build the redistributable archive of this discipline.
 
-    python tools/release.py                  # -> dist/agent-discipline-v1.1.0.zip
+    python tools/release.py                  # -> dist/agent-discipline-v3.3.0.zip
     python tools/release.py --keep-staging    # leave the staged tree for inspection
 
 The archive is produced by running the real installer against a scratch
@@ -14,7 +14,7 @@ documents at the root. Those are there because `.agent/` is a hidden directory:
 an agent told "integrate the discipline that is already in this repo" has to be
 able to see that something arrived.
 
-The seven-step gate runs first, from `tools/gate.py`: an archive is never cut
+The eleven-step gate runs first, from `tools/gate.py`: an archive is never cut
 from a tree that fails it. Until v1.1.0 nothing here checked that, so a release
 could be, and was, buildable from a tree with stale generated artifacts and a
 failing suite. Three more gates then stand between the staged tree and the zip,

@@ -95,7 +95,7 @@ is reported and left untouched; the other host can still be integrated safely.
 ```bash
 python tools/vendor.py check   ../some-repo   # local edits to read-only files
 python tools/harvest.py        ../some-repo   # discipline-level findings, upstream
-python tools/release.py                       # -> dist/agent-discipline-v3.2.0.zip
+python tools/release.py                       # -> dist/agent-discipline-v3.3.0.zip
 ```
 
 `release.py` builds the redistributable archive by running `vendor.py install` against a
