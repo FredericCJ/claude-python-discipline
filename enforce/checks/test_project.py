@@ -46,6 +46,7 @@ def v4(*, extra: str = "", tables: str = "") -> str:
         architecture = "architecture.json"
         contract_conformance = "contract-conformance.json"
         operational_model = "operational-model.json"
+        security_model = "security-model.json"
         {extra}
 
         [tool.agent-discipline.capabilities]
@@ -178,6 +179,19 @@ def test_a_missing_operational_model_is_refused(tmp_path: Path) -> None:
         v4().replace('operational_model = "operational-model.json"\n', ""),
     )
     with pytest.raises(ValueError, match="DISC-PROJECT-018"):
+        project.parse(path)
+
+
+def test_a_missing_security_model_is_refused(tmp_path: Path) -> None:
+    """Trust-boundary omission cannot silently narrow the security gate.
+
+    @param tmp_path fixture repository
+    """
+    path = declare(
+        tmp_path,
+        v4().replace('security_model = "security-model.json"\n', ""),
+    )
+    with pytest.raises(ValueError, match="DISC-PROJECT-019"):
         project.parse(path)
 
 

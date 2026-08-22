@@ -212,6 +212,8 @@ class Declaration:
     contract_conformance: PurePosixPath | None = None
     ## Repository-local lifecycle, budget, outcome, and platform model.
     operational_model: PurePosixPath | None = None
+    ## Repository-local trust-boundary and data-classification model.
+    security_model: PurePosixPath | None = None
     ## Explicit facts that add operational and security obligations.
     capabilities: frozenset[Capability] = frozenset()
     ## Canonical role name to repository-relative directory paths.
@@ -316,6 +318,15 @@ class Declaration:
             return None
         return self.root / Path(self.operational_model.as_posix())
 
+    def security_model_path(self) -> Path | None:
+        """The declared local security model as an absolute path.
+
+        @return local JSON path, or None for the undeclared direct-check fallback
+        """
+        if self.root is None or self.security_model is None:
+            return None
+        return self.root / Path(self.security_model.as_posix())
+
     def has(self, capability: Capability) -> bool:
         """Whether one additive project capability is active.
 
@@ -354,6 +365,11 @@ class Declaration:
             notes.append(
                 "DISC-PROJECT-018 operational_model is undeclared; lifecycle, "
                 "budgets, outcomes, identity, and platform support are undecided"
+            )
+        if self.security_model is None:
+            notes.append(
+                "DISC-PROJECT-019 security_model is undeclared; trust boundaries "
+                "and data classification are undecided"
             )
         if self.source is None:
             notes.append(
@@ -689,6 +705,30 @@ def _parse_operational_model(
     return model
 
 
+def _parse_security_model(
+    table: Mapping[str, object], path: Path,
+) -> PurePosixPath:
+    """Parse the canonical repository-local security model path.
+
+    @param table decoded discipline declaration
+    @param path declaring project file
+    @return validated repository-relative JSON path
+    """
+    raw = table.get("security_model")
+    if raw is None:
+        _reject(
+            "DISC-PROJECT-019", path,
+            "security_model is required and must name the local JSON model",
+        )
+    model = _relative_path(raw, field_name="security_model", source=path)
+    if model.suffix != ".json":
+        _reject(
+            "DISC-PROJECT-019", path,
+            "security_model must name a repository-local JSON model",
+        )
+    return model
+
+
 def parse(path: Path) -> Declaration:
     """Read one v4 declaration, refusing missing and unknown values.
 
@@ -758,6 +798,7 @@ def parse(path: Path) -> Declaration:
         architecture=architecture,
         contract_conformance=contract_conformance,
         operational_model=_parse_operational_model(table, path),
+        security_model=_parse_security_model(table, path),
         capabilities=capabilities,
         role_paths=roles,
         adapter_boundaries=boundaries,

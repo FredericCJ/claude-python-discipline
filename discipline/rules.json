@@ -493,6 +493,29 @@
       "path": "discipline/law/OPS.md"
     },
     {
+      "id": "law/SEC",
+      "kind": "law",
+      "title": "Local Security and Trust Boundaries",
+      "tokens": 566,
+      "load_when": [
+        "security model",
+        "trust boundary",
+        "sensitive data",
+        "classification",
+        "redaction",
+        "least exposure"
+      ],
+      "requires": [],
+      "grounds_on": [
+        "law/ARCH",
+        "law/DIAG",
+        "law/OPS"
+      ],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/law/SEC.md"
+    },
+    {
       "id": "law/TEST",
       "kind": "law",
       "title": "Systematic Testing and Oracles",
@@ -589,7 +612,7 @@
       "id": "meta/KERNEL",
       "kind": "meta",
       "title": "Discipline Kernel",
-      "tokens": 1961,
+      "tokens": 1982,
       "load_when": [
         "python",
         "discipline",
@@ -10278,6 +10301,138 @@
         "source": "v4.0.0",
         "disposition": "new",
         "guidance": "Generate the exact obligation set for each enabled capability and point every record at repository-local executable evidence."
+      }
+    },
+    {
+      "id": "SEC-001",
+      "module": "law/SEC",
+      "title": "Every contract has a local trust boundary",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:security_model"
+      ],
+      "statement": "The project MUST name one repository-local `security-model.json`. Every architecture contract MUST occur in exactly one trust-boundary record naming inbound trust, explicit assumptions, validation before stronger trust, the point where the trust claim ceases, and confined executable evidence.",
+      "why": "An unstated trust transition lets hostile representation become policy input, while an assumption with no endpoint quietly expands into a system-wide claim.",
+      "check": "`python -m checks.security_model`",
+      "no_mechanism": null,
+      "see": [
+        "ARCH-022",
+        "ERR-011",
+        "meta/SCOPE"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/SEC.md",
+      "line": 25,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "A local contract silently upgrades hostile or fallible representation into trusted policy input, or extends a bounded assumption into an unsupported system-wide claim.",
+      "warrants": [
+        {
+          "source": "source:AR",
+          "relation": "supports",
+          "confidence": "high"
+        },
+        {
+          "source": "source:SE",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:security_model",
+            "kind": "static",
+            "relation": "proxy",
+            "proposition": "The checker requires one exact trust-boundary record per architecture contract, including inbound trust, assumptions, validations, a local endpoint for the trust claim, and confined evidence.",
+            "residual": "Complete records and existing evidence files do not prove an assumption is realistic, validation is sufficient, or the cited test executes the claimed hostile case.",
+            "must_pass": "fixture:reference trust-boundary model",
+            "must_reject": "discrimination:SEC-001",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never; every canonical architecture contract crosses a local trust decision"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Create security-model.json and assign every architecture contract to one local trust boundary."
+      }
+    },
+    {
+      "id": "SEC-002",
+      "module": "law/SEC",
+      "title": "Data exposure follows explicit classification",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:security_model"
+      ],
+      "statement": "Every intentionally handled data class MUST name its entry trust boundaries, classification, allowed local roles and sinks, retention policy, redaction policy, and confined evidence. `sensitive_data = true` MUST name at least one confidential, secret, or personal class; `false` MUST state why none is intentionally handled and MUST NOT declare one. No role outside this repository may own a local exposure decision.",
+      "why": "Redaction by identifier spelling catches cheap mistakes but cannot establish what a value means, where it may flow, or when every copy ceases to exist.",
+      "check": "`python -m checks.security_model`",
+      "no_mechanism": null,
+      "see": [
+        "DIAG-014",
+        "OPS-001",
+        "EVID-003"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/SEC.md",
+      "line": 35,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "Data reaches an unowned role, sink, diagnostic, or durable copy because classification and exposure policy existed only in an implementer's head.",
+      "warrants": [
+        {
+          "source": "source:AR",
+          "relation": "supports",
+          "confidence": "high"
+        },
+        {
+          "source": "source:SE",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:security_model",
+            "kind": "static",
+            "relation": "proxy",
+            "proposition": "The checker validates each data class's classification, entry-boundary joins, local role and sink vocabulary, retention/redaction text, confined evidence, and coherence with the sensitive_data capability.",
+            "residual": "The model cannot infer semantic sensitivity, prove every runtime copy follows the declared flow, or establish that a stated redaction and retention policy is effective.",
+            "must_pass": "fixture:reference classified local data flow",
+            "must_reject": "discrimination:SEC-002",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never for classification coherence; sensitive controls activate only when a sensitive class is intentionally handled"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Classify intentionally handled data and state its local exposure, retention, redaction, and evidence before setting sensitive_data."
       }
     },
     {

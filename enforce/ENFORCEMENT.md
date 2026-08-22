@@ -4,12 +4,12 @@
 
 This ledger keeps unlike claims unlike. A rule can be normatively binding while its verifier is absent; a verifier can exist while deciding only a proxy; a proxy can pass while its residual remains true; and a successful adopter does not prove universal benefit. No state below is a project-gate outcome.
 
-- **172** binding rules; **14** lack an available declared strategy.
+- **174** binding rules; **14** lack an available declared strategy.
 - **26** advisory rules and **0** open rules.
-- **187** exact strategy records: **17** direct and **170** proxy claims.
-- **67/172** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
-- **21/208** rules carry named field observations.
-- **100/100** named mechanisms resolve locally or delegate explicitly; **0** local mechanisms are absent.
+- **189** exact strategy records: **17** direct and **172** proxy claims.
+- **69/174** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
+- **21/210** rules carry named field observations.
+- **101/101** named mechanisms resolve locally or delegate explicitly; **0** local mechanisms are absent.
 
 ## Verifier-state census
 
@@ -17,7 +17,7 @@ Measured against this tree, not copied from the rule heading. `discipline/rules.
 
 | State | Rules | Means |
 |---|---|---|
-| `local-verifier` | 124 | repository-local code observes every strategy |
+| `local-verifier` | 126 | repository-local code observes every strategy |
 | `external-verifier` | 24 | every strategy delegates to a configured tool |
 | `mixed-verifiers` | 10 | several verifier kinds contribute |
 | `structured-review` | 0 | judgment is recorded in a checked review artifact |
@@ -229,6 +229,8 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `OPS-006` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | A syntactically valid bound and existing measurement path do not establish that the chosen threshold is safe, that the test measures the stated scope, or that production cannot by… | Activated work has a finite measured budget |
 | `OPS-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | The model does not itself execute either platform, compare runtime identity to built metadata, or prove that cited evidence belongs to the artifact ultimately delivered. | Delivery identity and platform intent are explicit |
 | `OPS-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Closed identifiers prevent omission and drift but do not prove the referenced tests exercise their named conditions or that the generated obligation vocabulary is sufficient for t… | Capability activation expands to a closed evidence set |
+| `SEC-001` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Complete records and existing evidence files do not prove an assumption is realistic, validation is sufficient, or the cited test executes the claimed hostile case. | Every contract has a local trust boundary |
+| `SEC-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | The model cannot infer semantic sensitivity, prove every runtime copy follows the declared flow, or establish that a stated redaction and retention policy is effective. | Data exposure follows explicit classification |
 | `TEAMS-001` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement. | A dispatch states the contract, not the intention |
 | `TEAMS-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement. | A restriction is never lifted by an instruction |
 | `TEAMS-003` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_completion_hook_enforces_the_gate; it does not establish every behavior in the normative statement. | Verification runs as a gate, not as a request |
@@ -276,7 +278,7 @@ These remain normative obligations, but the declared verifier is absent or missi
 | Kind | Rules |
 |---|---|
 | `auto` | 39 |
-| `check` | 92 |
+| `check` | 94 |
 | `fitness` | 56 |
 
 ## Advisory rationale

@@ -22,6 +22,7 @@ source_roots = ["tools", "enforce"]
 architecture = "architecture.json"
 contract_conformance = "contract-conformance.json"
 operational_model = "operational-model.json"
+security_model = "security-model.json"
 doc_engine = "doxygen"
 pedagogical_full_projection = false
 

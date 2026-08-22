@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "trust_boundaries": [
+    {
+      "id": "archive_and_project_entry",
+      "contracts": ["discipline_archive"],
+      "inbound_trust": "untrusted",
+      "assumptions": [
+        "Archive members and target-project paths may be malformed, hostile, or already owned by the project."
+      ],
+      "validations": [
+        "Validate archive membership, manifest digests, destination confinement, and collisions before any project write."
+      ],
+      "trust_ceases_at": "Validated bytes cease to be discipline-owned after conservative installation transfers them to the target project.",
+      "evidence": "tools/test_vendor.py::test_the_whole_round_trip_preserves_every_prior_byte"
+    }
+  ],
+  "data_classes": [
+    {
+      "id": "project_and_corpus_content",
+      "classification": "internal",
+      "sources": ["archive_and_project_entry"],
+      "allowed_roles": ["application", "shell"],
+      "allowed_sinks": ["release_archive", "vendored_project"],
+      "retention": "Corpus bytes remain versioned; target-project bytes are read only for one install, check, or removal operation.",
+      "redaction": "Known credential fingerprints and machine-specific identifiers block release; review-shaped credential assignments remain explicit findings rather than copied silently.",
+      "evidence": "tools/test_release.py::test_a_credential_prefix_is_found"
+    }
+  ],
+  "sensitive_data_absence": "The application does not intentionally accept credentials, personal data, or classified content; release scanning treats their accidental presence as a defect to refuse."
+}

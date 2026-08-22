@@ -10,13 +10,13 @@ decay: none
 
 # Rule Index
 
-208 rules across 16 modules. Grep this file for a rule id, then open only the module that owns it.
+210 rules across 17 modules. Grep this file for a rule id, then open only the module that owns it.
 
 **The columns are different claims.** `Force` is the normative obligation. `Verifier` says what strategy is available, never that it passed. `Relation` says whether the observable proposition is the rule itself or only a proxy. `Rejection` records whether the current matrix has watched the rule reject a counterexample. `Platforms`, `Residual`, and `Field` state where the claim is supported, what can remain wrong, and what named adopters observed.
 
 **A proxy cannot decide its parent semantic rule.** Passing its proposition establishes only the stated syntax or behavior and leaves the printed residual. `rule-level witnessed` is deliberately weaker than v4's target: the inherited matrix proves that some strategy rejected a case for that rule, but cannot yet attribute the rejection to one exact strategy.
 
-14 of 172 binding rules lack an available declared strategy. 67 of 172 rules with automated strategies have inherited rule-level rejection evidence. 170 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
+14 of 174 binding rules lack an available declared strategy. 69 of 174 rules with automated strategies have inherited rule-level rejection evidence. 172 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
 
 ## Modules
 
@@ -41,6 +41,7 @@ decay: none
 | [law/FLOW](law/FLOW.md) | law | 2259 | 13 | definition of done, before i commit, what should i do first, ADR, decision record, review |
 | [law/LEARN](law/LEARN.md) | law | 1888 | 12 | learning, record what i learned, session memory, why did this fail before, calibration, promote a learning |
 | [law/OPS](law/OPS.md) | law | 1575 | 8 | capability manifest, operational behavior, subprocess lifecycle, network io, persistent state, generated artifact |
+| [law/SEC](law/SEC.md) | law | 566 | 2 | security model, trust boundary, sensitive data, classification, redaction, least exposure |
 | [law/TEST](law/TEST.md) | law | 2987 | 20 | write a test, pytest, fixture, hypothesis, property test, mutation |
 | [law/TYPE](law/TYPE.md) | law | 2171 | 15 | type hint, mypy, pyright, Protocol, generic, dataclass |
 | [ops/ALLOC](ops/ALLOC.md) | ops | 2145 | 10 | dispatch a subagent, which model, how much effort, delegate, escalate, sub-agent |
@@ -264,6 +265,13 @@ decay: none
 | `OPS-006` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | A syntactically valid bound and existing measurement path do not establish that the chosen thre… | none | Activated work has a finite measured budget |
 | `OPS-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | The model does not itself execute either platform, compare runtime identity to built metadata,… | none | Delivery identity and platform intent are explicit |
 | `OPS-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Closed identifiers prevent omission and drift but do not prove the referenced tests exercise th… | none | Capability activation expands to a closed evidence set |
+
+### law/SEC
+
+| Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
+|---|---|---|---|---|---|---|---|---|
+| `SEC-001` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Complete records and existing evidence files do not prove an assumption is realistic, validatio… | none | Every contract has a local trust boundary |
+| `SEC-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | The model cannot infer semantic sensitivity, prove every runtime copy follows the declared flow… | none | Data exposure follows explicit classification |
 
 ### law/TEST
 

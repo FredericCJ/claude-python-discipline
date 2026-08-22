@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "trust_boundaries": [
+    {
+      "id": "published_request_entry",
+      "contracts": ["published_service"],
+      "inbound_trust": "untrusted",
+      "assumptions": ["Replace with the hostile or missing properties the local boundary permits."],
+      "validations": ["Replace with validation performed before domain or application use."],
+      "trust_ceases_at": "Replace with the exact local handoff or output boundary where this trust claim ends.",
+      "evidence": "tests/fault/test_transport.py::test_malformed_frame"
+    },
+    {
+      "id": "transport_entry",
+      "contracts": ["transport_port"],
+      "inbound_trust": "constrained",
+      "assumptions": ["Replace with transport behavior that remains outside this repository's control."],
+      "validations": ["Replace with adapter translation and protocol validation."],
+      "trust_ceases_at": "Replace with the point where a value leaves the local port contract.",
+      "evidence": "tests/contract/test_transport.py::test_ordering"
+    }
+  ],
+  "data_classes": [
+    {
+      "id": "request_content",
+      "classification": "internal",
+      "sources": ["published_request_entry"],
+      "allowed_roles": ["domain", "application", "ports", "adapters", "shell"],
+      "allowed_sinks": ["structured_response"],
+      "retention": "Replace with a finite local retention and deletion policy.",
+      "redaction": "Replace with what may appear in diagnostics and what representation replaces raw values.",
+      "evidence": "tests/process/test_outcomes.py::test_completed"
+    }
+  ],
+  "sensitive_data_absence": "Replace when sensitive_data=false; set null and declare at least one confidential, secret, or personal class when true."
+}

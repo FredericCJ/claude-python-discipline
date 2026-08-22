@@ -1012,6 +1012,16 @@
    }
   },
   {
+   "id": "mech:check:security_model",
+   "type": "mechanism",
+   "label": "check:security_model",
+   "path": "enforce/checks/security_model.py",
+   "attrs": {
+    "family": "check",
+    "implemented": "true"
+   }
+  },
+  {
    "id": "mech:check:session_recorded",
    "type": "mechanism",
    "label": "check:session_recorded",
@@ -1671,6 +1681,18 @@
    }
   },
   {
+   "id": "law/SEC",
+   "type": "module",
+   "label": "Local Security and Trust Boundaries",
+   "path": "discipline/law/SEC.md",
+   "tokens": 566,
+   "attrs": {
+    "decay": "none",
+    "kind": "law",
+    "python": ">=3.11"
+   }
+  },
+  {
    "id": "law/TEST",
    "type": "module",
    "label": "Systematic Testing and Oracles",
@@ -1721,7 +1743,7 @@
    "type": "module",
    "label": "Discipline Kernel",
    "path": "discipline/KERNEL.md",
-   "tokens": 1961,
+   "tokens": 1982,
    "attrs": {
     "decay": "none",
     "kind": "meta"
@@ -3633,6 +3655,28 @@
    }
   },
   {
+   "id": "SEC-001",
+   "type": "rule",
+   "label": "Every contract has a local trust boundary",
+   "path": "discipline/law/SEC.md:25",
+   "tokens": 79,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/SEC"
+   }
+  },
+  {
+   "id": "SEC-002",
+   "type": "rule",
+   "label": "Data exposure follows explicit classification",
+   "path": "discipline/law/SEC.md:35",
+   "tokens": 112,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/SEC"
+   }
+  },
+  {
    "id": "TEAMS-001",
    "type": "rule",
    "label": "A dispatch states the contract, not the intention",
@@ -4575,6 +4619,14 @@
    }
   },
   {
+   "id": "trigger:glob:security-model.json",
+   "type": "trigger",
+   "label": "security-model.json",
+   "attrs": {
+    "kind": "glob"
+   }
+  },
+  {
    "id": "trigger:glob:tests/**/*.py",
    "type": "trigger",
    "label": "tests/**/*.py",
@@ -4762,6 +4814,14 @@
    "id": "trigger:kw:circular import",
    "type": "trigger",
    "label": "circular import",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:classification",
+   "type": "trigger",
+   "label": "classification",
    "attrs": {
     "kind": "keyword"
    }
@@ -5391,6 +5451,14 @@
    }
   },
   {
+   "id": "trigger:kw:least exposure",
+   "type": "trigger",
+   "label": "least exposure",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:legacy code",
    "type": "trigger",
    "label": "legacy code",
@@ -5759,6 +5827,14 @@
    }
   },
   {
+   "id": "trigger:kw:redaction",
+   "type": "trigger",
+   "label": "redaction",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:refactoring",
    "type": "trigger",
    "label": "refactoring",
@@ -5858,6 +5934,22 @@
    "id": "trigger:kw:seam",
    "type": "trigger",
    "label": "seam",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:security model",
+   "type": "trigger",
+   "label": "security model",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:sensitive data",
+   "type": "trigger",
+   "label": "sensitive data",
    "attrs": {
     "kind": "keyword"
    }
@@ -6026,6 +6118,14 @@
    "id": "trigger:kw:transaction",
    "type": "trigger",
    "label": "transaction",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:trust boundary",
+   "type": "trigger",
+   "label": "trust boundary",
    "attrs": {
     "kind": "keyword"
    }
@@ -7354,6 +7454,42 @@
   },
   {
    "type": "cites",
+   "src": "SEC-001",
+   "dst": "ARCH-022",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "SEC-001",
+   "dst": "ERR-011",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "SEC-001",
+   "dst": "meta/SCOPE",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "SEC-002",
+   "dst": "DIAG-014",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "SEC-002",
+   "dst": "EVID-003",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "SEC-002",
+   "dst": "OPS-001",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
    "src": "TEAMS-001",
    "dst": "ops/ALLOC",
    "origin": "derived"
@@ -8430,6 +8566,18 @@
    "type": "contains",
    "src": "law/OPS",
    "dst": "OPS-008",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/SEC",
+   "dst": "SEC-001",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/SEC",
+   "dst": "SEC-002",
    "origin": "derived"
   },
   {
@@ -9684,6 +9832,18 @@
    "type": "enforced_by",
    "src": "OPS-008",
    "dst": "mech:check:operational_model",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "SEC-001",
+   "dst": "mech:check:security_model",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "SEC-002",
+   "dst": "mech:check:security_model",
    "origin": "derived"
   },
   {
@@ -11788,6 +11948,42 @@
   },
   {
    "type": "grounds_on",
+   "src": "SEC-001",
+   "dst": "law/ARCH",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "SEC-001",
+   "dst": "law/DIAG",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "SEC-001",
+   "dst": "law/OPS",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "SEC-002",
+   "dst": "law/ARCH",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "SEC-002",
+   "dst": "law/DIAG",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "SEC-002",
+   "dst": "law/OPS",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
    "src": "TEST-001",
    "dst": "fact/py-testing",
    "origin": "derived"
@@ -12354,6 +12550,24 @@
    "type": "grounds_on",
    "src": "law/OPS",
    "dst": "law/TEST",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "law/SEC",
+   "dst": "law/ARCH",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "law/SEC",
+   "dst": "law/DIAG",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "law/SEC",
+   "dst": "law/OPS",
    "origin": "derived"
   },
   {
@@ -14324,6 +14538,66 @@
    "type": "triggered_by",
    "src": "law/OPS",
    "dst": "trigger:kw:subprocess lifecycle",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/SEC",
+   "dst": "trigger:glob:**/*.py",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/SEC",
+   "dst": "trigger:glob:architecture.json",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/SEC",
+   "dst": "trigger:glob:pyproject.toml",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/SEC",
+   "dst": "trigger:glob:security-model.json",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/SEC",
+   "dst": "trigger:kw:classification",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/SEC",
+   "dst": "trigger:kw:least exposure",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/SEC",
+   "dst": "trigger:kw:redaction",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/SEC",
+   "dst": "trigger:kw:security model",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/SEC",
+   "dst": "trigger:kw:sensitive data",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/SEC",
+   "dst": "trigger:kw:trust boundary",
    "origin": "derived"
   },
   {

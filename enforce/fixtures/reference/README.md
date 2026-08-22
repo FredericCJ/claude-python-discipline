@@ -29,7 +29,7 @@ src/refpkg/
               faults.py                        fault injection as data
   shell/      composition.py  envelope.py  identity.py  cli.py
 tests/        unit/ contract/ integration/ fault/ property/
-architecture.json  contract-conformance.json  operational-model.json
+architecture.json  contract-conformance.json  operational-model.json  security-model.json
 ```
 
 Given a directory, a maximum age and a number of newest files to spare, it decides
@@ -60,6 +60,8 @@ irreversible, so plan-then-apply is not a ceremony here but the only safe design
 | `OPS-006` activated work is bounded | public input and destructive cleanup are limited to 10,000 entries and tested |
 | `OPS-007` identity and platform intent are explicit | `shell/identity.py`, its unit test, and the Windows/Linux support matrix |
 | `OPS-008` capabilities expand to exact evidence | public API, filesystem, and destructive records carry their generated obligation sets |
+| `SEC-001` every contract crosses a trust boundary | command, clock, and file-store contracts state assumptions, validation, and where trust ends |
+| `SEC-002` data exposure follows classification | entry metadata names allowed local roles, sink, retention, redaction, and evidence |
 | `ARCH-011` one composition root | `shell/composition.py`; contract 7 proves the app cannot reach an adapter |
 | `ERR-001` two channels only | refusals are returned; the exceptional is raised |
 | `ERR-002` unions narrowed to `Never` | `domain/plan.py::narrow` |

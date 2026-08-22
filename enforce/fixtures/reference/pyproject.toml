@@ -18,6 +18,7 @@ source_roots = ["src"]
 architecture = "architecture.json"
 contract_conformance = "contract-conformance.json"
 operational_model = "operational-model.json"
+security_model = "security-model.json"
 doc_engine = "doxygen"
 adapter_boundaries = [
     "src/refpkg/adapters/clock",

@@ -1,7 +1,7 @@
 {
   "generated_by": "tools/discrimination_gate.py --update-baseline",
   "note": "D -- rules with at least one mutation observed provoking them. May rise, never fall. The entries are in enforce/discrimination.py and are meant to be read; the count alone says nothing about whether they are good.",
-  "count": 68,
+  "count": 70,
   "rules": [
     "ALLOC-002",
     "ALLOC-004",
@@ -55,6 +55,8 @@
     "OPS-006",
     "OPS-007",
     "OPS-008",
+    "SEC-001",
+    "SEC-002",
     "TEAMS-002",
     "TEST-001",
     "TEST-002",
@@ -73,5 +75,5 @@
     "TYPE-013"
   ],
   "gap": 92,
-  "why": "Added operational ownership, lifecycle, outcome, budget, identity, and closed capability-obligation mutations."
+  "why": "Added local trust-boundary and classified-data capability-coherence mutations."
 }

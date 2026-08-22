@@ -1313,6 +1313,32 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         ),),
     ),
     Mutation(
+        rule_id="SEC-001",
+        summary="a trust boundary cites a contract absent from local architecture",
+        source=(
+            "SEC-001's exact coverage predicate: replacing prune_command leaves the "
+            "published contract uncovered and introduces one unknown contract id."
+        ),
+        replace=((
+            "security-model.json",
+            '"contracts": ["prune_command"]',
+            '"contracts": ["peer_command"]',
+        ),),
+    ),
+    Mutation(
+        rule_id="SEC-002",
+        summary="a secret data class remains under sensitive_data false",
+        source=(
+            "SEC-002's capability-coherence predicate: a secret classification "
+            "directly refutes the model's explicit sensitive-data absence."
+        ),
+        replace=((
+            "security-model.json",
+            '"classification": "internal"',
+            '"classification": "secret"',
+        ),),
+    ),
+    Mutation(
         rule_id="EFCT-015",
         summary="a writer takes a lock and never reports losing the race",
         source=(

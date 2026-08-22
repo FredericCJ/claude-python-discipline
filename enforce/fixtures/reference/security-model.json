@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "trust_boundaries": [
+    {
+      "id": "command_entry",
+      "contracts": ["prune_command"],
+      "inbound_trust": "untrusted",
+      "assumptions": ["The command user may supply invalid policy values and an inaccessible directory."],
+      "validations": ["Parse policy values before orchestration and translate boundary failures into the published outcome families."],
+      "trust_ceases_at": "Typed results cease to be trusted when rendered for an external consumer.",
+      "evidence": "tests/integration/test_local_files.py::test_a_dry_run_changes_nothing_on_disk"
+    },
+    {
+      "id": "clock_entry",
+      "contracts": ["clock_port"],
+      "inbound_trust": "constrained",
+      "assumptions": ["A clock implementation may fail or return only whole-second instants."],
+      "validations": ["Translate host failures and expose only the typed Instant value through the port."],
+      "trust_ceases_at": "The instant is revalidated whenever a different clock implementation crosses the port.",
+      "evidence": "tests/contract/test_clock_contract.py::test_now_returns_an_instant_at_or_after_the_epoch"
+    },
+    {
+      "id": "file_store_entry",
+      "contracts": ["file_store_port"],
+      "inbound_trust": "untrusted",
+      "assumptions": ["Directory contents may change concurrently and each host filesystem call may fail."],
+      "validations": ["Translate host entries into validated immutable values and translate every filesystem failure at the adapter boundary."],
+      "trust_ceases_at": "A previously listed entry loses its trust when a later filesystem operation begins.",
+      "evidence": "tests/integration/test_local_files.py::test_the_real_store_lists_what_was_written"
+    }
+  ],
+  "data_classes": [
+    {
+      "id": "filesystem_entry_metadata",
+      "classification": "internal",
+      "sources": ["file_store_entry"],
+      "allowed_roles": ["domain", "application", "ports", "adapters", "shell"],
+      "allowed_sinks": ["structured_result"],
+      "retention": "Held only for one command invocation; the application persists no copy.",
+      "redaction": "Caller-owned entry names are deliberately returned in plans and typed failures but are never written to an independent log sink.",
+      "evidence": "tests/fault/test_containment.py::test_an_interrupted_apply_reports_how_far_it_got"
+    }
+  ],
+  "sensitive_data_absence": "The worked reference intentionally handles no credential, personal, confidential, or secret-bearing data class."
+}
