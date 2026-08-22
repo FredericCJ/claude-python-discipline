@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-08-23",
+  "discipline_baseline": {
+    "release": "v3.3.0",
+    "commit": "17cdd5d63a37e3e95b8061efaaf7dc520a73cb1d",
+    "environment_lock_sha256": "4a6392bc3abdd827d0f421a0cba6b8d274999f583df9a0c141cfc4e3359e6eb5",
+    "metrics": {
+      "tracked_files": 241,
+      "python_files": 140,
+      "python_lines": 34796,
+      "markdown_files": 69,
+      "markdown_lines": 16625,
+      "binding_rules": 155,
+      "advisory_rules": 28,
+      "validator_warnings": 17,
+      "unbuilt_mechanisms": 14,
+      "discrimination_cases": 49,
+      "discrimination_gap": 93,
+      "lint_baseline_findings": 113,
+      "documented_files": 139,
+      "import_contracts": 9,
+      "typed_reference_files": 26,
+      "tests_passed": 746,
+      "tests_skipped": 1,
+      "skip_reason": "The gate-entry smoke test does not recursively invoke the complete pytest suite from inside itself."
+    },
+    "runs": [
+      {
+        "platform": "Windows-11-10.0.26200-SP0 AMD64",
+        "environment": "claude",
+        "python": "3.13.14",
+        "conda": "26.5.3",
+        "environment_explicit_sha256": "b23b0d21096eb718e5b76fea94d8dd3610a1a4f3a5a7e12dfd3f9a7aa0e20b41",
+        "checkout": "clean detached clone",
+        "command": "python tools/gate.py",
+        "exit": 0,
+        "seconds": 325.90,
+        "steps_passed": 11,
+        "steps_total": 11
+      },
+      {
+        "platform": "Linux 6.18.33.1-microsoft-standard-WSL2 x86_64",
+        "environment": "claude",
+        "python": "3.13.14",
+        "doxygen": "1.10.0",
+        "environment_definition": "environment.yml plus requirements emitted by tools/check_env.py",
+        "checkout": "clean detached independent Linux clone",
+        "command": "python tools/gate.py",
+        "exit": 0,
+        "seconds": 170.49,
+        "steps_passed": 11,
+        "steps_total": 11
+      }
+    ]
+  },
+  "adopters": [
+    {
+      "name": "python-doctrine-test",
+      "unit": "application",
+      "commit": "bad79af0530eea7664085df36acb96cc045e6791",
+      "discipline_release": "v3.0.0",
+      "discipline_version": "29c1bfe78777",
+      "manifest_sha256": "ec0c5c1fd7cc2e7e0248c7f1a82568780267fe2be740dec094d3974955e9397b",
+      "product": {"source_files": 19, "source_lines": 1000, "test_files": 6, "test_lines": 664},
+      "gate": {
+        "platform": "Windows",
+        "exit": 0,
+        "seconds": 3.647,
+        "tests": "79 passed",
+        "steps": ["format", "lint", "mypy", "pyright", "imports", "discipline", "pytest", "doxygen"]
+      }
+    },
+    {
+      "name": "console-sink",
+      "unit": "component",
+      "commit": "d3d31211651d05cd8bb37c01e723b29da7b40bd6",
+      "discipline_release": "v3.2.0",
+      "discipline_version": "5adf1c62d37b",
+      "manifest_sha256": "c8bbe0a4080a2031f9666e6f655137365d91166dec8c1cfeec1dbc58ce8a9a34",
+      "product": {"source_files": 39, "source_lines": 4514, "test_files": 20, "test_lines": 3726},
+      "gate": {
+        "platform": "Windows",
+        "exit": 0,
+        "seconds": 17.324,
+        "tests": "192 passed",
+        "discipline_command": "PYTHONPATH=.agent/enforce python checks_gate.py",
+        "note": "The first measurement omitted the wrapper's documented PYTHONPATH and was discarded; the corrected invocation passed with zero findings."
+      }
+    },
+    {
+      "name": "signal-invocator",
+      "unit": "component",
+      "commit": "fac1028631850f150a27cf54d1fec760f2965333",
+      "discipline_release": "v3.2.0",
+      "discipline_version": "5adf1c62d37b",
+      "manifest_sha256": "c8bbe0a4080a2031f9666e6f655137365d91166dec8c1cfeec1dbc58ce8a9a34",
+      "product": {"source_files": 35, "source_lines": 3210, "test_files": 29, "test_lines": 4007},
+      "gate": {
+        "platform": "Windows",
+        "exit": 0,
+        "seconds": 17.181,
+        "tests": "219 passed",
+        "command": "python tools/gate.py",
+        "steps_passed": 7,
+        "steps_total": 7
+      }
+    },
+    {
+      "name": "sim-scheduler",
+      "unit": "component",
+      "commit": "7c02d27f5e0e9ce19bd64920e4d2d2ec1ea4be5d",
+      "discipline_release": "v3.2.0",
+      "discipline_version": "5adf1c62d37b",
+      "manifest_sha256": "c8bbe0a4080a2031f9666e6f655137365d91166dec8c1cfeec1dbc58ce8a9a34",
+      "product": {"source_files": 52, "source_lines": 5505, "test_files": 25, "test_lines": 3880},
+      "gate": {
+        "platform": "Windows",
+        "exit": 2,
+        "seconds": 57.195,
+        "tests": "286 passed",
+        "failed_step": "python -m mypy",
+        "failure": "No target module, package, files, or command was configured.",
+        "corrected_probe": "python -m mypy src tests tools",
+        "corrected_probe_exit": 0
+      }
+    },
+    {
+      "name": "sine-generator",
+      "unit": "component",
+      "commit": "33a0db27d571fe28c011ddfa0d7ca8524fe08e6b",
+      "discipline_release": "v3.2.0",
+      "discipline_version": "5adf1c62d37b",
+      "manifest_sha256": "c8bbe0a4080a2031f9666e6f655137365d91166dec8c1cfeec1dbc58ce8a9a34",
+      "product": {"source_files": 35, "source_lines": 3337, "test_files": 25, "test_lines": 2822},
+      "gate": {
+        "platform": "Windows",
+        "exit": 0,
+        "seconds": 25.155,
+        "tests": "343 passed",
+        "steps": ["format", "lint", "mypy", "pyright", "imports", "discipline", "pytest"]
+      }
+    }
+  ],
+  "common_limitations": [
+    "The four component measurements are four standalone repository observations, not a whole-system result.",
+    "Mutation was configured but produced no Windows verdict.",
+    "The discipline checker covered 59 rule ids while the v3 rule corpus contained 183 rules.",
+    "A passing presence or proxy check does not establish semantic adequacy.",
+    "Manual observations cannot satisfy an automated release gate."
+  ],
+  "source_worktrees_modified": false
+}

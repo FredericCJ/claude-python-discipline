@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-08-23",
+  "classifications": [
+    "doctrine_defect",
+    "mechanism_defect",
+    "project_defect",
+    "specification_defect",
+    "tool_fact",
+    "unsupported_platform_fact"
+  ],
+  "findings": [
+    {
+      "id": "V3E-001",
+      "classification": "mechanism_defect",
+      "claim": "The vendored aggregate check runner ignores the adopter's tool.agent-discipline declaration, causing false layer findings and silently narrowing documentation checks.",
+      "evidence_kind": "observed",
+      "observed_in": [
+        "console-sink .agent/learning/ledger.jsonl L-0002",
+        "signal-invocator .agent/learning/ledger.jsonl L-0005 and L-0007",
+        "sim-scheduler .agent/learning/ledger.jsonl L-0003"
+      ],
+      "reproduction": "Compare a mapped-layer per-check invocation with python -m checks over the same tree.",
+      "v4_disposition": "The canonical project runner must load and report the declaration used by every check; adopter-owned wrappers are forbidden as the shipped solution.",
+      "scope": "one adopter repository"
+    },
+    {
+      "id": "V3E-002",
+      "classification": "doctrine_defect",
+      "claim": "ARCH-004's transitive foreign-import ban conflicts with ARCH-011 when the repository-local shell wires real adapters that own those imports.",
+      "evidence_kind": "observed",
+      "observed_in": [
+        "console-sink .agent/learning/ledger.jsonl L-0003"
+      ],
+      "reproduction": "Use allow_indirect_imports=false with the shell as a forbidden-contract source and import a real adapter from the composition root.",
+      "v4_disposition": "Separate direct foreign-dependency ownership from permitted runtime wiring and emit distinct diagnostics for each relation.",
+      "scope": "one adopter repository"
+    },
+    {
+      "id": "V3E-003",
+      "classification": "mechanism_defect",
+      "claim": "The exception-code grammar rejects hyphens in codes already published by a component specification.",
+      "evidence_kind": "observed",
+      "observed_in": [
+        "console-sink .agent/learning/ledger.jsonl L-0008"
+      ],
+      "reproduction": "Run exception_has_code against a namespaced leaf such as consink.render.terminal-lost.",
+      "v4_disposition": "Make the local contract the source of its code grammar and check schema, implementation, tests, and documentation against one generated projection.",
+      "scope": "one adopter repository"
+    },
+    {
+      "id": "V3E-004",
+      "classification": "mechanism_defect",
+      "claim": "A wildcard-ending inline code span in a Python documentation block can abort Doxygen parsing while the doc-style proxy accepts it.",
+      "evidence_kind": "observed",
+      "observed_in": [
+        "sim-scheduler .agent/learning/ledger.jsonl L-0004"
+      ],
+      "reproduction": "Render a documentation block containing a backtick-delimited package wildcard with Doxygen 1.10.0.",
+      "v4_disposition": "Treat the style check as a proxy with an explicit residual and retain the behavioral Doxygen build verdict.",
+      "scope": "one adopter repository"
+    },
+    {
+      "id": "V3E-005",
+      "classification": "unsupported_platform_fact",
+      "claim": "mutmut 3.3.1 imports the Unix-only resource module before argument parsing and therefore cannot produce a Windows mutation verdict.",
+      "evidence_kind": "verified_tool_fact",
+      "observed_in": [
+        "discipline environment.yml at 17cdd5d",
+        "python-doctrine-test CLAUDE.md at bad79af",
+        "signal-invocator .agent/learning/ledger.jsonl L-0008"
+      ],
+      "reproduction": "Import or invoke mutmut 3.3.1 on Windows.",
+      "v4_disposition": "A release platform may not report an unsupported or not-run binding mechanism as green; use a supported mutation runner or an explicitly equivalent must-reject strategy.",
+      "scope": "mechanism portability"
+    },
+    {
+      "id": "V3E-006",
+      "classification": "project_defect",
+      "claim": "sim-scheduler's inherited prose says to run mypy, but its configuration declares no target, so that exact invocation exits 2; mypy src tests tools passes.",
+      "evidence_kind": "reproduced",
+      "observed_in": [
+        "sim-scheduler at 7c02d27f5e0e9ce19bd64920e4d2d2ec1ea4be5d"
+      ],
+      "reproduction": "python -m mypy",
+      "v4_disposition": "Generate one canonical gate with explicit repository-local targets and configuration-load probes.",
+      "scope": "one adopter repository"
+    },
+    {
+      "id": "V3E-007",
+      "classification": "tool_fact",
+      "claim": "Windows loopback buffering did not deterministically provoke the intended wire-level backpressure fault, while a fault injected at the owned socket seam did.",
+      "evidence_kind": "observed",
+      "observed_in": [
+        "sine-generator .agent/learning/ledger.jsonl L-0001"
+      ],
+      "reproduction": "Attempt to saturate a stalled Windows loopback consumer, then inject TimeoutError at the adapter's socket seam.",
+      "v4_disposition": "Permit controlled seam-level fault evidence while stating that it does not prove OS-level buffer behavior.",
+      "scope": "one adopter repository"
+    },
+    {
+      "id": "V3E-008",
+      "classification": "doctrine_defect",
+      "claim": "Universal comment-presence and physical real/fake/faulty shape rules overstate semantic evidence and can multiply ceremony without increasing discrimination.",
+      "evidence_kind": "manual_synthesis",
+      "observed_in": [
+        "four v3.2 component adoptions summarized in the v4 roadmap"
+      ],
+      "reproduction": null,
+      "v4_disposition": "Activate evidence by local obligation, accept one implementation realizing several test capabilities, and measure contract/invariant/failure content rather than comment presence alone.",
+      "scope": "one adopter repository"
+    }
+  ]
+}

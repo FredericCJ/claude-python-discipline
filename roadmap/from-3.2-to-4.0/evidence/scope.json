@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "governed_subject": "exactly one repository",
+  "included": [
+    {
+      "subject": "complete application repository",
+      "obligations": [
+        "repository-owned code and behavior",
+        "public entry points and contracts",
+        "repository-owned resources and lifecycle",
+        "standalone build, install, and gate verdict"
+      ]
+    },
+    {
+      "subject": "single component repository",
+      "obligations": [
+        "repository-owned code and behavior",
+        "its side of external contracts",
+        "repository-owned resources and lifecycle",
+        "standalone build, install, and gate verdict"
+      ]
+    }
+  ],
+  "excluded": [
+    "multi-component parent or meta-repository",
+    "cross-repository topology and counterpart identity",
+    "global startup, shutdown, liveness, and deployment wiring",
+    "contract synchronization across repositories",
+    "whole-application or whole-system conformance verdict",
+    "a gate dependency on a parent, sibling, or peer checkout"
+  ],
+  "fixtures": {
+    "python-doctrine-test": "complete application",
+    "console-sink": "single component",
+    "signal-invocator": "single component",
+    "sim-scheduler": "single component",
+    "sine-generator": "single component",
+    "multi-components parent": "excluded integration subject"
+  }
+}
