@@ -315,7 +315,7 @@
       "id": "law/DOC",
       "kind": "law",
       "title": "Documentation Comments",
-      "tokens": 2392,
+      "tokens": 2408,
       "load_when": [
         "docstring",
         "documentation comment",
@@ -330,6 +330,7 @@
       ],
       "grounds_on": [
         "fact/doxygen",
+        "fact/py-testing",
         "fact/py-typing"
       ],
       "verified": null,
@@ -424,7 +425,7 @@
       "id": "law/FLOW",
       "kind": "law",
       "title": "How a Change Is Made",
-      "tokens": 2259,
+      "tokens": 2281,
       "load_when": [
         "definition of done",
         "before i commit",
@@ -5417,12 +5418,11 @@
       "title": "Documentation is present whether or not it is generated",
       "force": "BINDING",
       "mechanisms": [
-        "auto:ruff:D100",
-        "check:doc_coverage"
+        "fitness:test_ordinary_gate_schedules_documentation_presence"
       ],
       "statement": "The presence checks MUST run in the ordinary gate, not in a documentation job. A repository that never builds documentation is held to the same standard as one that publishes it.",
       "why": "Documentation tied to a build step is documentation that lapses the moment the build is switched off, and nobody notices until someone needs it.",
-      "check": "`ruff check` and `python -m checks.doc_coverage`, both in the standard gate",
+      "check": "`pytest tools/test_project_gate.py::test_ordinary_gate_schedules_documentation_presence`",
       "no_mechanism": null,
       "see": [
         "law/FLOW"
@@ -5446,30 +5446,16 @@
         }
       ],
       "verification": {
-        "state": "unbuilt",
+        "state": "local-verifier",
         "strategies": [
           {
-            "mechanism": "auto:ruff:D100",
-            "kind": "tool",
-            "relation": "proxy",
-            "proposition": "auto:ruff:D100 reports no diagnostic corresponding to DOC-003 under the repository configuration and declared scan roots.",
-            "residual": "Passing excludes only the configured patterns implemented by auto:ruff:D100; it does not establish the full semantic benefit of the normative statement.",
-            "must_pass": "command:`ruff check` and `python -m checks.doc_coverage`, both in the standard gate",
-            "must_reject": "pending:DOC-003",
-            "platforms": [
-              "windows",
-              "linux"
-            ],
-            "not_applicable": "never while this rule is active for the governed repository"
-          },
-          {
-            "mechanism": "check:doc_coverage",
-            "kind": "static",
-            "relation": "proxy",
-            "proposition": "check:doc_coverage emits a finding tagged DOC-003 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
-            "residual": "Passing excludes only the configured patterns implemented by check:doc_coverage; it does not establish the full semantic benefit of the normative statement.",
-            "must_pass": "command:`ruff check` and `python -m checks.doc_coverage`, both in the standard gate",
-            "must_reject": "pending:DOC-003",
+            "mechanism": "fitness:test_ordinary_gate_schedules_documentation_presence",
+            "kind": "behavioral",
+            "relation": "direct",
+            "proposition": "The canonical default project gate schedules exactly one aggregate discipline-check adapter, that adapter claims DOC-003, discovers doc_coverage, and examines a non-empty conformant source tree.",
+            "residual": "Passing does not constrain project-owned wrappers that bypass the canonical gate; those wrappers are outside the shipped gate contract and cannot certify v4 conformance.",
+            "must_pass": "command:`pytest tools/test_project_gate.py::test_ordinary_gate_schedules_documentation_presence`",
+            "must_reject": "discrimination:DOC-003",
             "platforms": [
               "windows",
               "linux"
@@ -9020,11 +9006,11 @@
       "title": "Report what happened, including what did not",
       "force": "BINDING",
       "mechanisms": [
-        "check:deviation_recorded"
+        "fitness:test_report_records_every_non_pass_as_a_deviation"
       ],
       "statement": "A change description MUST state what was verified, what was skipped and why, and any rule deviation with its identifier. A failing test is reported as failing.",
       "why": "An agent inherits the previous agent's report as fact; a report that rounds a partial result up to a complete one poisons every decision built on it.",
-      "check": "`python -m checks.deviation_recorded`",
+      "check": "`pytest tools/test_project_gate.py::test_report_records_every_non_pass_as_a_deviation`",
       "no_mechanism": null,
       "see": [],
       "superseded_by": null,
@@ -9046,16 +9032,16 @@
         }
       ],
       "verification": {
-        "state": "unbuilt",
+        "state": "local-verifier",
         "strategies": [
           {
-            "mechanism": "check:deviation_recorded",
-            "kind": "static",
+            "mechanism": "fitness:test_report_records_every_non_pass_as_a_deviation",
+            "kind": "behavioral",
             "relation": "proxy",
-            "proposition": "check:deviation_recorded emits a finding tagged FLOW-012 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
-            "residual": "Passing excludes only the configured patterns implemented by check:deviation_recorded; it does not establish the full semantic benefit of the normative statement.",
-            "must_pass": "command:`python -m checks.deviation_recorded`",
-            "must_reject": "pending:FLOW-012",
+            "proposition": "The canonical gate report serializes every non-pass outcome as a deviation with its status, stable diagnostic, and standalone reason, including work prevented by a failed prerequisite.",
+            "residual": "The report cannot prove that a human-authored change description reproduces its facts; the machine report remains the authoritative handoff evidence.",
+            "must_pass": "command:`pytest tools/test_project_gate.py::test_report_records_every_non_pass_as_a_deviation`",
+            "must_reject": "discrimination:FLOW-012",
             "platforms": [
               "windows",
               "linux"

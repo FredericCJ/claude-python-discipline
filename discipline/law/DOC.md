@@ -2,7 +2,7 @@
 id: law/DOC
 kind: law
 title: Documentation Comments
-tokens: 2392
+tokens: 2408
 load_when:
   - "docstring"
   - "documentation comment"
@@ -12,7 +12,7 @@ load_when:
   - "document this function"
   - "undocumented"
 applies_to: ["**/*.py"]
-grounds_on: ["fact/doxygen", "fact/py-typing"]
+grounds_on: ["fact/doxygen", "fact/py-testing", "fact/py-typing"]
 requires: ["law/TYPE"]
 decay: none
 python: ">=3.11"
@@ -55,12 +55,12 @@ declaring Doxygen it MUST be a `##` block, which is the only form that engine re
 - **Check** `python -m checks.doc_coverage`, which reads the declared engine
 - **See** [fact/doxygen] · [DOC-014]
 
-### DOC-003 · Documentation is present whether or not it is generated  [BINDING] [auto:ruff:D100] [check:doc_coverage]
+### DOC-003 · Documentation is present whether or not it is generated  [BINDING] [fitness:test_ordinary_gate_schedules_documentation_presence]
 The presence checks MUST run in the ordinary gate, not in a documentation job. A repository
 that never builds documentation is held to the same standard as one that publishes it.
 - **Why** Documentation tied to a build step is documentation that lapses the moment the
   build is switched off, and nobody notices until someone needs it.
-- **Check** `ruff check` and `python -m checks.doc_coverage`, both in the standard gate
+- **Check** `pytest tools/test_project_gate.py::test_ordinary_gate_schedules_documentation_presence`
 - **See** [law/FLOW]
 
 ---

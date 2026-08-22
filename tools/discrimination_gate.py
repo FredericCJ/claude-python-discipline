@@ -33,7 +33,7 @@ import subprocess  # ruff: ignore[suspicious-subprocess-import]
 import sys
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, cast
 
 import import_gate
 import lint_gate
@@ -107,6 +107,19 @@ def damaged(mutation: discrimination.Mutation, workspace: Path) -> Path:
         `broken_copy` raises rather than silently leaving the tree intact
     """
     written = dict(mutation.write)
+    if mutation.base == "repository":
+        root = workspace / "repository"
+        shutil.copytree(
+            REPO_ROOT,
+            root,
+            ignore=shutil.ignore_patterns(
+                ".git", ".agent", ".agents", ".claude", ".pytest_cache",
+                ".ruff_cache", ".mypy_cache", ".hypothesis", "__pycache__",
+                "build", "dist",
+            ),
+        )
+        _apply_damage(root, mutation)
+        return root
     if mutation.base == "empty":
         root = workspace / "tree"
         for name, contents in written.items():
@@ -118,7 +131,39 @@ def damaged(mutation: discrimination.Mutation, workspace: Path) -> Path:
                        replace=mutation.replace)
 
 
-def fails_against(node: str, root: Path) -> bool:
+def _apply_damage(root: Path, mutation: discrimination.Mutation) -> None:
+    """Apply one mutation to a repository copy with drift detection.
+
+    @param root copied discipline repository
+    @param mutation exact paths and substitutions to apply
+    @throws FileNotFoundError when the declared damage no longer matches the tree
+    """
+    for relative in mutation.drop:
+        target = root / relative
+        if not target.exists():
+            message = f"nothing to drop at {relative}; the repository has moved"
+            raise FileNotFoundError(message)
+        if target.is_dir():
+            shutil.rmtree(target)
+        else:
+            target.unlink()
+    for relative, body in mutation.write:
+        target = root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(body, encoding="utf-8")
+    for relative, old, new in mutation.replace:
+        target = root / relative
+        if not target.exists():
+            message = f"nothing to edit at {relative}; the repository has moved"
+            raise FileNotFoundError(message)
+        source = target.read_text(encoding="utf-8")
+        if old not in source:
+            message = f"{relative} does not contain {old!r}; the repository has moved"
+            raise FileNotFoundError(message)
+        target.write_text(source.replace(old, new, 1), encoding="utf-8")
+
+
+def fails_against(node: str, root: Path, *, repository: bool = False) -> bool:
     """Whether one fitness test fails when pointed at a damaged tree.
 
     The suites read their subject through `fixtures.reference_root()`, which
@@ -132,11 +177,19 @@ def fails_against(node: str, root: Path) -> bool:
 
     @param node the pytest node id to run
     @param root the damaged tree the suite should reject
+    @param repository run the copied repository's test and implementation together
     @return True when pytest reported the node as not passing
     """
+    environment = dict(os.environ)
+    working_directory = REPO_ROOT
+    if repository:
+        environment.pop("DISCIPLINE_REFERENCE", None)
+        working_directory = root
+    else:
+        environment["DISCIPLINE_REFERENCE"] = str(root)
     finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
         (sys.executable, "-m", "pytest", "-q", "-p", "no:randomly", "-x", node),
-        cwd=REPO_ROOT, env={**os.environ, "DISCIPLINE_REFERENCE": str(root)},
+        cwd=working_directory, env=environment,
         capture_output=True, text=True, encoding="utf-8", errors="replace",
         check=False, timeout=600,
     )
@@ -243,8 +296,54 @@ def provoke(mutation: discrimination.Mutation, workspace: Path) -> set[str]:
     if mutation.tool:
         return {mutation.rule_id} if emits(mutation, root) else set()
     if mutation.node:
-        return {mutation.rule_id} if fails_against(mutation.node, root) else set()
+        return {
+            mutation.rule_id
+        } if fails_against(
+            mutation.node, root, repository=mutation.base == "repository"
+        ) else set()
     return findings_for(root, mutation.targets)
+
+
+def repository_preflight() -> list[str]:
+    """Require repository-based fitness nodes to pass before mutation.
+
+    @return one complaint for each already-red unmutated test
+    """
+    nodes = sorted({
+        mutation.node
+        for mutation in discrimination.MUTATIONS
+        if mutation.base == "repository" and mutation.node
+    })
+    return [
+        (
+            f"{node}: the unmutated repository fitness test does not pass, "
+            "so a damaged copy could earn false rejection credit."
+        )
+        for node in nodes
+        if fails_against(node, REPO_ROOT, repository=True)
+    ]
+
+
+def tool_preflight(reference: Path) -> list[str]:
+    """Reject tool mutations whose diagnostic is already present before damage.
+
+    @param reference conformant adopter fixture
+    @return one complaint for each already-present diagnostic
+    """
+    complaints: list[str] = []
+    observed: dict[str, set[str]] = {}
+    for mutation in discrimination.MUTATIONS:
+        if not mutation.tool:
+            continue
+        if mutation.tool not in observed:
+            observed[mutation.tool] = TOOLS[mutation.tool](reference)
+        if _present(mutation, observed[mutation.tool]):
+            complaints.append(
+                f"{mutation.rule_id}: {mutation.tool} already reports "
+                f"{mutation.diagnostic!r} against the CONFORMANT reference, so "
+                "seeing it after the damage would prove nothing."
+            )
+    return complaints
 
 
 def run() -> tuple[int, list[str], set[str]]:
@@ -273,18 +372,11 @@ def run() -> tuple[int, list[str], set[str]]:
     # actually makes the observation mean something. Each tool is run once and
     # its answer reused, because mypy over the reference is seconds, not
     # milliseconds.
-    already: dict[str, set[str]] = {}
-    for mutation in discrimination.MUTATIONS:
-        if not mutation.tool:
-            continue
-        if mutation.tool not in already:
-            already[mutation.tool] = TOOLS[mutation.tool](reference)
-        if _present(mutation, already[mutation.tool]):
-            complaints.append(
-                f"{mutation.rule_id}: {mutation.tool} already reports "
-                f"{mutation.diagnostic!r} against the CONFORMANT reference, so "
-                f"seeing it after the damage would prove nothing."
-            )
+    complaints.extend(tool_preflight(reference))
+    if complaints:
+        return EXIT_FAILED, complaints, provoked
+
+    complaints.extend(repository_preflight())
     if complaints:
         return EXIT_FAILED, complaints, provoked
 
@@ -351,18 +443,38 @@ def ratchets_held(provoked: set[str], gap: list[str],
     @param baseline the committed floor and ceiling
     @return an empty string when both hold, else what slipped and by how much
     """
-    floor = int(baseline.get("count", 0))
+    floor = _baseline_integer(baseline, "count", 0)
     if len(provoked) < floor:
-        lost = ", ".join(sorted(set(baseline.get("rules", [])) - provoked))
+        recorded = baseline.get("rules", [])
+        if not isinstance(recorded, list) or not all(isinstance(item, str) for item in recorded):
+            message = "discrimination baseline rules must be a list of strings"
+            raise TypeError(message)
+        lost = ", ".join(sorted(set(cast("list[str]", recorded)) - provoked))
         return (f"D fell from {floor} to {len(provoked)} -- {lost} no longer "
                 f"provoked. A ratchet may only rise.")
 
     ceiling = baseline.get("gap")
-    if ceiling is not None and len(gap) > int(ceiling):
+    if ceiling is not None and len(gap) > _baseline_integer(baseline, "gap", 0):
         return (f"{len(gap)} decided rule(s) are undiscriminated, above the "
                 f"recorded {ceiling}. A rule may not arrive carrying a mechanism "
                 f"and no mutation.")
     return ""
+
+
+def _baseline_integer(baseline: dict[str, object], field: str, default: int) -> int:
+    """Read one integer field without accepting JSON strings or booleans.
+
+    @param baseline decoded baseline object
+    @param field field to read
+    @param default value when the field is absent
+    @return validated integer
+    @throws TypeError when the field is not an integer
+    """
+    value = baseline.get(field, default)
+    if not isinstance(value, int) or isinstance(value, bool):
+        message = f"discrimination baseline {field} must be an integer"
+        raise TypeError(message)
+    return value
 
 
 def read_baseline() -> dict[str, object]:
@@ -372,7 +484,11 @@ def read_baseline() -> dict[str, object]:
     """
     if not BASELINE_PATH.is_file():
         return {"count": 0, "rules": [], "why": ""}
-    return json.loads(BASELINE_PATH.read_text(encoding="utf-8"))
+    loaded: object = json.loads(BASELINE_PATH.read_text(encoding="utf-8"))
+    if not isinstance(loaded, dict) or not all(isinstance(key, str) for key in loaded):
+        message = "discrimination baseline must be a JSON object with string keys"
+        raise TypeError(message)
+    return cast("dict[str, object]", loaded)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -399,7 +515,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  {complaint}", file=sys.stderr)
 
     baseline = read_baseline()
-    floor = int(baseline.get("count", 0))
+    floor = _baseline_integer(baseline, "count", 0)
 
     if arguments.update_baseline:
         if status != EXIT_OK:

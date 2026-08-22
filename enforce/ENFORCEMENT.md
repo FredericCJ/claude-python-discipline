@@ -4,12 +4,12 @@
 
 This ledger keeps unlike claims unlike. A rule can be normatively binding while its verifier is absent; a verifier can exist while deciding only a proxy; a proxy can pass while its residual remains true; and a successful adopter does not prove universal benefit. No state below is a project-gate outcome.
 
-- **176** binding rules; **2** lack an available declared strategy.
+- **176** binding rules; **0** lack an available declared strategy.
 - **26** advisory rules and **0** open rules.
-- **192** exact strategy records: **30** direct and **162** proxy claims.
-- **73/166** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
+- **191** exact strategy records: **31** direct and **160** proxy claims.
+- **75/166** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
 - **21/212** rules carry named field observations.
-- **103/103** named mechanisms resolve locally or delegate explicitly; **0** local mechanisms are absent.
+- **105/105** named mechanisms resolve locally or delegate explicitly; **0** local mechanisms are absent.
 
 ## Verifier-state census
 
@@ -17,11 +17,11 @@ Measured against this tree, not copied from the rule heading. `discipline/rules.
 
 | State | Rules | Means |
 |---|---|---|
-| `local-verifier` | 129 | repository-local code observes every strategy |
+| `local-verifier` | 131 | repository-local code observes every strategy |
 | `external-verifier` | 24 | every strategy delegates to a configured tool |
 | `mixed-verifiers` | 11 | several verifier kinds contribute |
 | `structured-review` | 10 | judgment is recorded in a checked review artifact |
-| `unbuilt` | 2 | at least one named local verifier is absent |
+| `unbuilt` | 0 | at least one named local verifier is absent |
 | `undeclared` | 26 | the active rule has no strategy record |
 | `retired` | 10 | the stable id remains only for history |
 
@@ -36,15 +36,6 @@ An `external-verifier` state says the strategy delegates a proposition to a tool
 | `mypy` | yes -- gate step `types` |
 | `pyright` | yes -- gate step `types` |
 | `ruff` | yes -- gate step `format and lint` |
-
-## Binding rules without an available strategy
-
-These remain normative obligations, but the declared verifier is absent or missing. They cannot contribute to a green release verdict.
-
-| Rule | Verifier | Mechanism | Title |
-|---|---|---|---|
-| `DOC-003` | `unbuilt` | `auto:ruff:D100` `check:doc_coverage` | Documentation is present whether or not it is generated |
-| `FLOW-012` | `unbuilt` | `check:deviation_recorded` | Report what happened, including what did not |
 
 ## Rule evidence
 
@@ -132,7 +123,7 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `DIAG-016` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | State transitions are observable |
 | `DOC-001` | BINDING | `mixed-verifiers` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:ruff:D100; it does not establish the full semantic benefit of the normative statement.; Passing excludes only the… | Every module, class, function and method is documented |
 | `DOC-002` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:doc_coverage; it does not establish the full semantic benefit of the normative statement. | Every named value is documented |
-| `DOC-003` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:ruff:D100; it does not establish the full semantic benefit of the normative statement.; Passing excludes only the… | Documentation is present whether or not it is generated |
+| `DOC-003` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | none | Passing does not constrain project-owned wrappers that bypass the canonical gate; those wrappers are outside the shipped gate contract and cannot certify v4 conformance. | Documentation is present whether or not it is generated |
 | `DOC-004` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:doc_style; it does not establish the full semantic benefit of the normative statement. | Documentation lives in docstrings wherever Python has a slot |
 | `DOC-005` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:doxygen; it does not establish the full semantic benefit of the normative statement. | Docstrings are parsed as documentation, not text |
 | `DOC-006` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:ruff:D205; it does not establish the full semantic benefit of the normative statement. | A brief statement comes first |
@@ -195,7 +186,7 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `FLOW-009` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | `V3E-006` | Passing covers only the cases and artifact shapes encoded by fitness:test_gate_suite_defined; it does not establish every behavior in the normative statement. | The gates pass before a change is offered |
 | `FLOW-010` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | New behaviour arrives with its obligations discharged |
 | `FLOW-011` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_envelope_conforms; it does not establish every behavior in the normative statement. | The diagnosis is checked, not assumed |
-| `FLOW-012` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:deviation_recorded; it does not establish the full semantic benefit of the normative statement. | Report what happened, including what did not |
+| `FLOW-012` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | The report cannot prove that a human-authored change description reproduces its facts; the machine report remains the authoritative handoff evidence. | Report what happened, including what did not |
 | `FLOW-013` | RETIRED | `retired` | n/a | n/a | n/a | none | n/a | Scale ceremony to reuse ambition, not to line count |
 | `LEARN-001` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:session_recorded; it does not establish the full semantic benefit of the normative statement. | A session records what it learned before reporting done |
 | `LEARN-002` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:learn; it does not establish the full semantic benefit of the normative statement. | A learning states a claim, an action and a trigger |
@@ -267,9 +258,9 @@ These remain normative obligations, but the declared verifier is absent or missi
 
 | Kind | Rules |
 |---|---|
-| `auto` | 39 |
-| `check` | 86 |
-| `fitness` | 56 |
+| `auto` | 38 |
+| `check` | 84 |
+| `fitness` | 58 |
 | `review` | 11 |
 
 ## Advisory rationale

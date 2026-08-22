@@ -2,7 +2,7 @@
 id: law/FLOW
 kind: law
 title: How a Change Is Made
-tokens: 2259
+tokens: 2281
 load_when:
   - "definition of done"
   - "before i commit"
@@ -141,12 +141,12 @@ fault without reading the source.
 - **Check** `pytest enforce/fitness/test_diagnostics.py::test_envelope_conforms`
 - **See** [law/DIAG]
 
-### FLOW-012 · Report what happened, including what did not  [BINDING] [check:deviation_recorded]
+### FLOW-012 · Report what happened, including what did not  [BINDING] [fitness:test_report_records_every_non_pass_as_a_deviation]
 A change description MUST state what was verified, what was skipped and why, and any rule
 deviation with its identifier. A failing test is reported as failing.
 - **Why** An agent inherits the previous agent's report as fact; a report that rounds a
   partial result up to a complete one poisons every decision built on it.
-- **Check** `python -m checks.deviation_recorded`
+- **Check** `pytest tools/test_project_gate.py::test_report_records_every_non_pass_as_a_deviation`
 
 ### FLOW-013 · Scale ceremony to reuse ambition, not to line count  [RETIRED]
 Retired in v4 because disposable scripts and lightweight profiles are outside the

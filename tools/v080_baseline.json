@@ -1,16 +1,7 @@
 {
   "generated_by": "tools/validate.py --update-baseline",
   "note": "Ratchet ceiling for V081/V082. validate.py fails when the corpus's unbuilt-mechanism count exceeds `count` below, and only warns when it falls under it. Move this file with `python tools/validate.py --update-baseline --why \"...\"`, never by hand -- the pairs must stay exactly what the tool itself measured.",
-  "count": 2,
-  "pairs": [
-    [
-      "DOC-003",
-      "check:doc_coverage"
-    ],
-    [
-      "FLOW-012",
-      "check:deviation_recorded"
-    ]
-  ],
-  "why": "Build DOC-008 type-restatement and DOC-014 explicit-engine mechanisms."
+  "count": 0,
+  "pairs": [],
+  "why": "Implement DOC-003 gate scheduling and FLOW-012 deviation-report mechanisms."
 }

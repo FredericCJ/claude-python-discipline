@@ -1318,6 +1318,14 @@
    }
   },
   {
+   "id": "mech:fitness:test_ordinary_gate_schedules_documentation_presence",
+   "type": "mechanism",
+   "label": "fitness:test_ordinary_gate_schedules_documentation_presence",
+   "attrs": {
+    "family": "fitness"
+   }
+  },
+  {
    "id": "mech:fitness:test_overruled_objections_are_kept",
    "type": "mechanism",
    "label": "fitness:test_overruled_objections_are_kept",
@@ -1353,6 +1361,14 @@
    "id": "mech:fitness:test_rejection_credit_is_witnessed",
    "type": "mechanism",
    "label": "fitness:test_rejection_credit_is_witnessed",
+   "attrs": {
+    "family": "fitness"
+   }
+  },
+  {
+   "id": "mech:fitness:test_report_records_every_non_pass_as_a_deviation",
+   "type": "mechanism",
+   "label": "fitness:test_report_records_every_non_pass_as_a_deviation",
    "attrs": {
     "family": "fitness"
    }
@@ -1619,7 +1635,7 @@
    "type": "module",
    "label": "Documentation Comments",
    "path": "discipline/law/DOC.md",
-   "tokens": 2392,
+   "tokens": 2408,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1667,7 +1683,7 @@
    "type": "module",
    "label": "How a Change Is Made",
    "path": "discipline/law/FLOW.md",
-   "tokens": 2259,
+   "tokens": 2281,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -9445,13 +9461,7 @@
   {
    "type": "enforced_by",
    "src": "DOC-003",
-   "dst": "mech:auto:ruff:D100",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
-   "src": "DOC-003",
-   "dst": "mech:check:doc_coverage",
+   "dst": "mech:fitness:test_ordinary_gate_schedules_documentation_presence",
    "origin": "derived"
   },
   {
@@ -9793,7 +9803,7 @@
   {
    "type": "enforced_by",
    "src": "FLOW-012",
-   "dst": "mech:check:deviation_recorded",
+   "dst": "mech:fitness:test_report_records_every_non_pass_as_a_deviation",
    "origin": "derived"
   },
   {
@@ -11065,6 +11075,12 @@
   {
    "type": "grounds_on",
    "src": "DOC-001",
+   "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-001",
    "dst": "fact/py-typing",
    "origin": "derived"
   },
@@ -11072,6 +11088,12 @@
    "type": "grounds_on",
    "src": "DOC-002",
    "dst": "fact/doxygen",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-002",
+   "dst": "fact/py-testing",
    "origin": "derived"
   },
   {
@@ -11084,6 +11106,12 @@
    "type": "grounds_on",
    "src": "DOC-003",
    "dst": "fact/doxygen",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-003",
+   "dst": "fact/py-testing",
    "origin": "derived"
   },
   {
@@ -11096,6 +11124,12 @@
    "type": "grounds_on",
    "src": "DOC-004",
    "dst": "fact/doxygen",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-004",
+   "dst": "fact/py-testing",
    "origin": "derived"
   },
   {
@@ -11108,6 +11142,12 @@
    "type": "grounds_on",
    "src": "DOC-005",
    "dst": "fact/doxygen",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-005",
+   "dst": "fact/py-testing",
    "origin": "derived"
   },
   {
@@ -11120,6 +11160,12 @@
    "type": "grounds_on",
    "src": "DOC-006",
    "dst": "fact/doxygen",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-006",
+   "dst": "fact/py-testing",
    "origin": "derived"
   },
   {
@@ -11132,6 +11178,12 @@
    "type": "grounds_on",
    "src": "DOC-007",
    "dst": "fact/doxygen",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-007",
+   "dst": "fact/py-testing",
    "origin": "derived"
   },
   {
@@ -11144,6 +11196,12 @@
    "type": "grounds_on",
    "src": "DOC-008",
    "dst": "fact/doxygen",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-008",
+   "dst": "fact/py-testing",
    "origin": "derived"
   },
   {
@@ -11156,6 +11214,12 @@
    "type": "grounds_on",
    "src": "DOC-009",
    "dst": "fact/doxygen",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-009",
+   "dst": "fact/py-testing",
    "origin": "derived"
   },
   {
@@ -11168,6 +11232,12 @@
    "type": "grounds_on",
    "src": "DOC-010",
    "dst": "fact/doxygen",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-010",
+   "dst": "fact/py-testing",
    "origin": "derived"
   },
   {
@@ -11180,6 +11250,12 @@
    "type": "grounds_on",
    "src": "DOC-011",
    "dst": "fact/doxygen",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-011",
+   "dst": "fact/py-testing",
    "origin": "derived"
   },
   {
@@ -11192,6 +11268,12 @@
    "type": "grounds_on",
    "src": "DOC-012",
    "dst": "fact/doxygen",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-012",
+   "dst": "fact/py-testing",
    "origin": "derived"
   },
   {
@@ -11204,6 +11286,12 @@
    "type": "grounds_on",
    "src": "DOC-013",
    "dst": "fact/doxygen",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-013",
+   "dst": "fact/py-testing",
    "origin": "derived"
   },
   {
@@ -11216,6 +11304,12 @@
    "type": "grounds_on",
    "src": "DOC-014",
    "dst": "fact/doxygen",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-014",
+   "dst": "fact/py-testing",
    "origin": "derived"
   },
   {
@@ -12608,6 +12702,12 @@
    "type": "grounds_on",
    "src": "law/DOC",
    "dst": "fact/doxygen",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "law/DOC",
+   "dst": "fact/py-testing",
    "origin": "derived"
   },
   {

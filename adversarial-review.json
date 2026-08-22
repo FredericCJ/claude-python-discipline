@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "review_id": "v4_security_slice_adversarial_acceptance",
-  "reviewed_commit": "4f44a86432464f9e0b73af8322df01179b3fbac2",
+  "reviewed_commit": "356fc08680e010127fc72697ad321e07ded765d7",
   "scope": {
     "algorithm": "sha256",
-    "digest": "sha256:427e1f4f455a5cc4ab1358f2d73b4c18f2636608fbe2969189c8064c3acb931b",
+    "digest": "sha256:cc40b101a2af0e2f3f9c52019758a9558fa1483f05b37032d4d2fba06d90eb63",
     "file_count": 281,
     "categories": [
       "project_declaration",
@@ -63,7 +63,7 @@
     {
       "id": "supply_chain",
       "challenge": "Can generated doctrine views, mirrored host skills, vendored manifests, or a delivered archive drift from the authored source while the gate stays green?",
-      "conclusion": "Generated drift and byte-identical host mirrors are checked and tested, and vendoring preserves a manifest. Full v4 reproducible build and install certification is not yet complete and is retained as release-gate debt.",
+      "conclusion": "Generated drift and byte-identical host mirrors are checked and tested, vendoring preserves a manifest, and the project gate now verifies built and freshly installed artifacts. Full reproducible combined-package certification remains release-gate debt.",
       "evidence": ["tools/build_skill_mirror.py", "tools/test_build_skill_mirror.py", "tools/test_vendor.py", "roadmap/from-3.2-to-4.0/README.md"]
     },
     {
@@ -177,7 +177,7 @@
       "id": "release_gate_debt",
       "category": "test_oracles",
       "severity": "high",
-      "statement": "The repository still records two unbuilt mechanisms and 92 mechanical claims without witnessed rejection, so this development snapshot cannot support a v4.0 release verdict.",
+      "statement": "The repository records zero unbuilt mechanisms but still has 91 mechanical claims without witnessed rejection, so this development snapshot cannot support a v4.0 release verdict.",
       "disposition": "accepted_risk",
       "resolution": "Acceptance is limited to the current gate-rebuild workstream as a base for continued implementation; the roadmap makes zero unbuilt mechanisms and zero rejection gap mandatory before release.",
       "evidence": "roadmap/from-3.2-to-4.0/README.md",

@@ -20,6 +20,8 @@ from typing import cast
 import pytest
 
 import project_gate
+from checks.__main__ import discover
+from decides import decides
 from fixtures import reference_root
 
 
@@ -94,6 +96,29 @@ def test_reference_loads_one_declaration_for_every_check() -> None:
     assert report.outcomes[1].configuration == report.outcomes[0].configuration
 
 
+@decides("DOC-003")
+def test_ordinary_gate_schedules_documentation_presence() -> None:
+    """Documentation presence is part of the default gate, not a doc-only job."""
+    scheduled = [
+        step for step in project_gate.DEFAULT_STEPS
+        if isinstance(step, project_gate.DisciplineChecksAdapter)
+    ]
+    discovered = {
+        type(check).__module__.rsplit(".", maxsplit=1)[-1]
+        for check in discover()
+    }
+
+    assert len(scheduled) == 1
+    assert "DOC-003" in scheduled[0].rules
+    assert "doc_coverage" in discovered
+
+    report = project_gate.run(reference_root(), steps=tuple(scheduled))
+    assert report.green
+    assert report.outcomes[1].step_id == "discipline-checks"
+    assert report.outcomes[1].subjects > 0
+
+
+@decides("FLOW-012")
 def test_report_records_every_non_pass_as_a_deviation(tmp_path: Path) -> None:
     """Failure and prevented work retain distinct reasons in serialized output."""
     report = project_gate.run(tmp_path)
@@ -101,6 +126,7 @@ def test_report_records_every_non_pass_as_a_deviation(tmp_path: Path) -> None:
 
     assert document["verdict"] == "fail"
     deviations = cast("list[dict[str, object]]", document["deviations"])
+    assert len(deviations) == len(report.outcomes)
     assert deviations[0]["status"] == "fail"
     assert all(item["status"] == "not-run" for item in deviations[1:])
     encoded = json.dumps(document)

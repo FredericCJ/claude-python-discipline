@@ -37,8 +37,10 @@ from typing import Final
 ## Where a mutation is applied. `reference` copies the conformant package and
 ## damages it, which is right for anything scoped to a source tree. `empty` builds
 ## a tree from `write` alone, for rules whose subject is not a package at all --
-## an agent definition, a learning ledger, a generated artefact.
-BASES: Final[frozenset[str]] = frozenset({"reference", "empty"})
+## an agent definition, a learning ledger, a generated artefact. `repository`
+## copies the discipline implementation itself, for a fitness mechanism whose
+## proposition is wiring in the shipped gate rather than an adopter property.
+BASES: Final[frozenset[str]] = frozenset({"reference", "empty", "repository"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -551,6 +553,22 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         ),
     ),
     Mutation(
+        rule_id="DOC-003",
+        summary="the default project gate no longer schedules discipline checks",
+        source=(
+            "The rule's exact ordinary-gate clause: removing the aggregate "
+            "adapter leaves documentation presence available only to an explicit "
+            "caller and must fail the scheduling fitness test."
+        ),
+        base="repository",
+        replace=((
+            "tools/project_gate.py",
+            "    DisciplineChecksAdapter(),\n    RUFF_STEP,",
+            "    RUFF_STEP,",
+        ),),
+        node="tools/test_project_gate.py::test_ordinary_gate_schedules_documentation_presence",
+    ),
+    Mutation(
         rule_id="DOC-008",
         summary="a parameter's signature type is repeated in its prose contract",
         source=(
@@ -684,6 +702,22 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             ),
         ),
         targets=("tests",),
+    ),
+    Mutation(
+        rule_id="FLOW-012",
+        summary="the report silently drops prevented not-run outcomes",
+        source=(
+            "The rule's including-what-did-not clause: narrowing the deviation "
+            "ledger to explicit failures erases every prevented gate step even "
+            "though each outcome remains known to the report."
+        ),
+        base="repository",
+        replace=((
+            "tools/project_gate.py",
+            "            if result.status is not Status.PASS\n",
+            "            if result.status is Status.FAIL\n",
+        ),),
+        node="tools/test_project_gate.py::test_report_records_every_non_pass_as_a_deviation",
     ),
     # ------------------------------------------------------------------- ops
     #

@@ -16,7 +16,7 @@ decay: none
 
 **A proxy cannot decide its parent semantic rule.** Passing its proposition establishes only the stated syntax or behavior and leaves the printed residual. `rule-level witnessed` is deliberately weaker than v4's target: the inherited matrix proves that some strategy rejected a case for that rule, but cannot yet attribute the rejection to one exact strategy.
 
-2 of 176 binding rules lack an available declared strategy. 73 of 166 rules with automated strategies have inherited rule-level rejection evidence. 162 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
+0 of 176 binding rules lack an available declared strategy. 75 of 166 rules with automated strategies have inherited rule-level rejection evidence. 160 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
 
 ## Modules
 
@@ -34,11 +34,11 @@ decay: none
 | [law/ARCH-PORTS](law/ARCH-PORTS.md) | law | 841 | 6 | new port, boundary contract, adapter substitute, fake adapter, fault schedule, contract suite |
 | [law/DEP](law/DEP.md) | law | 2111 | 14 | add a dependency, third party library, lockfile, environment, code generation, generated file |
 | [law/DIAG](law/DIAG.md) | law | 2634 | 16 | exception, traceback, logging, error message, error code, correlation id |
-| [law/DOC](law/DOC.md) | law | 2392 | 14 | docstring, documentation comment, doxygen, @param, @return, document this function |
+| [law/DOC](law/DOC.md) | law | 2408 | 14 | docstring, documentation comment, doxygen, @param, @return, document this function |
 | [law/EFCT](law/EFCT.md) | law | 2408 | 16 | write a file, mutation, state machine, transaction, rollback, dry run |
 | [law/ERR](law/ERR.md) | law | 2629 | 16 | raise, except, Result, error type, exception hierarchy, validation |
 | [law/EVID](law/EVID.md) | law | 1288 | 8 | why is this a rule, verification strategy, mechanism, proxy, residual, discrimination |
-| [law/FLOW](law/FLOW.md) | law | 2259 | 13 | definition of done, before i commit, what should i do first, ADR, decision record, review |
+| [law/FLOW](law/FLOW.md) | law | 2281 | 13 | definition of done, before i commit, what should i do first, ADR, decision record, review |
 | [law/LEARN](law/LEARN.md) | law | 1888 | 12 | learning, record what i learned, session memory, why did this fail before, calibration, promote a learning |
 | [law/OPS](law/OPS.md) | law | 1575 | 8 | capability manifest, operational behavior, subprocess lifecycle, network io, persistent state, generated artifact |
 | [law/SEC](law/SEC.md) | law | 1095 | 4 | security model, trust boundary, sensitive data, classification, redaction, least exposure |
@@ -150,7 +150,7 @@ decay: none
 |---|---|---|---|---|---|---|---|---|
 | `DOC-001` | BINDING | `mixed-verifiers` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:ruff:D100; it does not establ… | none | Every module, class, function and method is documented |
 | `DOC-002` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:doc_coverage; it does not es… | none | Every named value is documented |
-| `DOC-003` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:ruff:D100; it does not establ… | none | Documentation is present whether or not it is generated |
+| `DOC-003` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Passing does not constrain project-owned wrappers that bypass the canonical gate; those wrapper… | none | Documentation is present whether or not it is generated |
 | `DOC-004` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:doc_style; it does not estab… | none | Documentation lives in docstrings wherever Python has a slot |
 | `DOC-005` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:doxygen; it does not establis… | none | Docstrings are parsed as documentation, not text |
 | `DOC-006` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:ruff:D205; it does not establ… | none | A brief statement comes first |
@@ -233,7 +233,7 @@ decay: none
 | `FLOW-009` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_gate_suite_defined; i… | `V3E-006` | The gates pass before a change is offered |
 | `FLOW-010` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | New behaviour arrives with its obligations discharged |
 | `FLOW-011` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_envelope_conforms; it… | none | The diagnosis is checked, not assumed |
-| `FLOW-012` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:deviation_recorded; it does… | none | Report what happened, including what did not |
+| `FLOW-012` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | The report cannot prove that a human-authored change description reproduces its facts; the mach… | none | Report what happened, including what did not |
 | `FLOW-013` | RETIRED | `retired` | n/a | n/a | n/a | n/a | none | Scale ceremony to reuse ambition, not to line count |
 
 ### law/LEARN
