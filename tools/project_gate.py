@@ -17,18 +17,23 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.metadata
 import json
 import platform
+import re
+import subprocess  # ruff: ignore[suspicious-subprocess-import]
 import sys
+import tempfile
 import time
 import tomllib
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Protocol, cast
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Callable, Sequence
 
 ## The installed bundle: the repository root upstream and ``.agent`` when vendored.
 BUNDLE_ROOT: Final = Path(__file__).resolve().parent.parent
@@ -176,6 +181,8 @@ class GateContext:
 
     ## Exact governed root supplied to the CLI.
     root: Path
+    ## Ephemeral workspace for caches and later build/install isolation.
+    scratch: Path
     ## Required v4 unit kind, narrowed once at the declaration boundary.
     unit: project.UnitKind
     ## Parsed v4 declaration; no permissive ancestor fallback is possible here.
@@ -328,10 +335,11 @@ def _required_unit(declaration: project.Declaration, source: Path) -> project.Un
     return declaration.unit
 
 
-def _load_context(root: Path) -> tuple[StepResult, GateContext | None]:
+def _load_context(root: Path, scratch: Path) -> tuple[StepResult, GateContext | None]:
     """Load one exact-root declaration and expose its content binding.
 
     @param root governed repository root
+    @param scratch ephemeral gate workspace
     @return declaration outcome and context, or no context after refusal
     """
     started = time.perf_counter()
@@ -371,7 +379,7 @@ def _load_context(root: Path) -> tuple[StepResult, GateContext | None]:
         tool="agent-discipline declaration schema v4",
         duration_ms=duration,
     )
-    return result, GateContext(root, declared_unit, declaration, document, use)
+    return result, GateContext(root, scratch, declared_unit, declaration, document, use)
 
 
 def _bounded_output(findings: Sequence[Finding]) -> str:
@@ -465,8 +473,629 @@ class DisciplineChecksAdapter:
         return _run_discipline_checks(context)
 
 
+class ConfigurationProbeError(ValueError):
+    """A required tool field is missing, malformed, or points outside the root."""
+
+    def __init__(self, field: str, detail: str) -> None:
+        """Preserve the exact field for a stable gate diagnostic.
+
+        @param field dotted configuration field
+        @param detail actionable refusal reason
+        """
+        super().__init__(f"{field}: {detail}")
+        self.field = field
+        self.detail = detail
+
+
+class CommandExecutionError(RuntimeError):
+    """An external mechanism could not complete and produce a verdict."""
+
+
+@dataclass(frozen=True, slots=True)
+class PreparedCommand:
+    """Configuration-probed command ready for execution."""
+
+    ## Fully explicit argv; no tool may discover targets or config from ancestors.
+    command: tuple[str, ...]
+    ## Exact configuration inputs and fields consumed.
+    configuration: tuple[ConfigurationUse, ...]
+    ## Non-empty source, test, or contract count established before launch.
+    subjects: int
+    ## Diagnostic emitted when the command reports findings.
+    failure_diagnostic: str
+    ## Human description of the inspected subject.
+    subject_label: str
+
+
+@dataclass(frozen=True, slots=True)
+class CommandExecution:
+    """Bounded external-process observation."""
+
+    ## Process exit status.
+    returncode: int
+    ## Combined stdout and stderr, decoded with replacement.
+    output: str
+    ## Measured wall time.
+    duration_ms: int
+
+
+@dataclass(frozen=True, slots=True)
+class Evaluation:
+    """Semantic interpretation of one external process observation."""
+
+    ## None for pass, otherwise the precise failed predicate.
+    diagnostic_id: str | None
+    ## Standalone outcome explanation.
+    summary: str
+    ## Bounded details retained only when action is required.
+    output: str = ""
+
+
+def _probe_error(field: str, detail: str) -> ConfigurationProbeError:
+    """Build a typed configuration refusal without raising inside parsing loops.
+
+    @param field dotted configuration field
+    @param detail actionable refusal reason
+    @return typed refusal
+    """
+    return ConfigurationProbeError(field, detail)
+
+
+def _table(document: Mapping[str, object], path: tuple[str, ...]) -> Mapping[str, object]:
+    """Read one required nested TOML table.
+
+    @param document decoded project file
+    @param path table segments
+    @return nested table
+    @throws ConfigurationProbeError when a segment is absent or not a table
+    """
+    current: object = document
+    traversed: list[str] = []
+    for segment in path:
+        traversed.append(segment)
+        if not isinstance(current, Mapping) or segment not in current:
+            field = ".".join(traversed)
+            raise _probe_error(field, "required table is absent")
+        current = current[segment]
+    if not isinstance(current, Mapping):
+        field = ".".join(path)
+        raise _probe_error(field, "expected a table")
+    return cast("Mapping[str, object]", current)
+
+
+def _string_list(value: object, field: str) -> tuple[str, ...]:
+    """Parse a non-empty path list, accepting mypy's single-string shorthand.
+
+    @param value decoded TOML value
+    @param field dotted field name
+    @return non-empty strings
+    @throws ConfigurationProbeError on an empty or non-string member
+    """
+    values: object = [value] if isinstance(value, str) else value
+    if not isinstance(values, list) or not values:
+        raise _probe_error(field, "expected a non-empty string array")
+    if not all(isinstance(item, str) and item.strip() for item in values):
+        raise _probe_error(field, "every target must be a non-empty string")
+    return tuple(cast("list[str]", values))
+
+
+def _local_targets(
+    context: GateContext, values: Sequence[str], field: str,
+) -> tuple[tuple[str, ...], int]:
+    """Resolve explicit targets while refusing parent, sibling, and empty scans.
+
+    @param context exact governed repository
+    @param values repository-relative paths
+    @param field dotted configuration field
+    @return normalized command targets and distinct Python file count
+    @throws ConfigurationProbeError when a target escapes, is absent, or is empty
+    """
+    normalized: list[str] = []
+    files: set[Path] = set()
+    for value in values:
+        raw = Path(value)
+        candidate = (context.root / raw).resolve()
+        if raw.is_absolute() or not candidate.is_relative_to(context.root):
+            raise _probe_error(field, f"target {value!r} escapes the governed repository")
+        if not candidate.exists():
+            raise _probe_error(field, f"target {value!r} does not exist")
+        normalized.append(candidate.relative_to(context.root).as_posix())
+        candidates = candidate.rglob("*.py") if candidate.is_dir() else (candidate,)
+        files.update(path.resolve() for path in candidates if path.is_file())
+    if not files:
+        raise _probe_error(field, "configured targets contain no Python files")
+    return tuple(dict.fromkeys(normalized)), len(files)
+
+
+def _project_configuration(
+    context: GateContext, fields: Sequence[str],
+) -> ConfigurationUse:
+    """Reuse the declaration digest while narrowing the consumed field set.
+
+    @param context exact governed repository
+    @param fields tool-specific dotted fields
+    @return content-bound configuration record
+    """
+    return ConfigurationUse(
+        path=context.declaration_use.path,
+        sha256=context.declaration_use.sha256,
+        fields=tuple(fields),
+    )
+
+
+def _require_value(
+    table: Mapping[str, object], key: str, expected: object, field: str,
+) -> None:
+    """Require one exact configuration posture value.
+
+    @param table containing tool configuration
+    @param key local field name
+    @param expected required value
+    @param field full dotted field name
+    @throws ConfigurationProbeError when the value differs
+    """
+    if table.get(key) != expected:
+        raise _probe_error(field, f"expected {expected!r}, found {table.get(key)!r}")
+
+
+def _prepare_ruff(context: GateContext) -> PreparedCommand:
+    """Prove Ruff configuration and targets before constructing its argv.
+
+    @param context exact governed repository
+    @return explicit Ruff command
+    """
+    table = _table(context.pyproject, ("tool", "ruff"))
+    targets, subjects = _local_targets(
+        context,
+        _string_list(table.get("src"), "tool.ruff.src"),
+        "tool.ruff.src",
+    )
+    use = _project_configuration(context, ("tool.ruff", "tool.ruff.src"))
+    return PreparedCommand(
+        command=(
+            sys.executable,
+            "-m",
+            "ruff",
+            "check",
+            "--config",
+            str(context.root / "pyproject.toml"),
+            *targets,
+        ),
+        configuration=(use,),
+        subjects=subjects,
+        failure_diagnostic="GATE-RUFF-003_FINDINGS",
+        subject_label="Python files",
+    )
+
+
+def _declared_source_targets(context: GateContext) -> tuple[str, ...]:
+    """Repository-relative source roots from the validated declaration.
+
+    @param context exact governed repository
+    @return non-empty POSIX paths
+    """
+    return tuple(
+        path.resolve().relative_to(context.root).as_posix()
+        for path in context.declaration.source_paths()
+    )
+
+
+def _prepare_mypy(context: GateContext) -> PreparedCommand:
+    """Prove strict mypy configuration and a non-empty explicit target set.
+
+    @param context exact governed repository
+    @return explicit mypy command
+    """
+    table = _table(context.pyproject, ("tool", "mypy"))
+    _require_value(
+        table=table,
+        key="strict",
+        expected=True,
+        field="tool.mypy.strict",
+    )
+    raw_targets = (
+        _string_list(table["files"], "tool.mypy.files")
+        if "files" in table
+        else _declared_source_targets(context)
+    )
+    targets, subjects = _local_targets(context, raw_targets, "tool.mypy.files")
+    use = _project_configuration(
+        context,
+        ("tool.mypy", "tool.mypy.strict", "tool.mypy.files"),
+    )
+    return PreparedCommand(
+        command=(
+            sys.executable,
+            "-m",
+            "mypy",
+            "--config-file",
+            str(context.root / "pyproject.toml"),
+            "--no-incremental",
+            "--cache-dir",
+            str(context.scratch / "mypy-cache"),
+            *targets,
+        ),
+        configuration=(use,),
+        subjects=subjects,
+        failure_diagnostic="GATE-MYPY-003_FINDINGS",
+        subject_label="Python files",
+    )
+
+
+def _prepare_pyright(context: GateContext) -> PreparedCommand:
+    """Prove strict pyright configuration and a non-empty explicit include set.
+
+    @param context exact governed repository
+    @return explicit pyright command requesting machine-readable output
+    """
+    table = _table(context.pyproject, ("tool", "pyright"))
+    _require_value(table, "typeCheckingMode", "strict", "tool.pyright.typeCheckingMode")
+    targets, subjects = _local_targets(
+        context,
+        _string_list(table.get("include"), "tool.pyright.include"),
+        "tool.pyright.include",
+    )
+    use = _project_configuration(
+        context,
+        ("tool.pyright", "tool.pyright.typeCheckingMode", "tool.pyright.include"),
+    )
+    return PreparedCommand(
+        command=(
+            sys.executable,
+            "-m",
+            "pyright",
+            "--project",
+            str(context.root / "pyproject.toml"),
+            "--outputjson",
+            *targets,
+        ),
+        configuration=(use,),
+        subjects=subjects,
+        failure_diagnostic="GATE-PYRIGHT-003_FINDINGS",
+        subject_label="Python files",
+    )
+
+
+def _prepare_pytest(context: GateContext) -> PreparedCommand:
+    """Prove pytest configuration and name every local test root explicitly.
+
+    @param context exact governed repository
+    @return explicit pytest command
+    """
+    table = _table(context.pyproject, ("tool", "pytest", "ini_options"))
+    targets, subjects = _local_targets(
+        context,
+        _string_list(table.get("testpaths"), "tool.pytest.ini_options.testpaths"),
+        "tool.pytest.ini_options.testpaths",
+    )
+    use = _project_configuration(
+        context,
+        ("tool.pytest.ini_options", "tool.pytest.ini_options.testpaths"),
+    )
+    return PreparedCommand(
+        command=(
+            sys.executable,
+            "-m",
+            "pytest",
+            "-c",
+            str(context.root / "pyproject.toml"),
+            "--rootdir",
+            str(context.root),
+            "--strict-config",
+            "--strict-markers",
+            "-q",
+            *targets,
+        ),
+        configuration=(use,),
+        subjects=subjects,
+        failure_diagnostic="GATE-PYTEST-003_FAILURE",
+        subject_label="test files",
+    )
+
+
+def _execute(command: PreparedCommand, root: Path) -> CommandExecution:
+    """Run one fixed argv with bounded time and output capture.
+
+    @param command prepared explicit command
+    @param root exact governed working directory
+    @return process observation
+    @throws CommandExecutionError when the process cannot start or times out
+    """
+    started = time.perf_counter()
+    try:
+        finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
+            command.command,
+            cwd=root,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+            timeout=1800,
+        )
+    except (OSError, subprocess.TimeoutExpired) as problem:
+        raise CommandExecutionError(str(problem)) from problem
+    duration = round((time.perf_counter() - started) * 1000)
+    return CommandExecution(
+        returncode=finished.returncode,
+        output=finished.stdout + finished.stderr,
+        duration_ms=duration,
+    )
+
+
+def _tail(output: str, maximum: int = 4000) -> str:
+    """Bound retained tool output from the actionable end.
+
+    @param output combined process output
+    @param maximum maximum retained characters
+    @return stripped tail
+    """
+    return output[-maximum:].strip()
+
+
+def _last_line(output: str) -> str:
+    """Last non-empty status line from a tool.
+
+    @param output combined process output
+    @return line or a visible no-output marker
+    """
+    lines = [line.strip() for line in output.splitlines() if line.strip()]
+    return lines[-1] if lines else "completed with no textual output"
+
+
+def _distribution_version(name: str) -> str:
+    """Observed installed version behind an external mechanism.
+
+    @param name distribution package name
+    @return installed version
+    @throws PackageNotFoundError when the tool is unavailable
+    """
+    return importlib.metadata.version(name)
+
+
+def _ordinary_evaluation(
+    execution: CommandExecution, command: PreparedCommand,
+) -> Evaluation:
+    """Interpret a conventional zero-success tool without hiding its subject count.
+
+    @param execution process observation
+    @param command prepared command and diagnostic
+    @return pass or tool-finding evaluation
+    """
+    if execution.returncode != 0:
+        return Evaluation(
+            command.failure_diagnostic,
+            f"tool rejected {command.subjects} {command.subject_label}",
+            _tail(execution.output),
+        )
+    return Evaluation(
+        None,
+        f"clean over {command.subjects} {command.subject_label}: {_last_line(execution.output)}",
+    )
+
+
+def _pyright_evaluation(
+    execution: CommandExecution, command: PreparedCommand,
+) -> Evaluation:
+    """Require pyright's own report to confirm that it analysed files.
+
+    @param execution process observation
+    @param command prepared command and expected subject set
+    @return pass, findings, or vacuity failure
+    """
+    start = execution.output.find("{")
+    try:
+        report = json.loads(execution.output[start:]) if start >= 0 else None
+    except json.JSONDecodeError:
+        report = None
+    if not isinstance(report, Mapping):
+        return Evaluation(
+            "GATE-PYRIGHT-004_REPORT",
+            "pyright emitted no parseable JSON report",
+            _tail(execution.output),
+        )
+    summary = report.get("summary")
+    if not isinstance(summary, Mapping):
+        return Evaluation(
+            "GATE-PYRIGHT-004_REPORT",
+            "pyright report has no summary",
+            _tail(execution.output),
+        )
+    analysed = summary.get("filesAnalyzed")
+    errors = summary.get("errorCount")
+    if execution.returncode != 0 or errors != 0:
+        return Evaluation(
+            command.failure_diagnostic,
+            f"pyright reported {errors!r} error(s) after analysing {analysed!r} file(s)",
+            _tail(execution.output),
+        )
+    if not isinstance(analysed, int) or analysed <= 0:
+        return Evaluation(
+            "GATE-PYRIGHT-005_NO_SUBJECT",
+            "pyright reported success after analysing no files",
+            _tail(execution.output),
+        )
+    return Evaluation(None, f"pyright analysed {analysed} file(s) with zero errors")
+
+
+## Pytest's terminal summary carries the number that actually executed.
+_PYTEST_PASSED: Final = re.compile(r"(?:^|\s)(\d+) passed(?:,|\s|$)")
+
+
+def _pytest_evaluation(
+    execution: CommandExecution, command: PreparedCommand,
+) -> Evaluation:
+    """Refuse a zero-test or all-skipped pytest success.
+
+    @param execution process observation
+    @param command prepared command and expected test roots
+    @return pass, test failure, or vacuity failure
+    """
+    if execution.returncode != 0:
+        return Evaluation(
+            command.failure_diagnostic,
+            f"pytest failed while evaluating {command.subjects} configured test file(s)",
+            _tail(execution.output),
+        )
+    matches = _PYTEST_PASSED.findall(execution.output)
+    passed = int(matches[-1]) if matches else 0
+    if passed == 0:
+        return Evaluation(
+            "GATE-PYTEST-004_NO_EXECUTION",
+            "pytest exited zero without reporting any passed test",
+            _tail(execution.output),
+        )
+    return Evaluation(None, f"pytest executed {passed} passing test(s)")
+
+
+@dataclass(frozen=True, slots=True)
+class ConfiguredToolAdapter:
+    """One external mechanism with configuration, version, and subject probes."""
+
+    ## Stable report identity.
+    step_id: str
+    ## Binding rules whose decidable arms use the mechanism.
+    rules: tuple[str, ...]
+    ## Import-package distribution used to obtain the observed version.
+    distribution: str
+    ## Tool-specific configuration probe and argv constructor.
+    prepare: Callable[[GateContext], PreparedCommand]
+    ## Tool-specific process-report interpreter.
+    evaluate: Callable[[CommandExecution, PreparedCommand], Evaluation]
+    ## Platforms on which this adapter is part of the release gate.
+    supported_platforms: tuple[str, ...] = ("Windows", "Linux")
+
+    def _configuration_failure(
+        self, context: GateContext, problem: ConfigurationProbeError,
+    ) -> StepResult:
+        """Render one failed configuration-load probe.
+
+        @param context exact governed repository
+        @param problem field-specific refusal
+        @return red result
+        """
+        use = _project_configuration(context, (problem.field,))
+        return StepResult(
+            step_id=self.step_id,
+            rules=self.rules,
+            status=Status.FAIL,
+            required=True,
+            diagnostic_id=f"GATE-{self.step_id.upper()}-001_CONFIGURATION",
+            summary=str(problem),
+            configuration=(use,),
+            supported_platforms=self.supported_platforms,
+        )
+
+    def __call__(self, context: GateContext) -> StepResult:
+        """Probe, identify, run, and interpret one external tool.
+
+        @param context exact governed repository
+        @return explicit tool outcome
+        """
+        if platform.system() not in self.supported_platforms:
+            return StepResult(
+                step_id=self.step_id,
+                rules=self.rules,
+                status=Status.UNSUPPORTED,
+                required=True,
+                diagnostic_id=f"GATE-{self.step_id.upper()}-002_PLATFORM",
+                summary=f"{platform.system()} is not in {self.supported_platforms}",
+                supported_platforms=self.supported_platforms,
+            )
+        try:
+            command = self.prepare(context)
+        except ConfigurationProbeError as problem:
+            return self._configuration_failure(context, problem)
+        try:
+            version = _distribution_version(self.distribution)
+        except importlib.metadata.PackageNotFoundError:
+            return StepResult(
+                step_id=self.step_id,
+                rules=self.rules,
+                status=Status.UNSUPPORTED,
+                required=True,
+                diagnostic_id=f"GATE-{self.step_id.upper()}-002_TOOL",
+                summary=f"required distribution {self.distribution!r} is not installed",
+                command=command.command,
+                configuration=command.configuration,
+                subjects=command.subjects,
+                supported_platforms=self.supported_platforms,
+            )
+        try:
+            execution = _execute(command, context.root)
+        except CommandExecutionError as problem:
+            return StepResult(
+                step_id=self.step_id,
+                rules=self.rules,
+                status=Status.FAIL,
+                required=True,
+                diagnostic_id=f"GATE-{self.step_id.upper()}-006_EXECUTION",
+                summary=f"tool did not complete: {problem}",
+                command=command.command,
+                configuration=command.configuration,
+                subjects=command.subjects,
+                tool=f"{self.distribution} {version}",
+                supported_platforms=self.supported_platforms,
+            )
+        evaluation = self.evaluate(execution, command)
+        return StepResult(
+            step_id=self.step_id,
+            rules=self.rules,
+            status=Status.PASS if evaluation.diagnostic_id is None else Status.FAIL,
+            required=True,
+            diagnostic_id=evaluation.diagnostic_id,
+            summary=evaluation.summary,
+            command=command.command,
+            configuration=command.configuration,
+            subjects=command.subjects,
+            tool=f"{self.distribution} {version}",
+            supported_platforms=self.supported_platforms,
+            duration_ms=execution.duration_ms,
+            output=evaluation.output,
+        )
+
+
+## Ruff predicates presently named by binding rules.
+RUFF_RULES: Final = (
+    "ARCH-016", "DIAG-008", "DIAG-012", "DIAG-015", "DOC-001", "DOC-003",
+    "DOC-006", "ERR-008", "ERR-009", "TYPE-003",
+)
+## Mypy predicates presently named by binding rules.
+MYPY_RULES: Final = (
+    "ARCH-006", "ERR-002", "ERR-005", "TYPE-001", "TYPE-002", "TYPE-003",
+    "TYPE-006", "TYPE-013",
+)
+## Pyright supplies a deliberately independent strict type oracle.
+PYRIGHT_RULES: Final = ("ERR-002", "TYPE-001")
+## Pytest execution activates the configured timeout, randomization, and socket controls.
+PYTEST_RULES: Final = ("TEST-003", "TEST-017")
+
+## Canonical Ruff adapter.
+RUFF_STEP: Final = ConfiguredToolAdapter(
+    "ruff", RUFF_RULES, "ruff", _prepare_ruff, _ordinary_evaluation,
+)
+## Canonical mypy adapter.
+MYPY_STEP: Final = ConfiguredToolAdapter(
+    "mypy", MYPY_RULES, "mypy", _prepare_mypy, _ordinary_evaluation,
+)
+## Canonical pyright adapter.
+PYRIGHT_STEP: Final = ConfiguredToolAdapter(
+    "pyright", PYRIGHT_RULES, "pyright", _prepare_pyright, _pyright_evaluation,
+)
+## Canonical pytest adapter.
+PYTEST_STEP: Final = ConfiguredToolAdapter(
+    "pytest", PYTEST_RULES, "pytest", _prepare_pytest, _pytest_evaluation,
+)
+
+
 ## The adopter-facing gate grows by adding adapters here, never by local wrappers.
-DEFAULT_STEPS: Final[tuple[StepAdapter, ...]] = (DisciplineChecksAdapter(),)
+DEFAULT_STEPS: Final[tuple[StepAdapter, ...]] = (
+    DisciplineChecksAdapter(),
+    RUFF_STEP,
+    MYPY_STEP,
+    PYRIGHT_STEP,
+    PYTEST_STEP,
+)
 
 
 def _not_run(adapter: StepAdapter, prerequisite: StepResult) -> StepResult:
@@ -497,14 +1126,15 @@ def run(root: Path, *, steps: Sequence[StepAdapter] = DEFAULT_STEPS) -> GateRepo
     @return complete report
     """
     exact_root = root.resolve()
-    declaration_result, context = _load_context(exact_root)
-    outcomes = [declaration_result]
-    if context is None:
-        outcomes.extend(_not_run(adapter, declaration_result) for adapter in steps)
-        unit = None
-    else:
-        outcomes.extend(adapter(context) for adapter in steps)
-        unit = context.unit.value
+    with tempfile.TemporaryDirectory(prefix="agent-project-gate-") as temporary:
+        declaration_result, context = _load_context(exact_root, Path(temporary))
+        outcomes = [declaration_result]
+        if context is None:
+            outcomes.extend(_not_run(adapter, declaration_result) for adapter in steps)
+            unit = None
+        else:
+            outcomes.extend(adapter(context) for adapter in steps)
+            unit = context.unit.value
     return GateReport(
         root=exact_root,
         unit=unit,

@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "review_id": "v4_security_slice_adversarial_acceptance",
-  "reviewed_commit": "c3f9103cee936b439362f175d477882d203c6b03",
+  "reviewed_commit": "37b38e6fc330551dc67880da78130cc5e3db30a8",
   "scope": {
     "algorithm": "sha256",
-    "digest": "sha256:fe1e04ef7d0a9485278a967c7be8f8b9a1644a0a1143114b63f01c43354de786",
+    "digest": "sha256:e77ed761ac7c5d1bab94b0b9b629030b9bc96deff20dd1a1331433baff43c268",
     "file_count": 281,
     "categories": [
       "project_declaration",
@@ -128,6 +128,17 @@
       "evidence": "enforce/checks/test_doc_checks.py::test_an_undeclared_documentation_engine_fires_once",
       "owner": "project_declaration_maintainer",
       "review_trigger": "Review again whenever declaration defaults, documentation engines, doc_style predicates, or aggregate-gate configuration loading changes."
+    },
+    {
+      "id": "configuration_blind_external_tools",
+      "category": "test_oracles",
+      "severity": "critical",
+      "statement": "An aggregate runner could invoke Ruff, mypy, pyright, or pytest without proving which project configuration or targets the tool consumed; several of those tools can exit zero after examining nothing.",
+      "disposition": "resolved",
+      "resolution": "Bind each adapter to the exact root pyproject digest and consumed fields, pass configuration and repository-local targets explicitly, count non-empty subjects before launch, require pyright and pytest to corroborate actual execution, and record the observed distribution version and argv.",
+      "evidence": "tools/test_project_gate.py::test_external_adapters_bind_config_and_non_empty_targets",
+      "owner": "project_gate_maintainer",
+      "review_trigger": "Review again whenever a tool changes configuration discovery, target semantics, report format, module entry point, or supported platform."
     },
     {
       "id": "release_gate_debt",
