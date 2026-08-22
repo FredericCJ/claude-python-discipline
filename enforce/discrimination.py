@@ -1339,6 +1339,32 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         ),),
     ),
     Mutation(
+        rule_id="SEC-003",
+        summary="a review substitutes another algorithm for the closed scope digest",
+        source=(
+            "SEC-003 fixes both the selected inputs and digest algorithm; changing "
+            "sha256 means the artifact no longer matches the recomputed snapshot."
+        ),
+        replace=((
+            "adversarial-review.json",
+            '"algorithm": "sha256"',
+            '"algorithm": "sha1"',
+        ),),
+    ),
+    Mutation(
+        rule_id="SEC-004",
+        summary="the declared adversarial reviewer is also the change author",
+        source=(
+            "SEC-004's mechanically decidable separation predicate: the same stable "
+            "identity cannot occur in both the authors list and reviewer record."
+        ),
+        replace=((
+            "adversarial-review.json",
+            '"identity": "reference_adversarial_reviewer"',
+            '"identity": "reference_fixture_author"',
+        ),),
+    ),
+    Mutation(
         rule_id="EFCT-015",
         summary="a writer takes a lock and never reports losing the race",
         source=(

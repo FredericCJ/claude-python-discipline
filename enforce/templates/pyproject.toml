@@ -45,6 +45,7 @@ architecture = "architecture.json" # canonical local decisions/contracts/views
 contract_conformance = "contract-conformance.json" # implementations and test evidence
 operational_model = "operational-model.json" # lifecycle, budgets, outcomes, platforms
 security_model = "security-model.json" # local trust boundaries and data handling
+adversarial_review = "adversarial-review.json" # content-bound semantic acceptance
 doc_engine = "doxygen"             # doxygen | sphinx | none.  Absent => none.
 pedagogical_full_projection = false
 adapter_boundaries = [

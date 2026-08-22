@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "review_id": "replace_with_review_identity",
+  "reviewed_commit": "0000000000000000000000000000000000000000",
+  "scope": {
+    "algorithm": "sha256",
+    "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "file_count": 1,
+    "categories": [
+      "project_declaration",
+      "canonical_models",
+      "production_python",
+      "test_python",
+      "authored_documentation",
+      "tool_configuration",
+      "repository_assets"
+    ]
+  },
+  "authors": ["replace_with_change_author_identity"],
+  "reviewer": {
+    "identity": "replace_with_reviewer_identity",
+    "role": "adversarial_reviewer",
+    "independence": "role_separated",
+    "basis": "Replace with how the adversarial pass was separated from authorship and what independence it does not establish."
+  },
+  "questions": [
+    {
+      "id": "architecture",
+      "challenge": "Which volatile decision or dependency direction can the declared boundaries fail to contain?",
+      "conclusion": "Replace with a bounded conclusion from local evidence.",
+      "evidence": ["architecture.json"]
+    },
+    {
+      "id": "contracts",
+      "challenge": "Which representation, ordering, idempotency, or failure term is absent from a published or consumed contract?",
+      "conclusion": "Replace with a bounded conclusion from local evidence.",
+      "evidence": ["contract-conformance.json"]
+    },
+    {
+      "id": "failure_containment",
+      "challenge": "Which foreign or exceptional failure can escape without translation, cause preservation, or a decided local outcome?",
+      "conclusion": "Replace with a bounded conclusion from local evidence.",
+      "evidence": ["operational-model.json"]
+    },
+    {
+      "id": "lifecycle_budgets",
+      "challenge": "Which accepted input, queue, retry, cleanup, or owned lifecycle path lacks an executable bound or recovery decision?",
+      "conclusion": "Replace with a bounded conclusion from local evidence.",
+      "evidence": ["operational-model.json"]
+    },
+    {
+      "id": "trust_data",
+      "challenge": "Where can untrusted representation or classified data cross a local boundary without validation, confinement, retention, or redaction policy?",
+      "conclusion": "Replace with a bounded conclusion from local evidence.",
+      "evidence": ["security-model.json"]
+    },
+    {
+      "id": "observability",
+      "challenge": "Which non-exception terminal state, degraded condition, or causal failure is invisible or uncorrelated at the repository boundary?",
+      "conclusion": "Replace with a bounded conclusion from local evidence.",
+      "evidence": ["operational-model.json"]
+    },
+    {
+      "id": "supply_chain",
+      "challenge": "Which dependency, build input, generated projection, or delivered artifact can change without identity and drift evidence?",
+      "conclusion": "Replace with a bounded conclusion from local evidence.",
+      "evidence": ["pyproject.toml"]
+    },
+    {
+      "id": "test_oracles",
+      "challenge": "Which claimed contract, fault, bound, or delivered behavior is exercised without an oracle able to detect its violation?",
+      "conclusion": "Replace with a bounded conclusion from local evidence.",
+      "evidence": ["tests/test_replace.py::test_replace"]
+    }
+  ],
+  "objections": [
+    {
+      "id": "replace_with_concrete_objection",
+      "category": "test_oracles",
+      "severity": "medium",
+      "statement": "Replace with a concrete defect, risk, or unsupported claim found during the hostile pass.",
+      "disposition": "open",
+      "resolution": null,
+      "evidence": null,
+      "owner": "replace_with_local_owner",
+      "review_trigger": "Replace with the exact event that forces this finding to be reconsidered."
+    }
+  ],
+  "verdict": "rejected",
+  "conclusion": "Replace after every blocking objection is resolved or the risk is explicitly accepted.",
+  "residual": "A mechanically valid artifact cannot authenticate reviewer identity or establish that the semantic challenge was insightful."
+}

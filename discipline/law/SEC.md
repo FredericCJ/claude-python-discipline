@@ -2,7 +2,7 @@
 id: law/SEC
 kind: law
 title: Local Security and Trust Boundaries
-tokens: 566
+tokens: 1095
 load_when:
   - "security model"
   - "trust boundary"
@@ -42,3 +42,32 @@ declare one. No role outside this repository may own a local exposure decision.
   what a value means, where it may flow, or when every copy ceases to exist.
 - **Check** `python -m checks.security_model`
 - **See** [DIAG-014] · [OPS-001] · [EVID-003]
+
+## Adversarial acceptance
+
+### SEC-003 · Semantic review is bound to exact content  [BINDING] [check:adversarial_review]
+The project MUST name one repository-local `adversarial-review.json` carrying a full base
+commit id and the exact generated digest and file count for every repository-owned file.
+Only fixed environment and verifier caches, the vendored discipline, generated
+native-host mirrors, build output, and the review artifact's unavoidable self-reference
+may be excluded. Any change to the computed scope MUST make the review stale. UTF-8 CRLF
+checkout projections MUST canonicalize to LF so identical reviewed Git text retains one
+identity on Windows and Linux; invalid UTF-8 assets remain byte-exact.
+- **Why** A review of a previous tree is an opinion about different software; a timestamp
+  or filename cannot establish what bytes the reviewer actually considered.
+- **Check** `python -m checks.adversarial_review`
+- **See** [EVID-003] · [FLOW-011]
+
+### SEC-004 · Adversarial acceptance records challenge and closure  [BINDING] [check:adversarial_review] [review]
+An accepted review MUST cover architecture, contracts, failure containment, lifecycle and
+budgets, trust and data, observability, supply chain, and test oracles in canonical order.
+It MUST name a reviewer identity outside the author identities, state the independence
+basis, record at least one concrete objection, close or explicitly accept every risk with
+local evidence and a re-review trigger, and preserve a conclusion and residual. An open
+objection or rejected verdict MUST fail acceptance.
+- **Why** Presence-only review rewards an empty form. Named hostile questions and durable
+  objections make the judgment inspectable without pretending a checker can authenticate
+  independence or evaluate insight.
+- **Check** `python -m checks.adversarial_review`, followed by semantic review of the
+  artifact and cited evidence.
+- **See** [EVID-005] · [TEST-015] · [FLOW-007]

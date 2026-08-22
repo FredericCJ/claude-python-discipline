@@ -5763,6 +5763,99 @@
         "guidance": "Classify intentionally handled data and state its local exposure, retention, redaction, and evidence before setting sensitive_data."
       }
     },
+    "SEC-003": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "A green review artifact describes an older or author-selected subset of the repository while changed implementation and tests escape semantic reconsideration.",
+      "warrants": [
+        {
+          "source": "source:AR",
+          "relation": "supports",
+          "confidence": "high"
+        },
+        {
+          "source": "source:SE",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:adversarial_review",
+          "kind": "static",
+          "relation": "direct",
+          "proposition": "The checker recomputes a closed scope over every repository-owned file except fixed environment and verifier caches, vendoring, host-mirror, build-output, runtime-projection, and self-reference exclusions; it requires exact SHA-256 digest/count agreement over path plus canonical content and a full base commit that is an ancestor when local Git metadata is available.",
+          "residual": "A fresh complete content binding proves which canonical contents were in scope, not that the reviewer read them; fixed replaceable-cache names are intentionally outside review, UTF-8 CRLF and LF checkout projections deliberately share one identity, and copied fixtures without repository-owned Git metadata receive only commit-shape validation.",
+          "must_pass": "fixture:reference content-bound adversarial review",
+          "must_reject": "discrimination:SEC-003",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "never; every accepted governed scope is content-bound"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Generate the closed review scope after implementation and bind adversarial-review.json to its base commit, file count, and digest."
+      }
+    },
+    "SEC-004": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "A review exists but asks no hostile question, self-approves, suppresses an open objection, or discards the uncertainty that remains after acceptance.",
+      "warrants": [
+        {
+          "source": "source:AR",
+          "relation": "supports",
+          "confidence": "high"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:adversarial_review",
+          "kind": "static",
+          "relation": "proxy",
+          "proposition": "The checker requires all eight semantic question records in canonical order, a reviewer identity outside the author set, an independence basis, at least one objection, confined closure evidence and triggers, no open objection, an accepted verdict, and a residual.",
+          "residual": "Identifiers and complete fields cannot authenticate who reviewed, establish personal independence, or judge whether challenges, resolutions, evidence, and residual are intellectually adequate.",
+          "must_pass": "fixture:reference structurally closed adversarial acceptance",
+          "must_reject": "discrimination:SEC-004",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "never; structural review integrity is required for every governed repository"
+        },
+        {
+          "mechanism": "review",
+          "kind": "structured-review",
+          "relation": "direct",
+          "proposition": "A reviewer challenges the current bounded scope, judges the cited evidence, resolves or explicitly owns objections, and records whether the repository is semantically acceptable with a bounded residual.",
+          "residual": "A recorded human or agent judgment can still be mistaken, socially dependent, or incomplete; later defects and field evidence remain capable of refuting it.",
+          "must_pass": "artifact:adversarial-review.json accepted against its cited local evidence",
+          "must_reject": "artifact:adversarial-review.json rejected after an unresolved semantic objection",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "never; semantic adequacy cannot be delegated to the structural checker"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Perform a role-separated adversarial pass over all required categories, retain objections and residuals, and do not accept while any finding remains open."
+      }
+    },
     "TEAMS-001": {
       "units": [
         "application",

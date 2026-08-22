@@ -529,6 +529,7 @@ def _render_declaration(
         'contract_conformance = "contract-conformance.json"',
         'operational_model = "operational-model.json"',
         'security_model = "security-model.json"',
+        'adversarial_review = "adversarial-review.json"',
         f"doc_engine = {_toml_string(draft.doc_engine)}",
         f"pedagogical_full_projection = {str(draft.pedagogical).lower()}",
     ]
@@ -635,7 +636,7 @@ def _draft(
             "MIGRATE-V4-007_ARCHITECTURE_AUTHORING_REQUIRED",
             "warning",
             "author architecture.json, contract-conformance.json, operational-model.json, "
-            "and security-model.json from the v4 templates; "
+            "security-model.json, and adversarial-review.json from the v4 templates; "
             "then run checks.capabilities because semantic intent is never inferred",
         )
     )
@@ -667,7 +668,8 @@ def plan(root: Path, unit: str | None) -> MigrationPlan:
         key in table
         for key in (
             "unit", "source_roots", "architecture", "contract_conformance",
-            "operational_model", "security_model", "capabilities", "roles",
+            "operational_model", "security_model", "adversarial_review",
+            "capabilities", "roles",
         )
     ):
         return MigrationPlan(governed, project_file, before, before, ())

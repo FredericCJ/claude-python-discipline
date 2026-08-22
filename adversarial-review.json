@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "review_id": "v4_security_slice_adversarial_acceptance",
+  "reviewed_commit": "a05989c8fa775db77f2db21d39da81785eb7c23f",
+  "scope": {
+    "algorithm": "sha256",
+    "digest": "sha256:cab4214c67f3100f970a7c48feb307b82367286b14b9ca5712106df3d20d5379",
+    "file_count": 279,
+    "categories": [
+      "project_declaration",
+      "canonical_models",
+      "production_python",
+      "test_python",
+      "authored_documentation",
+      "tool_configuration",
+      "repository_assets"
+    ]
+  },
+  "authors": ["codex_v4_implementation"],
+  "reviewer": {
+    "identity": "codex_v4_adversarial_pass",
+    "role": "adversarial_reviewer",
+    "independence": "role_separated",
+    "basis": "A separate hostile review pass challenged the implementation after the security model was complete. It was performed in the same Codex session as authorship, so this records cognitive role separation rather than personal or organizational independence."
+  },
+  "questions": [
+    {
+      "id": "architecture",
+      "challenge": "Can a declared boundary conceal an unowned volatile decision, reverse policy dependencies, or make a component depend on a counterpart identity?",
+      "conclusion": "The canonical architecture names local roles, decisions, change scenarios, contracts, interactions, and technology owners; distinct structural checks and mutations cover ownership and direction, while semantic adequacy remains review judgment.",
+      "evidence": ["architecture.json", "enforce/checks/test_architecture_checks.py", "contract-conformance.json"]
+    },
+    {
+      "id": "contracts",
+      "challenge": "Can structural protocol conformance pass while behavioral terms, implementation variants, or test-term traceability are absent?",
+      "conclusion": "The contract-conformance model joins every local contract to representations, behavioral terms, implementation capabilities, suites, and exact test evidence; the checker rejects missing and orphaned terms without claiming those oracles are sufficient.",
+      "evidence": ["contract-conformance.json", "enforce/checks/contract_conformance.py", "enforce/checks/test_contract_conformance.py"]
+    },
+    {
+      "id": "failure_containment",
+      "challenge": "Which expected, exceptional, subprocess, generated-artifact, or persistence failure can escape without a typed outcome, causal diagnostic, or recovery owner?",
+      "conclusion": "The operational model connects active capabilities to translation, recovery, correlated terminal outcomes, and executable evidence. Existing v4 gate debt is retained as an explicit objection rather than treated as containment proof.",
+      "evidence": ["operational-model.json", "tools/test_gate_runner.py", "tools/test_learn.py"]
+    },
+    {
+      "id": "lifecycle_budgets",
+      "challenge": "Can accepted work, a launched process, cleanup, a generated projection, or the learning store consume unbounded local time or resources without an owned stop path?",
+      "conclusion": "All activated capability obligations resolve to explicit lifecycle phases, limits, recovery records, and tests. These records decide repository-local ownership only and do not claim whole-application liveness.",
+      "evidence": ["operational-model.json", "enforce/checks/operational_model.py", "enforce/checks/test_operational_model.py"]
+    },
+    {
+      "id": "trust_data",
+      "challenge": "Can untrusted project input or retained learning data gain stronger local trust, reach an unauthorized sink, or survive beyond its stated policy?",
+      "conclusion": "Every declared contract is joined to one trust boundary and every intentionally handled class records local roles, sinks, retention, redaction, and evidence. The model deliberately stops at this repository boundary.",
+      "evidence": ["security-model.json", "enforce/checks/security_model.py", "enforce/checks/test_security_model.py"]
+    },
+    {
+      "id": "observability",
+      "challenge": "Can a non-exception refusal, timeout, degraded condition, or failed gate disappear behind process status without correlation and cause-preserving diagnostics?",
+      "conclusion": "The operational outcomes and diagnostic laws require stable identities, correlation, terminal observability, and preserved causes; tests exercise gate refusal and timeout as data. Semantic usefulness of emitted context remains reviewable.",
+      "evidence": ["operational-model.json", "discipline/law/DIAG.md", "tools/test_gate_runner.py"]
+    },
+    {
+      "id": "supply_chain",
+      "challenge": "Can generated doctrine views, mirrored host skills, vendored manifests, or a delivered archive drift from the authored source while the gate stays green?",
+      "conclusion": "Generated drift and byte-identical host mirrors are checked and tested, and vendoring preserves a manifest. Full v4 reproducible build and install certification is not yet complete and is retained as release-gate debt.",
+      "evidence": ["tools/build_skill_mirror.py", "tools/test_build_skill_mirror.py", "tools/test_vendor.py", "roadmap/from-3.2-to-4.0/README.md"]
+    },
+    {
+      "id": "test_oracles",
+      "challenge": "Can a mechanism be counted as enforcement without a mutation proving that its stated observable proposition is rejected?",
+      "conclusion": "The evidence registry separates direct, proxy, behavioral, tool, and review claims and discrimination binds implemented mechanical claims to witnessed rejection. The legacy rejection gap remains a known release blocker, not evidence for this new checker.",
+      "evidence": ["discipline/meta/evidence.json", "enforce/discrimination.py", "tools/discrimination_gate.py"]
+    }
+  ],
+  "objections": [
+    {
+      "id": "same_session_role_separation",
+      "category": "test_oracles",
+      "severity": "medium",
+      "statement": "The author and adversarial reviewer labels represent two passes by the same Codex session, so the structure cannot establish personal or organizational independence.",
+      "disposition": "accepted_risk",
+      "resolution": "The artifact states the limitation without claiming independent identity; structural validation is used only as a proxy, and independent release certification remains mandatory.",
+      "evidence": "discipline/law/SEC.md",
+      "owner": "v4_release_maintainer",
+      "review_trigger": "Repeat with an independently tasked reviewer before v4.0 release certification or whenever the independence claim changes."
+    },
+    {
+      "id": "checkout_newline_identity",
+      "category": "supply_chain",
+      "severity": "high",
+      "statement": "Raw worktree hashing gave identical Git text different review identities under Windows CRLF and Linux LF checkout projection.",
+      "disposition": "resolved",
+      "resolution": "Canonicalize CRLF to LF only for valid UTF-8 inputs, retain invalid UTF-8 bytes exactly, and exercise both checkout projections in a proof-of-failure test.",
+      "evidence": "enforce/checks/test_adversarial_review.py::test_checkout_line_endings_do_not_change_review_identity",
+      "owner": "adversarial_review_checker",
+      "review_trigger": "Review again if scope serialization, supported platforms, text encoding, or digest algorithms change."
+    },
+    {
+      "id": "verifier_cache_scope_instability",
+      "category": "supply_chain",
+      "severity": "high",
+      "statement": "Import-linter writes a replaceable cache inside the governed tree, and including it made a verifier run invalidate the semantic content it had just checked.",
+      "disposition": "resolved",
+      "resolution": "Add the named import-linter cache to the fixed environment exclusions and prove that creating it after review leaves the governed identity unchanged.",
+      "evidence": "enforce/checks/test_adversarial_review.py::test_replaceable_tool_cache_is_outside_review_identity",
+      "owner": "adversarial_review_checker",
+      "review_trigger": "Review again whenever a supported verifier introduces a new repository-local cache or an exclusion name changes."
+    },
+    {
+      "id": "release_gate_debt",
+      "category": "test_oracles",
+      "severity": "high",
+      "statement": "The repository still records unbuilt mechanisms and mechanical claims without witnessed rejection, so this development snapshot cannot support a v4.0 release verdict.",
+      "disposition": "accepted_risk",
+      "resolution": "Acceptance is limited to the current security workstream as a base for continued implementation; the roadmap makes zero unbuilt mechanisms and zero rejection gap mandatory before release.",
+      "evidence": "roadmap/from-3.2-to-4.0/README.md",
+      "owner": "codex_v4_implementation",
+      "review_trigger": "Regenerate and independently review this artifact before any beta, release-candidate, or v4.0 conformance claim."
+    }
+  ],
+  "verdict": "accepted",
+  "conclusion": "The current repository scope is acceptable as a content-bound development baseline for continuing v4 implementation; this verdict is explicitly not v4.0 release certification.",
+  "residual": "Structured fields and local evidence cannot authenticate reviewer identity, establish intellectual independence, prove oracle sufficiency, or erase the recorded release-gate debt. Later bytes, field evidence, and independent review may refute this judgment."
+}

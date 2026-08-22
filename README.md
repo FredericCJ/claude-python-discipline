@@ -167,8 +167,9 @@ write-free, prints the exact diff, and keeps every byte outside the contiguous
 `[tool.agent-discipline]` table family. Apply is refused when production source has no
 inferable role, when an old `ARCH-004` technology has several candidate owners, or when a
 source root escapes this repository. The tool deliberately does not invent
-`architecture.json`, `contract-conformance.json`, `operational-model.json`, or
-`security-model.json`: its warning remains until a human authors the volatile decisions,
+`architecture.json`, `contract-conformance.json`, `operational-model.json`,
+`security-model.json`, or `adversarial-review.json`: its warning remains until a human
+authors the volatile decisions,
 contracts, resources, recoveries, implementation capabilities, lifecycle, budgets,
 outcomes, trust boundaries, data classes, and test traces from the shipped templates. The
 generated capability table starts explicit and conservative;
@@ -176,6 +177,9 @@ generated capability table starts explicit and conservative;
 build metadata, or published contracts. `python -m checks.operational_model` then requires
 the exact evidence obligations activated by those true facts. `python -m
 checks.security_model` joins local contract trust and data exposure to the same facts.
+Author `adversarial-review.json` last: its scope digest binds the accepted judgment to
+every governed repository file, so any later content change deliberately makes it stale.
+UTF-8 CRLF and LF checkout projections share one digest; binary assets remain byte-exact.
 Running `--apply` again is a no-op.
 
 ## Working on the discipline itself

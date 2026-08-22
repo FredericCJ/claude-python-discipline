@@ -163,11 +163,15 @@ Select `component` only when this checkout is one independently testable compone
 migrator preserves configuration outside `[tool.agent-discipline]`, converts legacy role
 aliases and unambiguous `ARCH-004` ownership, refuses paths outside this checkout, and is
 idempotent. It cannot decide the unit kind, the meaning of a boundary, or the contents of
-`architecture.json`, `contract-conformance.json`, `operational-model.json`, and
-`security-model.json`; those remain explicit authoring work rather than inferred prose.
-Start all four from the shipped templates, then run `python -m checks.capabilities` before
-filling the operational and security models so their records exactly match the true
-manifest facts.
+`architecture.json`, `contract-conformance.json`, `operational-model.json`,
+`security-model.json`, and `adversarial-review.json`; those remain explicit authoring work
+rather than inferred prose. Start the first four from the shipped templates, then run
+`python -m checks.capabilities` before filling the operational and security models so
+their records exactly match the true manifest facts. Author the adversarial review last:
+its file count and digest cover every governed repository-owned file, and any subsequent
+content change invalidates that acceptance until the review is repeated.
+UTF-8 CRLF and LF checkout projections deliberately share one digest so the accepted
+content remains portable across Windows and Linux; binary assets remain byte-exact.
 
 ## After integrating
 

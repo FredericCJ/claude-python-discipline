@@ -47,6 +47,7 @@ def v4(*, extra: str = "", tables: str = "") -> str:
         contract_conformance = "contract-conformance.json"
         operational_model = "operational-model.json"
         security_model = "security-model.json"
+        adversarial_review = "adversarial-review.json"
         {extra}
 
         [tool.agent-discipline.capabilities]
@@ -192,6 +193,19 @@ def test_a_missing_security_model_is_refused(tmp_path: Path) -> None:
         v4().replace('security_model = "security-model.json"\n', ""),
     )
     with pytest.raises(ValueError, match="DISC-PROJECT-019"):
+        project.parse(path)
+
+
+def test_a_missing_adversarial_review_is_refused(tmp_path: Path) -> None:
+    """A missing review artifact cannot look like semantic acceptance.
+
+    @param tmp_path fixture repository
+    """
+    path = declare(
+        tmp_path,
+        v4().replace('adversarial_review = "adversarial-review.json"\n', ""),
+    )
+    with pytest.raises(ValueError, match="DISC-PROJECT-020"):
         project.parse(path)
 
 

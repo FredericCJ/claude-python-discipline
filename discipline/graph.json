@@ -682,6 +682,16 @@
    }
   },
   {
+   "id": "mech:check:adversarial_review",
+   "type": "mechanism",
+   "label": "check:adversarial_review",
+   "path": "enforce/checks/adversarial_review.py",
+   "attrs": {
+    "family": "check",
+    "implemented": "true"
+   }
+  },
+  {
    "id": "mech:check:allocation_declared",
    "type": "mechanism",
    "label": "check:allocation_declared",
@@ -1428,6 +1438,14 @@
    }
   },
   {
+   "id": "mech:review",
+   "type": "mechanism",
+   "label": "review",
+   "attrs": {
+    "family": "review"
+   }
+  },
+  {
    "id": "examples/documentation",
    "type": "module",
    "label": "Documentation, Worked",
@@ -1685,7 +1703,7 @@
    "type": "module",
    "label": "Local Security and Trust Boundaries",
    "path": "discipline/law/SEC.md",
-   "tokens": 566,
+   "tokens": 1095,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -3671,6 +3689,28 @@
    "label": "Data exposure follows explicit classification",
    "path": "discipline/law/SEC.md:35",
    "tokens": 112,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/SEC"
+   }
+  },
+  {
+   "id": "SEC-003",
+   "type": "rule",
+   "label": "Semantic review is bound to exact content",
+   "path": "discipline/law/SEC.md:48",
+   "tokens": 160,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/SEC"
+   }
+  },
+  {
+   "id": "SEC-004",
+   "type": "rule",
+   "label": "Adversarial acceptance records challenge and closure",
+   "path": "discipline/law/SEC.md:61",
+   "tokens": 134,
    "attrs": {
     "force": "BINDING",
     "module": "law/SEC"
@@ -7490,6 +7530,36 @@
   },
   {
    "type": "cites",
+   "src": "SEC-003",
+   "dst": "EVID-003",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "SEC-003",
+   "dst": "FLOW-011",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "SEC-004",
+   "dst": "EVID-005",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "SEC-004",
+   "dst": "FLOW-007",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "SEC-004",
+   "dst": "TEST-015",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
    "src": "TEAMS-001",
    "dst": "ops/ALLOC",
    "origin": "derived"
@@ -8578,6 +8648,18 @@
    "type": "contains",
    "src": "law/SEC",
    "dst": "SEC-002",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/SEC",
+   "dst": "SEC-003",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/SEC",
+   "dst": "SEC-004",
    "origin": "derived"
   },
   {
@@ -9844,6 +9926,24 @@
    "type": "enforced_by",
    "src": "SEC-002",
    "dst": "mech:check:security_model",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "SEC-003",
+   "dst": "mech:check:adversarial_review",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "SEC-004",
+   "dst": "mech:check:adversarial_review",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "SEC-004",
+   "dst": "mech:review",
    "origin": "derived"
   },
   {
@@ -11979,6 +12079,42 @@
   {
    "type": "grounds_on",
    "src": "SEC-002",
+   "dst": "law/OPS",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "SEC-003",
+   "dst": "law/ARCH",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "SEC-003",
+   "dst": "law/DIAG",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "SEC-003",
+   "dst": "law/OPS",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "SEC-004",
+   "dst": "law/ARCH",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "SEC-004",
+   "dst": "law/DIAG",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "SEC-004",
    "dst": "law/OPS",
    "origin": "derived"
   },

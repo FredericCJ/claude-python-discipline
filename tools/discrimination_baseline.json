@@ -1,7 +1,7 @@
 {
   "generated_by": "tools/discrimination_gate.py --update-baseline",
   "note": "D -- rules with at least one mutation observed provoking them. May rise, never fall. The entries are in enforce/discrimination.py and are meant to be read; the count alone says nothing about whether they are good.",
-  "count": 70,
+  "count": 72,
   "rules": [
     "ALLOC-002",
     "ALLOC-004",
@@ -57,6 +57,8 @@
     "OPS-008",
     "SEC-001",
     "SEC-002",
+    "SEC-003",
+    "SEC-004",
     "TEAMS-002",
     "TEST-001",
     "TEST-002",
@@ -75,5 +77,5 @@
     "TYPE-013"
   ],
   "gap": 92,
-  "why": "Added local trust-boundary and classified-data capability-coherence mutations."
+  "why": "Witness SEC-003 scope freshness and SEC-004 reviewer separation failures."
 }

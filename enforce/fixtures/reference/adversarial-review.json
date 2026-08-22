@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "review_id": "reference_fixture_adversarial_acceptance",
+  "reviewed_commit": "a05989c8fa775db77f2db21d39da81785eb7c23f",
+  "scope": {
+    "algorithm": "sha256",
+    "digest": "sha256:54c7a7a2c756f6750df2935a18fef8f7545f021ce6c1ae5175f36535e0892782",
+    "file_count": 43,
+    "categories": [
+      "project_declaration",
+      "canonical_models",
+      "production_python",
+      "test_python",
+      "authored_documentation",
+      "tool_configuration",
+      "repository_assets"
+    ]
+  },
+  "authors": ["reference_fixture_author"],
+  "reviewer": {
+    "identity": "reference_adversarial_reviewer",
+    "role": "adversarial_reviewer",
+    "independence": "role_separated",
+    "basis": "A distinct adversarial pass reviewed the completed reference fixture. This worked example demonstrates declared role separation but does not claim an independently authenticated person."
+  },
+  "questions": [
+    {
+      "id": "architecture",
+      "challenge": "Could the clock or file-store technology leak into policy or leave a volatile decision without one owner?",
+      "conclusion": "The architecture records both decisions and confines the real technologies to separate adapters while application orchestration names only ports.",
+      "evidence": ["architecture.json", "src/refpkg/app/prune.py", "src/refpkg/shell/composition.py"]
+    },
+    {
+      "id": "contracts",
+      "challenge": "Could a real, fake, or scheduled-fault implementation pass structural typing while violating a clock or file-store behavioral term?",
+      "conclusion": "Every registered implementation is joined to one shared contract suite and every behavioral term resolves to exact test evidence.",
+      "evidence": ["contract-conformance.json", "tests/contract/test_clock_contract.py", "tests/contract/test_files_contract.py"]
+    },
+    {
+      "id": "failure_containment",
+      "challenge": "Can a filesystem or clock failure escape untranslated or can partial destructive work hide how far it progressed?",
+      "conclusion": "Adapters translate host failures, the application preserves causes, and the interrupted outcome reports completed and remaining work.",
+      "evidence": ["src/refpkg/app/prune.py", "tests/fault/test_containment.py"]
+    },
+    {
+      "id": "lifecycle_budgets",
+      "challenge": "Can directory enumeration or destructive cleanup accept unbounded work or lack a recovery decision?",
+      "conclusion": "The operational model sets a 10000-entry public-input and cleanup bound and links destructive failure to the apply-interrupted recovery outcome.",
+      "evidence": ["operational-model.json", "tests/property/test_plan_properties.py"]
+    },
+    {
+      "id": "trust_data",
+      "challenge": "Can caller-controlled paths or filesystem metadata become trusted policy input or reach an undeclared local sink?",
+      "conclusion": "Command and file-store trust boundaries state hostile assumptions and validation; the only handled metadata class has explicit local roles, sink, retention, and redaction.",
+      "evidence": ["security-model.json", "tests/integration/test_local_files.py"]
+    },
+    {
+      "id": "observability",
+      "challenge": "Can refusal or interrupted destructive work terminate without a stable layer, code, cause chain, and structured public outcome?",
+      "conclusion": "The shell envelope derives stable diagnostic identity and fault tests assert the correlated interrupted result rather than relying on an exception string.",
+      "evidence": ["src/refpkg/shell/envelope.py", "tests/fault/test_containment.py"]
+    },
+    {
+      "id": "supply_chain",
+      "challenge": "Could fixture dependencies or the declared package surface vary without appearing in the repository declaration?",
+      "conclusion": "The fixture is stdlib-only, declares its package and supported Python version locally, and is exercised directly from its isolated source root.",
+      "evidence": ["pyproject.toml", "README.md"]
+    },
+    {
+      "id": "test_oracles",
+      "challenge": "Could the worked example claim conformance while a real adapter, fake, faulty implementation, or irreversible dry run lacks a discriminating oracle?",
+      "conclusion": "Contract, property, integration, and fault suites assert typed values, disk state, invariants, failure translation, and partial-progress containment across all registered variants.",
+      "evidence": ["tests/contract/test_files_contract.py", "tests/integration/test_local_files.py", "tests/fault/test_containment.py"]
+    }
+  ],
+  "objections": [
+    {
+      "id": "fixture_review_is_not_external_assurance",
+      "category": "test_oracles",
+      "severity": "medium",
+      "statement": "A doctrine-authored fixture and its role-separated review can demonstrate the mechanism while still sharing the doctrine author's assumptions.",
+      "disposition": "accepted_risk",
+      "resolution": "Treat this artifact only as a positive conformance specimen; adopter audits and mutation cases supply independent pressure rather than promoting the fixture to field evidence.",
+      "evidence": "README.md",
+      "owner": "discipline_maintainer",
+      "review_trigger": "Review again when the reference behavior, contract model, or adopter evidence changes."
+    }
+  ],
+  "verdict": "accepted",
+  "conclusion": "No open local objection prevents the reference fixture from serving as the positive adversarial-review conformance case.",
+  "residual": "The fixture demonstrates closed structure and executable local evidence, not authenticated reviewer independence, production fitness, or empirical benefit in an external adopter."
+}

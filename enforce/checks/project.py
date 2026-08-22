@@ -214,6 +214,8 @@ class Declaration:
     operational_model: PurePosixPath | None = None
     ## Repository-local trust-boundary and data-classification model.
     security_model: PurePosixPath | None = None
+    ## Content-bound semantic and adversarial review artifact.
+    adversarial_review: PurePosixPath | None = None
     ## Explicit facts that add operational and security obligations.
     capabilities: frozenset[Capability] = frozenset()
     ## Canonical role name to repository-relative directory paths.
@@ -327,6 +329,15 @@ class Declaration:
             return None
         return self.root / Path(self.security_model.as_posix())
 
+    def adversarial_review_path(self) -> Path | None:
+        """The declared adversarial review artifact as an absolute path.
+
+        @return local JSON path, or None for the undeclared direct-check fallback
+        """
+        if self.root is None or self.adversarial_review is None:
+            return None
+        return self.root / Path(self.adversarial_review.as_posix())
+
     def has(self, capability: Capability) -> bool:
         """Whether one additive project capability is active.
 
@@ -370,6 +381,11 @@ class Declaration:
             notes.append(
                 "DISC-PROJECT-019 security_model is undeclared; trust boundaries "
                 "and data classification are undecided"
+            )
+        if self.adversarial_review is None:
+            notes.append(
+                "DISC-PROJECT-020 adversarial_review is undeclared; semantic review "
+                "scope, freshness, objections, and closure are undecided"
             )
         if self.source is None:
             notes.append(
@@ -729,6 +745,30 @@ def _parse_security_model(
     return model
 
 
+def _parse_adversarial_review(
+    table: Mapping[str, object], path: Path,
+) -> PurePosixPath:
+    """Parse the repository-local structured review path.
+
+    @param table decoded discipline declaration
+    @param path declaring project file
+    @return validated repository-relative JSON path
+    """
+    raw = table.get("adversarial_review")
+    if raw is None:
+        _reject(
+            "DISC-PROJECT-020", path,
+            "adversarial_review is required and must name the local JSON artifact",
+        )
+    review = _relative_path(raw, field_name="adversarial_review", source=path)
+    if review.suffix != ".json":
+        _reject(
+            "DISC-PROJECT-020", path,
+            "adversarial_review must name a repository-local JSON artifact",
+        )
+    return review
+
+
 def parse(path: Path) -> Declaration:
     """Read one v4 declaration, refusing missing and unknown values.
 
@@ -799,6 +839,7 @@ def parse(path: Path) -> Declaration:
         contract_conformance=contract_conformance,
         operational_model=_parse_operational_model(table, path),
         security_model=_parse_security_model(table, path),
+        adversarial_review=_parse_adversarial_review(table, path),
         capabilities=capabilities,
         role_paths=roles,
         adapter_boundaries=boundaries,
