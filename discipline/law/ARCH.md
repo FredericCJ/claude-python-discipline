@@ -2,7 +2,7 @@
 id: law/ARCH
 kind: law
 title: Architecture and Coupling
-tokens: 3343
+tokens: 3361
 load_when:
   - "new module"
   - "package layout"
@@ -125,12 +125,13 @@ object, a serialization node, or any other type owned by a framework.
   and the framework's failures become indistinguishable from the domain's.
 - **Check** `python -m checks.domain_purity`
 
-### ARCH-014 · Translation between representations is explicit  [BINDING] [check:domain_purity]
+### ARCH-014 · Translation between representations is explicit  [BINDING] [review]
 Wire and storage representations MUST be converted to domain types by a named function at
 the boundary, never by attribute-name coincidence or automatic mapping.
 - **Why** An explicit mapping fails in one identifiable place with both values in hand;
   an implicit one fails somewhere downstream with neither.
-- **Check** `python -m checks.domain_purity`
+- **Check** `adversarial-review.json` question `contracts`, against the declared
+  representation and translation evidence
 
 ### ARCH-015 · Metaprogramming leaves the four questions answerable  [BINDING] [check:no_magic_in_domain]
 Inside the domain, it MUST remain possible to answer by reading the code — not by running

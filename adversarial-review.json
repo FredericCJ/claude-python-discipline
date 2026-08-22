@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "review_id": "v4_security_slice_adversarial_acceptance",
-  "reviewed_commit": "a05989c8fa775db77f2db21d39da81785eb7c23f",
+  "reviewed_commit": "730d9ac36366668c41c55907e1f3a08b0fac105b",
   "scope": {
     "algorithm": "sha256",
-    "digest": "sha256:cab4214c67f3100f970a7c48feb307b82367286b14b9ca5712106df3d20d5379",
+    "digest": "sha256:07f92f8b56fa2c12931afe9d138fdea31a93544d649b014fdfd9370f715878c6",
     "file_count": 279,
     "categories": [
       "project_declaration",
@@ -69,7 +69,7 @@
     {
       "id": "test_oracles",
       "challenge": "Can a mechanism be counted as enforcement without a mutation proving that its stated observable proposition is rejected?",
-      "conclusion": "The evidence registry separates direct, proxy, behavioral, tool, and review claims and discrimination binds implemented mechanical claims to witnessed rejection. The legacy rejection gap remains a known release blocker, not evidence for this new checker.",
+      "conclusion": "The evidence registry separates direct, proxy, behavioral, tool, and review claims; review-only obligations no longer enter the mutation census, while mechanical claims remain bound to witnessed rejection. The legacy rejection gap remains a release blocker.",
       "evidence": ["discipline/meta/evidence.json", "enforce/discrimination.py", "tools/discrimination_gate.py"]
     }
   ],
@@ -108,12 +108,23 @@
       "review_trigger": "Review again whenever a supported verifier introduces a new repository-local cache or an exclusion name changes."
     },
     {
+      "id": "syntax_claimed_unemitted_semantics",
+      "category": "test_oracles",
+      "severity": "high",
+      "statement": "Ten binding rules named AST or markdown checks whose own rules tuples and module documentation stated that those mechanisms could never emit the named rule IDs.",
+      "disposition": "resolved",
+      "resolution": "Route semantic translation, mutation, transition-ordering, channel-seam, concept, immutability, and prior coordinator judgments to content-bound structured review; retain syntax checks only for the narrower predicates they actually report, and exclude review-only rules from the mechanical discrimination census.",
+      "evidence": "tools/test_discrimination_gate.py::test_the_gap_counts_only_rules_a_mechanism_actually_decides",
+      "owner": "evidence_model_maintainer",
+      "review_trigger": "Review again whenever a semantic-only rule acquires a syntax mechanism or the discrimination census changes its definition of a mechanical claim."
+    },
+    {
       "id": "release_gate_debt",
       "category": "test_oracles",
       "severity": "high",
-      "statement": "The repository still records unbuilt mechanisms and mechanical claims without witnessed rejection, so this development snapshot cannot support a v4.0 release verdict.",
+      "statement": "The repository still records four unbuilt mechanisms and 92 mechanical claims without witnessed rejection, so this development snapshot cannot support a v4.0 release verdict.",
       "disposition": "accepted_risk",
-      "resolution": "Acceptance is limited to the current security workstream as a base for continued implementation; the roadmap makes zero unbuilt mechanisms and zero rejection gap mandatory before release.",
+      "resolution": "Acceptance is limited to the current gate-rebuild workstream as a base for continued implementation; the roadmap makes zero unbuilt mechanisms and zero rejection gap mandatory before release.",
       "evidence": "roadmap/from-3.2-to-4.0/README.md",
       "owner": "codex_v4_implementation",
       "review_trigger": "Regenerate and independently review this artifact before any beta, release-candidate, or v4.0 conformance claim."

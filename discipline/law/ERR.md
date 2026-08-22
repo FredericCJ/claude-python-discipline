@@ -2,7 +2,7 @@
 id: law/ERR
 kind: law
 title: Error Semantics
-tokens: 2609
+tokens: 2629
 load_when:
   - "raise"
   - "except"
@@ -51,13 +51,14 @@ Every result union MUST be narrowed to `Never` at each consumer, with a final
 - **Check** `mypy --strict` · `pyright --strict`
 - **See** [ERR-005] · [law/TYPE]
 
-### ERR-003 · Conversion between channels happens at one named seam  [BINDING] [check:error_channels]
+### ERR-003 · Conversion between channels happens at one named seam  [BINDING] [review]
 The module and direction at which raised infrastructure failures become typed domain
 results MUST be named explicitly in the shell layer, and conversion MUST NOT occur
 anywhere else.
 - **Why** A seam left implicit is a seam no one can test, and the source corpus left this
   decision deferred between two documents until neither made it.
-- **Check** `python -m checks.error_channels`
+- **Check** `adversarial-review.json` question `failure_containment`, against the named
+  conversion seam and its executable evidence
 - **See** [law/ARCH]
 
 ---

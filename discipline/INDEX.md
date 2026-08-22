@@ -16,7 +16,7 @@ decay: none
 
 **A proxy cannot decide its parent semantic rule.** Passing its proposition establishes only the stated syntax or behavior and leaves the printed residual. `rule-level witnessed` is deliberately weaker than v4's target: the inherited matrix proves that some strategy rejected a case for that rule, but cannot yet attribute the rejection to one exact strategy.
 
-14 of 176 binding rules lack an available declared strategy. 71 of 176 rules with automated strategies have inherited rule-level rejection evidence. 173 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
+4 of 176 binding rules lack an available declared strategy. 71 of 166 rules with automated strategies have inherited rule-level rejection evidence. 163 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
 
 ## Modules
 
@@ -30,21 +30,21 @@ decay: none
 | [frame/architecture](frame/architecture.md) | frame | 2338 | 0 | which paradigm, tradeoff, refactoring, legacy code, coupling, cohesion |
 | [frame/spec](frame/spec.md) | frame | 1972 | 0 | write a spec, requirements, elicitation, design document, traceability, reusability |
 | [law/API](law/API.md) | law | 2445 | 15 | public API, contract, versioning, breaking change, CLI, JSON output |
-| [law/ARCH](law/ARCH.md) | law | 3343 | 19 | new module, package layout, port, adapter, hexagonal, dependency injection |
+| [law/ARCH](law/ARCH.md) | law | 3361 | 19 | new module, package layout, port, adapter, hexagonal, dependency injection |
 | [law/ARCH-PORTS](law/ARCH-PORTS.md) | law | 841 | 6 | new port, boundary contract, adapter substitute, fake adapter, fault schedule, contract suite |
 | [law/DEP](law/DEP.md) | law | 2111 | 14 | add a dependency, third party library, lockfile, environment, code generation, generated file |
 | [law/DIAG](law/DIAG.md) | law | 2634 | 16 | exception, traceback, logging, error message, error code, correlation id |
 | [law/DOC](law/DOC.md) | law | 2367 | 14 | docstring, documentation comment, doxygen, @param, @return, document this function |
-| [law/EFCT](law/EFCT.md) | law | 2362 | 16 | write a file, mutation, state machine, transaction, rollback, dry run |
-| [law/ERR](law/ERR.md) | law | 2609 | 16 | raise, except, Result, error type, exception hierarchy, validation |
+| [law/EFCT](law/EFCT.md) | law | 2408 | 16 | write a file, mutation, state machine, transaction, rollback, dry run |
+| [law/ERR](law/ERR.md) | law | 2629 | 16 | raise, except, Result, error type, exception hierarchy, validation |
 | [law/EVID](law/EVID.md) | law | 1288 | 8 | why is this a rule, verification strategy, mechanism, proxy, residual, discrimination |
 | [law/FLOW](law/FLOW.md) | law | 2259 | 13 | definition of done, before i commit, what should i do first, ADR, decision record, review |
 | [law/LEARN](law/LEARN.md) | law | 1888 | 12 | learning, record what i learned, session memory, why did this fail before, calibration, promote a learning |
 | [law/OPS](law/OPS.md) | law | 1575 | 8 | capability manifest, operational behavior, subprocess lifecycle, network io, persistent state, generated artifact |
 | [law/SEC](law/SEC.md) | law | 1095 | 4 | security model, trust boundary, sensitive data, classification, redaction, least exposure |
 | [law/TEST](law/TEST.md) | law | 2987 | 20 | write a test, pytest, fixture, hypothesis, property test, mutation |
-| [law/TYPE](law/TYPE.md) | law | 2171 | 15 | type hint, mypy, pyright, Protocol, generic, dataclass |
-| [ops/ALLOC](ops/ALLOC.md) | ops | 2145 | 10 | dispatch a subagent, which model, how much effort, delegate, escalate, sub-agent |
+| [law/TYPE](law/TYPE.md) | law | 2219 | 15 | type hint, mypy, pyright, Protocol, generic, dataclass |
+| [ops/ALLOC](ops/ALLOC.md) | ops | 2163 | 10 | dispatch a subagent, which model, how much effort, delegate, escalate, sub-agent |
 | [ops/teams](ops/teams.md) | ops | 2592 | 6 | agent team, teammate, subagent definition, spawn an agent, task list, slash command |
 
 ## Rules
@@ -82,7 +82,7 @@ decay: none
 | `ARCH-011` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:single_wiring_point; it does… | none | Adapters are selected at one local wiring root |
 | `ARCH-012` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:no_test_branches; it does no… | none | No test-mode branch in production code |
 | `ARCH-013` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:domain_purity; it does not e… | none | Framework and transport types stay out of the domain |
-| `ARCH-014` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:domain_purity; it does not e… | none | Translation between representations is explicit |
+| `ARCH-014` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | A named function can still omit, swap, or silently default fields, and review can miss an impli… | none | Translation between representations is explicit |
 | `ARCH-015` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:no_magic_in_domain; it does… | none | Metaprogramming leaves the four questions answerable |
 | `ARCH-016` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:ruff:C901; it does not establ… | none | Module complexity stays within budget |
 | `ARCH-017` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Prefer the direct call to the abstraction |
@@ -170,14 +170,14 @@ decay: none
 | `EFCT-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes configured direct imports of effect-capable APIs; it does not prove that every… | none | Foreign effects stay behind ports |
 | `EFCT-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:explicit_effects; it does no… | none | Time, randomness and environment enter through ports |
 | `EFCT-003` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_determinism; it does… | none | Determinism is the default |
-| `EFCT-004` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:plan_apply; it does not esta… | none | Mutating operations are commands, not raw writes |
+| `EFCT-004` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | Naming a command does not prove it is replayable, idempotent, authorized, or the only hidden wr… | none | Mutating operations are commands, not raw writes |
 | `EFCT-005` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:plan_apply; it does not esta… | none | Destructive operations plan before they apply |
 | `EFCT-006` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_dry_run_matches_apply… | none | A dry run is the pipeline truncated, never a second path |
 | `EFCT-007` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_interruption_recovers… | none | A multi-effect apply is journalled |
 | `EFCT-008` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:atomicity_qualified; it does… | none | Atomicity claims are qualified |
 | `EFCT-009` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_what_is_not_guarantee… | none | What is not guaranteed is stated |
 | `EFCT-010` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:plan_apply; it does not esta… | none | State transitions are explicit and closed |
-| `EFCT-011` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:plan_apply; it does not esta… | none | Illegal transitions are refused before any effect |
+| `EFCT-011` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | The exercised illegal transitions may not cover every runtime state or hidden effect, and mocks… | none | Illegal transitions are refused before any effect |
 | `EFCT-012` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | none | Persistent state has exactly one owning path |
 | `EFCT-013` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_concurrency_documente… | none | Concurrency is introduced only with stated semantics |
 | `EFCT-014` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_concurrency_documente… | none | Shared mutable state is guarded by a stated lock order |
@@ -190,7 +190,7 @@ decay: none
 |---|---|---|---|---|---|---|---|---|
 | `ERR-001` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:error_channels; it does not… | none | Exactly two propagation channels exist |
 | `ERR-002` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | Result unions are exhaustively handled |
-| `ERR-003` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:error_channels; it does not… | none | Conversion between channels happens at one named seam |
+| `ERR-003` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | Dynamic exception paths and callbacks may evade the trace, and one named seam can still perform… | none | Conversion between channels happens at one named seam |
 | `ERR-004` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:error_channels; it does not… | none | A layer produces only its own error family |
 | `ERR-005` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | A new variant is declared at its definition site |
 | `ERR-006` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:exception_shape; it does not… | none | Exceptions form one narrow hierarchy under a package base |
@@ -307,7 +307,7 @@ decay: none
 | `TYPE-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | Two checkers, both strict, both pinned |
 | `TYPE-002` | BINDING | `mixed-verifiers` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | The domain carries no `Any` |
 | `TYPE-003` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | Escape hatches are narrow, justified and counted |
-| `TYPE-004` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:domain_purity; it does not e… | none | Distinct concepts are distinct types |
+| `TYPE-004` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | Review can miss two concepts with similar names, and distinct wrappers do not prove their conve… | none | Distinct concepts are distinct types |
 | `TYPE-005` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:boundary_parsing; it does no… | none | A constrained type is a wrapper with a parsing constructor |
 | `TYPE-006` | BINDING | `mixed-verifiers` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | Closed sets are enumerations |
 | `TYPE-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:domain_purity; it does not e… | none | Domain values are frozen and slotted |
@@ -317,7 +317,7 @@ decay: none
 | `TYPE-011` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | What the checker cannot enforce is enforced at runtime |
 | `TYPE-012` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Signature or docstring, by who can enforce it |
 | `TYPE-013` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | Conversions are explicit |
-| `TYPE-014` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:domain_purity; it does not e… | none | Immutability is declared, and not mistaken for a guarantee |
+| `TYPE-014` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | Review and static declarations can miss mutation through aliases, reflection, foreign code, nes… | none | Immutability is declared, and not mistaken for a guarantee |
 | `TYPE-015` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Type sophistication stays proportionate |
 
 ### ops/ALLOC
@@ -328,11 +328,11 @@ decay: none
 | `ALLOC-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does n… | none | Score before dispatching, and record the score |
 | `ALLOC-003` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does n… | none | Named categories force escalation regardless of score |
 | `ALLOC-004` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does n… | none | A single signal at 3 raises the floor |
-| `ALLOC-005` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does n… | none | Escalation rules beat the mechanical permit |
-| `ALLOC-006` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does n… | none | Sharpen the contract before raising the tier |
-| `ALLOC-007` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does n… | none | Split before upgrading |
+| `ALLOC-005` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | The dispatch record and review can omit a real escalation, misjudge its applicability, or be so… | none | Escalation rules beat the mechanical permit |
+| `ALLOC-006` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | A completed record cannot prove an omitted sharpening attempt or establish that the revised spe… | none | Sharpen the contract before raising the tier |
+| `ALLOC-007` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | Decomposability and contract quality are semantic judgments, and the review may overlook a bett… | none | Split before upgrading |
 | `ALLOC-008` | RETIRED | `retired` | n/a | n/a | n/a | n/a | none | A restriction is not lifted by an instruction |
-| `ALLOC-009` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does n… | none | Misclassification belongs to the coordinator |
+| `ALLOC-009` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | The reviewer may misclassify the defect or never learn that returned work was inadequate; a com… | none | Misclassification belongs to the coordinator |
 | `ALLOC-010` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:allocation_declared; it does… | none | The gate's tier follows the risk under test |
 
 ### ops/teams

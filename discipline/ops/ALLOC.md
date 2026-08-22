@@ -2,7 +2,7 @@
 id: ops/ALLOC
 kind: ops
 title: Workload Allocation
-tokens: 2145
+tokens: 2163
 load_when:
   - "dispatch a subagent"
   - "which model"
@@ -109,32 +109,32 @@ silently — forces E2 regardless of tier.
   is individually at the top of its scale.
 - **Check** `python -m checks.dispatch_recorded`
 
-### ALLOC-005 · Escalation rules beat the mechanical permit  [BINDING] [check:dispatch_recorded]
+### ALLOC-005 · Escalation rules beat the mechanical permit  [BINDING] [review]
 A mechanical substitution with an explicit stop condition may run at T0/E0 — but where an
 escalation rule also applies, the escalation wins.
 - **Why** This is not hypothetical. The recorded incident that destroyed 8,023 files began
   as exactly this shape: a mechanical directory-cleanup instruction, dispatched without
   regard for its blast radius.
-- **Check** `python -m checks.dispatch_recorded`
+- **Check** adversarial review of the dispatch record and the applicable escalation
 - **See** [law/EFCT]
 
 ---
 
 ## Coordinator obligations
 
-### ALLOC-006 · Sharpen the contract before raising the tier  [BINDING] [check:dispatch_recorded]
+### ALLOC-006 · Sharpen the contract before raising the tier  [BINDING] [review]
 Where signal B is high, the coordinator MUST first attempt to complete the specification,
 and re-score, before escalating.
 - **Why** This is the doctrine's central lever: sharpening the contract lowers the tier, it
   is nearly always cheaper than escalating, and it produces a reusable artifact.
-- **Check** `python -m checks.dispatch_recorded`
+- **Check** adversarial review of the dispatch record's specification history
 
-### ALLOC-007 · Split before upgrading  [BINDING] [check:dispatch_recorded]
+### ALLOC-007 · Split before upgrading  [BINDING] [review]
 Prefer decomposing a workload into a large mechanical part and a small reasoning part over
 running the whole at a high tier.
 - **Why** Two cheap agents with a clear contract between them usually beat one expensive
   agent, and the contract survives the task.
-- **Check** `python -m checks.dispatch_recorded`
+- **Check** adversarial review of the dispatch record's decomposition decision
 
 ### ALLOC-008 · A restriction is not lifted by an instruction  [RETIRED]
 Retired as a duplicate. The obligation is [TEAMS-002], word for word in substance: a
@@ -147,14 +147,14 @@ not achieve the effect by other means.
 - **Superseded by** TEAMS-002
 - **See** [ops/teams]
 
-### ALLOC-009 · Misclassification belongs to the coordinator  [BINDING] [check:dispatch_recorded]
+### ALLOC-009 · Misclassification belongs to the coordinator  [BINDING] [review]
 When returned work is inadequate, the coordinator MUST re-score and record which of four
 defect kinds it was: misclassification, specification defect, execution defect, or
 capability mismatch.
 - **Why** The distribution over those four tells the organization whether it is
   under-tiering, under-specifying, or genuinely at a tier's limit — three problems with
   three different remedies.
-- **Check** `python -m checks.dispatch_recorded`
+- **Check** adversarial review of the returned-work classification and re-score record
 
 ### ALLOC-010 · The gate's tier follows the risk under test  [BINDING] [check:allocation_declared]
 A verification workload is scored on the risk of the code it examines, not on how routine

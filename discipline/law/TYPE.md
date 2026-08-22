@@ -2,7 +2,7 @@
 id: law/TYPE
 kind: law
 title: Typing and Contracts
-tokens: 2171
+tokens: 2219
 load_when:
   - "type hint"
   - "mypy"
@@ -62,12 +62,13 @@ and carry a comment giving the reason. Redundant casts and unused ignores fail t
 
 ## Making invalid states unrepresentable
 
-### TYPE-004 · Distinct concepts are distinct types  [BINDING] [check:domain_purity]
+### TYPE-004 · Distinct concepts are distinct types  [BINDING] [review]
 Identifiers and domain scalars MUST NOT be interchangeable primitives. Each concept gets
 its own type.
 - **Why** Passing an argument in the wrong position is the defect class this eliminates
   outright rather than testing for.
-- **Check** `python -m checks.domain_purity`
+- **Check** `adversarial-review.json` questions `architecture` and `contracts`, against
+  the repository's domain vocabulary and strict-checker evidence
 
 ### TYPE-005 · A constrained type is a wrapper with a parsing constructor  [BINDING] [check:boundary_parsing]
 A type carrying a well-formedness rule MUST be a frozen wrapper whose constructor
@@ -144,12 +145,13 @@ cross-type equality comparisons fail the build.
 - **Why** A silent coercion is a value changing identity with no site to attribute it to.
 - **Check** `mypy --strict-equality`
 
-### TYPE-014 · Immutability is declared, and not mistaken for a guarantee  [BINDING] [check:domain_purity]
+### TYPE-014 · Immutability is declared, and not mistaken for a guarantee  [BINDING] [review]
 Frozen dataclasses, read-only mappings and final declarations MUST be used to signal
 intent; code MUST NOT rely on them being unbypassable.
 - **Why** The freeze is shallow and can be circumvented; treating it as a hard guarantee
   produces an invariant nothing actually maintains.
-- **Check** `python -m checks.domain_purity`
+- **Check** `adversarial-review.json` question `architecture`, against declared
+  invariants, mutation ownership, and strict-checker evidence
 
 ### TYPE-015 · Type sophistication stays proportionate  [ADVISORY]
 Type-level machinery SHOULD be introduced when it removes a class of defect, not to

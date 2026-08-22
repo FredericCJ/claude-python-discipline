@@ -1,28 +1,8 @@
 {
   "generated_by": "tools/validate.py --update-baseline",
   "note": "Ratchet ceiling for V081/V082. validate.py fails when the corpus's unbuilt-mechanism count exceeds `count` below, and only warns when it falls under it. Move this file with `python tools/validate.py --update-baseline --why \"...\"`, never by hand -- the pairs must stay exactly what the tool itself measured.",
-  "count": 14,
+  "count": 4,
   "pairs": [
-    [
-      "ALLOC-005",
-      "check:dispatch_recorded"
-    ],
-    [
-      "ALLOC-006",
-      "check:dispatch_recorded"
-    ],
-    [
-      "ALLOC-007",
-      "check:dispatch_recorded"
-    ],
-    [
-      "ALLOC-009",
-      "check:dispatch_recorded"
-    ],
-    [
-      "ARCH-014",
-      "check:domain_purity"
-    ],
     [
       "DOC-003",
       "check:doc_coverage"
@@ -36,29 +16,9 @@
       "check:doc_coverage"
     ],
     [
-      "EFCT-004",
-      "check:plan_apply"
-    ],
-    [
-      "EFCT-011",
-      "check:plan_apply"
-    ],
-    [
-      "ERR-003",
-      "check:error_channels"
-    ],
-    [
       "FLOW-012",
       "check:deviation_recorded"
-    ],
-    [
-      "TYPE-004",
-      "check:domain_purity"
-    ],
-    [
-      "TYPE-014",
-      "check:domain_purity"
     ]
   ],
-  "why": "Requalification: 20 -> 14. ALLOC-008 retired as a word-for-word duplicate of TEAMS-002, the first use of the supersession protocol. TYPE-008 built into domain_purity, which already examined signatures. ERR-011, ERR-014, TYPE-011 and TYPE-012 retagged ADVISORY with justifications -- each was named by a check whose own docstring said it could not decide them, so BINDING was claiming a gate that would never fire. The 14 that remain are mechanizable and unbuilt, which is what this number is for."
+  "why": "Route ten semantic obligations from non-reporting syntax checks to structured adversarial review."
 }

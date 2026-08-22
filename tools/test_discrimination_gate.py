@@ -329,15 +329,16 @@ def test_a_baseline_with_no_ceiling_is_not_treated_as_zero(
 
 
 def test_the_gap_counts_only_rules_a_mechanism_actually_decides() -> None:
-    """A rule with no working mechanism is V080's business, not this one.
+    """An unbuilt or review-only rule is not an unwitnessed mechanical claim.
 
-    Counting it here would report the same defect twice under two names, and
-    the second count would move whenever the first did -- which is how two
-    numbers stop being independent evidence.
+    Counting an unbuilt rule would report the same defect twice under two names.
+    Counting structured review would ask a mutation runner to authenticate a
+    semantic judgment. Mixed review-plus-check rules remain in the gap through
+    their check arm.
     """
     gap = set(discrimination_gate.undiscriminated(set(discrimination.covered())))
     assert "ALLOC-005" not in gap, (
-        "ALLOC-005 is reported by V080 as undecided; it must not also be counted "
-        "as decided-but-undiscriminated"
+        "ALLOC-005 is decided by structured review; it must not be counted as an "
+        "unwitnessed mechanical claim"
     )
     assert gap, "the gap is empty, so this assertion proves nothing"

@@ -2,7 +2,7 @@
 id: law/EFCT
 kind: law
 title: Effects, State and Time
-tokens: 2362
+tokens: 2408
 load_when:
   - "write a file"
   - "mutation"
@@ -65,12 +65,13 @@ seedable.
 
 ## Changing state
 
-### EFCT-004 · Mutating operations are commands, not raw writes  [BINDING] [check:plan_apply]
+### EFCT-004 · Mutating operations are commands, not raw writes  [BINDING] [review]
 A change to persistent state MUST be expressed as a named command carrying its intent, not
 as a direct write performed wherever it was computed.
 - **Why** A named command is a thing that can be validated, logged, replayed and refused;
   a scattered write is none of those.
-- **Check** `python -m checks.plan_apply`
+- **Check** `adversarial-review.json` question `failure_containment`, against the named
+  command and state-ownership evidence
 
 ### EFCT-005 · Destructive operations plan before they apply  [BINDING] [check:plan_apply]
 An operation that deletes or overwrites MUST compute a complete plan of its effects, and
@@ -123,12 +124,13 @@ change goes through it.
   states, rather than an object quietly in the wrong condition.
 - **Check** `python -m checks.plan_apply`
 
-### EFCT-011 · Illegal transitions are refused before any effect  [BINDING] [check:plan_apply]
+### EFCT-011 · Illegal transitions are refused before any effect  [BINDING] [review]
 A transition not in the table MUST be rejected during validation, with the source and
 target states in the error, and MUST NOT be partially performed.
 - **Why** Refusing before the first effect is what keeps the failure cheap and the state
   interpretable.
-- **Check** `python -m checks.plan_apply`
+- **Check** `adversarial-review.json` questions `failure_containment` and
+  `lifecycle_budgets`, against executable refusal and no-effect evidence
 - **See** [law/ERR]
 
 ### EFCT-012 · Persistent state has exactly one owning path  [BINDING] [auto:import-linter]

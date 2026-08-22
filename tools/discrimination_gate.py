@@ -38,7 +38,7 @@ from typing import TYPE_CHECKING, Final
 import import_gate
 import lint_gate
 import type_gate
-from discipline_core import Force, iter_documents, mechanism_is_implemented
+from discipline_core import Force, has_mechanical_claim, iter_documents
 
 ## The repository root, one level up from `tools/`.
 REPO_ROOT: Final = Path(__file__).resolve().parent.parent
@@ -332,8 +332,7 @@ def undiscriminated(provoked: set[str]) -> list[str]:
         if rule.force is Force.BINDING
         and rule.rule_id not in provoked
         and rule.mechanisms
-        and any(mechanism_is_implemented(m, REPO_ROOT, rule.rule_id) is not False
-                for m in rule.mechanisms)
+        and has_mechanical_claim(rule.mechanisms, REPO_ROOT, rule.rule_id)
     )
 
 

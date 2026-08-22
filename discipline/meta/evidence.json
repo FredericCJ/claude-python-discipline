@@ -165,13 +165,13 @@
       ],
       "strategies": [
         {
-          "mechanism": "check:dispatch_recorded",
-          "kind": "static",
-          "relation": "proxy",
-          "proposition": "check:dispatch_recorded emits a finding tagged ALLOC-005 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
-          "residual": "Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement.",
-          "must_pass": "command:`python -m checks.dispatch_recorded`",
-          "must_reject": "pending:ALLOC-005",
+          "mechanism": "review",
+          "kind": "structured-review",
+          "relation": "direct",
+          "proposition": "The adversarial reviewer compares the mechanical allocation, every applicable escalation, and the final dispatch decision and rejects a permit that overrode a stronger escalation.",
+          "residual": "The dispatch record and review can omit a real escalation, misjudge its applicability, or be socially dependent; no syntax predicate can reconstruct unrecorded coordinator context.",
+          "must_pass": "artifact:adversarial-review.json accepts the dispatch after examining its escalation evidence",
+          "must_reject": "artifact:adversarial-review.json rejects an unresolved escalation-over-permit objection",
           "platforms": [
             "windows",
             "linux"
@@ -202,13 +202,13 @@
       ],
       "strategies": [
         {
-          "mechanism": "check:dispatch_recorded",
-          "kind": "static",
-          "relation": "proxy",
-          "proposition": "check:dispatch_recorded emits a finding tagged ALLOC-006 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
-          "residual": "Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement.",
-          "must_pass": "command:`python -m checks.dispatch_recorded`",
-          "must_reject": "pending:ALLOC-006",
+          "mechanism": "review",
+          "kind": "structured-review",
+          "relation": "direct",
+          "proposition": "The adversarial reviewer examines the dispatch history and decides whether high specification uncertainty was first reduced and re-scored before capability was escalated.",
+          "residual": "A completed record cannot prove an omitted sharpening attempt or establish that the revised specification was adequate; reviewer judgment remains fallible.",
+          "must_pass": "artifact:adversarial-review.json accepts the recorded specification-sharpening decision",
+          "must_reject": "artifact:adversarial-review.json rejects an unresolved specification-before-tier objection",
           "platforms": [
             "windows",
             "linux"
@@ -239,18 +239,18 @@
       ],
       "strategies": [
         {
-          "mechanism": "check:dispatch_recorded",
-          "kind": "static",
-          "relation": "proxy",
-          "proposition": "check:dispatch_recorded emits a finding tagged ALLOC-007 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
-          "residual": "Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement.",
-          "must_pass": "command:`python -m checks.dispatch_recorded`",
-          "must_reject": "pending:ALLOC-007",
+          "mechanism": "review",
+          "kind": "structured-review",
+          "relation": "direct",
+          "proposition": "The adversarial reviewer examines the workload boundary and decides whether separable mechanical and reasoning work was considered before the whole workload was upgraded.",
+          "residual": "Decomposability and contract quality are semantic judgments, and the review may overlook a better split or invent one whose coordination cost dominates.",
+          "must_pass": "artifact:adversarial-review.json accepts the recorded split-or-upgrade decision",
+          "must_reject": "artifact:adversarial-review.json rejects an unresolved decomposition objection",
           "platforms": [
             "windows",
             "linux"
           ],
-          "not_applicable": "never while this rule is active for the governed repository"
+          "not_applicable": "no dispatched workload was upgraded above its mechanical allocation"
         }
       ],
       "observations": [],
@@ -298,25 +298,25 @@
       ],
       "strategies": [
         {
-          "mechanism": "check:dispatch_recorded",
-          "kind": "static",
-          "relation": "proxy",
-          "proposition": "check:dispatch_recorded emits a finding tagged ALLOC-009 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
-          "residual": "Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement.",
-          "must_pass": "command:`python -m checks.dispatch_recorded`",
-          "must_reject": "pending:ALLOC-009",
+          "mechanism": "review",
+          "kind": "structured-review",
+          "relation": "direct",
+          "proposition": "When returned work was inadequate, the adversarial reviewer examines the re-score and decides whether the coordinator assigned one of the four defect kinds rather than displacing classification responsibility.",
+          "residual": "The reviewer may misclassify the defect or never learn that returned work was inadequate; a complete label cannot prove root cause.",
+          "must_pass": "artifact:adversarial-review.json accepts the returned-work classification evidence",
+          "must_reject": "artifact:adversarial-review.json rejects an unresolved classification-ownership objection",
           "platforms": [
             "windows",
             "linux"
           ],
-          "not_applicable": "never while this rule is active for the governed repository"
+          "not_applicable": "no dispatched work was returned as inadequate"
         }
       ],
       "observations": [],
       "migration": {
-        "source": "v3.3.0",
-        "disposition": "unchanged",
-        "guidance": "No adopter edit is required by this rule record."
+        "source": "v4.0.0",
+        "disposition": "clarified",
+        "guidance": "Record re-score, defect kind, and coordinator ownership for semantic review; presence of a dispatch file alone does not decide the classification."
       }
     },
     "ALLOC-010": {
@@ -863,7 +863,7 @@
             "windows",
             "linux"
           ],
-          "not_applicable": "never while this rule is active for the governed repository"
+          "not_applicable": "no agent work was dispatched while producing the reviewed repository change"
         },
         {
           "mechanism": "check:dependency_boundaries",
@@ -965,7 +965,7 @@
             "windows",
             "linux"
           ],
-          "not_applicable": "never while this rule is active for the governed repository"
+          "not_applicable": "no dispatch had high specification uncertainty"
         },
         {
           "mechanism": "check:dependency_boundaries",
@@ -1306,25 +1306,25 @@
       ],
       "strategies": [
         {
-          "mechanism": "check:domain_purity",
-          "kind": "static",
-          "relation": "proxy",
-          "proposition": "check:domain_purity emits a finding tagged ARCH-014 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
-          "residual": "Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement.",
-          "must_pass": "command:`python -m checks.domain_purity`",
-          "must_reject": "pending:ARCH-014",
+          "mechanism": "review",
+          "kind": "structured-review",
+          "relation": "direct",
+          "proposition": "The adversarial reviewer traces each boundary representation to a named conversion and rejects attribute-coincidence or implicit automatic mapping as the contract's translation seam.",
+          "residual": "A named function can still omit, swap, or silently default fields, and review can miss an implicit conversion hidden behind a library call.",
+          "must_pass": "artifact:adversarial-review.json accepts explicit representation translations under question contracts",
+          "must_reject": "artifact:adversarial-review.json rejects an unresolved implicit-mapping objection",
           "platforms": [
             "windows",
             "linux"
           ],
-          "not_applicable": "never while this rule is active for the governed repository"
+          "not_applicable": "the repository has no wire or storage representation boundary"
         }
       ],
       "observations": [],
       "migration": {
-        "source": "v3.3.0",
-        "disposition": "unchanged",
-        "guidance": "No adopter edit is required by this rule record."
+        "source": "v4.0.0",
+        "disposition": "clarified",
+        "guidance": "Cite named conversion code and behavioral evidence in the contracts review; domain-purity syntax never decided translation semantics."
       }
     },
     "ARCH-015": {
@@ -1418,9 +1418,9 @@
       "strategies": [],
       "observations": [],
       "migration": {
-        "source": "v3.3.0",
-        "disposition": "unchanged",
-        "guidance": "No adopter edit is required by this rule record."
+        "source": "v4.0.0",
+        "disposition": "clarified",
+        "guidance": "Do not credit dispatch-record syntax with proving a prior escalation judgment; preserve that judgment and its objections in structured review."
       }
     },
     "ARCH-018": {
@@ -3474,25 +3474,25 @@
       ],
       "strategies": [
         {
-          "mechanism": "check:plan_apply",
-          "kind": "static",
-          "relation": "proxy",
-          "proposition": "check:plan_apply emits a finding tagged EFCT-004 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
-          "residual": "Passing excludes only the configured patterns implemented by check:plan_apply; it does not establish the full semantic benefit of the normative statement.",
-          "must_pass": "command:`python -m checks.plan_apply`",
-          "must_reject": "pending:EFCT-004",
+          "mechanism": "review",
+          "kind": "structured-review",
+          "relation": "direct",
+          "proposition": "The adversarial reviewer traces persistent mutation from intent through one named command and rejects business decisions that write state directly at their computation site.",
+          "residual": "Naming a command does not prove it is replayable, idempotent, authorized, or the only hidden write path; semantic tracing can still miss dynamic effects.",
+          "must_pass": "artifact:adversarial-review.json accepts named mutation commands under question failure_containment",
+          "must_reject": "artifact:adversarial-review.json rejects an unresolved scattered-write objection",
           "platforms": [
             "windows",
             "linux"
           ],
-          "not_applicable": "never while this rule is active for the governed repository"
+          "not_applicable": "the repository performs no persistent-state mutation"
         }
       ],
       "observations": [],
       "migration": {
-        "source": "v3.3.0",
-        "disposition": "unchanged",
-        "guidance": "No adopter edit is required by this rule record."
+        "source": "v4.0.0",
+        "disposition": "clarified",
+        "guidance": "Use plan_apply only for its actual destructive-plan predicate; review command semantics and cite the named write path separately."
       }
     },
     "EFCT-005": {
@@ -3733,25 +3733,25 @@
       ],
       "strategies": [
         {
-          "mechanism": "check:plan_apply",
-          "kind": "static",
-          "relation": "proxy",
-          "proposition": "check:plan_apply emits a finding tagged EFCT-011 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
-          "residual": "Passing excludes only the configured patterns implemented by check:plan_apply; it does not establish the full semantic benefit of the normative statement.",
-          "must_pass": "command:`python -m checks.plan_apply`",
-          "must_reject": "pending:EFCT-011",
+          "mechanism": "review",
+          "kind": "structured-review",
+          "relation": "direct",
+          "proposition": "The adversarial reviewer challenges each illegal transition with executable evidence that validation refuses it before the first declared effect and reports both source and target states.",
+          "residual": "The exercised illegal transitions may not cover every runtime state or hidden effect, and mocks can observe a different order from a real adapter.",
+          "must_pass": "artifact:adversarial-review.json accepts refusal-before-effect evidence under failure_containment and lifecycle_budgets",
+          "must_reject": "artifact:adversarial-review.json rejects an unresolved partial-transition objection",
           "platforms": [
             "windows",
             "linux"
           ],
-          "not_applicable": "never while this rule is active for the governed repository"
+          "not_applicable": "the repository owns no state transition with effects"
         }
       ],
       "observations": [],
       "migration": {
-        "source": "v3.3.0",
-        "disposition": "unchanged",
-        "guidance": "No adopter edit is required by this rule record."
+        "source": "v4.0.0",
+        "disposition": "clarified",
+        "guidance": "Keep the closed-state syntax check under EFCT-010; establish refusal ordering with behavioral evidence and structured review."
       }
     },
     "EFCT-012": {
@@ -4028,25 +4028,25 @@
       ],
       "strategies": [
         {
-          "mechanism": "check:error_channels",
-          "kind": "static",
-          "relation": "proxy",
-          "proposition": "check:error_channels emits a finding tagged ERR-003 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
-          "residual": "Passing excludes only the configured patterns implemented by check:error_channels; it does not establish the full semantic benefit of the normative statement.",
-          "must_pass": "command:`python -m checks.error_channels`",
-          "must_reject": "pending:ERR-003",
+          "mechanism": "review",
+          "kind": "structured-review",
+          "relation": "direct",
+          "proposition": "The adversarial reviewer identifies the one module and direction where raised infrastructure failures become typed outcomes and traces every such conversion to that seam.",
+          "residual": "Dynamic exception paths and callbacks may evade the trace, and one named seam can still perform an incorrect or lossy conversion.",
+          "must_pass": "artifact:adversarial-review.json accepts the named conversion seam under question failure_containment",
+          "must_reject": "artifact:adversarial-review.json rejects an unresolved second-seam or unnamed-conversion objection",
           "platforms": [
             "windows",
             "linux"
           ],
-          "not_applicable": "never while this rule is active for the governed repository"
+          "not_applicable": "the repository converts no raised infrastructure failure into a typed contract outcome"
         }
       ],
       "observations": [],
       "migration": {
-        "source": "v3.3.0",
-        "disposition": "unchanged",
-        "guidance": "No adopter edit is required by this rule record."
+        "source": "v4.0.0",
+        "disposition": "clarified",
+        "guidance": "Use error_channels only for the channel shapes it emits; name and review the semantic conversion seam explicitly."
       }
     },
     "ERR-004": {
@@ -6703,9 +6703,9 @@
       "strategies": [],
       "observations": [],
       "migration": {
-        "source": "v3.3.0",
-        "disposition": "unchanged",
-        "guidance": "No adopter edit is required by this rule record."
+        "source": "v4.0.0",
+        "disposition": "clarified",
+        "guidance": "Record the sharpening and re-score sequence for review; a field-presence check is not evidence that the coordinator actually attempted it."
       }
     },
     "TEST-020": {
@@ -6921,25 +6921,25 @@
       ],
       "strategies": [
         {
-          "mechanism": "check:domain_purity",
-          "kind": "static",
-          "relation": "proxy",
-          "proposition": "check:domain_purity emits a finding tagged TYPE-004 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
-          "residual": "Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement.",
-          "must_pass": "command:`python -m checks.domain_purity`",
-          "must_reject": "pending:TYPE-004",
+          "mechanism": "review",
+          "kind": "structured-review",
+          "relation": "direct",
+          "proposition": "The adversarial reviewer compares the domain vocabulary and public contracts and rejects distinct identifiers or scalars that remain interchangeable primitives instead of distinct strict-checker-visible types.",
+          "residual": "Review can miss two concepts with similar names, and distinct wrappers do not prove their conversions or invariants are correct.",
+          "must_pass": "artifact:adversarial-review.json accepts the concept-to-type mapping under architecture and contracts",
+          "must_reject": "artifact:adversarial-review.json rejects an unresolved primitive-interchangeability objection",
           "platforms": [
             "windows",
             "linux"
           ],
-          "not_applicable": "never while this rule is active for the governed repository"
+          "not_applicable": "never for a consequential repository with domain vocabulary"
         }
       ],
       "observations": [],
       "migration": {
-        "source": "v3.3.0",
-        "disposition": "unchanged",
-        "guidance": "No adopter edit is required by this rule record."
+        "source": "v4.0.0",
+        "disposition": "clarified",
+        "guidance": "Use strict checkers after concepts are modeled; use structured review to decide which primitives represent distinct concepts."
       }
     },
     "TYPE-005": {
@@ -7260,25 +7260,25 @@
       ],
       "strategies": [
         {
-          "mechanism": "check:domain_purity",
-          "kind": "static",
-          "relation": "proxy",
-          "proposition": "check:domain_purity emits a finding tagged TYPE-014 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
-          "residual": "Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement.",
-          "must_pass": "command:`python -m checks.domain_purity`",
-          "must_reject": "pending:TYPE-014",
+          "mechanism": "review",
+          "kind": "structured-review",
+          "relation": "direct",
+          "proposition": "The adversarial reviewer traces invariants through frozen values, read-only views, final bindings, and their owned mutation paths and rejects reasoning that treats shallow declarations as unbypassable runtime barriers.",
+          "residual": "Review and static declarations can miss mutation through aliases, reflection, foreign code, nested mutable values, or deliberate bypasses.",
+          "must_pass": "artifact:adversarial-review.json accepts the declared immutability assumptions and mutation ownership",
+          "must_reject": "artifact:adversarial-review.json rejects an unresolved shallow-immutability objection",
           "platforms": [
             "windows",
             "linux"
           ],
-          "not_applicable": "never while this rule is active for the governed repository"
+          "not_applicable": "the repository owns no value or binding whose immutability participates in an invariant"
         }
       ],
       "observations": [],
       "migration": {
-        "source": "v3.3.0",
-        "disposition": "unchanged",
-        "guidance": "No adopter edit is required by this rule record."
+        "source": "v4.0.0",
+        "disposition": "clarified",
+        "guidance": "Retain frozen/read-only/final declarations where they communicate intent; review every invariant that depends on their shallow runtime behavior."
       }
     },
     "TYPE-015": {
@@ -7298,9 +7298,9 @@
       "strategies": [],
       "observations": [],
       "migration": {
-        "source": "v3.3.0",
-        "disposition": "unchanged",
-        "guidance": "No adopter edit is required by this rule record."
+        "source": "v4.0.0",
+        "disposition": "clarified",
+        "guidance": "Preserve the decomposition decision for adversarial review instead of claiming markdown syntax proves which split was possible."
       }
     },
     "EVID-001": {

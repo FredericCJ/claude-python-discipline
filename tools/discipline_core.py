@@ -311,6 +311,29 @@ def enforcement_of(
     return Enforcement.EXTERNAL
 
 
+def has_mechanical_claim(
+    mechanisms: Sequence[str], root: Path = REPO_ROOT, rule_id: str | None = None,
+) -> bool:
+    """Whether at least one mechanism arm claims a machine-decidable proposition.
+
+    This is deliberately not ``enforcement_of(...).is_mechanical``. Overall
+    enforcement fails closed when any local arm is unbuilt, while the
+    discrimination census must still retain another working or external tool arm.
+    Review is the one undecidable mechanism that is explicitly semantic rather
+    than an external mechanical claim.
+
+    @param mechanisms heading tags after the normative force
+    @param root tree against which local mechanisms resolve
+    @param rule_id rule each local mechanism must claim, when known
+    @return True for at least one local or external mechanical arm, never review alone
+    """
+    return any(
+        mechanism != "review"
+        and mechanism_is_implemented(mechanism, root, rule_id) is not False
+        for mechanism in mechanisms
+    )
+
+
 ## The delimited YAML header, anchored at the very start of the file. A block that
 ## begins anywhere else is body text, so a stray ``---`` cannot be read as metadata.
 _FRONT_MATTER = re.compile(r"\A---\r?\n(?P<yaml>.*?)\r?\n---\r?\n", re.DOTALL)

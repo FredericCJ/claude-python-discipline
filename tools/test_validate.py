@@ -19,7 +19,13 @@ from typing import TYPE_CHECKING
 import pytest
 
 import nav
-from discipline_core import REPO_ROOT, Enforcement, enforcement_of, mechanism_is_implemented
+from discipline_core import (
+    REPO_ROOT,
+    Enforcement,
+    enforcement_of,
+    has_mechanical_claim,
+    mechanism_is_implemented,
+)
 from evidence_model import VerificationState
 from validate import (
     Layout,
@@ -563,6 +569,31 @@ def test_review_only_is_never_counted_as_enforced(tmp_path: Path) -> None:
     assert Enforcement.UNBUILT.is_mechanical is False
     assert Enforcement.UNMECHANIZED.is_mechanical is False
     assert Enforcement.MECHANIZED.is_mechanical is True
+
+
+@pytest.mark.parametrize(
+    ("mechanisms", "expected_mechanical"),
+    [
+        (("review",), 0),
+        (("check:present",), 1),
+        (("check:absent",), 0),
+        (("auto:mypy",), 1),
+        (("review", "check:present"), 1),
+        (("review", "check:absent"), 0),
+        (("auto:mypy", "check:absent"), 1),
+    ],
+)
+def test_mechanical_claim_census_keeps_each_real_arm(
+    tmp_path: Path, mechanisms: tuple[str, ...], expected_mechanical: int,
+) -> None:
+    """Review is excluded without hiding a working arm behind an unbuilt one.
+
+    @param tmp_path throwaway mechanism tree
+    @param mechanisms heading mechanism set
+    @param expected_mechanical one when the set claims a mechanical proposition
+    """
+    root = corpus(tmp_path, built=["present"])
+    assert has_mechanical_claim(mechanisms, root) is bool(expected_mechanical)
 
 
 def test_an_unverifiable_mechanism_is_none_not_false(tmp_path: Path) -> None:

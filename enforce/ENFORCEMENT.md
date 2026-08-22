@@ -4,10 +4,10 @@
 
 This ledger keeps unlike claims unlike. A rule can be normatively binding while its verifier is absent; a verifier can exist while deciding only a proxy; a proxy can pass while its residual remains true; and a successful adopter does not prove universal benefit. No state below is a project-gate outcome.
 
-- **176** binding rules; **14** lack an available declared strategy.
+- **176** binding rules; **4** lack an available declared strategy.
 - **26** advisory rules and **0** open rules.
-- **192** exact strategy records: **19** direct and **173** proxy claims.
-- **71/176** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
+- **192** exact strategy records: **29** direct and **163** proxy claims.
+- **71/166** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
 - **21/212** rules carry named field observations.
 - **103/103** named mechanisms resolve locally or delegate explicitly; **0** local mechanisms are absent.
 
@@ -20,8 +20,8 @@ Measured against this tree, not copied from the rule heading. `discipline/rules.
 | `local-verifier` | 127 | repository-local code observes every strategy |
 | `external-verifier` | 24 | every strategy delegates to a configured tool |
 | `mixed-verifiers` | 11 | several verifier kinds contribute |
-| `structured-review` | 0 | judgment is recorded in a checked review artifact |
-| `unbuilt` | 14 | at least one named local verifier is absent |
+| `structured-review` | 10 | judgment is recorded in a checked review artifact |
+| `unbuilt` | 4 | at least one named local verifier is absent |
 | `undeclared` | 26 | the active rule has no strategy record |
 | `retired` | 10 | the stable id remains only for history |
 
@@ -43,20 +43,10 @@ These remain normative obligations, but the declared verifier is absent or missi
 
 | Rule | Verifier | Mechanism | Title |
 |---|---|---|---|
-| `ALLOC-005` | `unbuilt` | `check:dispatch_recorded` | Escalation rules beat the mechanical permit |
-| `ALLOC-006` | `unbuilt` | `check:dispatch_recorded` | Sharpen the contract before raising the tier |
-| `ALLOC-007` | `unbuilt` | `check:dispatch_recorded` | Split before upgrading |
-| `ALLOC-009` | `unbuilt` | `check:dispatch_recorded` | Misclassification belongs to the coordinator |
-| `ARCH-014` | `unbuilt` | `check:domain_purity` | Translation between representations is explicit |
 | `DOC-003` | `unbuilt` | `auto:ruff:D100` `check:doc_coverage` | Documentation is present whether or not it is generated |
 | `DOC-008` | `unbuilt` | `check:doc_style` | Types are not restated in prose |
 | `DOC-014` | `unbuilt` | `check:doc_coverage` | A project declares which engine reads its documentation |
-| `EFCT-004` | `unbuilt` | `check:plan_apply` | Mutating operations are commands, not raw writes |
-| `EFCT-011` | `unbuilt` | `check:plan_apply` | Illegal transitions are refused before any effect |
-| `ERR-003` | `unbuilt` | `check:error_channels` | Conversion between channels happens at one named seam |
 | `FLOW-012` | `unbuilt` | `check:deviation_recorded` | Report what happened, including what did not |
-| `TYPE-004` | `unbuilt` | `check:domain_purity` | Distinct concepts are distinct types |
-| `TYPE-014` | `unbuilt` | `check:domain_purity` | Immutability is declared, and not mistaken for a guarantee |
 
 ## Rule evidence
 
@@ -66,11 +56,11 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `ALLOC-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement. | Score before dispatching, and record the score |
 | `ALLOC-003` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement. | Named categories force escalation regardless of score |
 | `ALLOC-004` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement. | A single signal at 3 raises the floor |
-| `ALLOC-005` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement. | Escalation rules beat the mechanical permit |
-| `ALLOC-006` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement. | Sharpen the contract before raising the tier |
-| `ALLOC-007` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement. | Split before upgrading |
+| `ALLOC-005` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | none | The dispatch record and review can omit a real escalation, misjudge its applicability, or be socially dependent; no syntax predicate can reconstruct unrecorded coordinator context. | Escalation rules beat the mechanical permit |
+| `ALLOC-006` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | none | A completed record cannot prove an omitted sharpening attempt or establish that the revised specification was adequate; reviewer judgment remains fallible. | Sharpen the contract before raising the tier |
+| `ALLOC-007` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | none | Decomposability and contract quality are semantic judgments, and the review may overlook a better split or invent one whose coordination cost dominates. | Split before upgrading |
 | `ALLOC-008` | RETIRED | `retired` | n/a | n/a | n/a | none | n/a | A restriction is not lifted by an instruction |
-| `ALLOC-009` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement. | Misclassification belongs to the coordinator |
+| `ALLOC-009` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | none | The reviewer may misclassify the defect or never learn that returned work was inadequate; a complete label cannot prove root cause. | Misclassification belongs to the coordinator |
 | `ALLOC-010` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:allocation_declared; it does not establish the full semantic benefit of the normative statement. | The gate's tier follows the risk under test |
 | `API-001` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_contract_documented; it does not establish every behavior in the normative statement. | A contract states more than a signature |
 | `API-002` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_contract_documented; it does not establish every behavior in the normative statement. | The implementation is not the contract |
@@ -100,7 +90,7 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `ARCH-011` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:single_wiring_point; it does not establish the full semantic benefit of the normative statement. | Adapters are selected at one local wiring root |
 | `ARCH-012` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:no_test_branches; it does not establish the full semantic benefit of the normative statement. | No test-mode branch in production code |
 | `ARCH-013` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement. | Framework and transport types stay out of the domain |
-| `ARCH-014` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement. | Translation between representations is explicit |
+| `ARCH-014` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | none | A named function can still omit, swap, or silently default fields, and review can miss an implicit conversion hidden behind a library call. | Translation between representations is explicit |
 | `ARCH-015` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:no_magic_in_domain; it does not establish the full semantic benefit of the normative statement. | Metaprogramming leaves the four questions answerable |
 | `ARCH-016` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:ruff:C901; it does not establish the full semantic benefit of the normative statement. | Module complexity stays within budget |
 | `ARCH-017` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | Prefer the direct call to the abstraction |
@@ -159,14 +149,14 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `EFCT-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes configured direct imports of effect-capable APIs; it does not prove that every call through a port is sequenced or recovered correctly. | Foreign effects stay behind ports |
 | `EFCT-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:explicit_effects; it does not establish the full semantic benefit of the normative statement. | Time, randomness and environment enter through ports |
 | `EFCT-003` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_determinism; it does not establish every behavior in the normative statement. | Determinism is the default |
-| `EFCT-004` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:plan_apply; it does not establish the full semantic benefit of the normative statement. | Mutating operations are commands, not raw writes |
+| `EFCT-004` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | none | Naming a command does not prove it is replayable, idempotent, authorized, or the only hidden write path; semantic tracing can still miss dynamic effects. | Mutating operations are commands, not raw writes |
 | `EFCT-005` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:plan_apply; it does not establish the full semantic benefit of the normative statement. | Destructive operations plan before they apply |
 | `EFCT-006` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_dry_run_matches_apply; it does not establish every behavior in the normative statement. | A dry run is the pipeline truncated, never a second path |
 | `EFCT-007` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_interruption_recovers; it does not establish every behavior in the normative statement. | A multi-effect apply is journalled |
 | `EFCT-008` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:atomicity_qualified; it does not establish the full semantic benefit of the normative statement. | Atomicity claims are qualified |
 | `EFCT-009` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_what_is_not_guaranteed_is_stated; it does not establish every behavior in the normative statement. | What is not guaranteed is stated |
 | `EFCT-010` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:plan_apply; it does not establish the full semantic benefit of the normative statement. | State transitions are explicit and closed |
-| `EFCT-011` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:plan_apply; it does not establish the full semantic benefit of the normative statement. | Illegal transitions are refused before any effect |
+| `EFCT-011` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | none | The exercised illegal transitions may not cover every runtime state or hidden effect, and mocks can observe a different order from a real adapter. | Illegal transitions are refused before any effect |
 | `EFCT-012` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:import-linter; it does not establish the full semantic benefit of the normative statement. | Persistent state has exactly one owning path |
 | `EFCT-013` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_concurrency_documented; it does not establish every behavior in the normative statement. | Concurrency is introduced only with stated semantics |
 | `EFCT-014` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_concurrency_documented; it does not establish every behavior in the normative statement. | Shared mutable state is guarded by a stated lock order |
@@ -174,7 +164,7 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `EFCT-016` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | Prefer the sequential design |
 | `ERR-001` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:error_channels; it does not establish the full semantic benefit of the normative statement. | Exactly two propagation channels exist |
 | `ERR-002` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement.; Passing excludes only the conf… | Result unions are exhaustively handled |
-| `ERR-003` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:error_channels; it does not establish the full semantic benefit of the normative statement. | Conversion between channels happens at one named seam |
+| `ERR-003` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | none | Dynamic exception paths and callbacks may evade the trace, and one named seam can still perform an incorrect or lossy conversion. | Conversion between channels happens at one named seam |
 | `ERR-004` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:error_channels; it does not establish the full semantic benefit of the normative statement. | A layer produces only its own error family |
 | `ERR-005` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement. | A new variant is declared at its definition site |
 | `ERR-006` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:exception_shape; it does not establish the full semantic benefit of the normative statement. | Exceptions form one narrow hierarchy under a package base |
@@ -262,7 +252,7 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `TYPE-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement.; Passing excludes only the conf… | Two checkers, both strict, both pinned |
 | `TYPE-002` | BINDING | `mixed-verifiers` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement.; Passing excludes only the conf… | The domain carries no `Any` |
 | `TYPE-003` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement.; Passing excludes only the conf… | Escape hatches are narrow, justified and counted |
-| `TYPE-004` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement. | Distinct concepts are distinct types |
+| `TYPE-004` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | none | Review can miss two concepts with similar names, and distinct wrappers do not prove their conversions or invariants are correct. | Distinct concepts are distinct types |
 | `TYPE-005` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:boundary_parsing; it does not establish the full semantic benefit of the normative statement. | A constrained type is a wrapper with a parsing constructor |
 | `TYPE-006` | BINDING | `mixed-verifiers` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement.; Passing excludes only the conf… | Closed sets are enumerations |
 | `TYPE-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement. | Domain values are frozen and slotted |
@@ -272,7 +262,7 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `TYPE-011` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | What the checker cannot enforce is enforced at runtime |
 | `TYPE-012` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | Signature or docstring, by who can enforce it |
 | `TYPE-013` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement. | Conversions are explicit |
-| `TYPE-014` | BINDING | `unbuilt` **(!)** | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement. | Immutability is declared, and not mistaken for a guarantee |
+| `TYPE-014` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | none | Review and static declarations can miss mutation through aliases, reflection, foreign code, nested mutable values, or deliberate bypasses. | Immutability is declared, and not mistaken for a guarantee |
 | `TYPE-015` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | Type sophistication stays proportionate |
 
 ### Mechanisms in use
@@ -280,9 +270,9 @@ These remain normative obligations, but the declared verifier is absent or missi
 | Kind | Rules |
 |---|---|
 | `auto` | 39 |
-| `check` | 96 |
+| `check` | 86 |
 | `fitness` | 56 |
-| `review` | 1 |
+| `review` | 11 |
 
 ## Advisory rationale
 

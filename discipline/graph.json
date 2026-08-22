@@ -1571,7 +1571,7 @@
    "type": "module",
    "label": "Architecture and Coupling",
    "path": "discipline/law/ARCH.md",
-   "tokens": 3343,
+   "tokens": 3361,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1631,7 +1631,7 @@
    "type": "module",
    "label": "Effects, State and Time",
    "path": "discipline/law/EFCT.md",
-   "tokens": 2362,
+   "tokens": 2408,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1643,7 +1643,7 @@
    "type": "module",
    "label": "Error Semantics",
    "path": "discipline/law/ERR.md",
-   "tokens": 2609,
+   "tokens": 2629,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1727,7 +1727,7 @@
    "type": "module",
    "label": "Typing and Contracts",
    "path": "discipline/law/TYPE.md",
-   "tokens": 2171,
+   "tokens": 2219,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1816,7 +1816,7 @@
    "type": "module",
    "label": "Workload Allocation",
    "path": "discipline/ops/ALLOC.md",
-   "tokens": 2145,
+   "tokens": 2163,
    "attrs": {
     "decay": "months",
     "kind": "ops",
@@ -2268,7 +2268,7 @@
    "id": "ARCH-015",
    "type": "rule",
    "label": "Metaprogramming leaves the four questions answerable",
-   "path": "discipline/law/ARCH.md:135",
+   "path": "discipline/law/ARCH.md:136",
    "tokens": 45,
    "attrs": {
     "force": "BINDING",
@@ -2279,7 +2279,7 @@
    "id": "ARCH-016",
    "type": "rule",
    "label": "Module complexity stays within budget",
-   "path": "discipline/law/ARCH.md:142",
+   "path": "discipline/law/ARCH.md:143",
    "tokens": 18,
    "attrs": {
     "force": "BINDING",
@@ -2290,7 +2290,7 @@
    "id": "ARCH-017",
    "type": "rule",
    "label": "Prefer the direct call to the abstraction",
-   "path": "discipline/law/ARCH.md:148",
+   "path": "discipline/law/ARCH.md:149",
    "tokens": 38,
    "attrs": {
     "force": "ADVISORY",
@@ -2301,7 +2301,7 @@
    "id": "ARCH-018",
    "type": "rule",
    "label": "Every production source has one declared role",
-   "path": "discipline/law/ARCH.md:156",
+   "path": "discipline/law/ARCH.md:157",
    "tokens": 90,
    "attrs": {
     "force": "BINDING",
@@ -2312,7 +2312,7 @@
    "id": "ARCH-019",
    "type": "rule",
    "label": "Application code names no concrete adapter",
-   "path": "discipline/law/ARCH.md:167",
+   "path": "discipline/law/ARCH.md:168",
    "tokens": 53,
    "attrs": {
     "force": "BINDING",
@@ -2323,7 +2323,7 @@
    "id": "ARCH-020",
    "type": "rule",
    "label": "One adapter boundary owns each technology",
-   "path": "discipline/law/ARCH.md:176",
+   "path": "discipline/law/ARCH.md:177",
    "tokens": 84,
    "attrs": {
     "force": "BINDING",
@@ -2334,7 +2334,7 @@
    "id": "ARCH-021",
    "type": "rule",
    "label": "Boundaries hide named volatile decisions",
-   "path": "discipline/law/ARCH.md:186",
+   "path": "discipline/law/ARCH.md:187",
    "tokens": 75,
    "attrs": {
     "force": "BINDING",
@@ -2345,7 +2345,7 @@
    "id": "ARCH-022",
    "type": "rule",
    "label": "Four local architecture views stay complete",
-   "path": "discipline/law/ARCH.md:197",
+   "path": "discipline/law/ARCH.md:198",
    "tokens": 111,
    "attrs": {
     "force": "BINDING",
@@ -2356,7 +2356,7 @@
    "id": "ARCH-023",
    "type": "rule",
    "label": "Component contracts name roles, never peers",
-   "path": "discipline/law/ARCH.md:209",
+   "path": "discipline/law/ARCH.md:210",
    "tokens": 94,
    "attrs": {
     "force": "BINDING",
@@ -2917,7 +2917,7 @@
    "id": "EFCT-005",
    "type": "rule",
    "label": "Destructive operations plan before they apply",
-   "path": "discipline/law/EFCT.md:75",
+   "path": "discipline/law/EFCT.md:76",
    "tokens": 47,
    "attrs": {
     "force": "BINDING",
@@ -2928,7 +2928,7 @@
    "id": "EFCT-006",
    "type": "rule",
    "label": "A dry run is the pipeline truncated, never a second path",
-   "path": "discipline/law/EFCT.md:84",
+   "path": "discipline/law/EFCT.md:85",
    "tokens": 35,
    "attrs": {
     "force": "BINDING",
@@ -2939,7 +2939,7 @@
    "id": "EFCT-007",
    "type": "rule",
    "label": "A multi-effect apply is journalled",
-   "path": "discipline/law/EFCT.md:91",
+   "path": "discipline/law/EFCT.md:92",
    "tokens": 48,
    "attrs": {
     "force": "BINDING",
@@ -2950,7 +2950,7 @@
    "id": "EFCT-008",
    "type": "rule",
    "label": "Atomicity claims are qualified",
-   "path": "discipline/law/EFCT.md:98",
+   "path": "discipline/law/EFCT.md:99",
    "tokens": 50,
    "attrs": {
     "force": "BINDING",
@@ -2961,7 +2961,7 @@
    "id": "EFCT-009",
    "type": "rule",
    "label": "What is not guaranteed is stated",
-   "path": "discipline/law/EFCT.md:107",
+   "path": "discipline/law/EFCT.md:108",
    "tokens": 56,
    "attrs": {
     "force": "BINDING",
@@ -2972,7 +2972,7 @@
    "id": "EFCT-010",
    "type": "rule",
    "label": "State transitions are explicit and closed",
-   "path": "discipline/law/EFCT.md:119",
+   "path": "discipline/law/EFCT.md:120",
    "tokens": 30,
    "attrs": {
     "force": "BINDING",
@@ -2983,7 +2983,7 @@
    "id": "EFCT-011",
    "type": "rule",
    "label": "Illegal transitions are refused before any effect",
-   "path": "discipline/law/EFCT.md:126",
+   "path": "discipline/law/EFCT.md:127",
    "tokens": 41,
    "attrs": {
     "force": "BINDING",
@@ -2994,7 +2994,7 @@
    "id": "EFCT-012",
    "type": "rule",
    "label": "Persistent state has exactly one owning path",
-   "path": "discipline/law/EFCT.md:134",
+   "path": "discipline/law/EFCT.md:136",
    "tokens": 41,
    "attrs": {
     "force": "BINDING",
@@ -3005,7 +3005,7 @@
    "id": "EFCT-013",
    "type": "rule",
    "label": "Concurrency is introduced only with stated semantics",
-   "path": "discipline/law/EFCT.md:146",
+   "path": "discipline/law/EFCT.md:148",
    "tokens": 36,
    "attrs": {
     "force": "BINDING",
@@ -3016,7 +3016,7 @@
    "id": "EFCT-014",
    "type": "rule",
    "label": "Shared mutable state is guarded by a stated lock order",
-   "path": "discipline/law/EFCT.md:153",
+   "path": "discipline/law/EFCT.md:155",
    "tokens": 25,
    "attrs": {
     "force": "BINDING",
@@ -3027,7 +3027,7 @@
    "id": "EFCT-015",
    "type": "rule",
    "label": "Writer exclusion is enforced; contention is a result",
-   "path": "discipline/law/EFCT.md:160",
+   "path": "discipline/law/EFCT.md:162",
    "tokens": 47,
    "attrs": {
     "force": "BINDING",
@@ -3038,7 +3038,7 @@
    "id": "EFCT-016",
    "type": "rule",
    "label": "Prefer the sequential design",
-   "path": "discipline/law/EFCT.md:168",
+   "path": "discipline/law/EFCT.md:170",
    "tokens": 28,
    "attrs": {
     "force": "ADVISORY",
@@ -3082,7 +3082,7 @@
    "id": "ERR-004",
    "type": "rule",
    "label": "A layer produces only its own error family",
-   "path": "discipline/law/ERR.md:87",
+   "path": "discipline/law/ERR.md:88",
    "tokens": 32,
    "attrs": {
     "force": "BINDING",
@@ -3093,7 +3093,7 @@
    "id": "ERR-005",
    "type": "rule",
    "label": "A new variant is declared at its definition site",
-   "path": "discipline/law/ERR.md:95",
+   "path": "discipline/law/ERR.md:96",
    "tokens": 38,
    "attrs": {
     "force": "BINDING",
@@ -3104,7 +3104,7 @@
    "id": "ERR-006",
    "type": "rule",
    "label": "Exceptions form one narrow hierarchy under a package base",
-   "path": "discipline/law/ERR.md:102",
+   "path": "discipline/law/ERR.md:103",
    "tokens": 56,
    "attrs": {
     "force": "BINDING",
@@ -3115,7 +3115,7 @@
    "id": "ERR-007",
    "type": "rule",
    "label": "Define an exception only when a caller must distinguish it",
-   "path": "discipline/law/ERR.md:110",
+   "path": "discipline/law/ERR.md:111",
    "tokens": 39,
    "attrs": {
     "force": "ADVISORY",
@@ -3126,7 +3126,7 @@
    "id": "ERR-008",
    "type": "rule",
    "label": "Catch narrowly",
-   "path": "discipline/law/ERR.md:121",
+   "path": "discipline/law/ERR.md:122",
    "tokens": 45,
    "attrs": {
     "force": "BINDING",
@@ -3137,7 +3137,7 @@
    "id": "ERR-009",
    "type": "rule",
    "label": "The `try` body holds only what can fail",
-   "path": "discipline/law/ERR.md:129",
+   "path": "discipline/law/ERR.md:130",
    "tokens": 33,
    "attrs": {
     "force": "BINDING",
@@ -3148,7 +3148,7 @@
    "id": "ERR-010",
    "type": "rule",
    "label": "Grouped failures propagate as a group",
-   "path": "discipline/law/ERR.md:136",
+   "path": "discipline/law/ERR.md:137",
    "tokens": 45,
    "attrs": {
     "force": "BINDING",
@@ -3159,7 +3159,7 @@
    "id": "ERR-011",
    "type": "rule",
    "label": "Parse at the boundary; do not validate in the interior",
-   "path": "discipline/law/ERR.md:147",
+   "path": "discipline/law/ERR.md:148",
    "tokens": 46,
    "attrs": {
     "force": "ADVISORY",
@@ -3170,7 +3170,7 @@
    "id": "ERR-012",
    "type": "rule",
    "label": "Boundary validation survives optimized bytecode",
-   "path": "discipline/law/ERR.md:159",
+   "path": "discipline/law/ERR.md:160",
    "tokens": 23,
    "attrs": {
     "force": "BINDING",
@@ -3181,7 +3181,7 @@
    "id": "ERR-013",
    "type": "rule",
    "label": "Try the operation rather than pre-checking the world",
-   "path": "discipline/law/ERR.md:166",
+   "path": "discipline/law/ERR.md:167",
    "tokens": 58,
    "attrs": {
     "force": "BINDING",
@@ -3192,7 +3192,7 @@
    "id": "ERR-014",
    "type": "rule",
    "label": "Expected failure and contract violation are distinguished",
-   "path": "discipline/law/ERR.md:178",
+   "path": "discipline/law/ERR.md:179",
    "tokens": 45,
    "attrs": {
     "force": "ADVISORY",
@@ -3203,7 +3203,7 @@
    "id": "ERR-015",
    "type": "rule",
    "label": "No unhandled exception reaches the process boundary",
-   "path": "discipline/law/ERR.md:188",
+   "path": "discipline/law/ERR.md:189",
    "tokens": 29,
    "attrs": {
     "force": "BINDING",
@@ -3214,7 +3214,7 @@
    "id": "ERR-016",
    "type": "rule",
    "label": "A fault is contained at the boundary that detected it",
-   "path": "discipline/law/ERR.md:196",
+   "path": "discipline/law/ERR.md:197",
    "tokens": 36,
    "attrs": {
     "force": "BINDING",
@@ -4050,7 +4050,7 @@
    "id": "TYPE-005",
    "type": "rule",
    "label": "A constrained type is a wrapper with a parsing constructor",
-   "path": "discipline/law/TYPE.md:72",
+   "path": "discipline/law/TYPE.md:73",
    "tokens": 44,
    "attrs": {
     "force": "BINDING",
@@ -4061,7 +4061,7 @@
    "id": "TYPE-006",
    "type": "rule",
    "label": "Closed sets are enumerations",
-   "path": "discipline/law/TYPE.md:80",
+   "path": "discipline/law/TYPE.md:81",
    "tokens": 22,
    "attrs": {
     "force": "BINDING",
@@ -4072,7 +4072,7 @@
    "id": "TYPE-007",
    "type": "rule",
    "label": "Domain values are frozen and slotted",
-   "path": "discipline/law/TYPE.md:86",
+   "path": "discipline/law/TYPE.md:87",
    "tokens": 16,
    "attrs": {
     "force": "BINDING",
@@ -4083,7 +4083,7 @@
    "id": "TYPE-008",
    "type": "rule",
    "label": "Signatures take read-only collection types",
-   "path": "discipline/law/TYPE.md:92",
+   "path": "discipline/law/TYPE.md:93",
    "tokens": 30,
    "attrs": {
     "force": "BINDING",
@@ -4094,7 +4094,7 @@
    "id": "TYPE-009",
    "type": "rule",
    "label": "Ports are structural protocols",
-   "path": "discipline/law/TYPE.md:103",
+   "path": "discipline/law/TYPE.md:104",
    "tokens": 64,
    "attrs": {
     "force": "RETIRED",
@@ -4105,7 +4105,7 @@
    "id": "TYPE-010",
    "type": "rule",
    "label": "Runtime protocol checks are not contract checks",
-   "path": "discipline/law/TYPE.md:113",
+   "path": "discipline/law/TYPE.md:114",
    "tokens": 43,
    "attrs": {
     "force": "BINDING",
@@ -4116,7 +4116,7 @@
    "id": "TYPE-011",
    "type": "rule",
    "label": "What the checker cannot enforce is enforced at runtime",
-   "path": "discipline/law/TYPE.md:120",
+   "path": "discipline/law/TYPE.md:121",
    "tokens": 68,
    "attrs": {
     "force": "ADVISORY",
@@ -4127,7 +4127,7 @@
    "id": "TYPE-012",
    "type": "rule",
    "label": "Signature or docstring, by who can enforce it",
-   "path": "discipline/law/TYPE.md:131",
+   "path": "discipline/law/TYPE.md:132",
    "tokens": 49,
    "attrs": {
     "force": "ADVISORY",
@@ -4138,7 +4138,7 @@
    "id": "TYPE-013",
    "type": "rule",
    "label": "Conversions are explicit",
-   "path": "discipline/law/TYPE.md:141",
+   "path": "discipline/law/TYPE.md:142",
    "tokens": 35,
    "attrs": {
     "force": "BINDING",
@@ -4149,7 +4149,7 @@
    "id": "TYPE-014",
    "type": "rule",
    "label": "Immutability is declared, and not mistaken for a guarantee",
-   "path": "discipline/law/TYPE.md:147",
+   "path": "discipline/law/TYPE.md:148",
    "tokens": 38,
    "attrs": {
     "force": "BINDING",
@@ -4160,7 +4160,7 @@
    "id": "TYPE-015",
    "type": "rule",
    "label": "Type sophistication stays proportionate",
-   "path": "discipline/law/TYPE.md:154",
+   "path": "discipline/law/TYPE.md:156",
    "tokens": 30,
    "attrs": {
     "force": "ADVISORY",
@@ -9037,25 +9037,25 @@
   {
    "type": "enforced_by",
    "src": "ALLOC-005",
-   "dst": "mech:check:dispatch_recorded",
+   "dst": "mech:review",
    "origin": "derived"
   },
   {
    "type": "enforced_by",
    "src": "ALLOC-006",
-   "dst": "mech:check:dispatch_recorded",
+   "dst": "mech:review",
    "origin": "derived"
   },
   {
    "type": "enforced_by",
    "src": "ALLOC-007",
-   "dst": "mech:check:dispatch_recorded",
+   "dst": "mech:review",
    "origin": "derived"
   },
   {
    "type": "enforced_by",
    "src": "ALLOC-009",
-   "dst": "mech:check:dispatch_recorded",
+   "dst": "mech:review",
    "origin": "derived"
   },
   {
@@ -9193,7 +9193,7 @@
   {
    "type": "enforced_by",
    "src": "ARCH-014",
-   "dst": "mech:check:domain_purity",
+   "dst": "mech:review",
    "origin": "derived"
   },
   {
@@ -9535,7 +9535,7 @@
   {
    "type": "enforced_by",
    "src": "EFCT-004",
-   "dst": "mech:check:plan_apply",
+   "dst": "mech:review",
    "origin": "derived"
   },
   {
@@ -9577,7 +9577,7 @@
   {
    "type": "enforced_by",
    "src": "EFCT-011",
-   "dst": "mech:check:plan_apply",
+   "dst": "mech:review",
    "origin": "derived"
   },
   {
@@ -9625,7 +9625,7 @@
   {
    "type": "enforced_by",
    "src": "ERR-003",
-   "dst": "mech:check:error_channels",
+   "dst": "mech:review",
    "origin": "derived"
   },
   {
@@ -10111,7 +10111,7 @@
   {
    "type": "enforced_by",
    "src": "TYPE-004",
-   "dst": "mech:check:domain_purity",
+   "dst": "mech:review",
    "origin": "derived"
   },
   {
@@ -10159,7 +10159,7 @@
   {
    "type": "enforced_by",
    "src": "TYPE-014",
-   "dst": "mech:check:domain_purity",
+   "dst": "mech:review",
    "origin": "derived"
   },
   {

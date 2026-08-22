@@ -38,6 +38,7 @@ from discipline_core import (
     count_tokens,
     find_version_literals,
     find_xrefs,
+    has_mechanical_claim,
     mechanism_is_implemented,
     parse_document,
     prose_of,
@@ -1164,10 +1165,7 @@ def check_discrimination_gap(documents: Sequence[Document], layout: Layout) -> I
         if rule.force is Force.BINDING
         and rule.rule_id not in covered
         and rule.mechanisms
-        and any(
-            mechanism_is_implemented(m, layout.root, rule.rule_id) is not False
-            for m in rule.mechanisms
-        )
+        and has_mechanical_claim(rule.mechanisms, layout.root, rule.rule_id)
     )
     if not gap:
         return
