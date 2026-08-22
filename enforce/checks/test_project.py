@@ -45,6 +45,7 @@ def v4(*, extra: str = "", tables: str = "") -> str:
         source_roots = ["src/pkg"]
         architecture = "architecture.json"
         contract_conformance = "contract-conformance.json"
+        operational_model = "operational-model.json"
         {extra}
 
         [tool.agent-discipline.capabilities]
@@ -164,6 +165,19 @@ def test_a_missing_capability_manifest_is_refused(tmp_path: Path) -> None:
         'contract_conformance="contract-conformance.json"\n',
     )
     with pytest.raises(ValueError, match="DISC-PROJECT-016"):
+        project.parse(path)
+
+
+def test_a_missing_operational_model_is_refused(tmp_path: Path) -> None:
+    """Operational completeness cannot remain an optional side document.
+
+    @param tmp_path fixture repository
+    """
+    path = declare(
+        tmp_path,
+        v4().replace('operational_model = "operational-model.json"\n', ""),
+    )
+    with pytest.raises(ValueError, match="DISC-PROJECT-018"):
         project.parse(path)
 
 

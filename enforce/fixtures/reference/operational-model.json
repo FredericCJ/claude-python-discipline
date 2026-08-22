@@ -1,0 +1,213 @@
+{
+  "schema_version": 1,
+  "capability_obligations": [
+    {
+      "capability": "public_api",
+      "resources": [],
+      "resource_absence": "The public planning API acquires no resource; callers provide ports and values.",
+      "recoveries": ["apply_interrupted"],
+      "recovery_absence": null,
+      "tests": [
+        {
+          "id": "installed_surface",
+          "evidence": "tests/unit/test_identity.py::test_runtime_identity_names_version_and_build"
+        },
+        {
+          "id": "structured_terminal_outcome",
+          "evidence": "tests/fault/test_containment.py::test_the_envelope_of_an_interrupted_apply_localizes_it"
+        }
+      ]
+    },
+    {
+      "capability": "filesystem_io",
+      "resources": [],
+      "resource_absence": "The requested directory remains caller-owned; each adapter call acquires no retained handle.",
+      "recoveries": ["apply_interrupted"],
+      "recovery_absence": null,
+      "tests": [
+        {
+          "id": "failure_translation",
+          "evidence": "tests/fault/test_containment.py::test_a_store_fault_during_listing_surfaces_as_the_adapter_family"
+        },
+        {
+          "id": "resource_ownership",
+          "evidence": "tests/integration/test_local_files.py::test_the_real_store_lists_what_was_written"
+        }
+      ]
+    },
+    {
+      "capability": "destructive_effects",
+      "resources": [],
+      "resource_absence": "Deletion targets remain caller-owned and no handle survives an adapter call.",
+      "recoveries": ["apply_interrupted"],
+      "recovery_absence": null,
+      "tests": [
+        {
+          "id": "interruption",
+          "evidence": "tests/fault/test_containment.py::test_an_interrupted_apply_reports_how_far_it_got"
+        },
+        {
+          "id": "plan_apply",
+          "evidence": "tests/integration/test_local_files.py::test_the_dry_run_predicts_the_apply_exactly"
+        },
+        {
+          "id": "recovery",
+          "evidence": "tests/fault/test_containment.py::test_an_interrupted_apply_chains_the_adapter_error_it_came_from"
+        }
+      ]
+    }
+  ],
+  "lifecycle": [
+    {
+      "phase": "startup",
+      "owner_role": "shell",
+      "behavior": "Validate identity, policy values, and injected boundary implementations before planning.",
+      "terminal_state": "ready",
+      "test": "tests/unit/test_identity.py::test_runtime_identity_names_version_and_build",
+      "not_applicable": null
+    },
+    {
+      "phase": "steady_state",
+      "owner_role": "application",
+      "behavior": "Survey once and either return a typed refusal, return a preview plan, or apply that exact plan.",
+      "terminal_state": "ready",
+      "test": "tests/integration/test_local_files.py::test_the_dry_run_predicts_the_apply_exactly",
+      "not_applicable": null
+    },
+    {
+      "phase": "interruption",
+      "owner_role": "application",
+      "behavior": "Stop further deletion and report completed and remaining paths with the cause chain.",
+      "terminal_state": "interrupted",
+      "test": "tests/fault/test_containment.py::test_an_interrupted_apply_reports_how_far_it_got",
+      "not_applicable": null
+    },
+    {
+      "phase": "drain",
+      "owner_role": "shell",
+      "behavior": "No queue, stream, child, or retained resource exists to drain.",
+      "terminal_state": "ready",
+      "test": null,
+      "not_applicable": "The command performs a finite plan and owns no buffered work."
+    },
+    {
+      "phase": "shutdown",
+      "owner_role": "shell",
+      "behavior": "Render one terminal result and return after every adapter call has completed.",
+      "terminal_state": "ready",
+      "test": "tests/integration/test_local_files.py::test_a_dry_run_changes_nothing_on_disk",
+      "not_applicable": null
+    },
+    {
+      "phase": "forced_cleanup",
+      "owner_role": "shell",
+      "behavior": "No retained handle or background worker remains for forced cleanup.",
+      "terminal_state": "interrupted",
+      "test": null,
+      "not_applicable": "Every filesystem call is synchronous and no resource survives it."
+    }
+  ],
+  "states": [
+    {
+      "id": "ready",
+      "kind": "safe",
+      "entry_conditions": ["Inputs and boundary implementations are valid."],
+      "allowed_operations": ["survey", "apply"],
+      "observable_event": "REFPKG-READY",
+      "exit_condition": "The one requested command reaches a terminal outcome."
+    },
+    {
+      "id": "interrupted",
+      "kind": "degraded",
+      "entry_conditions": ["A destructive adapter call failed after zero or more deletions."],
+      "allowed_operations": [],
+      "observable_event": "REFPKG-APPLY-INTERRUPTED",
+      "exit_condition": "Terminal; the caller decides whether to construct a new plan."
+    }
+  ],
+  "budgets": [
+    {
+      "kind": "time",
+      "scope": "Local filesystem traversal and calls have no published latency promise.",
+      "bound": null,
+      "not_applicable": "bounded_latency and network_io are false and no child lifecycle is owned.",
+      "measurement": null
+    },
+    {
+      "kind": "memory",
+      "scope": "The fixture owns no persistent state, generator, or network buffer.",
+      "bound": null,
+      "not_applicable": "No active capability requires a separate memory budget.",
+      "measurement": null
+    },
+    {
+      "kind": "queue",
+      "scope": "The command owns no queue or overlapping work.",
+      "bound": null,
+      "not_applicable": "network_io and concurrency are false.",
+      "measurement": null
+    },
+    {
+      "kind": "retry",
+      "scope": "Adapter calls execute once and are never retried locally.",
+      "bound": null,
+      "not_applicable": "No active capability permits a retry loop.",
+      "measurement": null
+    },
+    {
+      "kind": "input_size",
+      "scope": "Entries accepted by one plan operation.",
+      "bound": {"value": 10000, "unit": "items"},
+      "not_applicable": null,
+      "measurement": "tests/unit/test_plan.py::test_planning_refuses_work_beyond_its_input_and_cleanup_budget"
+    },
+    {
+      "kind": "cleanup",
+      "scope": "Maximum deletion attempts in one already validated plan.",
+      "bound": {"value": 10000, "unit": "items"},
+      "not_applicable": null,
+      "measurement": "tests/unit/test_plan.py::test_planning_refuses_work_beyond_its_input_and_cleanup_budget"
+    }
+  ],
+  "outcomes": [
+    {
+      "id": "preview_complete",
+      "exceptional": false,
+      "trigger": "Survey produces a plan and apply was not requested.",
+      "event_code": "REFPKG-PREVIEW-COMPLETE",
+      "correlation_field": "operation_id",
+      "terminal_state": "ready",
+      "test": "tests/integration/test_local_files.py::test_a_dry_run_changes_nothing_on_disk"
+    },
+    {
+      "id": "apply_interrupted",
+      "exceptional": true,
+      "trigger": "A delete operation raises a translated port failure.",
+      "event_code": "REFPKG-APPLY-INTERRUPTED",
+      "correlation_field": "operation_id",
+      "terminal_state": "interrupted",
+      "test": "tests/fault/test_containment.py::test_the_envelope_of_an_interrupted_apply_localizes_it"
+    }
+  ],
+  "identity": {
+    "build_source": "src/refpkg/shell/identity.py",
+    "runtime_fields": ["version", "build_id"],
+    "test": "tests/unit/test_identity.py::test_runtime_identity_names_version_and_build"
+  },
+  "platforms": [
+    {
+      "name": "windows",
+      "runtime": "supported",
+      "development": "supported",
+      "evidence": "tests/integration/test_local_files.py::test_the_dry_run_predicts_the_apply_exactly",
+      "limitation": null
+    },
+    {
+      "name": "linux",
+      "runtime": "supported",
+      "development": "supported",
+      "evidence": "tests/integration/test_local_files.py::test_the_dry_run_predicts_the_apply_exactly",
+      "limitation": null
+    }
+  ]
+}

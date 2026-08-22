@@ -952,6 +952,16 @@
    }
   },
   {
+   "id": "mech:check:operational_model",
+   "type": "mechanism",
+   "label": "check:operational_model",
+   "path": "enforce/checks/operational_model.py",
+   "attrs": {
+    "family": "check",
+    "implemented": "true"
+   }
+  },
+  {
    "id": "mech:check:oracle_declared",
    "type": "mechanism",
    "label": "check:oracle_declared",
@@ -1653,7 +1663,7 @@
    "type": "module",
    "label": "Local Operations and Capability Activation",
    "path": "discipline/law/OPS.md",
-   "tokens": 507,
+   "tokens": 1575,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -3551,6 +3561,72 @@
    "label": "Observed capability cannot be declared false",
    "path": "discipline/law/OPS.md:38",
    "tokens": 58,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/OPS"
+   }
+  },
+  {
+   "id": "OPS-003",
+   "type": "rule",
+   "label": "Operational ownership joins the local architecture",
+   "path": "discipline/law/OPS.md:49",
+   "tokens": 82,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/OPS"
+   }
+  },
+  {
+   "id": "OPS-004",
+   "type": "rule",
+   "label": "Every local lifecycle phase is decided",
+   "path": "discipline/law/OPS.md:59",
+   "tokens": 110,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/OPS"
+   }
+  },
+  {
+   "id": "OPS-005",
+   "type": "rule",
+   "label": "Safe and degraded outcomes are observable",
+   "path": "discipline/law/OPS.md:70",
+   "tokens": 73,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/OPS"
+   }
+  },
+  {
+   "id": "OPS-006",
+   "type": "rule",
+   "label": "Activated work has a finite measured budget",
+   "path": "discipline/law/OPS.md:80",
+   "tokens": 82,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/OPS"
+   }
+  },
+  {
+   "id": "OPS-007",
+   "type": "rule",
+   "label": "Delivery identity and platform intent are explicit",
+   "path": "discipline/law/OPS.md:90",
+   "tokens": 92,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/OPS"
+   }
+  },
+  {
+   "id": "OPS-008",
+   "type": "rule",
+   "label": "Capability activation expands to a closed evidence set",
+   "path": "discipline/law/OPS.md:100",
+   "tokens": 70,
    "attrs": {
     "force": "BINDING",
     "module": "law/OPS"
@@ -7200,6 +7276,84 @@
   },
   {
    "type": "cites",
+   "src": "OPS-003",
+   "dst": "ARCH-023",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "OPS-003",
+   "dst": "meta/SCOPE",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "OPS-004",
+   "dst": "EFCT-009",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "OPS-004",
+   "dst": "OPS-001",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "OPS-005",
+   "dst": "DIAG-010",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "OPS-005",
+   "dst": "DIAG-016",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "OPS-006",
+   "dst": "TEST-003",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "OPS-006",
+   "dst": "TYPE-001",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "OPS-007",
+   "dst": "DIAG-001",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "OPS-007",
+   "dst": "EVID-005",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "OPS-008",
+   "dst": "EVID-003",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "OPS-008",
+   "dst": "OPS-001",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "OPS-008",
+   "dst": "TEST-020",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
    "src": "TEAMS-001",
    "dst": "ops/ALLOC",
    "origin": "derived"
@@ -8240,6 +8394,42 @@
    "type": "contains",
    "src": "law/OPS",
    "dst": "OPS-002",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/OPS",
+   "dst": "OPS-003",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/OPS",
+   "dst": "OPS-004",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/OPS",
+   "dst": "OPS-005",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/OPS",
+   "dst": "OPS-006",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/OPS",
+   "dst": "OPS-007",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/OPS",
+   "dst": "OPS-008",
    "origin": "derived"
   },
   {
@@ -9458,6 +9648,42 @@
    "type": "enforced_by",
    "src": "OPS-002",
    "dst": "mech:check:capabilities",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "OPS-003",
+   "dst": "mech:check:operational_model",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "OPS-004",
+   "dst": "mech:check:operational_model",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "OPS-005",
+   "dst": "mech:check:operational_model",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "OPS-006",
+   "dst": "mech:check:operational_model",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "OPS-007",
+   "dst": "mech:check:operational_model",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "OPS-008",
+   "dst": "mech:check:operational_model",
    "origin": "derived"
   },
   {
@@ -11449,6 +11675,114 @@
   {
    "type": "grounds_on",
    "src": "OPS-002",
+   "dst": "law/TEST",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-003",
+   "dst": "law/ARCH",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-003",
+   "dst": "law/EFCT",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-003",
+   "dst": "law/TEST",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-004",
+   "dst": "law/ARCH",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-004",
+   "dst": "law/EFCT",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-004",
+   "dst": "law/TEST",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-005",
+   "dst": "law/ARCH",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-005",
+   "dst": "law/EFCT",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-005",
+   "dst": "law/TEST",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-006",
+   "dst": "law/ARCH",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-006",
+   "dst": "law/EFCT",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-006",
+   "dst": "law/TEST",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-007",
+   "dst": "law/ARCH",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-007",
+   "dst": "law/EFCT",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-007",
+   "dst": "law/TEST",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-008",
+   "dst": "law/ARCH",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-008",
+   "dst": "law/EFCT",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-008",
    "dst": "law/TEST",
    "origin": "derived"
   },

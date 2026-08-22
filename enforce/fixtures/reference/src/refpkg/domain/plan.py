@@ -20,6 +20,10 @@ if TYPE_CHECKING:
 
     from refpkg.domain.model import Entry, Instant, Policy
 
+## Maximum entries accepted by one planning operation. This is both the input
+## and worst-case destructive-cleanup work budget in operational-model.json.
+MAX_PLAN_ENTRIES = 10_000
+
 
 @dataclass(frozen=True, slots=True)
 class Plan:
@@ -79,6 +83,13 @@ def plan_prune(entries: Sequence[Entry], policy: Policy, now: Instant) -> Outcom
     @param now the instant to measure age against, supplied rather than read
     @return the plan, or a refusal naming what made planning impossible
     """
+    if len(entries) > MAX_PLAN_ENTRIES:
+        return Refusal(
+            code="refpkg.domain.plan_too_large",
+            expected=f"at most {MAX_PLAN_ENTRIES} entries per plan",
+            actual=f"{len(entries)} entries",
+        )
+
     newest_first = sorted(entries, key=lambda e: e.modified_at.epoch_seconds, reverse=True)
 
     future = [e for e in newest_first if e.modified_at.epoch_seconds > now.epoch_seconds]

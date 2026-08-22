@@ -43,6 +43,7 @@ unit = "application"              # application | component
 source_roots = ["src"]
 architecture = "architecture.json" # canonical local decisions/contracts/views
 contract_conformance = "contract-conformance.json" # implementations and test evidence
+operational_model = "operational-model.json" # lifecycle, budgets, outcomes, platforms
 doc_engine = "doxygen"             # doxygen | sphinx | none.  Absent => none.
 pedagogical_full_projection = false
 adapter_boundaries = [

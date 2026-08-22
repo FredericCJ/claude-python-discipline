@@ -202,6 +202,7 @@ def test_unique_arch004_import_becomes_boundary_ownership(tmp_path: Path) -> Non
     assert 'owner = "src/pkg/adapters/http"' in rendered
     assert "[tool.agent-discipline.capabilities]" in rendered
     assert "network_io = false" in rendered
+    assert 'operational_model = "operational-model.json"' in rendered
 
 
 def test_arch004_import_in_two_boundaries_blocks_migration(tmp_path: Path) -> None:

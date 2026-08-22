@@ -1,0 +1,263 @@
+{
+  "schema_version": 1,
+  "capability_obligations": [
+    {
+      "capability": "public_api",
+      "resources": ["release_staging_tree"],
+      "resource_absence": null,
+      "recoveries": ["release_gate_failure"],
+      "recovery_absence": null,
+      "tests": [
+        {"id": "installed_surface", "evidence": "tools/test_vendor.py::test_the_manifest_names_every_upstream_file"},
+        {"id": "structured_terminal_outcome", "evidence": "tools/test_learn.py::test_the_verify_report_has_a_machine_readable_form"}
+      ]
+    },
+    {
+      "capability": "filesystem_io",
+      "resources": ["release_staging_tree", "learning_store", "generated_projections"],
+      "resource_absence": null,
+      "recoveries": ["release_gate_failure", "learning_store_corruption"],
+      "recovery_absence": null,
+      "tests": [
+        {"id": "failure_translation", "evidence": "tools/test_vendor.py::test_check_reports_an_edited_vendored_file_by_name"},
+        {"id": "resource_ownership", "evidence": "tools/test_vendor.py::test_the_whole_round_trip_preserves_every_prior_byte"}
+      ]
+    },
+    {
+      "capability": "persistent_state",
+      "resources": ["learning_store"],
+      "resource_absence": null,
+      "recoveries": ["learning_store_corruption"],
+      "recovery_absence": null,
+      "tests": [
+        {"id": "corruption_recovery", "evidence": "tools/test_learn.py::test_the_database_is_reconstructible_from_the_ledger"},
+        {"id": "migration", "evidence": "tools/test_learn.py::test_a_prior_version_database_is_rebuilt_not_patched"},
+        {"id": "schema_compatibility", "evidence": "tools/test_learn.py::test_the_schema_records_its_version"},
+        {"id": "single_writer", "evidence": "tools/test_learn.py::test_the_ledger_is_append_only_and_line_oriented"}
+      ]
+    },
+    {
+      "capability": "generated_artifacts",
+      "resources": ["generated_projections"],
+      "resource_absence": null,
+      "recoveries": ["release_gate_failure"],
+      "recovery_absence": null,
+      "tests": [
+        {"id": "byte_stability", "evidence": "tools/test_nav.py::test_the_built_graph_is_byte_stable"},
+        {"id": "independent_drift", "evidence": "tools/test_build_skill_mirror.py::test_check_names_the_host_copy_that_drifted"},
+        {"id": "lossless_round_trip", "evidence": "tools/test_vendor.py::test_the_whole_round_trip_preserves_every_prior_byte"},
+        {"id": "provenance", "evidence": "tools/test_vendor.py::test_the_manifest_names_every_upstream_file"},
+        {"id": "source_of_truth", "evidence": "tools/test_build_skill_mirror.py::test_one_source_is_mirrored_byte_for_byte_to_both_hosts"}
+      ]
+    },
+    {
+      "capability": "launches_subprocesses",
+      "resources": ["gate_subprocess"],
+      "resource_absence": null,
+      "recoveries": ["gate_subprocess_timeout"],
+      "recovery_absence": null,
+      "tests": [
+        {"id": "command_identity", "evidence": "tools/test_learn.py::test_no_shell_ever_sees_the_command"},
+        {"id": "launch_failure", "evidence": "tools/test_learn.py::test_a_failing_verification_is_data_not_a_crash"},
+        {"id": "lifecycle_authority", "evidence": "tools/test_learn.py::test_a_verification_that_never_ends_is_killed"}
+      ]
+    },
+    {
+      "capability": "owns_subprocess_lifecycle",
+      "resources": ["gate_subprocess"],
+      "resource_absence": null,
+      "recoveries": ["gate_subprocess_timeout"],
+      "recovery_absence": null,
+      "tests": [
+        {"id": "graceful_stop", "evidence": "tools/test_gate_runner.py::test_stop_early_stops"},
+        {"id": "no_orphans", "evidence": "tools/test_learn.py::test_a_verification_that_never_ends_is_killed"},
+        {"id": "signal_routing", "evidence": "tools/test_learn.py::test_a_verification_that_never_ends_is_killed"},
+        {"id": "timeout_escalation", "evidence": "tools/test_learn.py::test_a_verification_that_never_ends_is_killed"}
+      ]
+    },
+    {
+      "capability": "destructive_effects",
+      "resources": ["release_staging_tree", "generated_projections"],
+      "resource_absence": null,
+      "recoveries": ["release_gate_failure"],
+      "recovery_absence": null,
+      "tests": [
+        {"id": "interruption", "evidence": "tools/test_integrate.py::test_removal_restores_the_original_file"},
+        {"id": "plan_apply", "evidence": "tools/test_integrate.py::test_a_dry_run_writes_nothing"},
+        {"id": "recovery", "evidence": "tools/test_vendor.py::test_the_project_half_survives_an_update"}
+      ]
+    },
+    {
+      "capability": "bounded_latency",
+      "resources": ["gate_subprocess"],
+      "resource_absence": null,
+      "recoveries": ["gate_subprocess_timeout"],
+      "recovery_absence": null,
+      "tests": [
+        {"id": "latency_measurement", "evidence": "tools/test_learn.py::test_a_verification_that_never_ends_is_killed"}
+      ]
+    }
+  ],
+  "lifecycle": [
+    {
+      "phase": "startup",
+      "owner_role": "shell",
+      "behavior": "Load the nearest project declaration and pinned environment before any gate or release mutation.",
+      "terminal_state": "ready",
+      "test": "tools/test_toolchain_gates.py::test_a_missing_configuration_is_not_silence",
+      "not_applicable": null
+    },
+    {
+      "phase": "steady_state",
+      "owner_role": "application",
+      "behavior": "Run declared mechanisms, build deterministic projections, or apply one bounded package operation.",
+      "terminal_state": "ready",
+      "test": "tools/test_gate_runner.py::test_all_passing_returns_zero",
+      "not_applicable": null
+    },
+    {
+      "phase": "interruption",
+      "owner_role": "shell",
+      "behavior": "Stop publishing or verification, classify the failed or timed-out step, and retain project-owned data.",
+      "terminal_state": "gate_failed",
+      "test": "tools/test_gate_runner.py::test_stop_early_stops",
+      "not_applicable": null
+    },
+    {
+      "phase": "drain",
+      "owner_role": "shell",
+      "behavior": "Capture child output and wait for the current owned mechanism before reporting its verdict.",
+      "terminal_state": "ready",
+      "test": "tools/test_gate_runner.py::test_later_steps_still_run_by_default",
+      "not_applicable": null
+    },
+    {
+      "phase": "shutdown",
+      "owner_role": "shell",
+      "behavior": "Close local stores, remove owned staging state, and emit one complete gate or command summary.",
+      "terminal_state": "ready",
+      "test": "tools/test_release.py::test_caches_and_databases_are_pruned",
+      "not_applicable": null
+    },
+    {
+      "phase": "forced_cleanup",
+      "owner_role": "shell",
+      "behavior": "Terminate a timed-out owned child, report timeout as non-pass, and return control to the caller.",
+      "terminal_state": "gate_failed",
+      "test": "tools/test_learn.py::test_a_verification_that_never_ends_is_killed",
+      "not_applicable": null
+    }
+  ],
+  "states": [
+    {
+      "id": "ready",
+      "kind": "safe",
+      "entry_conditions": ["The declaration is local and every required mechanism is runnable."],
+      "allowed_operations": ["validate", "navigate", "build", "install", "remove"],
+      "observable_event": "DISCIPLINE-READY",
+      "exit_condition": "A command completes or a required mechanism fails."
+    },
+    {
+      "id": "gate_failed",
+      "kind": "degraded",
+      "entry_conditions": ["A required mechanism fails, times out, is unsupported, or is not run."],
+      "allowed_operations": ["diagnose", "repair", "rerun"],
+      "observable_event": "DISCIPLINE-GATE-FAILED",
+      "exit_condition": "The named defect is repaired and the complete gate passes."
+    }
+  ],
+  "budgets": [
+    {
+      "kind": "time",
+      "scope": "One repository gate child process.",
+      "bound": {"value": 1800, "unit": "seconds"},
+      "not_applicable": null,
+      "measurement": "tools/test_learn.py::test_a_verification_that_never_ends_is_killed"
+    },
+    {
+      "kind": "memory",
+      "scope": "One generated projection or reconstructed learning index.",
+      "bound": {"value": 256, "unit": "mebibytes"},
+      "not_applicable": null,
+      "measurement": "tools/test_learn.py::test_retrieval_respects_the_budget"
+    },
+    {
+      "kind": "queue",
+      "scope": "The tools own no asynchronous work queue.",
+      "bound": null,
+      "not_applicable": "network_io and concurrency are false.",
+      "measurement": null
+    },
+    {
+      "kind": "retry",
+      "scope": "A failed external mechanism is attempted once per gate invocation.",
+      "bound": {"value": 1, "unit": "attempts"},
+      "not_applicable": null,
+      "measurement": "tools/test_gate_runner.py::test_one_failing_step_fails_the_run"
+    },
+    {
+      "kind": "input_size",
+      "scope": "One release archive member or learning retrieval response.",
+      "bound": {"value": 100000, "unit": "items"},
+      "not_applicable": null,
+      "measurement": "tools/test_release.py::test_caches_and_databases_are_pruned"
+    },
+    {
+      "kind": "cleanup",
+      "scope": "Owned staging members or one timed-out child process.",
+      "bound": {"value": 1800, "unit": "seconds"},
+      "not_applicable": null,
+      "measurement": "tools/test_learn.py::test_a_verification_that_never_ends_is_killed"
+    }
+  ],
+  "outcomes": [
+    {
+      "id": "gate_passed",
+      "exceptional": false,
+      "trigger": "Every required gate step returns pass or valid non-applicability.",
+      "event_code": "DISCIPLINE-GATE-PASSED",
+      "correlation_field": "session_id",
+      "terminal_state": "ready",
+      "test": "tools/test_gate_runner.py::test_all_passing_returns_zero"
+    },
+    {
+      "id": "gate_refused",
+      "exceptional": false,
+      "trigger": "A configuration, permission, or safety prerequisite is not satisfied.",
+      "event_code": "DISCIPLINE-GATE-REFUSED",
+      "correlation_field": "session_id",
+      "terminal_state": "gate_failed",
+      "test": "tools/test_learn.py::test_a_refusal_is_reported_rather_than_run"
+    },
+    {
+      "id": "gate_timed_out",
+      "exceptional": true,
+      "trigger": "An owned required mechanism exceeds its finite deadline.",
+      "event_code": "DISCIPLINE-GATE-TIMEOUT",
+      "correlation_field": "session_id",
+      "terminal_state": "gate_failed",
+      "test": "tools/test_learn.py::test_a_verification_that_never_ends_is_killed"
+    }
+  ],
+  "identity": {
+    "build_source": "tools/release.py",
+    "runtime_fields": ["version", "build_id", "content_hash"],
+    "test": "tools/test_integrate.py::test_a_release_is_named_beside_the_content_hash"
+  },
+  "platforms": [
+    {
+      "name": "windows",
+      "runtime": "supported",
+      "development": "supported",
+      "evidence": "enforce/fitness/test_meta.py::test_the_workflow_mirrors_the_gate",
+      "limitation": null
+    },
+    {
+      "name": "linux",
+      "runtime": "supported",
+      "development": "supported",
+      "evidence": "enforce/fitness/test_meta.py::test_the_workflow_mirrors_the_gate",
+      "limitation": null
+    }
+  ]
+}

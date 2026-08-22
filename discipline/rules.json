@@ -472,7 +472,7 @@
       "id": "law/OPS",
       "kind": "law",
       "title": "Local Operations and Capability Activation",
-      "tokens": 507,
+      "tokens": 1575,
       "load_when": [
         "capability manifest",
         "operational behavior",
@@ -9907,6 +9907,377 @@
         "source": "v4.0.0",
         "disposition": "new",
         "guidance": "Run capability inference after migration and turn on every reported local fact before authoring its operational evidence."
+      }
+    },
+    {
+      "id": "OPS-003",
+      "module": "law/OPS",
+      "title": "Operational ownership joins the local architecture",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:operational_model"
+      ],
+      "statement": "The project MUST name one repository-local `operational-model.json`. Every resource and recovery cited by an enabled capability MUST resolve to the canonical local architecture model; an empty ownership set MUST carry an explicit local-absence rationale. Evidence paths MUST remain inside this repository.",
+      "why": "A lifecycle claim without an owned resource or recovery identity leaves cleanup assignable to nobody—or quietly assigns it to an out-of-scope integrator.",
+      "check": "`python -m checks.operational_model`",
+      "no_mechanism": null,
+      "see": [
+        "ARCH-023",
+        "meta/SCOPE"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/OPS.md",
+      "line": 49,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "Operational evidence cites a resource or recovery nobody owns locally, or escapes to a sibling or parent repository that this discipline does not govern.",
+      "warrants": [
+        {
+          "source": "source:AR",
+          "relation": "supports",
+          "confidence": "high"
+        },
+        {
+          "source": "source:SE",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:operational_model",
+            "kind": "static",
+            "relation": "proxy",
+            "proposition": "The checker requires the declared local operational model, confines its evidence paths, and joins every cited resource and recovery identity to architecture.json.",
+            "residual": "An identity join and existing file do not prove that runtime ownership, cleanup, or recovery behavior matches the authored claim.",
+            "must_pass": "fixture:reference operational ownership joins its architecture",
+            "must_reject": "discrimination:OPS-003",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never; every governed repository carries a local operational model"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Author operational-model.json and join enabled capability resources and recoveries to architecture.json."
+      }
+    },
+    {
+      "id": "OPS-004",
+      "module": "law/OPS",
+      "title": "Every local lifecycle phase is decided",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:operational_model"
+      ],
+      "statement": "The operational model MUST define startup, steady state, interruption, drain, shutdown, and forced cleanup in that order. Startup, steady state, and shutdown MUST name executable evidence. Each other phase MUST name executable evidence when an enabled capability activates it; otherwise it MUST state why the phase is locally inapplicable. Every phase MUST name its local owner and a declared terminal state.",
+      "why": "Happy-path typing says nothing about interruption, half-completed work, or who performs the last cleanup operation.",
+      "check": "`python -m checks.operational_model`",
+      "no_mechanism": null,
+      "see": [
+        "OPS-001",
+        "EFCT-009"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/OPS.md",
+      "line": 59,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "A locally owned interruption, drain, shutdown, or cleanup transition is left unspecified and fails only after work or resources are already in flight.",
+      "warrants": [
+        {
+          "source": "source:AR",
+          "relation": "supports",
+          "confidence": "high"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:operational_model",
+            "kind": "static",
+            "relation": "proxy",
+            "proposition": "The checker requires exactly six lifecycle phases, local owners and terminal-state joins, and confined evidence for universal and capability-activated phases.",
+            "residual": "The checker observes declarations and evidence-file presence; only executing the cited tests can establish the transition behavior or its completeness under real interruption.",
+            "must_pass": "fixture:reference lifecycle model",
+            "must_reject": "discrimination:OPS-004",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never for the model; individual non-universal phases may carry an accepted rationale when no capability activates them"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Declare all six local lifecycle phases and add tests for every phase activated by the capability manifest."
+      }
+    },
+    {
+      "id": "OPS-005",
+      "module": "law/OPS",
+      "title": "Safe and degraded outcomes are observable",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:operational_model"
+      ],
+      "statement": "The operational model MUST define at least one safe and one degraded local state. State entry MUST have a stable event code. Terminal outcomes MUST join a declared state, carry a correlation field and executable evidence, and include at least one non-exception outcome.",
+      "why": "Refusal, dropped work, exhaustion, and controlled degradation are operational facts even when no exception escapes; exception-only telemetry makes them disappear.",
+      "check": "`python -m checks.operational_model`",
+      "no_mechanism": null,
+      "see": [
+        "DIAG-010",
+        "DIAG-016"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/OPS.md",
+      "line": 70,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "Controlled refusals, degradation, or dropped work are invisible because observability follows exceptions rather than terminal state transitions.",
+      "warrants": [
+        {
+          "source": "source:AR",
+          "relation": "supports",
+          "confidence": "high"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:operational_model",
+            "kind": "static",
+            "relation": "proxy",
+            "proposition": "The checker requires safe and degraded states, stable entry events, state-joined terminal outcomes, correlation fields, confined test evidence, and at least one ordinary non-exception outcome.",
+            "residual": "Structural event and test references do not prove telemetry is emitted once, reaches its consumer, preserves useful context, or covers every semantic terminal outcome.",
+            "must_pass": "fixture:reference safe, degraded, and ordinary outcome model",
+            "must_reject": "discrimination:OPS-005",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never; even a pure governed unit has ordinary completion and degraded refusal states"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Model local safe and degraded states and correlate exceptional and ordinary terminal outcomes with executable evidence."
+      }
+    },
+    {
+      "id": "OPS-006",
+      "module": "law/OPS",
+      "title": "Activated work has a finite measured budget",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:operational_model"
+      ],
+      "statement": "The operational model MUST decide time, memory, queue, retry, input-size, and cleanup budgets. A budget activated by a true capability MUST carry a positive finite bound, a compatible unit, and repository-local measurement evidence. An inactive budget MUST instead state why it is locally inapplicable.",
+      "why": "Type-correct unbounded work remains an availability defect; a number without a measurement is an aspiration rather than a controlled limit.",
+      "check": "`python -m checks.operational_model`",
+      "no_mechanism": null,
+      "see": [
+        "TYPE-001",
+        "TEST-003"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/OPS.md",
+      "line": 80,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "Accepted work, retries, queues, memory, or cleanup grow without a declared limit while static typing remains green.",
+      "warrants": [
+        {
+          "source": "source:AR",
+          "relation": "supports",
+          "confidence": "high"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:operational_model",
+            "kind": "static",
+            "relation": "proxy",
+            "proposition": "The checker requires all six budget classes and a positive compatible bound plus confined measurement evidence whenever the declared capability map activates a class.",
+            "residual": "A syntactically valid bound and existing measurement path do not establish that the chosen threshold is safe, that the test measures the stated scope, or that production cannot bypass it.",
+            "must_pass": "fixture:reference finite activated budgets",
+            "must_reject": "discrimination:OPS-006",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "only a budget class not activated by any true capability may carry an explicit local rationale"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Bound and measure every budget activated by local capabilities; record explicit rationales for the remaining classes."
+      }
+    },
+    {
+      "id": "OPS-007",
+      "module": "law/OPS",
+      "title": "Delivery identity and platform intent are explicit",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:operational_model"
+      ],
+      "statement": "The operational model MUST name the local build-identity source, executable evidence that runtime diagnostics expose both version and build id, and distinct runtime and development-tool support outcomes for Windows and Linux. Every support claim MUST cite local evidence; every unsupported or inapplicable outcome MUST state its limitation.",
+      "why": "An unattributed failure cannot be tied to the artifact that ran, and an absent platform result must not be mistaken for support.",
+      "check": "`python -m checks.operational_model`",
+      "no_mechanism": null,
+      "see": [
+        "DIAG-001",
+        "EVID-005"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/OPS.md",
+      "line": 90,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "A runtime report cannot identify the delivered artifact, or an absent platform result is silently presented as supported behavior.",
+      "warrants": [
+        {
+          "source": "source:AR",
+          "relation": "supports",
+          "confidence": "high"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:operational_model",
+            "kind": "static",
+            "relation": "proxy",
+            "proposition": "The checker requires a confined build source and runtime identity test naming version and build_id, plus explicit Windows and Linux runtime/development outcomes with evidence or limitations.",
+            "residual": "The model does not itself execute either platform, compare runtime identity to built metadata, or prove that cited evidence belongs to the artifact ultimately delivered.",
+            "must_pass": "fixture:reference identity and platform matrix",
+            "must_reject": "discrimination:OPS-007",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never; unsupported and runtime-inapplicable are explicit outcomes, not omission permissions"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Expose version and build identity at runtime and declare separate Windows/Linux runtime and development-tool support intent."
+      }
+    },
+    {
+      "id": "OPS-008",
+      "module": "law/OPS",
+      "title": "Capability activation expands to a closed evidence set",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:operational_model"
+      ],
+      "statement": "Every true capability MUST have exactly one operational record containing every generated obligation for that capability and no unknown obligation. Each obligation MUST point to confined executable evidence. False capabilities MUST have no operational record.",
+      "why": "A prose checklist can omit the one hostile condition that matters while still looking complete; exact generated joins make omission and stale evidence observable.",
+      "check": "`python -m checks.operational_model`",
+      "no_mechanism": null,
+      "see": [
+        "OPS-001",
+        "TEST-020",
+        "EVID-003"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/OPS.md",
+      "line": 100,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "An enabled capability keeps a plausible-looking but incomplete checklist that omits one hostile condition or retains stale evidence after the capability is removed.",
+      "warrants": [
+        {
+          "source": "source:AR",
+          "relation": "supports",
+          "confidence": "high"
+        },
+        {
+          "source": "source:SE",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:operational_model",
+            "kind": "static",
+            "relation": "proxy",
+            "proposition": "The checker joins exactly one record to every true capability, forbids records for false capabilities, and requires the exact generated obligation-id set with confined evidence paths.",
+            "residual": "Closed identifiers prevent omission and drift but do not prove the referenced tests exercise their named conditions or that the generated obligation vocabulary is sufficient for the domain.",
+            "must_pass": "fixture:reference generated capability obligation set",
+            "must_reject": "discrimination:OPS-008",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never for the exact join; a repository with no true capability has an explicitly empty record array"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Generate the exact obligation set for each enabled capability and point every record at repository-local executable evidence."
       }
     },
     {

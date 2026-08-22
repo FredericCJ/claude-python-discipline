@@ -163,8 +163,10 @@ Select `component` only when this checkout is one independently testable compone
 migrator preserves configuration outside `[tool.agent-discipline]`, converts legacy role
 aliases and unambiguous `ARCH-004` ownership, refuses paths outside this checkout, and is
 idempotent. It cannot decide the unit kind, the meaning of a boundary, or the contents of
-`architecture.json` and `contract-conformance.json`; those remain explicit authoring work
-rather than inferred prose.
+`architecture.json`, `contract-conformance.json`, and `operational-model.json`; those
+remain explicit authoring work rather than inferred prose. Start all three from the
+shipped templates, then run `python -m checks.capabilities` before filling the operational
+model so its records exactly match the true manifest facts.
 
 ## After integrating
 

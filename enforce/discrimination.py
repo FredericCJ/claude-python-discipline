@@ -1219,6 +1219,100 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         ),),
     ),
     Mutation(
+        rule_id="OPS-003",
+        summary="an operational capability cites an absent architecture recovery",
+        source=(
+            "OPS-003's local join predicate: the capability record names a "
+            "recovery identity that architecture.json does not own."
+        ),
+        replace=((
+            "operational-model.json",
+            '"recoveries": ["apply_interrupted"]',
+            '"recoveries": ["peer_recovers_it"]',
+        ),),
+    ),
+    Mutation(
+        rule_id="OPS-004",
+        summary="destructive work excuses its interruption phase",
+        source=(
+            "OPS-004 requires executable interruption evidence when destructive "
+            "effects are active; a prose excuse cannot satisfy that phase."
+        ),
+        replace=((
+            "operational-model.json",
+            (
+                '"test": "tests/fault/test_containment.py::'
+                'test_an_interrupted_apply_reports_how_far_it_got",\n'
+                '      "not_applicable": null'
+            ),
+            (
+                '"test": null,\n'
+                '      "not_applicable": "Interruption is delegated elsewhere."'
+            ),
+        ),),
+    ),
+    Mutation(
+        rule_id="OPS-005",
+        summary="every declared terminal outcome is exception-only",
+        source=(
+            "OPS-005's ordinary-outcome predicate: changing preview completion to "
+            "exceptional leaves no observable non-exception terminal outcome."
+        ),
+        replace=((
+            "operational-model.json",
+            '"id": "preview_complete",\n      "exceptional": false',
+            '"id": "preview_complete",\n      "exceptional": true',
+        ),),
+    ),
+    Mutation(
+        rule_id="OPS-006",
+        summary="the public input surface replaces its finite limit with prose",
+        source=(
+            "OPS-006 requires a measured finite input-size budget because public_api "
+            "is true; a not-applicable rationale cannot override activation."
+        ),
+        replace=((
+            "operational-model.json",
+            (
+                '"bound": {"value": 10000, "unit": "items"},\n'
+                '      "not_applicable": null,\n'
+                '      "measurement": "tests/unit/test_plan.py::'
+                'test_planning_refuses_work_beyond_its_input_and_cleanup_budget"'
+            ),
+            (
+                '"bound": null,\n'
+                '      "not_applicable": "The public surface accepts every size.",\n'
+                '      "measurement": null'
+            ),
+        ),),
+    ),
+    Mutation(
+        rule_id="OPS-007",
+        summary="runtime identity reports a version without a build id",
+        source=(
+            "OPS-007's exact identity predicate requires both version and build_id; "
+            "the version alone cannot distinguish two builds of one release."
+        ),
+        replace=((
+            "operational-model.json",
+            '"runtime_fields": ["version", "build_id"]',
+            '"runtime_fields": ["version"]',
+        ),),
+    ),
+    Mutation(
+        rule_id="OPS-008",
+        summary="a public capability substitutes an unknown obligation id",
+        source=(
+            "OPS-008's closed generated-set predicate: replacing installed_surface "
+            "simultaneously leaves one required id missing and one stale id present."
+        ),
+        replace=((
+            "operational-model.json",
+            '"id": "installed_surface"',
+            '"id": "source_tree_surface"',
+        ),),
+    ),
+    Mutation(
         rule_id="EFCT-015",
         summary="a writer takes a lock and never reports losing the race",
         source=(

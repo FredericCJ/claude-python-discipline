@@ -210,6 +210,8 @@ class Declaration:
     architecture: PurePosixPath | None = None
     ## Contract implementation and behavioral-evidence registry.
     contract_conformance: PurePosixPath | None = None
+    ## Repository-local lifecycle, budget, outcome, and platform model.
+    operational_model: PurePosixPath | None = None
     ## Explicit facts that add operational and security obligations.
     capabilities: frozenset[Capability] = frozenset()
     ## Canonical role name to repository-relative directory paths.
@@ -305,6 +307,15 @@ class Declaration:
             return None
         return self.root / Path(self.contract_conformance.as_posix())
 
+    def operational_model_path(self) -> Path | None:
+        """The declared local operational model as an absolute path.
+
+        @return local JSON path, or None for the undeclared direct-check fallback
+        """
+        if self.root is None or self.operational_model is None:
+            return None
+        return self.root / Path(self.operational_model.as_posix())
+
     def has(self, capability: Capability) -> bool:
         """Whether one additive project capability is active.
 
@@ -338,6 +349,11 @@ class Declaration:
             notes.append(
                 "DISC-PROJECT-015 contract_conformance is undeclared; typed "
                 "implementation and shared-suite evidence are undecided"
+            )
+        if self.operational_model is None:
+            notes.append(
+                "DISC-PROJECT-018 operational_model is undeclared; lifecycle, "
+                "budgets, outcomes, identity, and platform support are undecided"
             )
         if self.source is None:
             notes.append(
@@ -649,6 +665,30 @@ def _parse_capabilities(
     return frozenset(item for item in CAPABILITIES if raw[item.value] is True)
 
 
+def _parse_operational_model(
+    table: Mapping[str, object], path: Path,
+) -> PurePosixPath:
+    """Parse the canonical repository-local operational model path.
+
+    @param table decoded discipline declaration
+    @param path declaring project file
+    @return validated repository-relative JSON path
+    """
+    raw = table.get("operational_model")
+    if raw is None:
+        _reject(
+            "DISC-PROJECT-018", path,
+            "operational_model is required and must name the local JSON model",
+        )
+    model = _relative_path(raw, field_name="operational_model", source=path)
+    if model.suffix != ".json":
+        _reject(
+            "DISC-PROJECT-018", path,
+            "operational_model must name a repository-local JSON model",
+        )
+    return model
+
+
 def parse(path: Path) -> Declaration:
     """Read one v4 declaration, refusing missing and unknown values.
 
@@ -717,6 +757,7 @@ def parse(path: Path) -> Declaration:
         source_roots=roots,
         architecture=architecture,
         contract_conformance=contract_conformance,
+        operational_model=_parse_operational_model(table, path),
         capabilities=capabilities,
         role_paths=roles,
         adapter_boundaries=boundaries,

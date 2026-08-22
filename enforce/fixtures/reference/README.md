@@ -27,8 +27,9 @@ src/refpkg/
   adapters/   clock/{real,fake,faulty}.py      one foreign dependency each
               files/{real,fake,faulty}.py
               faults.py                        fault injection as data
-  shell/      composition.py  envelope.py  cli.py
+  shell/      composition.py  envelope.py  identity.py  cli.py
 tests/        unit/ contract/ integration/ fault/ property/
+architecture.json  contract-conformance.json  operational-model.json
 ```
 
 Given a directory, a maximum age and a number of newest files to spare, it decides
@@ -53,6 +54,12 @@ irreversible, so plan-then-apply is not a ceremony here but the only safe design
 | `ARCH-024` boundary representation is explicit | `contract-conformance.json` joins both structural port classes |
 | `ARCH-025` implementation capabilities replace a triad rule | real, controllable, and scheduled-fault records per internal contract |
 | `TEST-020` one suite and total term trace | both suites select every registered implementation; registry points to each term's case |
+| `OPS-003` operational ownership joins architecture | capability recovery ids resolve to `apply_interrupted`; retained-resource absence is explicit |
+| `OPS-004` all local lifecycle phases are decided | `operational-model.json` records evidence or local non-applicability for all six phases |
+| `OPS-005` safe/degraded and ordinary outcomes are visible | `ready`, `interrupted`, and the correlated preview outcome |
+| `OPS-006` activated work is bounded | public input and destructive cleanup are limited to 10,000 entries and tested |
+| `OPS-007` identity and platform intent are explicit | `shell/identity.py`, its unit test, and the Windows/Linux support matrix |
+| `OPS-008` capabilities expand to exact evidence | public API, filesystem, and destructive records carry their generated obligation sets |
 | `ARCH-011` one composition root | `shell/composition.py`; contract 7 proves the app cannot reach an adapter |
 | `ERR-001` two channels only | refusals are returned; the exceptional is raised |
 | `ERR-002` unions narrowed to `Never` | `domain/plan.py::narrow` |

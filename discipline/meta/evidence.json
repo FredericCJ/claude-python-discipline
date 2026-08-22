@@ -5447,6 +5447,238 @@
         "guidance": "Run capability inference after migration and turn on every reported local fact before authoring its operational evidence."
       }
     },
+    "OPS-003": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "Operational evidence cites a resource or recovery nobody owns locally, or escapes to a sibling or parent repository that this discipline does not govern.",
+      "warrants": [
+        {
+          "source": "source:AR",
+          "relation": "supports",
+          "confidence": "high"
+        },
+        {
+          "source": "source:SE",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:operational_model",
+          "kind": "static",
+          "relation": "proxy",
+          "proposition": "The checker requires the declared local operational model, confines its evidence paths, and joins every cited resource and recovery identity to architecture.json.",
+          "residual": "An identity join and existing file do not prove that runtime ownership, cleanup, or recovery behavior matches the authored claim.",
+          "must_pass": "fixture:reference operational ownership joins its architecture",
+          "must_reject": "discrimination:OPS-003",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "never; every governed repository carries a local operational model"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Author operational-model.json and join enabled capability resources and recoveries to architecture.json."
+      }
+    },
+    "OPS-004": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "A locally owned interruption, drain, shutdown, or cleanup transition is left unspecified and fails only after work or resources are already in flight.",
+      "warrants": [
+        {
+          "source": "source:AR",
+          "relation": "supports",
+          "confidence": "high"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:operational_model",
+          "kind": "static",
+          "relation": "proxy",
+          "proposition": "The checker requires exactly six lifecycle phases, local owners and terminal-state joins, and confined evidence for universal and capability-activated phases.",
+          "residual": "The checker observes declarations and evidence-file presence; only executing the cited tests can establish the transition behavior or its completeness under real interruption.",
+          "must_pass": "fixture:reference lifecycle model",
+          "must_reject": "discrimination:OPS-004",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "never for the model; individual non-universal phases may carry an accepted rationale when no capability activates them"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Declare all six local lifecycle phases and add tests for every phase activated by the capability manifest."
+      }
+    },
+    "OPS-005": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "Controlled refusals, degradation, or dropped work are invisible because observability follows exceptions rather than terminal state transitions.",
+      "warrants": [
+        {
+          "source": "source:AR",
+          "relation": "supports",
+          "confidence": "high"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:operational_model",
+          "kind": "static",
+          "relation": "proxy",
+          "proposition": "The checker requires safe and degraded states, stable entry events, state-joined terminal outcomes, correlation fields, confined test evidence, and at least one ordinary non-exception outcome.",
+          "residual": "Structural event and test references do not prove telemetry is emitted once, reaches its consumer, preserves useful context, or covers every semantic terminal outcome.",
+          "must_pass": "fixture:reference safe, degraded, and ordinary outcome model",
+          "must_reject": "discrimination:OPS-005",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "never; even a pure governed unit has ordinary completion and degraded refusal states"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Model local safe and degraded states and correlate exceptional and ordinary terminal outcomes with executable evidence."
+      }
+    },
+    "OPS-006": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "Accepted work, retries, queues, memory, or cleanup grow without a declared limit while static typing remains green.",
+      "warrants": [
+        {
+          "source": "source:AR",
+          "relation": "supports",
+          "confidence": "high"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:operational_model",
+          "kind": "static",
+          "relation": "proxy",
+          "proposition": "The checker requires all six budget classes and a positive compatible bound plus confined measurement evidence whenever the declared capability map activates a class.",
+          "residual": "A syntactically valid bound and existing measurement path do not establish that the chosen threshold is safe, that the test measures the stated scope, or that production cannot bypass it.",
+          "must_pass": "fixture:reference finite activated budgets",
+          "must_reject": "discrimination:OPS-006",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "only a budget class not activated by any true capability may carry an explicit local rationale"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Bound and measure every budget activated by local capabilities; record explicit rationales for the remaining classes."
+      }
+    },
+    "OPS-007": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "A runtime report cannot identify the delivered artifact, or an absent platform result is silently presented as supported behavior.",
+      "warrants": [
+        {
+          "source": "source:AR",
+          "relation": "supports",
+          "confidence": "high"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:operational_model",
+          "kind": "static",
+          "relation": "proxy",
+          "proposition": "The checker requires a confined build source and runtime identity test naming version and build_id, plus explicit Windows and Linux runtime/development outcomes with evidence or limitations.",
+          "residual": "The model does not itself execute either platform, compare runtime identity to built metadata, or prove that cited evidence belongs to the artifact ultimately delivered.",
+          "must_pass": "fixture:reference identity and platform matrix",
+          "must_reject": "discrimination:OPS-007",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "never; unsupported and runtime-inapplicable are explicit outcomes, not omission permissions"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Expose version and build identity at runtime and declare separate Windows/Linux runtime and development-tool support intent."
+      }
+    },
+    "OPS-008": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "An enabled capability keeps a plausible-looking but incomplete checklist that omits one hostile condition or retains stale evidence after the capability is removed.",
+      "warrants": [
+        {
+          "source": "source:AR",
+          "relation": "supports",
+          "confidence": "high"
+        },
+        {
+          "source": "source:SE",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:operational_model",
+          "kind": "static",
+          "relation": "proxy",
+          "proposition": "The checker joins exactly one record to every true capability, forbids records for false capabilities, and requires the exact generated obligation-id set with confined evidence paths.",
+          "residual": "Closed identifiers prevent omission and drift but do not prove the referenced tests exercise their named conditions or that the generated obligation vocabulary is sufficient for the domain.",
+          "must_pass": "fixture:reference generated capability obligation set",
+          "must_reject": "discrimination:OPS-008",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "never for the exact join; a repository with no true capability has an explicitly empty record array"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Generate the exact obligation set for each enabled capability and point every record at repository-local executable evidence."
+      }
+    },
     "TEAMS-001": {
       "units": [
         "application",

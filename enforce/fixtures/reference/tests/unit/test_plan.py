@@ -13,7 +13,7 @@ from __future__ import annotations
 import pytest
 from refpkg.domain.errors import InvariantViolated
 from refpkg.domain.model import SECONDS_PER_DAY, Entry, Instant, Policy
-from refpkg.domain.plan import Plan, Refusal, plan_prune
+from refpkg.domain.plan import MAX_PLAN_ENTRIES, Plan, Refusal, plan_prune
 
 ## A fixed reference point, so every age in this module is stated relative to one
 ## instant a reader can hold in their head.
@@ -108,6 +108,15 @@ def test_every_entry_appears_exactly_once() -> None:
     assert isinstance(outcome, Plan)
     assert sorted(e.path for e in outcome.doomed + outcome.kept) == ["f10", "f50", "f90"]
     assert not set(outcome.doomed) & set(outcome.kept)
+
+
+def test_planning_refuses_work_beyond_its_input_and_cleanup_budget() -> None:
+    """The operational bound is enforced before sorting or destructive planning."""
+    entry = aged(90, name="same_value")
+    outcome = plan_prune([entry] * (MAX_PLAN_ENTRIES + 1), Policy.parse(30, 0), NOW)
+    assert isinstance(outcome, Refusal)
+    assert outcome.code == "refpkg.domain.plan_too_large"
+    assert str(MAX_PLAN_ENTRIES) in outcome.expected
 
 
 @pytest.mark.parametrize(("max_age", "keep"), [(-1, 0), (0, -1)])

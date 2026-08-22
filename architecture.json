@@ -56,6 +56,30 @@
       "acquire": "The release command creates a fresh staging directory before copying members.",
       "release": "The release command removes its owned staging directory after success or failure.",
       "transfer_to_role": null
+    },
+    {
+      "id": "learning_store",
+      "kind": "sqlite_projection",
+      "owner_role": "application",
+      "acquire": "Learning commands derive a local SQLite index from the append-only ledger.",
+      "release": "Each command closes its connection; the database remains a replaceable generated projection.",
+      "transfer_to_role": null
+    },
+    {
+      "id": "gate_subprocess",
+      "kind": "subprocess",
+      "owner_role": "shell",
+      "acquire": "Gate and verification tools launch fixed-argument child processes for pinned external mechanisms.",
+      "release": "The launching command waits for completion and timeout handling terminates its owned child before returning.",
+      "transfer_to_role": null
+    },
+    {
+      "id": "generated_projections",
+      "kind": "generated_artifact_set",
+      "owner_role": "application",
+      "acquire": "Build tools derive indexes, graphs, enforcement views, and native skill mirrors from authored sources.",
+      "release": "Generated files remain repository-owned review artifacts and are replaced only by their named builders.",
+      "transfer_to_role": null
     }
   ],
   "resource_absence": null,
@@ -68,6 +92,24 @@
       "action": "Stop packaging, retain the named failing verdict, and clean only command-owned staging state.",
       "escalation": "Return a nonzero status with the failed gate name and its output.",
       "terminal_state": "No release archive is published and project-owned files remain unchanged."
+    },
+    {
+      "failure": "learning_store_corruption",
+      "detected_at": "learning database open or schema check",
+      "contained_at": "replaceable SQLite projection",
+      "owner_role": "application",
+      "action": "Discard the derived database and rebuild it from the append-only ledger.",
+      "escalation": "Report the corrupt local projection and the ledger line when rebuilding fails.",
+      "terminal_state": "The authoritative ledger is unchanged and no stale projection is trusted."
+    },
+    {
+      "failure": "gate_subprocess_timeout",
+      "detected_at": "bounded subprocess invocation",
+      "contained_at": "one gate mechanism process",
+      "owner_role": "shell",
+      "action": "Terminate the owned child and classify the mechanism as timeout rather than pass.",
+      "escalation": "Return a nonzero gate verdict naming the timed-out step.",
+      "terminal_state": "No required mechanism is reported green and the caller regains control."
     }
   ]
 }

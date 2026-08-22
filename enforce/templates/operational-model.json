@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "capability_obligations": [
+    {
+      "capability": "public_api",
+      "resources": [],
+      "resource_absence": "Replace with local architecture resource ids or explain the absence.",
+      "recoveries": ["boundary_failure"],
+      "recovery_absence": null,
+      "tests": [
+        {"id": "installed_surface", "evidence": "tests/process/test_installed.py::test_public_surface"},
+        {"id": "structured_terminal_outcome", "evidence": "tests/process/test_installed.py::test_terminal_outcome"}
+      ]
+    },
+    {
+      "capability": "network_io",
+      "resources": [],
+      "resource_absence": "Replace with owned socket and queue ids from architecture.json.",
+      "recoveries": ["boundary_failure"],
+      "recovery_absence": null,
+      "tests": [
+        {"id": "backpressure", "evidence": "tests/fault/test_transport.py::test_backpressure"},
+        {"id": "disconnect", "evidence": "tests/fault/test_transport.py::test_disconnect"},
+        {"id": "local_shutdown", "evidence": "tests/fault/test_transport.py::test_shutdown"},
+        {"id": "malformed_input", "evidence": "tests/fault/test_transport.py::test_malformed_frame"},
+        {"id": "ordering", "evidence": "tests/contract/test_transport.py::test_ordering"},
+        {"id": "timeout", "evidence": "tests/fault/test_transport.py::test_timeout"}
+      ]
+    },
+    {
+      "capability": "concurrency",
+      "resources": [],
+      "resource_absence": "Replace with owned task, thread, and queue ids from architecture.json.",
+      "recoveries": ["boundary_failure"],
+      "recovery_absence": null,
+      "tests": [
+        {"id": "bounded_queue", "evidence": "tests/fault/test_concurrency.py::test_queue_bound"},
+        {"id": "cancellation", "evidence": "tests/fault/test_concurrency.py::test_cancellation"},
+        {"id": "ordering", "evidence": "tests/fault/test_concurrency.py::test_ordering"},
+        {"id": "race", "evidence": "tests/fault/test_concurrency.py::test_race"}
+      ]
+    },
+    {
+      "capability": "bounded_latency",
+      "resources": [],
+      "resource_absence": "Replace with ids for resources participating in the measured path.",
+      "recoveries": ["boundary_failure"],
+      "recovery_absence": null,
+      "tests": [
+        {"id": "latency_measurement", "evidence": "tests/performance/test_budget.py::test_latency_budget"}
+      ]
+    }
+  ],
+  "lifecycle": [
+    {"phase": "startup", "owner_role": "shell", "behavior": "Validate configuration and acquire owned resources.", "terminal_state": "ready", "test": "tests/process/test_lifecycle.py::test_startup", "not_applicable": null},
+    {"phase": "steady_state", "owner_role": "application", "behavior": "Serve the local contract within declared budgets.", "terminal_state": "ready", "test": "tests/process/test_lifecycle.py::test_steady_state", "not_applicable": null},
+    {"phase": "interruption", "owner_role": "application", "behavior": "Stop accepting work and preserve one terminal reason.", "terminal_state": "degraded", "test": "tests/process/test_lifecycle.py::test_interruption", "not_applicable": null},
+    {"phase": "drain", "owner_role": "application", "behavior": "Finish or reject admitted local work within the drain bound.", "terminal_state": "degraded", "test": "tests/process/test_lifecycle.py::test_drain", "not_applicable": null},
+    {"phase": "shutdown", "owner_role": "shell", "behavior": "Release every retained local resource.", "terminal_state": "safe", "test": "tests/process/test_lifecycle.py::test_shutdown", "not_applicable": null},
+    {"phase": "forced_cleanup", "owner_role": "shell", "behavior": "Escalate after the cleanup deadline and leave no owned work live.", "terminal_state": "safe", "test": "tests/process/test_lifecycle.py::test_forced_cleanup", "not_applicable": null}
+  ],
+  "states": [
+    {"id": "ready", "kind": "safe", "entry_conditions": ["Startup succeeds."], "allowed_operations": ["serve"], "observable_event": "COMPONENT-READY", "exit_condition": "Shutdown or degradation begins."},
+    {"id": "degraded", "kind": "degraded", "entry_conditions": ["A local dependency or budget fails."], "allowed_operations": ["drain", "diagnose"], "observable_event": "COMPONENT-DEGRADED", "exit_condition": "Recovery succeeds or shutdown completes."},
+    {"id": "safe", "kind": "safe", "entry_conditions": ["Shutdown completes."], "allowed_operations": [], "observable_event": "COMPONENT-SAFE", "exit_condition": "Terminal until a new process starts."}
+  ],
+  "budgets": [
+    {"kind": "time", "scope": "One published operation.", "bound": {"value": 1000, "unit": "milliseconds"}, "not_applicable": null, "measurement": "tests/performance/test_budget.py::test_latency_budget"},
+    {"kind": "memory", "scope": "Owned network and decode buffers.", "bound": {"value": 64, "unit": "mebibytes"}, "not_applicable": null, "measurement": "tests/performance/test_budget.py::test_memory_budget"},
+    {"kind": "queue", "scope": "Admitted requests awaiting service.", "bound": {"value": 1024, "unit": "items"}, "not_applicable": null, "measurement": "tests/fault/test_concurrency.py::test_queue_bound"},
+    {"kind": "retry", "scope": "One failed network operation.", "bound": {"value": 3, "unit": "attempts"}, "not_applicable": null, "measurement": "tests/fault/test_transport.py::test_retry_bound"},
+    {"kind": "input_size", "scope": "One accepted frame.", "bound": {"value": 1048576, "unit": "bytes"}, "not_applicable": null, "measurement": "tests/fault/test_transport.py::test_frame_bound"},
+    {"kind": "cleanup", "scope": "Drain and resource release.", "bound": {"value": 5, "unit": "seconds"}, "not_applicable": null, "measurement": "tests/process/test_lifecycle.py::test_forced_cleanup"}
+  ],
+  "outcomes": [
+    {"id": "completed", "exceptional": false, "trigger": "A request reaches a typed success or refusal.", "event_code": "COMPONENT-COMPLETED", "correlation_field": "correlation_id", "terminal_state": "ready", "test": "tests/process/test_outcomes.py::test_completed"},
+    {"id": "dropped", "exceptional": false, "trigger": "Backpressure refuses work before admission.", "event_code": "COMPONENT-DROPPED", "correlation_field": "correlation_id", "terminal_state": "degraded", "test": "tests/process/test_outcomes.py::test_dropped"}
+  ],
+  "identity": {
+    "build_source": "src/package/identity.py",
+    "runtime_fields": ["version", "build_id"],
+    "test": "tests/process/test_installed.py::test_runtime_identity"
+  },
+  "platforms": [
+    {"name": "windows", "runtime": "supported", "development": "supported", "evidence": "tests/process/test_installed.py::test_windows_probe", "limitation": null},
+    {"name": "linux", "runtime": "supported", "development": "supported", "evidence": "tests/process/test_installed.py::test_linux_probe", "limitation": null}
+  ]
+}
