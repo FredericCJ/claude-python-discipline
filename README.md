@@ -125,7 +125,7 @@ discipline/
   INDEX.md           generated: one line per rule
   rules.json         generated: the same, for jq
   graph.json         generated: the navigation multigraph
-  law/               ARCH ARCH-PORTS TYPE ERR DIAG EFCT TEST API DEP FLOW LEARN
+  law/               ARCH ARCH-PORTS TYPE ERR DIAG EFCT OPS TEST API DEP FLOW LEARN
   fact/              py-typing py-testing py-errors py-logging   (dated)
   frame/             architecture spec
   ops/               ALLOC teams
@@ -169,8 +169,10 @@ inferable role, when an old `ARCH-004` technology has several candidate owners, 
 source root escapes this repository. The tool deliberately does not invent
 `architecture.json` or `contract-conformance.json`: its warning remains until a human
 authors the volatile decisions, contracts, resources, recoveries, implementation
-capabilities, and test traces from the shipped templates. Running `--apply` again is a
-no-op.
+capabilities, and test traces from the shipped templates. The generated capability table
+starts explicit and conservative; `python -m checks.capabilities` then refuses any false
+fact contradicted by local source, build metadata, or published contracts. Running
+`--apply` again is a no-op.
 
 ## Working on the discipline itself
 

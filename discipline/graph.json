@@ -732,6 +732,16 @@
    }
   },
   {
+   "id": "mech:check:capabilities",
+   "type": "mechanism",
+   "label": "check:capabilities",
+   "path": "enforce/checks/capabilities.py",
+   "attrs": {
+    "family": "check",
+    "implemented": "true"
+   }
+  },
+  {
    "id": "mech:check:compound_gate",
    "type": "mechanism",
    "label": "check:compound_gate",
@@ -1639,6 +1649,18 @@
    }
   },
   {
+   "id": "law/OPS",
+   "type": "module",
+   "label": "Local Operations and Capability Activation",
+   "path": "discipline/law/OPS.md",
+   "tokens": 507,
+   "attrs": {
+    "decay": "none",
+    "kind": "law",
+    "python": ">=3.11"
+   }
+  },
+  {
    "id": "law/TEST",
    "type": "module",
    "label": "Systematic Testing and Oracles",
@@ -1689,7 +1711,7 @@
    "type": "module",
    "label": "Discipline Kernel",
    "path": "discipline/KERNEL.md",
-   "tokens": 1939,
+   "tokens": 1961,
    "attrs": {
     "decay": "none",
     "kind": "meta"
@@ -3513,6 +3535,28 @@
    }
   },
   {
+   "id": "OPS-001",
+   "type": "rule",
+   "label": "Capability facts are closed, explicit, and additive",
+   "path": "discipline/law/OPS.md:28",
+   "tokens": 81,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/OPS"
+   }
+  },
+  {
+   "id": "OPS-002",
+   "type": "rule",
+   "label": "Observed capability cannot be declared false",
+   "path": "discipline/law/OPS.md:38",
+   "tokens": 58,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/OPS"
+   }
+  },
+  {
    "id": "TEAMS-001",
    "type": "rule",
    "label": "A dispatch states the contract, not the intention",
@@ -4439,6 +4483,14 @@
    }
   },
   {
+   "id": "trigger:glob:operational-model.json",
+   "type": "trigger",
+   "label": "operational-model.json",
+   "attrs": {
+    "kind": "glob"
+   }
+  },
+  {
    "id": "trigger:glob:pyproject.toml",
    "type": "trigger",
    "label": "pyproject.toml",
@@ -4610,6 +4662,14 @@
    "id": "trigger:kw:calibration",
    "type": "trigger",
    "label": "calibration",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:capability manifest",
+   "type": "trigger",
+   "label": "capability manifest",
    "attrs": {
     "kind": "keyword"
    }
@@ -5119,6 +5179,14 @@
    }
   },
   {
+   "id": "trigger:kw:generated artifact",
+   "type": "trigger",
+   "label": "generated artifact",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:generated file",
    "type": "trigger",
    "label": "generated file",
@@ -5359,6 +5427,14 @@
    }
   },
   {
+   "id": "trigger:kw:network io",
+   "type": "trigger",
+   "label": "network io",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:new module",
    "type": "trigger",
    "label": "new module",
@@ -5399,6 +5475,14 @@
    }
   },
   {
+   "id": "trigger:kw:operational behavior",
+   "type": "trigger",
+   "label": "operational behavior",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:package layout",
    "type": "trigger",
    "label": "package layout",
@@ -5426,6 +5510,14 @@
    "id": "trigger:kw:pep 695",
    "type": "trigger",
    "label": "PEP 695",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:persistent state",
+   "type": "trigger",
+   "label": "persistent state",
    "attrs": {
     "kind": "keyword"
    }
@@ -5615,6 +5707,14 @@
    }
   },
   {
+   "id": "trigger:kw:resource budget",
+   "type": "trigger",
+   "label": "resource budget",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:result",
    "type": "trigger",
    "label": "Result",
@@ -5762,6 +5862,14 @@
    "id": "trigger:kw:subagent definition",
    "type": "trigger",
    "label": "subagent definition",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:subprocess lifecycle",
+   "type": "trigger",
+   "label": "subprocess lifecycle",
    "attrs": {
     "kind": "keyword"
    }
@@ -6386,6 +6494,18 @@
    "type": "applies_to",
    "src": "ERR-015",
    "dst": "layer:shell",
+   "origin": "declared"
+  },
+  {
+   "type": "applies_to",
+   "src": "OPS-001",
+   "dst": "artifact:enforce/templates/pyproject.toml",
+   "origin": "declared"
+  },
+  {
+   "type": "applies_to",
+   "src": "OPS-002",
+   "dst": "artifact:enforce/templates/pyproject.toml",
    "origin": "declared"
   },
   {
@@ -7052,6 +7172,30 @@
    "type": "cites",
    "src": "LEARN-009",
    "dst": "meta/SCHEMA",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "OPS-001",
+   "dst": "EVID-003",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "OPS-001",
+   "dst": "meta/SCOPE",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "OPS-002",
+   "dst": "ARCH-018",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "OPS-002",
+   "dst": "EVID-003",
    "origin": "derived"
   },
   {
@@ -8084,6 +8228,18 @@
    "type": "contains",
    "src": "law/LEARN",
    "dst": "LEARN-012",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/OPS",
+   "dst": "OPS-001",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/OPS",
+   "dst": "OPS-002",
    "origin": "derived"
   },
   {
@@ -9290,6 +9446,18 @@
    "type": "enforced_by",
    "src": "LEARN-011",
    "dst": "mech:auto:learn",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "OPS-001",
+   "dst": "mech:check:capabilities",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "OPS-002",
+   "dst": "mech:check:capabilities",
    "origin": "derived"
   },
   {
@@ -11250,6 +11418,42 @@
   },
   {
    "type": "grounds_on",
+   "src": "OPS-001",
+   "dst": "law/ARCH",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-001",
+   "dst": "law/EFCT",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-001",
+   "dst": "law/TEST",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-002",
+   "dst": "law/ARCH",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-002",
+   "dst": "law/EFCT",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "OPS-002",
+   "dst": "law/TEST",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
    "src": "TEST-001",
    "dst": "fact/py-testing",
    "origin": "derived"
@@ -11798,6 +12002,24 @@
    "type": "grounds_on",
    "src": "law/LEARN",
    "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "law/OPS",
+   "dst": "law/ARCH",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "law/OPS",
+   "dst": "law/EFCT",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "law/OPS",
+   "dst": "law/TEST",
    "origin": "derived"
   },
   {
@@ -13708,6 +13930,66 @@
    "type": "triggered_by",
    "src": "law/LEARN",
    "dst": "trigger:kw:why did this fail before",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/OPS",
+   "dst": "trigger:glob:**/*.py",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/OPS",
+   "dst": "trigger:glob:operational-model.json",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/OPS",
+   "dst": "trigger:glob:pyproject.toml",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/OPS",
+   "dst": "trigger:kw:capability manifest",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/OPS",
+   "dst": "trigger:kw:generated artifact",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/OPS",
+   "dst": "trigger:kw:network io",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/OPS",
+   "dst": "trigger:kw:operational behavior",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/OPS",
+   "dst": "trigger:kw:persistent state",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/OPS",
+   "dst": "trigger:kw:resource budget",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/OPS",
+   "dst": "trigger:kw:subprocess lifecycle",
    "origin": "derived"
   },
   {

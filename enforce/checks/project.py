@@ -3,12 +3,16 @@
 The declaration describes one governed repository, not a collection of
 switches. It names whether that repository delivers an application or one
 component, where its production Python lives, how those paths map to the five
-hexagonal roles, and which documentation syntax it deliberately uses.
+hexagonal roles, which additive local capabilities it owns, and which
+documentation syntax it deliberately uses.
 
     [tool.agent-discipline]
     unit = "component"             # application | component
     source_roots = ["src"]
     doc_engine = "doxygen"         # doxygen | sphinx | none
+
+    [tool.agent-discipline.capabilities]
+    network_io = true               # every v4 key is an explicit boolean
 
     [tool.agent-discipline.roles]
     domain = ["src/example/domain"]
@@ -48,6 +52,33 @@ class UnitKind(StrEnum):
     APPLICATION = "application"
     ## One independently testable component repository.
     COMPONENT = "component"
+
+
+class Capability(StrEnum):
+    """Repository-local facts that activate additional v4 obligations."""
+
+    ## The deliverable exposes a supported programmatic or command interface.
+    PUBLIC_API = "public_api"
+    ## Production behavior reads or changes a filesystem owned or supplied locally.
+    FILESYSTEM_IO = "filesystem_io"
+    ## The repository owns durable state and its compatibility or recovery.
+    PERSISTENT_STATE = "persistent_state"
+    ## Authored inputs produce reviewable derived artifacts.
+    GENERATED_ARTIFACTS = "generated_artifacts"
+    ## Production behavior opens, accepts, or uses network communication.
+    NETWORK_IO = "network_io"
+    ## Production behavior creates another operating-system process.
+    LAUNCHES_SUBPROCESSES = "launches_subprocesses"
+    ## Lifecycle authority for launched children remains in this repository.
+    OWNS_SUBPROCESS_LIFECYCLE = "owns_subprocess_lifecycle"
+    ## Production behavior admits overlapping tasks, threads, or processes.
+    CONCURRENCY = "concurrency"
+    ## Production behavior can irreversibly change external or durable state.
+    DESTRUCTIVE_EFFECTS = "destructive_effects"
+    ## A published response or completion latency has a finite local budget.
+    BOUNDED_LATENCY = "bounded_latency"
+    ## The repository intentionally handles classified or secret-bearing data.
+    SENSITIVE_DATA = "sensitive_data"
 
 
 class DeclarationError(ValueError):
@@ -102,6 +133,8 @@ DOC_ENGINES: Final[frozenset[str]] = frozenset({"doxygen", "sphinx", "none"})
 TABLE: Final = "agent-discipline"
 ## One top-level Python import identifier, excluding dotted module paths.
 IMPORT_ROOT: Final = re.compile(r"^[A-Za-z_]\w*$")
+## Closed capability vocabulary in canonical rendering order.
+CAPABILITIES: Final[tuple[Capability, ...]] = tuple(Capability)
 
 
 def _relative_path(raw: object, *, field_name: str, source: Path) -> PurePosixPath:
@@ -177,6 +210,8 @@ class Declaration:
     architecture: PurePosixPath | None = None
     ## Contract implementation and behavioral-evidence registry.
     contract_conformance: PurePosixPath | None = None
+    ## Explicit facts that add operational and security obligations.
+    capabilities: frozenset[Capability] = frozenset()
     ## Canonical role name to repository-relative directory paths.
     role_paths: Mapping[str, tuple[PurePosixPath, ...]] = field(default_factory=dict)
     ## Independently substitutable boundaries inside the broader adapters role.
@@ -270,6 +305,14 @@ class Declaration:
             return None
         return self.root / Path(self.contract_conformance.as_posix())
 
+    def has(self, capability: Capability) -> bool:
+        """Whether one additive project capability is active.
+
+        @param capability fact whose obligations are being selected
+        @return true only when the manifest explicitly enables it
+        """
+        return capability in self.capabilities
+
     def narrowed(self) -> tuple[str, ...]:
         """Facts a direct check invocation could not decide from this declaration.
 
@@ -295,6 +338,11 @@ class Declaration:
             notes.append(
                 "DISC-PROJECT-015 contract_conformance is undeclared; typed "
                 "implementation and shared-suite evidence are undecided"
+            )
+        if self.source is None:
+            notes.append(
+                "DISC-PROJECT-016 capabilities are undeclared; additive local "
+                "operational obligations are undecided"
             )
         if self.doc_engine != "doxygen":
             notes.append(
@@ -564,6 +612,43 @@ def _parse_contract_conformance(
     return conformance
 
 
+def _parse_capabilities(
+    table: Mapping[str, object], path: Path,
+) -> frozenset[Capability]:
+    """Parse the complete closed capability table.
+
+    Every fact is written as a boolean, including false facts. Absence is not
+    treated as false because that would make a newly introduced capability a
+    silent waiver in every existing repository.
+
+    @param table decoded discipline declaration
+    @param path declaring project file
+    @return enabled capability facts
+    @throws DeclarationError when the table is absent, partial, extended, or non-boolean
+    """
+    raw = table.get("capabilities")
+    if not isinstance(raw, dict):
+        _reject(
+            "DISC-PROJECT-016", path,
+            "capabilities must be a complete TOML table of explicit booleans",
+        )
+    expected = {item.value for item in CAPABILITIES}
+    missing = expected - set(raw)
+    unknown = set(raw) - expected
+    if missing or unknown:
+        _reject(
+            "DISC-PROJECT-016", path,
+            f"capabilities missing={sorted(missing)}, unknown={sorted(unknown)}",
+        )
+    invalid = sorted(name for name, value in raw.items() if not isinstance(value, bool))
+    if invalid:
+        _reject(
+            "DISC-PROJECT-017", path,
+            f"capabilities must be booleans: {', '.join(invalid)}",
+        )
+    return frozenset(item for item in CAPABILITIES if raw[item.value] is True)
+
+
 def parse(path: Path) -> Declaration:
     """Read one v4 declaration, refusing missing and unknown values.
 
@@ -596,6 +681,7 @@ def parse(path: Path) -> Declaration:
     )
     architecture = _parse_architecture(table, path)
     contract_conformance = _parse_contract_conformance(table, path)
+    capabilities = _parse_capabilities(table, path)
     engine = str(table.get("doc_engine", "none"))
     if engine not in DOC_ENGINES:
         known = ", ".join(sorted(DOC_ENGINES))
@@ -631,6 +717,7 @@ def parse(path: Path) -> Declaration:
         source_roots=roots,
         architecture=architecture,
         contract_conformance=contract_conformance,
+        capabilities=capabilities,
         role_paths=roles,
         adapter_boundaries=boundaries,
         layers=layers,

@@ -50,6 +50,21 @@ adapter_boundaries = [
     "src/package/adapters/storage",
 ]
 
+# A closed table: every fact is explicit. True adds obligations; false can be
+# rejected when source/build/contract inference observes the capability anyway.
+[tool.agent-discipline.capabilities]
+public_api = true
+filesystem_io = false
+persistent_state = false
+generated_artifacts = false
+network_io = true
+launches_subprocesses = false
+owns_subprocess_lifecycle = false
+concurrency = true
+destructive_effects = false
+bounded_latency = true
+sensitive_data = false
+
 [tool.agent-discipline.roles]
 # Replace `package` with the distribution's import package. Paths, rather than
 # guessed directory names, make full source coverage mechanically decidable.

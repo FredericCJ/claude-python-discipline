@@ -2,7 +2,7 @@
 id: meta/KERNEL
 kind: meta
 title: Discipline Kernel
-tokens: 1939
+tokens: 1961
 load_when: ["python", "discipline", "how should i", "what are the rules"]
 decay: none
 ---
@@ -73,6 +73,7 @@ an API name, a task verb.
 | raising, catching, result unions, validation, error taxonomy | `law/ERR` + `fact/py-errors` |
 | tracebacks, error codes, logging, correlation, diagnosis | `law/DIAG` + `fact/py-logging` |
 | writing files, deleting, state machines, locks, clocks, determinism | `law/EFCT` |
+| capabilities, lifecycle, resources, budgets, shutdown, recovery | `law/OPS` |
 | writing tests, fixtures, properties, fault injection, mutation | `law/TEST` + `fact/py-testing` |
 | public surface, CLI, structured output, versioning, migrations | `law/API` |
 | adding a dependency, lockfiles, generated files | `law/DEP` |

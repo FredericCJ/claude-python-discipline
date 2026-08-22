@@ -4,12 +4,12 @@
 
 This ledger keeps unlike claims unlike. A rule can be normatively binding while its verifier is absent; a verifier can exist while deciding only a proxy; a proxy can pass while its residual remains true; and a successful adopter does not prove universal benefit. No state below is a project-gate outcome.
 
-- **164** binding rules; **14** lack an available declared strategy.
+- **166** binding rules; **14** lack an available declared strategy.
 - **26** advisory rules and **0** open rules.
-- **179** exact strategy records: **16** direct and **163** proxy claims.
-- **59/164** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
-- **20/200** rules carry named field observations.
-- **98/98** named mechanisms resolve locally or delegate explicitly; **0** local mechanisms are absent.
+- **181** exact strategy records: **17** direct and **164** proxy claims.
+- **61/166** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
+- **21/202** rules carry named field observations.
+- **99/99** named mechanisms resolve locally or delegate explicitly; **0** local mechanisms are absent.
 
 ## Verifier-state census
 
@@ -17,7 +17,7 @@ Measured against this tree, not copied from the rule heading. `discipline/rules.
 
 | State | Rules | Means |
 |---|---|---|
-| `local-verifier` | 116 | repository-local code observes every strategy |
+| `local-verifier` | 118 | repository-local code observes every strategy |
 | `external-verifier` | 24 | every strategy delegates to a configured tool |
 | `mixed-verifiers` | 10 | several verifier kinds contribute |
 | `structured-review` | 0 | judgment is recorded in a checked review artifact |
@@ -221,6 +221,8 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `LEARN-010` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:learning_size; it does not establish the full semantic benefit of the normative statement. | The active set is triaged before it outgrows its ceiling |
 | `LEARN-011` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:learn; it does not establish the full semantic benefit of the normative statement. | A parameter change is recorded with its reason |
 | `LEARN-012` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | Prefer the smallest true entry |
+| `OPS-001` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | none | A coherent boolean manifest records intent and relationships; it does not establish that enabled obligations are satisfied or that every semantic capability was recognized by infe… | Capability facts are closed, explicit, and additive |
+| `OPS-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | `V3E-005` | The inference vocabulary is intentionally incomplete and syntactic; clean output never proves a capability false, and authors remain responsible for enabling unobservable intent. | Observed capability cannot be declared false |
 | `TEAMS-001` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement. | A dispatch states the contract, not the intention |
 | `TEAMS-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement. | A restriction is never lifted by an instruction |
 | `TEAMS-003` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_completion_hook_enforces_the_gate; it does not establish every behavior in the normative statement. | Verification runs as a gate, not as a request |
@@ -268,7 +270,7 @@ These remain normative obligations, but the declared verifier is absent or missi
 | Kind | Rules |
 |---|---|
 | `auto` | 39 |
-| `check` | 84 |
+| `check` | 86 |
 | `fitness` | 56 |
 
 ## Advisory rationale

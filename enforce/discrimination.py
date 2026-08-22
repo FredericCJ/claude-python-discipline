@@ -1193,6 +1193,32 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         ),),
     ),
     Mutation(
+        rule_id="OPS-001",
+        summary="subprocess lifecycle ownership is enabled without launch authority",
+        source=(
+            "OPS-001's closed relationship: lifecycle ownership is meaningful only "
+            "for a repository that also declares subprocess launch."
+        ),
+        replace=((
+            "pyproject.toml",
+            "owns_subprocess_lifecycle = false",
+            "owns_subprocess_lifecycle = true",
+        ),),
+    ),
+    Mutation(
+        rule_id="OPS-002",
+        summary="filesystem behavior remains while filesystem_io is declared false",
+        source=(
+            "OPS-002's one-way inference predicate: the reference file adapter "
+            "imports filesystem vocabulary and calls unlink."
+        ),
+        replace=((
+            "pyproject.toml",
+            "filesystem_io = true",
+            "filesystem_io = false",
+        ),),
+    ),
+    Mutation(
         rule_id="EFCT-015",
         summary="a writer takes a lock and never reports losing the race",
         source=(

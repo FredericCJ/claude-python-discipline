@@ -36,6 +36,19 @@ adapter_boundaries = [
     "src/pkg/adapters/http",
 ]
 
+[tool.agent-discipline.capabilities]
+public_api = false
+filesystem_io = false
+persistent_state = false
+generated_artifacts = false
+network_io = false
+launches_subprocesses = false
+owns_subprocess_lifecycle = false
+concurrency = false
+destructive_effects = false
+bounded_latency = false
+sensitive_data = false
+
 [tool.agent-discipline.roles]
 domain = ["src/pkg/domain"]
 application = ["src/pkg/app"]

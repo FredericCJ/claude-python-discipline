@@ -532,7 +532,23 @@ def _render_declaration(
     ]
     if draft.boundaries:
         lines.append(f"adapter_boundaries = {_toml_array(draft.boundaries)}")
-    lines.extend(["", "[tool.agent-discipline.roles]"])
+    lines.extend([
+        "",
+        "[tool.agent-discipline.capabilities]",
+        "public_api = false",
+        "filesystem_io = false",
+        "persistent_state = false",
+        "generated_artifacts = false",
+        "network_io = false",
+        "launches_subprocesses = false",
+        "owns_subprocess_lifecycle = false",
+        "concurrency = false",
+        "destructive_effects = false",
+        "bounded_latency = false",
+        "sensitive_data = false",
+        "",
+        "[tool.agent-discipline.roles]",
+    ])
     for role in ("domain", "application", "ports", "adapters", "shell"):
         paths = draft.roles.get(role)
         if paths:
@@ -617,7 +633,7 @@ def _draft(
             "MIGRATE-V4-007_ARCHITECTURE_AUTHORING_REQUIRED",
             "warning",
             "author architecture.json and contract-conformance.json from the v4 templates; "
-            "semantic decisions and test capabilities are never inferred",
+            "then run checks.capabilities because semantic intent is never inferred",
         )
     )
     return DeclarationDraft(
@@ -647,7 +663,8 @@ def plan(root: Path, unit: str | None) -> MigrationPlan:
     if all(
         key in table
         for key in (
-            "unit", "source_roots", "architecture", "contract_conformance", "roles",
+            "unit", "source_roots", "architecture", "contract_conformance",
+            "capabilities", "roles",
         )
     ):
         return MigrationPlan(governed, project_file, before, before, ())

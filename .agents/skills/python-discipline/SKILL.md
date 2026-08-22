@@ -74,6 +74,7 @@ Read only what the task needs.
 | raising, catching, result unions, validation, error taxonomy | `discipline/law/ERR.md` + `discipline/fact/py-errors.md` |
 | tracebacks, error codes, logging, correlation, diagnosis | `discipline/law/DIAG.md` + `discipline/fact/py-logging.md` |
 | writing files, deleting, state machines, locks, clocks, determinism | `discipline/law/EFCT.md` |
+| capabilities, lifecycle, resources, budgets, shutdown, recovery | `discipline/law/OPS.md` |
 | writing tests, fixtures, properties, fault injection, mutation | `discipline/law/TEST.md` + `discipline/fact/py-testing.md` |
 | public surface, CLI, structured output, versioning, migrations | `discipline/law/API.md` |
 | adding a dependency, lockfiles, generated files | `discipline/law/DEP.md` |

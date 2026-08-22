@@ -46,6 +46,20 @@ def v4(*, extra: str = "", tables: str = "") -> str:
         architecture = "architecture.json"
         contract_conformance = "contract-conformance.json"
         {extra}
+
+        [tool.agent-discipline.capabilities]
+        public_api = false
+        filesystem_io = false
+        persistent_state = false
+        generated_artifacts = false
+        network_io = false
+        launches_subprocesses = false
+        owns_subprocess_lifecycle = false
+        concurrency = false
+        destructive_effects = false
+        bounded_latency = false
+        sensitive_data = false
+
         {tables}
     """
 
@@ -136,6 +150,59 @@ def test_a_missing_contract_conformance_registry_is_refused(tmp_path: Path) -> N
     )
     with pytest.raises(ValueError, match="DISC-PROJECT-015"):
         project.parse(path)
+
+
+def test_a_missing_capability_manifest_is_refused(tmp_path: Path) -> None:
+    """Capability absence cannot silently mean that every added obligation is off.
+
+    @param tmp_path fixture repository
+    """
+    path = declare(
+        tmp_path,
+        '[tool.agent-discipline]\nunit="application"\nsource_roots=["src"]\n'
+        'architecture="architecture.json"\n'
+        'contract_conformance="contract-conformance.json"\n',
+    )
+    with pytest.raises(ValueError, match="DISC-PROJECT-016"):
+        project.parse(path)
+
+
+def test_a_partial_capability_manifest_is_refused(tmp_path: Path) -> None:
+    """Adding a future capability cannot default old declarations to false.
+
+    @param tmp_path fixture repository
+    """
+    path = declare(
+        tmp_path,
+        v4().replace("sensitive_data = false\n", ""),
+    )
+    with pytest.raises(ValueError, match="DISC-PROJECT-016"):
+        project.parse(path)
+
+
+def test_capability_values_are_boolean(tmp_path: Path) -> None:
+    """A truthy string cannot activate or deactivate an obligation accidentally.
+
+    @param tmp_path fixture repository
+    """
+    path = declare(
+        tmp_path,
+        v4().replace("network_io = false", 'network_io = "false"'),
+    )
+    with pytest.raises(ValueError, match="DISC-PROJECT-017"):
+        project.parse(path)
+
+
+def test_enabled_capabilities_are_typed_facts(tmp_path: Path) -> None:
+    """The parsed declaration exposes enum facts rather than arbitrary strings.
+
+    @param tmp_path fixture repository
+    """
+    found = project.parse(
+        declare(tmp_path, v4().replace("network_io = false", "network_io = true"))
+    )
+    assert found.has(project.Capability.NETWORK_IO)
+    assert not found.has(project.Capability.SENSITIVE_DATA)
 
 
 # ------------------------------------------------------------- source and roles

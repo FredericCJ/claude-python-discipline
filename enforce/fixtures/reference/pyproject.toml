@@ -23,6 +23,19 @@ adapter_boundaries = [
     "src/refpkg/adapters/files",
 ]
 
+[tool.agent-discipline.capabilities]
+public_api = true
+filesystem_io = true
+persistent_state = false
+generated_artifacts = false
+network_io = false
+launches_subprocesses = false
+owns_subprocess_lifecycle = false
+concurrency = false
+destructive_effects = true
+bounded_latency = false
+sensitive_data = false
+
 [tool.agent-discipline.roles]
 domain = ["src/refpkg/domain"]
 application = ["src/refpkg/app"]

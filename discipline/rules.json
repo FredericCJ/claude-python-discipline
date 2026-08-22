@@ -469,6 +469,30 @@
       "path": "discipline/law/LEARN.md"
     },
     {
+      "id": "law/OPS",
+      "kind": "law",
+      "title": "Local Operations and Capability Activation",
+      "tokens": 507,
+      "load_when": [
+        "capability manifest",
+        "operational behavior",
+        "subprocess lifecycle",
+        "network io",
+        "persistent state",
+        "generated artifact",
+        "resource budget"
+      ],
+      "requires": [],
+      "grounds_on": [
+        "law/ARCH",
+        "law/EFCT",
+        "law/TEST"
+      ],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/law/OPS.md"
+    },
+    {
       "id": "law/TEST",
       "kind": "law",
       "title": "Systematic Testing and Oracles",
@@ -565,7 +589,7 @@
       "id": "meta/KERNEL",
       "kind": "meta",
       "title": "Discipline Kernel",
-      "tokens": 1939,
+      "tokens": 1961,
       "load_when": [
         "python",
         "discipline",
@@ -9756,6 +9780,133 @@
         "source": "v3.3.0",
         "disposition": "unchanged",
         "guidance": "No adopter edit is required by this rule record."
+      }
+    },
+    {
+      "id": "OPS-001",
+      "module": "law/OPS",
+      "title": "Capability facts are closed, explicit, and additive",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:capabilities"
+      ],
+      "statement": "`[tool.agent-discipline.capabilities]` MUST contain the complete v4 capability vocabulary as booleans. `true` activates obligations and MAY conservatively exceed inference; absence never means false. A repository claiming subprocess lifecycle ownership MUST also declare that it launches subprocesses.",
+      "why": "An optional or open-ended table turns every future obligation into a silent waiver for existing repositories. Additive facts keep one strict kernel.",
+      "check": "`python -m checks.capabilities`",
+      "no_mechanism": null,
+      "see": [
+        "meta/SCOPE",
+        "EVID-003"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/OPS.md",
+      "line": 28,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "A partial, open-ended, or waiver-shaped capability declaration silently disables newly introduced operational obligations.",
+      "warrants": [
+        {
+          "source": "source:AR",
+          "relation": "supports",
+          "confidence": "high"
+        },
+        {
+          "source": "source:SE",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:capabilities",
+            "kind": "static",
+            "relation": "direct",
+            "proposition": "The project parser requires every closed v4 capability key to carry a boolean, and the capability check rejects subprocess lifecycle ownership unless subprocess launch is also true.",
+            "residual": "A coherent boolean manifest records intent and relationships; it does not establish that enabled obligations are satisfied or that every semantic capability was recognized by inference.",
+            "must_pass": "fixture:reference explicit capability manifest",
+            "must_reject": "discrimination:OPS-001",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never; every governed repository carries the closed manifest"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Add every capability key explicitly; enable any intentional capability even when static inference cannot observe it."
+      }
+    },
+    {
+      "id": "OPS-002",
+      "module": "law/OPS",
+      "title": "Observed capability cannot be declared false",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:capabilities"
+      ],
+      "statement": "A capability inferred from declared production roots, build metadata, or the canonical local contract model MUST be `true`. Inference MAY activate an obligation; lack of a syntactic witness MUST NOT deactivate one.",
+      "why": "Imports and effect calls can refute under-declaration cheaply, while no finite syntax scan can prove that a semantic capability is absent.",
+      "check": "`python -m checks.capabilities`",
+      "no_mechanism": null,
+      "see": [
+        "ARCH-018",
+        "EVID-003"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/OPS.md",
+      "line": 38,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "A repository declares an observable effect or runtime surface false and thereby avoids the obligations intended to control it.",
+      "warrants": [
+        {
+          "source": "source:AR",
+          "relation": "supports",
+          "confidence": "high"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:capabilities",
+            "kind": "static",
+            "relation": "proxy",
+            "proposition": "The check reports a false capability when declared production source contains a configured import or call witness, a production generator filename, build metadata exposes an entry point, or architecture.json publishes a contract.",
+            "residual": "The inference vocabulary is intentionally incomplete and syntactic; clean output never proves a capability false, and authors remain responsible for enabling unobservable intent.",
+            "must_pass": "fixture:reference capability inference agrees with its manifest",
+            "must_reject": "discrimination:OPS-002",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never; explicit false facts remain subject to inference"
+          }
+        ]
+      },
+      "field_observations": [
+        "V3E-005"
+      ],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Run capability inference after migration and turn on every reported local fact before authoring its operational evidence."
       }
     },
     {
