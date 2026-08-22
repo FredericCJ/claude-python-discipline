@@ -1,7 +1,7 @@
 {
   "generated_by": "tools/discrimination_gate.py --update-baseline",
   "note": "D -- rules with at least one mutation observed provoking them. May rise, never fall. The entries are in enforce/discrimination.py and are meant to be read; the count alone says nothing about whether they are good.",
-  "count": 60,
+  "count": 63,
   "rules": [
     "ALLOC-002",
     "ALLOC-004",
@@ -21,6 +21,9 @@
     "ARCH-018",
     "ARCH-019",
     "ARCH-020",
+    "ARCH-021",
+    "ARCH-022",
+    "ARCH-023",
     "DEP-001",
     "DIAG-002",
     "DIAG-008",
@@ -65,5 +68,5 @@
     "TYPE-013"
   ],
   "gap": 93,
-  "why": "Witness separate application-to-adapter and foreign-owner boundary diagnostics for ARCH-019 and ARCH-020."
+  "why": "Witness unit-model drift, missing local views, and peer identity leakage for ARCH-021 through ARCH-023."
 }

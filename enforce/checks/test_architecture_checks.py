@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING
 
 from checks import project
+from checks.architecture_model import ArchitectureModelCheck
 from checks.dependency_boundaries import DependencyBoundariesCheck
 from checks.source_roles import SourceRolesCheck
 
@@ -12,17 +14,21 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-def declared_tree(tmp_path: Path) -> tuple[project.Declaration, Path]:
+def declared_tree(
+    tmp_path: Path, unit: project.UnitKind = project.UnitKind.APPLICATION,
+) -> tuple[project.Declaration, Path]:
     """Create a smallest complete role-mapped application fixture.
 
     @param tmp_path fixture repository
+    @param unit governed repository shape
     @return parsed declaration and its source root
     """
     project_file = tmp_path / "pyproject.toml"
     project_file.write_text(
-        """[tool.agent-discipline]
-unit = "application"
+        f"""[tool.agent-discipline]
+unit = "{unit}"
 source_roots = ["src"]
+architecture = "architecture.json"
 adapter_boundaries = [
     "src/pkg/adapters/clock",
     "src/pkg/adapters/files",
@@ -49,6 +55,66 @@ owner = "src/pkg/adapters/clock"
     package.parent.mkdir(parents=True, exist_ok=True)
     package.write_text('"""Public package."""\n', encoding="utf-8")
     return project.parse(project_file), tmp_path / "src"
+
+
+def architecture_payload(unit: str = "application") -> dict[str, object]:
+    """A smallest complete local architecture model.
+
+    @param unit application or component model value
+    @return JSON-ready model
+    """
+    return {
+        "schema_version": 1,
+        "unit": unit,
+        "responsibility": "Transform one request into one typed response.",
+        "decisions": [{
+            "id": "encoding_choice",
+            "volatile_decision": "How boundary bytes become domain values.",
+            "owner_role": "adapters",
+            "change_scenarios": ["Replace the codec without changing policy."],
+        }],
+        "contracts": [{
+            "id": "request_contract",
+            "direction": "published",
+            "role": "request_client",
+            "version": "1",
+            "source": "local",
+            "provenance": None,
+            "operations": [{
+                "name": "request",
+                "inputs": "One validated request.",
+                "outputs": "One typed response.",
+                "errors": ["invalid_request"],
+                "ordering": "Requests are serialized.",
+                "idempotency": "Repeated equal requests are equivalent.",
+                "concurrency": "One request runs at a time.",
+                "timeout": "No retry is performed after the local deadline.",
+            }],
+        }],
+        "resources": [],
+        "resource_absence": "No resource survives a request.",
+        "recoveries": [{
+            "failure": "invalid_request",
+            "detected_at": "input adapter",
+            "contained_at": "published boundary",
+            "owner_role": "application",
+            "action": "Return a typed refusal.",
+            "escalation": "Render one terminal reason.",
+            "terminal_state": "No state changed.",
+        }],
+    }
+
+
+def write_architecture(root: Path, payload: dict[str, object]) -> Path:
+    """Write a canonical architecture fixture.
+
+    @param root fixture repository
+    @param payload JSON-ready architecture model
+    @return written model path
+    """
+    path = root / "architecture.json"
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    return path
 
 
 def write_python(root: Path, relative: str, body: str = '"""Fixture."""\n') -> Path:
@@ -197,4 +263,115 @@ def test_one_adapter_boundary_cannot_import_another(tmp_path: Path) -> None:
     findings = check.run([source])
     assert [finding.diagnostic_id for finding in findings] == [
         "ARCH003_ADAPTER_TO_ADAPTER"
+    ]
+
+
+def test_complete_local_architecture_views_are_accepted(tmp_path: Path) -> None:
+    """The positive reference joins all four local views to the declared unit.
+
+    @param tmp_path fixture repository
+    """
+    declaration, source = declared_tree(tmp_path)
+    write_architecture(tmp_path, architecture_payload())
+    check = ArchitectureModelCheck()
+    check.declaration = declaration
+    assert check.run([source]) == []
+
+
+def test_architecture_unit_must_match_project_unit(tmp_path: Path) -> None:
+    """Two canonical records cannot disagree about the governed shape.
+
+    @param tmp_path fixture repository
+    """
+    declaration, source = declared_tree(tmp_path)
+    write_architecture(tmp_path, architecture_payload("component"))
+    check = ArchitectureModelCheck()
+    check.declaration = declaration
+    findings = check.run([source])
+    assert [finding.diagnostic_id for finding in findings] == [
+        "ARCH021_UNIT_MISMATCH"
+    ]
+
+
+def test_volatile_decision_requires_a_change_scenario(tmp_path: Path) -> None:
+    """A boundary name without a change it absorbs is not information hiding.
+
+    @param tmp_path fixture repository
+    """
+    declaration, source = declared_tree(tmp_path)
+    payload = architecture_payload()
+    decisions = payload["decisions"]
+    assert isinstance(decisions, list)
+    decision = decisions[0]
+    assert isinstance(decision, dict)
+    decision["change_scenarios"] = []
+    write_architecture(tmp_path, payload)
+    check = ArchitectureModelCheck()
+    check.declaration = declaration
+    findings = check.run([source])
+    assert [finding.diagnostic_id for finding in findings] == [
+        "ARCH021_DECISION_INCOMPLETE"
+    ]
+
+
+def test_component_role_rejects_a_peer_repository_name(tmp_path: Path) -> None:
+    """A hyphenated peer identity cannot occupy a contract-role field.
+
+    @param tmp_path fixture repository
+    """
+    declaration, source = declared_tree(tmp_path, project.UnitKind.COMPONENT)
+    payload = architecture_payload("component")
+    contracts = payload["contracts"]
+    assert isinstance(contracts, list)
+    contract = contracts[0]
+    assert isinstance(contract, dict)
+    contract["role"] = "sine-generator"
+    write_architecture(tmp_path, payload)
+    check = ArchitectureModelCheck()
+    check.declaration = declaration
+    findings = check.run([source])
+    assert [finding.diagnostic_id for finding in findings] == [
+        "ARCH023_ROLE_IDENTITY"
+    ]
+
+
+def test_component_model_rejects_a_deployment_endpoint(tmp_path: Path) -> None:
+    """Endpoint wiring is outside a standalone component's local contract.
+
+    @param tmp_path fixture repository
+    """
+    declaration, source = declared_tree(tmp_path, project.UnitKind.COMPONENT)
+    payload = architecture_payload("component")
+    contracts = payload["contracts"]
+    assert isinstance(contracts, list)
+    contract = contracts[0]
+    assert isinstance(contract, dict)
+    operations = contract["operations"]
+    assert isinstance(operations, list)
+    operation = operations[0]
+    assert isinstance(operation, dict)
+    operation["timeout"] = "Connect to tcp://127.0.0.1:9000 within one second."
+    write_architecture(tmp_path, payload)
+    check = ArchitectureModelCheck()
+    check.declaration = declaration
+    findings = check.run([source])
+    assert [finding.diagnostic_id for finding in findings] == [
+        "ARCH023_COUNTERPART_IDENTITY"
+    ]
+
+
+def test_empty_resource_view_requires_an_explanation(tmp_path: Path) -> None:
+    """An empty array is explicit only when the absence itself is justified.
+
+    @param tmp_path fixture repository
+    """
+    declaration, source = declared_tree(tmp_path)
+    payload = architecture_payload()
+    payload["resource_absence"] = None
+    write_architecture(tmp_path, payload)
+    check = ArchitectureModelCheck()
+    check.declaration = declaration
+    findings = check.run([source])
+    assert [finding.diagnostic_id for finding in findings] == [
+        "ARCH022_RESOURCE_OWNER"
     ]

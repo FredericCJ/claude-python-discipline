@@ -1600,6 +1600,116 @@
         "guidance": "Replace ARCH-004 per-module contracts with one foreign_dependencies record per import root and owning adapter boundary."
       }
     },
+    "ARCH-021": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "A physical boundary with no volatile decision or change scenario is ceremony whose cohesion cannot be challenged when requirements change.",
+      "warrants": [
+        {
+          "source": "source:SE",
+          "relation": "supports",
+          "confidence": "high"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:architecture_model",
+          "kind": "static",
+          "relation": "direct",
+          "proposition": "The declared local architecture JSON exists, names the same unit kind as pyproject.toml, and carries at least one exact decision record with an owner role and non-empty change scenarios.",
+          "residual": "Passing verifies record structure and the declaration join; it cannot decide whether the named volatility is real or the boundary would actually absorb the scenario.",
+          "must_pass": "fixture:enforce/fixtures/reference",
+          "must_reject": "discrimination:ARCH-021",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "never for a declared v4 governed repository"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Create architecture.json from the template and record the change scenarios each existing boundary is intended to absorb."
+      }
+    },
+    "ARCH-022": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "A single structural diagram conflates imports, interactions, resource lifetime, and recovery, leaving ownership and containment assumptions invisible.",
+      "warrants": [
+        {
+          "source": "source:SE",
+          "relation": "supports",
+          "confidence": "high"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:architecture_model",
+          "kind": "static",
+          "relation": "direct",
+          "proposition": "The canonical model has exact, typed contract-operation, resource-ownership or explicit-absence, and recovery records whose ids are unique and owner roles are local.",
+          "residual": "Passing proves the records are complete in form and internally joined; behavioral tests and review must establish that runtime behavior agrees with them.",
+          "must_pass": "fixture:enforce/fixtures/reference",
+          "must_reject": "discrimination:ARCH-022",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "never for a declared v4 governed repository"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Transcribe repository-local interaction, resource, and recovery decisions into the canonical model without adding system topology."
+      }
+    },
+    "ARCH-023": {
+      "units": [
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "A component contract coupled to a peer checkout or endpoint cannot be tested, deployed, or evolved independently and assigns integration responsibility to the wrong repository.",
+      "warrants": [
+        {
+          "source": "source:SE",
+          "relation": "supports",
+          "confidence": "high"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:architecture_model",
+          "kind": "static",
+          "relation": "proxy",
+          "proposition": "A component model's role fields are lower_snake identifiers and no model string matches the declared repository, topology, URI, IP-address, or filesystem-path predicates.",
+          "residual": "A neutral-looking identifier can still be a disguised counterpart name, and lexical passing cannot prove the prose makes no implementation assumption; structured adversarial review owns that residual.",
+          "must_pass": "fixture:component-neutral architecture model",
+          "must_reject": "discrimination:ARCH-023",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "unit is application"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Replace peer names and endpoints with contract roles; retain external snapshot provenance as source role, version, and digest only."
+      }
+    },
     "DEP-001": {
       "units": [
         "application",

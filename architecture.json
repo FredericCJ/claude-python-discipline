@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "unit": "application",
+  "responsibility": "Build, validate, package, and install one Python engineering discipline for supported agent hosts.",
+  "decisions": [
+    {
+      "id": "authored_corpus",
+      "volatile_decision": "Normative doctrine is authored once while indexes, graphs, enforcement views, and host discovery surfaces are projections.",
+      "owner_role": "domain",
+      "change_scenarios": [
+        "Add or supersede a rule without independently editing generated views.",
+        "Add an agent host without forking the authored skill or doctrine corpus."
+      ]
+    },
+    {
+      "id": "evidence_claims",
+      "volatile_decision": "Normative force, decidable propositions, and adopter observations evolve independently.",
+      "owner_role": "application",
+      "change_scenarios": [
+        "Replace a verifier without presenting the replacement as new empirical support.",
+        "Retire a rule while keeping historical citations resolvable."
+      ]
+    }
+  ],
+  "contracts": [
+    {
+      "id": "discipline_archive",
+      "direction": "published",
+      "role": "project_maintainer",
+      "version": "4",
+      "source": "local",
+      "provenance": null,
+      "operations": [
+        {
+          "name": "install",
+          "inputs": "A release archive and one target project root.",
+          "outputs": "One vendored corpus and byte-identical native discovery surfaces.",
+          "errors": [
+            "collision",
+            "invalid_archive",
+            "unsupported_layout"
+          ],
+          "ordering": "Validate archive membership and collisions before writing project files.",
+          "idempotency": "Reinstalling identical bytes is a no-op; conflicting project-owned bytes are refused.",
+          "concurrency": "Install and removal are serialized per target project.",
+          "timeout": "No runtime timeout is promised; release tooling reports the failing bounded gate step."
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "release_staging_tree",
+      "kind": "temporary_directory",
+      "owner_role": "shell",
+      "acquire": "The release command creates a fresh staging directory before copying members.",
+      "release": "The release command removes its owned staging directory after success or failure.",
+      "transfer_to_role": null
+    }
+  ],
+  "resource_absence": null,
+  "recoveries": [
+    {
+      "failure": "release_gate_failure",
+      "detected_at": "release command gate subprocess boundary",
+      "contained_at": "release staging tree",
+      "owner_role": "shell",
+      "action": "Stop packaging, retain the named failing verdict, and clean only command-owned staging state.",
+      "escalation": "Return a nonzero status with the failed gate name and its output.",
+      "terminal_state": "No release archive is published and project-owned files remain unchanged."
+    }
+  ]
+}

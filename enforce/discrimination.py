@@ -857,6 +857,54 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         ),),
     ),
     Mutation(
+        rule_id="ARCH-021",
+        summary="the local architecture record declares a different governed unit",
+        source=(
+            "The project and architecture records jointly define one unit. A model "
+            "that silently changes application to component makes every conditional "
+            "obligation ambiguous."
+        ),
+        replace=((
+            "architecture.json",
+            '"unit": "application"',
+            '"unit": "component"',
+        ),),
+    ),
+    Mutation(
+        rule_id="ARCH-022",
+        summary="the declared canonical local architecture model is absent",
+        source=(
+            "All four local views have one declared source. Removing it must fail "
+            "as missing evidence, never become a successful empty traversal."
+        ),
+        drop=("architecture.json",),
+    ),
+    Mutation(
+        rule_id="ARCH-023",
+        summary="a component contract identifies a peer repository by name",
+        source=(
+            "The roadmap's adversarial acceptance case: component contracts know "
+            "roles, never counterpart repository identities or deployment wiring."
+        ),
+        replace=(
+            (
+                "pyproject.toml",
+                'unit = "application"',
+                'unit = "component"',
+            ),
+            (
+                "architecture.json",
+                '"unit": "application"',
+                '"unit": "component"',
+            ),
+            (
+                "architecture.json",
+                '"role": "command_user"',
+                '"role": "sine-generator"',
+            ),
+        ),
+    ),
+    Mutation(
         rule_id="EFCT-001",
         summary="the app opens a socket, performing an effect outside the shell",
         source=(

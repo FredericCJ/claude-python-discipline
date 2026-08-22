@@ -19,6 +19,7 @@
 [tool.agent-discipline]
 unit = "application"
 source_roots = ["tools", "enforce"]
+architecture = "architecture.json"
 doc_engine = "doxygen"
 pedagogical_full_projection = false
 

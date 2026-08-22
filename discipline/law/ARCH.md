@@ -2,7 +2,7 @@
 id: law/ARCH
 kind: law
 title: Architecture and Coupling
-tokens: 3448
+tokens: 3950
 load_when:
   - "new module"
   - "package layout"
@@ -36,10 +36,8 @@ shell          repository-local wiring, process lifecycle, final escape handling
 ports          typed contracts used by app and implemented by adapters
 ```
 
-Ports are declarations, not a fifth rung in an executable stack. Application code may
-invoke injected ports; it cannot name their concrete adapters or the foreign APIs behind
-them. The shell selects adapters locally. Nothing here describes wiring to another
-repository.
+Ports are declarations, not a fifth executable rung. Application code invokes injected
+ports without naming adapters or foreign APIs; the shell selects adapters locally.
 
 ---
 
@@ -57,9 +55,8 @@ are [ARCH-019] and [ARCH-003].
 - **Check** `python -m checks.dependency_boundaries` · `lint-imports --config enforce/importlinter.toml` · `python tools/import_gate.py`
 - **See** [DOC-014]
 
-The role paths are how every role-scoped mechanism finds its subject. [ARCH-018] makes
-their completeness a separate decidable claim; dependency direction cannot be credited
-for files the declaration omitted.
+[ARCH-018] separately makes role-path completeness decidable; dependency direction cannot
+be credited for files the declaration omitted.
 
 ### ARCH-002 · The domain imports nothing that can perform I/O  [BINDING] [auto:import-linter] [check:domain_purity]
 Modules under `domain/` MUST NOT import any I/O-capable module — filesystem, network,
@@ -137,9 +134,8 @@ one real adapter.
   and the boundary stops meaning anything.
 - **Check** `pytest enforce/fitness/test_ports.py::test_port_justification`
 
-Serialization, path computation and hashing are *not* ports on purity grounds alone — they
-are pure functions and belong in the domain. They become ports only when one of the eight
-justifications applies, most often containment of an unstable external format.
+Pure serialization, path computation and hashing are not ports on purity grounds alone.
+They become ports only under a listed justification.
 
 ### ARCH-011 · Adapters are selected at one local wiring root  [BINDING] [check:single_wiring_point]
 Concrete adapters MUST be chosen in a single repository-local wiring module in `shell`.
@@ -224,3 +220,36 @@ transitively by importing the selected adapter.
   site without forcing an adapter into one file or making valid local wiring impossible.
 - **Check** `python -m checks.dependency_boundaries`
 - **See** [ARCH-003] · [ARCH-011] · [DEP-002]
+
+### ARCH-021 · Boundaries hide named volatile decisions  [BINDING] [check:architecture_model]
+The repository MUST carry one canonical `architecture.json` whose unit kind agrees with
+its project declaration. Every internal boundary MUST be justified by a named volatile
+decision, its owning role, and at least one concrete change scenario the boundary is
+intended to absorb.
+- **Why** A directory diagram records a physical form. Information hiding records why the
+  boundary exists and supplies a falsifiable change against which its cohesion can be
+  reviewed.
+- **Check** `python -m checks.architecture_model`
+- **See** [ARCH-010] · [EVID-004]
+
+### ARCH-022 · Four local architecture views stay complete  [BINDING] [check:architecture_model]
+The canonical architecture record MUST contain this repository's boundary operations and
+interaction terms, resource ownership or an explicit absence, and failure detection,
+containment, recovery ownership, escalation, and terminal state. The source dependency
+view is the joined project role and ownership declaration. Every record MUST use stable
+local identifiers, exact fields, and resolvable local roles.
+- **Why** Imports, runtime interaction, resource lifetime, and failure propagation are
+  different graphs. Flattening them into one component diagram hides ownerless cleanup
+  and implicit recovery policy.
+- **Check** `python -m checks.architecture_model`
+- **See** [ARCH-018] · [law/ERR]
+
+### ARCH-023 · Component contracts name roles, never peers  [BINDING] [check:architecture_model]
+For `unit = "component"`, published and consumed contracts MUST identify external actors
+only by lower-snake contract roles. The local model MUST NOT carry a parent or sibling
+repository identity, filesystem location, deployment endpoint, address, or topology.
+External snapshots MAY record version, digest, and source role, never a source checkout.
+- **Why** A standalone component owns what it promises and consumes, not which concrete
+  counterpart or deployment happens to satisfy that role in a larger application.
+- **Check** `python -m checks.architecture_model`
+- **See** [meta/SCOPE] · [EVID-006]

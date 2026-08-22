@@ -214,7 +214,7 @@
       "id": "law/ARCH",
       "kind": "law",
       "title": "Architecture and Coupling",
-      "tokens": 3448,
+      "tokens": 3950,
       "load_when": [
         "new module",
         "package layout",
@@ -2115,7 +2115,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 48,
+      "line": 46,
       "applicability": {
         "units": [
           "application",
@@ -2190,7 +2190,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 64,
+      "line": 61,
       "applicability": {
         "units": [
           "application",
@@ -2262,7 +2262,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 73,
+      "line": 70,
       "applicability": {
         "units": [
           "application",
@@ -2334,7 +2334,7 @@
       ],
       "superseded_by": "ARCH-020",
       "path": "discipline/law/ARCH.md",
-      "line": 81,
+      "line": 78,
       "applicability": {
         "units": [
           "application",
@@ -2378,7 +2378,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 90,
+      "line": 87,
       "applicability": {
         "units": [
           "application",
@@ -2437,7 +2437,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 98,
+      "line": 95,
       "applicability": {
         "units": [
           "application",
@@ -2497,7 +2497,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 109,
+      "line": 106,
       "applicability": {
         "units": [
           "application",
@@ -2554,7 +2554,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 117,
+      "line": 114,
       "applicability": {
         "units": [
           "application",
@@ -2613,7 +2613,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 123,
+      "line": 120,
       "applicability": {
         "units": [
           "application",
@@ -2672,7 +2672,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 130,
+      "line": 127,
       "applicability": {
         "units": [
           "application",
@@ -2729,7 +2729,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 144,
+      "line": 140,
       "applicability": {
         "units": [
           "application",
@@ -2786,7 +2786,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 156,
+      "line": 152,
       "applicability": {
         "units": [
           "application",
@@ -2843,7 +2843,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 163,
+      "line": 159,
       "applicability": {
         "units": [
           "application",
@@ -2900,7 +2900,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 170,
+      "line": 166,
       "applicability": {
         "units": [
           "application",
@@ -2957,7 +2957,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 177,
+      "line": 173,
       "applicability": {
         "units": [
           "application",
@@ -3014,7 +3014,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 184,
+      "line": 180,
       "applicability": {
         "units": [
           "application",
@@ -3069,7 +3069,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 190,
+      "line": 186,
       "applicability": {
         "units": [
           "application",
@@ -3114,7 +3114,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 198,
+      "line": 194,
       "applicability": {
         "units": [
           "application",
@@ -3177,7 +3177,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 209,
+      "line": 205,
       "applicability": {
         "units": [
           "application",
@@ -3240,7 +3240,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/ARCH.md",
-      "line": 218,
+      "line": 214,
       "applicability": {
         "units": [
           "application",
@@ -3282,6 +3282,185 @@
         "source": "v4.0.0",
         "disposition": "new",
         "guidance": "Replace ARCH-004 per-module contracts with one foreign_dependencies record per import root and owning adapter boundary."
+      }
+    },
+    {
+      "id": "ARCH-021",
+      "module": "law/ARCH",
+      "title": "Boundaries hide named volatile decisions",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:architecture_model"
+      ],
+      "statement": "The repository MUST carry one canonical `architecture.json` whose unit kind agrees with its project declaration. Every internal boundary MUST be justified by a named volatile decision, its owning role, and at least one concrete change scenario the boundary is intended to absorb.",
+      "why": "A directory diagram records a physical form. Information hiding records why the boundary exists and supplies a falsifiable change against which its cohesion can be reviewed.",
+      "check": "`python -m checks.architecture_model`",
+      "no_mechanism": null,
+      "see": [
+        "ARCH-010",
+        "EVID-004"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 224,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "A physical boundary with no volatile decision or change scenario is ceremony whose cohesion cannot be challenged when requirements change.",
+      "warrants": [
+        {
+          "source": "source:SE",
+          "relation": "supports",
+          "confidence": "high"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:architecture_model",
+            "kind": "static",
+            "relation": "direct",
+            "proposition": "The declared local architecture JSON exists, names the same unit kind as pyproject.toml, and carries at least one exact decision record with an owner role and non-empty change scenarios.",
+            "residual": "Passing verifies record structure and the declaration join; it cannot decide whether the named volatility is real or the boundary would actually absorb the scenario.",
+            "must_pass": "fixture:enforce/fixtures/reference",
+            "must_reject": "discrimination:ARCH-021",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never for a declared v4 governed repository"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Create architecture.json from the template and record the change scenarios each existing boundary is intended to absorb."
+      }
+    },
+    {
+      "id": "ARCH-022",
+      "module": "law/ARCH",
+      "title": "Four local architecture views stay complete",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:architecture_model"
+      ],
+      "statement": "The canonical architecture record MUST contain this repository's boundary operations and interaction terms, resource ownership or an explicit absence, and failure detection, containment, recovery ownership, escalation, and terminal state. The source dependency view is the joined project role and ownership declaration. Every record MUST use stable local identifiers, exact fields, and resolvable local roles.",
+      "why": "Imports, runtime interaction, resource lifetime, and failure propagation are different graphs. Flattening them into one component diagram hides ownerless cleanup and implicit recovery policy.",
+      "check": "`python -m checks.architecture_model`",
+      "no_mechanism": null,
+      "see": [
+        "ARCH-018",
+        "law/ERR"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 235,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "A single structural diagram conflates imports, interactions, resource lifetime, and recovery, leaving ownership and containment assumptions invisible.",
+      "warrants": [
+        {
+          "source": "source:SE",
+          "relation": "supports",
+          "confidence": "high"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:architecture_model",
+            "kind": "static",
+            "relation": "direct",
+            "proposition": "The canonical model has exact, typed contract-operation, resource-ownership or explicit-absence, and recovery records whose ids are unique and owner roles are local.",
+            "residual": "Passing proves the records are complete in form and internally joined; behavioral tests and review must establish that runtime behavior agrees with them.",
+            "must_pass": "fixture:enforce/fixtures/reference",
+            "must_reject": "discrimination:ARCH-022",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never for a declared v4 governed repository"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Transcribe repository-local interaction, resource, and recovery decisions into the canonical model without adding system topology."
+      }
+    },
+    {
+      "id": "ARCH-023",
+      "module": "law/ARCH",
+      "title": "Component contracts name roles, never peers",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:architecture_model"
+      ],
+      "statement": "For `unit = \"component\"`, published and consumed contracts MUST identify external actors only by lower-snake contract roles. The local model MUST NOT carry a parent or sibling repository identity, filesystem location, deployment endpoint, address, or topology. External snapshots MAY record version, digest, and source role, never a source checkout.",
+      "why": "A standalone component owns what it promises and consumes, not which concrete counterpart or deployment happens to satisfy that role in a larger application.",
+      "check": "`python -m checks.architecture_model`",
+      "no_mechanism": null,
+      "see": [
+        "meta/SCOPE",
+        "EVID-006"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/ARCH.md",
+      "line": 247,
+      "applicability": {
+        "units": [
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "A component contract coupled to a peer checkout or endpoint cannot be tested, deployed, or evolved independently and assigns integration responsibility to the wrong repository.",
+      "warrants": [
+        {
+          "source": "source:SE",
+          "relation": "supports",
+          "confidence": "high"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:architecture_model",
+            "kind": "static",
+            "relation": "proxy",
+            "proposition": "A component model's role fields are lower_snake identifiers and no model string matches the declared repository, topology, URI, IP-address, or filesystem-path predicates.",
+            "residual": "A neutral-looking identifier can still be a disguised counterpart name, and lexical passing cannot prove the prose makes no implementation assumption; structured adversarial review owns that residual.",
+            "must_pass": "fixture:component-neutral architecture model",
+            "must_reject": "discrimination:ARCH-023",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "unit is application"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v4.0.0",
+        "disposition": "new",
+        "guidance": "Replace peer names and endpoints with contract roles; retain external snapshot provenance as source role, version, and digest only."
       }
     },
     {

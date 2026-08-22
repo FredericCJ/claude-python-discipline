@@ -4,12 +4,12 @@
 
 This ledger keeps unlike claims unlike. A rule can be normatively binding while its verifier is absent; a verifier can exist while deciding only a proxy; a proxy can pass while its residual remains true; and a successful adopter does not prove universal benefit. No state below is a project-gate outcome.
 
-- **165** binding rules; **14** lack an available declared strategy.
+- **168** binding rules; **14** lack an available declared strategy.
 - **26** advisory rules and **0** open rules.
-- **180** exact strategy records: **13** direct and **167** proxy claims.
-- **59/165** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
-- **18/194** rules carry named field observations.
-- **100/100** named mechanisms resolve locally or delegate explicitly; **0** local mechanisms are absent.
+- **183** exact strategy records: **15** direct and **168** proxy claims.
+- **62/168** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
+- **18/197** rules carry named field observations.
+- **101/101** named mechanisms resolve locally or delegate explicitly; **0** local mechanisms are absent.
 
 ## Verifier-state census
 
@@ -17,7 +17,7 @@ Measured against this tree, not copied from the rule heading. `discipline/rules.
 
 | State | Rules | Means |
 |---|---|---|
-| `local-verifier` | 117 | repository-local code observes every strategy |
+| `local-verifier` | 120 | repository-local code observes every strategy |
 | `external-verifier` | 24 | every strategy delegates to a configured tool |
 | `mixed-verifiers` | 10 | several verifier kinds contribute |
 | `structured-review` | 0 | judgment is recorded in a checked review artifact |
@@ -107,6 +107,9 @@ These remain normative obligations, but the declared verifier is absent or missi
 | `ARCH-018` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | `V3E-001` | Passing proves path coverage only; it cannot establish that a human assigned each file to the semantically correct role. | Every production source has one declared role |
 | `ARCH-019` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | `V3E-002` | Passing does not detect dynamic imports or prove that an injected object actually satisfies the declared port's behavior. | Application code names no concrete adapter |
 | `ARCH-020` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | `V3E-002` | Passing covers registered direct Python imports; capability inference must separately detect undeclared technology, and runtime plugin lookup remains a review subject. | One adapter boundary owns each technology |
+| `ARCH-021` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | none | Passing verifies record structure and the declaration join; it cannot decide whether the named volatility is real or the boundary would actually absorb the scenario. | Boundaries hide named volatile decisions |
+| `ARCH-022` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | none | Passing proves the records are complete in form and internally joined; behavioral tests and review must establish that runtime behavior agrees with them. | Four local architecture views stay complete |
+| `ARCH-023` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | A neutral-looking identifier can still be a disguised counterpart name, and lexical passing cannot prove the prose makes no implementation assumption; structured adversarial revie… | Component contracts name roles, never peers |
 | `DEP-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:import-linter; it does not establish the full semantic benefit of the normative statement. | The domain depends on the standard library only |
 | `DEP-002` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_dependency_position; it does not establish every behavior in the normative statement. | A dependency is judged by its architectural position |
 | `DEP-003` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | An adapter owns its dependency's failure modes |
@@ -262,7 +265,7 @@ These remain normative obligations, but the declared verifier is absent or missi
 | Kind | Rules |
 |---|---|
 | `auto` | 39 |
-| `check` | 78 |
+| `check` | 81 |
 | `fitness` | 63 |
 
 ## Advisory rationale

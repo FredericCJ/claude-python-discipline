@@ -173,6 +173,8 @@ class Declaration:
     unit: UnitKind | None = None
     ## Production roots relative to ``source.parent``.
     source_roots: tuple[PurePosixPath, ...] = ()
+    ## Canonical local architecture record relative to the repository root.
+    architecture: PurePosixPath | None = None
     ## Canonical role name to repository-relative directory paths.
     role_paths: Mapping[str, tuple[PurePosixPath, ...]] = field(default_factory=dict)
     ## Independently substitutable boundaries inside the broader adapters role.
@@ -248,6 +250,15 @@ class Declaration:
             return ()
         return tuple(self.root / Path(root.as_posix()) for root in self.source_roots)
 
+    def architecture_path(self) -> Path | None:
+        """The declared local architecture record as an absolute path.
+
+        @return local JSON path, or None for the undeclared direct-check fallback
+        """
+        if self.root is None or self.architecture is None:
+            return None
+        return self.root / Path(self.architecture.as_posix())
+
     def narrowed(self) -> tuple[str, ...]:
         """Facts a direct check invocation could not decide from this declaration.
 
@@ -263,6 +274,11 @@ class Declaration:
             notes.append(
                 "DISC-PROJECT-003 source_roots are undeclared; source-role "
                 "coverage is undecided"
+            )
+        if self.architecture is None:
+            notes.append(
+                "DISC-PROJECT-014 architecture is undeclared; local design views "
+                "are undecided"
             )
         if self.doc_engine != "doxygen":
             notes.append(
@@ -484,6 +500,28 @@ def _parse_adapter_boundaries(
     return boundaries
 
 
+def _parse_architecture(table: Mapping[str, object], path: Path) -> PurePosixPath:
+    """Parse the canonical local architecture-model path.
+
+    @param table the ``tool.agent-discipline`` table
+    @param path declaring project file
+    @return validated repository-relative JSON path
+    """
+    raw = table.get("architecture")
+    if raw is None:
+        _reject(
+            "DISC-PROJECT-014", path,
+            "architecture is required and must name the canonical local JSON model",
+        )
+    architecture = _relative_path(raw, field_name="architecture", source=path)
+    if architecture.suffix != ".json":
+        _reject(
+            "DISC-PROJECT-014", path,
+            "architecture must name the repository-local canonical JSON model",
+        )
+    return architecture
+
+
 def parse(path: Path) -> Declaration:
     """Read one v4 declaration, refusing missing and unknown values.
 
@@ -514,6 +552,7 @@ def parse(path: Path) -> Declaration:
     roots = _path_tuple(
         table.get("source_roots"), field_name="source_roots", source=path
     )
+    architecture = _parse_architecture(table, path)
     engine = str(table.get("doc_engine", "none"))
     if engine not in DOC_ENGINES:
         known = ", ".join(sorted(DOC_ENGINES))
@@ -547,6 +586,7 @@ def parse(path: Path) -> Declaration:
     return Declaration(
         unit=unit,
         source_roots=roots,
+        architecture=architecture,
         role_paths=roles,
         adapter_boundaries=boundaries,
         layers=layers,

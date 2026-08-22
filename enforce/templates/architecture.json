@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "unit": "component",
+  "responsibility": "State the one responsibility owned by this component repository.",
+  "decisions": [
+    {
+      "id": "transport_choice",
+      "volatile_decision": "How the component translates its boundary representation.",
+      "owner_role": "adapters",
+      "change_scenarios": [
+        "Replace the transport without changing domain policy.",
+        "Add malformed-input handling without changing the published outcome vocabulary."
+      ]
+    }
+  ],
+  "contracts": [
+    {
+      "id": "published_service",
+      "direction": "published",
+      "role": "request_client",
+      "version": "1",
+      "source": "local",
+      "provenance": null,
+      "operations": [
+        {
+          "name": "request",
+          "inputs": "Validated request value and correlation identifier.",
+          "outputs": "Typed success or refusal value.",
+          "errors": [
+            "malformed_request",
+            "service_unavailable"
+          ],
+          "ordering": "State the ordering guarantee or explicitly state none.",
+          "idempotency": "State the retry and duplicate-delivery semantics.",
+          "concurrency": "State serialization, interleaving, and cancellation semantics.",
+          "timeout": "State the local deadline and terminal outcome."
+        }
+      ]
+    }
+  ],
+  "resources": [],
+  "resource_absence": "Replace this explanation or declare every locally owned resource and handoff.",
+  "recoveries": [
+    {
+      "failure": "boundary_failure",
+      "detected_at": "adapter input boundary",
+      "contained_at": "published contract boundary",
+      "owner_role": "application",
+      "action": "Translate or recover according to local policy.",
+      "escalation": "Emit one stable structured terminal reason.",
+      "terminal_state": "State the safe or degraded local state."
+    }
+  ]
+}

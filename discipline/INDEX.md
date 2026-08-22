@@ -10,13 +10,13 @@ decay: none
 
 # Rule Index
 
-194 rules across 14 modules. Grep this file for a rule id, then open only the module that owns it.
+197 rules across 14 modules. Grep this file for a rule id, then open only the module that owns it.
 
 **The columns are different claims.** `Force` is the normative obligation. `Verifier` says what strategy is available, never that it passed. `Relation` says whether the observable proposition is the rule itself or only a proxy. `Rejection` records whether the current matrix has watched the rule reject a counterexample. `Platforms`, `Residual`, and `Field` state where the claim is supported, what can remain wrong, and what named adopters observed.
 
 **A proxy cannot decide its parent semantic rule.** Passing its proposition establishes only the stated syntax or behavior and leaves the printed residual. `rule-level witnessed` is deliberately weaker than v4's target: the inherited matrix proves that some strategy rejected a case for that rule, but cannot yet attribute the rejection to one exact strategy.
 
-14 of 165 binding rules lack an available declared strategy. 59 of 165 rules with automated strategies have inherited rule-level rejection evidence. 167 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
+14 of 168 binding rules lack an available declared strategy. 62 of 168 rules with automated strategies have inherited rule-level rejection evidence. 168 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
 
 ## Modules
 
@@ -30,7 +30,7 @@ decay: none
 | [frame/architecture](frame/architecture.md) | frame | 2338 | 0 | which paradigm, tradeoff, refactoring, legacy code, coupling, cohesion |
 | [frame/spec](frame/spec.md) | frame | 1972 | 0 | write a spec, requirements, elicitation, design document, traceability, reusability |
 | [law/API](law/API.md) | law | 2445 | 15 | public API, contract, versioning, breaking change, CLI, JSON output |
-| [law/ARCH](law/ARCH.md) | law | 3448 | 20 | new module, package layout, port, adapter, hexagonal, dependency injection |
+| [law/ARCH](law/ARCH.md) | law | 3950 | 23 | new module, package layout, port, adapter, hexagonal, dependency injection |
 | [law/DEP](law/DEP.md) | law | 2111 | 14 | add a dependency, third party library, lockfile, environment, code generation, generated file |
 | [law/DIAG](law/DIAG.md) | law | 2634 | 16 | exception, traceback, logging, error message, error code, correlation id |
 | [law/DOC](law/DOC.md) | law | 2367 | 14 | docstring, documentation comment, doxygen, @param, @return, document this function |
@@ -90,6 +90,9 @@ decay: none
 | `ARCH-018` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Passing proves path coverage only; it cannot establish that a human assigned each file to the s… | `V3E-001` | Every production source has one declared role |
 | `ARCH-019` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Passing does not detect dynamic imports or prove that an injected object actually satisfies the… | `V3E-002` | Application code names no concrete adapter |
 | `ARCH-020` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Passing covers registered direct Python imports; capability inference must separately detect un… | `V3E-002` | One adapter boundary owns each technology |
+| `ARCH-021` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Passing verifies record structure and the declaration join; it cannot decide whether the named… | none | Boundaries hide named volatile decisions |
+| `ARCH-022` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Passing proves the records are complete in form and internally joined; behavioral tests and rev… | none | Four local architecture views stay complete |
+| `ARCH-023` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | A neutral-looking identifier can still be a disguised counterpart name, and lexical passing can… | none | Component contracts name roles, never peers |
 
 ### law/DEP
 

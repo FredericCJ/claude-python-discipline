@@ -41,6 +41,7 @@
 [tool.agent-discipline]
 unit = "application"              # application | component
 source_roots = ["src"]
+architecture = "architecture.json" # canonical local decisions/contracts/views
 doc_engine = "doxygen"             # doxygen | sphinx | none.  Absent => none.
 pedagogical_full_projection = false
 adapter_boundaries = [

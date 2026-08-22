@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "unit": "application",
+  "responsibility": "Plan and optionally apply deterministic pruning of stale files in one requested directory.",
+  "decisions": [
+    {
+      "id": "clock_source",
+      "volatile_decision": "How the current instant is obtained.",
+      "owner_role": "adapters",
+      "change_scenarios": [
+        "Use a monotonic or simulated time source without changing age policy.",
+        "Inject scheduled clock failure without changing application orchestration."
+      ]
+    },
+    {
+      "id": "file_storage",
+      "volatile_decision": "How directory entries are listed and deleted.",
+      "owner_role": "adapters",
+      "change_scenarios": [
+        "Replace local filesystem access with another store without changing prune policy.",
+        "Translate a new storage failure without changing domain outcomes."
+      ]
+    }
+  ],
+  "contracts": [
+    {
+      "id": "prune_command",
+      "direction": "published",
+      "role": "command_user",
+      "version": "1",
+      "source": "local",
+      "provenance": null,
+      "operations": [
+        {
+          "name": "prune",
+          "inputs": "A directory, age policy, retention count, and explicit apply choice.",
+          "outputs": "A versioned plan or application result rendered from one result object.",
+          "errors": [
+            "invalid_policy",
+            "store_unavailable",
+            "clock_unavailable",
+            "prune_interrupted"
+          ],
+          "ordering": "Candidates and effects are ordered deterministically by path.",
+          "idempotency": "Preview is read-only; applying the same completed plan again may report missing entries as a typed interruption.",
+          "concurrency": "No cross-process isolation is promised for the requested directory.",
+          "timeout": "No wall-time deadline is promised for local filesystem traversal."
+        }
+      ]
+    },
+    {
+      "id": "clock_port",
+      "direction": "internal",
+      "role": "time_source",
+      "version": "1",
+      "source": "local",
+      "provenance": null,
+      "operations": [
+        {
+          "name": "now",
+          "inputs": "No explicit value beyond the injected port instance.",
+          "outputs": "A validated whole-second instant.",
+          "errors": [
+            "clock_unavailable"
+          ],
+          "ordering": "Calls are observed in application sequence.",
+          "idempotency": "The operation is intentionally time-varying; fakes control the returned sequence.",
+          "concurrency": "The contract promises no shared mutable state.",
+          "timeout": "The local adapter performs one host clock read without retry."
+        }
+      ]
+    },
+    {
+      "id": "file_store_port",
+      "direction": "internal",
+      "role": "file_store",
+      "version": "1",
+      "source": "local",
+      "provenance": null,
+      "operations": [
+        {
+          "name": "entries",
+          "inputs": "The directory bound when the adapter is created.",
+          "outputs": "A deterministic sequence of validated entry values.",
+          "errors": [
+            "store_unavailable"
+          ],
+          "ordering": "Entries are sorted by path name.",
+          "idempotency": "Read-only for a stable external directory state.",
+          "concurrency": "Concurrent external changes are not isolated.",
+          "timeout": "No traversal deadline is promised."
+        },
+        {
+          "name": "delete",
+          "inputs": "One entry name previously returned by the same store contract.",
+          "outputs": "Successful completion with no payload.",
+          "errors": [
+            "store_unavailable"
+          ],
+          "ordering": "Application applies the deterministic plan in order.",
+          "idempotency": "Deletion is not idempotent when the entry has already disappeared.",
+          "concurrency": "No cross-process exclusion is promised.",
+          "timeout": "Each call performs one local deletion without retry."
+        }
+      ]
+    }
+  ],
+  "resources": [],
+  "resource_absence": "The application holds no resource beyond one command invocation; the requested directory remains owned by the command user.",
+  "recoveries": [
+    {
+      "failure": "apply_interrupted",
+      "detected_at": "file store port call",
+      "contained_at": "application apply operation",
+      "owner_role": "application",
+      "action": "Stop further deletion and return completed and remaining effects in a typed interruption.",
+      "escalation": "The shell renders one structured failure envelope and nonzero exit status.",
+      "terminal_state": "Already completed deletions remain explicit and every unapplied deletion remains listed."
+    }
+  ]
+}

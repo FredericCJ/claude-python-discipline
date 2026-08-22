@@ -15,6 +15,7 @@
 [tool.agent-discipline]
 unit = "application"
 source_roots = ["src"]
+architecture = "architecture.json"
 doc_engine = "doxygen"
 adapter_boundaries = [
     "src/refpkg/adapters/clock",

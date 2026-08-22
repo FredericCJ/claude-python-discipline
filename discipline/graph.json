@@ -683,6 +683,16 @@
    }
   },
   {
+   "id": "mech:check:architecture_model",
+   "type": "mechanism",
+   "label": "check:architecture_model",
+   "path": "enforce/checks/architecture_model.py",
+   "attrs": {
+    "family": "check",
+    "implemented": "true"
+   }
+  },
+  {
    "id": "mech:check:assert_usage",
    "type": "mechanism",
    "label": "check:assert_usage",
@@ -1526,7 +1536,7 @@
    "type": "module",
    "label": "Architecture and Coupling",
    "path": "discipline/law/ARCH.md",
-   "tokens": 3448,
+   "tokens": 3950,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -2033,7 +2043,7 @@
    "id": "ARCH-001",
    "type": "rule",
    "label": "Source dependencies point toward policy",
-   "path": "discipline/law/ARCH.md:48",
+   "path": "discipline/law/ARCH.md:46",
    "tokens": 101,
    "attrs": {
     "force": "BINDING",
@@ -2044,7 +2054,7 @@
    "id": "ARCH-002",
    "type": "rule",
    "label": "The domain imports nothing that can perform I/O",
-   "path": "discipline/law/ARCH.md:64",
+   "path": "discipline/law/ARCH.md:61",
    "tokens": 48,
    "attrs": {
     "force": "BINDING",
@@ -2055,7 +2065,7 @@
    "id": "ARCH-003",
    "type": "rule",
    "label": "Adapter boundaries remain independent",
-   "path": "discipline/law/ARCH.md:73",
+   "path": "discipline/law/ARCH.md:70",
    "tokens": 61,
    "attrs": {
     "force": "BINDING",
@@ -2066,7 +2076,7 @@
    "id": "ARCH-004",
    "type": "rule",
    "label": "Each foreign dependency has one importer module",
-   "path": "discipline/law/ARCH.md:81",
+   "path": "discipline/law/ARCH.md:78",
    "tokens": 72,
    "attrs": {
     "force": "RETIRED",
@@ -2077,7 +2087,7 @@
    "id": "ARCH-005",
    "type": "rule",
    "label": "Effects are named in the signature",
-   "path": "discipline/law/ARCH.md:90",
+   "path": "discipline/law/ARCH.md:87",
    "tokens": 56,
    "attrs": {
     "force": "BINDING",
@@ -2088,7 +2098,7 @@
    "id": "ARCH-006",
    "type": "rule",
    "label": "Domain functions are total or return a typed result",
-   "path": "discipline/law/ARCH.md:98",
+   "path": "discipline/law/ARCH.md:95",
    "tokens": 40,
    "attrs": {
     "force": "BINDING",
@@ -2099,7 +2109,7 @@
    "id": "ARCH-007",
    "type": "rule",
    "label": "Every port is a Protocol with a published contract",
-   "path": "discipline/law/ARCH.md:109",
+   "path": "discipline/law/ARCH.md:106",
    "tokens": 44,
    "attrs": {
     "force": "BINDING",
@@ -2110,7 +2120,7 @@
    "id": "ARCH-008",
    "type": "rule",
    "label": "Every port has a real, a fake and a faulty adapter",
-   "path": "discipline/law/ARCH.md:117",
+   "path": "discipline/law/ARCH.md:114",
    "tokens": 19,
    "attrs": {
     "force": "BINDING",
@@ -2121,7 +2131,7 @@
    "id": "ARCH-009",
    "type": "rule",
    "label": "One contract suite runs against every adapter",
-   "path": "discipline/law/ARCH.md:123",
+   "path": "discipline/law/ARCH.md:120",
    "tokens": 30,
    "attrs": {
     "force": "BINDING",
@@ -2132,7 +2142,7 @@
    "id": "ARCH-010",
    "type": "rule",
    "label": "A port earns its place from a stated justification",
-   "path": "discipline/law/ARCH.md:130",
+   "path": "discipline/law/ARCH.md:127",
    "tokens": 98,
    "attrs": {
     "force": "BINDING",
@@ -2143,7 +2153,7 @@
    "id": "ARCH-011",
    "type": "rule",
    "label": "Adapters are selected at one local wiring root",
-   "path": "discipline/law/ARCH.md:144",
+   "path": "discipline/law/ARCH.md:140",
    "tokens": 63,
    "attrs": {
     "force": "BINDING",
@@ -2154,7 +2164,7 @@
    "id": "ARCH-012",
    "type": "rule",
    "label": "No test-mode branch in production code",
-   "path": "discipline/law/ARCH.md:156",
+   "path": "discipline/law/ARCH.md:152",
    "tokens": 35,
    "attrs": {
     "force": "BINDING",
@@ -2165,7 +2175,7 @@
    "id": "ARCH-013",
    "type": "rule",
    "label": "Framework and transport types stay out of the domain",
-   "path": "discipline/law/ARCH.md:163",
+   "path": "discipline/law/ARCH.md:159",
    "tokens": 43,
    "attrs": {
     "force": "BINDING",
@@ -2176,7 +2186,7 @@
    "id": "ARCH-014",
    "type": "rule",
    "label": "Translation between representations is explicit",
-   "path": "discipline/law/ARCH.md:170",
+   "path": "discipline/law/ARCH.md:166",
    "tokens": 44,
    "attrs": {
     "force": "BINDING",
@@ -2187,7 +2197,7 @@
    "id": "ARCH-015",
    "type": "rule",
    "label": "Metaprogramming leaves the four questions answerable",
-   "path": "discipline/law/ARCH.md:177",
+   "path": "discipline/law/ARCH.md:173",
    "tokens": 45,
    "attrs": {
     "force": "BINDING",
@@ -2198,7 +2208,7 @@
    "id": "ARCH-016",
    "type": "rule",
    "label": "Module complexity stays within budget",
-   "path": "discipline/law/ARCH.md:184",
+   "path": "discipline/law/ARCH.md:180",
    "tokens": 18,
    "attrs": {
     "force": "BINDING",
@@ -2209,7 +2219,7 @@
    "id": "ARCH-017",
    "type": "rule",
    "label": "Prefer the direct call to the abstraction",
-   "path": "discipline/law/ARCH.md:190",
+   "path": "discipline/law/ARCH.md:186",
    "tokens": 38,
    "attrs": {
     "force": "ADVISORY",
@@ -2220,7 +2230,7 @@
    "id": "ARCH-018",
    "type": "rule",
    "label": "Every production source has one declared role",
-   "path": "discipline/law/ARCH.md:198",
+   "path": "discipline/law/ARCH.md:194",
    "tokens": 90,
    "attrs": {
     "force": "BINDING",
@@ -2231,7 +2241,7 @@
    "id": "ARCH-019",
    "type": "rule",
    "label": "Application code names no concrete adapter",
-   "path": "discipline/law/ARCH.md:209",
+   "path": "discipline/law/ARCH.md:205",
    "tokens": 53,
    "attrs": {
     "force": "BINDING",
@@ -2242,8 +2252,41 @@
    "id": "ARCH-020",
    "type": "rule",
    "label": "One adapter boundary owns each technology",
-   "path": "discipline/law/ARCH.md:218",
+   "path": "discipline/law/ARCH.md:214",
    "tokens": 84,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/ARCH"
+   }
+  },
+  {
+   "id": "ARCH-021",
+   "type": "rule",
+   "label": "Boundaries hide named volatile decisions",
+   "path": "discipline/law/ARCH.md:224",
+   "tokens": 75,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/ARCH"
+   }
+  },
+  {
+   "id": "ARCH-022",
+   "type": "rule",
+   "label": "Four local architecture views stay complete",
+   "path": "discipline/law/ARCH.md:235",
+   "tokens": 111,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/ARCH"
+   }
+  },
+  {
+   "id": "ARCH-023",
+   "type": "rule",
+   "label": "Component contracts name roles, never peers",
+   "path": "discipline/law/ARCH.md:247",
+   "tokens": 94,
    "attrs": {
     "force": "BINDING",
     "module": "law/ARCH"
@@ -6501,6 +6544,42 @@
   },
   {
    "type": "cites",
+   "src": "ARCH-021",
+   "dst": "ARCH-010",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "ARCH-021",
+   "dst": "EVID-004",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "ARCH-022",
+   "dst": "ARCH-018",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "ARCH-022",
+   "dst": "law/ERR",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "ARCH-023",
+   "dst": "EVID-006",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "ARCH-023",
+   "dst": "meta/SCOPE",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
    "src": "DEP-001",
    "dst": "law/ARCH",
    "origin": "derived"
@@ -7199,6 +7278,24 @@
    "type": "contains",
    "src": "law/ARCH",
    "dst": "ARCH-020",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/ARCH",
+   "dst": "ARCH-021",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/ARCH",
+   "dst": "ARCH-022",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/ARCH",
+   "dst": "ARCH-023",
    "origin": "derived"
   },
   {
@@ -8439,6 +8536,24 @@
   },
   {
    "type": "enforced_by",
+   "src": "ARCH-021",
+   "dst": "mech:check:architecture_model",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "ARCH-022",
+   "dst": "mech:check:architecture_model",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "ARCH-023",
+   "dst": "mech:check:architecture_model",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
    "src": "DEP-001",
    "dst": "mech:auto:import-linter",
    "origin": "derived"
@@ -9604,6 +9719,42 @@
   {
    "type": "grounds_on",
    "src": "ARCH-020",
+   "dst": "fact/py-typing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "ARCH-021",
+   "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "ARCH-021",
+   "dst": "fact/py-typing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "ARCH-022",
+   "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "ARCH-022",
+   "dst": "fact/py-typing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "ARCH-023",
+   "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "ARCH-023",
    "dst": "fact/py-typing",
    "origin": "derived"
   },

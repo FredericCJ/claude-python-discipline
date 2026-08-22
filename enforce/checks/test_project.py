@@ -43,6 +43,7 @@ def v4(*, extra: str = "", tables: str = "") -> str:
         [tool.agent-discipline]
         unit = "application"
         source_roots = ["src/pkg"]
+        architecture = "architecture.json"
         {extra}
         {tables}
     """
@@ -89,7 +90,10 @@ def test_a_missing_unit_is_refused(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
-    path = declare(tmp_path, '[tool.agent-discipline]\nsource_roots=["src"]\n')
+    path = declare(
+        tmp_path,
+        '[tool.agent-discipline]\nsource_roots=["src"]\narchitecture="architecture.json"\n',
+    )
     with pytest.raises(ValueError, match="DISC-PROJECT-001"):
         project.parse(path)
 
@@ -101,9 +105,22 @@ def test_an_unknown_unit_is_refused(tmp_path: Path) -> None:
     """
     path = declare(
         tmp_path,
-        '[tool.agent-discipline]\nunit="system"\nsource_roots=["src"]\n',
+        '[tool.agent-discipline]\nunit="system"\nsource_roots=["src"]\narchitecture="architecture.json"\n',
     )
     with pytest.raises(ValueError, match="DISC-PROJECT-002"):
+        project.parse(path)
+
+
+def test_a_missing_architecture_record_is_refused(tmp_path: Path) -> None:
+    """The local views cannot be silently absent from a declared v4 unit.
+
+    @param tmp_path fixture repository
+    """
+    path = declare(
+        tmp_path,
+        '[tool.agent-discipline]\nunit="application"\nsource_roots=["src"]\n',
+    )
+    with pytest.raises(ValueError, match="DISC-PROJECT-014"):
         project.parse(path)
 
 
@@ -244,7 +261,7 @@ def test_source_roots_cannot_escape_or_name_the_repository(
     """
     path = declare(
         tmp_path,
-        f'[tool.agent-discipline]\nunit="component"\nsource_roots=["{bad}"]\n',
+        f'[tool.agent-discipline]\nunit="component"\nsource_roots=["{bad}"]\narchitecture="architecture.json"\n',
     )
     with pytest.raises(ValueError, match="DISC-PROJECT-004"):
         project.parse(path)

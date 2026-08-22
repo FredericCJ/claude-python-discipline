@@ -1,0 +1,585 @@
+"""Validate the canonical repository-local architecture record.
+
+``architecture.json`` is one source for four local views: information-hiding
+decisions and their change scenarios, boundary interactions, resource ownership,
+and failure recovery. The checker validates completeness and cross-references;
+it does not claim the stated decisions are wise or the behavioral promises true.
+
+For a component it also decides a deliberately narrow neutrality predicate:
+external contract roles use lower-snake role identifiers and model text contains
+no repository/topology vocabulary, endpoint URI, address, or filesystem path.
+Neutral-looking prose can still conceal identity; structured adversarial review
+owns that residual.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Final, Never
+
+from . import Check, Finding
+from .project import UnitKind
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+    from pathlib import Path
+
+## Stable local identifiers used for decisions, contracts, resources, and failures.
+LOCAL_ID: Final = re.compile(r"^[a-z][a-z0-9_]*$")
+## Digest form for a locally vendored external contract snapshot.
+DIGEST: Final = re.compile(r"^sha256:[0-9a-f]{64}$")
+## Text that encodes deployment identity rather than a counterpart-neutral role.
+IDENTITY_TEXT: Final[tuple[re.Pattern[str], ...]] = (
+    re.compile(r"(?i)\b(?:repository|repo|sibling checkout|parent checkout)\b"),
+    re.compile(r"(?i)\bdeployment\s+(?:endpoint|host|topology|wiring)\b"),
+    re.compile(r"(?i)\b(?:hostname|host name)\b"),
+    re.compile(r"(?i)\b[a-z][a-z0-9+.-]*://"),
+    re.compile(r"(?<!\d)(?:\d{1,3}\.){3}\d{1,3}(?!\d)"),
+    re.compile(r"(?:^|\s)(?:[A-Za-z]:[\\/]|\.\.[\\/]|/[A-Za-z0-9_.-])"),
+)
+## Architectural roles permitted to own a local decision, resource, or recovery.
+OWNER_ROLES: Final = frozenset({"domain", "application", "ports", "adapters", "shell"})
+## Contract directions within one repository's view.
+DIRECTIONS: Final = frozenset({"published", "consumed", "internal"})
+## Provenance modes for locally authoritative and externally supplied contracts.
+SOURCES: Final = frozenset({"local", "external_snapshot"})
+
+
+class ArchitectureError(ValueError):
+    """One stable architecture-model diagnostic."""
+
+    def __init__(self, diagnostic_id: str, where: str, detail: str) -> None:
+        """Build a structured parse or semantic failure.
+
+        @param diagnostic_id stable checker diagnostic
+        @param where JSON path identifying the rejected value
+        @param detail actionable explanation
+        """
+        super().__init__(f"{diagnostic_id} {where}: {detail}")
+        self.diagnostic_id = diagnostic_id
+        self.where = where
+        self.detail = detail
+
+
+def _fail(diagnostic_id: str, where: str, detail: str) -> Never:
+    """Raise one model diagnostic.
+
+    @param diagnostic_id stable checker diagnostic
+    @param where JSON path identifying the rejected value
+    @param detail actionable explanation
+    @return never; this helper always raises
+    @throws ArchitectureError unconditionally
+    """
+    raise ArchitectureError(diagnostic_id, where, detail)
+
+
+def _object(value: object, where: str) -> Mapping[str, object]:
+    """Require a JSON object.
+
+    @param value untrusted decoded value
+    @param where JSON path
+    @return typed mapping
+    """
+    if not isinstance(value, dict):
+        _fail("ARCH022_MODEL_SCHEMA", where, "expected an object")
+    return value
+
+
+def _exact(record: Mapping[str, object], fields: set[str], where: str) -> None:
+    """Require an exact field set so misspellings cannot be ignored.
+
+    @param record decoded object
+    @param fields required and only accepted keys
+    @param where JSON path
+    @throws ArchitectureError when fields are absent or unknown
+    """
+    missing = fields - set(record)
+    unknown = set(record) - fields
+    if missing or unknown:
+        detail = f"missing={sorted(missing)}, unknown={sorted(unknown)}"
+        _fail("ARCH022_MODEL_SCHEMA", where, detail)
+
+
+def _text(value: object, where: str) -> str:
+    """Require a non-empty string.
+
+    @param value untrusted decoded value
+    @param where JSON path
+    @return stripped text
+    """
+    if not isinstance(value, str) or not value.strip():
+        _fail("ARCH022_MODEL_SCHEMA", where, "expected non-empty text")
+    return value.strip()
+
+
+def _identifier(value: object, where: str) -> str:
+    """Require one stable lower-snake local identifier.
+
+    @param value untrusted decoded value
+    @param where JSON path
+    @return validated identifier
+    """
+    text = _text(value, where)
+    if LOCAL_ID.fullmatch(text) is None:
+        _fail(
+            "ARCH023_ROLE_IDENTITY", where,
+            "expected a lower_snake role identifier, not a product or repository name",
+        )
+    return text
+
+
+def _texts(value: object, where: str, *, allow_empty: bool = False) -> tuple[str, ...]:
+    """Require an array of non-empty strings.
+
+    @param value untrusted decoded value
+    @param where JSON path
+    @param allow_empty whether an explicit empty list is meaningful
+    @return strings in source order
+    """
+    if not isinstance(value, list) or (not value and not allow_empty):
+        _fail("ARCH022_MODEL_SCHEMA", where, "expected a non-empty string array")
+    return tuple(_text(item, f"{where}[{index}]") for index, item in enumerate(value))
+
+
+def _records(value: object, where: str, *, allow_empty: bool = False) -> list[Mapping[str, object]]:
+    """Require an array of JSON objects.
+
+    @param value untrusted decoded value
+    @param where JSON path
+    @param allow_empty whether an explicit empty view is meaningful
+    @return decoded object records
+    """
+    if not isinstance(value, list) or (not value and not allow_empty):
+        _fail("ARCH022_MODEL_SCHEMA", where, "expected a non-empty record array")
+    return [_object(item, f"{where}[{index}]") for index, item in enumerate(value)]
+
+
+@dataclass(frozen=True, slots=True)
+class Decision:
+    """One volatile decision and the changes its boundary should absorb."""
+
+    ## Stable local identifier.
+    decision_id: str
+    ## Decision expected to vary independently.
+    volatile_decision: str
+    ## Architectural role hiding the decision.
+    owner_role: str
+    ## Concrete future changes that should remain local to the owner.
+    change_scenarios: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class Operation:
+    """Observable terms of one local contract operation."""
+
+    ## Stable operation identifier.
+    name: str
+    ## Input contract in repository vocabulary.
+    inputs: str
+    ## Successful and typed outcome contract.
+    outputs: str
+    ## Published exceptional or refusal variants, explicitly possibly empty.
+    errors: tuple[str, ...]
+    ## Ordering guarantee or explicit absence.
+    ordering: str
+    ## Idempotency guarantee or explicit absence.
+    idempotency: str
+    ## Concurrency behavior or explicit serialization.
+    concurrency: str
+    ## Timeout behavior or explicit absence of a timeout at this boundary.
+    timeout: str
+
+
+@dataclass(frozen=True, slots=True)
+class Contract:
+    """One published, consumed, or repository-internal typed boundary."""
+
+    ## Stable local contract identifier.
+    contract_id: str
+    ## Published, consumed, or internal direction.
+    direction: str
+    ## Counterpart-neutral role served by or used through the contract.
+    role: str
+    ## Locally meaningful contract version.
+    version: str
+    ## Local authority or external snapshot provenance mode.
+    source: str
+    ## Provenance record for an external snapshot, otherwise None.
+    provenance: Mapping[str, str] | None
+    ## Complete observable operation terms.
+    operations: tuple[Operation, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class Resource:
+    """One resource whose lifecycle is owned or explicitly transferred locally."""
+
+    ## Stable local resource identifier.
+    resource_id: str
+    ## File, socket, thread, subprocess, queue, state, or more specific kind.
+    kind: str
+    ## Local architectural role initially owning lifecycle authority.
+    owner_role: str
+    ## Acquisition boundary and condition.
+    acquire: str
+    ## Release or cleanup boundary and condition.
+    release: str
+    ## Neutral external role receiving an explicit handoff, otherwise None.
+    transfer_to_role: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class Recovery:
+    """One local failure's detection, containment, recovery, and terminal state."""
+
+    ## Stable local failure identifier.
+    failure_id: str
+    ## Boundary that first detects the failure.
+    detected_at: str
+    ## Boundary beyond which the failure must not propagate untranslated.
+    contained_at: str
+    ## Local role responsible for the recovery decision.
+    owner_role: str
+    ## Local recovery action.
+    action: str
+    ## Escalation when local recovery cannot succeed.
+    escalation: str
+    ## Observable safe or degraded terminal state.
+    terminal_state: str
+
+
+@dataclass(frozen=True, slots=True)
+class ArchitectureModel:
+    """The complete canonical local architecture record."""
+
+    ## Governed repository shape, joined against the project declaration.
+    unit: UnitKind
+    ## One responsibility owned by this repository.
+    responsibility: str
+    ## Information-hiding decisions.
+    decisions: tuple[Decision, ...]
+    ## Local boundary and interaction contracts.
+    contracts: tuple[Contract, ...]
+    ## Locally owned or transferred resources.
+    resources: tuple[Resource, ...]
+    ## Explanation required when the resource view is explicitly empty.
+    resource_absence: str | None
+    ## Local detection, containment, and recovery records.
+    recoveries: tuple[Recovery, ...]
+    ## Every string retained for component-neutrality analysis.
+    all_text: tuple[tuple[str, str], ...]
+
+
+def _decision(record: Mapping[str, object], where: str) -> Decision:
+    """Parse one information-hiding decision.
+
+    @param record decoded decision object
+    @param where JSON path
+    @return typed decision
+    """
+    _exact(record, {"id", "volatile_decision", "owner_role", "change_scenarios"}, where)
+    owner = _text(record["owner_role"], f"{where}.owner_role")
+    if owner not in OWNER_ROLES:
+        _fail("ARCH021_DECISION_INCOMPLETE", f"{where}.owner_role", "unknown role")
+    scenarios = record["change_scenarios"]
+    if not isinstance(scenarios, list) or not scenarios:
+        _fail(
+            "ARCH021_DECISION_INCOMPLETE", f"{where}.change_scenarios",
+            "each volatile decision needs at least one concrete change scenario",
+        )
+    return Decision(
+        decision_id=_identifier(record["id"], f"{where}.id"),
+        volatile_decision=_text(record["volatile_decision"], f"{where}.volatile_decision"),
+        owner_role=owner,
+        change_scenarios=_texts(scenarios, f"{where}.change_scenarios"),
+    )
+
+
+def _operation(record: Mapping[str, object], where: str) -> Operation:
+    """Parse one complete interaction operation.
+
+    @param record decoded operation object
+    @param where JSON path
+    @return typed operation
+    """
+    fields = {
+        "name", "inputs", "outputs", "errors", "ordering",
+        "idempotency", "concurrency", "timeout",
+    }
+    _exact(record, fields, where)
+    return Operation(
+        name=_identifier(record["name"], f"{where}.name"),
+        inputs=_text(record["inputs"], f"{where}.inputs"),
+        outputs=_text(record["outputs"], f"{where}.outputs"),
+        errors=_texts(record["errors"], f"{where}.errors", allow_empty=True),
+        ordering=_text(record["ordering"], f"{where}.ordering"),
+        idempotency=_text(record["idempotency"], f"{where}.idempotency"),
+        concurrency=_text(record["concurrency"], f"{where}.concurrency"),
+        timeout=_text(record["timeout"], f"{where}.timeout"),
+    )
+
+
+def _contract(record: Mapping[str, object], where: str) -> Contract:
+    """Parse one boundary contract and its snapshot provenance.
+
+    @param record decoded contract object
+    @param where JSON path
+    @return typed contract
+    """
+    fields = {"id", "direction", "role", "version", "source", "provenance", "operations"}
+    _exact(record, fields, where)
+    direction = _text(record["direction"], f"{where}.direction")
+    source = _text(record["source"], f"{where}.source")
+    if direction not in DIRECTIONS:
+        _fail("ARCH022_MODEL_SCHEMA", f"{where}.direction", "unknown direction")
+    if source not in SOURCES:
+        _fail("ARCH022_MODEL_SCHEMA", f"{where}.source", "unknown provenance mode")
+    raw_provenance = record["provenance"]
+    provenance: Mapping[str, str] | None = None
+    if source == "local" and raw_provenance is not None:
+        _fail("ARCH022_MODEL_SCHEMA", f"{where}.provenance", "local contracts use null")
+    if source == "external_snapshot":
+        parsed = _object(raw_provenance, f"{where}.provenance")
+        _exact(parsed, {"source_role", "version", "digest"}, f"{where}.provenance")
+        digest = _text(parsed["digest"], f"{where}.provenance.digest")
+        if DIGEST.fullmatch(digest) is None:
+            _fail("ARCH022_MODEL_SCHEMA", f"{where}.provenance.digest", "expected sha256 digest")
+        provenance = {
+            "source_role": _identifier(parsed["source_role"], f"{where}.provenance.source_role"),
+            "version": _text(parsed["version"], f"{where}.provenance.version"),
+            "digest": digest,
+        }
+    operations = tuple(
+        _operation(item, f"{where}.operations[{index}]")
+        for index, item in enumerate(_records(record["operations"], f"{where}.operations"))
+    )
+    return Contract(
+        contract_id=_identifier(record["id"], f"{where}.id"),
+        direction=direction,
+        role=_identifier(record["role"], f"{where}.role"),
+        version=_text(record["version"], f"{where}.version"),
+        source=source,
+        provenance=provenance,
+        operations=operations,
+    )
+
+
+def _resource(record: Mapping[str, object], where: str) -> Resource:
+    """Parse one resource ownership or handoff record.
+
+    @param record decoded resource object
+    @param where JSON path
+    @return typed resource
+    """
+    fields = {"id", "kind", "owner_role", "acquire", "release", "transfer_to_role"}
+    _exact(record, fields, where)
+    owner = _text(record["owner_role"], f"{where}.owner_role")
+    if owner not in OWNER_ROLES:
+        _fail("ARCH022_RESOURCE_OWNER", f"{where}.owner_role", "unknown local role")
+    transfer_raw = record["transfer_to_role"]
+    transfer = (
+        None
+        if transfer_raw is None
+        else _identifier(transfer_raw, f"{where}.transfer_to_role")
+    )
+    return Resource(
+        resource_id=_identifier(record["id"], f"{where}.id"),
+        kind=_text(record["kind"], f"{where}.kind"),
+        owner_role=owner,
+        acquire=_text(record["acquire"], f"{where}.acquire"),
+        release=_text(record["release"], f"{where}.release"),
+        transfer_to_role=transfer,
+    )
+
+
+def _recovery(record: Mapping[str, object], where: str) -> Recovery:
+    """Parse one local failure and recovery view record.
+
+    @param record decoded recovery object
+    @param where JSON path
+    @return typed recovery record
+    """
+    fields = {
+        "failure", "detected_at", "contained_at", "owner_role",
+        "action", "escalation", "terminal_state",
+    }
+    _exact(record, fields, where)
+    owner = _text(record["owner_role"], f"{where}.owner_role")
+    if owner not in OWNER_ROLES:
+        _fail("ARCH022_RECOVERY_OWNER", f"{where}.owner_role", "unknown local role")
+    return Recovery(
+        failure_id=_identifier(record["failure"], f"{where}.failure"),
+        detected_at=_text(record["detected_at"], f"{where}.detected_at"),
+        contained_at=_text(record["contained_at"], f"{where}.contained_at"),
+        owner_role=owner,
+        action=_text(record["action"], f"{where}.action"),
+        escalation=_text(record["escalation"], f"{where}.escalation"),
+        terminal_state=_text(record["terminal_state"], f"{where}.terminal_state"),
+    )
+
+
+def _walk_text(value: object, where: str = "$") -> tuple[tuple[str, str], ...]:
+    """Collect every string with its JSON path for neutrality diagnostics.
+
+    @param value decoded JSON subtree
+    @param where path of that subtree
+    @return path-text pairs in deterministic traversal order
+    """
+    if isinstance(value, str):
+        return ((where, value),)
+    if isinstance(value, list):
+        return tuple(
+            pair
+            for index, item in enumerate(value)
+            for pair in _walk_text(item, f"{where}[{index}]")
+        )
+    if isinstance(value, dict):
+        return tuple(
+            pair
+            for key in sorted(value)
+            for pair in _walk_text(value[key], f"{where}.{key}")
+        )
+    return ()
+
+
+def parse(path: Path) -> ArchitectureModel:
+    """Parse and cross-check one canonical local architecture record.
+
+    @param path JSON model path
+    @return complete typed model
+    @throws ArchitectureError when syntax, fields, or local references are invalid
+    """
+    try:
+        raw: object = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as problem:
+        _fail("ARCH022_MODEL_SCHEMA", str(path), str(problem))
+    root = _object(raw, "$")
+    fields = {
+        "schema_version", "unit", "responsibility", "decisions", "contracts",
+        "resources", "resource_absence", "recoveries",
+    }
+    _exact(root, fields, "$")
+    if root["schema_version"] != 1:
+        _fail("ARCH022_MODEL_SCHEMA", "$.schema_version", "expected 1")
+    try:
+        unit = UnitKind(root["unit"])
+    except ValueError:
+        _fail("ARCH021_UNIT_MISMATCH", "$.unit", "expected application or component")
+    decisions = tuple(
+        _decision(item, f"$.decisions[{index}]")
+        for index, item in enumerate(_records(root["decisions"], "$.decisions"))
+    )
+    contracts = tuple(
+        _contract(item, f"$.contracts[{index}]")
+        for index, item in enumerate(_records(root["contracts"], "$.contracts"))
+    )
+    resources = tuple(
+        _resource(item, f"$.resources[{index}]")
+        for index, item in enumerate(_records(root["resources"], "$.resources", allow_empty=True))
+    )
+    absence_raw = root["resource_absence"]
+    if resources and absence_raw is not None:
+        _fail("ARCH022_RESOURCE_OWNER", "$.resource_absence", "must be null when resources exist")
+    if not resources and absence_raw is None:
+        _fail("ARCH022_RESOURCE_OWNER", "$.resource_absence", "explain the explicit empty view")
+    absence = None if absence_raw is None else _text(absence_raw, "$.resource_absence")
+    recoveries = tuple(
+        _recovery(item, f"$.recoveries[{index}]")
+        for index, item in enumerate(_records(root["recoveries"], "$.recoveries"))
+    )
+    identities = [
+        *(decision.decision_id for decision in decisions),
+        *(contract.contract_id for contract in contracts),
+        *(resource.resource_id for resource in resources),
+        *(recovery.failure_id for recovery in recoveries),
+    ]
+    if len(identities) != len(set(identities)):
+        _fail("ARCH022_MODEL_SCHEMA", "$", "local ids must be unique across all views")
+    return ArchitectureModel(
+        unit=unit,
+        responsibility=_text(root["responsibility"], "$.responsibility"),
+        decisions=decisions,
+        contracts=contracts,
+        resources=resources,
+        resource_absence=absence,
+        recoveries=recoveries,
+        all_text=_walk_text(raw),
+    )
+
+
+def neutrality_failure(model: ArchitectureModel) -> tuple[str, str] | None:
+    """Find the first lexical component-identity or topology leak.
+
+    @param model parsed architecture model
+    @return JSON path and offending text, or None when the narrow predicate holds
+    """
+    if model.unit is not UnitKind.COMPONENT:
+        return None
+    for where, value in model.all_text:
+        if any(pattern.search(value) is not None for pattern in IDENTITY_TEXT):
+            return where, value
+    return None
+
+
+class ArchitectureModelCheck(Check):
+    """Join the declaration to complete, local, counterpart-neutral architecture views."""
+
+    ## Mechanism token declared by ARCH-021 through ARCH-023.
+    name = "architecture_model"
+    ## Separately diagnosable architecture-record obligations.
+    rules = ("ARCH-021", "ARCH-022", "ARCH-023")
+
+    def run(self, _paths: Sequence[Path]) -> list[Finding]:
+        """Validate this declaration's canonical model without reading another repository.
+
+        @param _paths ignored caller selection; the declaration names the sole model
+        @return zero or one earliest structural or neutrality finding
+        """
+        path = self.declaration.architecture_path()
+        if path is None:
+            return []
+        try:
+            model = parse(path)
+        except ArchitectureError as problem:
+            rule = {
+                "ARCH021": "ARCH-021",
+                "ARCH022": "ARCH-022",
+                "ARCH023": "ARCH-023",
+            }[problem.diagnostic_id[:7]]
+            return [Finding(
+                rule_id=rule, path=path, line=1,
+                message=f"{problem.where}: {problem.detail}",
+                remediation="Repair the canonical local architecture record from its template.",
+                diagnostic_id=problem.diagnostic_id,
+            )]
+        if model.unit is not self.declaration.unit:
+            return [Finding(
+                rule_id="ARCH-021", path=path, line=1,
+                message=(
+                    f"architecture unit {model.unit!s} disagrees with project unit "
+                    f"{self.declaration.unit!s}"
+                ),
+                remediation="Use the same one governed-unit kind in both canonical records.",
+                diagnostic_id="ARCH021_UNIT_MISMATCH",
+            )]
+        leaked = neutrality_failure(model)
+        if leaked is not None:
+            where, value = leaked
+            return [Finding(
+                rule_id="ARCH-023", path=path, line=1,
+                message=f"{where} carries counterpart identity or deployment wiring: {value!r}",
+                remediation=(
+                    "Describe the external actor only by a lower_snake contract role and "
+                    "remove repository, endpoint, address, and topology identity."
+                ),
+                diagnostic_id="ARCH023_COUNTERPART_IDENTITY",
+            )]
+        return []
+
+
+if __name__ == "__main__":
+    from . import main
+
+    raise SystemExit(main(ArchitectureModelCheck()))
