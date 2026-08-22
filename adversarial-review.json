@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "review_id": "v4_security_slice_adversarial_acceptance",
-  "reviewed_commit": "4a4ce4dff00f453a15b5ad4b140f820ff7f06b4a",
+  "reviewed_commit": "4f44a86432464f9e0b73af8322df01179b3fbac2",
   "scope": {
     "algorithm": "sha256",
-    "digest": "sha256:34d4a746906705d355c04904eff7b64b14196afe9b40f750c0dfff03d5572c46",
+    "digest": "sha256:427e1f4f455a5cc4ab1358f2d73b4c18f2636608fbe2969189c8064c3acb931b",
     "file_count": 281,
     "categories": [
       "project_declaration",
@@ -161,6 +161,17 @@
       "evidence": "tools/test_project_gate.py::test_doxygen_zero_output_is_not_green",
       "owner": "documentation_gate_maintainer",
       "review_trigger": "Review again whenever an engine, input grammar, output generator, warning policy, or documentation source-root convention changes."
+    },
+    {
+      "id": "source_tree_substituted_for_deliverable",
+      "category": "supply_chain",
+      "severity": "critical",
+      "statement": "Source-tree tests can remain green while wheel membership, source-distribution metadata, runtime dependencies, entry points, or clean installation are broken; PYTHONPATH substitution conceals that entire defect class.",
+      "disposition": "resolved",
+      "resolution": "Build wheel and sdist from an ephemeral copy that excludes VCS, agent, cache, and prior build state; require exact build-backend pins; inspect Name and Version inside both archives; install the wheel into a fresh venv; and run metadata, import, and declared entry-point probes under isolated Python without the source tree on sys.path.",
+      "evidence": "tools/test_project_gate.py::test_real_build_and_clean_install_pipeline",
+      "owner": "artifact_gate_maintainer",
+      "review_trigger": "Review again whenever build isolation, archive metadata, dependency installation, entry-point declaration, venv behavior, or artifact probe configuration changes."
     },
     {
       "id": "release_gate_debt",

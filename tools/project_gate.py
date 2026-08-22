@@ -19,17 +19,23 @@ import argparse
 import hashlib
 import importlib.metadata
 import json
+import os
 import platform
 import re
 import shlex
 import shutil
 import subprocess  # ruff: ignore[suspicious-subprocess-import]
 import sys
+import tarfile
 import tempfile
 import time
 import tomllib
+import venv
+import zipfile
 from collections.abc import Mapping
 from dataclasses import dataclass
+from email.parser import BytesParser
+from email.policy import default as email_policy
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Protocol, cast
@@ -130,6 +136,8 @@ class StepResult:
     duration_ms: int = 0
     ## Bounded diagnostic output retained when a command fails.
     output: str = ""
+    ## Content identities or named probes supporting the outcome.
+    evidence: tuple[tuple[str, str], ...] = ()
 
     def __post_init__(self) -> None:
         """Refuse ambiguous result records at their construction boundary.
@@ -174,6 +182,7 @@ class StepResult:
             "supported_platforms": list(self.supported_platforms),
             "duration_ms": self.duration_ms,
             "output": self.output,
+            "evidence": dict(self.evidence),
         }
 
 
@@ -1390,6 +1399,849 @@ class DocumentationAdapter:
         return _run_sphinx_documentation(context, self.rules)
 
 
+class ArtifactError(ValueError):
+    """A build or installed-artifact proof is malformed or inconsistent."""
+
+
+def _artifact_error(detail: str) -> ArtifactError:
+    """Build an artifact refusal from already-localized detail.
+
+    @param detail actionable artifact inconsistency
+    @return typed refusal
+    """
+    return ArtifactError(detail)
+
+
+@dataclass(frozen=True, slots=True)
+class BuildPlan:
+    """Isolated source copy and expected distribution identity."""
+
+    ## Scratch copy containing no parent, sibling, VCS, or agent bundle.
+    source: Path
+    ## Ephemeral output directory.
+    artifacts: Path
+    ## Declared distribution name.
+    name: str
+    ## Declared distribution version.
+    version: str
+    ## Number of repository-owned files copied into isolation.
+    subjects: int
+    ## Project/build table content binding.
+    configuration: tuple[ConfigurationUse, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class BuiltArtifacts:
+    """One validated wheel and source distribution."""
+
+    ## Built wheel path.
+    wheel: Path
+    ## Built source archive path.
+    sdist: Path
+    ## Canonical distribution identity read from both artifacts.
+    name: str
+    ## Version read from both artifacts.
+    version: str
+
+
+@dataclass(frozen=True, slots=True)
+class ArtifactProbe:
+    """One explicitly declared installed entry-point behavior probe."""
+
+    ## Stable human-facing probe name.
+    name: str
+    ## Venv-local argv; ``{python}`` denotes the fresh interpreter.
+    command: tuple[str, ...]
+    ## Exact expected process status.
+    expected_exit: int
+    ## Finite execution budget.
+    timeout_seconds: int
+
+
+## Repository content that cannot influence the delivered artifact and must not be copied.
+_ISOLATION_EXCLUDES: Final = frozenset({
+    ".agent", ".agents", ".claude", ".git", ".hypothesis", ".import_linter_cache",
+    ".mypy_cache", ".pytest_cache", ".ruff_cache", ".tox", ".venv", "__pycache__",
+    "build", "dist", "node_modules",
+})
+
+## Import names accepted by the installed smoke probe.
+_IMPORT_NAME: Final = re.compile(r"^[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*$")
+
+## One exact PEP 508-like build requirement; environment markers remain allowed.
+_EXACT_BUILD_REQUIREMENT: Final = re.compile(
+    r"^[A-Za-z0-9][A-Za-z0-9_.-]*(?:\[[A-Za-z0-9_.,-]+\])?"
+    r"==[A-Za-z0-9][A-Za-z0-9_.+!-]*(?:\s*;\s*.+)?$",
+)
+
+## Longest installed behavior probe accepted by project configuration.
+_MAX_PROBE_TIMEOUT: Final = 300
+
+
+def _copy_isolated(root: Path, destination: Path) -> int:
+    """Copy only one repository's authored inputs into an ephemeral build root.
+
+    @param root exact governed repository
+    @param destination absent scratch directory
+    @return copied regular-file count
+    @throws ArtifactError when a symlink could preserve ambient filesystem reach
+    """
+    for directory, names, files in os.walk(root):
+        names[:] = [name for name in names if name not in _ISOLATION_EXCLUDES]
+        current = Path(directory)
+        for name in (*names, *files):
+            path = current / name
+            if path.is_symlink():
+                relative = path.relative_to(root).as_posix()
+                detail = (
+                    f"build isolation refuses symlink {relative!r}; "
+                    "materialize or package it"
+                )
+                raise _artifact_error(detail)
+    shutil.copytree(
+        root,
+        destination,
+        ignore=shutil.ignore_patterns(*_ISOLATION_EXCLUDES),
+    )
+    return sum(1 for path in destination.rglob("*") if path.is_file())
+
+
+def _project_identity(context: GateContext) -> tuple[str, str]:
+    """Read the required PEP 621 distribution identity.
+
+    @param context decoded exact-root project
+    @return name and version
+    @throws ConfigurationProbeError when either is absent
+    """
+    table = _table(context.pyproject, ("project",))
+    name = table.get("name")
+    version = table.get("version")
+    name_field = "project.name"
+    version_field = "project.version"
+    if not isinstance(name, str) or not name.strip():
+        raise _probe_error(name_field, "expected a non-empty distribution name")
+    if not isinstance(version, str) or not version.strip():
+        raise _probe_error(version_field, "expected a static non-empty version")
+    return name.strip(), version.strip()
+
+
+def _validate_build_system(context: GateContext) -> None:
+    """Require a named backend and exact isolated-environment requirements.
+
+    @param context decoded exact-root project
+    @throws ConfigurationProbeError when backend selection can drift
+    """
+    table = _table(context.pyproject, ("build-system",))
+    backend = table.get("build-backend")
+    backend_field = "build-system.build-backend"
+    if not isinstance(backend, str) or not backend.strip():
+        raise _probe_error(backend_field, "expected a backend module")
+    requirements_field = "build-system.requires"
+    requirements = _string_list(table.get("requires"), requirements_field)
+    unpinned = [
+        requirement
+        for requirement in requirements
+        if _EXACT_BUILD_REQUIREMENT.fullmatch(requirement) is None
+    ]
+    if unpinned:
+        raise _probe_error(
+            requirements_field,
+            f"every build requirement must use one exact == version; found {unpinned}",
+        )
+
+
+def _prepare_build(context: GateContext) -> tuple[BuildPlan, PreparedCommand]:
+    """Probe packaging config and create the repository-only build copy.
+
+    @param context exact governed repository
+    @return build plan and explicit PEP 517 command
+    """
+    name, version = _project_identity(context)
+    _validate_build_system(context)
+    source = context.scratch / "isolated-source"
+    artifacts = context.scratch / "artifacts"
+    try:
+        subjects = _copy_isolated(context.root, source)
+    except ArtifactError as problem:
+        build_inputs_field = "repository.build_inputs"
+        raise _probe_error(build_inputs_field, str(problem)) from problem
+    use = _project_configuration(
+        context,
+        (
+            "project.name",
+            "project.version",
+            "project.dependencies",
+            "build-system.requires",
+            "build-system.build-backend",
+        ),
+    )
+    plan = BuildPlan(source, artifacts, name, version, subjects, (use,))
+    command = PreparedCommand(
+        command=(
+            sys.executable,
+            "-m",
+            "build",
+            "--sdist",
+            "--wheel",
+            "--outdir",
+            str(artifacts),
+            str(source),
+        ),
+        configuration=plan.configuration,
+        subjects=subjects,
+        failure_diagnostic="GATE-BUILD-003_FAILURE",
+        subject_label="isolated repository files",
+    )
+    return plan, command
+
+
+def _canonical_distribution(name: str) -> str:
+    """Normalize distribution punctuation for metadata comparison.
+
+    @param name PEP 503-like distribution name
+    @return lowercase name with one hyphen per punctuation run
+    """
+    return re.sub(r"[-_.]+", "-", name).lower()
+
+
+def _metadata_identity(content: bytes, source: str) -> tuple[str, str]:
+    """Read Name and Version from core metadata bytes.
+
+    @param content METADATA or PKG-INFO bytes
+    @param source artifact/member label
+    @return distribution name and version
+    @throws ArtifactError when required fields are absent
+    """
+    message = BytesParser(policy=email_policy).parsebytes(content)
+    name = message.get("Name")
+    version = message.get("Version")
+    if not name or not version:
+        detail = f"{source} has no complete Name/Version metadata"
+        raise _artifact_error(detail)
+    return str(name), str(version)
+
+
+def _wheel_identity(path: Path) -> tuple[str, str]:
+    """Read the one wheel core-metadata record without importing the package.
+
+    @param path wheel archive
+    @return distribution name and version
+    @throws ArtifactError when membership or metadata is malformed
+    """
+    try:
+        with zipfile.ZipFile(path) as archive:
+            members = [name for name in archive.namelist()
+                       if name.endswith(".dist-info/METADATA")]
+            if len(members) != 1:
+                detail = f"{path.name} contains {len(members)} METADATA files"
+                raise _artifact_error(detail)
+            return _metadata_identity(archive.read(members[0]), f"{path.name}:{members[0]}")
+    except (OSError, zipfile.BadZipFile, KeyError) as problem:
+        detail = f"cannot read wheel {path.name}: {problem}"
+        raise _artifact_error(detail) from problem
+
+
+def _read_sdist_identity(path: Path) -> tuple[str, str]:
+    """Read one root PKG-INFO member from an already-openable source archive.
+
+    @param path gzipped tar source archive
+    @return distribution name and version
+    @throws ArtifactError when membership or metadata is malformed
+    """
+    with tarfile.open(path, mode="r:gz") as archive:
+        members = [
+            member
+            for member in archive.getmembers()
+            if member.isfile()
+            and member.name.count("/") == 1
+            and member.name.endswith("/PKG-INFO")
+        ]
+        if len(members) != 1:
+            detail = f"{path.name} contains {len(members)} root PKG-INFO files"
+            raise _artifact_error(detail)
+        stream = archive.extractfile(members[0])
+        if stream is None:
+            detail = f"cannot read {path.name}:{members[0].name}"
+            raise _artifact_error(detail)
+        return _metadata_identity(stream.read(), f"{path.name}:{members[0].name}")
+
+
+def _sdist_identity(path: Path) -> tuple[str, str]:
+    """Read source-distribution core metadata without extracting any member.
+
+    @param path gzipped tar source archive
+    @return distribution name and version
+    @throws ArtifactError when membership or metadata is malformed
+    """
+    try:
+        return _read_sdist_identity(path)
+    except (OSError, tarfile.TarError) as problem:
+        detail = f"cannot read sdist {path.name}: {problem}"
+        raise _artifact_error(detail) from problem
+
+
+def _validate_artifacts(plan: BuildPlan) -> BuiltArtifacts:
+    """Require one wheel and one sdist with the declared shared identity.
+
+    @param plan expected identity and output directory
+    @return validated artifact paths and identity
+    @throws ArtifactError when count or metadata differs
+    """
+    wheels = sorted(plan.artifacts.glob("*.whl"))
+    sdists = sorted(plan.artifacts.glob("*.tar.gz"))
+    if len(wheels) != 1 or len(sdists) != 1:
+        detail = (
+            f"expected one wheel and one sdist, found {len(wheels)} and {len(sdists)}"
+        )
+        raise _artifact_error(detail)
+    wheel_identity = _wheel_identity(wheels[0])
+    sdist_identity = _sdist_identity(sdists[0])
+    expected = (_canonical_distribution(plan.name), plan.version)
+    observed = (
+        (_canonical_distribution(wheel_identity[0]), wheel_identity[1]),
+        (_canonical_distribution(sdist_identity[0]), sdist_identity[1]),
+    )
+    if observed != (expected, expected):
+        detail = f"expected artifact identity {expected}, found {observed}"
+        raise _artifact_error(detail)
+    return BuiltArtifacts(wheels[0], sdists[0], expected[0], expected[1])
+
+
+@dataclass(frozen=True, slots=True)
+class ArtifactBuildAdapter:
+    """Build and inspect wheel plus sdist from one isolated repository copy."""
+
+    ## Stable report identity.
+    step_id: str = "artifact-build"
+    ## Delivered-artifact obligation.
+    rules: tuple[str, ...] = ("API-015", "DEP-008")
+
+    def __call__(self, context: GateContext) -> StepResult:
+        """Build both formats and bind their metadata to project declaration.
+
+        @param context exact governed repository
+        @return explicit build outcome
+        """
+        try:
+            plan, command = _prepare_build(context)
+        except ConfigurationProbeError as problem:
+            return StepResult(
+                step_id=self.step_id,
+                rules=self.rules,
+                status=Status.FAIL,
+                required=True,
+                diagnostic_id="GATE-BUILD-001_CONFIGURATION",
+                summary=str(problem),
+                configuration=(_project_configuration(context, (problem.field,)),),
+            )
+        try:
+            version = _distribution_version("build")
+        except importlib.metadata.PackageNotFoundError:
+            return StepResult(
+                step_id=self.step_id,
+                rules=self.rules,
+                status=Status.UNSUPPORTED,
+                required=True,
+                diagnostic_id="GATE-BUILD-002_TOOL",
+                summary="required distribution 'build' is not installed",
+                command=command.command,
+                configuration=command.configuration,
+                subjects=command.subjects,
+            )
+        try:
+            execution = _execute(command, context.root)
+        except CommandExecutionError as problem:
+            return StepResult(
+                step_id=self.step_id,
+                rules=self.rules,
+                status=Status.FAIL,
+                required=True,
+                diagnostic_id="GATE-BUILD-006_EXECUTION",
+                summary=f"build did not complete: {problem}",
+                command=command.command,
+                configuration=command.configuration,
+                subjects=command.subjects,
+                tool=f"build {version}",
+            )
+        if execution.returncode != 0:
+            return StepResult(
+                step_id=self.step_id,
+                rules=self.rules,
+                status=Status.FAIL,
+                required=True,
+                diagnostic_id=command.failure_diagnostic,
+                summary="isolated wheel/sdist build failed",
+                command=command.command,
+                configuration=command.configuration,
+                subjects=command.subjects,
+                tool=f"build {version}",
+                duration_ms=execution.duration_ms,
+                output=_tail(execution.output),
+            )
+        try:
+            artifacts = _validate_artifacts(plan)
+        except ArtifactError as problem:
+            return StepResult(
+                step_id=self.step_id,
+                rules=self.rules,
+                status=Status.FAIL,
+                required=True,
+                diagnostic_id="GATE-BUILD-004_ARTIFACT",
+                summary=str(problem),
+                command=command.command,
+                configuration=command.configuration,
+                subjects=command.subjects,
+                tool=f"build {version}",
+                duration_ms=execution.duration_ms,
+            )
+        return StepResult(
+            step_id=self.step_id,
+            rules=self.rules,
+            status=Status.PASS,
+            required=True,
+            diagnostic_id=None,
+            summary=(
+                f"built and inspected wheel plus sdist for "
+                f"{artifacts.name} {artifacts.version}"
+            ),
+            command=command.command,
+            configuration=command.configuration,
+            subjects=command.subjects,
+            tool=f"build {version}",
+            duration_ms=execution.duration_ms,
+            evidence=(
+                ("wheel", f"{artifacts.wheel.name} sha256:{_digest(artifacts.wheel)}"),
+                ("sdist", f"{artifacts.sdist.name} sha256:{_digest(artifacts.sdist)}"),
+            ),
+        )
+
+
+def _parse_artifact_probes(
+    context: GateContext,
+) -> tuple[tuple[str, ...], tuple[ArtifactProbe, ...]]:
+    """Parse installed import and command probes from the project-gate table.
+
+    @param context decoded exact-root project
+    @return import names and executable probes
+    @throws ConfigurationProbeError when a probe is unsafe or ambiguous
+    """
+    gate = _gate_table(context)
+    import_field = "tool.agent-discipline-gate.artifact_imports"
+    imports = _string_list(gate.get("artifact_imports"), import_field)
+    invalid = [name for name in imports if _IMPORT_NAME.fullmatch(name) is None]
+    if invalid:
+        raise _probe_error(import_field, f"invalid import names {invalid}")
+    probes_field = "tool.agent-discipline-gate.artifact_probes"
+    raw_probes = gate.get("artifact_probes", [])
+    if not isinstance(raw_probes, list):
+        raise _probe_error(probes_field, "expected an array")
+    probes: list[ArtifactProbe] = []
+    for index, raw in enumerate(raw_probes):
+        field = f"tool.agent-discipline-gate.artifact_probes[{index}]"
+        if not isinstance(raw, Mapping):
+            raise _probe_error(field, "expected a table")
+        unknown = set(raw) - {"name", "command", "expected_exit", "timeout_seconds"}
+        if unknown:
+            raise _probe_error(field, f"unknown fields {sorted(unknown)}")
+        name = raw.get("name")
+        command = raw.get("command")
+        expected = raw.get("expected_exit", 0)
+        timeout = raw.get("timeout_seconds", 10)
+        if not isinstance(name, str) or not name.strip():
+            raise _probe_error(field, "name must be non-empty text")
+        argv = _string_list(command, f"{field}.command")
+        if not isinstance(expected, int) or isinstance(expected, bool):
+            raise _probe_error(field, "expected_exit must be an integer")
+        timeout_valid = (
+            isinstance(timeout, int)
+            and not isinstance(timeout, bool)
+            and 1 <= timeout <= _MAX_PROBE_TIMEOUT
+        )
+        if not timeout_valid:
+            raise _probe_error(
+                field,
+                f"timeout_seconds must be between 1 and {_MAX_PROBE_TIMEOUT}",
+            )
+        probes.append(ArtifactProbe(name.strip(), argv, expected, timeout))
+    if len({probe.name for probe in probes}) != len(probes):
+        raise _probe_error(probes_field, "probe names repeat")
+    return imports, tuple(probes)
+
+
+def _fresh_python(environment: Path) -> Path:
+    """Locate the interpreter inside a fresh cross-platform virtual environment.
+
+    @param environment virtual-environment root
+    @return interpreter path
+    """
+    windows = environment / "Scripts" / "python.exe"
+    return windows if windows.is_file() else environment / "bin" / "python"
+
+
+def _create_venv(environment: Path) -> Path:
+    """Create a clean pip-bearing environment and return its interpreter.
+
+    @param environment absent scratch directory
+    @return fresh interpreter path
+    @throws CommandExecutionError when creation is incomplete
+    """
+    try:
+        venv.EnvBuilder(with_pip=True, clear=True).create(environment)
+    except OSError as problem:
+        raise CommandExecutionError(str(problem)) from problem
+    interpreter = _fresh_python(environment)
+    if not interpreter.is_file():
+        detail = f"virtual environment has no interpreter at {interpreter}"
+        raise CommandExecutionError(detail)
+    return interpreter
+
+
+def _probe_argv(probe: ArtifactProbe, interpreter: Path) -> tuple[str, ...]:
+    """Resolve one probe strictly inside the fresh virtual environment.
+
+    @param probe declared argv and expectation
+    @param interpreter fresh environment Python
+    @return executable argv
+    @throws ConfigurationProbeError when the entry point is absent
+    """
+    scripts = interpreter.parent
+    resolved = [
+        str(interpreter) if argument == "{python}" else argument
+        for argument in probe.command
+    ]
+    first = Path(resolved[0])
+    if resolved[0] == str(interpreter):
+        return tuple(resolved)
+    if first.is_absolute() or len(first.parts) != 1:
+        raise _probe_error(probe.name, "probe executable must be {python} or a venv entry point")
+    candidates = (scripts / first, (scripts / first).with_suffix(".exe"))
+    executable = next((path for path in candidates if path.is_file()), None)
+    if executable is None:
+        raise _probe_error(probe.name, f"installed entry point {first} does not exist")
+    return (str(executable), *resolved[1:])
+
+
+def _execute_with_timeout(
+    command: tuple[str, ...], root: Path, timeout: int,
+) -> CommandExecution:
+    """Execute a declared installed probe with its own finite budget.
+
+    @param command resolved venv-local argv
+    @param root source-free working directory
+    @param timeout seconds before refusal
+    @return process observation
+    @throws CommandExecutionError when launch or timeout fails
+    """
+    prepared = PreparedCommand(command, (), 1, "", "probe")
+    started = time.perf_counter()
+    try:
+        finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
+            prepared.command,
+            cwd=root,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+            timeout=timeout,
+        )
+    except (OSError, subprocess.TimeoutExpired) as problem:
+        raise CommandExecutionError(str(problem)) from problem
+    return CommandExecution(
+        finished.returncode,
+        finished.stdout + finished.stderr,
+        round((time.perf_counter() - started) * 1000),
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class InstallPlan:
+    """Fresh environment plus declared installed-artifact probes."""
+
+    ## Distribution identity expected after installation.
+    name: str
+    ## Distribution version expected after installation.
+    version: str
+    ## Modules that must import under isolated mode.
+    imports: tuple[str, ...]
+    ## Optional installed console behavior probes.
+    probes: tuple[ArtifactProbe, ...]
+    ## Fresh environment interpreter.
+    interpreter: Path
+    ## Explicit wheel-install command.
+    install: PreparedCommand
+
+
+def _prepare_install(
+    context: GateContext, step_id: str, rules: tuple[str, ...],
+) -> InstallPlan | StepResult:
+    """Locate the validated wheel, parse probes, and create the fresh environment.
+
+    @param context exact governed repository
+    @param step_id stable gate result identity
+    @param rules delivered-artifact rules
+    @return install plan or explicit preflight failure
+    """
+    wheels = sorted((context.scratch / "artifacts").glob("*.whl"))
+    if len(wheels) != 1:
+        return StepResult(
+            step_id=step_id,
+            rules=rules,
+            status=Status.NOT_RUN,
+            required=True,
+            diagnostic_id="GATE-INSTALL-000_BUILD_REQUIRED",
+            summary=f"expected one validated wheel from artifact-build, found {len(wheels)}",
+        )
+    try:
+        imports, probes = _parse_artifact_probes(context)
+        name, version = _project_identity(context)
+    except ConfigurationProbeError as problem:
+        return StepResult(
+            step_id=step_id,
+            rules=rules,
+            status=Status.FAIL,
+            required=True,
+            diagnostic_id="GATE-INSTALL-001_CONFIGURATION",
+            summary=str(problem),
+            configuration=(_project_configuration(context, (problem.field,)),),
+        )
+    try:
+        interpreter = _create_venv(context.scratch / "installed")
+    except CommandExecutionError as problem:
+        return StepResult(
+            step_id=step_id,
+            rules=rules,
+            status=Status.FAIL,
+            required=True,
+            diagnostic_id="GATE-INSTALL-002_ENVIRONMENT",
+            summary=f"cannot create clean environment: {problem}",
+        )
+    use = _project_configuration(
+        context,
+        (
+            "project.dependencies",
+            "tool.agent-discipline-gate.artifact_imports",
+            "tool.agent-discipline-gate.artifact_probes",
+        ),
+    )
+    install = PreparedCommand(
+        (
+            str(interpreter), "-m", "pip", "install", "--disable-pip-version-check",
+            "--no-input", str(wheels[0]),
+        ),
+        (use,),
+        1,
+        "GATE-INSTALL-003_INSTALL",
+        "wheel",
+    )
+    return InstallPlan(name, version, imports, probes, interpreter, install)
+
+
+def _install_wheel(
+    context: GateContext, plan: InstallPlan, step_id: str, rules: tuple[str, ...],
+) -> CommandExecution | StepResult:
+    """Install one wheel and translate process failure into a gate result.
+
+    @param context exact governed repository
+    @param plan fresh environment install plan
+    @param step_id stable gate result identity
+    @param rules delivered-artifact rules
+    @return process observation or explicit failure
+    """
+    try:
+        installed = _execute(plan.install, context.scratch)
+    except CommandExecutionError as problem:
+        return StepResult(
+            step_id=step_id,
+            rules=rules,
+            status=Status.FAIL,
+            required=True,
+            diagnostic_id="GATE-INSTALL-006_EXECUTION",
+            summary=f"pip did not complete: {problem}",
+            command=plan.install.command,
+            configuration=plan.install.configuration,
+        )
+    if installed.returncode != 0:
+        return StepResult(
+            step_id=step_id,
+            rules=rules,
+            status=Status.FAIL,
+            required=True,
+            diagnostic_id=plan.install.failure_diagnostic,
+            summary="fresh-environment wheel installation failed",
+            command=plan.install.command,
+            configuration=plan.install.configuration,
+            duration_ms=installed.duration_ms,
+            output=_tail(installed.output),
+        )
+    return installed
+
+
+def _verify_installed_imports(
+    context: GateContext,
+    plan: InstallPlan,
+    installed: CommandExecution,
+    step_id: str,
+    rules: tuple[str, ...],
+) -> int | StepResult:
+    """Check metadata and imports under Python isolated mode.
+
+    @param context exact governed repository
+    @param plan expected identity and import list
+    @param installed successful pip observation
+    @param step_id stable gate result identity
+    @param rules delivered-artifact rules
+    @return accumulated duration or explicit failure
+    """
+    script = (
+        "import importlib, importlib.metadata as metadata; "
+        f"assert metadata.version({plan.name!r}) == {plan.version!r}; "
+        f"[importlib.import_module(name) for name in {plan.imports!r}]"
+    )
+    try:
+        imported = _execute_with_timeout(
+            (str(plan.interpreter), "-I", "-c", script),
+            context.scratch,
+            60,
+        )
+    except CommandExecutionError as problem:
+        return StepResult(
+            step_id=step_id,
+            rules=rules,
+            status=Status.FAIL,
+            required=True,
+            diagnostic_id="GATE-INSTALL-004_IMPORT",
+            summary=f"installed import probe did not complete: {problem}",
+            command=plan.install.command,
+            configuration=plan.install.configuration,
+        )
+    duration = installed.duration_ms + imported.duration_ms
+    if imported.returncode != 0:
+        return StepResult(
+            step_id=step_id,
+            rules=rules,
+            status=Status.FAIL,
+            required=True,
+            diagnostic_id="GATE-INSTALL-004_IMPORT",
+            summary="installed metadata or import probe failed",
+            command=plan.install.command,
+            configuration=plan.install.configuration,
+            duration_ms=duration,
+            output=_tail(imported.output),
+        )
+    return duration
+
+
+def _verify_installed_commands(
+    context: GateContext,
+    plan: InstallPlan,
+    duration: int,
+    step_id: str,
+    rules: tuple[str, ...],
+) -> int | StepResult:
+    """Run each declared venv-local command with its exact budget and status.
+
+    @param context exact governed repository
+    @param plan declared installed probes
+    @param duration accumulated install/import duration
+    @param step_id stable gate result identity
+    @param rules delivered-artifact rules
+    @return total duration or first explicit probe failure
+    """
+    total = duration
+    for probe in plan.probes:
+        try:
+            argv = _probe_argv(probe, plan.interpreter)
+            observed = _execute_with_timeout(argv, context.scratch, probe.timeout_seconds)
+        except (ConfigurationProbeError, CommandExecutionError) as problem:
+            return StepResult(
+                step_id=step_id,
+                rules=rules,
+                status=Status.FAIL,
+                required=True,
+                diagnostic_id="GATE-INSTALL-005_PROBE",
+                summary=f"probe {probe.name!r} could not run: {problem}",
+                command=plan.install.command,
+                configuration=plan.install.configuration,
+                duration_ms=total,
+            )
+        total += observed.duration_ms
+        if observed.returncode != probe.expected_exit:
+            return StepResult(
+                step_id=step_id,
+                rules=rules,
+                status=Status.FAIL,
+                required=True,
+                diagnostic_id="GATE-INSTALL-005_PROBE",
+                summary=(
+                    f"probe {probe.name!r} returned {observed.returncode}, "
+                    f"expected {probe.expected_exit}"
+                ),
+                command=argv,
+                configuration=plan.install.configuration,
+                duration_ms=total,
+                output=_tail(observed.output),
+            )
+    return total
+
+
+@dataclass(frozen=True, slots=True)
+class CleanInstallAdapter:
+    """Install the built wheel and exercise declared public probes outside source."""
+
+    ## Stable report identity.
+    step_id: str = "clean-install"
+    ## Delivered-artifact and public-entry obligations.
+    rules: tuple[str, ...] = ("API-015", "TEST-019")
+
+    def __call__(self, context: GateContext) -> StepResult:
+        """Create a fresh venv, install the wheel, and run local probes.
+
+        @param context exact governed repository and shared scratch space
+        @return explicit installation/probe outcome
+        """
+        prepared = _prepare_install(context, self.step_id, self.rules)
+        if isinstance(prepared, StepResult):
+            return prepared
+        installed = _install_wheel(context, prepared, self.step_id, self.rules)
+        if isinstance(installed, StepResult):
+            return installed
+        imported = _verify_installed_imports(
+            context, prepared, installed, self.step_id, self.rules,
+        )
+        if isinstance(imported, StepResult):
+            return imported
+        probed = _verify_installed_commands(
+            context, prepared, imported, self.step_id, self.rules,
+        )
+        if isinstance(probed, StepResult):
+            return probed
+        return StepResult(
+            step_id=self.step_id,
+            rules=self.rules,
+            status=Status.PASS,
+            required=True,
+            diagnostic_id=None,
+            summary=(
+                f"installed {prepared.name} {prepared.version}; imported "
+                f"{len(prepared.imports)} module(s) and ran "
+                f"{len(prepared.probes)} entry-point probe(s)"
+            ),
+            command=prepared.install.command,
+            configuration=prepared.install.configuration,
+            subjects=1 + len(prepared.imports) + len(prepared.probes),
+            tool="fresh venv pip",
+            duration_ms=probed,
+            evidence=tuple(
+                (f"import[{index}]", value)
+                for index, value in enumerate(prepared.imports)
+            ) + tuple(
+                (f"probe[{index}]", probe.name)
+                for index, probe in enumerate(prepared.probes)
+            ),
+        )
+
+
 def _execute(command: PreparedCommand, root: Path) -> CommandExecution:
     """Run one fixed argv with bounded time and output capture.
 
@@ -1707,6 +2559,8 @@ DEFAULT_STEPS: Final[tuple[StepAdapter, ...]] = (
     IMPORT_CONTRACTS_STEP,
     DocumentationAdapter(),
     PYTEST_STEP,
+    ArtifactBuildAdapter(),
+    CleanInstallAdapter(),
 )
 
 

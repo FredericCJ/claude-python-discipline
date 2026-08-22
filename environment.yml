@@ -93,6 +93,12 @@ dependencies:
       - mypy==2.3.0
       - pyright==1.1.407
 
+      # --------------------------------------------------------- project gate
+      # API-015. Build both wheel and sdist through the PEP 517 frontend before
+      # installing the wheel into a fresh environment. The project-gate adapter
+      # refuses absence as unsupported rather than silently omitting delivery.
+      - build==1.3.0
+
       # ---------------------------------------------------------- gate step 9
       # Not named as any rule's mechanism, and pinned anyway: the reference
       # package's property layer imports it, and those 49 tests are collected by

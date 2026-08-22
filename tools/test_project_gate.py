@@ -9,17 +9,18 @@ against a known conformant tree.
 
 from __future__ import annotations
 
+import io
 import json
 import shutil
-from typing import TYPE_CHECKING, cast
+import tarfile
+import zipfile
+from pathlib import Path
+from typing import cast
 
 import pytest
 
 import project_gate
 from fixtures import reference_root
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 def test_only_pass_and_valid_not_applicable_are_green() -> None:
@@ -119,6 +120,13 @@ def _configured_tool_project(tmp_path: Path) -> Path:
     shutil.copytree(reference_root(), root)
     with (root / "pyproject.toml").open("a", encoding="utf-8", newline="\n") as stream:
         stream.write(
+            "\n[project]\n"
+            "name = 'refpkg'\n"
+            "version = '1.0.0'\n"
+            "dependencies = []\n"
+            "\n[build-system]\n"
+            "requires = ['setuptools==84.0.0']\n"
+            "build-backend = 'setuptools.build_meta'\n"
             "\n[tool.ruff]\n"
             "src = ['src']\n"
             "\n[tool.ruff.lint]\n"
@@ -134,7 +142,8 @@ def _configured_tool_project(tmp_path: Path) -> Path:
             "\n[tool.agent-discipline-gate]\n"
             "import_contracts = 'importlinter.toml'\n"
             "doxyfile = 'Doxyfile'\n"
-            "documentation_root = 'docs'\n",
+            "documentation_root = 'docs'\n"
+            "artifact_imports = ['refpkg']\n",
         )
     tests = root / "tests"
     tests.mkdir(exist_ok=True)
@@ -388,3 +397,191 @@ def test_doxygen_zero_output_is_not_green(
 
     assert result.status is project_gate.Status.FAIL
     assert result.diagnostic_id == "GATE-DOCUMENTATION-004_NO_OUTPUT"
+
+
+def _write_artifacts(output: Path, name: str = "refpkg", version: str = "1.0.0") -> None:
+    """Create minimal wheel and sdist archives carrying shared core metadata.
+
+    @param output artifact directory
+    @param name core-metadata distribution name
+    @param version core-metadata version
+    """
+    output.mkdir(parents=True, exist_ok=True)
+    metadata = f"Metadata-Version: 2.4\nName: {name}\nVersion: {version}\n\n".encode()
+    wheel = output / f"{name}-{version}-py3-none-any.whl"
+    with zipfile.ZipFile(wheel, mode="w") as archive:
+        archive.writestr(f"{name}-{version}.dist-info/METADATA", metadata)
+    sdist = output / f"{name}-{version}.tar.gz"
+    with tarfile.open(sdist, mode="w:gz") as archive:
+        member = tarfile.TarInfo(f"{name}-{version}/PKG-INFO")
+        member.size = len(metadata)
+        archive.addfile(member, io.BytesIO(metadata))
+
+
+def test_artifact_build_uses_only_an_isolated_repository_copy(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Build input excludes the agent bundle and produces content-bound archives."""
+    root = _configured_tool_project(tmp_path)
+    agent = root / ".agent"
+    agent.mkdir()
+    (agent / "ambient.txt").write_text("must not build", encoding="utf-8")
+
+    def execute(
+        command: project_gate.PreparedCommand, _root: Path,
+    ) -> project_gate.CommandExecution:
+        """Assert isolation and synthesize the declared artifact pair.
+
+        @param command explicit build command
+        @param _root governed working directory
+        @return successful build observation
+        """
+        source = Path(command.command[-1])
+        assert not (source / ".agent").exists()
+        output = Path(command.command[command.command.index("--outdir") + 1])
+        _write_artifacts(output)
+        return project_gate.CommandExecution(0, "built", 2)
+
+    monkeypatch.setattr(project_gate, "_execute", execute)
+    monkeypatch.setattr(project_gate, "_distribution_version", lambda _name: "1.3.0")
+
+    result = project_gate.run(
+        root,
+        steps=(project_gate.ArtifactBuildAdapter(),),
+    ).outcomes[1]
+
+    assert result.status is project_gate.Status.PASS
+    wheel_evidence = dict(result.evidence)["wheel"]
+    _, separator, digest = wheel_evidence.partition(" sha256:")
+    assert separator == " sha256:"
+    assert len(digest) == 64
+    assert result.subjects > 0
+
+
+def test_artifact_metadata_mismatch_is_rejected(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A filename cannot conceal a wheel and sdist for another distribution."""
+    root = _configured_tool_project(tmp_path)
+
+    def execute(
+        command: project_gate.PreparedCommand, _root: Path,
+    ) -> project_gate.CommandExecution:
+        """Write internally consistent but incorrectly identified artifacts.
+
+        @param command explicit build command
+        @param _root governed working directory
+        @return successful process observation
+        """
+        output = Path(command.command[command.command.index("--outdir") + 1])
+        _write_artifacts(output, name="other")
+        return project_gate.CommandExecution(0, "built", 2)
+
+    monkeypatch.setattr(project_gate, "_execute", execute)
+    monkeypatch.setattr(project_gate, "_distribution_version", lambda _name: "1.3.0")
+
+    result = project_gate.run(
+        root,
+        steps=(project_gate.ArtifactBuildAdapter(),),
+    ).outcomes[1]
+
+    assert result.status is project_gate.Status.FAIL
+    assert result.diagnostic_id == "GATE-BUILD-004_ARTIFACT"
+
+
+def test_unpinned_build_backend_is_rejected(tmp_path: Path) -> None:
+    """An isolated build cannot be reproducible when its backend version floats."""
+    root = _configured_tool_project(tmp_path)
+    project_file = root / "pyproject.toml"
+    project_file.write_text(
+        project_file.read_text(encoding="utf-8").replace(
+            "setuptools==84.0.0",
+            "setuptools>=68",
+        ),
+        encoding="utf-8",
+    )
+
+    result = project_gate.run(
+        root,
+        steps=(project_gate.ArtifactBuildAdapter(),),
+    ).outcomes[1]
+
+    assert result.status is project_gate.Status.FAIL
+    assert result.diagnostic_id == "GATE-BUILD-001_CONFIGURATION"
+    assert "exact == version" in result.summary
+
+
+def test_clean_install_runs_without_a_source_tree_on_pythonpath(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The wheel is installed fresh and imports run under Python isolated mode."""
+    root = _configured_tool_project(tmp_path)
+    commands: list[tuple[str, ...]] = []
+
+    def execute(
+        command: project_gate.PreparedCommand, _root: Path,
+    ) -> project_gate.CommandExecution:
+        """Synthesize build output and accept the fresh pip invocation.
+
+        @param command explicit build or install command
+        @param _root source-free working directory
+        @return successful process observation
+        """
+        commands.append(command.command)
+        if "build" in command.command:
+            output = Path(command.command[command.command.index("--outdir") + 1])
+            _write_artifacts(output)
+        return project_gate.CommandExecution(0, "ok", 2)
+
+    def create(environment: Path) -> Path:
+        """Create only the path identity required by the mocked subprocess.
+
+        @param environment fresh environment root
+        @return synthetic Windows interpreter
+        """
+        interpreter = environment / "Scripts" / "python.exe"
+        interpreter.parent.mkdir(parents=True)
+        interpreter.write_bytes(b"")
+        return interpreter
+
+    def execute_timeout(
+        command: tuple[str, ...], _root: Path, _timeout: int,
+    ) -> project_gate.CommandExecution:
+        """Capture the isolated import command and accept it.
+
+        @param command fresh-interpreter argv
+        @param _root source-free working directory
+        @param _timeout finite probe budget
+        @return successful process observation
+        """
+        commands.append(command)
+        return project_gate.CommandExecution(0, "", 1)
+
+    monkeypatch.setattr(project_gate, "_execute", execute)
+    monkeypatch.setattr(project_gate, "_create_venv", create)
+    monkeypatch.setattr(project_gate, "_distribution_version", lambda _name: "1.3.0")
+    monkeypatch.setattr(project_gate, "_execute_with_timeout", execute_timeout)
+
+    report = project_gate.run(
+        root,
+        steps=(project_gate.ArtifactBuildAdapter(), project_gate.CleanInstallAdapter()),
+    )
+
+    assert report.outcomes[1].status is project_gate.Status.PASS
+    assert report.outcomes[2].status is project_gate.Status.PASS
+    assert any("-I" in command for command in commands)
+    assert all("PYTHONPATH" not in argument for command in commands for argument in command)
+
+
+def test_real_build_and_clean_install_pipeline(tmp_path: Path) -> None:
+    """The configured reference really builds, installs, and imports from its wheel."""
+    root = _configured_tool_project(tmp_path)
+
+    report = project_gate.run(
+        root,
+        steps=(project_gate.ArtifactBuildAdapter(), project_gate.CleanInstallAdapter()),
+    )
+
+    assert report.outcomes[1].status is project_gate.Status.PASS
+    assert report.outcomes[2].status is project_gate.Status.PASS
+    assert report.outcomes[2].subjects == 2

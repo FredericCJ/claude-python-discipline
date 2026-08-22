@@ -96,6 +96,15 @@ owner = "src/package/adapters/http"
 import_contracts = "importlinter.toml"
 doxyfile = "Doxyfile"
 documentation_root = "docs"
+artifact_imports = ["package"]
+
+# Optional installed command probes. Commands are argv arrays, never shell text.
+# ``{python}`` selects the fresh environment's interpreter; any other executable
+# must be an entry point installed into that environment. Every probe has a
+# finite budget and exact expected status.
+# artifact_probes = [
+#   { name = "help", command = ["package-cli", "--help"], expected_exit = 0, timeout_seconds = 10 },
+# ]
 
 # ---------------------------------------------------------------------------- ruff
 
