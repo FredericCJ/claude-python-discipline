@@ -236,6 +236,31 @@ def test_retirement_preserves_the_id_and_removes_strategies(tmp_path: Path) -> N
     assert verification_state(retired, registry.rules["TYPE-001"]) is VerificationState.RETIRED
 
 
+def test_withdrawal_without_a_replacement_is_representable(tmp_path: Path) -> None:
+    """A rule can leave scope without inventing a successor that does not exist."""
+    payload = deepcopy(valid_payload())
+    record(payload)["strategies"] = []
+    migration = record(payload)["migration"]
+    assert isinstance(migration, dict)
+    migration["disposition"] = MigrationDisposition.RETIRED
+    registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
+    withdrawn = rule(mechanisms=())
+    assert validate_evidence(registry, [withdrawn], set()) == []
+    assert verification_state(withdrawn, registry.rules["TYPE-001"]) is VerificationState.RETIRED
+
+
+def test_replacement_disposition_requires_a_successor(tmp_path: Path) -> None:
+    """Superseded cannot mean retired-without-replacement by implication."""
+    payload = deepcopy(valid_payload())
+    record(payload)["strategies"] = []
+    migration = record(payload)["migration"]
+    assert isinstance(migration, dict)
+    migration["disposition"] = MigrationDisposition.SUPERSEDED
+    registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
+    findings = validate_evidence(registry, [rule(mechanisms=())], set())
+    assert [finding.code for finding in findings] == ["E007"]
+
+
 def test_verification_state_says_what_exists_not_that_it_passed(tmp_path: Path) -> None:
     """An external strategy is a verifier declaration, never a synthetic pass."""
     registry = load_evidence(write_payload(tmp_path / "evidence.json", valid_payload()))

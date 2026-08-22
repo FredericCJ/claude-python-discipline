@@ -72,9 +72,13 @@ DECAY_DAYS: Final[dict[str, int]] = {
 }
 
 ## Documents legitimately named in prose that are not corpus modules.
-KNOWN_EXTERNAL_MD: Final[frozenset[str]] = frozenset(
-    {"CLAUDE.md", "README.md", "SKILL.md", "SUPERSEDED.md", "MEMORY.md"}
-)
+KNOWN_EXTERNAL_MD: Final[frozenset[str]] = frozenset({
+    "CLAUDE.md",
+    "README.md",
+    "SKILL.md",
+    "SUPERSEDED.md",
+    "MEMORY.md",
+})
 ## A backticked markdown filename, which V041 then has to resolve on disk. Only
 ## backticked mentions count -- unquoted prose says "the schema", not a path --
 ## and it is run over the body with fenced blocks removed, so an illustrative
@@ -577,8 +581,10 @@ def check_budgets(documents: Sequence[Document], layout: Layout) -> Iterator[Fin
                 severity=Severity.WARN,
                 path=_relpath(layout, doc),
                 line=1,
-                message=(f"{actual} of the {budget}-token ceiling "
-                         f"({actual / budget:.0%}); {budget - actual} left"),
+                message=(
+                    f"{actual} of the {budget}-token ceiling "
+                    f"({actual / budget:.0%}); {budget - actual} left"
+                ),
                 remediation=(
                     "The always-loaded surface is the premise the layered design "
                     "rests on. Pay for an addition here by trimming, not by "
@@ -803,7 +809,9 @@ def load_v080_baseline(path: Path = V080_BASELINE_PATH) -> V080Baseline:
     return V080Baseline(count=data["count"], pairs=pairs, why=data.get("why"))
 
 
-def write_v080_baseline(pairs: frozenset[tuple[str, str]], why: str, path: Path = V080_BASELINE_PATH) -> None:
+def write_v080_baseline(
+    pairs: frozenset[tuple[str, str]], why: str, path: Path = V080_BASELINE_PATH
+) -> None:
     """Move the ceiling to `pairs`, recording why, in the `doc_baseline.json` idiom.
 
     @param pairs the (rule, mechanism) set the new ceiling holds the corpus to
@@ -863,7 +871,10 @@ def check_v080_ratchet(
     current = unbuilt_pairs(documents, layout)
     if len(current) > baseline.count:
         added = sorted(current - baseline.pairs)
-        names = ", ".join(f"{rule_id} `{mechanism}`" for rule_id, mechanism in added) or "(recount only)"
+        names = (
+            ", ".join(f"{rule_id} `{mechanism}`" for rule_id, mechanism in added)
+            or "(recount only)"
+        )
         yield Finding(
             code="V081",
             severity=Severity.ERROR,
@@ -876,7 +887,7 @@ def check_v080_ratchet(
             remediation=(
                 "Build the missing mechanism(s) under enforce/, or if the rule is "
                 "legitimately new and its mechanism genuinely not written yet, move "
-                'the ceiling deliberately: `python tools/validate.py '
+                "the ceiling deliberately: `python tools/validate.py "
                 '--update-baseline --why "..."`.'
             ),
         )
@@ -888,8 +899,7 @@ def check_v080_ratchet(
             line=1,
             message=f"{len(current)} unbuilt mechanism(s), below the baseline of {baseline.count}",
             remediation=(
-                'Lock in the progress: `python tools/validate.py --update-baseline '
-                '--why "..."`.'
+                'Lock in the progress: `python tools/validate.py --update-baseline --why "..."`.'
             ),
         )
 
@@ -1064,8 +1074,10 @@ def check_learning_outcomes(layout: Layout) -> Iterator[Finding]:
         severity=Severity.WARN,
         path="learning/ledger.jsonl",
         line=1,
-        message=(f"{recorded} learning(s) recorded and {reported} outcome(s) "
-                 f"reported; precision rests on {reported} sample(s)"),
+        message=(
+            f"{recorded} learning(s) recorded and {reported} outcome(s) "
+            f"reported; precision rests on {reported} sample(s)"
+        ),
         remediation=(
             "Run `learn.py retrieve` before the work and `learn.py used <id> "
             "--outcome helped|noise` after. Until outcomes accumulate, retrieval "
@@ -1075,8 +1087,7 @@ def check_learning_outcomes(layout: Layout) -> Iterator[Finding]:
     )
 
 
-def check_discrimination_gap(documents: Sequence[Document],
-                             layout: Layout) -> Iterator[Finding]:
+def check_discrimination_gap(documents: Sequence[Document], layout: Layout) -> Iterator[Finding]:
     """V098 -- a decided rule has been watched rejecting something.
 
     `V080` asks whether a mechanism exists. It has been wrong twice about that,
@@ -1116,12 +1127,15 @@ def check_discrimination_gap(documents: Sequence[Document],
         return
     gap = sorted(
         rule.rule_id
-        for doc in documents for rule in doc.rules
+        for doc in documents
+        for rule in doc.rules
         if rule.force is Force.BINDING
         and rule.rule_id not in covered
         and rule.mechanisms
-        and any(mechanism_is_implemented(m, layout.root, rule.rule_id) is not False
-                for m in rule.mechanisms)
+        and any(
+            mechanism_is_implemented(m, layout.root, rule.rule_id) is not False
+            for m in rule.mechanisms
+        )
     )
     if not gap:
         return
@@ -1130,9 +1144,11 @@ def check_discrimination_gap(documents: Sequence[Document],
         severity=Severity.WARN,
         path="enforce/discrimination.py",
         line=1,
-        message=(f"{len(gap)} binding rule(s) name a mechanism that nobody has "
-                 f"watched reject anything: {', '.join(gap[:GAP_NAMED])}"
-                 f"{' ...' if len(gap) > GAP_NAMED else ''}"),
+        message=(
+            f"{len(gap)} binding rule(s) name a mechanism that nobody has "
+            f"watched reject anything: {', '.join(gap[:GAP_NAMED])}"
+            f"{' ...' if len(gap) > GAP_NAMED else ''}"
+        ),
         remediation=(
             "Declare one concrete mutation per rule in `enforce/discrimination.py` "
             "and run `python tools/discrimination_gate.py`. A mechanism that "
@@ -1173,12 +1189,12 @@ _EVIDENCE_CODES: Final[dict[str, tuple[str, Severity, str]]] = {
     "E006": (
         "V105",
         Severity.ERROR,
-        "Classify the retired id as superseded, consolidated, or retired.",
+        "Classify a heading with a successor as superseded, consolidated, or retired.",
     ),
     "E007": (
         "V105",
         Severity.ERROR,
-        "Keep the rule active or add a resolvable Superseded by field to its heading.",
+        "Add the replacement to Superseded by, or classify a withdrawal as retired.",
     ),
     "E008": (
         "V106",
@@ -1251,8 +1267,7 @@ def check_evidence(
         )
     if unwitnessed:
         named = ", ".join(
-            f"{finding.rule_id} {finding.message.split()[0]}"
-            for finding in unwitnessed[:GAP_NAMED]
+            f"{finding.rule_id} {finding.message.split()[0]}" for finding in unwitnessed[:GAP_NAMED]
         )
         yield Finding(
             code="V107",
@@ -1312,7 +1327,10 @@ def check_learning(layout: Layout) -> Iterator[Finding]:
         events = len(learn.read_ledger(store))
     except learn.LearnError as exc:
         yield Finding(
-            code="V096", severity=Severity.ERROR, path="learning/ledger.jsonl", line=1,
+            code="V096",
+            severity=Severity.ERROR,
+            path="learning/ledger.jsonl",
+            line=1,
             message=str(exc),
             remediation="Repair the line, or drop it and re-record the event.",
         )
@@ -1328,7 +1346,10 @@ def check_learning(layout: Layout) -> Iterator[Finding]:
         connection.close()
     if stored != events:
         yield Finding(
-            code="V096", severity=Severity.ERROR, path="learning/learning.db", line=1,
+            code="V096",
+            severity=Severity.ERROR,
+            path="learning/learning.db",
+            line=1,
             message=f"database holds {stored} event(s), the ledger holds {events}",
             remediation="Run `python tools/learn.py sync`; the ledger is the record.",
         )
@@ -1435,7 +1456,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", help="emit findings as JSON")
     parser.add_argument("--root", type=Path, default=REPO_ROOT, help="repository root")
     parser.add_argument(
-        "--update-baseline", action="store_true",
+        "--update-baseline",
+        action="store_true",
         help="move the V081/V082 ceiling to the corpus's current unbuilt-mechanism count and exit",
     )
     parser.add_argument("--why", help="required with --update-baseline: why the ceiling is moving")
@@ -1444,12 +1466,16 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.update_baseline:
         if not args.why:
-            parser.error("--why is required with --update-baseline; an unexplained ceiling move is drift")
+            parser.error(
+                "--why is required with --update-baseline; an unexplained ceiling move is drift"
+            )
         layout = Layout(root)
         documents, _ = load_documents(layout)
         pairs = unbuilt_pairs(documents, layout)
         write_v080_baseline(pairs, args.why)
-        print(f"recorded {len(pairs)} unbuilt mechanism(s) in {layout.rel(V080_BASELINE_PATH)} -- {args.why}")
+        print(
+            f"recorded {len(pairs)} unbuilt mechanism(s) in {layout.rel(V080_BASELINE_PATH)} -- {args.why}"
+        )
         return 0
 
     findings = run(Layout(root))

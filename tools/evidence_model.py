@@ -451,7 +451,12 @@ def _validate_record(
     @return semantic mismatches for this pair
     """
     findings: list[EvidenceFinding] = []
-    retired = rule.superseded_by is not None
+    disposition = evidence.migration.disposition
+    retired = disposition in {
+        MigrationDisposition.SUPERSEDED,
+        MigrationDisposition.CONSOLIDATED,
+        MigrationDisposition.RETIRED,
+    }
     if not evidence.warrants:
         findings.append(EvidenceFinding("E003", rule.rule_id, "rule names no warrant"))
     declared = Counter(rule.mechanisms)
@@ -466,21 +471,16 @@ def _validate_record(
         )
     if retired and evidence.strategies:
         findings.append(EvidenceFinding("E005", rule.rule_id, "retired rule has strategies"))
-    if retired and evidence.migration.disposition not in {
-        MigrationDisposition.SUPERSEDED,
-        MigrationDisposition.CONSOLIDATED,
-        MigrationDisposition.RETIRED,
-    }:
+    if rule.superseded_by is not None and not retired:
         findings.append(
-            EvidenceFinding("E006", rule.rule_id, "retired rule has an active disposition")
+            EvidenceFinding("E006", rule.rule_id, "heading has a successor but migration is active")
         )
-    if not retired and evidence.migration.disposition in {
+    if rule.superseded_by is None and disposition in {
         MigrationDisposition.SUPERSEDED,
         MigrationDisposition.CONSOLIDATED,
-        MigrationDisposition.RETIRED,
     }:
         findings.append(
-            EvidenceFinding("E007", rule.rule_id, "active rule has a retired disposition")
+            EvidenceFinding("E007", rule.rule_id, "replacement disposition names no successor")
         )
     for strategy in evidence.strategies:
         if strategy.is_automated and strategy.must_reject is None:
@@ -517,7 +517,11 @@ def verification_state(
     @param root repository against which local mechanisms are located
     @return the honest strategy state
     """
-    if rule.superseded_by is not None:
+    if evidence.migration.disposition in {
+        MigrationDisposition.SUPERSEDED,
+        MigrationDisposition.CONSOLIDATED,
+        MigrationDisposition.RETIRED,
+    }:
         state = VerificationState.RETIRED
     elif not evidence.strategies:
         state = VerificationState.UNDECLARED
