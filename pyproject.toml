@@ -17,7 +17,10 @@
 #  Adding a [tool.ruff] or [tool.pytest] table here would undo that.
 
 [tool.agent-discipline]
+unit = "application"
+source_roots = ["tools", "enforce"]
 doc_engine = "doxygen"
+pedagogical_full_projection = false
 
 [tool.agent-discipline.layers]
 # Empty on purpose. This repository is a documentation corpus with a tools/ and

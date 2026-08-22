@@ -27,7 +27,7 @@ import pkgutil
 import sys
 from pathlib import Path
 
-from . import Check, Finding
+from . import Check, Finding, describe
 
 
 def discover() -> list[Check]:
@@ -61,14 +61,22 @@ def main(argv: list[str] | None = None) -> int:
     @return 0 when no check found anything, 1 when any did
     """
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("paths", nargs="*", type=Path, default=[Path("src")])
+    parser.add_argument("paths", nargs="*", type=Path)
     parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument(
+        "--project",
+        type=Path,
+        help="the governed repository's own nearest pyproject.toml",
+    )
     args = parser.parse_args(argv)
-    paths = args.paths or [Path("src")]
+    probe = args.paths[0] if args.paths else args.root
+    declaration = describe(probe, args.project)
+    paths = args.paths or list(declaration.source_paths()) or [Path("src")]
 
     checks = discover()
     findings: list[Finding] = []
     for check in checks:
+        check.declaration = declaration
         found = check.run(paths)
         findings.extend(found)
         for finding in found:

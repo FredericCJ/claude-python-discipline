@@ -13,6 +13,13 @@
 #  the commented example in the template.
 
 [tool.agent-discipline]
+unit = "application"
+source_roots = ["src/refpkg"]
 doc_engine = "doxygen"
 
-[tool.agent-discipline.layers]
+[tool.agent-discipline.roles]
+domain = ["src/refpkg/domain"]
+application = ["src/refpkg/app"]
+ports = ["src/refpkg/ports"]
+adapters = ["src/refpkg/adapters"]
+shell = ["src/refpkg/shell"]

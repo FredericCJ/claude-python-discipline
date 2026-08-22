@@ -19,13 +19,14 @@
 #  What this project says about its own conventions. The AST checks under
 #  enforce/checks/ read it; nothing else does.
 #
-#  ONLY TWO THINGS ARE DECLARABLE, and neither switches a rule off:
+#  The declaration identifies exactly one governed repository. Capabilities add
+#  obligations later in this file; none of these fields switches a kernel rule off.
 #
-#  * `layers` maps this project's own directory names onto the four canonical
-#    layers law/ARCH defines. Without it, a project laid out as `services/` and
-#    `composition/` has those files resolve to no layer at all, and every
-#    layer-scoped check SKIPS them -- a silence indistinguishable from
-#    conformance. It renames; it cannot add a fifth layer.
+#  * `unit` is the repository's product shape: a complete application or one
+#    independently testable component. It never denotes several components.
+#  * `source_roots` bounds all production Python inspected by role-scoped checks.
+#  * `roles` maps repository-relative paths onto the four executable roles and
+#    the port-contract role. An uncovered source path fails; it never disappears.
 #  * `doc_engine` names what reads this project's documentation comments.
 #    DOC-001 and DOC-003 -- every element is documented -- apply whatever it
 #    says. DOC-002 and DOC-007 describe Doxygen's own syntax (the `##` block,
@@ -38,15 +39,19 @@
 #  prevent, not to cause.
 
 [tool.agent-discipline]
+unit = "application"              # application | component
+source_roots = ["src"]
 doc_engine = "doxygen"             # doxygen | sphinx | none.  Absent => none.
+pedagogical_full_projection = false
 
-[tool.agent-discipline.layers]
-# Left empty because this template assumes the canonical src/ layout. A project
-# with its own vocabulary maps each of its segment names onto a canonical layer:
-#
-#   services = "app"
-#   composition = "shell"
-#   cli = "shell"
+[tool.agent-discipline.roles]
+# Replace `package` with the distribution's import package. Paths, rather than
+# guessed directory names, make full source coverage mechanically decidable.
+domain = ["src/package/domain"]
+application = ["src/package/app"]
+ports = ["src/package/ports"]
+adapters = ["src/package/adapters"]
+shell = ["src/package/shell"]
 
 # ---------------------------------------------------------------------------- ruff
 

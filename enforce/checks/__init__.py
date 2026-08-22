@@ -260,20 +260,7 @@ def layer_of(path: Path, declaration: project.Declaration = project.DEFAULT) -> 
         canonical names onto themselves
     @return the canonical layer name, or 'unknown' when no segment names one
     """
-    for part in path.parts:
-        canonical = declaration.canonical(part)
-        if canonical is not None:
-            return canonical
-    # The final component is tried again without its suffix, because a shell is
-    # not always a package. A program of a few thousand lines commonly puts its
-    # entry point and its wiring at the package root as `cli.py` and
-    # `composition.py`, and no directory segment then names the layer at all.
-    # Found by running this against a real four-package codebase shaped exactly
-    # that way: both files resolved to 'unknown', so every layer-scoped check
-    # skipped the shell -- which is the layer where the effects are.
-    if path.suffix:
-        return declaration.canonical(path.stem) or "unknown"
-    return "unknown"
+    return declaration.role_of(path) or "unknown"
 
 
 def is_test_path(path: Path) -> bool:
@@ -301,8 +288,8 @@ def describe(start: Path, explicit: Path | None = None) -> project.Declaration:
     """
     declaration = project.load(start, explicit)
     if declaration.source is None:
-        print("  no [tool.agent-discipline] declaration found; "
-              "assuming the canonical layers and no documentation engine")
+        print("  no local [tool.agent-discipline] declaration found; "
+              "direct check is using legacy defaults, but a v4 project gate must fail")
     else:
         print(f"  declaration: {declaration.source}")
     for note in declaration.narrowed():

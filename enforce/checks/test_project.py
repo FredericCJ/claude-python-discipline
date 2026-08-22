@@ -1,13 +1,8 @@
-"""Proof-of-failure tests for the project declaration.
+"""Proof-of-failure tests for the bounded v4 project declaration.
 
-Two silent failures motivated this module, and both have a case here: a layer
-vocabulary the checks did not recognise, which made them skip whole directories
-while reporting clean; and one engine's comment syntax demanded of a project
-using another, which buried 18 real findings under 1,064 of form.
-
-The declaration is deliberately narrow, so the tests that matter most are the
-ones proving it cannot be widened: an unknown engine and a fifth layer are both
-refused rather than ignored (`FLOW-007`).
+The important negative cases are the ones that formerly produced a narrower
+green scan: an unknown source role, a missing unit, and a component inheriting a
+parent repository's declaration. Each is refused with a stable diagnostic id.
 
     pytest enforce/checks/test_project.py
 """
@@ -26,95 +21,177 @@ if TYPE_CHECKING:
 
 
 def declare(tmp_path: Path, body: str) -> Path:
-    """Write a project file carrying a declaration.
+    """Write one project file verbatim.
 
-    @param tmp_path the directory to write into
-    @param body the `[tool.agent-discipline]` section, dedented before writing
-    @return the written `pyproject.toml`
+    @param tmp_path directory to write into
+    @param body complete TOML body
+    @return written ``pyproject.toml``
     """
     path = tmp_path / "pyproject.toml"
     path.write_text(dedent(body), encoding="utf-8")
     return path
 
 
+def v4(*, extra: str = "", tables: str = "") -> str:
+    """A minimal complete declaration with optional fields and child tables.
+
+    @param extra scalar entries in the main declaration table
+    @param tables complete child-table text
+    @return TOML suitable for ``declare``
+    """
+    return f"""
+        [tool.agent-discipline]
+        unit = "application"
+        source_roots = ["src/pkg"]
+        {extra}
+        {tables}
+    """
+
+
 # ------------------------------------------------------------------- defaults
 
 
-def test_an_undeclared_project_gets_the_canonical_layers() -> None:
-    """The default must be the strict reading, never a permissive one."""
+def test_an_undeclared_project_is_conspicuously_incomplete() -> None:
+    """Direct checks retain defaults, but the v4 gate can see they are incomplete."""
+    assert project.DEFAULT.unit is None
+    assert project.DEFAULT.source_roots == ()
     assert project.DEFAULT.canonical("domain") == "domain"
     assert project.DEFAULT.canonical("services") is None
-    assert project.DEFAULT.doc_engine == "none"
+    assert "DISC-PROJECT-001" in project.DEFAULT.narrowed()[0]
 
 
-def test_an_undeclared_project_is_told_what_that_costs() -> None:
-    """Silence about a narrowed run is the failure this whole table prevents."""
-    notes = project.DEFAULT.narrowed()
-    assert notes
-    assert "DOC-002" in notes[0]
-    assert "DOC-007" in notes[0]
+def test_a_missing_declaration_falls_back_for_direct_checks(tmp_path: Path) -> None:
+    """The loader preserves a diagnostic fallback; the project gate rejects it.
 
-
-def test_a_missing_declaration_falls_back_rather_than_raising(tmp_path: Path) -> None:
-    """A project with no table is ordinary, not an error.
-
-    @param tmp_path an empty directory standing in for an undeclaring project
+    @param tmp_path empty directory standing in for an undeclared project
     """
     assert project.load(tmp_path) is project.DEFAULT
 
 
-# -------------------------------------------------------------- layer aliases
+@pytest.mark.parametrize("kind", list(project.UnitKind))
+def test_both_governed_unit_kinds_are_accepted(
+    tmp_path: Path, kind: project.UnitKind,
+) -> None:
+    """Application and single-component repositories share one declaration model.
 
-
-def test_an_aliased_layer_is_recognised(tmp_path: Path) -> None:
-    """The defect this exists for: `services/` resolving to no layer at all.
-
-    @param tmp_path the fixture directory
+    @param tmp_path fixture repository
+    @param kind one supported repository shape
     """
-    path = declare(tmp_path, """
+    path = declare(
+        tmp_path,
+        v4(extra=f'unit = "{kind}"').replace('unit = "application"\n', "", 1),
+    )
+    assert project.parse(path).unit is kind
+
+
+def test_a_missing_unit_is_refused(tmp_path: Path) -> None:
+    """A repository cannot silently acquire application semantics.
+
+    @param tmp_path fixture repository
+    """
+    path = declare(tmp_path, '[tool.agent-discipline]\nsource_roots=["src"]\n')
+    with pytest.raises(ValueError, match="DISC-PROJECT-001"):
+        project.parse(path)
+
+
+def test_an_unknown_unit_is_refused(tmp_path: Path) -> None:
+    """Several components in one repository is not a third unit kind.
+
+    @param tmp_path fixture repository
+    """
+    path = declare(
+        tmp_path,
+        '[tool.agent-discipline]\nunit="system"\nsource_roots=["src"]\n',
+    )
+    with pytest.raises(ValueError, match="DISC-PROJECT-002"):
+        project.parse(path)
+
+
+# ------------------------------------------------------------- source and roles
+
+
+def test_explicit_role_paths_classify_source(tmp_path: Path) -> None:
+    """Classification uses a complete relative path, not a guessed segment.
+
+    @param tmp_path fixture repository
+    """
+    found = project.parse(declare(tmp_path, v4(tables="""
+        [tool.agent-discipline.roles]
+        application = ["src/pkg/services"]
+        shell = ["src/pkg/entry"]
+    """)))
+    assert layer_of(tmp_path / "src/pkg/services/clean.py", found) == "app"
+    assert layer_of(tmp_path / "src/pkg/unmapped/clean.py", found) == "unknown"
+
+
+def test_legacy_aliases_remain_parseable_for_migration(tmp_path: Path) -> None:
+    """A dry-run migrator must be able to understand rather than ignore v3 aliases.
+
+    @param tmp_path fixture repository
+    """
+    found = project.parse(declare(tmp_path, v4(tables="""
         [tool.agent-discipline.layers]
         services = "app"
         composition = "shell"
-    """)
-    found = project.parse(path)
+    """)))
     assert found.canonical("services") == "app"
-    assert layer_of(tmp_path / "src" / "pkg" / "services" / "clean.py", found) == "app"
+    assert layer_of(tmp_path / "src/pkg/services/clean.py", found) == "app"
 
 
-def test_the_canonical_names_still_work_alongside_aliases(tmp_path: Path) -> None:
-    """Declaring an alias must not stop the canonical names being recognised.
+def test_an_unknown_role_is_refused(tmp_path: Path) -> None:
+    """A misspelled role cannot make its directory disappear from checks.
 
-    @param tmp_path the fixture directory
+    @param tmp_path fixture repository
     """
-    found = project.parse(declare(tmp_path, """
-        [tool.agent-discipline.layers]
-        services = "app"
+    path = declare(tmp_path, v4(tables="""
+        [tool.agent-discipline.roles]
+        middleware = ["src/pkg/middleware"]
     """))
-    assert layer_of(tmp_path / "src" / "pkg" / "domain" / "x.py", found) == "domain"
+    with pytest.raises(ValueError, match="DISC-PROJECT-005"):
+        project.parse(path)
 
 
-def test_an_unaliased_layer_still_reads_as_unknown(tmp_path: Path) -> None:
-    """Undeclared is undeclared; the table must not guess.
+def test_a_role_outside_source_roots_is_refused(tmp_path: Path) -> None:
+    """A role may not expand the bounded production tree implicitly.
 
-    @param tmp_path the fixture directory
+    @param tmp_path fixture repository
     """
-    found = project.parse(declare(tmp_path, '[tool.agent-discipline]\ndoc_engine="none"\n'))
-    assert layer_of(tmp_path / "src" / "pkg" / "services" / "x.py", found) == "unknown"
+    path = declare(tmp_path, v4(tables="""
+        [tool.agent-discipline.roles]
+        domain = ["other/pkg/domain"]
+    """))
+    with pytest.raises(ValueError, match="DISC-PROJECT-006"):
+        project.parse(path)
 
 
-def test_a_fifth_layer_is_refused(tmp_path: Path) -> None:
-    """A project may rename its layers; it may not invent one.
+def test_overlapping_roles_are_refused(tmp_path: Path) -> None:
+    """One source path cannot acquire two architectural owners.
 
-    Four layers with a defined direction are what make a fault's origin derivable
-    from where it was raised. A fifth has no place in that order.
-
-    @param tmp_path the fixture directory
+    @param tmp_path fixture repository
     """
-    path = declare(tmp_path, """
-        [tool.agent-discipline.layers]
-        plugins = "middleware"
-    """)
-    with pytest.raises(ValueError, match="canonical layers"):
+    path = declare(tmp_path, v4(tables="""
+        [tool.agent-discipline.roles]
+        application = ["src/pkg/services"]
+        adapters = ["src/pkg/services/http"]
+    """))
+    with pytest.raises(ValueError, match="DISC-PROJECT-006"):
+        project.parse(path)
+
+
+@pytest.mark.parametrize("bad", ["../peer", "/absolute", "C:/peer", "./"])
+def test_source_roots_cannot_escape_or_name_the_repository(
+    tmp_path: Path, bad: str,
+) -> None:
+    """Every inspected source root is bounded by this checkout.
+
+    @param tmp_path fixture repository
+    @param bad unsafe path spelling
+    """
+    path = declare(
+        tmp_path,
+        f'[tool.agent-discipline]\nunit="component"\nsource_roots=["{bad}"]\n',
+    )
+    with pytest.raises(ValueError, match="DISC-PROJECT-004"):
         project.parse(path)
 
 
@@ -123,67 +200,86 @@ def test_a_fifth_layer_is_refused(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize("engine", ["doxygen", "sphinx", "none"])
 def test_each_known_engine_is_accepted(tmp_path: Path, engine: str) -> None:
-    """The three the discipline recognises, one at a time.
+    """The three recognized documentation syntaxes remain explicit.
 
-    @param tmp_path the fixture directory
-    @param engine the engine under test
+    @param tmp_path fixture repository
+    @param engine engine under test
     """
-    found = project.parse(declare(tmp_path, f'[tool.agent-discipline]\ndoc_engine="{engine}"\n'))
+    found = project.parse(declare(tmp_path, v4(extra=f'doc_engine = "{engine}"')))
     assert found.doc_engine == engine
 
 
 def test_an_unknown_engine_is_refused_not_ignored(tmp_path: Path) -> None:
-    """A misspelled engine that silently means `none` is the worst outcome.
+    """A misspelled engine cannot silently deactivate form rules.
 
-    The author believes the form rules are active; they are not, and nothing says
-    so. Refusing is the only reading that cannot mislead.
-
-    @param tmp_path the fixture directory
+    @param tmp_path fixture repository
     """
-    path = declare(tmp_path, '[tool.agent-discipline]\ndoc_engine="doxy"\n')
-    with pytest.raises(ValueError, match="doc_engine"):
+    path = declare(tmp_path, v4(extra='doc_engine = "doxy"'))
+    with pytest.raises(ValueError, match="DISC-PROJECT-007"):
         project.parse(path)
 
 
 def test_doxygen_narrows_nothing(tmp_path: Path) -> None:
-    """Under the engine the rules were written for, all four apply.
+    """A complete Doxygen declaration leaves no direct-check caveat.
 
-    @param tmp_path the fixture directory
+    @param tmp_path fixture repository
     """
-    found = project.parse(declare(tmp_path, '[tool.agent-discipline]\ndoc_engine="doxygen"\n'))
+    found = project.parse(declare(tmp_path, v4(extra='doc_engine = "doxygen"')))
     assert found.narrowed() == ()
 
 
-# ---------------------------------------------------------------- the search
+# --------------------------------------------------------- repository boundary
 
 
 def test_the_declaration_is_found_from_a_nested_path(tmp_path: Path) -> None:
-    """A check is pointed at `src/`; the declaration lives above it.
+    """A check pointed at source finds the repository's own declaration.
 
-    @param tmp_path the fixture directory
+    @param tmp_path fixture repository
     """
-    declare(tmp_path, '[tool.agent-discipline]\ndoc_engine="sphinx"\n')
-    nested = tmp_path / "src" / "pkg" / "domain"
+    declare(tmp_path, v4(extra='doc_engine = "sphinx"'))
+    nested = tmp_path / "src/pkg/domain"
     nested.mkdir(parents=True)
     assert project.load(nested).doc_engine == "sphinx"
 
 
-def test_a_project_file_without_the_table_is_not_a_declaration(tmp_path: Path) -> None:
-    """Most pyproject.toml files have nothing to say here and must be walked past.
+def test_a_nearer_project_without_the_table_blocks_parent_inheritance(
+    tmp_path: Path,
+) -> None:
+    """A component never inherits a parent/meta-repository declaration.
 
-    @param tmp_path the fixture directory
+    @param tmp_path parent fixture containing a nested component checkout
     """
-    (tmp_path / "pyproject.toml").write_text('[project]\nname="x"\n', encoding="utf-8")
-    assert project.find_declaration(tmp_path) is None
+    declare(tmp_path, v4(extra='doc_engine = "doxygen"'))
+    component = tmp_path / "component"
+    component.mkdir()
+    declare(component, '[project]\nname="component"\n')
+    source = component / "src"
+    source.mkdir()
+    assert project.find_declaration(source) is None
+    assert project.load(source) is project.DEFAULT
 
 
-def test_an_explicit_declaration_wins(tmp_path: Path) -> None:
-    """The only way to check a tree whose own project file cannot be edited.
+def test_an_explicit_parent_or_sibling_project_is_refused(tmp_path: Path) -> None:
+    """Command-line configuration cannot pierce the local repository boundary.
 
-    @param tmp_path the fixture directory
+    @param tmp_path parent fixture containing two projects
     """
-    inner = tmp_path / "target"
-    inner.mkdir()
-    declare(inner, '[tool.agent-discipline]\ndoc_engine="doxygen"\n')
-    outside = declare(tmp_path, '[tool.agent-discipline]\ndoc_engine="sphinx"\n')
-    assert project.load(inner, outside).doc_engine == "sphinx"
+    parent = declare(tmp_path, v4())
+    component = tmp_path / "component"
+    component.mkdir()
+    declare(component, v4())
+    source = component / "src"
+    source.mkdir()
+    with pytest.raises(ValueError, match="DISC-PROJECT-009"):
+        project.load(source, parent)
+
+
+def test_the_nearest_project_may_be_named_explicitly(tmp_path: Path) -> None:
+    """Explicit loading is deterministic when it names the same local boundary.
+
+    @param tmp_path fixture repository
+    """
+    local = declare(tmp_path, v4(extra='doc_engine = "sphinx"'))
+    source = tmp_path / "src"
+    source.mkdir()
+    assert project.load(source, local).doc_engine == "sphinx"
