@@ -149,6 +149,22 @@ is outside the markers, which for a greenfield repository is its title line. Del
 hand if you want it gone. `.agent/integration-record.json` is left in place too, emptied,
 so that removing twice is a no-op.
 
+## Migrating a v3 declaration
+
+Installation and declaration migration are separate reviews. After vendoring v4, an
+existing v3 repository previews the bounded project-file edit with:
+
+```bash
+python .agent/tools/migrate_v4.py --root . --unit application
+python .agent/tools/migrate_v4.py --root . --unit application --apply
+```
+
+Select `component` only when this checkout is one independently testable component. The
+migrator preserves configuration outside `[tool.agent-discipline]`, converts legacy role
+aliases and unambiguous `ARCH-004` ownership, refuses paths outside this checkout, and is
+idempotent. It cannot decide the unit kind, the meaning of a boundary, or the contents of
+`architecture.json`; those remain explicit authoring work rather than inferred prose.
+
 ## After integrating
 
 Read `.agent/discipline/KERNEL.md`. It is about 1,800 tokens and it routes everything

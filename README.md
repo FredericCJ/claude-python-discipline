@@ -138,7 +138,7 @@ enforce/
   ENFORCEMENT.md     generated: every rule against its mechanism
 learning/            schema.sql  config.toml  ledger.jsonl  INDEX.md  calibration.md
 tools/               validate.py build_index.py build_graph.py nav.py learn.py
-                     vendor.py integrate.py harvest.py build_provenance.py release.py
+                     vendor.py integrate.py migrate_v4.py harvest.py release.py
 skills/python-discipline/
   SKILL.md            the one authored Claude Code and Codex skill entry point
 packaging/           INSTALL-DISCIPLINE.md, the archive-root pointer for adopters
@@ -154,6 +154,22 @@ Copy `enforce/templates/pyproject.toml` and `enforce/importlinter.toml` into the
 replace the placeholder package name; copy `enforce/checks/` alongside. The configuration
 comments name the rule ids each stanza enforces, so a lint failure traces back to a rule
 and a rule traces forward to the check that decides it.
+
+For an existing v3 project, preview the declaration migration before changing it:
+
+```bash
+python .agent/tools/migrate_v4.py --root . --unit application
+python .agent/tools/migrate_v4.py --root . --unit application --apply
+```
+
+Use `--unit component` for one standalone component repository. The default invocation is
+write-free, prints the exact diff, and keeps every byte outside the contiguous
+`[tool.agent-discipline]` table family. Apply is refused when production source has no
+inferable role, when an old `ARCH-004` technology has several candidate owners, or when a
+source root escapes this repository. The tool deliberately does not invent
+`architecture.json`: its warning remains until a human authors the volatile decisions,
+contracts, resources, and recoveries from the shipped template. Running `--apply` again is
+a no-op.
 
 ## Working on the discipline itself
 

@@ -33,6 +33,17 @@ python .agent/tools/integrate.py --remove     # uninstall, restoring the prior c
 `--dry-run` prints a unified diff of every file it would touch. It is the same code path as
 the real run, stopped before the write — a preview, not a second implementation's guess.
 
+If the repository already uses v3, preview its declaration migration separately:
+
+```bash
+python .agent/tools/migrate_v4.py --root . --unit application
+python .agent/tools/migrate_v4.py --root . --unit application --apply
+```
+
+Use `--unit component` for one component repository. Preview writes nothing; apply changes
+only the contiguous discipline declaration tables and refuses ambiguous role or foreign
+dependency ownership. Semantic `architecture.json` content is intentionally not guessed.
+
 Then start a fresh agent session, so the new configuration is loaded.
 
 ## What it will and will not do
