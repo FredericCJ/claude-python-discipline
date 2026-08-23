@@ -269,6 +269,7 @@ def test_gate_suite_defined() -> None:
 
 
 @pytest.mark.parametrize("name,command", GATE, ids=[n for n, _ in GATE])
+@pytest.mark.timeout(240)
 def test_every_gate_entry_is_runnable(name: str, command: tuple[str, ...]) -> None:
     """FLOW-009: each gate command starts and reports, rather than erroring out.
 
