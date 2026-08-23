@@ -413,7 +413,7 @@ def _contract(record: Mapping[str, object], where: str) -> Contract:
         if DIGEST.fullmatch(digest) is None:
             # Reject malformed digest provenance at the exact field.
             _fail("ARCH022_MODEL_SCHEMA", f"{where}.provenance.digest", "expected sha256 digest")
-        # Build the canonical three-pair provenance mapping in source-role/version/digest order.
+        # Map each provenance key to its text value in source-role/version/digest order.
         provenance = {
             "source_role": _identifier(parsed["source_role"], f"{where}.provenance.source_role"),
             "version": _text(parsed["version"], f"{where}.provenance.version"),
