@@ -16,7 +16,7 @@ decay: none
 
 **A proxy cannot decide its parent semantic rule.** Passing its proposition establishes only the stated syntax or behavior and leaves the printed residual. `rule-level witnessed` is deliberately weaker than v4's target: the inherited matrix proves that some strategy rejected a case for that rule, but cannot yet attribute the rejection to one exact strategy.
 
-0 of 176 binding rules lack an available declared strategy. 111 of 166 rules with automated strategies have inherited rule-level rejection evidence. 160 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
+0 of 176 binding rules lack an available declared strategy. 138 of 166 rules with automated strategies have inherited rule-level rejection evidence. 160 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
 
 ## Modules
 
@@ -53,18 +53,18 @@ decay: none
 
 | Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
 |---|---|---|---|---|---|---|---|---|
-| `API-001` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_contract_documented;… | none | A contract states more than a signature |
-| `API-002` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_contract_documented;… | none | The implementation is not the contract |
+| `API-001` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_contract_documented;… | none | A contract states more than a signature |
+| `API-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_contract_documented;… | none | The implementation is not the contract |
 | `API-003` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:single_wiring_point; it does… | none | Public operations speak the domain, not the store |
 | `API-004` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | none | The persistent representation is private |
-| `API-005` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_structured_output; it… | none | Structured output is the primary interface |
-| `API-006` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_structured_output; it… | none | Human output renders the same result object |
-| `API-007` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_exit_codes; it does n… | none | Exit status is part of the contract |
+| `API-005` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_structured_output; it… | none | Structured output is the primary interface |
+| `API-006` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_structured_output; it… | none | Human output renders the same result object |
+| `API-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_exit_codes; it does n… | none | Exit status is part of the contract |
 | `API-008` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | The surface is self-describing |
-| `API-009` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_agent_parity; it does… | none | Automation gets no relaxed validation |
-| `API-010` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_schema_versioned; it… | none | Every published payload carries a schema version |
+| `API-009` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_agent_parity; it does… | none | Automation gets no relaxed validation |
+| `API-010` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_schema_versioned; it… | none | Every published payload carries a schema version |
 | `API-011` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Error codes and result variants are versioned surface |
-| `API-012` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_migrations; it does n… | none | A format change ships with a migration and its test |
+| `API-012` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_migrations; it does n… | none | A format change ships with a migration and its test |
 | `API-013` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Compatibility is not inherited from parser tolerance |
 | `API-014` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Prefer additive change |
 | `API-015` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | The delivered artifact is what gets tested |
@@ -109,7 +109,7 @@ decay: none
 | Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
 |---|---|---|---|---|---|---|---|---|
 | `DEP-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | none | The domain depends on the standard library only |
-| `DEP-002` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_dependency_position;… | none | A dependency is judged by its architectural position |
+| `DEP-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_dependency_position;… | none | A dependency is judged by its architectural position |
 | `DEP-003` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | An adapter owns its dependency's failure modes |
 | `DEP-004` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Do not reimplement a solved, specified problem |
 | `DEP-005` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_environment_locked; i… | none | The environment is locked by content hash |
@@ -127,7 +127,7 @@ decay: none
 
 | Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
 |---|---|---|---|---|---|---|---|---|
-| `DIAG-001` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_envelope_conforms; it… | none | Every escaping error produces a valid envelope |
+| `DIAG-001` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_envelope_conforms; it… | none | Every escaping error produces a valid envelope |
 | `DIAG-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:exception_has_code; it does… | `V3E-003` | Every custom exception carries a stable code |
 | `DIAG-003` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:exception_has_code; it does… | none | Error detail is carried in attributes, not interpolated away |
 | `DIAG-004` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | A code is a public contract |
@@ -169,18 +169,18 @@ decay: none
 |---|---|---|---|---|---|---|---|---|
 | `EFCT-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes configured direct imports of effect-capable APIs; it does not prove that every… | none | Foreign effects stay behind ports |
 | `EFCT-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:explicit_effects; it does no… | none | Time, randomness and environment enter through ports |
-| `EFCT-003` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_determinism; it does… | none | Determinism is the default |
+| `EFCT-003` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_determinism; it does… | none | Determinism is the default |
 | `EFCT-004` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | Naming a command does not prove it is replayable, idempotent, authorized, or the only hidden wr… | none | Mutating operations are commands, not raw writes |
 | `EFCT-005` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:plan_apply; it does not esta… | none | Destructive operations plan before they apply |
 | `EFCT-006` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_dry_run_matches_apply… | none | A dry run is the pipeline truncated, never a second path |
-| `EFCT-007` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_interruption_recovers… | none | A multi-effect apply is journalled |
+| `EFCT-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_interruption_recovers… | none | A multi-effect apply is journalled |
 | `EFCT-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:atomicity_qualified; it does… | none | Atomicity claims are qualified |
-| `EFCT-009` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_what_is_not_guarantee… | none | What is not guaranteed is stated |
+| `EFCT-009` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_what_is_not_guarantee… | none | What is not guaranteed is stated |
 | `EFCT-010` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:plan_apply; it does not esta… | none | State transitions are explicit and closed |
 | `EFCT-011` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | The exercised illegal transitions may not cover every runtime state or hidden effect, and mocks… | none | Illegal transitions are refused before any effect |
 | `EFCT-012` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | none | Persistent state has exactly one owning path |
 | `EFCT-013` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_concurrency_documente… | none | Concurrency is introduced only with stated semantics |
-| `EFCT-014` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_concurrency_documente… | none | Shared mutable state is guarded by a stated lock order |
+| `EFCT-014` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_concurrency_documente… | none | Shared mutable state is guarded by a stated lock order |
 | `EFCT-015` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_single_writer; it doe… | none | Writer exclusion is enforced; contention is a result |
 | `EFCT-016` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Prefer the sequential design |
 
@@ -202,7 +202,7 @@ decay: none
 | `ERR-012` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:assert_usage; it does not es… | none | Boundary validation survives optimized bytecode |
 | `ERR-013` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:boundary_parsing; it does no… | none | Try the operation rather than pre-checking the world |
 | `ERR-014` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Expected failure and contract violation are distinguished |
-| `ERR-015` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_no_unhandled_escape;… | none | No unhandled exception reaches the process boundary |
+| `ERR-015` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_no_unhandled_escape;… | none | No unhandled exception reaches the process boundary |
 | `ERR-016` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_fault_containment; it… | none | A fault is contained at the boundary that detected it |
 
 ### law/EVID
@@ -224,15 +224,15 @@ decay: none
 |---|---|---|---|---|---|---|---|---|
 | `FLOW-001` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | The contract is written before the implementation |
 | `FLOW-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:oracle_declared; it does not… | none | Test obligations are named before tests are written |
-| `FLOW-003` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_decisions_recorded; i… | none | A structural decision is recorded before it is relied upon |
-| `FLOW-004` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_decision_records_are_… | none | Decision records are appended, never rewritten |
-| `FLOW-005` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_overruled_objections_… | none | Overruled objections are recorded, not discarded |
-| `FLOW-006` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Structural declaration and mechanism resolution do not prove that each strategy decides the ful… | none | Binding rules declare exact strategies |
-| `FLOW-007` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | This inherited proxy does not yet prove a must-reject case for every exact strategy, external t… | none | Every automated proposition rejects a counterexample |
+| `FLOW-003` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_decisions_recorded; i… | none | A structural decision is recorded before it is relied upon |
+| `FLOW-004` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_decision_records_are_… | none | Decision records are appended, never rewritten |
+| `FLOW-005` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_overruled_objections_… | none | Overruled objections are recorded, not discarded |
+| `FLOW-006` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Structural declaration and mechanism resolution do not prove that each strategy decides the ful… | none | Binding rules declare exact strategies |
+| `FLOW-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | This inherited proxy does not yet prove a must-reject case for every exact strategy, external t… | none | Every automated proposition rejects a counterexample |
 | `FLOW-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:deviation_recorded; it does… | none | Deviations from an advisory rule are recorded in the change |
-| `FLOW-009` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_gate_suite_defined; i… | `V3E-006` | The gates pass before a change is offered |
+| `FLOW-009` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_gate_suite_defined; i… | `V3E-006` | The gates pass before a change is offered |
 | `FLOW-010` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | New behaviour arrives with its obligations discharged |
-| `FLOW-011` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_envelope_conforms; it… | none | The diagnosis is checked, not assumed |
+| `FLOW-011` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_envelope_conforms; it… | none | The diagnosis is checked, not assumed |
 | `FLOW-012` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | The report cannot prove that a human-authored change description reproduces its facts; the mach… | none | Report what happened, including what did not |
 | `FLOW-013` | RETIRED | `retired` | n/a | n/a | n/a | n/a | none | Scale ceremony to reuse ambition, not to line count |
 
@@ -289,14 +289,14 @@ decay: none
 | `TEST-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_goldens_reviewed; it… | none | Golden files are reviewed, never merely regenerated |
 | `TEST-009` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_fault_schedules_are_d… | `V3E-007` | Fault injection is data, not bespoke classes |
 | `TEST-010` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_fault_catalogue; it d… | none | The fault catalogue is covered per port |
-| `TEST-011` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_fault_containment; it… | none | Propagation and containment are tested, not assumed |
-| `TEST-012` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_interruption_recovers… | none | Interruption is tested at every effect boundary |
+| `TEST-011` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_fault_containment; it… | none | Propagation and containment are tested, not assumed |
+| `TEST-012` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_interruption_recovers… | none | Interruption is tested at every effect boundary |
 | `TEST-013` | BINDING | `external-verifier` | `proxy` | `pending` | `linux` | Passing excludes only the configured patterns implemented by auto:mutmut; it does not establish… | `V3E-005` | Mutation score is gated on the core |
 | `TEST-014` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:compound_gate; it does not e… | none | Compound decisions are decomposed and tabulated |
-| `TEST-015` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_checks_can_fail; it d… | none | Every check has a proof-of-failure companion |
+| `TEST-015` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_checks_can_fail; it d… | none | Every check has a proof-of-failure companion |
 | `TEST-016` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:test_weakening; it does not… | none | A test that weakens must say so |
 | `TEST-017` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:pytest-randomly; it does not… | none | Tests are order-independent and network-isolated |
-| `TEST-018` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_no_rerun_dismissal; i… | none | A flaky failure is a defect in the harness |
+| `TEST-018` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_no_rerun_dismissal; i… | none | A flaky failure is a defect in the harness |
 | `TEST-019` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Test names state the behaviour |
 | `TEST-020` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Source spelling and path existence do not prove pytest collects or passes a node, that a parame… | `V3E-008` | Contract suites cover implementations and observable terms |
 
@@ -341,7 +341,7 @@ decay: none
 |---|---|---|---|---|---|---|---|---|
 | `TEAMS-001` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does n… | none | A dispatch states the contract, not the intention |
 | `TEAMS-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does n… | none | A restriction is never lifted by an instruction |
-| `TEAMS-003` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_completion_hook_enfor… | none | Verification runs as a gate, not as a request |
+| `TEAMS-003` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_completion_hook_enfor… | none | Verification runs as a gate, not as a request |
 | `TEAMS-004` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Documentation is written in one stage, verified in another |
 | `TEAMS-005` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | A verifier refutes claims; it does not improve prose |
 | `TEAMS-006` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Presence and truth need separate mechanisms |

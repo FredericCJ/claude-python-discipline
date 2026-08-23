@@ -1943,6 +1943,428 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         ),
         proof="enforce/checks/test_ledger_checks.py::test_a_skip_without_a_reason_fires",
     ),
+    # ---------------------------------------- damaged fitness-test references
+    Mutation(
+        rule_id="API-001",
+        summary="a protocol docstring states no result contract",
+        source=(
+            "The fitness mechanism requires a non-void protocol method to state "
+            "its result; this replaces that contract with a title-only docstring."
+        ),
+        replace=((
+            "src/refpkg/ports/clock.py",
+            (
+                '        """The current instant.\n\n'
+                "        @return the current instant, at or after the epoch\n"
+                "        @throws ClockUnavailable when no reading can be taken\n"
+                '        """'
+            ),
+            '        """The current instant."""',
+        ),),
+        node="enforce/fitness/test_api.py::test_contract_documented",
+    ),
+    Mutation(
+        rule_id="API-002",
+        summary="a protocol method acquires an implementation body",
+        source=(
+            "The mechanism permits documentation plus ellipsis only; replacing "
+            "that ellipsis with a return makes the contract carry implementation."
+        ),
+        replace=((
+            "src/refpkg/ports/clock.py",
+            (
+                '        @throws ClockUnavailable when no reading can be taken\n'
+                '        """\n        ...'
+            ),
+            (
+                '        @throws ClockUnavailable when no reading can be taken\n'
+                '        """\n        return Instant(0)'
+            ),
+        ),),
+        node="enforce/fitness/test_api.py::test_contract_documented",
+    ),
+    Mutation(
+        rule_id="API-005",
+        summary="the entry point exposes no recognized result renderer",
+        source=(
+            "The structured-output mechanism requires an explicit renderer at "
+            "the boundary; renaming it removes that observable shared interface."
+        ),
+        replace=((
+            "src/refpkg/shell/cli.py",
+            "def render(payload: dict[str, Any], *, as_json: bool) -> str:",
+            "def display(payload: dict[str, Any], *, as_json: bool) -> str:",
+        ),),
+        node="enforce/fitness/test_api.py::test_structured_output",
+    ),
+    Mutation(
+        rule_id="API-006",
+        summary="the human renderer no longer accepts the result object",
+        source=(
+            "The mechanism recognizes payload/result/data parameters as the shared "
+            "object seam; renaming the renderer input removes that exact evidence."
+        ),
+        replace=((
+            "src/refpkg/shell/cli.py",
+            "def render(payload: dict[str, Any], *, as_json: bool) -> str:",
+            "def render(message: dict[str, Any], *, as_json: bool) -> str:",
+        ),),
+        node="enforce/fitness/test_api.py::test_structured_output",
+    ),
+    Mutation(
+        rule_id="API-007",
+        summary="success and refusal statuses cease to be named exit constants",
+        source=(
+            "The fitness mechanism requires at least two published EXIT constants; "
+            "renaming success and refusal leaves only the usage status discoverable."
+        ),
+        replace=(
+            ("src/refpkg/shell/cli.py", "EXIT_OK: int = 0", "STATUS_OK: int = 0"),
+            ("src/refpkg/shell/cli.py", "EXIT_REFUSED: int = 1", "STATUS_REFUSED: int = 1"),
+        ),
+        node="enforce/fitness/test_api.py::test_exit_codes",
+    ),
+    Mutation(
+        rule_id="API-009",
+        summary="the shell introduces an automation-specific validation branch",
+        source=(
+            "The mechanism rejects caller-identity branches by name; inserting an "
+            "is_agent switch creates the relaxed automation path the rule forbids."
+        ),
+        replace=((
+            "src/refpkg/shell/cli.py",
+            "from __future__ import annotations",
+            "from __future__ import annotations\n\nis_agent = False",
+        ),),
+        node="enforce/fitness/test_api.py::test_agent_parity",
+    ),
+    Mutation(
+        rule_id="API-010",
+        summary="the published entry point carries no schema-version field",
+        source=(
+            "The replacement remains an entry-point module with a renderer but "
+            "contains neither a schema-version declaration nor payload field."
+        ),
+        write=((
+            "src/refpkg/shell/cli.py",
+            (
+                '"""An unversioned entry point."""\n\n'
+                "from typing import Any\n\n"
+                "def render(payload: dict[str, Any], *, as_json: bool) -> str:\n"
+                '    """Render one payload."""\n'
+                "    return str(payload)\n"
+            ),
+        ),),
+        node="enforce/fitness/test_api.py::test_schema_versioned",
+    ),
+    Mutation(
+        rule_id="API-012",
+        summary="a version-two payload ships without any migration",
+        source=(
+            "The replacement raises the format to version two in the published "
+            "entry point while the repository still contains no migration artifact."
+        ),
+        write=((
+            "src/refpkg/shell/cli.py",
+            (
+                '"""A changed entry point with no migration."""\n\n'
+                'SCHEMA_VERSION = "2"\n\n'
+                "def render(payload: object) -> str:\n"
+                '    """Render one payload."""\n'
+                "    return str(payload)\n"
+            ),
+        ),),
+        node="enforce/fitness/test_api.py::test_migrations",
+    ),
+    Mutation(
+        rule_id="DEP-002",
+        summary="the domain directly imports a third-party dependency",
+        source=(
+            "The dependency-position mechanism classifies requests as foreign and "
+            "rejects it when introduced into policy rather than an adapter."
+        ),
+        replace=((
+            "src/refpkg/domain/model.py",
+            "from __future__ import annotations",
+            "from __future__ import annotations\n\nimport requests",
+        ),),
+        node="enforce/fitness/test_deps.py::test_dependency_position",
+    ),
+    Mutation(
+        rule_id="DIAG-001",
+        summary="the diagnostic producer omits its stable code field",
+        source=(
+            "The behavioral mechanism serializes real errors and validates them "
+            "against the schema; removing code makes every case non-conformant."
+        ),
+        replace=((
+            "src/refpkg/shell/envelope.py",
+            '        "code": getattr(error, "code", "refpkg.shell.unexpected"),',
+            '        "broken_code": getattr(error, "code", "refpkg.shell.unexpected"),',
+        ),),
+        node="enforce/fitness/test_diagnostics.py::test_envelope_conforms",
+    ),
+    Mutation(
+        rule_id="FLOW-011",
+        summary="a real diagnostic envelope fails its published schema",
+        source=(
+            "FLOW-011 requires inspection rather than assumption; the same real-error "
+            "case rejects a producer that renames the required code field."
+        ),
+        replace=((
+            "src/refpkg/shell/envelope.py",
+            '        "code": getattr(error, "code", "refpkg.shell.unexpected"),',
+            '        "broken_code": getattr(error, "code", "refpkg.shell.unexpected"),',
+        ),),
+        node="enforce/fitness/test_diagnostics.py::test_envelope_conforms",
+    ),
+    Mutation(
+        rule_id="EFCT-003",
+        summary="domain policy imports a random-number source",
+        source=(
+            "The determinism fitness test enumerates ambient nondeterminism imports; "
+            "adding random to the domain makes identical inputs no longer sufficient."
+        ),
+        replace=((
+            "src/refpkg/domain/plan.py",
+            "from __future__ import annotations",
+            "from __future__ import annotations\n\nimport random",
+        ),),
+        node="enforce/fitness/test_determinism.py::test_determinism",
+    ),
+    Mutation(
+        rule_id="EFCT-007",
+        summary="the fault layer contains no interruption or recovery evidence",
+        source=(
+            "The journal obligation is observed through scheduled partial progress; "
+            "replacing the fault suite with an unrelated assertion removes that evidence."
+        ),
+        write=((
+            "tests/fault/test_containment.py",
+            (
+                '"""Tests. Oracle: contract."""\n\n\ndef test_unrelated() -> None:\n'
+                '    """Exercise no interruption."""\n    assert True\n'
+            ),
+        ),),
+        node="enforce/fitness/test_effects.py::test_interruption_recovers",
+    ),
+    Mutation(
+        rule_id="TEST-012",
+        summary="the fault layer never drives an interrupted effect boundary",
+        source=(
+            "The test obligation requires scheduled interruption evidence; replacing "
+            "the only fault suite leaves the behavioral mechanism with no such case."
+        ),
+        write=((
+            "tests/fault/test_containment.py",
+            (
+                '"""Tests. Oracle: contract."""\n\n\ndef test_unrelated() -> None:\n'
+                '    """Exercise no interruption."""\n    assert True\n'
+            ),
+        ),),
+        node="enforce/fitness/test_effects.py::test_interruption_recovers",
+    ),
+    Mutation(
+        rule_id="EFCT-009",
+        summary="the file port stops stating its non-atomic limit",
+        source=(
+            "The mechanism searches published port contracts for an explicit limit; "
+            "removing the sole partial-progress statement makes the guarantee implicit."
+        ),
+        replace=((
+            "src/refpkg/ports/files.py",
+            "* `delete` is **not** atomic across a sequence of calls, and the port says so",
+            "* `delete` reports failures across a sequence of calls",
+        ), (
+            "src/refpkg/ports/files.py",
+            "an interrupted\n  run leaves some entries deleted and the rest present.",
+            "a failed\n  run reports an error.",
+        ), (
+            "src/refpkg/ports/errors.py",
+            "report an interrupted",
+            "report a failed",
+        )),
+        node="enforce/fitness/test_effects.py::test_what_is_not_guaranteed_is_stated",
+    ),
+    Mutation(
+        rule_id="EFCT-014",
+        summary="a module introduces shared threading state without semantics",
+        source=(
+            "The mechanism inventories concurrency primitives and requires lock-order "
+            "or ownership prose; the new pooled adapter states neither."
+        ),
+        write=((
+            "src/refpkg/adapters/files/pooled.py",
+            (
+                '"""A store sharing state across threads without semantics."""\n\n'
+                "import threading\n\n"
+                "class PooledStore:\n"
+                '    """Share a dictionary."""\n\n'
+                "    def __init__(self) -> None:\n"
+                '        """Build it."""\n'
+                "        self._entries: dict[str, str] = {}\n"
+            ),
+        ),),
+        node="enforce/fitness/test_concurrency.py::test_concurrency_documented",
+    ),
+    Mutation(
+        rule_id="ERR-015",
+        summary="the process boundary catches only ValueError",
+        source=(
+            "The fitness mechanism parses the entry point for a broad final handler; "
+            "narrowing it permits every other unexpected exception to escape."
+        ),
+        replace=((
+            "src/refpkg/shell/cli.py",
+            "except Exception as exc:",
+            "except ValueError as exc:",
+        ),),
+        node="enforce/fitness/test_diagnostics.py::test_no_unhandled_escape",
+    ),
+    Mutation(
+        rule_id="TEST-011",
+        summary="fault tests assert only that an exception was raised",
+        source=(
+            "The containment fitness test requires cause-chain and layer evidence; "
+            "the replacement demonstrates neither and therefore cannot localize failure."
+        ),
+        write=((
+            "tests/fault/test_containment.py",
+            (
+                '"""Tests. Oracle: contract."""\n\nimport pytest\n\n'
+                "def test_it_raises() -> None:\n"
+                '    """Observe only that something broke."""\n'
+                "    with pytest.raises(ValueError):\n"
+                "        raise ValueError\n"
+            ),
+        ),),
+        node="enforce/fitness/test_faults.py::test_fault_containment",
+    ),
+    Mutation(
+        rule_id="FLOW-003",
+        summary="the primary decision ledger is absent",
+        source=(
+            "The mechanism parameterizes every declared ledger and requires a "
+            "reasoned decision; deleting OPEN.md removes that durable subject."
+        ),
+        base="repository",
+        drop=("discipline/meta/OPEN.md",),
+        node="enforce/fitness/test_decisions.py::test_decisions_recorded",
+    ),
+    Mutation(
+        rule_id="FLOW-004",
+        summary="two structural decisions reuse the same stable identifier",
+        source=(
+            "The append-only mechanism rejects duplicate decision identities; "
+            "renaming OPEN-002 to OPEN-001 simulates rewriting historical identity."
+        ),
+        base="repository",
+        replace=((
+            "discipline/meta/OPEN.md",
+            "### OPEN-002",
+            "### OPEN-001",
+        ),),
+        node="enforce/fitness/test_decisions.py::test_decision_records_are_appended",
+    ),
+    Mutation(
+        rule_id="FLOW-005",
+        summary="the decision ledger retains outcomes but no objection",
+        source=(
+            "The reversal mechanism requires at least one record to preserve what "
+            "it answered; replacing the ledger with bare decisions erases that history."
+        ),
+        base="repository",
+        write=((
+            "discipline/meta/OPEN.md",
+            (
+                "### OPEN-001 · Choose one\n\n"
+                "This decision has reasoning but records no contrary view.\n"
+            ),
+        ),),
+        node="enforce/fitness/test_decisions.py::test_overruled_objections_are_kept",
+    ),
+    Mutation(
+        rule_id="FLOW-006",
+        summary="a generated binding rule has neither mechanism nor strategy",
+        source=(
+            "The meta-mechanism joins binding headings to complete strategy records; "
+            "the minimal generated rule deliberately breaks every required join field."
+        ),
+        base="repository",
+        write=((
+            "discipline/rules.json",
+            (
+                '{"rules":[{"id":"FIX-001","force":"BINDING","mechanisms":[],'
+                '"check":"","verification":{"strategies":[]}}]}\n'
+            ),
+        ),),
+        node="enforce/fitness/test_meta.py::test_binding_rules_have_mechanisms",
+    ),
+    Mutation(
+        rule_id="FLOW-007",
+        summary="custom check modules lose their proof-of-failure companions",
+        source=(
+            "The mechanism inventories checker implementations against companion "
+            "test text; deleting the foundational suite leaves several checkers unproven."
+        ),
+        base="repository",
+        drop=("enforce/checks/test_checks.py",),
+        node="enforce/fitness/test_meta.py::test_checks_can_fail",
+    ),
+    Mutation(
+        rule_id="TEST-015",
+        summary="custom check modules ship without companion rejection tests",
+        source=(
+            "TEST-015 is the proof-of-failure obligation itself; removing the suite "
+            "for raise, assertion, domain, and naming checks makes the census fail."
+        ),
+        base="repository",
+        drop=("enforce/checks/test_checks.py",),
+        node="enforce/fitness/test_meta.py::test_checks_can_fail",
+    ),
+    Mutation(
+        rule_id="FLOW-009",
+        summary="the canonical gate definition becomes empty",
+        source=(
+            "The gate fitness mechanism rejects a zero-entry definition, which "
+            "would otherwise let every change report success without verification."
+        ),
+        base="repository",
+        write=((
+            "tools/gate.py",
+            (
+                '"""An intentionally empty gate fixture."""\n\n'
+                "from typing import Final\n\n"
+                "GATE: Final[tuple[tuple[str, tuple[str, ...]], ...]] = ()\n"
+            ),
+        ),),
+        node="enforce/fitness/test_meta.py::test_gate_suite_defined",
+    ),
+    Mutation(
+        rule_id="TEAMS-003",
+        summary="the installed completion hook no longer invokes the gate",
+        source=(
+            "The mechanism inspects the shipped hook and installer; replacing the "
+            "hook with an unconditional success turns verification back into a request."
+        ),
+        base="repository",
+        write=((
+            "enforce/templates/hooks/pre-push",
+            "#!/bin/sh\necho pushing\nexit 0\n",
+        ),),
+        node="enforce/fitness/test_meta.py::test_completion_hook_enforces_the_gate",
+    ),
+    Mutation(
+        rule_id="TEST-018",
+        summary="pytest is configured to rerun failures until one passes",
+        source=(
+            "The mechanism explicitly bans rerun switches; adding --reruns to the "
+            "repository harness demonstrates the dismissal path it exists to stop."
+        ),
+        base="repository",
+        write=(("pytest.ini", "[pytest]\naddopts = --reruns 3\n"),),
+        node="enforce/fitness/test_determinism.py::test_no_rerun_dismissal",
+    ),
 )
 
 
