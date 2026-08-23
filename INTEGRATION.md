@@ -51,12 +51,12 @@ happens — not a prediction made by a second implementation.
 It manages one clearly delimited block in each of `CLAUDE.md` and `AGENTS.md`:
 
 ```
-<!-- BEGIN AGENT DISCIPLINE v4.1.0 (manifest content hash) -- managed by ... -->
+<!-- BEGIN AGENT DISCIPLINE v5.0.0 (manifest content hash) -- managed by ... -->
    ... the pointer, the thesis, the three commands that matter ...
 <!-- END AGENT DISCIPLINE -->
 ```
 
-The marker names two things. `v4.1.0` is the release, so a reader can tell at a glance
+The marker names two things. `v5.0.0` is the release, so a reader can tell at a glance
 what is installed. The value in brackets is the content hash from
 `.agent/MANIFEST.json`, computed over every upstream file: it is what `--check` compares,
 and unlike a release name it cannot be claimed, only computed. If you edited a vendored
@@ -178,10 +178,10 @@ is outside the markers, which for a greenfield repository is its title line. Del
 hand if you want it gone. `.agent/integration-record.json` is left in place too, emptied,
 so that removing twice is a no-op.
 
-## Migrating a v3 declaration
+## Migrating a v3 or v4 declaration
 
-Installation and declaration migration are separate reviews. After vendoring v4, an
-existing v3 repository previews the bounded project-file edit with:
+Installation and declaration migration are separate reviews. A v3 repository first
+previews and applies the bounded v3-to-v4 project-file edit with:
 
 ```bash
 python .agent/tools/migrate_v4.py --root . --unit application
@@ -201,6 +201,30 @@ its file count and digest cover every governed repository-owned file, and any su
 content change invalidates that acceptance until the review is repeated.
 UTF-8 CRLF and LF checkout projections deliberately share one digest so the accepted
 content remains portable across Windows and Linux; binary assets remain byte-exact.
+
+A complete v4 declaration then previews and applies the v5 documentation migration. A
+repository already on v4 starts with these commands:
+
+```bash
+python .agent/tools/migrate_v5.py --root .
+python .agent/tools/migrate_v5.py --root . --apply
+```
+
+The migrator selects Doxygen, adds the project-owned documentation-model and Doxyfile
+declarations, and creates only canonical artifacts that are absent. It does not overwrite
+existing artifacts or infer semantic comments, abbreviations, identifier grammars,
+generated-code ownership, units, states, or collection meanings. Treat every
+`MIGRATE-V5-003_AUTHORING_REQUIRED`, `MIGRATE-V5-004_SCOPE_REVIEW`, and
+`MIGRATE-V5-005_DOXYFILE_REVIEW` diagnostic as work to resolve from project truth. Unsafe
+paths and incomplete v4 declarations block all writes, and apply refuses a declaration
+that changed after preview.
+
+The v5 project gate requires `doc_engine = "doxygen"` and executes four complementary
+source checks: structured entity coverage, semantic-step narration, the project naming
+model, and mechanically inferable semantic properties. It also runs Doxygen and inspects
+the generated site for non-vacuous entities and relationships. Syntax and declared policy
+are mechanical verdicts; the content-bound adversarial review remains the verdict on
+whether comments actually match the implementation.
 
 ## After integrating
 

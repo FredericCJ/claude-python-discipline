@@ -50,6 +50,33 @@ A release is not one agent's job. Run it in this order; each step gates the next
 6. `adoption-tester` — unzip the built archive into all three fixtures and round-trip it.
 7. `learning-steward` — record what the release taught; confirm the ledger ships empty.
 
+## Maintaining the v5 documentation mechanisms
+
+The v5 source model has two deliberately separate owners. Doxygen parses structured entity
+contracts and produces the browsable projection; the AST checks allocate narration to
+local bindings and execution steps that Doxygen cannot represent. Do not make either layer
+stand in for the other, and do not describe syntactic coverage as proof that prose is true.
+
+After changing Python or its documentation, run `python tools/docgate.py --all`. The gate
+executes entity coverage, narration, naming-model, and semantic-property checks over every
+governed file. `tools/doc_baseline.json` is a content-bound behavior oracle, not a waiver
+list: re-record an entry only for an intentional executable change, with a Git-resolvable
+source ref and an explicit reason. Documentation-only edits must preserve the stored AST
+fingerprint.
+
+Changes to `enforce/Doxyfile`, the Doxygen or Graphviz pins, extraction allocation, warning
+policy, or relationship requirements also require `python -m pytest
+tools/test_doxygen_gate.py`. That suite executes Doxygen 1.17.0, inspects generated HTML and
+XML, proves call/caller/dependency relationships, rejects remote assets, and reruns the
+known parser defects. Run it through both development legs before changing the dated facts
+in `discipline/fact/doxygen.md`.
+
+The project-owned `documentation-model.json` is strict data. Generic tooling may validate
+declared scopes, abbreviation mappings, naming dimensions, generated-name boundaries and
+semantic-property patterns; it must not invent a project's vocabulary. Whenever a target
+file changes after semantic review, refresh `adversarial-review.json` against the new
+content digest rather than carrying forward a stale human conclusion.
+
 ## Tier to model
 
 `ops/ALLOC` deliberately never names a model — `ALLOC-001` forbids it, because a model name

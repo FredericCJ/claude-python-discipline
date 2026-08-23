@@ -39,6 +39,13 @@ verifiable shall be mechanically verified. `[ADVISORY]` means no mechanism was f
 carries a written justification; `enforce/ENFORCEMENT.md` reports the unenforceable surface
 and the mechanisms still to build, so the gap is tracked rather than assumed closed.
 
+**v5 makes source explanation part of the architecture.** Doxygen owns structured entity
+contracts, while repository checks allocate semantic narration to local bindings and
+execution steps that Doxygen cannot represent. A project-owned documentation model declares
+source ownership, controlled abbreviations, optional naming grammars, generated-name
+mappings, and mechanically inferable semantic properties. The checks decide those explicit
+propositions; content-bound adversarial review remains responsible for whether prose is true.
+
 ## Navigating it, and remembering what it taught
 
 Two systems, one graph. The **navigation graph** is a directed typed multigraph over
@@ -128,7 +135,7 @@ is reported and left untouched; the other host can still be integrated safely.
 ```bash
 python tools/vendor.py check   ../some-repo   # local edits to read-only files
 python tools/harvest.py        ../some-repo   # discipline-level findings, upstream
-python tools/release.py                       # -> dist/agent-discipline-v4.1.0.zip
+python tools/release.py                       # -> dist/agent-discipline-v5.0.0.zip
 ```
 
 `release.py` builds the redistributable archive by running `vendor.py install` against a
@@ -166,7 +173,7 @@ enforce/
   ENFORCEMENT.md     generated: every rule against its mechanism
 learning/            schema.sql  config.toml  ledger.jsonl  INDEX.md  calibration.md
 tools/               validate.py build_index.py build_graph.py nav.py learn.py
-                     vendor.py integrate.py migrate_v4.py harvest.py release.py
+                     vendor.py integrate.py migrate_v4.py migrate_v5.py harvest.py release.py
 dev/                 Windows Conda and Linux Docker launchers, image, entry point
 skills/python-discipline/
   SKILL.md            the one authored Claude Code and Codex skill entry point
@@ -181,12 +188,13 @@ sources/             the eleven originals, frozen and superseded
 
 ## Using it in a project
 
-Copy `enforce/templates/pyproject.toml` and `enforce/importlinter.toml` into the target project and
-replace the placeholder package name; copy `enforce/checks/` alongside. The configuration
-comments name the rule ids each stanza enforces, so a lint failure traces back to a rule
-and a rule traces forward to the check that decides it.
+Copy `enforce/templates/pyproject.toml`, `enforce/templates/documentation-model.json`,
+`enforce/Doxyfile`, and `enforce/importlinter.toml` into the target project and replace the
+placeholder package and scope declarations; copy `enforce/checks/` alongside. The
+configuration comments name the rule ids each stanza enforces, so a gate failure traces
+back to a rule and a rule traces forward to the check that decides it.
 
-For an existing v3 project, preview the declaration migration before changing it:
+For an existing v3 project, first preview and apply the structural v4 migration:
 
 ```bash
 python .agent/tools/migrate_v4.py --root . --unit application
@@ -212,6 +220,22 @@ Author `adversarial-review.json` last: its scope digest binds the accepted judgm
 every governed repository file, so any later content change deliberately makes it stale.
 UTF-8 CRLF and LF checkout projections share one digest; binary assets remain byte-exact.
 Running `--apply` again is a no-op.
+
+Then migrate a complete v4 declaration to v5. A repository already on v4 starts here:
+
+```bash
+python .agent/tools/migrate_v5.py --root .
+python .agent/tools/migrate_v5.py --root . --apply
+```
+
+The preview and apply path is shared by application and component repositories. It selects
+Doxygen, declares the project-owned documentation model and Doxyfile, and creates only
+missing canonical artifacts. Existing artifacts are never overwritten, paths outside the
+repository are refused, a changed declaration invalidates an earlier preview, and a second
+apply is a no-op. The migrator deliberately does not invent semantic comments, vocabulary,
+naming grammars, generated-code ownership, or units and states. Resolve its authoring and
+scope-review diagnostics against the actual project, then run
+`python .agent/tools/project_gate.py --root .` through one of the shipped development legs.
 
 ## Working on the discipline itself
 

@@ -1,6 +1,6 @@
 # A Python engineering discipline was unzipped here
 
-**Release v4.1.0.** The archive placed one directory at the root of this repository:
+**Release v5.0.0.** The archive placed one directory at the root of this repository:
 
 ```
 .agent/
@@ -76,7 +76,8 @@ python .agent/tools/integrate.py --remove     # uninstall, restoring the prior c
 `--dry-run` prints a unified diff of every file it would touch. It is the same code path as
 the real run, stopped before the write — a preview, not a second implementation's guess.
 
-If the repository already uses v3, preview its declaration migration separately:
+If the repository still uses v3, preview and apply its structural declaration migration
+first:
 
 ```bash
 python .agent/tools/migrate_v4.py --root . --unit application
@@ -86,6 +87,20 @@ python .agent/tools/migrate_v4.py --root . --unit application --apply
 Use `--unit component` for one component repository. Preview writes nothing; apply changes
 only the contiguous discipline declaration tables and refuses ambiguous role or foreign
 dependency ownership. Semantic architecture and conformance content is not guessed.
+
+Then migrate the complete v4 declaration to v5. A repository already on v4 starts here:
+
+```bash
+python .agent/tools/migrate_v5.py --root .
+python .agent/tools/migrate_v5.py --root . --apply
+```
+
+This second migrator selects Doxygen, declares the project-owned documentation model and
+Doxyfile, and creates only missing canonical artifacts. It never overwrites an existing
+model or Doxyfile and does not manufacture semantic comments, vocabulary, naming grammars,
+generated-code ownership, units, states, or collection meanings. Resolve every reported
+authoring and scope-review diagnostic from the project's actual contracts before treating
+the project gate as release evidence.
 
 Then start a fresh agent session, so the new configuration is loaded.
 
@@ -142,7 +157,7 @@ overwritten by the next update.
 **This file has done its job — delete it.** Nothing references it, and re-running the
 integrator does not need it.
 
-`RELEASE-NOTES-v4.1.0.md` beside it is worth reading once before you rely on the discipline:
+`RELEASE-NOTES-v5.0.0.md` beside it is worth reading once before you rely on the discipline:
 it states what is mechanically enforced and, more usefully, what is not. Delete it too when
 you have.
 
