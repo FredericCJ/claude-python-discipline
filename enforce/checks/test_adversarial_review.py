@@ -14,6 +14,7 @@ from checks.adversarial_review import (
 )
 from checks.test_project import declare, v4
 
+# Import the fixture path protocol only during static analysis.
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -29,7 +30,9 @@ def review_payload(declaration: project.Declaration) -> dict[str, object]:
     @param declaration parsed bounded project declaration
     @return JSON-ready structured review
     """
+    # Snapshot the exact governed file count and normalized content digest together.
     count, digest = scope_snapshot(declaration)
+    # Render a closed, independent, accepted review bound to that content identity.
     return {
         "schema_version": 1,
         "review_id": "fixture_adversarial_acceptance",
@@ -54,6 +57,7 @@ def review_payload(declaration: project.Declaration) -> dict[str, object]:
                 "conclusion": f"The fixture evidence bounds the {category} conclusion.",
                 "evidence": [EVIDENCE],
             }
+            # Preserve one semantic question element per category in canonical order.
             for category in QUESTION_CATEGORIES
         ],
         "objections": [{
@@ -80,30 +84,47 @@ def _tree(
 
     @param tmp_path fixture repository
     @return configured checker, source root, review path, and mutable payload
+
+    @par Effects
+    Creates a complete isolated repository, review evidence, and model artifacts.
     """
+    # Persist the complete project declaration before constructing its reviewed scope.
     declaration_path = declare(tmp_path, v4())
+    # Select the bounded production root included in review content identity.
     source = tmp_path / "src/pkg"
+    # Materialize production source before computing the review snapshot.
     source.mkdir(parents=True)
     (source / "module.py").write_text("VALUE = 1\n", encoding="utf-8")
+    # Select the local evidence cited by every question and objection.
     evidence = tmp_path / "tests/test_review.py"
+    # Materialize and publish review evidence before snapshotting governed content.
     evidence.parent.mkdir()
     evidence.write_text("def test_review_evidence(): ...\n", encoding="utf-8")
+    # Publish each required model name in deterministic declaration order.
     for name in (
         "architecture.json",
         "contract-conformance.json",
         "operational-model.json",
         "security-model.json",
     ):
+        # Materialize the current placeholder model as part of reviewed content.
         (tmp_path / name).write_text("{}\n", encoding="utf-8")
+    # Publish the documentation model included in the content-bound scope.
     (tmp_path / "documentation-model.json").write_text(
         '{"schema_version": 1}\n', encoding="utf-8"
     )
+    # Parse the completed repository boundary used by content snapshotting.
     declaration = project.parse(declaration_path)
+    # Build the unordered review mapping whose keys name views and values hold records.
     payload = review_payload(declaration)
+    # Select the declaration-owned structured review path.
     review_path = tmp_path / "adversarial-review.json"
+    # Publish the accepted review only after every scoped artifact exists.
     _write(review_path, payload)
+    # Configure a fresh checker from the declaration owning the fixture repository.
     check = AdversarialReviewCheck()
     check.declaration = declaration
+    # Return the mechanism, subject, persisted review, and mutable mapping together.
     return check, source, review_path, payload
 
 
@@ -111,8 +132,13 @@ def _write(path: Path, payload: dict[str, object]) -> None:
     """Write a mutated review payload.
 
     @param path review path
-    @param payload JSON-ready review
+    @param payload JSON-ready unordered mapping whose keys name review views and
+        whose values hold their serialized contents
+
+    @par Effects
+    Creates or replaces the structured review at the supplied repository-local path.
     """
+    # Publish the complete review mapping as one JSON document.
     path.write_text(json.dumps(payload), encoding="utf-8")
 
 
@@ -123,20 +149,26 @@ def _diagnostic(check: AdversarialReviewCheck, source: Path) -> str | None:
     @param source production source root
     @return diagnostic id or None for acceptance
     """
+    # Preserve ordered findings so the first refusal identifies the broken invariant.
     findings = check.run([source])
+    # Collapse acceptance to no diagnostic and refusal to its leading stable identity.
     return None if not findings else findings[0].diagnostic_id
 
 
 def _records(payload: dict[str, object], key: str) -> list[dict[str, object]]:
     """Narrow one mutable review record array.
 
-    @param payload JSON-ready review
+    @param payload JSON-ready unordered mapping whose keys name review views and
+        whose values hold their serialized contents
     @param key root record-array field
     @return mutable records
     """
+    # Select the requested root value before proving its mutable record-array shape.
     value = payload[key]
     assert isinstance(value, list)
+    # Require every ordered array element to be a mutable record mapping.
     assert all(isinstance(item, dict) for item in value)
+    # Return the same narrowed array so tests can mutate one focused record.
     return cast("list[dict[str, object]]", value)
 
 
@@ -145,6 +177,7 @@ def test_complete_content_bound_review_is_accepted(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
+    # Build the fresh, complete, independent review as the accepting control.
     check, source, _, _ = _tree(tmp_path)
     assert check.run([source]) == []
 
@@ -153,8 +186,13 @@ def test_source_change_makes_review_stale(tmp_path: Path) -> None:
     """A reviewed artifact cannot cover production bytes changed afterward.
 
     @param tmp_path fixture repository
+
+    @par Effects
+    Creates a complete fixture repository, then replaces reviewed production source.
     """
+    # Build a review bound to the original production bytes.
     check, source, _, _ = _tree(tmp_path)
+    # Change reviewed source after acceptance without refreshing its snapshot.
     (source / "module.py").write_text("VALUE = 2\n", encoding="utf-8")
     assert _diagnostic(check, source) == "REVIEW002_SCOPE_STALE"
 
@@ -163,15 +201,23 @@ def test_checkout_line_endings_do_not_change_review_identity(tmp_path: Path) -> 
     """Windows CRLF projection and Linux LF projection identify the same text.
 
     @param tmp_path fixture repository
+
+    @par Effects
+    Creates a complete fixture repository, then projects one source file's line endings.
     """
+    # Build a review bound to normalized text content.
     check, source, _, _ = _tree(tmp_path)
+    # Select the reviewed module whose checkout projection will change.
     module = source / "module.py"
+    # Read its current byte projection without changing semantic text.
     content = module.read_bytes()
+    # Derive the opposite LF/CRLF projection while preserving normalized content.
     projected = (
         content.replace(b"\r\n", b"\n")
         if b"\r\n" in content
         else content.replace(b"\n", b"\r\n")
     )
+    # Publish only the alternate checkout projection of the same reviewed text.
     module.write_bytes(projected)
     assert check.run([source]) == []
 
@@ -180,9 +226,15 @@ def test_replaceable_tool_cache_is_outside_review_identity(tmp_path: Path) -> No
     """A verifier cache cannot invalidate the source it just verified.
 
     @param tmp_path fixture repository
+
+    @par Effects
+    Creates a complete fixture repository, then adds replaceable verifier cache data.
     """
+    # Build a review before introducing an excluded replaceable verifier artifact.
     check, source, _, _ = _tree(tmp_path)
+    # Select a conventional import-linter cache path outside reviewed identity.
     cache = tmp_path / ".import_linter_cache/result.json"
+    # Materialize and publish the replaceable cache after review acceptance.
     cache.parent.mkdir()
     cache.write_text('{"replaceable": true}\n', encoding="utf-8")
     assert check.run([source]) == []
@@ -192,9 +244,15 @@ def test_replaceable_packaging_metadata_is_outside_review_identity(tmp_path: Pat
     """A clean package build cannot invalidate the source it just reviewed.
 
     @param tmp_path fixture repository
+
+    @par Effects
+    Creates a complete fixture repository, then adds replaceable packaging metadata.
     """
+    # Build a review before introducing excluded packaging build output.
     check, source, _, _ = _tree(tmp_path)
+    # Select generated egg-info metadata outside reviewed content identity.
     metadata = tmp_path / "src/pkg.egg-info/SOURCES.txt"
+    # Materialize and publish the replaceable metadata after review acceptance.
     metadata.parent.mkdir()
     metadata.write_text("src/pkg/module.py\n", encoding="utf-8")
     assert check.run([source]) == []
@@ -205,9 +263,12 @@ def test_scope_categories_are_closed_and_ordered(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
+    # Build the complete review and retain its unordered mapping keys and values for mutation.
     check, source, path, payload = _tree(tmp_path)
+    # Select the scope record that owns the closed category sequence.
     scope = payload["scope"]
     assert isinstance(scope, dict)
+    # Remove the final canonical category while preserving the remaining order.
     scope["categories"] = list(SCOPE_CATEGORIES[:-1])
     _write(path, payload)
     assert _diagnostic(check, source) == "REVIEW002_SCOPE_STALE"
@@ -218,7 +279,9 @@ def test_review_commit_requires_a_full_object_id(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
+    # Build the complete review and retain its unordered mapping keys and values for mutation.
     check, source, path, payload = _tree(tmp_path)
+    # Replace immutable commit identity with a movable branch name.
     payload["reviewed_commit"] = "main"
     _write(path, payload)
     assert _diagnostic(check, source) == "REVIEW003_COMMIT"
@@ -229,7 +292,9 @@ def test_every_semantic_question_is_required(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
+    # Build the complete review and retain its unordered mapping keys and values for mutation.
     check, source, path, payload = _tree(tmp_path)
+    # Remove the first ordered semantic-question element from the closed set.
     _records(payload, "questions").pop(0)
     _write(path, payload)
     assert _diagnostic(check, source) == "REVIEW004_QUESTIONS"
@@ -240,9 +305,13 @@ def test_a_missing_documentation_question_fails_doc_028(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
+    # Build the complete review and retain its unordered mapping keys and values for mutation.
     check, source, path, payload = _tree(tmp_path)
+    # Select the ordered semantic-question elements for focused filtering.
     questions = _records(payload, "questions")
+    # Preserve every question element except the documentation-truth challenge.
     questions[:] = [
+        # Retain the current question when its identity belongs to another category.
         question for question in questions if question["id"] != "documentation_truth"
     ]
     _write(path, payload)
@@ -255,7 +324,9 @@ def test_question_evidence_cannot_escape_repository(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
+    # Build the complete review and retain its unordered mapping keys and values for mutation.
     check, source, path, payload = _tree(tmp_path)
+    # Redirect the first question's evidence to a sibling repository.
     _records(payload, "questions")[0]["evidence"] = ["../peer/review.md"]
     _write(path, payload)
     assert _diagnostic(check, source) == "REVIEW004_QUESTIONS"
@@ -266,9 +337,12 @@ def test_reviewer_cannot_be_a_declared_author(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
+    # Build the complete review and retain its unordered mapping keys and values for mutation.
     check, source, path, payload = _tree(tmp_path)
+    # Select the reviewer identity and independence record.
     reviewer = payload["reviewer"]
     assert isinstance(reviewer, dict)
+    # Replace the independent identity with one already declared as an author.
     reviewer["identity"] = "fixture_implementation_author"
     _write(path, payload)
     assert _diagnostic(check, source) == "REVIEW005_INDEPENDENCE"
@@ -279,8 +353,11 @@ def test_open_objection_blocks_acceptance(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
+    # Build the complete review and retain its unordered mapping keys and values for mutation.
     check, source, path, payload = _tree(tmp_path)
+    # Select the sole resolved objection record.
     objection = _records(payload, "objections")[0]
+    # Reopen the objection and erase every closure artifact.
     objection["disposition"] = "open"
     objection["resolution"] = None
     objection["evidence"] = None
@@ -293,7 +370,9 @@ def test_rejected_verdict_is_not_a_green_gate(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
+    # Build the complete review and retain its unordered mapping keys and values for mutation.
     check, source, path, payload = _tree(tmp_path)
+    # Replace accepted closure with an explicit rejected verdict.
     payload["verdict"] = "rejected"
     _write(path, payload)
     assert _diagnostic(check, source) == "REVIEW007_VERDICT_RESIDUAL"
