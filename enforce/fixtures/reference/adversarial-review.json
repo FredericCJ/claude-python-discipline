@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "review_id": "reference_fixture_adversarial_acceptance",
-  "reviewed_commit": "97b1ef9dae00d198b5d5fb350ca28ccb642d29ed",
+  "reviewed_commit": "776ba8491ed24e146624e1673acfb74ae2a08023",
   "scope": {
     "algorithm": "sha256",
-    "digest": "sha256:8de25f5f0cec767e88da180c53272233b3d37f875c32c6f670adf4b857df4b4b",
+    "digest": "sha256:ac276fbe1fc65a2d9745e944b9a7eaee3de957bf881812ef8b26a2842fc3d561",
     "file_count": 46,
     "categories": [
       "project_declaration",
