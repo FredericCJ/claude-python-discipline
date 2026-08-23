@@ -8,8 +8,8 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 
 | Status | Count |
 |---|---|
-| active | 5 |
-| candidate | 106 |
+| active | 6 |
+| candidate | 105 |
 | superseded | 1 |
 
 ## active
@@ -57,6 +57,14 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `error:V080`
 - **About** FLOW-006
 - **Verify** `python tools/validate.py`
+
+### L-0108 · On Windows PowerShell 5.1, a native Conda command can surface stderr as a NativeCommandError even though its process exit status is authoritative.
+
+- **Do** Permit native stderr temporarily, capture LASTEXITCODE immediately, restore strict error handling, and decide the Conda transaction from that exit status.
+- **Kind** diagnostic · **scope** discipline · **evidence** observed (+1/-0 over 1 session(s))
+- **Confidence** 0.60, last seen 2026-08-23
+- **Triggers** `glob:dev/windows.ps1`
+- **Verify** `python -m pytest tools/test_dev_environment.py -q`
 
 ## candidate
 
@@ -925,14 +933,6 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `glob:skills/python-discipline/**`, `glob:tools/integrate.py`
 - **About** FLOW-009
 - **Verify** `python tools/build_skill_mirror.py --check; python -m pytest tools/test_integrate.py -q`
-
-### L-0108 · On Windows PowerShell 5.1, a native Conda command can surface stderr as a NativeCommandError even though its process exit status is authoritative.
-
-- **Do** Permit native stderr temporarily, capture LASTEXITCODE immediately, restore strict error handling, and decide the Conda transaction from that exit status.
-- **Kind** diagnostic · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
-- **Confidence** 0.50, last seen 2026-08-23
-- **Triggers** `glob:dev/windows.ps1`
-- **Verify** `python -m pytest tools/test_dev_environment.py -q`
 
 ### L-0109 · Pyright can create a hidden Node environment when the declared Node executable is not on PATH before Pyright is invoked.
 
