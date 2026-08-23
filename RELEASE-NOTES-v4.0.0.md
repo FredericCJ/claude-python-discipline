@@ -124,6 +124,29 @@ through the extracted public CLIs.
 An unowned or locally edited native skill is preserved and reported. A conflict for one
 host does not authorize overwriting it and does not prevent the other host's safe install.
 
+## Release certification
+
+The complete application and each component passed the eleven-step project gate in its
+own repository on native Windows and in a clean independent Linux checkout:
+
+| Repository | Unit | Certified commit | Tests, Windows / Linux | Mutants killed on each platform |
+|---|---|---|---:|---:|
+| `python-doctrine-test` | application | `b6cf08c3da6343e1f65f5bf97e5b4c89f339e648` | 98 / 98 | 137 / 137 |
+| `console-sink` | component | `cf6cf39cee90d6d60eb2566c31e1794a54dc3e76` | 258 / 258 | 481 / 481 |
+| `sine-generator` | component | `481249b0710555ebb5f3791b19492dcf26125815` | 361 / 361 | 235 / 235 |
+| `signal-invocator` | component | `0a86528397ee740f669f7045084860408f95e0f0` | 261 / 261 | 735 / 735 |
+| `sim-scheduler` | component | `c986a7672627d39f24e51f81c31716dd5b4a9b2e` | 388 / 387 | 938 / 938 |
+
+All 110 required step verdicts passed. Across both platform legs, the runs executed 2,731
+passing tests, killed 5,052 mutants, built 20 wheel/source-distribution artifacts, and
+passed 10 clean-install verdicts. The discipline source itself passed its complete gate on
+both platforms, and two independently staged release archives were byte-identical. Exact
+environment and report identities are recorded in
+`roadmap/from-3.2-to-4.0/evidence/adopter-certification.json`.
+
+No adopter gate read a parent or sibling checkout. These results certify five standalone
+repositories, not the SIGSIM parent application or any multi-repository composition.
+
 ## Known residuals
 
 - Structured review cannot authenticate reviewer identity or prove intellectual
@@ -137,6 +160,6 @@ host does not authorize overwriting it and does not prevent the other host's saf
 - v4 certifies each component independently. It makes no claim about composition,
   counterpart compatibility or whole-application behavior.
 
-The release is complete only with named Windows and independent Linux gate evidence plus
-independent passing commits for the complete-application adopter and all four component
-adopters. Those identities are recorded during final release certification.
+The release is certified only for the commits and local obligations named above. Later
+changes, separately developed counterpart compatibility, deployment wiring, and
+whole-application behavior require their own evidence.

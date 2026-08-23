@@ -4,7 +4,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Proposed roadmap |
+| Status | Released on 2026-08-23 |
 | Target | v4.0.0 |
 | Doctrine evidence baseline | v3.2.0 |
 | Packaging baseline | v3.3.0 |
@@ -12,6 +12,21 @@
 | Supported product shapes | One complete application, or one component of a larger application |
 | Product class | Consequential, potentially long-lived Python software |
 | Primary validation adopters | `python-doctrine-test` and the four standalone SIGSIM component repositories |
+
+## Release outcome
+
+All six phases are complete. The discipline source passed its complete gate on native
+Windows and from a clean independent Linux checkout. Two independently staged release
+archives were byte-identical. The complete-application specimen and all four component
+repositories passed every required project-gate step on both platforms, including real
+Cosmic Ray mutation, wheel and source-distribution construction, clean installation, and
+public entry-point probes.
+
+The exact adopter commits, environments, report digests, durations, test totals, mutation
+totals, and negative scope attestation are frozen in
+`evidence/adopter-certification.json`. That certificate records 10 green repository/platform
+verdicts, 2,731 passing test executions, and 5,052 killed mutant executions. It makes no
+claim about the excluded SIGSIM parent or about multi-repository composition.
 
 ## Scope boundary
 
@@ -875,27 +890,31 @@ owner, and ratcheted count. A known silent false negative is a release blocker.
 | Generated local views become another source of truth | Require canonical local model identity, provenance, byte stability, lossless round-trip or independent diff, and edit detection. |
 | Migration is too large for existing adopters | Provide preview, supersession map, unit-aware baseline ratchet, and staged commits; never reset project-owned debt during upgrade. |
 
-## Decisions required before alpha.2
+## Questions resolved during implementation
 
-The prototypes must answer these questions with repository-local evidence:
+The alpha questions were resolved with repository-local mechanisms and adopter evidence:
 
-1. What exact obligations differ between `unit = "application"` and
-   `unit = "component"`, beyond their external entry points?
-2. Which local contract model gives the best lossless round-trip and diff quality across
-   Python calls, JSON/NDJSON, CLI, and persisted formats?
-3. How can a component record the provenance/version of an externally supplied contract
-   without learning counterpart identity or requiring a parent checkout?
-4. How are structured semantic-review verdicts bound to a commit and reviewer role
-   without hard-coding a particular agent product or model name?
-5. What is the executable Windows equivalent for every POSIX-only verifier, especially
-   mutation and teardown when the governed unit owns subprocess lifecycles?
-6. Which v3 documentation requirements remain universally valuable after filler and
-   false-positive data are measured?
-7. Which exact v3 ids can be clarified and which must be superseded to keep historical
-   citations truthful?
-
-Each decision shall record alternatives, objections, prototype evidence, and the failure
-mode it controls before the first beta.
+1. Applications own the complete installed entry-point behavior. Components own one
+   deliverable and their counterpart-neutral side of every local contract; they never gain
+   parent, sibling, topology, or composition obligations.
+2. Canonical JSON architecture, contract-conformance, operational, and security models
+   provide stable joins across Python calls, streams, CLI surfaces, and persisted formats.
+   Structural checks decide their exact joins; content-bound review decides semantic
+   adequacy and states its residual.
+3. A component records a contract role, origin, version, representation, terms, and local
+   evidence. Counterpart identity is neither required nor admitted as conformance input.
+4. Reviews bind an authored scope digest and file count to a reviewed commit while naming
+   author and reviewer roles independently of agent products. The artifact explicitly
+   concedes that fields cannot authenticate personal or organizational independence.
+5. Cosmic Ray 8.7.0 now runs natively on Windows and Linux through one adapter that rejects
+   zero work, incompetent outcomes, abnormal results, and survivors. Cross-platform adopter
+   certification also repaired real signal, socket-teardown, selector, and typing defects.
+6. Documentation remains binding for public behavior, contracts, invariants, failures,
+   ownership, recovery, budgets, and non-obvious decisions. Presence and generated output
+   are mechanically checked without being misrepresented as proof that prose is true.
+7. The v4 rule registry preserves old IDs as resolvable superseded, consolidated, or
+   retired records. The exact disposition and adopter action for every changed v3 ID is in
+   the v4 release notes.
 
 ## Definition of success
 
