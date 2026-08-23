@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 import pytest
 from tools import migrate_v4
 
+# Import annotation-only protocols without adding runtime dependencies.
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -18,12 +19,22 @@ def _project(tmp_path: Path, *, declaration: str = 'doc_engine = "doxygen"') -> 
     @param tmp_path scratch repository root
     @param declaration body of the main v3 discipline table
     @return repository root
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Publish the externally visible effect after all required inputs are ready.
     (tmp_path / "src/pkg/domain").mkdir(parents=True)
+    # Publish the externally visible effect after all required inputs are ready.
     (tmp_path / "src/pkg/app").mkdir()
+    # Publish the externally visible effect after all required inputs are ready.
     (tmp_path / "src/pkg/ports").mkdir()
+    # Publish the externally visible effect after all required inputs are ready.
     (tmp_path / "src/pkg/adapters/http").mkdir(parents=True)
+    # Publish the externally visible effect after all required inputs are ready.
     (tmp_path / "src/pkg/shell").mkdir()
+    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Advance project through the current input element in declared order.
     for path in (
         "src/pkg/__init__.py",
         "src/pkg/domain/model.py",
@@ -32,7 +43,9 @@ def _project(tmp_path: Path, *, declaration: str = 'doc_engine = "doxygen"') -> 
         "src/pkg/adapters/http/client.py",
         "src/pkg/shell/cli.py",
     ):
+        # Publish the externally visible effect after all required inputs are ready.
         (tmp_path / path).write_text("", encoding="utf-8")
+    # Retain the immutable source representation consumed by subsequent analysis.
     body = dedent(f"""
         [project]
         name = "pkg"
@@ -50,7 +63,9 @@ def _project(tmp_path: Path, *, declaration: str = 'doc_engine = "doxygen"') -> 
         [tool.ruff]
         line-length = 99
     """).lstrip()
+    # Publish the externally visible effect after all required inputs are ready.
     (tmp_path / "pyproject.toml").write_text(body, encoding="utf-8")
+    # Return repository root to the caller.
     return tmp_path
 
 
@@ -60,6 +75,8 @@ def _diagnostic_ids(plan: migrate_v4.MigrationPlan) -> set[str]:
     @param plan migration plan
     @return diagnostic ids
     """
+    # Treat the current item as the candidate element consumed by the enclosing transformation.
+    # Return diagnostic ids to the caller.
     return {item.diagnostic_id for item in plan.diagnostics}
 
 
@@ -68,11 +85,18 @@ def test_preview_is_pure_and_exposes_complete_diff(tmp_path: Path) -> None:
 
     @param tmp_path scratch repository
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = _project(tmp_path)
+    # Resolve the repository-confined path used by this operation before filesystem access.
     project_file = root / "pyproject.toml"
+    # Compute original using project file.read bytes for later test preview is pure and exposes
+    # Details: complete diff logic.
     original = project_file.read_bytes()
 
+    # Compute migration using migrate v4.plan for later test preview is pure and exposes
+    # Details: complete diff logic.
     migration = migrate_v4.plan(root, "application")
+    # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
     report = migrate_v4.preview(migration)
 
     assert project_file.read_bytes() == original
@@ -87,11 +111,16 @@ def test_apply_preserves_unrelated_project_configuration(tmp_path: Path) -> None
 
     @param tmp_path scratch repository
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = _project(tmp_path)
+    # Compute migration using migrate v4.plan for later test apply preserves unrelated project
+    # Details: configuration logic.
     migration = migrate_v4.plan(root, "application")
 
     migrate_v4.apply(migration)
 
+    # Capture result as the completed test apply preserves unrelated project configuration
+    # Details: outcome for subsequent validation or publication.
     result = (root / "pyproject.toml").read_text(encoding="utf-8")
     assert result.startswith('[project]\nname = "pkg"')
     assert "# declaration marker" in result
@@ -106,10 +135,14 @@ def test_apply_is_idempotent(tmp_path: Path) -> None:
 
     @param tmp_path scratch repository
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = _project(tmp_path)
     migrate_v4.apply(migrate_v4.plan(root, "component"))
+    # Compute once using (root / "pyproject.toml").read_bytes() for later test apply is
+    # Details: idempotent logic.
     once = (root / "pyproject.toml").read_bytes()
 
+    # Compute second using migrate v4.plan for later test apply is idempotent logic.
     second = migrate_v4.plan(root, "component")
     migrate_v4.apply(second)
 
@@ -123,10 +156,12 @@ def test_unit_kind_is_never_guessed(tmp_path: Path) -> None:
 
     @param tmp_path scratch repository
     """
+    # Compute migration using migrate v4.plan for later test unit kind is never guessed logic.
     migration = migrate_v4.plan(_project(tmp_path), None)
 
     assert migration.blocked
     assert "MIGRATE-V4-001_UNIT_REQUIRED" in _diagnostic_ids(migration)
+    # Confine the acquired resource to this operation and release it on every exit.
     with pytest.raises(ValueError, match="blocking diagnostics"):
         migrate_v4.apply(migration)
 
@@ -135,11 +170,19 @@ def test_unmapped_production_source_blocks_apply(tmp_path: Path) -> None:
     """An old unclassified directory cannot disappear during role migration.
 
     @param tmp_path scratch repository
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = _project(tmp_path)
+    # Publish the externally visible effect after all required inputs are ready.
     (root / "src/pkg/mystery").mkdir()
+    # Publish the externally visible effect after all required inputs are ready.
     (root / "src/pkg/mystery/code.py").write_text("", encoding="utf-8")
 
+    # Compute migration using migrate v4.plan for later test unmapped production source blocks
+    # Details: apply logic.
     migration = migrate_v4.plan(root, "application")
 
     assert migration.blocked
@@ -150,12 +193,22 @@ def test_legacy_shell_alias_becomes_an_explicit_role_path(tmp_path: Path) -> Non
     """A repository-specific v3 segment survives as an exact v4 mapping.
 
     @param tmp_path scratch repository
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = _project(tmp_path)
+    # Publish the externally visible effect after all required inputs are ready.
     (root / "src/pkg/cli").mkdir()
+    # Publish the externally visible effect after all required inputs are ready.
     (root / "src/pkg/cli/main.py").write_text("", encoding="utf-8")
+    # Resolve the repository-confined path used by this operation before filesystem access.
     project_file = root / "pyproject.toml"
+    # Compute original using project file.read text for later test legacy shell alias becomes an
+    # Details: explicit role path logic.
     original = project_file.read_text(encoding="utf-8")
+    # Publish the externally visible effect after all required inputs are ready.
     project_file.write_text(
         original.replace(
             "[tool.agent-discipline.layers]\n",
@@ -164,6 +217,8 @@ def test_legacy_shell_alias_becomes_an_explicit_role_path(tmp_path: Path) -> Non
         encoding="utf-8",
     )
 
+    # Compute migration using migrate v4.plan for later test legacy shell alias becomes an
+    # Details: explicit role path logic.
     migration = migrate_v4.plan(root, "component")
 
     assert not migration.blocked
@@ -174,12 +229,18 @@ def test_unique_arch004_import_becomes_boundary_ownership(tmp_path: Path) -> Non
     """One observed v3 technology owner translates without a semantic guess.
 
     @param tmp_path scratch repository
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = _project(tmp_path)
+    # Publish the externally visible effect after all required inputs are ready.
     (root / "src/pkg/adapters/http/client.py").write_text(
         "import httpx\n",
         encoding="utf-8",
     )
+    # Publish the externally visible effect after all required inputs are ready.
     (root / "importlinter.toml").write_text(
         dedent("""
         [tool.importlinter]
@@ -194,7 +255,11 @@ def test_unique_arch004_import_becomes_boundary_ownership(tmp_path: Path) -> Non
         encoding="utf-8",
     )
 
+    # Compute migration using migrate v4.plan for later test unique arch004 import becomes
+    # Details: boundary ownership logic.
     migration = migrate_v4.plan(root, "application")
+    # Compute rendered using migration.after.decode for later test unique arch004 import becomes
+    # Details: boundary ownership logic.
     rendered = migration.after.decode("utf-8")
 
     assert not migration.blocked
@@ -211,14 +276,24 @@ def test_arch004_import_in_two_boundaries_blocks_migration(tmp_path: Path) -> No
     """The tool refuses to invent one owner for a genuinely shared technology.
 
     @param tmp_path scratch repository
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = _project(tmp_path)
+    # Publish the externally visible effect after all required inputs are ready.
     (root / "src/pkg/adapters/backup").mkdir()
+    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Advance test arch004 import in two boundaries blocks migration through the current input
+    # Details: element in declared order.
     for path in (
         root / "src/pkg/adapters/http/client.py",
         root / "src/pkg/adapters/backup/client.py",
     ):
+        # Publish the externally visible effect after all required inputs are ready.
         path.write_text("import httpx\n", encoding="utf-8")
+    # Publish the externally visible effect after all required inputs are ready.
     (root / "importlinter.toml").write_text(
         dedent("""
         [tool.importlinter]
@@ -231,6 +306,8 @@ def test_arch004_import_in_two_boundaries_blocks_migration(tmp_path: Path) -> No
         encoding="utf-8",
     )
 
+    # Compute migration using migrate v4.plan for later test arch004 import in two boundaries
+    # Details: blocks migration logic.
     migration = migrate_v4.plan(root, "component")
 
     assert migration.blocked
@@ -241,8 +318,13 @@ def test_stale_arch004_contract_is_visible_but_not_invented(tmp_path: Path) -> N
     """An absent old dependency gets a warning and no ownership record.
 
     @param tmp_path scratch repository
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = _project(tmp_path)
+    # Publish the externally visible effect after all required inputs are ready.
     (root / "importlinter.toml").write_text(
         dedent("""
         [tool.importlinter]
@@ -255,6 +337,8 @@ def test_stale_arch004_contract_is_visible_but_not_invented(tmp_path: Path) -> N
         encoding="utf-8",
     )
 
+    # Compute migration using migrate v4.plan for later test stale arch004 contract is visible
+    # Details: but not invented logic.
     migration = migrate_v4.plan(root, "application")
 
     assert not migration.blocked
@@ -266,13 +350,23 @@ def test_crlf_bytes_outside_the_declaration_survive(tmp_path: Path) -> None:
     """Migration does not normalize a project's line-ending convention.
 
     @param tmp_path scratch repository
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = _project(tmp_path)
+    # Resolve the repository-confined path used by this operation before filesystem access.
     project_file = root / "pyproject.toml"
+    # Compute normalized using project file.read bytes for later test crlf bytes outside the
+    # Details: declaration survive logic.
     normalized = project_file.read_bytes().replace(b"\r\n", b"\n")
+    # Publish the externally visible effect after all required inputs are ready.
     project_file.write_bytes(normalized.replace(b"\n", b"\r\n"))
 
     migrate_v4.apply(migrate_v4.plan(root, "application"))
+    # Capture result as the completed test crlf bytes outside the declaration survive outcome
+    # Details: for subsequent validation or publication.
     result = project_file.read_bytes()
 
     assert b"[project]\r\nname" in result
@@ -284,15 +378,24 @@ def test_source_root_cannot_escape_to_a_parent_checkout(tmp_path: Path) -> None:
     """Build metadata cannot authorize the migrator to inspect a sibling tree.
 
     @param tmp_path scratch repository
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = _project(tmp_path)
+    # Resolve the repository-confined path used by this operation before filesystem access.
     project_file = root / "pyproject.toml"
+    # Retain the immutable source representation consumed by subsequent analysis.
     text = project_file.read_text(encoding="utf-8")
+    # Publish the externally visible effect after all required inputs are ready.
     project_file.write_text(
         text.replace('where = ["src"]', 'where = ["../peer"]'),
         encoding="utf-8",
     )
 
+    # Compute migration using migrate v4.plan for later test source root cannot escape to a
+    # Details: parent checkout logic.
     migration = migrate_v4.plan(root, "component")
 
     assert migration.blocked
@@ -304,8 +407,11 @@ def test_partial_v4_fields_are_not_discarded(tmp_path: Path) -> None:
 
     @param tmp_path scratch repository
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = _project(tmp_path, declaration='doc_engine = "doxygen"\nunit = "component"')
 
+    # Compute migration using migrate v4.plan for later test partial v4 fields are not discarded
+    # Details: logic.
     migration = migrate_v4.plan(root, "component")
 
     assert migration.blocked
@@ -317,11 +423,17 @@ def test_existing_complete_v4_declaration_is_a_noop(tmp_path: Path) -> None:
 
     @param tmp_path scratch repository
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = _project(tmp_path)
     migrate_v4.apply(migrate_v4.plan(root, "application"))
+    # Resolve the repository-confined path used by this operation before filesystem access.
     project_file = root / "pyproject.toml"
+    # Compute before using project file.read bytes for later test existing complete v4
+    # Details: declaration is a noop logic.
     before = project_file.read_bytes()
 
+    # Compute migration using migrate v4.plan for later test existing complete v4 declaration is
+    # Details: a noop logic.
     migration = migrate_v4.plan(root, None)
 
     assert not migration.changed
@@ -334,8 +446,11 @@ def test_cli_refuses_apply_when_unit_is_missing(tmp_path: Path) -> None:
 
     @param tmp_path scratch repository
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = _project(tmp_path)
 
+    # Capture status as the completed test cli refuses apply when unit is missing outcome for
+    # Details: subsequent validation or publication.
     status = migrate_v4.main(["--root", str(root), "--apply"])
 
     assert status == migrate_v4.EXIT_BLOCKED
