@@ -55,9 +55,11 @@ def tree(tmp_path: Path) -> Path:
     @param tmp_path the per-test directory
     @return the copy's root
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     destination = tmp_path / "reference"
     shutil.copytree(REFERENCE, destination,
                     ignore=shutil.ignore_patterns(*_SKIP))
+    # Return the copy's root to the caller.
     return destination
 
 
@@ -71,6 +73,7 @@ def test_contracts_hold_on_the_reference() -> None:
     is not stricter, it is broken -- and every negative result below would then
     be meaningless.
     """
+    # Preserve the current decoded diagnostic line before location normalization.
     status, line = import_gate.check(REFERENCE, import_gate.DEFAULT_CONFIG,
                                      import_gate.MINIMUM_CONTRACTS)
     assert status == import_gate.EXIT_OK, line
@@ -84,15 +87,23 @@ def test_a_broken_layer_is_caught(tree: Path) -> None:
     inward -- driven by making them point outward.
 
     @param tree a writable copy of the reference
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Hold the decoded mapping elements whose keys identify fields and values carry their
+    # Details: content; key order is deliberately unused.
     model = tree / "src" / "refpkg" / "domain" / "model.py"
+    # Retain the immutable source representation consumed by subsequent analysis.
     text = model.read_text(encoding="utf-8")
+    # Publish the externally visible effect after all required inputs are ready.
     model.write_text(
         text.replace("from __future__ import annotations",
                      "from __future__ import annotations\n\n"
                      "from refpkg.adapters.clock.real import SystemClock  # noqa", 1),
         encoding="utf-8",
     )
+    # Preserve the current decoded diagnostic line before location normalization.
     status, line = import_gate.check(tree, import_gate.DEFAULT_CONFIG,
                                      import_gate.MINIMUM_CONTRACTS)
     assert status == import_gate.EXIT_BROKEN, (
@@ -108,6 +119,7 @@ def test_the_vacuity_guard_fires() -> None:
     resolving yields zero contracts and a report saying nothing is broken, which
     is indistinguishable from success at the exit status.
     """
+    # Preserve the current decoded diagnostic line before location normalization.
     status, line = import_gate.check(REFERENCE, import_gate.DEFAULT_CONFIG,
                                      minimum=999)
     assert status == import_gate.EXIT_BROKEN
@@ -116,6 +128,7 @@ def test_the_vacuity_guard_fires() -> None:
 
 def test_a_missing_configuration_is_not_silence() -> None:
     """No contract file is a failure, not an empty pass."""
+    # Confine the acquired resource to this operation and release it on every exit.
     with pytest.raises(FileNotFoundError):
         import_gate.check(REFERENCE, "no-such-file.toml",
                           import_gate.MINIMUM_CONTRACTS)
@@ -125,9 +138,14 @@ def test_a_declared_nonstandard_source_root_is_used(tree: Path) -> None:
     """Import contracts resolve from the adopter's declared root, not only src.
 
     @param tree writable reference copy
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Publish the externally visible effect after all required inputs are ready.
     (tree / "src").rename(tree / "code")
 
+    # Preserve the current decoded diagnostic line before location normalization.
     status, line = import_gate.check(
         tree,
         import_gate.DEFAULT_CONFIG,
@@ -143,6 +161,7 @@ def test_an_escaping_source_root_is_refused(tree: Path) -> None:
 
     @param tree writable reference copy
     """
+    # Confine the acquired resource to this operation and release it on every exit.
     with pytest.raises(import_gate.SourceRootError, match="escape"):
         import_gate.check(
             tree,
@@ -161,7 +180,10 @@ def test_the_reference_is_clean(checker: str) -> None:
 
     @param checker which of the two is under test
     """
+    # Compute runner using type_gate.run_mypy if checker == "mypy" else type_gate.run_p for
+    # Details: later test the reference is clean logic.
     runner = type_gate.run_mypy if checker == "mypy" else type_gate.run_pyright
+    # Capture checker success, analyzed-file count, and diagnostic output together.
     passed, analysed, output = runner(REFERENCE)
     assert passed, f"{checker} reported findings on the reference:\n{output[-1500:]}"
     assert analysed >= type_gate.MINIMUM_FILES, (
@@ -177,13 +199,20 @@ def test_an_untyped_definition_is_caught(tree: Path) -> None:
     and by the gate itself rather than a second time here.
 
     @param tree a writable copy of the reference
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Hold the decoded mapping elements whose keys identify fields and values carry their
+    # Details: content; key order is deliberately unused.
     model = tree / "src" / "refpkg" / "domain" / "model.py"
+    # Publish the externally visible effect after all required inputs are ready.
     model.write_text(
         model.read_text(encoding="utf-8")
         + '\n\ndef untyped(value):\n    """No annotations anywhere."""\n    return value\n',
         encoding="utf-8",
     )
+    # Capture checker success, analyzed-file count, and diagnostic output together.
     passed, analysed, output = type_gate.run_mypy(tree)
     assert not passed, (
         f"mypy --strict accepted an unannotated function over {analysed} files; "
@@ -200,7 +229,11 @@ def test_a_checker_that_examined_nothing_fails(tmp_path: Path) -> None:
     the exit status is exactly what success looks like.
 
     @param tmp_path the per-test directory
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Publish the externally visible effect after all required inputs are ready.
     (tmp_path / "src").mkdir()
     assert type_gate.main(["--root", str(tmp_path)]) == type_gate.EXIT_FAILED
 
@@ -248,6 +281,7 @@ def _pytest_control(*arguments: str, cwd: Path) -> subprocess.CompletedProcess[s
     @param cwd temporary experiment directory
     @return completed process with combined output available to the oracle
     """
+    # Return completed process with combined output available to the oracle to the caller.
     return subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
         (sys.executable, "-m", "pytest", "-q", *arguments),
         cwd=cwd,
@@ -264,15 +298,23 @@ def test_pytest_timeout_terminates_a_slow_test(tmp_path: Path) -> None:
     """The real timeout plugin rejects a test beyond its finite budget.
 
     @param tmp_path isolated pytest project
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Compute test using tmp_path / "test_slow.py" for later test pytest timeout terminates a
+    # Details: slow test logic.
     test = tmp_path / "test_slow.py"
+    # Publish the externally visible effect after all required inputs are ready.
     test.write_text(
         "import time\n\n\ndef test_slow() -> None:\n    time.sleep(2)\n",
         encoding="utf-8",
     )
+    # Preserve the external command representation and its observed completion outcome.
     finished = _pytest_control(
         "-p", "no:randomly", "--timeout=0.05", str(test), cwd=tmp_path,
     )
+    # Combine the checker's captured diagnostic streams without losing emission text.
     output = finished.stdout + finished.stderr
     assert finished.returncode != 0
     assert "Timeout" in output or "timeout" in output
@@ -282,15 +324,23 @@ def test_pytest_socket_blocks_ambient_network(tmp_path: Path) -> None:
     """The real socket plugin rejects creation of an unapproved socket.
 
     @param tmp_path isolated pytest project
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Compute test using tmp_path / "test_network.py" for later test pytest socket blocks
+    # Details: ambient network logic.
     test = tmp_path / "test_network.py"
+    # Publish the externally visible effect after all required inputs are ready.
     test.write_text(
         "import socket\n\n\ndef test_network() -> None:\n    socket.socket()\n",
         encoding="utf-8",
     )
+    # Preserve the external command representation and its observed completion outcome.
     finished = _pytest_control(
         "-p", "no:randomly", "--disable-socket", str(test), cwd=tmp_path,
     )
+    # Combine the checker's captured diagnostic streams without losing emission text.
     output = finished.stdout + finished.stderr
     assert finished.returncode != 0
     assert "SocketBlockedError" in output
@@ -301,9 +351,17 @@ def test_pytest_randomly_exposes_an_order_dependency(tmp_path: Path) -> None:
     """At least one bounded seed runs a consumer before its hidden producer.
 
     @param tmp_path isolated pytest project
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Compute marker using tmp_path / "produced" for later test pytest randomly exposes an order
+    # Details: dependency logic.
     marker = tmp_path / "produced"
+    # Compute test using tmp_path / "test_order.py" for later test pytest randomly exposes an
+    # Details: order dependency logic.
     test = tmp_path / "test_order.py"
+    # Publish the externally visible effect after all required inputs are ready.
     test.write_text(
         "from pathlib import Path\n\n"
         "MARKER = Path(__file__).with_name('produced')\n\n\n"
@@ -312,15 +370,26 @@ def test_pytest_randomly_exposes_an_order_dependency(tmp_path: Path) -> None:
         "    assert MARKER.exists(), 'order dependency exposed'\n",
         encoding="utf-8",
     )
+    # True enables exposed; false selects its disabled alternative.
     exposed = False
+    # Select seed as the current element from range(1, 11) while test pytest randomly exposes an
+    # Details: order dependency preserves traversal order.
+    # Advance test pytest randomly exposes an order dependency through the current input element
+    # Details: in declared order.
     for seed in range(1, 11):
+        # Publish the externally visible effect after all required inputs are ready.
         marker.unlink(missing_ok=True)
+        # Preserve the external command representation and its observed completion outcome.
         finished = _pytest_control(
             f"--randomly-seed={seed}", "-p", "no:socket", str(test), cwd=tmp_path,
         )
+        # Combine the checker's captured diagnostic streams without losing emission text.
         output = finished.stdout + finished.stderr
+        # Enter the failure path only when the subprocess reports a nonzero status.
         if finished.returncode != 0 and "order dependency exposed" in output:
+            # True enables exposed; false selects its disabled alternative.
             exposed = True
+            # Stop the scan once the decisive match has been established.
             break
     assert exposed, "ten explicit randomized orders all concealed the dependency"
 
@@ -337,13 +406,19 @@ def test_a_stale_import_does_not_decide_the_verdict(tree: Path) -> None:
     that defect rather than a restatement of `test_a_broken_layer_is_caught`.
 
     @param tree a writable copy of the reference
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
     sys.path.insert(0, str(REFERENCE / "src"))
     importlib.import_module("refpkg.domain.model")
 
     assert "refpkg" in sys.modules, "the precondition this test rests on did not hold"
 
+    # Hold the decoded mapping elements whose keys identify fields and values carry their
+    # Details: content; key order is deliberately unused.
     model = tree / "src" / "refpkg" / "domain" / "model.py"
+    # Publish the externally visible effect after all required inputs are ready.
     model.write_text(
         model.read_text(encoding="utf-8").replace(
             "from __future__ import annotations",
@@ -351,6 +426,7 @@ def test_a_stale_import_does_not_decide_the_verdict(tree: Path) -> None:
             "from refpkg.adapters.clock.real import SystemClock  # noqa", 1),
         encoding="utf-8",
     )
+    # Preserve the current decoded diagnostic line before location normalization.
     status, line = import_gate.check(tree, import_gate.DEFAULT_CONFIG,
                                      import_gate.MINIMUM_CONTRACTS)
     assert status == import_gate.EXIT_BROKEN, (

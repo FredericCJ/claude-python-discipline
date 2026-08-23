@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 
 import lint_gate
 
+# Import annotation-only protocols without adding runtime dependencies.
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -25,18 +26,21 @@ if TYPE_CHECKING:
 
 def test_a_new_pair_fails() -> None:
     """The thing the gate is for: a finding that was not there before."""
+    # Preserve finding-record elements in checker emission order for the final verdict.
     errors, _ = lint_gate.judge({("a.py", "E501")}, 1, set(), 0)
     assert errors == ["new finding -- a.py: E501"]
 
 
 def test_a_recorded_pair_passes() -> None:
     """Existing debt must not fail the gate, or nobody keeps the gate on."""
+    # Preserve finding-record elements in checker emission order for the final verdict.
     errors, _ = lint_gate.judge({("a.py", "E501")}, 1, {("a.py", "E501")}, 1)
     assert errors == []
 
 
 def test_more_instances_of_a_recorded_code_fail() -> None:
     """Pairs alone would let a file accumulate the same finding indefinitely."""
+    # Preserve finding-record elements in checker emission order for the final verdict.
     errors, _ = lint_gate.judge({("a.py", "E501")}, 3, {("a.py", "E501")}, 1)
     assert len(errors) == 1
     assert "rose from 1 to 3" in errors[0]
@@ -44,6 +48,7 @@ def test_more_instances_of_a_recorded_code_fail() -> None:
 
 def test_shrinking_is_a_notice_and_not_a_failure() -> None:
     """Progress must never fail the build; it invites the ceiling down."""
+    # Preserve finding-record elements in checker emission order for the final verdict.
     errors, notices = lint_gate.judge(set(), 0, {("a.py", "E501")}, 1)
     assert errors == []
     assert notices
@@ -58,12 +63,14 @@ def test_a_protected_code_fails_even_when_it_is_in_the_baseline() -> None:
     C901 is the mechanism behind ARCH-016. A baseline entry for it would leave
     the rule reading as enforced while nothing decided it.
     """
+    # Preserve finding-record elements in checker emission order for the final verdict.
     errors, _ = lint_gate.judge({("a.py", "C901")}, 1, {("a.py", "C901")}, 1)
     assert errors == ["protected code, never baselined -- a.py: C901"]
 
 
 def test_a_protected_code_is_reported_once_not_twice() -> None:
     """A protected code is not also reported as a new finding; one defect, one line."""
+    # Preserve finding-record elements in checker emission order for the final verdict.
     errors, _ = lint_gate.judge({("a.py", "C901")}, 1, set(), 0)
     assert len(errors) == 1
 
@@ -76,19 +83,30 @@ def test_every_protected_code_names_a_rule_mechanism() -> None:
     its `Check` line names D205, D400 and D415, and all three decide it. That
     authored `Check` line survives in `rules.json`, which is why it counts here.
     """
+    # Compute rules using json.loads for later test every protected code names a rule mechanism
+    # Details: logic.
     rules = json.loads(
         (lint_gate.REPO_ROOT / "discipline" / "rules.json").read_text(encoding="utf-8")
     )
+    # Collect unique tagged element values; their order is deliberately unordered.
     tagged = {
         mechanism.rsplit(":", 1)[-1]
         for rule in rules["rules"]
         for mechanism in rule.get("mechanisms", [])
         if mechanism.startswith("auto:ruff:")
     }
+    # Compute template using (lint_gate.REPO_ROOT / "enforce" / "templates" / "pyproject. for
+    # Details: later test every protected code names a rule mechanism logic.
     template = (lint_gate.REPO_ROOT / "enforce" / "templates" / "pyproject.toml").read_text(
         encoding="utf-8"
     )
+    # Select checks, rule as the current element from rules["rules"]) while test every protected
+    # Details: code names a rule mechanism preserves traversal order.
     checks = "\n".join(str(rule.get("check") or "") for rule in rules["rules"])
+    # Capture code as the completed test every protected code names a rule mechanism outcome for
+    # Details: subsequent validation or publication.
+    # Advance test every protected code names a rule mechanism through the current input element
+    # Details: in declared order.
     for code in lint_gate.PROTECTED:
         assert code in tagged or code in template or code in checks, (
             f"{code} is protected but nothing ties it to a rule -- no mechanism tag, "
@@ -107,12 +125,14 @@ def test_the_baseline_refuses_to_move_without_a_reason(tmp_path: Path) -> None:
 
 def test_an_absent_baseline_reads_as_empty(tmp_path: Path) -> None:
     """A missing ceiling must demand a clean tree, never accept whatever is there."""
+    # Preserve the observed item count used by the non-vacuity verdict.
     count, pairs = lint_gate.load_baseline(tmp_path / "nothing.json")
     assert (count, pairs) == (0, set())
 
 
 def test_a_baseline_round_trips(tmp_path: Path) -> None:
     """What the tool writes is what it reads back; the file is not hand-edited."""
+    # Resolve the repository-confined path used by this operation before filesystem access.
     path = tmp_path / "lint_baseline.json"
     lint_gate.write_baseline(2, {("a.py", "E501"), ("b.py", "TC003")}, "because", path)
     assert lint_gate.load_baseline(path) == (2, {("a.py", "E501"), ("b.py", "TC003")})
@@ -121,7 +141,11 @@ def test_a_baseline_round_trips(tmp_path: Path) -> None:
 
 def test_the_committed_baseline_holds_no_protected_code() -> None:
     """The live claim, checked rather than asserted in prose."""
+    # Compute pairs using lint gate.load baseline for later test the committed baseline holds no
+    # Details: protected code logic.
     _, pairs = lint_gate.load_baseline()
+    # Capture code, offenders as the completed test the committed baseline holds no protected
+    # Details: code outcome for subsequent validation or publication.
     offenders = sorted({code for _, code in pairs if code in lint_gate.PROTECTED})
     assert offenders == [], f"protected code(s) in the committed baseline: {offenders}"
 
@@ -135,6 +159,7 @@ def test_line_numbers_are_dropped_from_the_pair(tmp_path: Path) -> None:
     They churn on every edit above a finding and would make the baseline
     unreviewable; the count is what catches a second instance instead.
     """
+    # Each findings element is one emitted diagnostic mapping; checker order is preserved.
     findings = [
         {"filename": str(tmp_path / "a.py"), "code": "E501", "location": {"row": 1}},
         {"filename": str(tmp_path / "a.py"), "code": "E501", "location": {"row": 99}},

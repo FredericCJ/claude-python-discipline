@@ -20,16 +20,21 @@ from typing import TYPE_CHECKING
 
 import gate
 
+# Import annotation-only protocols without adding runtime dependencies.
 if TYPE_CHECKING:
     import pytest
 
 ## A step that always succeeds. Expressed as this interpreter running a one-line
 ## program, so the fixture needs no files and behaves identically on every
 ## platform.
+## Each  PASSES element carries one  PASSES value produced or consumed by this operation;
+## construction order is preserved.
 _PASSES = (sys.executable, "-c", "print('fine')")
 
 ## A step that always fails, printing before it does -- so the runner has output
 ## to report as well as a status to act on.
+## Each  FAILS element carries one  FAILS value produced or consumed by this operation;
+## construction order is preserved.
 _FAILS = (sys.executable, "-c", "import sys; print('broken'); sys.exit(1)")
 
 
