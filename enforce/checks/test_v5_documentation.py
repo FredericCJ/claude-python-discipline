@@ -23,6 +23,7 @@ from checks.doc_naming import DocNamingCheck
 from checks.doc_narration import DocNarrationCheck
 from checks.doc_semantics import DocSemanticsCheck
 
+# Import the fixture path protocol only during static analysis.
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -32,6 +33,7 @@ def _payload() -> dict[str, object]:
 
     @return mutable JSON model
     """
+    # Render the minimal governed scope with empty controlled-vocabulary extensions.
     return {
         "schema_version": 1,
         "engine": "doxygen",
@@ -52,13 +54,20 @@ def _fixture(
     @param source complete Python module
     @param payload optional documentation-model override
     @return source path and declaration
+
+    @par Effects
+    Creates one isolated governed module and its documentation-model artifact.
     """
+    # Select the sole production module governed by the fixture documentation scope.
     module = tmp_path / "src" / "sample.py"
+    # Materialize and publish normalized source before constructing its declaration.
     module.parent.mkdir()
     module.write_text(dedent(source), encoding="utf-8")
+    # Publish either the focused override or the minimal complete documentation model.
     (tmp_path / "documentation-model.json").write_text(
         json.dumps(payload or _payload()), encoding="utf-8"
     )
+    # Construct the direct declaration that owns the module and model paths.
     declaration = project.Declaration(
         unit=project.UnitKind.APPLICATION,
         source_roots=(PurePosixPath("src"),),
@@ -67,6 +76,7 @@ def _fixture(
         doc_engine_declared=True,
         source=(tmp_path / "pyproject.toml").resolve(),
     )
+    # Return the persisted module together with its configured model owner.
     return module, declaration
 
 
@@ -77,13 +87,19 @@ def _run(check: Check, module: Path, declaration: project.Declaration) -> list[F
     @param module governed source
     @param declaration fixture model owner
     @return emitted findings
+
+    @par Effects
+    Rebinds the supplied check to the fixture's documentation declaration.
     """
+    # Fix the check's project model before evaluating the governed source entity.
     check.declaration = declaration
+    # Return ordered finding elements exactly as emitted by the focused mechanism.
     return check.run([module])
 
 
 def test_every_required_local_binding_shape_is_discovered() -> None:
     """Assignments, aliases, comprehensions, walruses, and captures enter the census."""
+    # Parse one function containing every locally governed binding shape.
     tree = ast.parse(
         dedent(
             """
@@ -107,6 +123,7 @@ def test_every_required_local_binding_shape_is_discovered() -> None:
         )
     )
 
+    # Collect unordered `(name, shape)` tuple elements for every discovered binding.
     found = {(item.name, item.shape) for item in bindings(tree)}
 
     assert {
@@ -125,6 +142,7 @@ def test_every_required_local_binding_shape_is_discovered() -> None:
 
 def test_a_decorator_comprehension_uses_the_decorator_as_owner() -> None:
     """Narration above a decorator can own bindings created in its expression."""
+    # Normalize a decorated test whose identifier comprehension is preceded by narration.
     source = dedent(
         """
         values = ("first", "second")
@@ -134,9 +152,12 @@ def test_a_decorator_comprehension_uses_the_decorator_as_owner() -> None:
             pass
         """
     )
+    # Parse the decorated source into its ownership syntax tree.
     tree = ast.parse(source)
+    # Select the decorator comprehension target from discovered binding elements.
     target = next(item for item in bindings(tree) if item.name == "value")
 
+    # Associate the target's owning decorator expression with lexical comment blocks.
     result = associate(target.owner_node, comment_blocks(source))
 
     assert result.owner is not None
@@ -148,13 +169,19 @@ def test_comment_association_survives_multiline_prose(line_count: int) -> None:
 
     @param line_count number of contiguous comment lines
     """
+    # Preserve the requested number of semantic comment lines in increasing index order.
     prose = "\n".join(
+        # Render each one-based prose element as part of the same contiguous block.
         f"    # Preserve semantic context part {index}." for index in range(line_count)
     )
+    # Embed the variable-length prose immediately above one governed assignment.
     source = f"def work() -> None:\n{prose}\n    value = 1\n"
+    # Parse the generated source into its ownership syntax tree.
     tree = ast.parse(source)
+    # Select the sole assignment node whose owner must remain stable.
     assignment = next(node for node in ast.walk(tree) if isinstance(node, ast.Assign))
 
+    # Associate the assignment with lexical blocks after varying only prose length.
     result = associate(assignment, comment_blocks(source))
 
     assert result.owner is not None
@@ -163,6 +190,7 @@ def test_comment_association_survives_multiline_prose(line_count: int) -> None:
 
 def test_one_block_owns_one_contiguous_same_suite_step() -> None:
     """A semantic explanation may cover several statements without per-line filler."""
+    # Normalize one function whose contiguous statements form a coherent semantic step.
     source = dedent(
         """
         def calculate() -> int:
@@ -172,20 +200,26 @@ def test_one_block_owns_one_contiguous_same_suite_step() -> None:
             return calibrated
         """
     )
+    # Parse the function and extract its lexical comment blocks.
     tree = ast.parse(source)
     blocks = comment_blocks(source)
+    # Resolve semantic ownership for every executable node in the function.
     owners = semantic_associations(tree, source, blocks)
+    # Select the ordered statement elements belonging to the `calculate` suite.
     statements = next(
+        # Match the target function element among all syntax-tree nodes.
         node.body
         for node in ast.walk(tree)
         if isinstance(node, ast.FunctionDef) and node.name == "calculate"
     )
 
+    # Require every statement element to resolve to one shared ownership block.
     assert len({owners[statement].owner for statement in statements}) == 1
 
 
 def test_blank_line_ends_a_semantic_step() -> None:
     """Paragraph separation prevents a prior explanation from floating downward."""
+    # Normalize a function whose return is separated from narration by a blank line.
     source = dedent(
         """
         def calculate() -> int:
@@ -195,9 +229,12 @@ def test_blank_line_ends_a_semantic_step() -> None:
             return calibrated
         """
     )
+    # Parse the function and extract its lexical comment blocks.
     tree = ast.parse(source)
     blocks = comment_blocks(source)
+    # Resolve semantic ownership after paragraph separation.
     owners = semantic_associations(tree, source, blocks)
+    # Select the return path that must remain unowned.
     return_path = next(node for node in ast.walk(tree) if isinstance(node, ast.Return))
 
     assert owners[return_path].owner is None
@@ -208,6 +245,7 @@ def test_a_local_binding_without_an_owner_fails_doc_016(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
+    # Materialize an otherwise documented callable with one unexplained local result.
     module, declaration = _fixture(
         tmp_path,
         '''
@@ -221,8 +259,10 @@ def test_a_local_binding_without_an_owner_fails_doc_016(tmp_path: Path) -> None:
         ''',
     )
 
+    # Preserve coverage findings from the focused owner-absence probe.
     findings = _run(DocCoverageCheck(), module, declaration)
 
+    # Require one finding element to name both DOC-016 and the unowned result.
     assert any(item.rule_id == "DOC-016" and "`result`" in item.message for item in findings)
 
 
@@ -231,6 +271,7 @@ def test_two_binding_owners_fail_as_ambiguous(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
+    # Materialize one local binding claimed by preceding and trailing explanations.
     module, declaration = _fixture(
         tmp_path,
         '''
@@ -246,8 +287,10 @@ def test_two_binding_owners_fail_as_ambiguous(tmp_path: Path) -> None:
         ''',
     )
 
+    # Preserve coverage findings from the focused ambiguity probe.
     findings = _run(DocCoverageCheck(), module, declaration)
 
+    # Require one finding element to carry the stable ambiguous-owner diagnostic.
     assert any(item.diagnostic_id == "LOCAL_BINDING_AMBIGUOUS" for item in findings)
 
 
@@ -256,6 +299,7 @@ def test_missing_branch_narration_fails_doc_017(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
+    # Materialize a conditional whose nested refusal is narrated but branch choice is not.
     module, declaration = _fixture(
         tmp_path,
         '''
@@ -273,8 +317,10 @@ def test_missing_branch_narration_fails_doc_017(tmp_path: Path) -> None:
         ''',
     )
 
+    # Preserve narration findings from the focused branch-ownership probe.
     findings = _run(DocNarrationCheck(), module, declaration)
 
+    # Require one finding element to identify the missing conditional-branch meaning.
     assert any(
         item.rule_id == "DOC-017" and "conditional branch" in item.message for item in findings
     )
@@ -285,6 +331,7 @@ def test_syntactic_paraphrase_fails_doc_019(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
+    # Materialize a return whose comment merely restates the syntax token.
     module, declaration = _fixture(
         tmp_path,
         '''
@@ -299,8 +346,10 @@ def test_syntactic_paraphrase_fails_doc_019(tmp_path: Path) -> None:
         ''',
     )
 
+    # Preserve narration findings from the focused paraphrase probe.
     findings = _run(DocNarrationCheck(), module, declaration)
 
+    # Require one finding element to identify semantic-content failure.
     assert any(item.rule_id == "DOC-019" for item in findings)
 
 
@@ -309,6 +358,7 @@ def test_two_narration_owners_fail_doc_018(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
+    # Materialize one return path claimed by preceding and trailing narration.
     module, declaration = _fixture(
         tmp_path,
         '''
@@ -323,8 +373,10 @@ def test_two_narration_owners_fail_doc_018(tmp_path: Path) -> None:
         ''',
     )
 
+    # Preserve narration findings from the focused owner-ambiguity probe.
     findings = _run(DocNarrationCheck(), module, declaration)
 
+    # Require one finding element to identify duplicate semantic owners.
     assert any(item.rule_id == "DOC-018" for item in findings)
 
 
@@ -333,6 +385,7 @@ def test_boolean_and_collection_meaning_fail_independently(tmp_path: Path) -> No
 
     @param tmp_path fixture repository
     """
+    # Materialize entity blocks omitting both boolean states and collection semantics.
     module, declaration = _fixture(
         tmp_path,
         '''
@@ -344,7 +397,9 @@ def test_boolean_and_collection_meaning_fail_independently(tmp_path: Path) -> No
         ''',
     )
 
+    # Preserve semantic findings from the combined but independently decidable probe.
     findings = _run(DocSemanticsCheck(), module, declaration)
+    # Collect unordered diagnostic-id string elements from every emitted finding.
     diagnostics = {item.diagnostic_id for item in findings}
 
     assert "BOOLEAN_STATES" in diagnostics
@@ -357,7 +412,9 @@ def test_deleting_a_declared_unit_fails_doc_026(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
+    # Start from the unordered model mapping whose keys name views and values hold rules.
     payload = _payload()
+    # Declare milliseconds as a required semantic property for timeout identifiers.
     payload["semantic_properties"] = [
         {
             "identifier_pattern": "*_ms",
@@ -366,14 +423,17 @@ def test_deleting_a_declared_unit_fails_doc_026(tmp_path: Path) -> None:
             "scopes": ["src"],
         }
     ]
+    # Materialize a matching timeout entity whose prose omits its declared unit.
     module, declaration = _fixture(
         tmp_path,
         '"""! Fixture module."""\n## Maximum wait before timeout.\ntimeout_ms: int = 10\n',
         payload,
     )
 
+    # Preserve semantic findings from the focused declared-property probe.
     findings = _run(DocSemanticsCheck(), module, declaration)
 
+    # Require one finding element to identify the absent declared property.
     assert any(item.diagnostic_id == "DECLARED_PROPERTY" for item in findings)
 
 
@@ -382,6 +442,7 @@ def test_detectable_effect_without_contract_fails_doc_027(tmp_path: Path) -> Non
 
     @param tmp_path fixture repository
     """
+    # Materialize a filesystem write with narration but no callable effects paragraph.
     module, declaration = _fixture(
         tmp_path,
         '''
@@ -396,8 +457,10 @@ def test_detectable_effect_without_contract_fails_doc_027(tmp_path: Path) -> Non
         ''',
     )
 
+    # Preserve semantic findings from the focused missing-contract probe.
     findings = _run(DocSemanticsCheck(), module, declaration)
 
+    # Require one finding element to identify the callable-effects obligation.
     assert any(item.rule_id == "DOC-027" for item in findings)
 
 
@@ -406,6 +469,7 @@ def test_immutable_string_replace_is_not_a_detectable_effect(tmp_path: Path) -> 
 
     @param tmp_path fixture repository
     """
+    # Materialize an immutable string transformation as the pure accepting control.
     module, declaration = _fixture(
         tmp_path,
         '''
@@ -420,8 +484,10 @@ def test_immutable_string_replace_is_not_a_detectable_effect(tmp_path: Path) -> 
         ''',
     )
 
+    # Preserve semantic findings from the ambiguous method-name control.
     findings = _run(DocSemanticsCheck(), module, declaration)
 
+    # Require every finding element to exclude the callable-effects rule.
     assert not any(item.rule_id == "DOC-027" for item in findings)
 
 
@@ -430,6 +496,7 @@ def test_qualified_os_replace_remains_a_detectable_effect(tmp_path: Path) -> Non
 
     @param tmp_path fixture repository
     """
+    # Materialize the qualified operating-system namespace replacement effect.
     module, declaration = _fixture(
         tmp_path,
         '''
@@ -446,8 +513,10 @@ def test_qualified_os_replace_remains_a_detectable_effect(tmp_path: Path) -> Non
         ''',
     )
 
+    # Preserve semantic findings from the exact qualified-effect probe.
     findings = _run(DocSemanticsCheck(), module, declaration)
 
+    # Require one finding element to retain the callable-effects obligation.
     assert any(item.rule_id == "DOC-027" for item in findings)
 
 
@@ -456,6 +525,7 @@ def test_container_member_deletion_is_a_detectable_effect(tmp_path: Path) -> Non
 
     @param tmp_path fixture repository
     """
+    # Materialize deletion from caller-visible indexed store state.
     module, declaration = _fixture(
         tmp_path,
         '''
@@ -471,8 +541,10 @@ def test_container_member_deletion_is_a_detectable_effect(tmp_path: Path) -> Non
         ''',
     )
 
+    # Preserve semantic findings from the container-mutation probe.
     findings = _run(DocSemanticsCheck(), module, declaration)
 
+    # Require one finding element to retain the callable-effects obligation.
     assert any(item.rule_id == "DOC-027" for item in findings)
 
 
@@ -481,6 +553,7 @@ def test_constructor_and_local_projection_are_not_external_effects(tmp_path: Pat
 
     @param tmp_path fixture repository
     """
+    # Materialize fresh-object initialization and detached local projection together.
     module, declaration = _fixture(
         tmp_path,
         '''
@@ -507,8 +580,10 @@ def test_constructor_and_local_projection_are_not_external_effects(tmp_path: Pat
         ''',
     )
 
+    # Preserve semantic findings from both pure local-state controls.
     findings = _run(DocSemanticsCheck(), module, declaration)
 
+    # Require every finding element to exclude the callable-effects rule.
     assert not any(item.rule_id == "DOC-027" for item in findings)
 
 
@@ -517,6 +592,7 @@ def test_deleting_an_abbreviation_entry_fails_doc_024(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
+    # Materialize an API initialism with no controlled-vocabulary declaration.
     module, declaration = _fixture(
         tmp_path,
         '"""! Fixture module."""\n'
@@ -524,8 +600,10 @@ def test_deleting_an_abbreviation_entry_fails_doc_024(tmp_path: Path) -> None:
         "APIClient = object()\n",
     )
 
+    # Preserve naming findings from the missing-abbreviation probe.
     findings = _run(DocNamingCheck(), module, declaration)
 
+    # Require one finding element to identify both DOC-024 and the API token.
     assert any(item.rule_id == "DOC-024" and "`API`" in item.message for item in findings)
 
 
@@ -534,6 +612,7 @@ def test_constant_case_words_are_not_guessed_to_be_abbreviations(tmp_path: Path)
 
     @param tmp_path fixture repository
     """
+    # Materialize ordinary all-capitals words as the abbreviation false-positive control.
     module, declaration = _fixture(
         tmp_path,
         '"""! Fixture module."""\n'
@@ -541,8 +620,10 @@ def test_constant_case_words_are_not_guessed_to_be_abbreviations(tmp_path: Path)
         "SECONDS_PER_DAY = 86400\n",
     )
 
+    # Preserve naming findings from the ordinary constant-word control.
     findings = _run(DocNamingCheck(), module, declaration)
 
+    # Require every finding element to exclude the controlled-abbreviation rule.
     assert not any(item.rule_id == "DOC-024" for item in findings)
 
 
@@ -551,7 +632,9 @@ def test_identifier_outside_a_declared_grammar_fails_doc_023(tmp_path: Path) -> 
 
     @param tmp_path fixture repository
     """
+    # Start from the unordered model mapping whose keys name views and values hold rules.
     payload = _payload()
+    # Declare a scoped two-dimensional identifier grammar for production source.
     payload["identifier_grammars"] = [
         {
             "scope": "src",
@@ -560,14 +643,17 @@ def test_identifier_outside_a_declared_grammar_fails_doc_023(tmp_path: Path) -> 
             "exclusions": [],
         }
     ]
+    # Materialize a one-dimensional identifier missing its required role segment.
     module, declaration = _fixture(
         tmp_path,
         '"""! Fixture module."""\n## Domain value lacking its role dimension.\nvalue = 1\n',
         payload,
     )
 
+    # Preserve naming findings from the scoped grammar probe.
     findings = _run(DocNamingCheck(), module, declaration)
 
+    # Require one finding element to identify both DOC-023 and the malformed name.
     assert any(item.rule_id == "DOC-023" and "`value`" in item.message for item in findings)
 
 
@@ -576,6 +662,7 @@ def test_deleting_a_generated_mapping_fails_doc_025(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
+    # Materialize a leading generated marker with no canonical-origin mapping.
     module, declaration = _fixture(
         tmp_path,
         '"""! Fixture module."""\n'
@@ -583,8 +670,10 @@ def test_deleting_a_generated_mapping_fails_doc_025(tmp_path: Path) -> None:
         "generated_wire_record = object()\n",
     )
 
+    # Preserve naming findings from the missing generated-origin probe.
     findings = _run(DocNamingCheck(), module, declaration)
 
+    # Require one finding element to identify the generated-name mapping rule.
     assert any(item.rule_id == "DOC-025" for item in findings)
 
 
@@ -593,6 +682,7 @@ def test_generated_concept_mentioned_inside_a_name_is_not_a_marker(tmp_path: Pat
 
     @param tmp_path fixture repository
     """
+    # Materialize `generated` as an interior predicate concept, not a leading marker.
     module, declaration = _fixture(
         tmp_path,
         '''
@@ -607,6 +697,8 @@ def test_generated_concept_mentioned_inside_a_name_is_not_a_marker(tmp_path: Pat
         ''',
     )
 
+    # Preserve naming findings from the interior-concept control.
     findings = _run(DocNamingCheck(), module, declaration)
 
+    # Require every finding element to exclude generated-origin mapping.
     assert not any(item.rule_id == "DOC-025" for item in findings)
