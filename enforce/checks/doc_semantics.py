@@ -385,6 +385,10 @@ def _has_detectable_effect(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool
                 "self" in roots or bool(roots.intersection(parameter_names))
             ):
                 return True
+        if isinstance(child, ast.Delete):
+            roots = {_target_root(target) for target in child.targets}
+            if "self" in roots or bool(roots.intersection(parameter_names)):
+                return True
     return False
 
 

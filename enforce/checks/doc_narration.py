@@ -180,6 +180,8 @@ def _operation_kind(node: ast.AST) -> str | None:
             return label
     if isinstance(node, (ast.Assign, ast.AnnAssign, ast.AugAssign)) and _changes_state(node):
         return "state transition"
+    if isinstance(node, ast.Delete) and _changes_deleted_state(node):
+        return "state deletion"
     if isinstance(node, ast.Expr) and isinstance(node.value, ast.Call) and _effect_call(node.value):
         return "externally visible effect"
     return None
@@ -195,6 +197,19 @@ def _changes_state(node: ast.Assign | ast.AnnAssign | ast.AugAssign) -> bool:
     return any(
         isinstance(part, (ast.Attribute, ast.Subscript))
         for target in targets
+        for part in ast.walk(target)
+    )
+
+
+def _changes_deleted_state(node: ast.Delete) -> bool:
+    """Whether deletion removes an attribute or indexed-container member.
+
+    @param node deletion statement
+    @return true for object or container state targets
+    """
+    return any(
+        isinstance(part, (ast.Attribute, ast.Subscript))
+        for target in node.targets
         for part in ast.walk(target)
     )
 

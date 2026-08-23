@@ -382,6 +382,31 @@ def test_detectable_effect_without_contract_fails_doc_027(tmp_path: Path) -> Non
     assert any(item.rule_id == "DOC-027" for item in findings)
 
 
+def test_container_member_deletion_is_a_detectable_effect(tmp_path: Path) -> None:
+    """Deleting caller-visible indexed state requires an effect contract.
+
+    @param tmp_path fixture repository
+    """
+    module, declaration = _fixture(
+        tmp_path,
+        '''
+        """! Fixture module."""
+        class Store:
+            """One mutable store."""
+            def remove(self, key: str) -> None:
+                """Remove one stored value.
+                @param key stored identity
+                """
+                # Remove the selected member from externally visible store state.
+                del self.values[key]
+        ''',
+    )
+
+    findings = _run(DocSemanticsCheck(), module, declaration)
+
+    assert any(item.rule_id == "DOC-027" for item in findings)
+
+
 def test_constructor_and_local_projection_are_not_external_effects(tmp_path: Path) -> None:
     """Fresh-object initialization and local assembly do not mutate caller state.
 
