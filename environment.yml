@@ -20,9 +20,9 @@
 # Hash-level pinning needs pip-tools and `--require-hashes`; it is not done here,
 # so do not read this file as proving more than it does.
 #
-# Only `python` comes from conda. Everything else is pip inside the conda env,
-# which is how this environment was actually built -- recording it any other way
-# would be a tidier lie.
+# Python and host-neutral executables come from conda. Python verifier libraries
+# remain exact pip requirements inside that environment. This lets the same file
+# construct the native Windows leg and the environment baked into the Linux image.
 
 name: claude
 
@@ -34,6 +34,21 @@ dependencies:
   # ExceptionGroup, except*, add_note, Self and assert_never all land natively).
   # 3.13 is the tested target.
   - python=3.13.14
+
+  # The developer launchers use pip to install a governed repository's declared
+  # dependencies. Pin the executable itself rather than accepting whichever pip
+  # happened to accompany the interpreter build.
+  - pip=26.2.1
+
+  # Content-bound reviews and release provenance invoke Git. Shipping it inside
+  # both legs avoids inheriting an arbitrary host Git while keeping repository
+  # identity available in the container.
+  - git=2.51.2
+
+  # Pyright is a Python distribution which executes a Node program. Providing a
+  # pinned Node runtime removes its hidden first-use download and makes offline
+  # runs after environment/image construction honest.
+  - nodejs=22.21.1
 
   # DOC-005/007/010/011. Doxygen is a native binary, not a pip package, and 1.10.0
   # is the exact version discipline/fact/doxygen.md's measurements were taken
@@ -48,7 +63,6 @@ dependencies:
   # is reported as unverifiable rather than waved through.
   - doxygen=1.10.0
 
-  - pip
   - pip:
       # ---------------------------------------------------------- gate step 1
       # Lint. Named as the mechanism behind ARCH-016 (C901), DIAG-008/ERR-008
@@ -91,10 +105,9 @@ dependencies:
       # itself immediately: pyright strict found two defects in the reference
       # that mypy --strict reported clean.
       #
-      # pyright PROVISIONS ITS OWN NODE on first use, downloading it. That makes
-      # gate step 8 the one step in this repository that needs network access the
-      # first time it runs on a machine. Stated here because a lock that hides a
-      # download is not a lock.
+      # Node is pinned above, so Pyright does not provision a private runtime on
+      # first use. Network access is needed while the Conda environment or Docker
+      # image is constructed, not while an already-built gate runs.
       - mypy==2.3.0
       - pyright==1.1.407
 

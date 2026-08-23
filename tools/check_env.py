@@ -59,6 +59,14 @@ _LOOSE: Final = re.compile(r"^\s*-\s*([A-Za-z0-9._-]+)\s*(>=|<=|>|<|~=|!=)")
 ## here.
 _CONDA: Final = re.compile(r"^\s*-\s*([A-Za-z0-9._-]+)=([0-9][A-Za-z0-9._]*)\s*$")
 
+## Native tools do not agree on a version grammar: Doxygen starts with the
+## version, pip prefixes it with its name, Git says ``git version``, and Node
+## prefixes it with ``v``. Extract the first dotted numeric identity and stop at
+## a platform suffix such as Git for Windows' ``.windows.1``.
+_NATIVE_VERSION: Final = re.compile(
+    r"(?<![0-9])v?([0-9]+(?:\.[0-9]+)+)(?=[^0-9]|$)",
+)
+
 ## How to ask a conda-installed native tool for its version. Anything declared as
 ## a conda pin and absent from this table is REPORTED as unverifiable rather than
 ## passed over: a declared dependency nobody checks is the exact shape of defect
@@ -66,6 +74,9 @@ _CONDA: Final = re.compile(r"^\s*-\s*([A-Za-z0-9._-]+)=([0-9][A-Za-z0-9._]*)\s*$
 ## would reintroduce it one entry at a time.
 NATIVE_VERIFIERS: Final[dict[str, tuple[str, ...]]] = {
     "doxygen": ("doxygen.exe", "doxygen"),
+    "git": ("git.exe", "git"),
+    "nodejs": ("node.exe", "node"),
+    "pip": ("pip.exe", "pip"),
 }
 
 
@@ -130,8 +141,8 @@ def native_version(name: str) -> str | None:
     same wrong answer as not looking.
 
     @param name the conda package name
-    @return the first whitespace-separated token of its `--version` output, or
-        None when the binary cannot be found or refuses to report
+    @return the normalized dotted version from its `--version` output, or None
+        when the binary cannot be found or refuses to report
     """
     located = locate_native(name)
     return _ask_version(located) if located else None
@@ -156,15 +167,26 @@ def locate_native(name: str) -> str | None:
     """
     root = Path(sys.executable).parent
     for filename in NATIVE_VERIFIERS.get(name, (f"{name}.exe", name)):
-        for candidate in (root / "Library" / "bin" / filename, root / filename,
+        for candidate in (root / "Library" / "bin" / filename,
+                          root / "Scripts" / filename, root / filename,
                           root / "bin" / filename):
             if candidate.is_file():
                 return str(candidate)
     return shutil.which(name)
 
 
+def parse_native_version(output: str) -> str | None:
+    """Extract one dotted numeric version from a native tool's output.
+
+    @param output stdout and stderr emitted by a successful version probe
+    @return the normalized numeric version, or None when none is present
+    """
+    found = _NATIVE_VERSION.search(output)
+    return found.group(1) if found is not None else None
+
+
 def _ask_version(executable: str) -> str | None:
-    """Run `<executable> --version` and return its first token.
+    """Run `<executable> --version` and normalize its version grammar.
 
     @param executable the binary to run
     @return the version token, or None when the call fails
@@ -173,9 +195,9 @@ def _ask_version(executable: str) -> str | None:
         (executable, "--version"), capture_output=True, text=True,
         encoding="utf-8", errors="replace", check=False, timeout=60,
     )
-    if finished.returncode != 0 or not finished.stdout.strip():
+    if finished.returncode != 0:
         return None
-    return finished.stdout.strip().split()[0]
+    return parse_native_version(f"{finished.stdout}\n{finished.stderr}")
 
 
 def drift(python: str | None, pins: dict[str, str],
@@ -220,7 +242,8 @@ def main(argv: list[str] | None = None) -> int:
     @return 0 when the environment matches the declaration, 1 when it does not
         and 2 when the declaration itself cannot be trusted
     """
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    description = (__doc__ or "Verify the declared development environment.")
+    parser = argparse.ArgumentParser(description=description.splitlines()[0])
     parser.add_argument("--quiet", action="store_true",
                         help="print nothing when the environment matches")
     parser.add_argument("--file", type=Path, default=ENVIRONMENT_PATH,

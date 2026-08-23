@@ -179,12 +179,42 @@ def test_a_verifiable_conda_pin_at_the_wrong_version_fails() -> None:
     assert "doxygen" in problems[0]
 
 
-def test_the_installed_doxygen_matches_its_pin() -> None:
-    """The positive case: the declaration and the environment agree.
+@pytest.mark.parametrize(
+    ("reported", "expected"),
+    [
+        ("1.10.0 (7ce1305)", "1.10.0"),
+        ("pip 26.2.1 from /opt/conda/site-packages/pip", "26.2.1"),
+        ("git version 2.51.2.windows.1", "2.51.2"),
+        ("v22.21.1", "22.21.1"),
+    ],
+)
+def test_native_version_grammars_are_normalized(reported: str, expected: str) -> None:
+    """Every shipped native executable's real output yields its lock identity.
+
+    @param reported representative output from one supported executable
+    @param expected the exact Conda version the checker must compare
+    """
+    assert check_env.parse_native_version(reported) == expected
+
+
+def test_native_output_without_a_dotted_version_is_not_accepted() -> None:
+    """A successful-looking word cannot satisfy an executable version pin."""
+    assert check_env.parse_native_version("git version unknown") is None
+
+
+def test_every_shipped_conda_tool_has_an_executable_probe() -> None:
+    """Adding a lock member without a verifier must fail in the test nearest it."""
+    _, _, _, conda = check_env.read_pins(check_env.ENVIRONMENT_PATH)
+    assert set(conda) == {"doxygen", "git", "nodejs", "pip"}
+    assert set(conda) <= set(check_env.NATIVE_VERIFIERS)
+
+
+def test_the_installed_native_tools_match_their_pins() -> None:
+    """The positive case: every native declaration and environment agree.
 
     @throws AssertionError when the pin and the installed binary differ
     """
     _, _, _, conda = check_env.read_pins(check_env.ENVIRONMENT_PATH)
-    if "doxygen" not in conda:
-        pytest.skip("this declaration pins no doxygen")
+    if not conda:
+        pytest.skip("this declaration pins no native tools")
     assert check_env.drift(None, {}, conda) == []
