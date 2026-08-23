@@ -24,18 +24,20 @@ from typing import TYPE_CHECKING, Final
 from decides import decides
 from fixtures import broken_copy, package_root, reference_root
 
+# Import path typing only while static analyzers evaluate fixture contracts.
 if TYPE_CHECKING:
     from pathlib import Path
 
-## Names a planning function goes by. A plan is computed and returned; nothing is
-## performed until a caller asks.
+## Planner-function-name elements in stable discovery and diagnostic order. A plan
+## is computed and returned without performing effects.
 PLANNERS: Final[tuple[str, ...]] = ("survey", "plan", "preview", "dry_run", "compute")
 
-## Names an applying function goes by. It takes the plan the planner produced.
+## Applier-function-name elements in stable discovery and diagnostic order. An
+## applier consumes the plan produced by its planning counterpart.
 APPLIERS: Final[tuple[str, ...]] = ("apply", "perform", "execute", "commit")
 
-## Evidence in the fault or integration layer that an interruption was driven and
-## its aftermath asserted, rather than the happy path being run twice.
+## Interruption-evidence token elements in stable diagnostic order. Several must
+## occur in fault source to distinguish aftermath checks from a repeated happy path.
 INTERRUPTION_EVIDENCE: Final[tuple[str, ...]] = ("interrupt", "partway", "remaining",
                                                  "deleted", "failing_on")
 
@@ -49,16 +51,25 @@ def functions_in(package: Path) -> dict[str, ast.FunctionDef | ast.AsyncFunction
     """Every top-level function the package defines, by name.
 
     @param package the package directory
-    @return each function name against its definition; later definitions win
+    @return function-name keys mapped to definitions in sorted module order; later wins
     """
+    # Accumulate function-name keys in module order against their latest AST definitions.
     found: dict[str, ast.FunctionDef | ast.AsyncFunctionDef] = {}
+    # Inspect every Python module path in deterministic source-tree order.
     for module in sorted(package.rglob("*.py")):
+        # Exclude interpreter cache paths from the authored source surface.
         if "__pycache__" in module.parts:
+            # Advance to the next authored module.
             continue
+        # Parse top-level declarations without importing or executing the module.
         tree = ast.parse(module.read_text(encoding="utf-8"), filename=str(module))
+        # Visit top-level statement elements in lexical order.
         for node in tree.body:
+            # Select synchronous and asynchronous function declarations only.
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                # Record the latest definition under its callable name.
                 found[node.name] = node
+    # Return the complete name-to-definition mapping after source traversal.
     return found
 
 
@@ -74,15 +85,20 @@ def test_dry_run_matches_apply() -> None:
     recomputing the plan for itself is a second implementation free to disagree
     with the one the caller was shown.
     """
+    # Inventory top-level functions in the conformant reference package.
     package = package_root(reference_root())
     functions = functions_in(package)
 
+    # Select the first declared planner and applier names present in the package.
     planner = next((n for n in PLANNERS if n in functions), None)
     applier = next((n for n in APPLIERS if n in functions), None)
+    # Establish both pipeline halves before joining them through parameters.
     assert planner, f"no planning function found; looked for {', '.join(PLANNERS)}"
     assert applier, f"no applying function found; looked for {', '.join(APPLIERS)}"
 
+    # Collapse applier parameter-name elements to an unordered membership set.
     parameters = {a.arg for a in functions[applier].args.args}
+    # Require the applier to consume an explicitly named planning result.
     assert parameters & {"plan", "outcome", "planned"}, (
         f"{applier}() does not take a plan. If it recomputes what to do, the dry "
         f"run is a prediction made by a second implementation, and the two are "
@@ -96,13 +112,16 @@ def test_the_dry_run_is_compared_to_the_apply() -> None:
     The structural check above can be satisfied by two functions that never meet.
     This asserts the integration layer actually drives both.
     """
+    # Combine integration-test source elements in sorted path order for call evidence.
     integration = reference_root() / "tests" / "integration"
     text = "\n".join(m.read_text(encoding="utf-8")
                      for m in sorted(integration.rglob("test_*.py")))
+    # Define one diagnostic template for either missing pipeline execution mode.
     unrun = (
         "the integration layer never runs the pipeline {}, so nothing compares "
         "the plan a caller is shown against the one performed"
     )
+    # Require the same integration harness to drive both truncated and applied modes.
     assert "apply_it=False" in text, unrun.format("as a dry run")
     assert "apply_it=True" in text, unrun.format("for real")
 
@@ -111,13 +130,19 @@ def test_an_applier_that_recomputes_is_caught(tmp_path: Path) -> None:
     """The negative case: an apply that takes no plan.
 
     @param tmp_path the fixture directory
+
+    @par Effects
+    Creates an isolated project whose applier signature no longer accepts the plan.
     """
+    # Replace only the applier signature while retaining the rest of the reference.
     root = broken_copy(tmp_path, replace=[(
         "src/refpkg/app/prune.py",
         "def apply(store: FileStore, plan: Plan) -> tuple[str, ...]:",
         "def apply(store: FileStore) -> tuple[str, ...]:",
     )])
+    # Inventory mutated functions and reject any remaining explicit plan parameter.
     functions = functions_in(package_root(root))
+    # Prove the negative subject exercises the recomputing-applier shape.
     assert not {a.arg for a in functions["apply"].args.args} & {"plan", "outcome"}
 
 
@@ -132,10 +157,13 @@ def test_interruption_recovers() -> None:
     with some effects done", which nothing but a fault schedule can produce on
     demand -- and which is the state a journal exists to make recoverable.
     """
+    # Combine fault-test source elements in sorted path order and normalize case.
     fault = reference_root() / "tests" / "fault"
     text = "\n".join(m.read_text(encoding="utf-8")
                      for m in sorted(fault.rglob("test_*.py"))).lower()
+    # Retain evidence-token string elements in declared diagnostic order when present.
     found = [word for word in INTERRUPTION_EVIDENCE if word in text]
+    # Require several independent signs of interruption and aftermath observation.
     assert len(found) >= 3, (
         f"the fault layer shows little evidence of driving an interruption; it "
         f"mentions only {', '.join(found) or 'none'} of "
@@ -151,10 +179,12 @@ def test_what_is_not_guaranteed_is_stated() -> None:
     it so. A caller who assumes the strongest guarantee has been told nothing and
     believes they have been told everything.
     """
+    # Combine port-source elements in sorted filename order for stated-limit evidence.
     package = package_root(reference_root())
     ports = "\n".join(
         m.read_text(encoding="utf-8") for m in sorted((package / "ports").glob("*.py"))
     )
+    # Require the public port contract to name the absence of an atomicity guarantee.
     assert _STATES_LIMITS.search(ports), (
         "no port states what it does not guarantee. The rule is satisfied by "
         "saying so, and unsatisfiable by hoping nobody asks."
@@ -165,12 +195,18 @@ def test_an_error_carrying_no_progress_is_caught(tmp_path: Path) -> None:
     """The negative case: an interruption that does not say how far it got.
 
     @param tmp_path the fixture directory
+
+    @par Effects
+    Creates an isolated project whose application error omits progress state.
     """
+    # Replace application errors with a minimal diagnostic carrying no progress fields.
     root = broken_copy(tmp_path, write={
         "src/refpkg/app/errors.py":
             '"""The app family."""\n\n\nclass AppError(Exception):\n'
             '    """Base."""\n\n    ## The code.\n    code = "refpkg.app.error"\n',
     })
+    # Read the mutated application-error source as the progress-vocabulary subject.
     text = (package_root(root) / "app" / "errors.py").read_text(encoding="utf-8")
+    # Require both completed and remaining progress concepts to be absent independently.
     assert "deleted" not in text
     assert "remaining" not in text
