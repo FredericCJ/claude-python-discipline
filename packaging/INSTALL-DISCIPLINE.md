@@ -37,9 +37,9 @@ sh .agent/dev/docker.sh
 Either command constructs the same exact direct verifier set from
 `.agent/environment.yml`, checks Python and every native executable, and runs the canonical
 project gate. The Windows launcher creates or repairs the `claude` environment. The Linux
-launcher builds its digest-pinned image when absent, then bind-mounts this repository and
-runs as the invoking uid/gid. Append a command such as `python -m pytest -q` to either
-launcher for a focused run.
+launcher reconciles its digest-pinned image through Docker's build cache, then bind-mounts
+this repository and runs as the invoking uid/gid. Append a command such as
+`python -m pytest -q` to either launcher for a focused run.
 
 The first construction needs network access. The image supplies the discipline verifiers,
 not undeclared project runtime dependencies. `requirements.txt` remains the exact direct

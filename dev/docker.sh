@@ -52,12 +52,6 @@ build_image() {
         "$build_context"
 }
 
-ensure_image() {
-    if ! "$docker_command" image inspect "$image" >/dev/null 2>&1; then
-        build_image
-    fi
-}
-
 mode=${1:-run}
 if [ "$#" -gt 0 ]; then
     shift
@@ -82,7 +76,7 @@ case $mode in
         ;;
 esac
 
-ensure_image
+build_image
 
 if [ "$#" -eq 0 ]; then
     if [ "$packaged" = true ]; then

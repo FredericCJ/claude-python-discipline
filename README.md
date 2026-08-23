@@ -89,9 +89,9 @@ sh .agent/dev/docker.sh python -m pytest -q
 
 Both legs are constructed from the same `environment.yml`. The Windows launcher creates
 or repairs the named Conda environment and verifies it after the transaction. The Linux
-launcher builds a digest-pinned image when absent, mounts the repository rather than
-baking it into a layer, and runs as the invoking uid/gid. Project-specific dependencies
-remain the governed repository's declared responsibility.
+launcher reconciles a digest-pinned image through Docker's build cache, mounts the
+repository rather than baking it into a layer, and runs as the invoking uid/gid.
+Project-specific dependencies remain the governed repository's declared responsibility.
 
 ## Vendoring and integration
 

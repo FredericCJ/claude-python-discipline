@@ -92,6 +92,13 @@ def test_the_wsl_fallback_rejects_a_nonfunctional_docker_stub() -> None:
     assert "wslpath -w" in launcher
 
 
+def test_every_linux_invocation_reconciles_the_image_inputs() -> None:
+    """A pre-existing mutable local tag must not stand in for current build bytes."""
+    launcher = _text("dev/docker.sh")
+    assert launcher.count("\nbuild_image\n") == 1
+    assert "image inspect" not in launcher
+
+
 def test_the_windows_leg_delegates_environment_ownership_only_to_conda() -> None:
     """No undeclared host package manager enters the native bootstrap path."""
     launcher = _text("dev/windows.ps1")

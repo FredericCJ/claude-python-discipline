@@ -29,10 +29,10 @@ working Docker engine:
 sh .agent/dev/docker.sh
 ```
 
-The launcher builds the image when absent, bind-mounts the repository at `/workspace`, and
-runs the project gate as the invoking uid/gid. It uses a native Linux Docker CLI when that
-engine responds and otherwise supports Docker Desktop's Windows CLI from WSL. Build again
-explicitly after changing the lock or Dockerfile, open a shell, or run another command with:
+The launcher reconciles the image through Docker's build cache, bind-mounts the repository
+at `/workspace`, and runs the project gate as the invoking uid/gid. It uses a native Linux
+Docker CLI when that engine responds and otherwise supports Docker Desktop's Windows CLI
+from WSL. Warm the build cache explicitly, open a shell, or run another command with:
 
 ```bash
 sh .agent/dev/docker.sh build
