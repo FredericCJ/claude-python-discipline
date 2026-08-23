@@ -37,7 +37,7 @@ class Reading:
 
     ## Temperature represented in degrees Celsius.
     celsius: float
-    ## Whether the reading has crossed the adapter boundary.
+    ## True when the reading crossed the adapter boundary; false while pending.
     complete: bool = False
     ## Internal calibration offset in degrees Celsius.
     _offset_celsius: float = 0.0
@@ -49,4 +49,5 @@ class Reading:
         @return the temperature in kelvins
         @post the result is non-negative
         """
+        # Convert the stored Celsius value using the fixed absolute-zero offset.
         return self.celsius + 273.15

@@ -26,8 +26,8 @@ from .broken import (
     reference_root,
 )
 
-## The names a fitness test may import from this package. Re-exported here so the
-## helpers have one import path even though they are implemented next door.
+## Public symbol-name elements in stable export order. Re-exporting keeps one
+## import path even though the helpers are implemented next door.
 __all__ = [
     "REFERENCE",
     "broken_copy",

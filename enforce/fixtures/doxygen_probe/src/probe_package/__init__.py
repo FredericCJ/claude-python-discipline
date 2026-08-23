@@ -7,5 +7,5 @@
 from probe_package.model import Reading, State
 from probe_package.service import convert_reading
 
-## Deliberately small public surface re-exported by the probe package.
+## Public symbol-name elements in stable export order for qualification output.
 __all__ = ["Reading", "State", "convert_reading"]

@@ -38,6 +38,7 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING, TypeVar
 
+# Import the callable protocol only for static analysis of transparent decorators.
 if TYPE_CHECKING:
     from collections.abc import Callable
 
@@ -69,18 +70,25 @@ def decides(*rule_ids: str) -> Callable[[_F], _F]:
     @return a decorator that records the ids on the function and returns it
     @raise ValueError if no rule is named, or one is not a well-formed rule id
     """
+    # Refuse a declaration that only appears to claim governing rules.
     if not rule_ids:
+        # Explain how an author represents a test that intentionally decides no rule.
         msg = (
             "@decides() names no rule. A test that decides nothing should "
             "carry no decorator, and no rule should tag it."
         )
+        # Stop before attaching a misleading empty declaration to the test.
         raise ValueError(msg)
+    # Retain every malformed rule-id element in caller-provided order for diagnosis.
     malformed = [rule for rule in rule_ids if not RULE_ID.match(rule)]
+    # Refuse the complete declaration when any one identifier violates the schema.
     if malformed:
+        # Render every invalid identifier so one correction pass can repair the call.
         msg = (
             f"not rule ids: {', '.join(malformed)}. Expected FAMILY-NNN, "
             f"as discipline/meta/SCHEMA.md defines it."
         )
+        # Stop before an unresolvable identifier enters the evidence join.
         raise ValueError(msg)
 
     def record(function: _F) -> _F:
@@ -89,7 +97,10 @@ def decides(*rule_ids: str) -> Callable[[_F], _F]:
         @param function the fitness test being declared
         @return the same object, so collection and execution are unaffected
         """
+        # Store an immutable rule-id set on the original function object.
         setattr(function, ATTRIBUTE, frozenset(rule_ids))
+        # Preserve the function identity expected by pytest and static analysis.
         return function
 
+    # Supply the configured decorator without changing the declared test yet.
     return record

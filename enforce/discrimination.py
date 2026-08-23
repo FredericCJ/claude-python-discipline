@@ -67,16 +67,16 @@ class Mutation:
     mechanism: str = ""
     ## Which tree to damage. See `BASES`.
     base: str = "reference"
-    ## Paths to delete, relative to the tree root.
+    ## Relative path elements to delete, in declared mutation order.
     drop: tuple[str, ...] = ()
-    ## `(path, contents)` pairs to create or overwrite. Held as pairs rather than
-    ## a mapping so the entry stays hashable and cannot be edited in place.
+    ## Relative-path and content pair elements to write, in declared mutation
+    ## order. Pairs keep the entry hashable and immutable.
     write: tuple[tuple[str, str], ...] = ()
-    ## `(path, old, new)` literal substitutions.
+    ## Relative-path, old-text, and new-text replacement elements, in application
+    ## order.
     replace: tuple[tuple[str, str, str], ...] = ()
-    ## Paths the runner points the checks at, relative to the tree root. The
-    ## default suits a package; a rule about a ledger or an agent file names its
-    ## own subject.
+    ## Relative target-path elements supplied to checks in stable invocation
+    ## order. The default suits a package; non-package rules name their subject.
     targets: tuple[str, ...] = field(default=("src",))
     ## A pytest node id, for a rule decided by a fitness test rather than an AST
     ## check. The runner points `DISCIPLINE_REFERENCE` at the damaged tree and
@@ -180,10 +180,8 @@ TANGLED: Final = "".join(
 )
 
 
-## The declared table: one concrete mutation per rule, each of which the runner
-## applies and then insists the rule is reported. Grouped by the law module the
-## rule belongs to, so a reader can see at a glance which tracks are covered and
-## which are still taking the mechanism's word for it.
+## Mutation-record elements in governing-rule order. Each concrete mutation is
+## applied before the runner insists that its declared mechanism rejects it.
 MUTATIONS: Final[tuple[Mutation, ...]] = (
     # --------------------------------------------------------------- law/EVID
     Mutation(
@@ -3300,19 +3298,24 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
 def by_rule() -> dict[str, list[Mutation]]:
     """Every mutation, grouped by the rule it must provoke.
 
-    @return each rule id against its mutations, in declaration order
+    @return rule-id keys mapped to mutation elements in declaration order
     """
+    # Accumulate rule-id keys whose values are mutation elements in declaration order.
     grouped: dict[str, list[Mutation]] = {}
+    # Preserve declaration order while visiting every mutation record.
     for mutation in MUTATIONS:
+        # Create a rule bucket on first use, then append the current witness.
         grouped.setdefault(mutation.rule_id, []).append(mutation)
+    # Expose the complete rule-to-witness index to evidence validators.
     return grouped
 
 
 def covered() -> frozenset[str]:
     """Which rules have at least one declared mutation.
 
-    @return the rule ids `D` counts
+    @return unordered rule-id elements counted by `D`
     """
+    # Collapse mutation records to the unique governing identifiers they witness.
     return frozenset(mutation.rule_id for mutation in MUTATIONS)
 
 
@@ -3324,6 +3327,7 @@ def covered_strategies() -> frozenset[tuple[str, str]]:
     evidence validator owns that join because this table deliberately does not
     duplicate the normative registry.
 
-    @return rule and mechanism pairs declared by the matrix
+    @return unordered rule-id and mechanism-pair elements declared by the matrix
     """
+    # Collapse records to unique exact-strategy witnesses for the evidence join.
     return frozenset((mutation.rule_id, mutation.mechanism) for mutation in MUTATIONS)

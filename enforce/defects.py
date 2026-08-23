@@ -50,19 +50,16 @@ class Defect:
     ## Exactly what the program or tool printed. The ONLY input the harness gives
     ## the navigator -- anything else would be the measurement helping itself.
     output: str
-    ## The rules that must be reached before the defect can be fixed. Reaching any
-    ## of them counts: a reader who lands on the governing rule has arrived.
+    ## Governing rule-id elements that may resolve the defect, in acceptable
+    ## navigation order. Reaching any one means the reader has arrived.
     governs: tuple[str, ...]
-    ## Whether `output` quotes a rule id outright. Reported separately, because a
-    ## quoted id makes the lookup trivial and averaging the two together would
-    ## flatter the result.
+    ## True when `output` quotes a rule id outright; false when navigation must
+    ## derive it. Reported separately so trivial lookup cannot flatter the result.
     names_a_rule: bool = False
 
 
-## The frozen set. Twelve defects: eight whose output names no rule and must be
-## derived, four whose output names one and are kept as the control -- if the
-## named ones ever stop resolving, the navigator is broken in a way the derived
-## ones would not isolate.
+## Frozen defect-record elements in stable benchmark order. The first eight must
+## be derived; the final four name a rule and act as the navigation control.
 DEFECTS: Final[tuple[Defect, ...]] = (
     Defect(
         defect_id="D-01",
@@ -225,14 +222,16 @@ DEFECTS: Final[tuple[Defect, ...]] = (
 def derived() -> tuple[Defect, ...]:
     """The defects whose output names no rule, which is the real measurement.
 
-    @return the entries an agent would have to reason from
+    @return defect elements requiring derivation, in benchmark order
     """
+    # Select the benchmark subjects whose diagnostics provide no direct rule id.
     return tuple(d for d in DEFECTS if not d.names_a_rule)
 
 
 def control() -> tuple[Defect, ...]:
     """The defects whose output names a rule outright.
 
-    @return the entries that should always resolve, and isolate a broken navigator
+    @return control-defect elements in benchmark order
     """
+    # Select the controls whose diagnostics make navigation mechanically trivial.
     return tuple(d for d in DEFECTS if d.names_a_rule)

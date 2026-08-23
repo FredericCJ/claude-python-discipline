@@ -17,9 +17,13 @@ def validate_celsius(value: float) -> float:
     @pre `value` is finite
     @post the result is at least -273.15
     """
+    # Reject an impossible value before constructing any reading.
     if value < ABSOLUTE_ZERO_CELSIUS:
+        # Preserve stable refusal detail for callers and qualification output.
         message = "below absolute zero"
+        # Expose the boundary violation as the documented public exception.
         raise ValueError(message)
+    # Return the unchanged value after the physical lower-bound check succeeds.
     return value
 
 
@@ -32,6 +36,7 @@ def convert_reading(value: float) -> Reading:
     """
     # Preserve the validated representation used to construct the domain value.
     validated_celsius = validate_celsius(value)
+    # Construct the immutable reading only from the validated representation.
     return Reading(celsius=validated_celsius)
 
 
@@ -48,6 +53,8 @@ def outer_scale(factor: float) -> Callable[[float], float]:
         @param value number to scale
         @return the scaled number
         """
+        # Apply the multiplier captured when the nested operation was created.
         return value * factor
 
+    # Expose the configured nested operation to the caller.
     return scale
