@@ -4,7 +4,8 @@ The Docker integration test is a release qualification because it needs a
 daemon, registry access, and several minutes on a cold cache. These tests keep
 the security- and ownership-bearing structure from drifting during every normal
 suite: immutable build inputs, a minimal context, non-root execution, direct
-signal delivery, and Conda as the Windows launcher's only package manager.
+signal delivery, a native-mode WSL gate projection, and Conda as the Windows
+launcher's only package manager.
 
     pytest tools/test_dev_environment.py
 """
@@ -96,7 +97,7 @@ def test_the_image_never_cleans_the_mounted_conda_package_cache() -> None:
 
 
 def test_the_linux_leg_preserves_identity_and_signal_delivery() -> None:
-    """The mounted checkout stays developer-owned and the tool becomes PID 1."""
+    """The runtime workspace stays developer-owned and the tool becomes PID 1."""
     # Compute launcher using  text for later test the linux leg preserves identity and signal
     # Details: delivery logic.
     launcher = _text("dev/docker.sh")
@@ -108,6 +109,23 @@ def test_the_linux_leg_preserves_identity_and_signal_delivery() -> None:
     assert "--privileged" not in launcher
     assert "safe.directory /workspace" in entrypoint
     assert entrypoint.rstrip().endswith('exec "$@"')
+
+
+def test_a_windows_backed_default_gate_uses_a_native_linux_projection() -> None:
+    """WSL gate evidence is not distorted by NTFS modes or metadata latency."""
+    # Read the launcher contract whose default-gate projection is under test.
+    launcher = _text("dev/docker.sh")
+
+    assert "/mnt/[A-Za-z]/*:true)" in launcher
+    assert 'staging_parent=$(CDPATH= cd -- "${TMPDIR:-/tmp}" && pwd)' in launcher
+    assert 'mktemp -d "$staging_parent/python-discipline-workspace.XXXXXX"' in launcher
+    assert 'cp -a "$repository_root/." "$staged_repository/"' in launcher
+    assert "-type f -name '*.py' -exec chmod 0644" in launcher
+    assert '"#!"*) chmod 0755 "$python_file"' in launcher
+    assert "runtime_repository=$repository_root" in launcher
+    assert "trap cleanup_stage EXIT HUP INT TERM" in launcher
+    assert '"$staging_parent"/python-discipline-workspace.*)' in launcher
+    assert 'cp "$staged_repository/build/project-gate-docker.json"' in launcher
 
 
 def test_the_wsl_fallback_rejects_a_nonfunctional_docker_stub() -> None:

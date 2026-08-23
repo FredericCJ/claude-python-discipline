@@ -230,8 +230,11 @@ whether comments actually match the implementation.
 
 Use `.agent\dev\windows.cmd` or `sh .agent/dev/docker.sh` with no appended command to run
 the canonical project gate. The Windows leg reconciles the shared lock before execution;
-the Linux leg mounts this repository into its image as the invoking uid/gid. Neither leg
-governs a parent or sibling repository.
+the Linux leg mounts this repository into its image as the invoking uid/gid. For a default
+gate on a Windows-backed WSL path, it mounts a disposable native-Linux byte projection,
+normalizes Python executable intent from shebangs, copies the JSON report back, and removes
+the projection. Explicit commands still mount the real checkout so edits persist. Neither
+leg governs a parent or sibling repository.
 
 Read `.agent/discipline/KERNEL.md`. It is about 2,000 tokens and it routes everything
 else; do not read the modules speculatively. From then on:

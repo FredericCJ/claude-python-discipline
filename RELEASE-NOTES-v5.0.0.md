@@ -87,6 +87,13 @@ application and a single-component repository install from the same staged packa
 their v4 declaration with actionable guidance, migrate through the public command path,
 and reach the same v5 project gate without assuming a parent or counterpart repository.
 
+On the expected Windows 11 plus WSL topology, a no-argument Docker gate projects the
+Windows-backed checkout into a disposable native-Linux directory before mounting it. Exact
+bytes are preserved and Python executable intent is derived from shebangs, so NTFS's
+all-executable mode projection and metadata latency cannot create Linux-only Ruff findings
+or false timeouts. The packaged JSON report is copied back and the projection is removed.
+Explicit commands and shells mount the real checkout because their edits must persist.
+
 ## Compatibility and residuals
 
 - v4 projects declaring `sphinx` or `none` no longer pass. Doxygen is a deliberate v5
