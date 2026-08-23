@@ -14,7 +14,7 @@ class AppError(Exception):
 
     ## Namespaced and stable, like every other code in the package.
     code: str = "refpkg.app.error"
-    ## The rules an app failure defends.
+    ## Each defended rule identifier, in stable diagnostic display order.
     rule_ids: tuple[str, ...] = ("ERR-004",)
 
 
@@ -28,21 +28,21 @@ class PruneInterrupted(AppError):
 
     ## Distinguishes this arm from every other in the family.
     code = "refpkg.app.prune_interrupted"
-    ## An interrupted multi-effect apply is exactly what `EFCT-007` journals
-    ## and `EFCT-009` requires be stated rather than quietly hoped past.
+    ## Each defended rule identifier, ordered from progress journalling to
+    ## explicitly bounded partial-effect behavior.
     rule_ids: tuple[str, ...] = ("EFCT-007", "EFCT-009")
 
     def __init__(self, deleted: tuple[str, ...], remaining: tuple[str, ...]) -> None:
         """Record how far the apply got.
 
-        @param deleted the paths already removed, in the order they were removed
-        @param remaining the paths the plan named that are still present
+        @param deleted each path already removed, in the order it was removed
+        @param remaining each still-present path, preserving its order in the plan
         """
         super().__init__(
             f"apply stopped after {len(deleted)} deletion(s); "
             f"{len(remaining)} entr(ies) from the plan remain"
         )
         ## Paths already removed, in their execution order.
-        self.deleted = deleted
+        self.deleted = deleted  # Preserve the completed prefix in execution order.
         ## Planned paths that were not removed when execution stopped.
-        self.remaining = remaining
+        self.remaining = remaining  # Preserve the untouched suffix in plan order.

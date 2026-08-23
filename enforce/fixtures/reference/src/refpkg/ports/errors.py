@@ -47,11 +47,9 @@ class PortError(Exception):
 
     ## Namespaced, greppable, and part of the published surface (`DIAG-002`).
     code: str = "refpkg.port.error"
-    ## The rules this family defends, carried into the envelope so a consumer --
-    ## or an agent -- can go from the failure to the contract it broke without
-    ## guessing. `DIAG-001`'s envelope has carried a `rule_ids` field since it was
-    ## published; until something populated it, the field was specified, shipped
-    ## and dead, and the last hop of the Prime Directive stayed manual.
+    ## Each rule identifier this family defends, ordered from error ownership to
+    ## port-contract completeness. The sequence lets a consumer reach the broken
+    ## contract without guessing.
     rule_ids: tuple[str, ...] = ("ERR-004", "ARCH-025")
 
     def __init__(self, port: str, operation: str, detail: str) -> None:
@@ -63,11 +61,11 @@ class PortError(Exception):
         """
         super().__init__(f"{port}.{operation}: {detail}")
         ## Stable port family that rejected the operation.
-        self.port = port
+        self.port = port  # Retain the stable boundary family for classification.
         ## Operation attempted through that port.
-        self.operation = operation
+        self.operation = operation  # Retain the exact contract operation that failed.
         ## Dependency-safe detail reported at the boundary.
-        self.detail = detail
+        self.detail = detail  # Retain sanitized adapter detail without reparsing prose.
 
 
 class ClockUnavailable(PortError):

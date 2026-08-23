@@ -15,6 +15,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Never, TypeAlias
 
+# Keep type-only port and value dependencies out of the runtime domain graph.
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
@@ -34,10 +35,10 @@ class Plan:
     truncated rather than a second implementation (`EFCT-006`).
     """
 
-    ## The entries the policy condemns, newest first, so a reader sees the
-    ## least-obvious deletion at the top rather than buried.
+    ## Each entry the policy condemns, ordered newest first so the least-obvious
+    ## deletion appears at the top rather than buried.
     doomed: tuple[Entry, ...]
-    ## The entries spared, for the same reason a plan states what it will not do.
+    ## Each spared entry, ordered newest first to mirror the condemned partition.
     kept: tuple[Entry, ...]
 
     @property
@@ -46,6 +47,7 @@ class Plan:
 
         @return the total size of every doomed entry, zero for an empty plan
         """
+        # Fold each condemned entry's byte count without changing plan order.
         return sum(entry.size_bytes for entry in self.doomed)
 
 
@@ -78,22 +80,27 @@ def plan_prune(entries: Sequence[Entry], policy: Policy, now: Instant) -> Outcom
     Total for its argument types: every combination either yields a plan or a
     refusal, and neither raises.
 
-    @param entries the files under consideration, in any order
+    @param entries each file under consideration; input order is deliberately irrelevant
     @param policy what the caller considers stale
     @param now the instant to measure age against, supplied rather than read
     @return the plan, or a refusal naming what made planning impossible
     """
+    # Enforce the declared work bound before sorting or inspecting any entry.
     if len(entries) > MAX_PLAN_ENTRIES:
+        # Return the expected input ceiling and the observed population together.
         return Refusal(
             code="refpkg.domain.plan_too_large",
             expected=f"at most {MAX_PLAN_ENTRIES} entries per plan",
             actual=f"{len(entries)} entries",
         )
 
+    # Establish the one newest-first order used by every later partition.
     newest_first = sorted(entries, key=lambda e: e.modified_at.epoch_seconds, reverse=True)
 
+    # Isolate each future-dated entry while preserving the established newest-first order.
     future = [e for e in newest_first if e.modified_at.epoch_seconds > now.epoch_seconds]
     if future:
+        # Refuse the inconsistent time frame and identify its newest offending element.
         return Refusal(
             code="refpkg.domain.entry_from_the_future",
             expected="every entry was modified at or before the current instant",
@@ -111,6 +118,7 @@ def plan_prune(entries: Sequence[Entry], policy: Policy, now: Instant) -> Outcom
     candidates = newest_first[policy.keep_newest :]
     cutoff = now.minus_days(policy.max_age_days)
 
+    # Partition each candidate at the cutoff, preserving newest-first order in both results.
     doomed = tuple(e for e in candidates if e.modified_at.epoch_seconds < cutoff.epoch_seconds)
     surviving = tuple(
         e for e in candidates if e.modified_at.epoch_seconds >= cutoff.epoch_seconds
@@ -130,5 +138,6 @@ def narrow(outcome: Never) -> Never:
     @return never; it always raises
     @throws AssertionError always, if the impossible happens at runtime
     """
+    # Render the impossible residual arm before terminating the runtime fallback.
     message = f"unhandled outcome arm: {outcome!r}"
     raise AssertionError(message)

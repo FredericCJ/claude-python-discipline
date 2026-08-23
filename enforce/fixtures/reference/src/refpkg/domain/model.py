@@ -39,9 +39,12 @@ class Instant:
         @return the validated instant
         @throws InvariantViolated when the value is negative
         """
+        # Reject a pre-epoch representation before it can become a domain instant.
         if epoch_seconds < 0:
+            # Preserve the violated temporal predicate in the raised diagnostic.
             message = "an instant is at or after the epoch"
             raise InvariantViolated(message, epoch_seconds)
+        # Publish only the validated epoch-relative representation.
         return cls(epoch_seconds)
 
     def minus_days(self, days: int) -> Self:
@@ -53,6 +56,7 @@ class Instant:
         @param days how many whole days to subtract
         @return the earlier instant, never before the epoch
         """
+        # Convert whole days to seconds and clamp the earlier instant at the epoch.
         return type(self)(max(0, self.epoch_seconds - days * SECONDS_PER_DAY))
 
 
@@ -97,10 +101,15 @@ class Policy:
         @return the validated policy
         @throws InvariantViolated when either value is negative
         """
+        # Refuse an age threshold that would make every past entry appear too new.
         if max_age_days < 0:
+            # Name the failed age constraint without discarding the supplied value.
             message = "max_age_days is not negative"
             raise InvariantViolated(message, max_age_days)
+        # Refuse a negative reservation count because no such partition exists.
         if keep_newest < 0:
+            # Name the failed reservation constraint for the diagnostic boundary.
             message = "keep_newest is not negative"
             raise InvariantViolated(message, keep_newest)
+        # Construct the policy only after both interacting constraints hold.
         return cls(max_age_days, keep_newest)

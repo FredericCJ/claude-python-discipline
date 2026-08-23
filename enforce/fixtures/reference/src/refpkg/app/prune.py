@@ -20,6 +20,7 @@ from refpkg.app.errors import PruneInterrupted
 from refpkg.domain.plan import Outcome, Plan, plan_prune
 from refpkg.ports.errors import PortError
 
+# Keep abstract contract types available to the checker without runtime coupling.
 if TYPE_CHECKING:
     from refpkg.domain.model import Policy
     from refpkg.ports.clock import Clock
@@ -37,6 +38,7 @@ def survey(store: FileStore, clock: Clock, policy: Policy) -> Outcome:
         are left to propagate, because the caller's boundary is where an error is
         logged and rendered, not here (`DIAG-010`)
     """
+    # Snapshot each store entry and the matching current instant before pure planning.
     entries = store.entries()
     now = clock.now()
     return plan_prune(entries, policy, now)
@@ -55,12 +57,19 @@ def apply(store: FileStore, plan: Plan) -> tuple[str, ...]:
     @throws PruneInterrupted when a deletion fails partway, carrying what was
         already done and what remains
     """
+    # Accumulate each successfully removed path in execution order for interruption reports.
     deleted: list[str] = []
     for entry in plan.doomed:
+        # Contain one destructive port call so partial progress remains attributable.
         try:
+            # Apply the next deletion in the immutable plan's declared order.
             store.delete(entry.path)
         except PortError as exc:
+            # Preserve each still-planned path in plan order after the failed operation.
             remaining = tuple(e.path for e in plan.doomed if e.path not in deleted)
+            # Translate orchestration failure while retaining the adapter cause chain.
             raise PruneInterrupted(tuple(deleted), remaining) from exc
+        # Journal the completed path only after its deletion succeeds.
         deleted.append(entry.path)
+    # Expose the complete ordered deletion journal as an immutable result.
     return tuple(deleted)

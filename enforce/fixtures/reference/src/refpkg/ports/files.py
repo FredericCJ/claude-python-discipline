@@ -23,6 +23,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
+# Keep the domain value dependency type-only at the abstract port boundary.
 if TYPE_CHECKING:
     from collections.abc import Sequence
 

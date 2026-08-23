@@ -24,10 +24,9 @@ class DomainError(Exception):
     ## Namespaced, greppable, and part of the published surface: renaming one is
     ## a breaking change (`DIAG-004`, `API-011`).
     code: str = "refpkg.domain.error"
-    ## The rules a domain failure defends. `ERR-004` because a layer produces
-    ## only its own family, `ARCH-006` because a domain function is total or
-    ## says how it failed. Carried into the envelope so the failure names its
-    ## own contract (`DIAG-001`).
+    ## Each rule identifier a domain failure defends, ordered by error-family
+    ## ownership before total-function behavior. Carried into the envelope so
+    ## the failure names its own contract (`DIAG-001`).
     rule_ids: tuple[str, ...] = ("ERR-004", "ARCH-006")
 
     def __init__(self, message: str) -> None:
@@ -49,8 +48,8 @@ class InvariantViolated(DomainError):
 
     ## Distinguishes this arm from every other in the family.
     code = "refpkg.domain.invariant_violated"
-    ## A broken invariant is the domain refusing a value it was handed, which
-    ## is `ERR-014`'s contract-violation half rather than an expected outcome.
+    ## Each defended rule identifier, ordered from contract violation to layer
+    ## totality; this is not an unordered classification set.
     rule_ids: tuple[str, ...] = ("ERR-014", "ARCH-006")
 
     def __init__(self, invariant: str, actual: object) -> None:
@@ -61,6 +60,6 @@ class InvariantViolated(DomainError):
         """
         super().__init__(f"{invariant}; got {actual!r}")
         ## Human-readable predicate that the rejected value violated.
-        self.invariant = invariant
+        self.invariant = invariant  # Preserve the exact predicate for structured handling.
         ## Original value that failed the predicate.
-        self.actual = actual
+        self.actual = actual  # Preserve the rejected representation without string parsing.
