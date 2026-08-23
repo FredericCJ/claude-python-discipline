@@ -24,24 +24,25 @@ from typing import TYPE_CHECKING
 
 from . import Finding, ModuleCheck, is_test_path, main
 
+# Import annotation-only contracts without runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
 
-## Calls that destroy something and cannot be undone by the same process.
+## Unordered destructive-call set whose each element cannot be undone by the same process.
 DESTRUCTIVE = frozenset({
     "unlink", "rmtree", "remove", "rmdir", "removedirs", "truncate",
     "drop", "drop_table", "delete_many", "purge", "wipe", "destroy",
 })
 
-## Parameter names that mean the caller has opted in, or handed over a plan. A
-## function taking one of these has a seam at which the operation can be refused.
+## Unordered gate-parameter set whose each name element represents opt-in or an explicit plan.
 GATE_PARAMS = frozenset({
     "plan", "dry_run", "apply", "apply_it", "confirm", "confirmed", "force",
     "commit", "execute", "really",
 })
 
-## Layers where a plan is owed before an irreversible call. Deliberately excludes
+## Unordered governed-layer set whose each element owes a plan before irreversible calls.
+## Deliberately excludes
 ## `adapters`: an adapter implementing a port's `delete` IS the apply half of
 ## plan/apply, and requiring it to take a plan parameter would mean no conformant
 ## implementation of the pattern could pass. Calibration found this immediately --
@@ -52,8 +53,7 @@ GATE_PARAMS = frozenset({
 ## effects at all, so a destructive call there is already a worse finding.
 GOVERNED = frozenset({"app", "shell"})
 
-## Attribute names that hold a state a transition moves between. A comparison
-## against a bare string on one of these is the open-set shape `EFCT-010` refuses.
+## Unordered state-attribute set whose each name element must not use open string states.
 STATE_NAMES = frozenset({"state", "status", "phase", "stage", "mode"})
 
 
@@ -67,6 +67,7 @@ class PlanApplyCheck(ModuleCheck):
     ## were named here and never emitted, so they counted as `mechanized` while
     ## being decided by nothing -- and this module's own docstring said so in
     ## prose. `V080` rises as a result, which is the true number.
+    ## Rule-id elements in deterministic reporting order actually decided here.
     rules = ("EFCT-005", "EFCT-010")
 
     def visit_module(self, tree: ast.Module, path: Path, layer: str) -> Iterator[Finding]:
@@ -75,12 +76,17 @@ class PlanApplyCheck(ModuleCheck):
         @param tree the module's syntax tree
         @param path the file it was parsed from
         @param layer the architectural layer the file sits in
-        @return one finding per violation
+        @return finding elements in destruction then transition order
         """
+        # Tests may intentionally construct destructive and open-state counterexamples.
         if is_test_path(path):
+            # Stop iteration for the explicit test-code exemption.
             return
+        # Only application and shell code decide whether irreversible work should happen.
         if layer in GOVERNED:
+            # Yield ungated-destruction findings before general state findings.
             yield from self._destruction(tree, path)
+        # State closure applies across every non-test architectural layer.
         yield from self._transitions(tree, path)
 
     def _destruction(self, tree: ast.Module, path: Path) -> Iterator[Finding]:
@@ -93,11 +99,15 @@ class PlanApplyCheck(ModuleCheck):
 
         @param tree the module's syntax tree
         @param path the file it came from
-        @return one finding per ungated destructive function
+        @return finding elements in AST walk order, one per ungated destructive function
         """
+        # Inspect each syntax-node element in deterministic AST walk order.
         for node in ast.walk(tree):
+            # Only callable bodies can own caller-provided plan parameters.
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                # Advance without scanning unrelated syntax as a function body.
                 continue
+            # Build an unordered set whose each element is a called terminal function name.
             calls = {
                 call.func.attr for call in ast.walk(node)
                 if isinstance(call, ast.Call) and isinstance(call.func, ast.Attribute)
@@ -105,14 +115,23 @@ class PlanApplyCheck(ModuleCheck):
                 call.func.id for call in ast.walk(node)
                 if isinstance(call, ast.Call) and isinstance(call.func, ast.Name)
             }
+            # Intersect called names with the closed destructive-operation set.
             destructive = calls & DESTRUCTIVE
+            # A function with no destructive call owes no plan gate.
             if not destructive:
+                # Advance to the next callable definition.
                 continue
+            # Apply/delete-named functions are the execution half whose caller owns gating.
             if node.name.lower() in DESTRUCTIVE | {"apply", "_apply"}:
+                # Advance without making conformant plan execution impossible.
                 continue
+            # Build an unordered set whose each element is a positional or keyword-only name.
             params = {a.arg for a in (*node.args.args, *node.args.kwonlyargs)}
+            # Any recognized gate parameter provides a refusal seam for the caller.
             if params & GATE_PARAMS:
+                # Advance because the function does not perform destruction unconditionally.
                 continue
+            # Yield the ungated-destruction finding with destructive names sorted for stability.
             yield Finding(
                 "EFCT-005", path, node.lineno,
                 f"{node.name}() calls {', '.join(sorted(destructive))} with no plan "
@@ -127,16 +146,25 @@ class PlanApplyCheck(ModuleCheck):
 
         @param tree the module's syntax tree
         @param path the file it came from
-        @return one finding per open comparison
+        @return finding elements in AST walk order, one per open comparison
         """
+        # Inspect each syntax-node element in deterministic AST walk order.
         for node in ast.walk(tree):
+            # Only comparisons with at least one right-hand operand can encode transitions.
             if not isinstance(node, ast.Compare) or not node.comparators:
+                # Advance without interpreting unrelated syntax nodes.
                 continue
+            # Select the left comparison expression that may carry state identity.
             left = node.left
+            # Only known state attributes are mechanically reliable transition signals.
             if not isinstance(left, ast.Attribute) or left.attr not in STATE_NAMES:
+                # Advance without guessing the semantics of arbitrary names.
                 continue
+            # Inspect each comparator element in authored chained-comparison order.
             for other in node.comparators:
+                # A bare string comparator creates an unbounded open state vocabulary.
                 if isinstance(other, ast.Constant) and isinstance(other.value, str):
+                    # Yield one open-state finding for this comparison.
                     yield Finding(
                         "EFCT-010", path, node.lineno,
                         f"`{left.attr}` is compared against the literal "
@@ -145,8 +173,11 @@ class PlanApplyCheck(ModuleCheck):
                         "closed table. A string comparison admits every state "
                         "anyone ever typos, and refuses none of them.",
                     )
+                    # Stop after the first literal so one comparison reports once.
                     break
 
 
+# Permit direct module execution through the common checker command-line adapter.
 if __name__ == "__main__":
+    # Translate the checker result into the process exit status.
     raise SystemExit(main(PlanApplyCheck()))

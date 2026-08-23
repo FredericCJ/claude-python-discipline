@@ -26,11 +26,13 @@ from typing import TYPE_CHECKING
 
 from . import Finding, ModuleCheck, is_test_path, main
 
+# Import annotation-only contracts without runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
 
-## Built-ins a layer may raise without owning a family for them: they are
+## Unordered admitted-error set whose each element denotes a caller contract violation.
+## These are
 ## contract violations by the caller, detected at a boundary, and the standard
 ## library's own vocabulary is the clearest way to say so.
 ADMITTED = frozenset({
@@ -38,7 +40,8 @@ ADMITTED = frozenset({
     "KeyboardInterrupt", "SystemExit", "GeneratorExit", "AssertionError",
 })
 
-## Built-ins whose direct use inside a layer means that layer has no family of
+## Unordered unowned-error set whose each element makes layer origin uncatchable by family.
+## Direct use
 ## its own for the condition. Raising one leaves a caller unable to catch this
 ## package's failures without also catching the standard library's.
 UNOWNED = frozenset({
@@ -46,7 +49,8 @@ UNOWNED = frozenset({
     "LookupError", "ArithmeticError", "EnvironmentError",
 })
 
-## Layers whose code is governed. Every layer is, in fact; the set exists so a
+## Unordered governed-layer set whose each element must raise its own error family. The set
+## exists so a
 ## file outside the four is skipped rather than reported against a family it
 ## has no way to have.
 GOVERNED = frozenset({"domain", "app", "adapters", "shell"})
@@ -62,6 +66,7 @@ class ErrorChannelsCheck(ModuleCheck):
     ## were named here and never emitted, so they counted as `mechanized` while
     ## being decided by nothing -- and this module's own docstring said so in
     ## prose. `V080` rises as a result, which is the true number.
+    ## Rule-id elements in deterministic reporting order actually decided here.
     rules = ("ERR-001", "ERR-004")
 
     def visit_module(self, tree: ast.Module, path: Path, layer: str) -> Iterator[Finding]:
@@ -70,13 +75,19 @@ class ErrorChannelsCheck(ModuleCheck):
         @param tree the module's syntax tree
         @param path the file it was parsed from
         @param layer the architectural layer the file sits in
-        @return one finding per violation
+        @return finding elements in function then raise/channel order
         """
+        # Only non-test canonical layers own layer-family and two-channel obligations.
         if layer not in GOVERNED or is_test_path(path):
+            # Stop iteration outside the rule's exact architectural subject.
             return
+        # Build an unordered set whose each element is a locally defined exception name.
         local = _local_exceptions(tree)
+        # Inspect each syntax-node element in deterministic AST walk order.
         for node in ast.walk(tree):
+            # Validate each function body as one propagation boundary.
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                # Yield unowned raises before any mixed-channel finding for the function.
                 yield from self._function(node, path, layer, local)
 
     def _function(self, node: ast.FunctionDef | ast.AsyncFunctionDef, path: Path,
@@ -86,13 +97,18 @@ class ErrorChannelsCheck(ModuleCheck):
         @param node the function definition
         @param path the file it came from
         @param layer the architectural layer, named in the message
-        @param local exception classes defined in this module
-        @return findings for unowned raises and for a result union that also raises
+        @param local unordered set whose each element is an exception class defined here
+        @return finding elements in raise walk order followed by any mixed-channel finding
         """
+        # Collect each explicit raise-statement element in deterministic function walk order.
         raises = [n for n in ast.walk(node) if isinstance(n, ast.Raise) and n.exc]
+        # Inspect each explicit raise element in function walk order.
         for raised in raises:
+            # Resolve the terminal raised class name, or empty text for another expression.
             name = _raised_name(raised)
+            # Directly raising an unowned built-in destroys the layer-family origin invariant.
             if name in UNOWNED:
+                # Yield the family-ownership finding at the exact raise statement.
                 yield Finding(
                     "ERR-004", path, raised.lineno,
                     f"{layer} raises `{name}` directly, which belongs to no layer",
@@ -101,10 +117,15 @@ class ErrorChannelsCheck(ModuleCheck):
                     f"raised here makes the origin unknowable.",
                 )
 
+        # Mixed-channel analysis applies only to result unions that also raise explicitly.
         if not _returns_union(node) or not raises:
+            # Stop after family validation for ordinary return shapes or raise-free functions.
             return
+        # Preserve raise walk order while selecting each locally owned exception element.
         owned = [r for r in raises if _raised_name(r) in local]
+        # Any owned raise alongside the result union exposes the same caller to two channels.
         if owned:
+            # Yield one mixed-channel finding at the first locally owned raise.
             yield Finding(
                 "ERR-001", path, owned[0].lineno,
                 f"{node.name}() returns a result union and also raises "
@@ -119,8 +140,9 @@ def _local_exceptions(tree: ast.Module) -> set[str]:
     """Exception classes defined in this module.
 
     @param tree the module's syntax tree
-    @return their names
+    @return unordered set whose each element is a locally defined exception name
     """
+    # Collect class-name elements whose bases lexically denote an exception hierarchy.
     return {
         node.name for node in ast.walk(tree)
         if isinstance(node, ast.ClassDef)
@@ -138,11 +160,17 @@ def _raised_name(node: ast.Raise) -> str:
     @param node the raise statement
     @return the trailing identifier, or the empty string for a bare re-raise
     """
+    # Select the explicit raised expression, which may be absent only for a bare re-raise.
     exc = node.exc
+    # Constructor calls name their raised class through the called expression.
     if isinstance(exc, ast.Call):
+        # Replace the constructor call with its function identity expression.
         exc = exc.func
+    # Qualified exception classes expose their terminal attribute name.
     if isinstance(exc, ast.Attribute):
+        # Return the qualified class's final identifier.
         return exc.attr
+    # Return a bare identifier or empty text for another expression form.
     return getattr(exc, "id", "")
 
 
@@ -154,12 +182,17 @@ def _returns_union(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
     as a result union: `None` is an absence, not an error arm.
 
     @param node the function definition
-    @return True when the annotation is a union with no `None` arm
+    @return true when the annotation is a union with no ``None`` arm; false otherwise
     """
+    # Select the function's return annotation without evaluating it.
     returns = node.returns
+    # Only PEP 604 ``X | Y`` syntax is claimed as a result-union signal.
     if not isinstance(returns, ast.BinOp) or not isinstance(returns.op, ast.BitOr):
+        # Reject other annotation shapes from this narrow predicate.
         return False
+    # Collect name and constant arm elements in deterministic annotation walk order.
     arms = [n for n in ast.walk(returns) if isinstance(n, (ast.Name, ast.Constant))]
+    # A union without any spelling of None represents multiple result arms, not optionality.
     return not any(
         (isinstance(a, ast.Constant) and a.value is None)
         or (isinstance(a, ast.Name) and a.id == "None")
@@ -167,5 +200,7 @@ def _returns_union(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
     )
 
 
+# Permit direct module execution through the common checker command-line adapter.
 if __name__ == "__main__":
+    # Translate the checker result into the process exit status.
     raise SystemExit(main(ErrorChannelsCheck()))

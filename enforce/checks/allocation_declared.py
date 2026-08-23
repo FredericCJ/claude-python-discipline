@@ -32,6 +32,7 @@ from typing import TYPE_CHECKING, Final
 
 from . import Finding, TextCheck, main
 
+# Import annotation-only contracts without runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
@@ -40,10 +41,11 @@ if TYPE_CHECKING:
 ## and never overwritten, so a declaration survives every update.
 DECLARATION: Final = "allocation.toml"
 
-## Directories the declaration may sit in, nearest first.
+## Search-directory elements in nearest-first precedence order for the allocation declaration.
 SEARCH: Final[tuple[str, ...]] = ("overrides", ".agent/overrides")
 
-## Values that mean "nobody filled this in". A mapping carrying one of these is a
+## Unordered placeholder-value set whose each element means nobody filled the mapping in.
+## A mapping carrying one of these is a
 ## copied template, not a declaration, and the rule it would otherwise satisfy is
 ## the one about a tier resolving to a real choice.
 ##
@@ -76,9 +78,9 @@ class AllocationDeclaredCheck(TextCheck):
 
     ## Invoked as `python -m checks.allocation_declared`.
     name = "allocation_declared"
-    ## The law/ops rule this mechanism decides.
+    ## Rule-id elements in deterministic reporting order decided by this check.
     rules = ("ALLOC-010",)
-    ## Dispatch records are written in markdown, beside the agents they describe.
+    ## File-suffix elements in deterministic matching order for Markdown dispatch records.
     suffixes = (".md",)
 
     def visit_text(self, text: str, path: Path) -> Iterator[Finding]:
@@ -86,16 +88,24 @@ class AllocationDeclaredCheck(TextCheck):
 
         @param text the file's contents
         @param path the file it was read from
-        @return one ALLOC-010 finding per unresolved tier, at the file's head
+        @return finding elements in template then sorted unresolved-tier order
         """
+        # Markdown without the dispatch heading has no allocation resolution obligation.
         if not _DISPATCH.search(text):
+            # Stop iteration without treating ordinary prose as a dispatch record.
             return
+        # Build an unordered set whose each element is one cited normalized tier identity.
         cited = {f"T{m.group(1)}" for m in _TIER.finditer(text)}
+        # A dispatch heading with no tier citation provides nothing this mechanism can resolve.
         if not cited:
+            # Stop without inventing an allocation choice.
             return
 
+        # Resolve the nearest mapping, its source label, and ordered placeholder descriptions.
         mapping, source, unfilled = self._mapping(path)
+        # An existing mapping with placeholder values is an unedited template, not authority.
         if mapping is not None and unfilled:
+            # Yield one aggregate placeholder finding in deterministic discovery order.
             yield Finding(
                 "ALLOC-010", path, 1,
                 f"{source} is an unedited template: {', '.join(unfilled)}",
@@ -103,8 +113,11 @@ class AllocationDeclaredCheck(TextCheck):
                 "to nothing a dispatch can be audited against, which is the "
                 "condition this rule exists to end.",
             )
+            # Stop because unresolved template content supersedes missing-tier details.
             return
+        # Complete absence makes every cited tier unauditable through one root cause.
         if mapping is None:
+            # Yield one aggregate missing-mapping finding with tier elements sorted.
             yield Finding(
                 "ALLOC-010", path, 1,
                 f"dispatches at {', '.join(sorted(cited))} and no tier mapping "
@@ -113,9 +126,12 @@ class AllocationDeclaredCheck(TextCheck):
                 f"and fill it in. Until a tier resolves to something, it names a "
                 f"role rather than a choice, and the dispatch cannot be audited.",
             )
+            # Stop because no per-tier comparison is possible without a mapping.
             return
 
+        # Report each cited tier absent from mapping keys in lexical order.
         for tier in sorted(cited - set(mapping)):
+            # Yield the unresolved-tier finding at the dispatch record head.
             yield Finding(
                 "ALLOC-010", path, 1,
                 f"dispatches at {tier}, which {source} does not resolve",
@@ -131,21 +147,36 @@ class AllocationDeclaredCheck(TextCheck):
         as readily as against this repository.
 
         @param path the file being examined
-        @return the `[tiers]` table, the file it came from, and one description
-            per field nobody filled in; `(None, "", [])` when there is no file
+        @return mapping from each tier key to model-name value preserving TOML order, source
+            filename, and placeholder-description elements in detection order; no mapping
+            returns ``(None, "", [])``
+
+        @par Effects
+        Searches ancestor directories and reads the first allocation declaration found.
         """
+        # Search each ancestor-path element from the file itself outward to filesystem root.
         for parent in [path.resolve(), *path.resolve().parents]:
+            # Search each declaration-directory element in nearest-first precedence order.
             for where in SEARCH:
+                # Compose the exact candidate allocation declaration path.
                 candidate = parent / where / DECLARATION
+                # Only an existing regular declaration file can terminate discovery.
                 if candidate.is_file():
+                    # Decode one immutable TOML declaration snapshot.
                     try:
+                        # Parse strict UTF-8 text into an untrusted table mapping.
                         document = tomllib.loads(
                             candidate.read_text(encoding="utf-8"))
+                    # Treat unreadable or malformed declaration as unresolved authority.
                     except (OSError, tomllib.TOMLDecodeError):
+                        # Return the stable absence triple without scanning farther authority.
                         return None, "", []
+                    # Map each authored tier key to its model spelling value in TOML order.
                     tiers = {str(k): str(v)
                              for k, v in document.get("tiers", {}).items()}
+                    # Select the metadata key/value mapping, preserving authored order.
                     meta = document.get("meta", {})
+                    # Collect placeholder-description elements in authored tier order.
                     unfilled = [
                         f"{name} is {value!r}" for name, value in tiers.items()
                         if str(value).strip().lower() in UNFILLED
@@ -154,14 +185,22 @@ class AllocationDeclaredCheck(TextCheck):
                     # `[meta]` block is a shorter file, not a placeholder, and
                     # rejecting one would be the over-reporting that made five
                     # ARCH-002 findings wrong against real code.
+                    # A present epoch verification date proves the template was not reviewed.
                     if str(meta.get("verified", "")).strip() == EPOCH:
+                        # Append the verification placeholder after tier placeholders.
                         unfilled.append("verified is the epoch")
+                    # A present owner key with placeholder content likewise remains unassigned.
                     if ("owner" in meta
                             and str(meta["owner"]).strip().lower() in UNFILLED):
+                        # Append the owner placeholder last in deterministic metadata order.
                         unfilled.append("owner is unassigned")
+                    # Return the first declaration under the nearest-first search contract.
                     return tiers, str(candidate.name), unfilled
+        # No ancestor and search-directory combination supplied an allocation declaration.
         return None, "", []
 
 
+# Permit direct module execution through the common checker command-line adapter.
 if __name__ == "__main__":
+    # Translate the checker result into the process exit status.
     raise SystemExit(main(AllocationDeclaredCheck()))
