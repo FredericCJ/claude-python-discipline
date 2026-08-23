@@ -9,19 +9,21 @@ what version it is decides nothing about documentation, and these are what make
 the difference visible.
 
 **What this gate does and does not decide, measured rather than assumed.**
-`enforce/Doxyfile` disables `WARN_IF_UNDOCUMENTED` and `WARN_NO_PARAMDOC` -- both
-are consequences of defects verified at exactly 1.10.0 and recorded in
-`discipline/fact/doxygen.md`. So an undocumented function passes this gate, and
-`DOC-007` is decided by `check:doc_coverage` alone. What IS enabled is
-`WARN_IF_DOC_ERROR` and `WARN_IF_INCOMPLETE_DOC` under `WARN_AS_ERROR`, which is
-`DOC-005` and `DOC-010`; the page count is `DOC-011`.
+`enforce/Doxyfile` disables `WARN_NO_PARAMDOC` because 1.17.0 still demands a
+return description from `-> None` procedures. `discipline/fact/doxygen.md`
+records that residual. `WARN_IF_UNDOCUMENTED` is enabled again because the 1.10
+field-attribution false positive no longer reproduces. Doxygen therefore decides
+representable entity presence, while `DOC-007` completeness and unrepresentable
+Python binding shapes remain owned by `check:doc_coverage`.
 
     pytest tools/test_doxygen_gate.py
 """
 
 from __future__ import annotations
 
+import re
 import shutil
+from hashlib import sha256
 from typing import TYPE_CHECKING, Final
 
 import pytest
@@ -29,6 +31,7 @@ import pytest
 import doxygen_gate
 
 if TYPE_CHECKING:
+    from contextlib import AbstractContextManager
     from pathlib import Path
 
 ## Skip rather than fail where the binary is absent: `check_env.py` already fails
@@ -40,6 +43,62 @@ _DOXYGEN: Final = doxygen_gate.locate_native("doxygen")
 ## one cause is noise a reader learns to skim.
 pytestmark = pytest.mark.skipif(_DOXYGEN is None,
                                 reason="doxygen is not installed in this environment")
+
+
+def _generated_probe(
+    extra_configuration: str = "GENERATE_XML=YES\n",
+) -> AbstractContextManager[doxygen_gate.GeneratedDocumentation]:
+    """Generate the version-qualification fixture for one bounded inspection.
+
+    @param extra_configuration settings appended after the canonical Doxyfile
+    @return a context manager whose output exists for the duration of the context
+    """
+    assert _DOXYGEN is not None
+    return doxygen_gate.generated(
+        _DOXYGEN,
+        doxygen_gate.PROBE_ROOT,
+        extra_configuration=extra_configuration,
+    )
+
+
+def _html_text(output: Path) -> str:
+    """Join generated pages while excluding syntax-highlighted source listings.
+
+    @param output Doxygen output root
+    @return the text of entity and index pages
+    """
+    return "\n".join(
+        path.read_text(encoding="utf-8", errors="replace")
+        for path in (output / "html").glob("*.html")
+        if not path.name.endswith("_source.html")
+    )
+
+
+def _run_inline_source(
+    tmp_path: Path,
+    source: str,
+    settings: str,
+) -> tuple[int, str]:
+    """Run one reduced behavior probe through the canonical configuration.
+
+    @param tmp_path isolated fixture directory
+    @param source complete Python module text
+    @param settings final Doxygen overrides for the behavior under test
+    @return native exit status and combined diagnostics
+    """
+    root = tmp_path / "inline"
+    (root / "src").mkdir(parents=True)
+    (root / "src" / "probe.py").write_text(source, encoding="utf-8")
+    assert _DOXYGEN is not None
+    with doxygen_gate.generated(
+        _DOXYGEN,
+        root,
+        extra_configuration=settings,
+    ) as result:
+        return (
+            result.finished.returncode,
+            f"{result.finished.stdout}\n{result.finished.stderr}",
+        )
 
 
 @pytest.fixture
@@ -129,14 +188,8 @@ def test_the_run_leaves_the_fixture_untouched() -> None:
     )
 
 
-def test_an_undocumented_function_is_not_caught_here(tree: Path) -> None:
-    """The gate's limit, pinned so nobody credits it with more than it does.
-
-    `WARN_IF_UNDOCUMENTED` is off because of a defect verified at Doxygen 1.10.0.
-    An undocumented element therefore passes this gate, and `DOC-001`/`DOC-007`
-    rest entirely on `check:doc_coverage`. If a later Doxygen lets those warnings
-    be turned back on, THIS TEST IS WHAT FAILS -- which is the prompt to re-read
-    `discipline/fact/doxygen.md` and move the setting.
+def test_an_undocumented_function_is_caught_here(tree: Path) -> None:
+    """The 1.17 gate again rejects a representable entity without a contract.
 
     @param tree a writable copy of the reference
     """
@@ -146,8 +199,168 @@ def test_an_undocumented_function_is_not_caught_here(tree: Path) -> None:
         + "\n\ndef undocumented(value: int) -> int:\n    return value\n",
         encoding="utf-8",
     )
-    status, _ = doxygen_gate.run(tree, doxygen_gate.MINIMUM_FILES)
-    assert status == doxygen_gate.EXIT_OK, (
-        "doxygen now warns about undocumented elements; re-check "
-        "discipline/fact/doxygen.md and consider enabling WARN_IF_UNDOCUMENTED"
+    status, line = doxygen_gate.run(tree, doxygen_gate.MINIMUM_FILES)
+    assert status == doxygen_gate.EXIT_FAILED
+    assert "undocumented" in line
+
+
+def test_117_projects_supported_python_entities_and_contract_commands() -> None:
+    """The exact target reads both comment forms and every required command."""
+    with _generated_probe() as result:
+        assert result.finished.returncode == 0, result.finished.stderr
+        body = _html_text(result.output)
+        for phrase in (
+            "Number of attempts permitted",
+            "Limit documented after its declaration",
+            "Private module state remains extractable",
+            "Internal calibration offset",
+            "Parameters",
+            "Returns",
+            "Exceptions",
+            "Precondition",
+            "Postcondition",
+            "Invariant",
+        ):
+            assert phrase in body
+
+
+def test_117_exposes_its_local_and_nested_definition_limits() -> None:
+    """Locals, nested functions and annotation-only fields are not entities."""
+    with _generated_probe() as result:
+        member_names: set[str] = set()
+        for path in (result.output / "xml").glob("*.xml"):
+            xml = path.read_text(encoding="utf-8", errors="strict")
+            member_names.update(
+                re.findall(
+                    r"<memberdef\b.*?<name>([^<]+)</name>",
+                    xml,
+                    flags=re.DOTALL,
+                ),
+            )
+        assert {
+            "RETRY_LIMIT",
+            "TRAILING_LIMIT",
+            "_PRIVATE_LIMIT",
+            "complete",
+            "_offset_celsius",
+            "PENDING",
+            "COMPLETE",
+            "kelvin",
+        } <= member_names
+        assert "celsius" not in member_names
+        assert "validated_celsius" not in member_names
+        assert "scale" not in member_names
+
+
+def test_117_generates_text_call_caller_and_dependency_relations() -> None:
+    """Enabled relationship features produce evidence, not merely settings."""
+    with _generated_probe() as result:
+        body = _html_text(result.output)
+        assert "References" in body
+        assert "Referenced by" in body
+        assert "Here is the call graph" in body
+        assert "Here is the caller graph" in body
+        assert "Directory dependency graph" in body
+        images = {path.name for path in (result.output / "html").glob("*.svg")}
+        assert any(name.endswith("_cgraph.svg") for name in images)
+        assert any(name.endswith("_icgraph.svg") for name in images)
+        assert any(name.endswith("_dep.svg") for name in images)
+
+
+def test_117_generated_site_has_no_remote_runtime_dependency() -> None:
+    """First view works offline and AUTO Mermaid's CDN string is absent."""
+    with _generated_probe() as result:
+        assets = "\n".join(
+            path.read_text(encoding="utf-8", errors="replace")
+            for path in (result.output / "html").rglob("*")
+            if path.suffix in {".css", ".html", ".js", ".svg"}
+        )
+        assert "cdn.jsdelivr.net" not in assets
+        assert not re.search(
+            r"<(?:script|link|iframe)[^>]+(?:src|href)=\"https?://",
+            assets,
+            flags=re.IGNORECASE,
+        )
+
+
+def test_117_output_is_byte_deterministic_for_the_same_fixture() -> None:
+    """Two clean generations have the same members and bytes."""
+
+    def snapshot() -> dict[str, str]:
+        """Hash the locally delivered HTML tree by relative identity."""
+        with _generated_probe(extra_configuration="") as result:
+            return {
+                path.relative_to(result.output / "html").as_posix(): sha256(
+                    path.read_bytes(),
+                ).hexdigest()
+                for path in (result.output / "html").rglob("*")
+                if path.is_file()
+            }
+
+    assert snapshot() == snapshot()
+
+
+def test_117_warns_about_an_undocumented_element(tmp_path: Path) -> None:
+    """`WARN_IF_UNDOCUMENTED` now finds a genuine missing function contract."""
+    status, diagnostic = _run_inline_source(
+        tmp_path,
+        '"""! Probe module.\n@package probe\n"""\n\n'
+        "def undocumented(value: int) -> int:\n"
+        "    return value\n",
+        "WARN_IF_UNDOCUMENTED=YES\nWARN_NO_PARAMDOC=NO\n",
     )
+    assert status != 0
+    assert "undocumented" in diagnostic
+
+
+def test_117_no_longer_misattributes_a_documented_field_use(tmp_path: Path) -> None:
+    """The 1.10 bare `self.field` false warning is fixed in 1.17."""
+    status, diagnostic = _run_inline_source(
+        tmp_path,
+        '"""! Probe module.\n@package probe\n"""\n\n'
+        "from dataclasses import dataclass\n\n"
+        "@dataclass\n"
+        "class Item:\n"
+        '    """! One item."""\n\n'
+        "    ## Documented value.\n"
+        "    bare: int = 1\n\n"
+        "    def size(self) -> int:\n"
+        '        """! Measure its text.\n'
+        "        @return the text length\n"
+        '        """\n'
+        "        return len(str(self.bare))\n",
+        "WARN_IF_UNDOCUMENTED=YES\nWARN_NO_PARAMDOC=NO\n",
+    )
+    assert status == 0, diagnostic
+
+
+def test_117_still_misclassifies_none_as_a_return_value(tmp_path: Path) -> None:
+    """`WARN_NO_PARAMDOC` remains unusable for annotated procedures."""
+    status, diagnostic = _run_inline_source(
+        tmp_path,
+        '"""! Probe module.\n@package probe\n"""\n\n'
+        "def consume(value: int) -> None:\n"
+        '    """! Consume one value.\n'
+        "    @param value value to consume\n"
+        '    """\n'
+        "    return None\n",
+        "WARN_IF_UNDOCUMENTED=YES\nWARN_NO_PARAMDOC=YES\n",
+    )
+    assert status != 0
+    assert "return type" in diagnostic
+
+
+def test_117_still_rejects_a_code_span_ending_in_a_period(tmp_path: Path) -> None:
+    """The reduced 1.10 markup defect remains present in 1.17."""
+    status, diagnostic = _run_inline_source(
+        tmp_path,
+        '"""! Probe module.\n@package probe\n"""\n\n'
+        "def name() -> str:\n"
+        '    """! Return `thing.` safely.\n'
+        "    @return the name\n"
+        '    """\n'
+        '    return "thing"\n',
+        "WARN_IF_UNDOCUMENTED=YES\nWARN_NO_PARAMDOC=NO\n",
+    )
+    assert status != 0
+    assert "end of comment block" in diagnostic

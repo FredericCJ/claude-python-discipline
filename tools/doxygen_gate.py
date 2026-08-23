@@ -34,8 +34,13 @@ import shutil
 import subprocess  # ruff: ignore[suspicious-subprocess-import]
 import sys
 import tempfile
+from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 ## The repository root, one level up from `tools/`.
 REPO_ROOT: Final = Path(__file__).resolve().parent.parent
@@ -49,6 +54,9 @@ from check_env import locate_native  # ruff: ignore[module-import-not-at-top-of-
 ## the working directory, so this is where the run happens from.
 DEFAULT_ROOT: Final = REPO_ROOT / "enforce" / "fixtures" / "reference"
 
+## Minimal source tree used to qualify version-dependent Doxygen behavior.
+PROBE_ROOT: Final = REPO_ROOT / "enforce" / "fixtures" / "doxygen_probe"
+
 ## The configuration, which is the one an adopter copies.
 DOXYFILE: Final = REPO_ROOT / "enforce" / "Doxyfile"
 
@@ -61,6 +69,54 @@ EXIT_OK: Final = 0
 
 ## Exit status when it warned, examined too little, or is not installed.
 EXIT_FAILED: Final = 1
+
+
+@dataclass(frozen=True)
+class GeneratedDocumentation:
+    """! One Doxygen process result while its temporary output still exists.
+
+    @var finished completed native process, including captured diagnostic streams
+    @var output temporary output directory; valid only inside `generated()`
+    @var source_pages number of generated Python source pages
+    """
+
+    finished: subprocess.CompletedProcess[str]
+    output: Path
+    source_pages: int
+
+
+@contextmanager
+def generated(
+    executable: str,
+    root: Path,
+    *,
+    extra_configuration: str = "",
+) -> Iterator[GeneratedDocumentation]:
+    """! Generate documentation and expose the output for bounded inspection.
+
+    @param executable resolved Doxygen executable
+    @param root directory holding the configured `src/`
+    @param extra_configuration newline-delimited overrides appended last
+    @return a context yielding the process result and temporary output
+    """
+    output = Path(tempfile.mkdtemp(prefix="doxygen-gate-"))
+    try:
+        # Later Doxygen assignments win, so the gate can redirect products and a
+        # qualification probe can enable an additional machine-readable view.
+        configuration = (
+            DOXYFILE.read_text(encoding="utf-8")
+            + f"\nOUTPUT_DIRECTORY={output.as_posix()}\n"
+            + extra_configuration
+        )
+        finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
+            (executable, "-"), input=configuration, cwd=root,
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            check=False, timeout=600,
+        )
+        source_pages = len(list(output.rglob("*_source.html")))
+        yield GeneratedDocumentation(finished, output, source_pages)
+    finally:
+        shutil.rmtree(output, ignore_errors=True)
 
 
 def run(root: Path, minimum: int) -> tuple[int, str]:
@@ -79,21 +135,9 @@ def run(root: Path, minimum: int) -> tuple[int, str]:
     if not (root / "src").is_dir():
         return EXIT_FAILED, f"no src/ under {root}; nothing would be examined"
 
-    output = Path(tempfile.mkdtemp(prefix="doxygen-gate-"))
-    try:
-        # The configuration is piped so `OUTPUT_DIRECTORY` can be overridden
-        # without editing the file an adopter copies. Doxygen reads a config from
-        # stdin when given `-`, and later assignments win.
-        configuration = (DOXYFILE.read_text(encoding="utf-8")
-                         + f"\nOUTPUT_DIRECTORY={output.as_posix()}\n")
-        finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
-            (executable, "-"), input=configuration, cwd=root,
-            capture_output=True, text=True, encoding="utf-8", errors="replace",
-            check=False, timeout=600,
-        )
-        pages = len(list(output.rglob("*_source.html")))
-    finally:
-        shutil.rmtree(output, ignore_errors=True)
+    with generated(executable, root) as result:
+        finished = result.finished
+        pages = result.source_pages
 
     if finished.returncode != 0:
         noise = (finished.stderr or finished.stdout).strip()

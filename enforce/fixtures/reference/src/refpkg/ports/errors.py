@@ -62,8 +62,11 @@ class PortError(Exception):
         @param detail what the underlying dependency reported
         """
         super().__init__(f"{port}.{operation}: {detail}")
+        ## Stable port family that rejected the operation.
         self.port = port
+        ## Operation attempted through that port.
         self.operation = operation
+        ## Dependency-safe detail reported at the boundary.
         self.detail = detail
 
 

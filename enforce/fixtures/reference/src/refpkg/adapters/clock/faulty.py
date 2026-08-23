@@ -30,8 +30,11 @@ class FaultyClock:
         @param start what a successful `now` returns
         @param schedule which calls fail; healthy when omitted
         """
+        ## The instant returned by a successful call.
         self._current = start
+        ## Deterministic call indexes at which the fake raises.
         self._schedule = schedule if schedule is not None else FaultSchedule.healthy()
+        ## Number of calls already attempted against this fake.
         self._calls = 0
 
     def now(self) -> Instant:

@@ -162,7 +162,7 @@ def test_a_conda_pin_nobody_can_verify_is_reported() -> None:
     verifier for, and having the lock report success anyway. That is how a lock
     stops covering things one entry at a time.
     """
-    problems = check_env.drift(None, {}, {"graphviz": "9.0.0"})
+    problems = check_env.drift(None, {}, {"unverifiable-native": "9.0.0"})
     assert problems
     assert "no way to verify it" in problems[0]
 
@@ -205,7 +205,7 @@ def test_native_output_without_a_dotted_version_is_not_accepted() -> None:
 def test_every_shipped_conda_tool_has_an_executable_probe() -> None:
     """Adding a lock member without a verifier must fail in the test nearest it."""
     _, _, _, conda = check_env.read_pins(check_env.ENVIRONMENT_PATH)
-    assert set(conda) == {"doxygen", "git", "nodejs", "pip"}
+    assert set(conda) == {"doxygen", "git", "graphviz", "nodejs", "pip"}
     assert set(conda) <= set(check_env.NATIVE_VERIFIERS)
 
 

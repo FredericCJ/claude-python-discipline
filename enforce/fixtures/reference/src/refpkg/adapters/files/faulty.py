@@ -38,8 +38,11 @@ class FaultyFileStore:
         @param entries the entries it starts with
         @param schedule which `delete` calls fail; healthy when omitted
         """
+        ## Current entries keyed by their unique repository-relative path.
         self._entries = {entry.path: entry for entry in entries}
+        ## Deterministic deletion indexes at which the fake raises.
         self._schedule = schedule if schedule is not None else FaultSchedule.healthy()
+        ## Number of deletion calls already attempted against this fake.
         self._deletes = 0
 
     def entries(self) -> Sequence[Entry]:

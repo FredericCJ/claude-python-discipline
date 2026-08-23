@@ -42,5 +42,7 @@ class PruneInterrupted(AppError):
             f"apply stopped after {len(deleted)} deletion(s); "
             f"{len(remaining)} entr(ies) from the plan remain"
         )
+        ## Paths already removed, in their execution order.
         self.deleted = deleted
+        ## Planned paths that were not removed when execution stopped.
         self.remaining = remaining

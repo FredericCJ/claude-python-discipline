@@ -34,6 +34,7 @@ class LocalFileStore:
         @param root the directory whose files this store reports; not read until
             a call is made, so constructing one cannot fail
         """
+        ## Directory that bounds every listed and deleted file.
         self._root = root
 
     def entries(self) -> Sequence[Entry]:

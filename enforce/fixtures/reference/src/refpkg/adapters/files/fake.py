@@ -26,6 +26,7 @@ class MemoryFileStore:
         @param entries the entries it starts with; duplicates by path collapse,
             since a store cannot hold one path twice
         """
+        ## Current entries keyed by their unique repository-relative path.
         self._entries = {entry.path: entry for entry in entries}
 
     def entries(self) -> Sequence[Entry]:

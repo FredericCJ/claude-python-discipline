@@ -73,6 +73,14 @@ def test_the_image_uses_the_declared_node_before_pyright() -> None:
     assert 'PYRIGHT_PYTHON_NODEJS_WHEEL="false"' in dockerfile
 
 
+def test_the_image_never_cleans_the_mounted_conda_package_cache() -> None:
+    """A reusable package cache must retain every manifest-owned file."""
+    dockerfile = _text("dev/Dockerfile")
+    assert "id=python-discipline-conda-v5,target=/opt/conda/pkgs" in dockerfile
+    assert "find /opt/conda/envs/claude" in dockerfile
+    assert "find /opt/conda -type d -name __pycache__" not in dockerfile
+
+
 def test_the_linux_leg_preserves_identity_and_signal_delivery() -> None:
     """The mounted checkout stays developer-owned and the tool becomes PID 1."""
     launcher = _text("dev/docker.sh")

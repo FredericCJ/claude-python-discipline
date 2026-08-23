@@ -23,7 +23,7 @@ ENV PATH="/opt/conda/envs/claude/bin:/opt/conda/bin:${PATH}" \
     PYRIGHT_PYTHON_GLOBAL_NODE="true" \
     PYRIGHT_PYTHON_NODEJS_WHEEL="false"
 
-RUN --mount=type=cache,target=/opt/conda/pkgs \
+RUN --mount=type=cache,id=python-discipline-conda-v5,target=/opt/conda/pkgs \
     --mount=type=cache,target=/root/.cache/pip \
     conda env create --file /opt/python-discipline/environment.yml \
     && /opt/conda/envs/claude/bin/python /opt/python-discipline/tools/check_env.py \
@@ -31,7 +31,7 @@ RUN --mount=type=cache,target=/opt/conda/pkgs \
     && /opt/conda/envs/claude/bin/python -m pip check \
     && /opt/conda/envs/claude/bin/python -m pyright --version \
     && rm -f /opt/python-discipline/condaenv.*.requirements.txt \
-    && find /opt/conda -type d -name __pycache__ -prune -exec rm -rf '{}' '+'
+    && find /opt/conda/envs/claude -type d -name __pycache__ -prune -exec rm -rf '{}' '+'
 
 ENV CONDA_DEFAULT_ENV="claude" \
     CONDA_PREFIX="/opt/conda/envs/claude" \

@@ -48,3 +48,6 @@ ban-relative-imports = "parents"
 # The check framework re-exports for its subclasses; RUF067 fires on any non-empty
 # package init.
 "enforce/checks/__init__.py" = ["non-empty-init-module"]
+# Doxygen's trailing entity form is literally ``##<``; inserting Ruff's space
+# changes the token and makes the qualification probe stop testing that form.
+"enforce/fixtures/doxygen_probe/src/probe_package/model.py" = ["no-space-after-inline-comment"]

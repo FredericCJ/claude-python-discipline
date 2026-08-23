@@ -22,7 +22,7 @@ decay: none
 
 | Module | Kind | Tokens | Rules | Load when |
 |---|---|---|---|---|
-| [fact/doxygen](fact/doxygen.md) | fact | 2540 | 0 | doxygen, documentation comment, docstring format, @param, @return, generate documentation |
+| [fact/doxygen](fact/doxygen.md) | fact | 1975 | 0 | doxygen, documentation comment, docstring format, @param, @return, generate documentation |
 | [fact/py-errors](fact/py-errors.md) | fact | 1441 | 0 | raise from, __cause__, __context__, add_note, ExceptionGroup, except star |
 | [fact/py-logging](fact/py-logging.md) | fact | 1509 | 0 | log level, getLogger, basicConfig, NullHandler, handler, formatter |
 | [fact/py-testing](fact/py-testing.md) | fact | 1585 | 0 | pytest version, fixture scope, hypothesis, coverage tool, mutation tool, pytest plugin |

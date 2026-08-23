@@ -7,7 +7,7 @@
 # consuming project and change INPUT and PROJECT_NAME; nothing else needs editing.
 #
 # Every non-default setting below is load-bearing and was verified by execution
-# against Doxygen 1.10.0. See discipline/fact/doxygen.md for the measurements.
+# against Doxygen 1.17.0. See discipline/fact/doxygen.md for the measurements.
 
 PROJECT_NAME           = "project"
 OUTPUT_DIRECTORY       = build/doc
@@ -35,16 +35,12 @@ HIDE_UNDOC_CLASSES     = NO
 
 # ------------------------------------------------------------------- the gate
 
-# DOC-001 / DOC-002 presence is decided by enforce/checks/doc_coverage.py, not
-# here. Doxygen's Python parser re-reports a field that IS documented at its
-# declaration whenever a method refers to it bare, as `self.field`, and it points
-# at the use rather than the declaration. Reproduced minimally: a documented
-# dataclass field read as `len(str(self.bare))` is reported undocumented, while
-# the same field read as `self.other.values()` is not, and a genuinely
-# undocumented field is reported either way. Six such false reports here against
-# zero true ones. doc_coverage decides presence from the declaration site, where
-# the fix belongs, and its proof-of-failure tests pin that it still fires.
-WARN_IF_UNDOCUMENTED   = NO
+# DOC-001 / DOC-002. Doxygen 1.17.0 no longer reproduces 1.10.0's false warning
+# for a documented dataclass field read as bare `self.field`, so presence is
+# enabled again. The AST checker remains necessary for exact declaration-site
+# findings and for Python shapes Doxygen cannot represent, including locals,
+# nested functions and annotation-only dataclass fields.
+WARN_IF_UNDOCUMENTED   = YES
 # DOC-007 parameter and return completeness is decided by enforce/checks/
 # doc_coverage.py, not here. Doxygen's Python parser does not map `-> None` onto
 # void, so it demands an @return from every procedure: 142 false demands on this
@@ -81,3 +77,22 @@ SORT_MEMBER_DOCS       = NO
 SOURCE_BROWSER         = YES
 INLINE_SOURCES         = NO
 ALPHABETICAL_INDEX     = YES
+
+# DOC-REL-001. Textual relations remain available without a renderer and are
+# independently inspected, while Graphviz produces call, caller and directory
+# dependency diagrams. Graphviz is exact-pinned and execution-verified beside
+# Doxygen, so these are declared build features rather than host conveniences.
+REFERENCES_RELATION    = YES
+REFERENCED_BY_RELATION = YES
+HAVE_DOT               = YES
+CALL_GRAPH              = YES
+CALLER_GRAPH            = YES
+DIRECTORY_GRAPH         = YES
+DOT_IMAGE_FORMAT        = svg
+INTERACTIVE_SVG         = NO
+
+# Doxygen 1.17's AUTO mode emits a JavaScript module containing a jsDelivr URL,
+# even when the documented tree contains no Mermaid diagram. CLI mode keeps the
+# generated site locally complete. Mermaid diagrams themselves are not a v5
+# requirement and no undeclared `mmdc` executable is assumed.
+MERMAID_RENDER_MODE    = CLI

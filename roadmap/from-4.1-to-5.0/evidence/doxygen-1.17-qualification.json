@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "qualification": "doxygen-1.17.0",
+  "observed_at": "2026-08-23",
+  "status": "passed",
+  "scope": "Version-dependent Python extraction, structured contracts, relationships, warning behavior, deterministic local HTML, and offline first view through both shipped development legs.",
+  "fixture": {
+    "path": "enforce/fixtures/doxygen_probe",
+    "aggregate_sha256": "58582978532179e10b8d7d13ba7d3d631b8d82468979776a8697a1ac8cd844ec",
+    "files": {
+      "src/probe_package/__init__.py": "112e83d8e962bca20cad5e0b7ef26fb03b3775c34494c4d3a61c82d0f8aaaf2c",
+      "src/probe_package/model.py": "7be095cbf4740524bbcaaaa53c156f92d8894d978ceb85aceb4d2d6d4fab99f5",
+      "src/probe_package/service.py": "f68c91b2a31f34475564963e7e764763e6d73ef44f29910f8d21ce69d391464b"
+    }
+  },
+  "qualified_inputs": {
+    "environment_yml_sha256": "c61e24b22b955a8a79e8468d52015f48e16b5f81db56302eedaadddb8f797959",
+    "doxyfile_sha256": "fc38c00191a79cb670fc89a999ac66ebc1934cbd3d49960bf3cf746441c0adc0",
+    "probe_test_sha256": "54e94804bc06ff1bcc3cd7b88550193c547aefda16bd8d201df0c1ec1b35e9b9"
+  },
+  "platforms": [
+    {
+      "leg": "windows-conda",
+      "platform": "Windows 11 10.0.26200.0 win-64",
+      "packages": {
+        "doxygen": "doxygen-1.17.0-py311pl5321hfd67193_0",
+        "graphviz": "graphviz-14.1.2-h4c50273_0",
+        "git": "git-2.55.0-h57928b3_1"
+      },
+      "command": "dev\\windows.cmd python -m pytest tools\\test_doxygen_gate.py tools\\test_check_env.py tools\\test_dev_environment.py -q",
+      "observed": "45 passed; environment checker executed doxygen, dot, git, node and pip at their exact pins"
+    },
+    {
+      "leg": "linux-docker-via-wsl-fallback",
+      "platform": "Linux 6.18.33.1-microsoft-standard-WSL2 x86_64, Docker Desktop linux-64 image",
+      "packages": {
+        "doxygen": "doxygen-1.17.0-py313hfca462b_0",
+        "graphviz": "graphviz-14.1.2-h8b86629_0",
+        "git": "git-2.55.0-pl5321h5685339_1"
+      },
+      "command": "./dev/docker.sh python -m pytest tools/test_doxygen_gate.py tools/test_check_env.py tools/test_dev_environment.py -q",
+      "observed": "fresh v5 Conda cache solve and image build succeeded; 45 passed in the non-root mounted checkout"
+    }
+  ],
+  "behavior_matrix": [
+    {
+      "claim": "ordinary docstrings are parsed as Doxygen blocks under PYTHON_DOCSTRING=NO",
+      "expected": "contract commands render as sections and a ghost parameter fails",
+      "observed": "Parameters, Returns, Exceptions, Precondition, Postcondition and Invariant rendered; ghost parameter mutation exited non-zero"
+    },
+    {
+      "claim": "leading ## and trailing ##< document representable values",
+      "expected": "both descriptions appear on entity pages",
+      "observed": "module, private, defaulted dataclass and enum values were members with their descriptions"
+    },
+    {
+      "claim": "Doxygen's Python association boundary is explicit",
+      "expected": "unrepresentable shapes are not credited to Doxygen",
+      "observed": "local binding, nested function and annotation-only dataclass field were absent from XML member definitions"
+    },
+    {
+      "claim": "references and diagrams are non-vacuous",
+      "expected": "text references plus call, caller and directory-dependency products",
+      "observed": "References and Referenced by prose rendered; _cgraph.svg, _icgraph.svg and _dep.svg were generated"
+    },
+    {
+      "claim": "generated HTML is deterministic and locally complete",
+      "expected": "two equal trees and no remote runtime resource",
+      "observed": "two HTML snapshots were byte-identical; no remote script/link/frame and no jsDelivr string remained under MERMAID_RENDER_MODE=CLI"
+    },
+    {
+      "claim": "undocumented representable entities fail",
+      "expected": "WARN_IF_UNDOCUMENTED can be enabled again",
+      "observed": "genuine missing function failed; the Doxygen 1.10 documented-field false warning did not reproduce"
+    },
+    {
+      "claim": "known residual defects remain assigned to more accurate checks",
+      "expected": "the None-return and final-period-span reproducers remain red",
+      "observed": "WARN_NO_PARAMDOC demanded a return for -> None; a code span ending in one period aborted its block"
+    }
+  ],
+  "discovered_failures": [
+    {
+      "failure": "Git 2.51.2 and Graphviz 14.1.2 required incompatible PCRE2 ranges on linux-64",
+      "resolution": "Git was exact-pinned to 2.55.0, whose win-64 and linux-64 packages solve with PCRE2 10.47 and Graphviz 14.1.2"
+    },
+    {
+      "failure": "Docker cleanup deleted manifest-owned __pycache__ files from the mounted Conda package cache",
+      "resolution": "cleanup is bounded to /opt/conda/envs/claude and v5 starts from an independent package-cache namespace"
+    }
+  ],
+  "graphviz_decision": "retained: textual references alone do not generate the required call, caller and dependency diagrams; Graphviz generated all three and is exact-pinned and execution-checked",
+  "external_adopters_touched": []
+}

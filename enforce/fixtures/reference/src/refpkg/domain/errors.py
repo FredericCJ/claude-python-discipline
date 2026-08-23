@@ -60,5 +60,7 @@ class InvariantViolated(DomainError):
         @param actual the offending value, as received
         """
         super().__init__(f"{invariant}; got {actual!r}")
+        ## Human-readable predicate that the rejected value violated.
         self.invariant = invariant
+        ## Original value that failed the predicate.
         self.actual = actual

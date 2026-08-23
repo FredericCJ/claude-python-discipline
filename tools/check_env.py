@@ -75,6 +75,7 @@ _NATIVE_VERSION: Final = re.compile(
 NATIVE_VERIFIERS: Final[dict[str, tuple[str, ...]]] = {
     "doxygen": ("doxygen.exe", "doxygen"),
     "git": ("git.exe", "git"),
+    "graphviz": ("dot.exe", "dot"),
     "nodejs": ("node.exe", "node"),
     "pip": ("pip.exe", "pip"),
 }

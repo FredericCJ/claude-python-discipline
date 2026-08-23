@@ -25,6 +25,7 @@ class FakeClock:
 
         @param start what `now` returns until the clock is advanced
         """
+        ## The last instant supplied to callers of `now`.
         self._current = start
 
     def now(self) -> Instant:

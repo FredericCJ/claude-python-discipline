@@ -40,7 +40,7 @@
       "id": "fact/doxygen",
       "kind": "fact",
       "title": "Doxygen for Python",
-      "tokens": 2540,
+      "tokens": 1975,
       "load_when": [
         "doxygen",
         "documentation comment",
@@ -52,7 +52,7 @@
       ],
       "requires": [],
       "grounds_on": [],
-      "verified": "2026-08-18",
+      "verified": "2026-08-23",
       "decay": "quarters",
       "path": "discipline/fact/doxygen.md"
     },
