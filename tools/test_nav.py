@@ -33,7 +33,11 @@ def _tiny() -> Graph:
 
     @return a fresh graph; no test may mutate another's
     """
+    # Compute graph using Graph for later tiny logic.
     graph = Graph()
+    # Select node id, node type as the current element from ( while tiny preserves traversal
+    # Details: order.
+    # Advance tiny through the current input element in declared order.
     for node_id, node_type in (
         ("law/A", NodeType.MODULE),
         ("law/B", NodeType.MODULE),
@@ -41,11 +45,13 @@ def _tiny() -> Graph:
         ("A-002", NodeType.RULE),
     ):
         graph.add_node(Node(id=node_id, type=node_type, label=node_id))
+    # Return a fresh graph; no test may mutate another's to the caller.
     return graph
 
 
 def test_parallel_edges_of_different_types_coexist() -> None:
     """The defining property: two nodes, several relations, either direction."""
+    # Compute graph using  tiny for later test parallel edges of different types coexist logic.
     graph = _tiny()
     assert graph.add_edge(Edge(EdgeType.CITES, "A-001", "A-002"))
     assert graph.add_edge(Edge(EdgeType.TENSIONS_WITH, "A-001", "A-002"))
@@ -57,6 +63,7 @@ def test_parallel_edges_of_different_types_coexist() -> None:
 
 def test_same_edge_from_two_origins_is_kept() -> None:
     """A relation both declared and observed is two facts, not one."""
+    # Compute graph using  tiny for later test same edge from two origins is kept logic.
     graph = _tiny()
     assert graph.add_edge(Edge(EdgeType.CITES, "A-001", "A-002", Origin.DECLARED))
     assert graph.add_edge(Edge(EdgeType.CITES, "A-001", "A-002", Origin.LEARNED))
@@ -65,6 +72,7 @@ def test_same_edge_from_two_origins_is_kept() -> None:
 
 def test_an_identical_edge_is_not_duplicated() -> None:
     """Same type, endpoints and origin is the same fact; the second add is refused."""
+    # Compute graph using  tiny for later test an identical edge is not duplicated logic.
     graph = _tiny()
     assert graph.add_edge(Edge(EdgeType.CITES, "A-001", "A-002"))
     assert not graph.add_edge(Edge(EdgeType.CITES, "A-001", "A-002"))
@@ -73,6 +81,8 @@ def test_an_identical_edge_is_not_duplicated() -> None:
 
 def test_direction_is_respected_unless_asked_otherwise() -> None:
     """Walking an edge backwards has to be asked for; `cites` is not symmetric."""
+    # Compute graph using  tiny for later test direction is respected unless asked otherwise
+    # Details: logic.
     graph = _tiny()
     graph.add_edge(Edge(EdgeType.CITES, "A-001", "A-002"))
     assert graph.neighbors("A-002") == []
@@ -85,9 +95,11 @@ def test_expansion_is_deterministic() -> None:
     An unreproducible expansion could not be calibrated or reviewed, so equality
     of two runs is asserted before the walk's content is.
     """
+    # Compute graph using  tiny for later test expansion is deterministic logic.
     graph = _tiny()
     graph.add_edge(Edge(EdgeType.CITES, "A-001", "A-002"))
     graph.add_edge(Edge(EdgeType.CITES, "A-002", "law/B"))
+    # Compute first using graph.expand for later test expansion is deterministic logic.
     first = graph.expand(["A-001"], depth=2)
     assert first == graph.expand(["A-001"], depth=2)
     assert first == {"A-001": 0, "A-002": 1, "law/B": 2}
@@ -95,6 +107,7 @@ def test_expansion_is_deterministic() -> None:
 
 def test_a_requires_cycle_is_found() -> None:
     """Two modules each demanding the other first leaves load order undefined."""
+    # Compute graph using  tiny for later test a requires cycle is found logic.
     graph = _tiny()
     graph.add_edge(Edge(EdgeType.REQUIRES, "law/A", "law/B"))
     graph.add_edge(Edge(EdgeType.REQUIRES, "law/B", "law/A"))
@@ -103,8 +116,11 @@ def test_a_requires_cycle_is_found() -> None:
 
 def test_a_dangling_edge_is_found() -> None:
     """Endpoint checking is deferred, not skipped: the ghost edge is stored, then reported."""
+    # Compute graph using  tiny for later test a dangling edge is found logic.
     graph = _tiny()
     graph.add_edge(Edge(EdgeType.CITES, "A-001", "GHOST-999"))
+    # Select e as the current element from graph.dangling()] == ["GHOST-999"] while test a
+    # Details: dangling edge is found preserves traversal order.
     assert [e.dst for e in graph.dangling()] == ["GHOST-999"]
 
 
@@ -115,9 +131,12 @@ def test_round_trip_through_json_is_lossless() -> None:
     no rebuild and no staleness check would show it, while every reader coming
     through `load_graph` gets a graph the corpus never described.
     """
+    # Compute graph using  tiny for later test round trip through json is lossless logic.
     graph = _tiny()
     graph.add_edge(Edge(EdgeType.CITES, "A-001", "A-002", note="why"))
     graph.add_edge(Edge(EdgeType.TENSIONS_WITH, "A-001", "A-002", Origin.DECLARED))
+    # Compute again using Graph.from dict for later test round trip through json is lossless
+    # Details: logic.
     again = Graph.from_dict(graph.to_dict())
     assert again.to_dict() == graph.to_dict()
 
@@ -132,12 +151,15 @@ def graph() -> Graph:
     @return the repository's own corpus as a graph; shared by every test below
         that asks for it, so none of them may mutate it
     """
+    # Return the repository's own corpus as a graph; shared by every test below to the caller.
     return load_graph(REPO_ROOT)
 
 
 def test_the_built_graph_is_byte_stable() -> None:
     """Same corpus, same bytes -- the property `--check` depends on."""
+    # Compute first using build for later test the built graph is byte stable logic.
     first, _ = build(REPO_ROOT)
+    # Compute second using build for later test the built graph is byte stable logic.
     second, _ = build(REPO_ROOT)
     assert render(first) == render(second)
 
@@ -148,7 +170,10 @@ def test_every_rule_is_reachable(graph: Graph) -> None:
     A rule nobody can arrive at is a rule that exists and cannot be found. Three
     hops from any module is the ceiling the corpus is held to.
     """
+    # Preserve the observed item count used by the non-vacuity verdict.
     seeds = sorted(n.id for n in graph.of_type(NodeType.MODULE))
+    # Compute unreachable using graph.unreachable from for later test every rule is reachable
+    # Details: logic.
     unreachable = graph.unreachable_from(seeds, NodeType.RULE, depth=3)
     assert unreachable == []
 
@@ -169,17 +194,32 @@ def test_every_rule_belongs_to_exactly_one_module(graph: Graph) -> None:
     The context planner charges a rule to its owning module; two owners or none
     and the budget it reports would be fiction.
     """
+    # Select rule as the current element from graph.of_type(NodeType.RULE) while test every rule
+    # Details: belongs to exactly one module preserves traversal order.
+    # Advance test every rule belongs to exactly one module through the current input element in
+    # Details: declared order.
     for rule in graph.of_type(NodeType.RULE):
+        # Compute owners using graph.in edges for later test every rule belongs to exactly one
+        # Details: module logic.
         owners = graph.in_edges(rule.id, [EdgeType.CONTAINS])
         assert len(owners) == 1, f"{rule.id} has {len(owners)} owning modules"
 
 
 def test_tensions_are_symmetric(graph: Graph) -> None:
     """A tension one rule declares is a tension the other is subject to."""
+    # Select edge as the current element from graph.edges while test tensions are symmetric
+    # Details: preserves traversal order.
+    # Advance test tensions are symmetric through the current input element in declared order.
     for edge in graph.edges:
+        # Select the guarded path only after `edge.type is not EdgeType.TENSIONS_WITH` is
+        # Details: satisfied.
         if edge.type is not EdgeType.TENSIONS_WITH:
+            # Advance after the current candidate has been conclusively excluded.
             continue
+        # Compute back using graph.out edges for later test tensions are symmetric logic.
         back = graph.out_edges(edge.dst, [EdgeType.TENSIONS_WITH])
+        # Select e as the current element from back), f"{edge.dst} does not point back" while
+        # Details: test tensions are symmetric preserves traversal order.
         assert any(e.dst == edge.src for e in back), f"{edge.dst} does not point back"
 
 
@@ -195,10 +235,13 @@ def _ns(**kwargs: object) -> argparse.Namespace:
     @param kwargs fields to override on top of those defaults
     @return a namespace the `cmd_*` entry points accept
     """
+    # Each defaults key is a context argument name and each value mirrors its CLI default;
+    # mapping key order is deliberately unused.
     defaults = {
         "file": None, "error": None, "task": None, "rule": None,
-        "depth": 1, "budget": 6000, "max_rules": 20,  # matches the CLI default
+        "depth": 1, "budget": 6000, "max_rules": 20,
     }
+    # Return a namespace the `cmd_*` entry points accept to the caller.
     return argparse.Namespace(**{**defaults, "root": REPO_ROOT, **kwargs})
 
 
@@ -206,8 +249,13 @@ def _rule_ids(payload: dict[str, object]) -> set[str]:
     """The rules a context answer selected, stripped of order and reason.
 
     @param payload the answer returned by `cmd_context`
+        Each key is a context-response field and each value is its command result; mapping key
+        order is deliberately unused.
     @return the ids it names, for containment assertions
     """
+    # Select r as the current element from payload["rules"]}  # type while rule ids preserves
+    # Details: traversal order.
+    # Return the ids it names, for containment assertions to the caller.
     return {r["id"] for r in payload["rules"]}  # type: ignore[union-attr,index]
 
 
@@ -217,6 +265,7 @@ def test_an_adapter_file_reaches_the_adapter_rules(graph: Graph) -> None:
     Precision matters as much as recall: an answer that names every rule is the
     same as no answer at all.
     """
+    # Preserve the optional pattern match that carries the reported analysis count.
     found = _rule_ids(nav.cmd_context(graph, _ns(file="src/pkg/adapters/fs.py")))
     assert {"ARCH-003", "ARCH-020", "ARCH-025", "DEP-003", "TEST-020"} <= found
     assert "TYPE-002" not in found, "a domain-only rule must not govern an adapter"
@@ -224,6 +273,7 @@ def test_an_adapter_file_reaches_the_adapter_rules(graph: Graph) -> None:
 
 def test_a_domain_file_reaches_the_purity_rules(graph: Graph) -> None:
     """The mirror case: purity, typing and effects arrive; the adapter-only rule does not."""
+    # Preserve the optional pattern match that carries the reported analysis count.
     found = _rule_ids(nav.cmd_context(graph, _ns(file="src/pkg/domain/outline.py")))
     assert {"ARCH-002", "TYPE-002", "TYPE-007", "EFCT-001", "DEP-001"} <= found
     assert "ARCH-003" not in found, "an adapter-only rule must not govern the domain"
@@ -231,16 +281,22 @@ def test_a_domain_file_reaches_the_purity_rules(graph: Graph) -> None:
 
 def test_an_import_linter_failure_reaches_its_rule(graph: Graph) -> None:
     """Separator style must not decide the outcome."""
+    # Retain the immutable source representation consumed by subsequent analysis.
+    # Advance test an import linter failure reaches its rule through the current input element
+    # Details: in declared order.
     for text in (
         "lint-imports: contract adapters-are-independent FAILED",
         "ARCH-003 adapters are independent: broken",
     ):
+        # Preserve the optional pattern match that carries the reported analysis count.
         found = _rule_ids(nav.cmd_context(graph, _ns(error=text)))
         assert "ARCH-003" in found, text
 
 
 def test_a_named_rule_in_an_error_is_picked_up(graph: Graph) -> None:
     """A rule id anywhere in the message text is a seed by itself."""
+    # Capture context-response field keys to command results; mapping key order is deliberately
+    # unused.
     payload = nav.cmd_context(graph, _ns(error="violates DIAG-005 at line 12"))
     assert "DIAG-005" in _rule_ids(payload)
 
@@ -251,6 +307,7 @@ def test_what_do_i_run_for_a_rule(graph: Graph) -> None:
     "Which command decides this?" must be answerable without reading prose, or
     the rule is binding in name only.
     """
+    # Compute mechanisms using graph.neighbors for later test what do i run for a rule logic.
     mechanisms = graph.neighbors("ARCH-002", [EdgeType.ENFORCED_BY])
     assert "mech:check:domain_purity" in mechanisms
     assert "mech:auto:import-linter" in mechanisms
@@ -258,13 +315,19 @@ def test_what_do_i_run_for_a_rule(graph: Graph) -> None:
 
 def test_why_a_rule_has_its_shape(graph: Graph) -> None:
     """The conflict that settled a rule stays attached to it, so it is not relitigated."""
+    # Capture why-response field keys to command results; mapping key order is deliberately
+    # unused.
     payload = nav.cmd_why(graph, argparse.Namespace(id="ARCH-025", root=REPO_ROOT))
+    # Treat the current entry as the candidate element consumed by the enclosing transformation.
     assert any("OPEN-020" in entry for entry in payload["resolved_by"])  # type: ignore[union-attr]
 
 
 def test_an_open_rule_names_what_blocks_it(graph: Graph) -> None:
     """A rule that is not yet binding says which open question is holding it there."""
+    # Capture why-response field keys to command results; mapping key order is deliberately
+    # unused.
     payload = nav.cmd_why(graph, argparse.Namespace(id="ALLOC-010", root=REPO_ROOT))
+    # Treat the current entry as the candidate element consumed by the enclosing transformation.
     assert any("OPEN-006" in entry for entry in payload["blocked_by"])  # type: ignore[union-attr]
 
 
@@ -275,29 +338,45 @@ def test_a_budget_defers_rather_than_truncates(graph: Graph) -> None:
     read; the overflow is named instead, and the first module is exempt so a
     budget below any single module still yields something.
     """
+    # Capture context-response field keys to command results; mapping key order is deliberately
+    # unused.
     payload = nav.cmd_context(graph, _ns(file="src/pkg/adapters/fs.py", budget=3000))
+    # Compute plan using payload["read"] for later test a budget defers rather than truncates
+    # Details: logic.
     plan = payload["read"]
+    # Select p as the current element from plan), "nothing was deferred"  # type while test a
+    # Details: budget defers rather than truncates preserves traversal order.
     assert any(p["status"] == "deferred" for p in plan), "nothing was deferred"  # type: ignore[union-attr]
+    # Select p, read as the current element from plan if p["status"] == "read")  # type while
+    # Details: test a budget defers rather than truncates preserves traversal order.
     read = sum(p["tokens"] for p in plan if p["status"] == "read")  # type: ignore[union-attr]
+    # Select p as the current element from plan if p["status"] == "read"]) == 1 while test a
+    # Details: budget defers rather than truncates preserves traversal order.
     assert read <= 3000 or len([p for p in plan if p["status"] == "read"]) == 1
     assert payload["tokens_planned"] == read
 
 
 def test_the_most_relevant_module_is_planned_first(graph: Graph) -> None:
     """A tight budget must keep what the task is about, not what is smallest."""
+    # Capture context-response field keys to command results; mapping key order is deliberately
+    # unused.
     payload = nav.cmd_context(graph, _ns(file="src/pkg/adapters/fs.py", budget=3000))
+    # Each first element is one selected module id in read-plan order.
     first = [p["id"] for p in payload["read"] if p["status"] == "read"]  # type: ignore[union-attr]
     assert first[0] == "law/ARCH"
 
 
 def test_context_is_reproducible(graph: Graph) -> None:
     """The same situation gives back the same plan, so a retrieval can be reviewed."""
+    # Capture the validated invocation arguments that govern this execution.
     args = _ns(file="src/pkg/domain/outline.py", error="G004", task="add a port")
     assert nav.cmd_context(graph, args) == nav.cmd_context(graph, args)
 
 
 def test_a_path_between_two_rules_is_found(graph: Graph) -> None:
     """Two related rules are connected by some chain, in one direction or the other."""
+    # Capture path-response field keys to command results; mapping key order is deliberately
+    # unused.
     payload = nav.cmd_path(
         graph, argparse.Namespace(src="ARCH-024", dst="TEST-020", root=REPO_ROOT)
     )
@@ -310,6 +389,8 @@ def test_stats_reports_full_reachability(graph: Graph) -> None:
     The same guarantee as the reachability test above, taken through the command
     an agent actually runs.
     """
+    # Capture statistics-response field keys to command results; mapping key order is
+    # deliberately unused.
     payload = nav.cmd_stats(graph, argparse.Namespace(depth=3, root=REPO_ROOT))
     assert payload["rules_reachable"] == payload["rules_total"]
 
@@ -326,7 +407,9 @@ def test_a_reported_path_can_actually_be_opened(monkeypatch: pytest.MonkeyPatch)
     @param monkeypatch pytest's fixture, used to move the working directory
     """
     monkeypatch.chdir(REPO_ROOT.parent)
+    # Preserve the completed Git query with its status and captured content.
     shown = nav.openable("discipline/law/ARCH.md:51")
+    # Retain the immutable source representation consumed by subsequent analysis.
     body = shown.rsplit(":", 1)[0]
     assert (REPO_ROOT.parent / body).exists(), f"{shown} does not resolve from {Path.cwd()}"
     assert body.endswith("discipline/law/ARCH.md")
@@ -345,7 +428,9 @@ def test_a_path_without_a_line_number_survives(monkeypatch: pytest.MonkeyPatch) 
     assert not nav.openable("")
 
 
+# Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
+    # Propagate the localized failure so callers cannot mistake it for success.
     raise SystemExit(pytest.main([__file__, "-q"]))
 
 
@@ -362,8 +447,11 @@ def _diagnose(**kwargs: object) -> dict[str, object]:
     @param kwargs the namespace fields, defaulted for the ones every call needs
     @return the payload
     """
+    # Each fields key is a diagnosis argument name and each value is its caller override or
+    # default; mapping key order is deliberately unused.
     fields = {"envelope": None, "error": None, "root": str(nav.REPO_ROOT)}
     fields.update(kwargs)  # type: ignore[arg-type]
+    # Return the payload to the caller.
     return nav.cmd_diagnose(nav.load_graph(nav.REPO_ROOT),
                             argparse.Namespace(**fields))
 
@@ -376,8 +464,14 @@ def test_an_envelope_resolves_the_rules_it_names(tmp_path: Path) -> None:
     quoted id is not a guess.
 
     @param tmp_path holds the serialized envelope
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Compute envelope using tmp_path / "e.json" for later test an envelope resolves the rules
+    # Details: it names logic.
     envelope = tmp_path / "e.json"
+    # Publish the externally visible effect after all required inputs are ready.
     envelope.write_text(json.dumps({
         "code": "refpkg.app.prune_interrupted",
         "layer": "app",
@@ -385,10 +479,15 @@ def test_an_envelope_resolves_the_rules_it_names(tmp_path: Path) -> None:
         "rule_ids": ["EFCT-007", "EFCT-009"],
     }), encoding="utf-8")
 
+    # Capture diagnosis-response field keys to command results; mapping key order is deliberately
+    # unused.
     payload = _diagnose(envelope=str(envelope))
+    # Collect unique found element values; their order is deliberately unordered.
     found = {rule["id"] for rule in payload["rules"]}  # type: ignore[union-attr,index]
     assert found == {"EFCT-007", "EFCT-009"}
     assert payload["reported_remediation"] == "re-run to retry what remains"
+    # Select rule as the current element from payload["rules"])  # type while test an envelope
+    # Details: resolves the rules it names preserves traversal order.
     assert all(rule["statement"] for rule in payload["rules"])  # type: ignore[union-attr,index]
 
 
@@ -399,6 +498,8 @@ def test_the_answer_costs_a_fraction_of_a_reading_plan() -> None:
     themselves cost tens. Both are correct answers to different questions, and an
     agent holding a traceback is asking the cheap one.
     """
+    # Capture diagnosis-response field keys to command results; mapping key order is deliberately
+    # unused.
     payload = _diagnose(error="FileNotFoundError: [Errno 2] No such file")
     assert payload["rules"], "the traceback reached no rule"
     assert 0 < int(payload["tokens"]) < 1000, (  # type: ignore[arg-type]
@@ -413,8 +514,12 @@ def test_raw_error_text_still_works_without_an_envelope() -> None:
     The fallback is the same signature and quoted-id seeding `context` uses, so a
     codebase that has adopted none of this still gets an answer.
     """
+    # Capture diagnosis-response field keys to command results; mapping key order is deliberately
+    # unused.
     payload = _diagnose(error="src/p.py:4: error: Function is missing a type "
                               "annotation  [no-untyped-def]")
+    # Select r as the current element from payload["rules"]} & {"TYPE-001"}  # type while test
+    # Details: raw error text still works without an envelope preserves traversal order.
     assert {r["id"] for r in payload["rules"]} & {"TYPE-001"}  # type: ignore[union-attr,index]
 
 
@@ -428,14 +533,24 @@ def test_an_id_the_corpus_does_not_carry_is_reported_not_dropped(
     while naming nothing that resolves.
 
     @param tmp_path holds the serialized envelope
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Compute envelope using tmp_path / "e.json" for later test an id the corpus does not carry
+    # Details: is reported not dropped logic.
     envelope = tmp_path / "e.json"
+    # Publish the externally visible effect after all required inputs are ready.
     envelope.write_text(json.dumps({
         "code": "pkg.gone",
         "rule_ids": ["EFCT-007", "ZZZZ-999"],
     }), encoding="utf-8")
 
+    # Capture diagnosis-response field keys to command results; mapping key order is deliberately
+    # unused.
     payload = _diagnose(envelope=str(envelope))
+    # Select r as the current element from payload["rules"]} == {"EFCT-007"}  # type while test
+    # Details: an id the corpus does not carry is reported not dropped preserves traversal order.
     assert {r["id"] for r in payload["rules"]} == {"EFCT-007"}  # type: ignore[union-attr,index]
     assert payload["unresolved"] == ["ZZZZ-999"]
 
@@ -446,5 +561,6 @@ def test_diagnose_refuses_when_given_nothing() -> None:
     An empty answer reads as "no rule governs this", which is a claim, and it
     would be one nobody made.
     """
+    # Confine the acquired resource to this operation and release it on every exit.
     with pytest.raises(SystemExit):
         _diagnose()
