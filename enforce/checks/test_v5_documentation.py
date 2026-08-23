@@ -123,6 +123,25 @@ def test_every_required_local_binding_shape_is_discovered() -> None:
     } <= found
 
 
+def test_a_decorator_comprehension_uses_the_decorator_as_owner() -> None:
+    """Narration above a decorator can own bindings created in its expression."""
+    source = dedent(
+        """
+        values = ("first", "second")
+        # Derive each display identity in declared parameter order.
+        @decorate(ids=[value for value in values])
+        def test_case() -> None:
+            pass
+        """
+    )
+    tree = ast.parse(source)
+    target = next(item for item in bindings(tree) if item.name == "value")
+
+    result = associate(target.owner_node, comment_blocks(source))
+
+    assert result.owner is not None
+
+
 @given(st.integers(min_value=1, max_value=5))
 def test_comment_association_survives_multiline_prose(line_count: int) -> None:
     """Adding ordinary prose lines does not change the owned assignment.

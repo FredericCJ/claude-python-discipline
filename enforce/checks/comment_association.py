@@ -167,12 +167,19 @@ def associate(node: ast.AST, blocks: Sequence[CommentBlock]) -> Association:
     line = getattr(node, "lineno", 0)
     end = getattr(node, "end_lineno", line)
     column = getattr(node, "col_offset", 0)
+    preceding_columns = (
+        {column, column - 1} if isinstance(node, ast.expr) and column > 0 else {column}
+    )
     candidates = tuple(
         block
         for block in blocks
         if (
             (block.trailing and line <= block.start <= end)
-            or (not block.trailing and block.end == line - 1 and block.column == column)
+            or (
+                not block.trailing
+                and block.end == line - 1
+                and block.column in preceding_columns
+            )
         )
     )
     return Association(candidates[0] if len(candidates) == 1 else None, candidates)
@@ -362,6 +369,7 @@ def bindings(tree: ast.Module) -> tuple[Binding, ...]:
         elif isinstance(node, ast.comprehension):
             pairs = _names(node.target)
             shape = "comprehension target"
+            owner = _decorator_owner(node, parents) or owner
         elif isinstance(node, ast.withitem) and node.optional_vars is not None:
             pairs = _names(node.optional_vars)
             shape = "context-manager alias"
@@ -380,6 +388,33 @@ def bindings(tree: ast.Module) -> tuple[Binding, ...]:
             continue
         found.extend(Binding(name, line, shape, owner) for name, line in pairs)
     return tuple(sorted(found, key=lambda item: (item.line, item.name, item.shape)))
+
+
+def _decorator_owner(
+    node: ast.AST,
+    parents: Mapping[ast.AST, ast.AST],
+) -> ast.expr | None:
+    """Return the decorator expression containing a nested binding.
+
+    A function definition's AST line starts at ``def``, while human narration
+    must sit above the first decorator. Treating the definition as owner would
+    therefore make a decorator comprehension impossible to document. The outer
+    decorator expression has the attachable lexical line and remains unique.
+
+    @param node binding nested somewhere in a decorator expression
+    @param parents child-to-parent map
+    @return outer decorator expression, or None outside decorators
+    """
+    current = node
+    while current in parents:
+        parent = parents[current]
+        if isinstance(parent, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            attachable = current in parent.decorator_list and isinstance(current, ast.expr)
+            return current if attachable else None
+        if isinstance(parent, ast.stmt):
+            return None
+        current = parent
+    return None
 
 
 def _enclosing_function(
