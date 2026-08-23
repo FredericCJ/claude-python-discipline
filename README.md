@@ -100,7 +100,7 @@ launcher reconciles a digest-pinned image through Docker's build cache, mounts t
 repository rather than baking it into a layer, and runs as the invoking uid/gid.
 Project-specific dependencies remain the governed repository's declared responsibility.
 For a default gate launched from a Windows-backed WSL path, it first makes a disposable
-byte projection on WSL's native Linux filesystem and derives Python executable bits from
+byte projection in a Docker-managed Linux volume and derives Python executable bits from
 shebangs. That prevents NTFS's all-executable projection and metadata latency from changing
 Ruff or timeout verdicts. Explicit commands and shells still mount the real checkout so
 their deliberate edits remain visible; a packaged default gate copies its JSON report back.

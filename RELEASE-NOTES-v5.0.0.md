@@ -88,8 +88,8 @@ their v4 declaration with actionable guidance, migrate through the public comman
 and reach the same v5 project gate without assuming a parent or counterpart repository.
 
 On the expected Windows 11 plus WSL topology, a no-argument Docker gate projects the
-Windows-backed checkout into a disposable native-Linux directory before mounting it. Exact
-bytes are preserved and Python executable intent is derived from shebangs, so NTFS's
+Windows-backed checkout into a disposable Docker-managed Linux volume. Exact bytes are
+preserved and Python executable intent is derived from shebangs, so NTFS's
 all-executable mode projection and metadata latency cannot create Linux-only Ruff findings
 or false timeouts. The packaged JSON report is copied back and the projection is removed.
 Explicit commands and shells mount the real checkout because their edits must persist.

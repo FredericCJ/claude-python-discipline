@@ -42,11 +42,12 @@ this repository and runs as the invoking uid/gid. Append a command such as
 `python -m pytest -q` to either launcher for a focused run.
 
 When the checkout is on a Windows-backed WSL path, the no-argument gate uses a disposable
-copy on WSL's native Linux filesystem. It preserves exact file bytes, derives Python
+copy in a Docker-managed Linux volume. It preserves exact file bytes, derives Python
 executable bits from shebangs, and copies the packaged gate's JSON report back before
 discarding the copy. This prevents NTFS mode projection and metadata latency from changing
 Linux verifier outcomes. Explicit commands and `shell` mount the real checkout so intended
-edits are not discarded.
+edits are not discarded. The launcher labels and verifies its temporary container and
+volume identities before removing them.
 
 The first construction needs network access. The image supplies the discipline verifiers,
 not undeclared project runtime dependencies. `requirements.txt` remains the exact direct

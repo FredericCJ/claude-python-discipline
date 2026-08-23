@@ -104,28 +104,32 @@ def test_the_linux_leg_preserves_identity_and_signal_delivery() -> None:
     # Compute entrypoint using  text for later test the linux leg preserves identity and signal
     # Details: delivery logic.
     entrypoint = _text("dev/container-entrypoint.sh")
-    assert '--user "$(id -u):$(id -g)"' in launcher
+    assert "runtime_uid=$(id -u)" in launcher
+    assert "runtime_gid=$(id -g)" in launcher
+    assert '--user "$runtime_uid:$runtime_gid"' in launcher
     assert '--volume "${mounted_repository}:/workspace"' in launcher
     assert "--privileged" not in launcher
     assert "safe.directory /workspace" in entrypoint
     assert entrypoint.rstrip().endswith('exec "$@"')
 
 
-def test_a_windows_backed_default_gate_uses_a_native_linux_projection() -> None:
+def test_a_windows_backed_default_gate_uses_a_docker_volume_projection() -> None:
     """WSL gate evidence is not distorted by NTFS modes or metadata latency."""
     # Read the launcher contract whose default-gate projection is under test.
     launcher = _text("dev/docker.sh")
 
     assert "/mnt/[A-Za-z]/*:true)" in launcher
-    assert 'staging_parent=$(CDPATH= cd -- "${TMPDIR:-/tmp}" && pwd)' in launcher
-    assert 'mktemp -d "$staging_parent/python-discipline-workspace.XXXXXX"' in launcher
-    assert 'cp -a "$repository_root/." "$staged_repository/"' in launcher
-    assert "-type f -name '*.py' -exec chmod 0644" in launcher
+    assert "volume create \\" in launcher
+    assert '--label "python-discipline.workspace-token=$workspace_token"' in launcher
+    assert 'cp --archive "$copy_source"' in launcher
+    assert '-type f -name "*.py" -exec chmod 0644' in launcher
     assert '"#!"*) chmod 0755 "$python_file"' in launcher
-    assert "runtime_repository=$repository_root" in launcher
-    assert "trap cleanup_stage EXIT HUP INT TERM" in launcher
-    assert '"$staging_parent"/python-discipline-workspace.*)' in launcher
-    assert 'cp "$staged_repository/build/project-gate-docker.json"' in launcher
+    assert 'chown -R "$1:$2" /workspace' in launcher
+    assert "mounted_repository=$workspace_volume" in launcher
+    assert "container_is_owned" in launcher
+    assert "volume_is_owned" in launcher
+    assert "trap cleanup_workspace EXIT HUP INT TERM" in launcher
+    assert '"${report_container}:/workspace/build/project-gate-docker.json"' in launcher
 
 
 def test_the_wsl_fallback_rejects_a_nonfunctional_docker_stub() -> None:

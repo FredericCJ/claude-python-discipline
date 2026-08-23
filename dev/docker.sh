@@ -88,74 +88,117 @@ if [ "$#" -eq 0 ]; then
     fi
 fi
 
-runtime_repository=$repository_root
-staged_repository=
-staging_parent=
+runtime_uid=$(id -u)
+runtime_gid=$(id -g)
+workspace_volume=
+staging_container=
+report_container=
+workspace_token="v5-$$"
 
-cleanup_stage() {
-    case $staged_repository in
-        "$staging_parent"/python-discipline-workspace.*)
-            if [ -d "$staged_repository" ]; then
-                rm -rf -- "$staged_repository"
-            fi
-            ;;
-        "")
-            ;;
-        *)
-            echo "Refusing to remove unexpected staging path: $staged_repository" >&2
-            return 1
-            ;;
-    esac
+container_is_owned() {
+    [ "$("$docker_command" inspect --format \
+        '{{ index .Config.Labels "python-discipline.workspace-token" }}' \
+        "$1" 2>/dev/null || :)" = "$workspace_token" ]
 }
-trap cleanup_stage EXIT HUP INT TERM
 
-# Docker Desktop projects reached through /mnt/<drive> expose every regular file
-# as executable and make metadata-heavy checks dramatically slower. For the
-# read-only default gate, project exact bytes into WSL's Linux filesystem and
-# normalize Python executable intent from the only portable source-level signal:
-# a shebang. Explicit commands and shells still mount the real checkout so edits
-# remain visible to the developer.
-case $repository_root:$default_gate in
-    /mnt/[A-Za-z]/*:true)
-        staging_parent=$(CDPATH= cd -- "${TMPDIR:-/tmp}" && pwd)
-        staged_repository=$(mktemp -d "$staging_parent/python-discipline-workspace.XXXXXX")
-        cp -a "$repository_root/." "$staged_repository/"
-        find "$staged_repository" -type f -name '*.py' -exec chmod 0644 {} +
-        find "$staged_repository" -type f -name '*.py' -exec sh -c '
-            for python_file do
-                first_line=
-                IFS= read -r first_line < "$python_file" || :
-                case $first_line in
-                    "#!"*) chmod 0755 "$python_file" ;;
-                esac
-            done
-        ' sh {} +
-        runtime_repository=$staged_repository
-        if [ "$packaged" = true ]; then
-            rm -f -- "$staged_repository/build/project-gate-docker.json"
+volume_is_owned() {
+    [ "$("$docker_command" volume inspect --format \
+        '{{ index .Labels "python-discipline.workspace-token" }}' \
+        "$1" 2>/dev/null || :)" = "$workspace_token" ]
+}
+
+cleanup_workspace() {
+    for owned_container in "$report_container" "$staging_container"; do
+        if [ -n "$owned_container" ]; then
+            if ! container_is_owned "$owned_container"; then
+                echo "Refusing to remove an unowned staging container." >&2
+                return 1
+            fi
+            "$docker_command" rm --force "$owned_container" >/dev/null
         fi
-        ;;
-esac
+    done
+    if [ -n "$workspace_volume" ]; then
+        if ! volume_is_owned "$workspace_volume"; then
+            echo "Refusing to remove an unowned staging volume." >&2
+            return 1
+        fi
+        "$docker_command" volume rm "$workspace_volume" >/dev/null
+    fi
+}
+trap cleanup_workspace EXIT HUP INT TERM
 
 case $docker_command in
     *.exe)
-        mounted_repository=$(wslpath -w "$runtime_repository")
+        mounted_repository=$(wslpath -w "$repository_root")
+        copy_source="${mounted_repository}\\."
+        report_destination=$(wslpath -w \
+            "$repository_root/build/project-gate-docker.json")
         ;;
     *)
-        mounted_repository=$runtime_repository
+        mounted_repository=$repository_root
+        copy_source="$repository_root/."
+        report_destination="$repository_root/build/project-gate-docker.json"
+        ;;
+esac
+
+# Docker Desktop projects reached through /mnt/<drive> expose every regular file
+# as executable and make metadata-heavy checks dramatically slower. For the
+# read-only default gate, copy exact bytes into an owned Docker volume, normalize
+# Python executable intent from shebangs, and run the non-root verifier there.
+# Explicit commands and shells still mount the real checkout so edits persist.
+case $repository_root:$default_gate in
+    /mnt/[A-Za-z]/*:true)
+        workspace_volume=$("$docker_command" volume create \
+            --label "python-discipline.workspace-token=$workspace_token")
+        case $workspace_volume in
+            ""|*[!A-Za-z0-9_.-]*)
+                echo "Docker returned an unsafe staging-volume identity." >&2
+                exit 1
+                ;;
+        esac
+        staging_container=$("$docker_command" create \
+            --label "python-discipline.workspace-token=$workspace_token" \
+            --volume "${workspace_volume}:/workspace" \
+            --workdir /workspace \
+            "$image" sh -c '
+                find /workspace -type f -name "*.py" -exec chmod 0644 {} +
+                find /workspace -type f -name "*.py" -exec sh -c '\''
+                    for python_file do
+                        first_line=
+                        IFS= read -r first_line < "$python_file" || :
+                        case $first_line in
+                            "#!"*) chmod 0755 "$python_file" ;;
+                        esac
+                    done
+                '\'' sh {} +
+                if [ "$3" = true ]; then
+                    rm -f -- /workspace/build/project-gate-docker.json
+                fi
+                chown -R "$1:$2" /workspace
+            ' sh "$runtime_uid" "$runtime_gid" "$packaged")
+        if ! container_is_owned "$staging_container"; then
+            echo "Docker returned an unowned staging container." >&2
+            exit 1
+        fi
+        "$docker_command" cp --archive "$copy_source" \
+            "${staging_container}:/workspace"
+        "$docker_command" start --attach "$staging_container"
+        "$docker_command" rm "$staging_container" >/dev/null
+        staging_container=
+        mounted_repository=$workspace_volume
         ;;
 esac
 
 run_container() {
     if [ -t 0 ] && [ -t 1 ]; then
         "$docker_command" run --rm --init --interactive --tty \
-            --user "$(id -u):$(id -g)" \
+            --user "$runtime_uid:$runtime_gid" \
             --volume "${mounted_repository}:/workspace" \
             --workdir /workspace \
             "$image" "$@"
     else
         "$docker_command" run --rm --init \
-            --user "$(id -u):$(id -g)" \
+            --user "$runtime_uid:$runtime_gid" \
             --volume "${mounted_repository}:/workspace" \
             --workdir /workspace \
             "$image" "$@"
@@ -168,10 +211,26 @@ run_status=$?
 set -e
 
 if [ "$packaged" = true ] && [ "$default_gate" = true ] \
-        && [ -n "$staged_repository" ] \
-        && [ -f "$staged_repository/build/project-gate-docker.json" ]; then
-    cp "$staged_repository/build/project-gate-docker.json" \
-        "$repository_root/build/project-gate-docker.json"
+        && [ -n "$workspace_volume" ]; then
+    report_container=$("$docker_command" create \
+        --label "python-discipline.workspace-token=$workspace_token" \
+        --volume "${workspace_volume}:/workspace" "$image" true)
+    if ! container_is_owned "$report_container"; then
+        echo "Docker returned an unowned report container." >&2
+        exit 1
+    fi
+    set +e
+    "$docker_command" cp \
+        "${report_container}:/workspace/build/project-gate-docker.json" \
+        "$report_destination"
+    report_status=$?
+    set -e
+    "$docker_command" rm "$report_container" >/dev/null
+    report_container=
+    if [ "$run_status" -eq 0 ] && [ "$report_status" -ne 0 ]; then
+        echo "The successful packaged gate did not publish its JSON report." >&2
+        run_status=1
+    fi
 fi
 
 exit "$run_status"

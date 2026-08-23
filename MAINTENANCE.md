@@ -133,6 +133,6 @@ sh dev/docker.sh <optional command>
 
 It requires only Docker, uses the same declaration in a digest-pinned image, and mounts a
 runtime workspace as the invoking uid/gid. A default gate from a Windows-backed WSL path
-uses a disposable native-Linux byte projection so NTFS executable modes and metadata
-latency cannot alter the verdict; explicit commands mount the real checkout. With no
-optional command, either leg runs the full source gate.
+uses a disposable byte projection in a Docker-managed Linux volume so NTFS executable
+modes and metadata latency cannot alter the verdict; explicit commands mount the real
+checkout. With no optional command, either leg runs the full source gate.
