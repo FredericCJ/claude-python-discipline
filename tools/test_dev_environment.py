@@ -111,3 +111,14 @@ def test_the_windows_leg_delegates_environment_ownership_only_to_conda() -> None
     assert launcher.count("$condaExit = $LASTEXITCODE") == 2
     assert "pip install" not in launcher.lower()
     assert "docker" not in launcher.lower()
+
+
+def test_the_windows_leg_reserves_only_leading_launcher_options() -> None:
+    """Dashed Python arguments must pass through without PowerShell binding."""
+    launcher = _text("dev/windows.ps1")
+    assert "[CmdletBinding" not in launcher
+    assert "$rawArguments = @($args)" in launcher
+    assert '$argument -ieq "-EnvironmentName"' in launcher
+    assert '$argument -ieq "-Refresh"' in launcher
+    assert '$argument -eq "--"' in launcher
+    assert "$Command = @($rawArguments[" in launcher

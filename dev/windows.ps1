@@ -1,19 +1,44 @@
-[CmdletBinding(PositionalBinding = $false)]
-param(
-    [Parameter()]
-    [ValidateNotNullOrEmpty()]
-    [string] $EnvironmentName = "claude",
-
-    [Parameter()]
-    [switch] $Refresh,
-
-    [Parameter(ValueFromRemainingArguments = $true)]
-    [string[]] $Command
-)
-
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
+
+# PowerShell's parameter binder also examines tokens intended for the child
+# command. In particular, Python arguments such as ``--error`` can bind to the
+# shell's common ``-ErrorAction`` parameter, while ``-c`` can be rejected as an
+# unknown launcher parameter. Parse only the launcher's leading options here;
+# after the first command token, every remaining token belongs to that command.
+$EnvironmentName = "claude"
+$Refresh = $false
+$Command = @()
+$rawArguments = @($args)
+$argumentIndex = 0
+while ($argumentIndex -lt $rawArguments.Count) {
+    $argument = $rawArguments[$argumentIndex]
+    if ($argument -ieq "-EnvironmentName") {
+        $argumentIndex += 1
+        if ($argumentIndex -ge $rawArguments.Count) {
+            throw "-EnvironmentName requires a non-empty value."
+        }
+        $EnvironmentName = $rawArguments[$argumentIndex]
+        if ([string]::IsNullOrWhiteSpace($EnvironmentName)) {
+            throw "-EnvironmentName requires a non-empty value."
+        }
+        $argumentIndex += 1
+        continue
+    }
+    if ($argument -ieq "-Refresh") {
+        $Refresh = $true
+        $argumentIndex += 1
+        continue
+    }
+    if ($argument -eq "--") {
+        $argumentIndex += 1
+    }
+    if ($argumentIndex -lt $rawArguments.Count) {
+        $Command = @($rawArguments[$argumentIndex..($rawArguments.Count - 1)])
+    }
+    break
+}
 
 $condaInfo = Get-Command conda -ErrorAction SilentlyContinue
 if ($null -eq $condaInfo) {
