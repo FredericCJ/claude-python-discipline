@@ -2,6 +2,7 @@
   "schema_version": 1,
   "release": "v5.0.0",
   "observed_on": "2026-08-24",
+  "discipline_candidate_commit": "7e700ac816aaf584490abc7fb31d1b8818b61b4e",
   "purpose": "Bounded field qualification of the public v4-to-v5 application-repository upgrade path.",
   "adopter": {
     "name": "python-doctrine-test",
@@ -114,5 +115,5 @@
     ]
   },
   "conclusion": "The v5 package upgrades and integrates a real v4 application without guessing project prose or weakening unrelated evidence. It then fails closed on exactly the project-authored documentation and content-review work the migration says remains. This is field evidence for migration behavior, not v5 certification of the adopter application.",
-  "scope_limit": "No adopter source was edited for compliance, no adopter commit was created, and no repository other than python-doctrine-test was opened or executed for this field qualification."
+  "scope_limit": "No adopter source was edited for compliance, no adopter commit was created, and no repository other than python-doctrine-test was opened or executed for this field qualification. This evidence is bound to the named candidate commit; later release-only discrimination, Docker, and leak-scanner repairs did not re-run or broaden the adopter exercise."
 }

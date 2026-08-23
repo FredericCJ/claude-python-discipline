@@ -4,13 +4,15 @@
 
 | Field | Value |
 |---|---|
-| Status | Planned; source input frozen, integration not started |
+| Status | Implementation and platform qualification complete; final content-bound review and tag follow this frozen candidate |
 | Baseline | v4.1.0 at `40466474ac91c5152f58a3fb20b7a93601c4016d` |
 | Target | v5.0.0 |
 | Governed unit | Exactly one application repository or one independently developed component repository |
 | Distribution | One combined Claude Code and Codex discipline package |
 | Input | [`inputs/python-commenting-and-documentation-discipline.md`](inputs/python-commenting-and-documentation-discipline.md) |
 | Input SHA-256 | `23509318ef92d79240a931539eba0c57b4367f345f06c74ad99225bbd989fa72` |
+| Qualified candidate | `033046384e88afcbdde3a188a26427727931e6b0` |
+| Qualification evidence | [`evidence/release-qualification.json`](evidence/release-qualification.json) |
 
 ## Why this is v5
 
@@ -59,15 +61,21 @@ inconvenient to migrate.
 The following remain out of scope:
 
 - parent-level orchestration of a multi-component application;
-- changes to adopter, demonstration or reference repositories outside this discipline
+- implementation work in adopter or demonstration repositories outside this discipline
   repository;
 - documentation hosting, publication infrastructure or a committed rendered site;
 - a parallel Sphinx, pydoc or second docstring contract;
 - non-Python source-language commenting rules; and
 - automatic generation of semantic prose from identifiers or syntax.
 
-Application and component fixtures created inside this repository may be used for
-qualification. No external adopter repository is an implementation or test target.
+Application and component fixtures created inside this repository are the release-deciding
+round trips. The later implementation task expressly authorized one bounded field test of
+`python-doctrine-test` and prohibited every other external adopter. That application was
+used only through a disposable detached worktree: the v5 package was installed, integrated,
+structurally migrated, and allowed to fail closed on its unauthored documentation debt. No
+adopter source was repaired or committed, and its primary checkout remained clean. This
+field observation is recorded separately and is not substituted for the synthetic release
+fixtures.
 
 ## What v4.1 already provides
 
@@ -326,8 +334,10 @@ the gate red with the expected rule ID.
    rules; and
 6. make generators emit conforming comments rather than patching their outputs.
 
-The migration uses only this repository and synthetic in-repository fixtures. It shall not
-open, modify or execute any external adopter repository.
+The implementation migration uses only this repository and synthetic in-repository
+fixtures. The separately authorized `python-doctrine-test` field observation may exercise
+the public package and migration commands in a disposable worktree, but shall not repair or
+commit adopter source and shall not expand to another external repository.
 
 Exit: the v5 mechanisms report zero undocumented entities, zero undocumented local
 bindings, zero uncovered governed operations and zero undeclared naming-policy violations
@@ -429,6 +439,36 @@ Environment changes and empirical facts should precede laws that depend on them.
 | Naming checks overclaim semantic correctness | State exact syntactic propositions and residuals; use structured review for meaning |
 | Migration is too large for review | Inventory first, migrate by module group and forbid mass-generated semantic prose |
 | The new gate becomes prohibitively slow | Measure each mechanism on Windows and Docker, retain static single-pass parsing and set explicit build budgets |
+
+## Implementation outcome
+
+The roadmap was executed as one breaking v5 release rather than split across a minor
+series:
+
+- all 365 imported normative claims have exactly one disposition: 106 retained, 114 split,
+  and 145 strengthened, with zero unreviewed or multiply claimed items;
+- Doxygen 1.17.0 and Graphviz 14.1.2 were empirically qualified on Windows Conda and Linux
+  Docker, including extraction limits, warning behavior, relationships, offline output and
+  deterministic generation;
+- `DOC-015` through `DOC-019` and `DOC-022` through `DOC-029` carry exact mechanisms,
+  residuals and independent discrimination witnesses without repurposing the earlier IDs;
+- a strict project documentation model, comment-association grammar, four complementary
+  source checks and a generated-output gate now decide the mechanically expressible layer;
+- all 180 governed repository Python files are clean under the v5 documentation gate, and
+  the behavior oracle distinguishes prose-only work from intentional executable change;
+- the public v4-to-v5 migrator and one combined Claude Code/Codex package round-trip both
+  application and single-component repositories through synthetic release fixtures;
+- the one authorized `python-doctrine-test` field exercise proved conservative migration
+  and fail-closed authorship debt without modifying its primary checkout;
+- the complete 11-step source gate passed through both shipped development legs; and
+- the non-skipped Windows release command produced the deterministic, leak-clean archive
+  recorded in `evidence/release-qualification.json`.
+
+The implementation exposed and closed four qualification defects rather than ratcheting
+them away: one stale textual discrimination target, NTFS executable-mode and metadata
+distortion, Docker Desktop's unavailable WSL-directory mount service, and a leak-scanner
+self-match on the package-authored disposable container home. The qualification artifact
+binds each failure to its repair and final counterevidence.
 
 ## Release acceptance
 

@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "release": "v5.0.0",
+  "qualified_on": "2026-08-24",
+  "candidate_commit": "033046384e88afcbdde3a188a26427727931e6b0",
+  "toolchain": {
+    "python": "3.13.14",
+    "doxygen": "1.17.0",
+    "graphviz": "14.1.2",
+    "git": "2.55.0",
+    "nodejs": "22.21.1",
+    "pip": "26.2.1",
+    "direct_python_packages": 13,
+    "environment_check": "Every named executable and Python distribution was verified by execution on both shipped legs."
+  },
+  "windows": {
+    "entrypoint": "dev\\windows.cmd python tools\\release.py",
+    "host_requirement": "Conda on PATH",
+    "environment": "claude",
+    "source_gate": "all 11 steps passed",
+    "release_command": "pass",
+    "notes": "This was the non-skipped archive-producing command at the candidate commit."
+  },
+  "linux": {
+    "entrypoint": "sh dev/docker.sh",
+    "host_shape": "Ubuntu under WSL on Windows 11, using Docker Desktop's Windows CLI fallback",
+    "host_requirement": "Docker",
+    "image": "python-discipline-dev:v5.0.0",
+    "image_inputs": "Dockerfile frontend and Miniforge base resolved by the immutable digests declared in dev/Dockerfile.",
+    "runtime_uid": 1000,
+    "workspace": "The default gate copied exact checkout bytes into a labeled Docker-managed Linux volume, normalized Python executable intent from shebangs, and removed all labeled containers and volumes after execution.",
+    "source_gate": "all 11 steps passed",
+    "tests": "1046 passed, 1 intentional recursion skip",
+    "discrimination": "D=180 above floor 167; all 194 mutations provoked their rule; S=192 with zero undiscriminated strategy claims or rule ids",
+    "doxygen": "clean over 28 files; call=10, caller=15, dependency=8 relationship families",
+    "cleanup_check": "No container or volume carrying the python-discipline.workspace-token label remained."
+  },
+  "qualification_failures_closed": [
+    {
+      "failure": "The Windows documentation migration made the textual LEARN-006 reconstructibility mutation inapplicable.",
+      "resolution_commits": [
+        "cf61c4a",
+        "4cdfab4"
+      ],
+      "final_evidence": "The complete discrimination gate passed on Windows and Linux."
+    },
+    {
+      "failure": "A direct Docker Desktop bind mount of the Windows-backed checkout projected non-shebang Python files as executable and made metadata-heavy proof exceed its timeout.",
+      "resolution_commits": [
+        "719714f",
+        "00fdfd3"
+      ],
+      "final_evidence": "The owned Docker-volume projection passed the unchanged lint and timeout gates."
+    },
+    {
+      "failure": "Docker Desktop could not mount a temporary directory inside the selected WSL distribution.",
+      "resolution_commits": [
+        "719714f"
+      ],
+      "final_evidence": "The Docker API populated the managed volume without distro filesystem sharing."
+    },
+    {
+      "failure": "The Linux release scanner treated the fixed package-authored container HOME as a builder identity and rejected the Dockerfile that declared it.",
+      "resolution_commits": [
+        "f4d2675",
+        "f4101fd"
+      ],
+      "final_evidence": "All 33 focused release tests and both complete platform gates passed; nearby temporary homes remain discriminating fixtures."
+    }
+  ],
+  "documentation": {
+    "governed_python_files": 180,
+    "source_checks": [
+      "doc_coverage",
+      "doc_narration",
+      "doc_naming",
+      "doc_semantics"
+    ],
+    "findings": 0,
+    "doxygen_projection": "warning-free, non-vacuous, relational, offline, and deterministic under the qualified probe"
+  },
+  "package_round_trips": {
+    "application": "pass",
+    "component": "pass",
+    "v4_rejection": "Both shapes reject an unmigrated v4 documentation declaration with an actionable diagnostic.",
+    "v5_migration": "Both shapes migrate through the packaged public command and pass afterward.",
+    "host_skills": "Claude Code and Codex discovery copies remain byte-identical to the one authored skill."
+  },
+  "archive": {
+    "path": "dist/agent-discipline-v5.0.0.zip",
+    "sha256": "58b76b260135a939e069fed560279d82a1d71b7e877ff2efac1e1831263b6871",
+    "size_bytes": 1842772,
+    "members": 271,
+    "upstream_files": 265,
+    "manifest_release": "v5.0.0",
+    "manifest_content_hash": "341dc2aad152",
+    "root_documents": [
+      "INSTALL-DISCIPLINE.md",
+      "RELEASE-NOTES-v5.0.0.md"
+    ],
+    "timestamp_values": 1,
+    "determinism": "The complete final suite includes the independent two-build byte-equality test.",
+    "dependency_closure": "12 required Python distributions present",
+    "learning_ledger": "seed files only; no project learning shipped",
+    "leak_scan": "clean over 270 scanned members; 17 matches were review-only or exact justified proof fixtures"
+  },
+  "residuals": [
+    "Exact versions are locked, not dependency artifact hashes.",
+    "The Docker image supplies discipline verifiers, not undeclared project runtime dependencies.",
+    "Syntactic documentation coverage and association cannot prove prose truth; content-bound adversarial review owns that judgment.",
+    "The qualification covers one repository as an application or one independently developed component, not a multi-repository application root."
+  ]
+}
