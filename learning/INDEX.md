@@ -9,7 +9,7 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 | Status | Count |
 |---|---|
 | active | 5 |
-| candidate | 104 |
+| candidate | 106 |
 | superseded | 1 |
 
 ## active
@@ -448,8 +448,8 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 ### L-0049 · Committed tokens: values across the corpus are the len(text)/3.7 fallback estimate, not tiktoken measurements, because tiktoken is absent from the claude env; installing it would rewrite every module and cascade into graph.json
 
 - **Do** Pin tiktoken in the environment and rebuild the corpus as one change, or correct meta/SCHEMA.md, KERNEL.md and README.md which all claim the field is tiktoken-measured
-- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
-- **Confidence** 0.50, last seen 2026-08-19
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-1 over 1 session(s))
+- **Confidence** 0.35, last seen 2026-08-23
 - **Triggers** `glob:discipline/**/*.md`, `term:count_tokens`, `term:tiktoken`
 - **About** DEP-005, meta/SCHEMA
 - **Verify** `python -c "import tiktoken"`
@@ -949,6 +949,20 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Confidence** 0.50, last seen 2026-08-23
 - **Triggers** `glob:dev/docker.sh`
 - **Verify** `python -m pytest tools/test_dev_environment.py -q`
+
+### L-0111 · The v4.1 kernel and DOC-002 describe every element or named value, but doc_coverage inspects only module and class assignments and never function-local bindings.
+
+- **Do** Treat local-binding documentation as a new v5 proposition with its own AST association mechanism and counterexamples instead of claiming DOC-002 already decides it.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-23
+- **Triggers** `glob:enforce/checks/doc_coverage.py`, `rule:DOC-002`
+
+### L-0112 · DOC-009 governs Doxygen entity contracts, while semantic implementation narration belongs in ordinary non-extracted comments, so the two comment forms do not make contradictory demands.
+
+- **Do** Keep entity contracts and implementation narration in separate DOC modules and make each mechanism inspect only its owning comment form.
+- **Kind** rule-application · **scope** discipline · **evidence** inferred (+0/-0 over 1 session(s))
+- **Confidence** 0.25, last seen 2026-08-23
+- **Triggers** `rule:DOC-009`, `term:implementation-narration`
 
 ## superseded
 
