@@ -4,7 +4,7 @@
 
 | Field | Value |
 |---|---|
-| Status | In progress |
+| Status | Implementation and platform qualification complete; final release gate pending |
 | Baseline | v4.0.0 at `d4d43841f0cb0f59640183eb8f72441c894116c8` |
 | Target | v4.1.0 |
 | Governed unit | Exactly one application repository or one component repository |
@@ -106,3 +106,22 @@ v4.1.0 may be tagged only after:
 No adopter or SIGSIM repository is a v4.1 work target. v4 adopter evidence remains the
 frozen v4.0 certificate; v4.1 changes delivery and developer setup, not adopter product
 code or multi-component scope.
+
+## Implementation record
+
+The implementation is split into reviewable Conventional Commits:
+
+- `2c1c3d4` locks and execution-checks the shared native toolchain;
+- `67a0cfc` introduces the Windows and Linux development legs;
+- `ae62275` makes both legs mandatory members of the combined v4.1 package;
+- `2d838d7` closes Windows PowerShell 5.1 native-stderr handling; and
+- `e2292b0` prevents a pre-existing mutable Docker tag from bypassing current build inputs.
+
+Pre-release qualification is frozen in
+[`evidence/development-environment-qualification.json`](evidence/development-environment-qualification.json).
+It records the fresh Windows environment, real Docker build and non-root runtime, packaged
+launcher invocations, cleanup, focused enforcement, and byte-identical candidate archives.
+The candidate archives were deliberately built with `--skip-gate` and destroyed after
+inspection; they are evidence about staging determinism, not publishable releases. The
+release command remains responsible for running the complete gate before writing the
+official archive.

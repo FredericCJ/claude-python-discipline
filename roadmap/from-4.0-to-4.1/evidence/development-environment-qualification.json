@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "release": "v4.1.0",
+  "qualified_source_commit": "e2292b0288da7383b82c1c16e6c43f3f50d9cfe9",
+  "baseline_tag": "v4.0.0",
+  "governed_scope": "the discipline repository and its generated package only",
+  "adopter_repositories_touched": false,
+  "shared_environment": {
+    "python": "3.13.14",
+    "doxygen": "1.10.0",
+    "pip": "26.2.1",
+    "git": "2.51.2",
+    "nodejs": "22.21.1",
+    "direct_python_pins": 14,
+    "checker_result": "pass"
+  },
+  "windows": {
+    "host_prerequisite": "Conda on PATH",
+    "launcher_shell": "Windows PowerShell 5.1 through dev/windows.cmd/windows.ps1",
+    "designated_environment": {
+      "name": "claude",
+      "checker_result": "pass",
+      "explicit_command": "python --version",
+      "observed": "Python 3.13.14"
+    },
+    "fresh_packaged_environment": {
+      "name": "discipline-v410-qualification-20260823",
+      "initially_absent": true,
+      "created_from_packaged_environment_yml": true,
+      "post_transaction_checker_result": "pass",
+      "packaged_command_result": "pass",
+      "removed_after_qualification": true
+    },
+    "defect_discovered": "PowerShell 5.1 promoted expected conda.bat stderr to a terminating ErrorRecord before LASTEXITCODE could be inspected",
+    "defect_closure_commit": "2d838d7"
+  },
+  "linux": {
+    "host_prerequisite": "Docker",
+    "docker_client": "29.6.1",
+    "docker_server": "29.6.1",
+    "dockerfile_frontend": "docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32",
+    "base_image": "condaforge/miniforge3:25.3.1-0@sha256:1e65803d646bf8503728001dddb5756f3e8235e0883c19b5a5ad1da85cff0905",
+    "image_size_bytes": 408282744,
+    "filesystem_config_digest": "sha256:9d80f54134fc26eb1d4653ba5b33b562afa417af98010720d22c78b32efc9b81",
+    "environment_checker_result": "pass",
+    "pyright_result": "pyright 1.1.407 through declared Node; no nodeenv provisioning",
+    "unmounted_workspace": "empty",
+    "baked_discipline_files": [
+      "/opt/python-discipline/environment.yml",
+      "/opt/python-discipline/tools/check_env.py",
+      "/usr/local/bin/python-discipline-entrypoint"
+    ],
+    "mounted_runtime": "pass as uid 1000",
+    "wsl_windows_cli_fallback": "pass",
+    "packaged_launcher": "pass",
+    "current_input_reconciliation_commit": "e2292b0"
+  },
+  "packaging": {
+    "upstream_files": 247,
+    "archive_members": 253,
+    "extracted_windows_launcher": "pass",
+    "extracted_linux_launcher": "pass",
+    "independent_candidate_archives_byte_identical": true,
+    "candidate_archive_sha256": "be1fa19945352498063d685c57c4141c39504681e77188c5963788d06ead60be",
+    "candidate_archive_bytes": 1456524,
+    "candidate_gate_ran": false,
+    "candidate_publishable": false,
+    "candidate_cleanup": "both archives and the extracted package were sent to the Windows Recycle Bin"
+  },
+  "focused_enforcement": {
+    "environment_and_dependency_tests": "25 passed",
+    "development_leg_contracts": "7 passed",
+    "vendor_and_release_lifecycle": "44 passed",
+    "strict_mypy": "pass",
+    "strict_pyright": "pass",
+    "lint_ratcheting": "pass at the recorded ceiling",
+    "documentation_gate": "pass",
+    "skill_mirrors": "byte-current"
+  },
+  "remaining_release_operation": "Run tools/release.py without --skip-gate from the content-bound reviewed commit, verify the official archive identity, and tag that exact commit."
+}

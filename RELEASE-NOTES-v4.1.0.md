@@ -77,7 +77,10 @@ PID 1.
 
 ## Qualification evidence
 
-- The Windows launcher verified and invoked the designated `claude` environment.
+- The source Windows launcher verified and invoked the designated `claude` environment.
+- A freshly vendored package created a new, isolated Windows Conda environment from its
+  own lock, verified every declared pin, and executed its packaged checker. This exposed
+  and closed a Windows PowerShell 5.1 stderr/exit-status defect before release.
 - A clean Linux image was constructed from the pinned digests and matched all declared
   executable and Python versions.
 - Pyright 1.1.407 executed through the pinned Node 22.21.1 without provisioning nodeenv.
@@ -86,10 +89,12 @@ PID 1.
 - A bind-mounted discipline checkout executed as numeric uid 1000.
 - The WSL launcher rejected Docker Desktop's nonfunctional Linux stub, selected the working
   Windows Docker CLI, converted mount paths, and ran the checker successfully.
+- A literal extracted candidate archive invoked both packaged legs, and two independently
+  staged candidate archives were byte-identical.
 
-Release certification also requires a fresh temporary Windows environment, packaged
-launcher invocations, the complete discipline release gate, leak scan, and two independently
-staged byte-identical archives. Those results are recorded in the v4.1 roadmap evidence.
+The final release operation still runs the complete discipline gate before repeating the
+staging and leak scan. Exact pre-release qualification results are recorded in the v4.1
+roadmap evidence.
 
 ## Residuals
 
