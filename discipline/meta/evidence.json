@@ -3313,8 +3313,8 @@
           "mechanism": "check:doc_coverage",
           "kind": "static",
           "relation": "direct",
-          "proposition": "The v4 declaration parser requires one explicit doc_engine value from the closed doxygen, sphinx, or none set, and check:doc_coverage emits DOC_ENGINE_UNDECLARED once when a direct legacy fallback has no declaration.",
-          "residual": "A declared engine can still be misconfigured, absent from the gate environment, or unable to parse the project's actual documentation syntax; the project gate owns those configuration and execution probes.",
+          "proposition": "The declaration parser requires an explicit doc_engine field, and check:doc_coverage emits DOC_ENGINE_UNDECLARED when a direct legacy invocation has no local declaration.",
+          "residual": "An explicit selection can still name an unsupported engine or fail at execution; DOC-015 and the project gate decide those separate predicates.",
           "must_pass": "command:`python -m checks.doc_coverage`, which prints the declaration it found and every rule that declaration leaves inactive",
           "must_reject": "discrimination:DOC-014/check:doc_coverage",
           "platforms": [
@@ -3328,9 +3328,504 @@
         "V3E-001"
       ],
       "migration": {
-        "source": "v4.0.0",
+        "source": "v5.0.0",
         "disposition": "clarified",
-        "guidance": "Set doc_engine explicitly during migration, including none; v4 no longer treats field absence as a silent none declaration."
+        "guidance": "Add doc_engine = \"doxygen\". Former sphinx and none declarations are explicit migration errors under DOC-015."
+      }
+    },
+    "DOC-015": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "Allowing several structured engines makes one package carry conditional syntax and completeness rules, so changing configuration silently changes the meaning of conformance.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:project",
+          "kind": "static",
+          "relation": "direct",
+          "proposition": "The project declaration parser accepts doxygen and rejects legacy sphinx or none selections with one migration diagnostic.",
+          "residual": "A valid selection does not prove that Doxygen is installed, correctly configured, or able to render the governed content.",
+          "must_pass": "fixture:reference project declaration selecting doxygen",
+          "must_reject": "discrimination:DOC-015/check:project",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "never while this rule is active for the governed repository"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Replace doc_engine = \"sphinx\" or \"none\" with \"doxygen\" and migrate entity documentation before running the gate."
+      }
+    },
+    "DOC-016": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "An undocumented local representation forces the reader to infer its role from a transient identifier and nearby syntax, which is especially unreliable during agent-operated changes.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:doc_coverage",
+          "kind": "static",
+          "relation": "direct",
+          "proposition": "Every mechanically enumerated non-parameter local binding has exactly one qualifying ordinary comment association.",
+          "residual": "Association proves neither that the prose is true nor that it captures the value's important domain meaning.",
+          "must_pass": "fixture:reference governed Python local bindings",
+          "must_reject": "discrimination:DOC-016/check:doc_coverage",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "never for a governed non-parameter local binding"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Add ordinary semantic-step comments for assignments, targets, aliases, assignment expressions, and pattern captures."
+      }
+    },
+    "DOC-017": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "Unnarrated changes in direction, representation, state, or external interaction require readers to mentally execute syntax before they can identify the procedure.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:doc_narration",
+          "kind": "static",
+          "relation": "proxy",
+          "proposition": "Each mechanically enumerated branch, loop, return, loop control, exception path, resource sequence, pattern dispatch, selected state change, or selected external effect has an ordinary comment owner.",
+          "residual": "The bounded syntax and method vocabulary misses domain-specific semantic operations, and a present comment may still misdescribe the step.",
+          "must_pass": "fixture:reference governed Python execution paths",
+          "must_reject": "discrimination:DOC-017/check:doc_narration",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "never for an operation in the check's declared census"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Narrate governed control, data-flow, resource, state, and effect steps with ordinary comments."
+      }
+    },
+    "DOC-018": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "A distant or multiply attributable comment lets the checker choose an ownership relation that a human reader can reasonably interpret differently.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:doc_narration",
+          "kind": "static",
+          "relation": "direct",
+          "proposition": "A narrated operation resolves to one full-line semantic-step or trailing ordinary comment owner under same-suite and paragraph boundaries, and an operation with two owners is rejected as ambiguous.",
+          "residual": "Unique lexical proximity cannot establish that the selected prose is conceptually allocated to the right semantic step.",
+          "must_pass": "fixture:reference uniquely associated narration",
+          "must_reject": "discrimination:DOC-018/check:doc_narration",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "never for an operation in the narration census"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Place one ordinary comment block immediately above or on each semantic step and remove competing owners."
+      }
+    },
+    "DOC-019": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "Token paraphrases increase maintenance surface without supplying domain meaning, constraints, ordering, or rationale.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:doc_narration",
+          "kind": "static",
+          "relation": "proxy",
+          "proposition": "Narration with no informative vocabulary beyond the owned operation's syntax and generic procedural words is rejected.",
+          "residual": "Lexical novelty is only a proxy: sophisticated paraphrase can pass and concise domain vocabulary can be falsely suspected.",
+          "must_pass": "fixture:reference semantically worded narration",
+          "must_reject": "discrimination:DOC-019/check:doc_narration",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "never for a qualifying ordinary narration block"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Replace syntax translations with the represented information, constraint, ordering, operation, or reason."
+      }
+    },
+    "DOC-022": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "An informal or permissively parsed vocabulary model cannot bound ownership or drive reliable checks; misspellings then become silent waivers.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:documentation_model",
+          "kind": "static",
+          "relation": "direct",
+          "proposition": "The declared JSON model has the exact v1 schema, confined non-conflicting scopes, one owner for every source root, and internally consistent vocabulary declarations.",
+          "residual": "A structurally valid model can still omit useful optional domain policy or declare a vocabulary that does not match stakeholder meaning.",
+          "must_pass": "fixture:reference documentation-model.json",
+          "must_reject": "discrimination:DOC-022/check:documentation_model",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "never while this rule is active for the governed repository"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Copy documentation-model.json, declare it in pyproject.toml, and classify every governed, generated, or foreign source scope."
+      }
+    },
+    "DOC-023": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "Project-specific semantic dimensions collapsed into ad hoc identifier order cannot be searched or checked consistently.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:doc_naming",
+          "kind": "static",
+          "relation": "direct",
+          "proposition": "Every identifier under a declared grammar scope matches its regular expression or narrow exclusion, and named group order equals declared dimension order.",
+          "residual": "The project can declare a syntactically consistent grammar whose dimensions are semantically incomplete or poorly chosen.",
+          "must_pass": "fixture:declared identifier grammar with ordered named groups",
+          "must_reject": "discrimination:DOC-023/check:doc_naming",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "when the project declares no identifier grammar for the identifier's scope"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Declare only domain-supported identifier grammars; list dimensions broad-to-specific and add narrow explicit exclusions."
+      }
+    },
+    "DOC-024": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "An undeclared or inconsistently spelled abbreviation makes one identifier expand to different meanings for different readers.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:doc_naming",
+          "kind": "static",
+          "relation": "proxy",
+          "proposition": "Mechanically identifiable uppercase initialisms are declared for their scope, use declared spelling, and overlapping declarations do not assign conflicting meanings.",
+          "residual": "All-uppercase constant tokens, lowercase contractions, and domain words that resemble abbreviations require semantic review rather than lexical classification.",
+          "must_pass": "fixture:declared scoped abbreviation",
+          "must_reject": "discrimination:DOC-024/check:doc_naming",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "when an identifier contains no mechanically identifiable abbreviation"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Inventory project abbreviations, give each one scoped spelling and meaning, and rename conflicting uses."
+      }
+    },
+    "DOC-025": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "Tool-derived vocabulary can silently replace canonical domain terminology when generated names have no explicit origin mapping.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:doc_naming",
+          "kind": "static",
+          "relation": "proxy",
+          "proposition": "Every identifier containing a declared generated-name marker has an exact canonical mapping, and each mapping key contains a marker.",
+          "residual": "A mapped canonical term can still be the wrong domain concept, and generated names lacking a configured marker remain invisible.",
+          "must_pass": "fixture:mapped generated identifier",
+          "must_reject": "discrimination:DOC-025/check:doc_naming",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "when the governed repository has no generated vocabulary boundary"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Declare visible generated-name markers and map every matching identifier to its canonical domain term."
+      }
+    },
+    "DOC-026": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "Types identify boolean or collection shape but leave state meaning, element meaning, order, units, ranges, encoding, and representation unstated.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:doc_semantics",
+          "kind": "static",
+          "relation": "proxy",
+          "proposition": "Mechanically inferred booleans mention both states, inferred collections mention element and order semantics, and model-declared properties appear in owning documentation.",
+          "residual": "Required words can occur in false or irrelevant prose, and semantics not inferable from annotations, literals, or the project model remain untested.",
+          "must_pass": "fixture:documented boolean, collection, and declared unit",
+          "must_reject": "discrimination:DOC-026/check:doc_semantics",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "when no inferable or project-declared value semantic applies"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Document both boolean states, collection elements and ordering, and every modeled unit, range, encoding, or representation."
+      }
+    },
+    "DOC-027": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "A caller cannot tell a computation from a command or order observable state changes when a signature omits purity and effects.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:doc_semantics",
+          "kind": "static",
+          "relation": "proxy",
+          "proposition": "A callable using a bounded set of externally visible effect operations has an @par Effects paragraph, and an explicitly pure callable declares no effects.",
+          "residual": "Unrecognized domain effects, dishonest purity markers, and inaccurate effect ordering remain semantic-review residuals.",
+          "must_pass": "fixture:callable with an explicit effects contract",
+          "must_reject": "discrimination:DOC-027/check:doc_semantics",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "when no detectable effect or explicit purity marker is present"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Add @par Effects to commands and an explicit no-effects statement to callables deliberately marked pure."
+      }
+    },
+    "DOC-028": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "Lexical checks can report complete documentation while prose is false, misplaced, obsolete, or uses the wrong domain concepts.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "limits",
+          "confidence": "high"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "check:adversarial_review",
+          "kind": "static",
+          "relation": "direct",
+          "proposition": "The current content-bound review contains documentation-truth, allocation, obsolescence, and domain-naming questions and is invalidated by governed input drift.",
+          "residual": "Artifact structure and freshness do not authenticate reviewer independence or make its semantic conclusions true.",
+          "must_pass": "fixture:reference content-bound adversarial review",
+          "must_reject": "discrimination:DOC-028/check:adversarial_review",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "never while this rule is active for the governed repository"
+        },
+        {
+          "mechanism": "review",
+          "kind": "structured-review",
+          "relation": "direct",
+          "proposition": "A reviewer challenges documentation truth, allocation, obsolescence, and naming against exact current code and records bounded conclusions without claiming independent authentication.",
+          "residual": "Recorded conclusions remain judgments by a potentially non-independent reviewer and cannot prove arbitrary prose-code agreement.",
+          "must_pass": "artifact:accepted adversarial-review.json with question-level conclusions and explicit epistemic limits",
+          "must_reject": null,
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "never; the structured judgment is the declared residual owner"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Regenerate the review scope, answer all four documentation question categories, and record the review's epistemic limits."
+      }
+    },
+    "DOC-029": {
+      "units": [
+        "application",
+        "component"
+      ],
+      "capabilities": [],
+      "failure_mode": "A clean documentation command can be vacuous when input is filtered out or relational features are enabled without producing any relation artifact.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "strategies": [
+        {
+          "mechanism": "auto:doxygen",
+          "kind": "tool",
+          "relation": "direct",
+          "proposition": "The Doxygen gate rejects a generated projection with no entity/source pages or with zero call, caller, or directory-dependency relation SVGs.",
+          "residual": "Non-empty generated relationships do not establish that Doxygen inferred every intended semantic relationship or that rendered prose is true.",
+          "must_pass": "command:`python tools/doxygen_gate.py` on the conformant reference",
+          "must_reject": "discrimination:DOC-029/auto:doxygen",
+          "platforms": [
+            "windows",
+            "linux"
+          ],
+          "not_applicable": "never while Doxygen is the selected structured engine"
+        }
+      ],
+      "observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Use the shipped Doxygen gate and configure governed inputs so entity, source, call, caller, and dependency projections are non-empty."
       }
     },
     "EFCT-001": {

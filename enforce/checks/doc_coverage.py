@@ -2,7 +2,8 @@
 
 Enforces DOC-001 (modules, classes, callables), DOC-002 (module constants, class
 attributes, dataclass fields, enum members), DOC-007 (Doxygen parameter/result
-records), and DOC-014 (the engine selection is explicit). DOC-003 is the separate
+records), DOC-014 (the engine selection is explicit), and DOC-016 (every local
+binding resolves to ordinary semantic narration). DOC-003 is the separate
 gate obligation that schedules this mechanism outside a documentation-build job.
 
 The division of labour matters. ruff's D1 rules see docstrings and nothing else;
@@ -18,6 +19,8 @@ import re
 from typing import TYPE_CHECKING
 
 from . import Finding, ModuleCheck, main
+from .comment_association import associate, bindings, comment_blocks, semantic_associations
+from .documentation_model import governed_paths
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
@@ -44,7 +47,7 @@ class DocCoverageCheck(ModuleCheck):
     ## The law/DOC rules this check decides.
     ## DOC-003 belongs to the gate that schedules this mechanism; the remaining
     ## ids are predicates this class itself can report.
-    rules = ("DOC-001", "DOC-002", "DOC-007", "DOC-014")
+    rules = ("DOC-001", "DOC-002", "DOC-007", "DOC-014", "DOC-016")
 
     def run(self, paths: Sequence[Path]) -> list[Finding]:
         """Report an undeclared engine once, then inspect documentation content.
@@ -52,7 +55,7 @@ class DocCoverageCheck(ModuleCheck):
         @param paths project source files or roots
         @return declaration finding followed by element findings
         """
-        findings = super().run(paths)
+        findings = super().run(governed_paths(self.declaration, paths))
         if self.declaration.doc_engine_declared or not paths:
             return findings
         subject = self.declaration.source or paths[0]
@@ -60,11 +63,12 @@ class DocCoverageCheck(ModuleCheck):
             subject /= "pyproject.toml"
         return [
             Finding(
-                "DOC-014", subject, 1,
+                "DOC-014",
+                subject,
+                1,
                 "project declares no documentation engine",
-                "Set doc_engine explicitly to doxygen, sphinx, or none in "
-                "[tool.agent-discipline]. An implicit default can silently "
-                "deactivate engine-specific checks.",
+                "Set doc_engine explicitly to doxygen in [tool.agent-discipline]. "
+                "An implicit default can silently deactivate structured checks.",
                 diagnostic_id="DOC_ENGINE_UNDECLARED",
             ),
             *findings,
@@ -78,11 +82,16 @@ class DocCoverageCheck(ModuleCheck):
         @param _layer the architectural layer, unused here
         @return findings for every element lacking documentation
         """
-        source = path.read_text(encoding="utf-8").splitlines()
+        text = path.read_text(encoding="utf-8")
+        source = text.splitlines()
+        ordinary_blocks = comment_blocks(text)
+        associations = semantic_associations(tree, text, ordinary_blocks)
 
         if ast.get_docstring(tree) is None:
             yield Finding(
-                "DOC-001", path, 1,
+                "DOC-001",
+                path,
+                1,
                 "module has no docstring",
                 'Open the file with a """! summary; it is what every index shows.',
             )
@@ -104,8 +113,38 @@ class DocCoverageCheck(ModuleCheck):
         if forms:
             yield from self._module_values(tree, path, source)
 
-    def _callable(self, node: ast.FunctionDef | ast.AsyncFunctionDef,
-                  path: Path, *, forms: bool) -> Iterator[Finding]:
+        for binding in bindings(tree):
+            association = associations.get(
+                binding.owner_node, associate(binding.owner_node, ordinary_blocks)
+            )
+            if association.owner is not None:
+                continue
+            if association.ambiguous:
+                problem = "has multiple possible implementation-comment owners"
+                remedy = (
+                    "Remove the competing comment or move one block directly above the "
+                    "semantic step so this binding has exactly one owner."
+                )
+                diagnostic = "LOCAL_BINDING_AMBIGUOUS"
+            else:
+                problem = "has no associated implementation comment"
+                remedy = (
+                    "Add one ordinary `#` block immediately above its semantic step; "
+                    "state what the value represents in that operation."
+                )
+                diagnostic = "LOCAL_BINDING_UNDOCUMENTED"
+            yield Finding(
+                "DOC-016",
+                path,
+                binding.line,
+                f"{binding.shape} `{binding.name}` {problem}",
+                remedy,
+                diagnostic_id=diagnostic,
+            )
+
+    def _callable(
+        self, node: ast.FunctionDef | ast.AsyncFunctionDef, path: Path, *, forms: bool
+    ) -> Iterator[Finding]:
         """Report a function or method with no docstring.
 
         @param node the callable
@@ -120,7 +159,9 @@ class DocCoverageCheck(ModuleCheck):
         docstring = ast.get_docstring(node)
         if docstring is None:
             yield Finding(
-                "DOC-001", path, node.lineno,
+                "DOC-001",
+                path,
+                node.lineno,
                 f"{node.name}() has no docstring",
                 "State what it guarantees: parameters, result, and when it fails.",
             )
@@ -128,8 +169,9 @@ class DocCoverageCheck(ModuleCheck):
         if forms:
             yield from _completeness(node, docstring, path)
 
-    def _class(self, node: ast.ClassDef, path: Path,
-               source: list[str], *, forms: bool) -> Iterator[Finding]:
+    def _class(
+        self, node: ast.ClassDef, path: Path, source: list[str], *, forms: bool
+    ) -> Iterator[Finding]:
         """Report an undocumented class and any undocumented attribute in it.
 
         @param node the class definition
@@ -143,7 +185,9 @@ class DocCoverageCheck(ModuleCheck):
         """
         if ast.get_docstring(node) is None:
             yield Finding(
-                "DOC-001", path, node.lineno,
+                "DOC-001",
+                path,
+                node.lineno,
                 f"class {node.name} has no docstring",
                 "State what the type represents and what holds of every instance.",
             )
@@ -158,13 +202,14 @@ class DocCoverageCheck(ModuleCheck):
                     continue
                 what = "enum member" if is_enum else "attribute"
                 yield Finding(
-                    "DOC-002", path, lineno,
+                    "DOC-002",
+                    path,
+                    lineno,
                     f"{what} {node.name}.{target} has no `##` comment",
                     "Python has no docstring slot here; document it with a ## block above.",
                 )
 
-    def _module_values(self, tree: ast.Module, path: Path,
-                       source: list[str]) -> Iterator[Finding]:
+    def _module_values(self, tree: ast.Module, path: Path, source: list[str]) -> Iterator[Finding]:
         """Report module-level constants with no `##` block.
 
         @param tree the parsed module
@@ -182,14 +227,17 @@ class DocCoverageCheck(ModuleCheck):
                 if _has_hash_block(source, lineno) or _has_trailing_block(source, lineno):
                     continue
                 yield Finding(
-                    "DOC-002", path, lineno,
+                    "DOC-002",
+                    path,
+                    lineno,
                     f"module constant {target} has no `##` comment",
                     "Document it with a ## block above; a bare name states nothing.",
                 )
 
 
-def _completeness(node: ast.FunctionDef | ast.AsyncFunctionDef, docstring: str,
-                  path: Path) -> Iterator[Finding]:
+def _completeness(
+    node: ast.FunctionDef | ast.AsyncFunctionDef, docstring: str, path: Path
+) -> Iterator[Finding]:
     """Report parameters and results a docstring leaves undocumented.
 
     Owned here rather than left to Doxygen because Doxygen's Python parser does
@@ -211,14 +259,17 @@ def _completeness(node: ast.FunctionDef | ast.AsyncFunctionDef, docstring: str,
     for name in () if node.name.startswith("test_") else _parameter_names(node):
         if name not in documented:
             yield Finding(
-                "DOC-007", path, node.lineno,
+                "DOC-007",
+                path,
+                node.lineno,
                 f"{node.name}(): parameter `{name}` is not documented",
-                f"Add `@param {name} <what it means>` -- the signature already "
-                f"carries its type.",
+                f"Add `@param {name} <what it means>` -- the signature already carries its type.",
             )
     if _returns_a_value(node) and not _DOC_RETURN.search(docstring):
         yield Finding(
-            "DOC-007", path, node.lineno,
+            "DOC-007",
+            path,
+            node.lineno,
             f"{node.name}(): the result is not documented",
             "Add `@return <what the value signifies>`.",
         )

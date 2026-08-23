@@ -2,7 +2,7 @@
 id: meta/CONFLICTS
 kind: meta
 title: Conflict Ledger
-tokens: 3295
+tokens: 3819
 load_when: ["contradiction", "which source wins", "why was this decided", "precedence"]
 decay: none
 ---
@@ -28,7 +28,7 @@ claim produces a third, worse one.
 `SG` style guidelines · `SE` doctrine/SOFTWARE-ENGINEERING · `TD` doctrine/TESTING ·
 `CA` doctrine/CHEAPEST-ABLE · `AR` architecture manifest · `ET` error-tracing manifest ·
 `LO` logging manifest · `TY` typing manifest · `TT` testing-tooling manifest ·
-`SP` spec-discipline manifest
+`SP` spec-discipline manifest · `CD` commenting and documentation doctrine
 
 ---
 
@@ -142,6 +142,14 @@ swapped without touching the rule.
 | CONF-033 | Boundary-crossing logging triple and unconditional state-transition logging vs cost discipline | AR / LO | Kept, scoped to debug level and guarded, so the cost rule is not violated. |
 | CONF-034 | Four vocabularies for one reuse objective (`atomic/integrated reusability`, goal3, reusability discipline, cohesion) | SP, LO, ET, AR | One vocabulary in `meta/GLOSSARY.md`; substitution evidence is the declared boundary representation, registered capabilities and shared contract suite, not a file triad. |
 | CONF-035 | Agent-teams mechanics decaying in months, mixed with doctrine that decays in years or not at all | AT / rest | Separated into `ops/`, with `verified:` and `decay: months`, so its staleness is visible instead of inherited. |
+| CONF-036 | Implementation restatement required vs `DOC-009` rejecting implementation narration in entity docs | CD / DOC-009 | Different owners: Doxygen states the stable entity contract; ordinary `#` comments narrate execution semantically. Neither impersonates the other. |
+| CONF-037 | Narrative completeness vs `DOC-013` preferring one sentence | CD / DOC-013 | One accurate sentence remains sufficient for a simple entity. Execution narration is complete per semantic step; padding remains a defect. |
+| CONF-038 | Every variable belongs to Doxygen vs Doxygen not representing Python locals | CD / fact/doxygen | Doxygen owns empirically representable entities. Ordinary comments and the AST checker own locals and temporary representations. |
+| CONF-039 | Mandatory Doxygen vs `DOC-014` permitting `sphinx` or `none` | CD / DOC-014 | Keep explicit selection and add a v5 Doxygen-only rule. A v4 value receives one migration diagnostic, never a narrowed run. |
+| CONF-040 | Every Doxygen feature vs warning classes with false positives | CD / fact/doxygen | The most accurate mechanism wins: Doxygen checks representable entities and structure; AST checks own locals, nested definitions, result completeness, and semantic fields. |
+| CONF-041 | Controlled abbreviations vs domain-specific grammars | CD internal | Each repository declares its model. The package checks its schema, consistency, and decidable uses without imposing application vocabulary. |
+| CONF-042 | Synchronized comments vs undecidable semantic agreement | CD internal | Detectable drift fails mechanically. Content-bound adversarial review owns agreement with behavior and states its residual judgment. |
+| CONF-043 | Generated elements need docs vs generated output not being hand-maintained | CD / DEP | Generated Python conforms, but its generator owns the comments; editing derived output is not remediation. |
 
 ---
 

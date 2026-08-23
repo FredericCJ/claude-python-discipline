@@ -32,7 +32,7 @@ def declare(tmp_path: Path, body: str) -> Path:
     return path
 
 
-def v4(*, extra: str = "", tables: str = "", doc_engine: str = "none") -> str:
+def v4(*, extra: str = "", tables: str = "", doc_engine: str = "doxygen") -> str:
     """A minimal complete declaration with optional fields and child tables.
 
     @param extra scalar entries in the main declaration table
@@ -50,6 +50,7 @@ def v4(*, extra: str = "", tables: str = "", doc_engine: str = "none") -> str:
         security_model = "security-model.json"
         adversarial_review = "adversarial-review.json"
         doc_engine = "{doc_engine}"
+        documentation_model = "documentation-model.json"
         {extra}
 
         [tool.agent-discipline.capabilities]
@@ -91,7 +92,8 @@ def test_a_missing_declaration_falls_back_for_direct_checks(tmp_path: Path) -> N
 
 @pytest.mark.parametrize("kind", list(project.UnitKind))
 def test_both_governed_unit_kinds_are_accepted(
-    tmp_path: Path, kind: project.UnitKind,
+    tmp_path: Path,
+    kind: project.UnitKind,
 ) -> None:
     """Application and single-component repositories share one declaration model.
 
@@ -211,6 +213,32 @@ def test_a_missing_adversarial_review_is_refused(tmp_path: Path) -> None:
         project.parse(path)
 
 
+def test_a_missing_documentation_model_is_refused(tmp_path: Path) -> None:
+    """Documentation scopes and project vocabulary cannot remain implicit.
+
+    @param tmp_path fixture repository
+    """
+    path = declare(
+        tmp_path,
+        v4().replace('documentation_model = "documentation-model.json"\n', ""),
+    )
+    with pytest.raises(ValueError, match="DISC-PROJECT-022"):
+        project.parse(path)
+
+
+def test_documentation_model_path_cannot_escape(tmp_path: Path) -> None:
+    """A model in a parent repository cannot govern the local component.
+
+    @param tmp_path fixture repository
+    """
+    body = v4().replace(
+        'documentation_model = "documentation-model.json"',
+        'documentation_model = "../documentation-model.json"',
+    )
+    with pytest.raises(ValueError, match="DISC-PROJECT-004"):
+        project.parse(declare(tmp_path, body))
+
+
 def test_a_partial_capability_manifest_is_refused(tmp_path: Path) -> None:
     """Adding a future capability cannot default old declarations to false.
 
@@ -257,11 +285,18 @@ def test_explicit_role_paths_classify_source(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
-    found = project.parse(declare(tmp_path, v4(tables="""
+    found = project.parse(
+        declare(
+            tmp_path,
+            v4(
+                tables="""
         [tool.agent-discipline.roles]
         application = ["src/pkg/services"]
         shell = ["src/pkg/entry"]
-    """)))
+    """
+            ),
+        )
+    )
     assert layer_of(tmp_path / "src/pkg/services/clean.py", found) == "app"
     assert layer_of(tmp_path / "src/pkg/unmapped/clean.py", found) == "unknown"
 
@@ -271,11 +306,18 @@ def test_legacy_aliases_remain_parseable_for_migration(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
-    found = project.parse(declare(tmp_path, v4(tables="""
+    found = project.parse(
+        declare(
+            tmp_path,
+            v4(
+                tables="""
         [tool.agent-discipline.layers]
         services = "app"
         composition = "shell"
-    """)))
+    """
+            ),
+        )
+    )
     assert found.canonical("services") == "app"
     assert layer_of(tmp_path / "src/pkg/services/clean.py", found) == "app"
 
@@ -285,10 +327,15 @@ def test_an_unknown_role_is_refused(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
-    path = declare(tmp_path, v4(tables="""
+    path = declare(
+        tmp_path,
+        v4(
+            tables="""
         [tool.agent-discipline.roles]
         middleware = ["src/pkg/middleware"]
-    """))
+    """
+        ),
+    )
     with pytest.raises(ValueError, match="DISC-PROJECT-005"):
         project.parse(path)
 
@@ -298,10 +345,15 @@ def test_a_role_outside_source_roots_is_refused(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
-    path = declare(tmp_path, v4(tables="""
+    path = declare(
+        tmp_path,
+        v4(
+            tables="""
         [tool.agent-discipline.roles]
         domain = ["other/pkg/domain"]
-    """))
+    """
+        ),
+    )
     with pytest.raises(ValueError, match="DISC-PROJECT-006"):
         project.parse(path)
 
@@ -311,11 +363,16 @@ def test_overlapping_roles_are_refused(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
-    path = declare(tmp_path, v4(tables="""
+    path = declare(
+        tmp_path,
+        v4(
+            tables="""
         [tool.agent-discipline.roles]
         application = ["src/pkg/services"]
         adapters = ["src/pkg/services/http"]
-    """))
+    """
+        ),
+    )
     with pytest.raises(ValueError, match="DISC-PROJECT-006"):
         project.parse(path)
 
@@ -325,14 +382,21 @@ def test_foreign_import_has_one_adapter_owner(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
-    found = project.parse(declare(tmp_path, v4(tables="""
+    found = project.parse(
+        declare(
+            tmp_path,
+            v4(
+                tables="""
         [tool.agent-discipline.roles]
         adapters = ["src/pkg/adapters"]
 
         [[tool.agent-discipline.foreign_dependencies]]
         import_name = "httpx"
         owner = "src/pkg/adapters/http"
-    """)))
+    """
+            ),
+        )
+    )
     assert found.foreign_ownership["httpx"].as_posix() == "src/pkg/adapters/http"
 
 
@@ -341,7 +405,10 @@ def test_duplicate_foreign_import_owners_are_refused(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
-    path = declare(tmp_path, v4(tables="""
+    path = declare(
+        tmp_path,
+        v4(
+            tables="""
         [tool.agent-discipline.roles]
         adapters = ["src/pkg/adapters"]
 
@@ -352,7 +419,9 @@ def test_duplicate_foreign_import_owners_are_refused(tmp_path: Path) -> None:
         [[tool.agent-discipline.foreign_dependencies]]
         import_name = "httpx"
         owner = "src/pkg/adapters/backup_http"
-    """))
+    """
+        ),
+    )
     with pytest.raises(ValueError, match="DISC-PROJECT-011"):
         project.parse(path)
 
@@ -362,7 +431,10 @@ def test_foreign_owner_outside_adapters_is_refused(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
-    path = declare(tmp_path, v4(tables="""
+    path = declare(
+        tmp_path,
+        v4(
+            tables="""
         [tool.agent-discipline.roles]
         adapters = ["src/pkg/adapters"]
         shell = ["src/pkg/shell"]
@@ -370,14 +442,17 @@ def test_foreign_owner_outside_adapters_is_refused(tmp_path: Path) -> None:
         [[tool.agent-discipline.foreign_dependencies]]
         import_name = "httpx"
         owner = "src/pkg/shell"
-    """))
+    """
+        ),
+    )
     with pytest.raises(ValueError, match="DISC-PROJECT-012"):
         project.parse(path)
 
 
 @pytest.mark.parametrize("bad", ["../peer", "/absolute", "C:/peer", "./"])
 def test_source_roots_cannot_escape_or_name_the_repository(
-    tmp_path: Path, bad: str,
+    tmp_path: Path,
+    bad: str,
 ) -> None:
     """Every inspected source root is bounded by this checkout.
 
@@ -400,20 +475,29 @@ def test_a_missing_engine_is_refused_not_defaulted(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
-    body = v4().replace('        doc_engine = "none"\n', "", 1)
+    body = v4().replace('        doc_engine = "doxygen"\n', "", 1)
     with pytest.raises(ValueError, match="DISC-PROJECT-007"):
         project.parse(declare(tmp_path, body))
 
 
-@pytest.mark.parametrize("engine", ["doxygen", "sphinx", "none"])
-def test_each_known_engine_is_accepted(tmp_path: Path, engine: str) -> None:
-    """The three recognized documentation syntaxes remain explicit.
+def test_doxygen_is_the_only_v5_engine(tmp_path: Path) -> None:
+    """A v5 project retains exactly one structured documentation system.
 
     @param tmp_path fixture repository
-    @param engine engine under test
     """
-    found = project.parse(declare(tmp_path, v4(doc_engine=engine)))
-    assert found.doc_engine == engine
+    found = project.parse(declare(tmp_path, v4()))
+    assert found.doc_engine == "doxygen"
+
+
+@pytest.mark.parametrize("engine", ["sphinx", "none"])
+def test_a_v4_engine_gets_one_actionable_migration_diagnostic(tmp_path: Path, engine: str) -> None:
+    """Former explicit choices fail as migrations rather than narrowed scans.
+
+    @param tmp_path fixture repository
+    @param engine former v4 selection
+    """
+    with pytest.raises(ValueError, match=r"DISC-PROJECT-021.*replace it with 'doxygen'"):
+        project.parse(declare(tmp_path, v4(doc_engine=engine)))
 
 
 def test_an_unknown_engine_is_refused_not_ignored(tmp_path: Path) -> None:
@@ -443,10 +527,10 @@ def test_the_declaration_is_found_from_a_nested_path(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
-    declare(tmp_path, v4(doc_engine="sphinx"))
+    declare(tmp_path, v4())
     nested = tmp_path / "src/pkg/domain"
     nested.mkdir(parents=True)
-    assert project.load(nested).doc_engine == "sphinx"
+    assert project.load(nested).doc_engine == "doxygen"
 
 
 def test_a_nearer_project_without_the_table_blocks_parent_inheritance(
@@ -486,7 +570,7 @@ def test_the_nearest_project_may_be_named_explicitly(tmp_path: Path) -> None:
 
     @param tmp_path fixture repository
     """
-    local = declare(tmp_path, v4(doc_engine="sphinx"))
+    local = declare(tmp_path, v4())
     source = tmp_path / "src"
     source.mkdir()
-    assert project.load(source, local).doc_engine == "sphinx"
+    assert project.load(source, local).doc_engine == "doxygen"

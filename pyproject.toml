@@ -25,6 +25,7 @@ operational_model = "operational-model.json"
 security_model = "security-model.json"
 adversarial_review = "adversarial-review.json"
 doc_engine = "doxygen"
+documentation_model = "documentation-model.json"
 pedagogical_full_projection = false
 
 [tool.agent-discipline.capabilities]

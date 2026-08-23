@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "engine": "doxygen",
+  "scopes": [
+    {
+      "path": "src",
+      "kind": "production",
+      "ownership": "governed"
+    },
+    {
+      "path": "tests",
+      "kind": "tests",
+      "ownership": "governed"
+    },
+    {
+      "path": "src/example/generated",
+      "kind": "production",
+      "ownership": "generated"
+    },
+    {
+      "path": "src/example/vendor",
+      "kind": "production",
+      "ownership": "foreign"
+    }
+  ],
+  "controlled_abbreviations": [
+    {
+      "token": "API",
+      "meaning": "application programming interface",
+      "scopes": [
+        "src",
+        "tests"
+      ]
+    }
+  ],
+  "identifier_grammars": [],
+  "generated_names": {
+    "markers": [
+      "generated",
+      "derived"
+    ],
+    "mappings": {
+      "generated_wire_record": "record"
+    }
+  },
+  "semantic_properties": [
+    {
+      "identifier_pattern": "*_ms",
+      "property": "unit",
+      "value": "milliseconds",
+      "scopes": [
+        "src",
+        "tests"
+      ]
+    }
+  ]
+}

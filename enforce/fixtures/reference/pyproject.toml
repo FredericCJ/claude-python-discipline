@@ -21,6 +21,7 @@ operational_model = "operational-model.json"
 security_model = "security-model.json"
 adversarial_review = "adversarial-review.json"
 doc_engine = "doxygen"
+documentation_model = "documentation-model.json"
 adapter_boundaries = [
     "src/refpkg/adapters/clock",
     "src/refpkg/adapters/files",

@@ -71,6 +71,30 @@
       "challenge": "Can a mechanism be counted as enforcement without a mutation proving that its stated observable proposition is rejected?",
       "conclusion": "The evidence registry separates direct, proxy, behavioral, tool, and review claims; review-only obligations do not enter the mutation census, and all 179 mechanical strategies now bind exact rule/mechanism markers to witnessed rejection. Validation refuses rule-only or pending credit and generated proposition boilerplate. The portable core-mutation adapter additionally refuses zero work, survivors, and non-verdict tool outcomes.",
       "evidence": ["discipline/meta/evidence.json", "tools/evidence_model.py", "enforce/discrimination.py", "tools/discrimination_gate.py"]
+    },
+    {
+      "id": "documentation_truth",
+      "challenge": "Which v5 entity contract or semantic-step comment can disagree with the exact implementation and tests it now describes?",
+      "conclusion": "The v5 pass compares every migrated comment with its current AST operation and relevant executable cases; static presence and vocabulary checks are not treated as proof of truth.",
+      "evidence": ["documentation-model.json", "discipline/law/DOC.md", "enforce/checks/doc_semantics.py"]
+    },
+    {
+      "id": "documentation_allocation",
+      "challenge": "Which fact is duplicated across a Doxygen contract and ordinary narration, or attached below the highest layer able to express it correctly?",
+      "conclusion": "The review samples entity, local-binding, branch, transformation, state, and effect documentation against the exclusive two-layer allocation and records any residual ambiguity as a defect.",
+      "evidence": ["documentation-model.json", "discipline/law/DOC.md", "enforce/checks/comment_association.py"]
+    },
+    {
+      "id": "documentation_obsolescence",
+      "challenge": "Which narration preserves an earlier mechanism, workaround, ordering, or state sequence that current code no longer executes?",
+      "conclusion": "Content-bound scope freshness invalidates this acceptance after any governed file changes; the hostile pass additionally searches current comments for historical or contradicted mechanics.",
+      "evidence": ["documentation-model.json", "enforce/checks/adversarial_review.py", "enforce/checks/doc_narration.py"]
+    },
+    {
+      "id": "domain_naming",
+      "challenge": "Which identifier hides a relevant semantic dimension, violates broad-to-specific ordering, or uses an abbreviation with an undeclared or competing meaning?",
+      "conclusion": "The repository model declares its actual scopes and controlled vocabulary; lexical checks decide internal consistency while this review retains the domain-semantic residual.",
+      "evidence": ["documentation-model.json", "discipline/law/DOC-NAMING.md", "enforce/checks/doc_naming.py"]
     }
   ],
   "objections": [

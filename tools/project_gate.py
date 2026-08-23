@@ -326,6 +326,7 @@ def _project_use(root: Path) -> ConfigurationUse:
             "tool.agent-discipline.security_model",
             "tool.agent-discipline.adversarial_review",
             "tool.agent-discipline.doc_engine",
+            "tool.agent-discipline.documentation_model",
             "tool.agent-discipline.capabilities",
             "tool.agent-discipline.roles",
             "tool.agent-discipline.foreign_dependencies",

@@ -1,4 +1,4 @@
-"""The bounded declaration every v4 project check consumes.
+"""The bounded declaration every v5 project check consumes.
 
 The declaration describes one governed repository, not a collection of
 switches. It names whether that repository delivers an application or one
@@ -9,7 +9,8 @@ documentation syntax it deliberately uses.
     [tool.agent-discipline]
     unit = "component"             # application | component
     source_roots = ["src"]
-    doc_engine = "doxygen"         # doxygen | sphinx | none
+    doc_engine = "doxygen"
+    documentation_model = "documentation-model.json"
 
     [tool.agent-discipline.capabilities]
     network_io = true               # every v4 key is an explicit boolean
@@ -127,8 +128,9 @@ ROLE_TO_LAYER: Final[dict[str, str]] = {
 CANONICAL_ROLES: Final[tuple[str, ...]] = tuple(ROLE_TO_LAYER)
 ## Legacy internal layer values consumed by v3 AST checks.
 CANONICAL_LAYERS: Final[tuple[str, ...]] = tuple(ROLE_TO_LAYER.values())
-## Documentation syntaxes whose form rules the corpus understands.
-DOC_ENGINES: Final[frozenset[str]] = frozenset({"doxygen", "sphinx", "none"})
+## The sole structured documentation engine supported by v5.
+DOC_ENGINES: Final[frozenset[str]] = frozenset({"doxygen"})
+LEGACY_DOC_ENGINES: Final[frozenset[str]] = frozenset({"sphinx", "none"})
 ## TOML table name beneath ``tool``.
 TABLE: Final = "agent-discipline"
 ## One top-level Python import identifier, excluding dotted module paths.
@@ -148,30 +150,32 @@ def _relative_path(raw: object, *, field_name: str, source: Path) -> PurePosixPa
     """
     if not isinstance(raw, str) or not raw.strip():
         _reject(
-            "DISC-PROJECT-004", source,
+            "DISC-PROJECT-004",
+            source,
             f"{field_name} entries must be non-empty strings",
         )
     candidate = PurePosixPath(raw.replace("\\", "/"))
-    if (
-        candidate.is_absolute()
-        or PureWindowsPath(raw).drive
-        or ".." in candidate.parts
-    ):
+    if candidate.is_absolute() or PureWindowsPath(raw).drive or ".." in candidate.parts:
         _reject(
-            "DISC-PROJECT-004", source,
+            "DISC-PROJECT-004",
+            source,
             f"{field_name} path {raw!r} must stay inside the repository",
         )
     parts = tuple(part for part in candidate.parts if part not in {"", "."})
     if not parts:
         _reject(
-            "DISC-PROJECT-004", source,
+            "DISC-PROJECT-004",
+            source,
             f"{field_name} may not name the repository root",
         )
     return PurePosixPath(*parts)
 
 
 def _path_tuple(
-    raw: object, *, field_name: str, source: Path,
+    raw: object,
+    *,
+    field_name: str,
+    source: Path,
 ) -> tuple[PurePosixPath, ...]:
     """Parse a non-empty TOML array of unique repository-relative paths.
 
@@ -183,15 +187,15 @@ def _path_tuple(
     """
     if not isinstance(raw, list) or not raw:
         _reject(
-            "DISC-PROJECT-003", source,
+            "DISC-PROJECT-003",
+            source,
             f"{field_name} must be a non-empty array of source paths",
         )
-    paths = tuple(
-        _relative_path(value, field_name=field_name, source=source) for value in raw
-    )
+    paths = tuple(_relative_path(value, field_name=field_name, source=source) for value in raw)
     if len(set(paths)) != len(paths):
         _reject(
-            "DISC-PROJECT-004", source,
+            "DISC-PROJECT-004",
+            source,
             f"{field_name} contains a duplicate path",
         )
     return paths
@@ -216,6 +220,8 @@ class Declaration:
     security_model: PurePosixPath | None = None
     ## Content-bound semantic and adversarial review artifact.
     adversarial_review: PurePosixPath | None = None
+    ## Project-owned scope, vocabulary, naming, and semantic-property model.
+    documentation_model: PurePosixPath | None = None
     ## Explicit facts that add operational and security obligations.
     capabilities: frozenset[Capability] = frozenset()
     ## Canonical role name to repository-relative directory paths.
@@ -340,6 +346,15 @@ class Declaration:
             return None
         return self.root / Path(self.adversarial_review.as_posix())
 
+    def documentation_model_path(self) -> Path | None:
+        """Resolve the project-owned documentation model.
+
+        @return local JSON path, or None for the undeclared direct-check fallback
+        """
+        if self.root is None or self.documentation_model is None:
+            return None
+        return self.root / Path(self.documentation_model.as_posix())
+
     def has(self, capability: Capability) -> bool:
         """Whether one additive project capability is active.
 
@@ -357,13 +372,12 @@ class Declaration:
         if not self.doc_engine_declared:
             notes.append(
                 "DISC-PROJECT-007 doc_engine is undeclared; direct checks use 'none', "
-                "but a v4 project gate must refuse this repository"
+                "but a v5 project gate must refuse this repository"
             )
         if self.doc_engine != "doxygen":
             notes.append(
-                f"DOC-002 and DOC-007 are inactive: doc_engine is {self.doc_engine!r}, "
-                "so the @param and ## forms are not required. DOC-001 and DOC-003 "
-                "still require every required contract element to be documented."
+                f"DISC-PROJECT-021 doc_engine is {self.doc_engine!r}; v5 requires "
+                "'doxygen'. Run the v5 migration to replace the former sphinx/none choice."
             )
         return tuple(notes)
 
@@ -375,18 +389,15 @@ class Declaration:
         notes: list[str] = []
         if self.unit is None:
             notes.append(
-                "DISC-PROJECT-001 unit is undeclared; a v4 project gate must "
-                "refuse this repository"
+                "DISC-PROJECT-001 unit is undeclared; a v4 project gate must refuse this repository"
             )
         if not self.source_roots:
             notes.append(
-                "DISC-PROJECT-003 source_roots are undeclared; source-role "
-                "coverage is undecided"
+                "DISC-PROJECT-003 source_roots are undeclared; source-role coverage is undecided"
             )
         if self.architecture is None:
             notes.append(
-                "DISC-PROJECT-014 architecture is undeclared; local design views "
-                "are undecided"
+                "DISC-PROJECT-014 architecture is undeclared; local design views are undecided"
             )
         if self.contract_conformance is None:
             notes.append(
@@ -407,6 +418,11 @@ class Declaration:
             notes.append(
                 "DISC-PROJECT-020 adversarial_review is undeclared; semantic review "
                 "scope, freshness, objections, and closure are undecided"
+            )
+        if self.documentation_model is None:
+            notes.append(
+                "DISC-PROJECT-022 documentation_model is undeclared; governed "
+                "documentation scopes and project vocabulary are undecided"
             )
         if self.source is None:
             notes.append(
@@ -476,9 +492,9 @@ def _parse_roles(
     unknown = set(raw_roles) - set(CANONICAL_ROLES)
     if unknown:
         _reject(
-            "DISC-PROJECT-005", path,
-            f"unknown roles {', '.join(sorted(unknown))}; "
-            f"expected {', '.join(CANONICAL_ROLES)}",
+            "DISC-PROJECT-005",
+            path,
+            f"unknown roles {', '.join(sorted(unknown))}; expected {', '.join(CANONICAL_ROLES)}",
         )
     parsed = {
         role: _path_tuple(raw, field_name=f"roles.{role}", source=path)
@@ -488,25 +504,22 @@ def _parse_roles(
         (role, role_path) for role, paths in parsed.items() for role_path in paths
     ]
     for role, role_path in owners:
-        if not any(
-            role_path == root or role_path.is_relative_to(root) for root in roots
-        ):
+        if not any(role_path == root or role_path.is_relative_to(root) for root in roots):
             _reject(
-                "DISC-PROJECT-006", path,
+                "DISC-PROJECT-006",
+                path,
                 f"roles.{role} path {role_path} lies outside source_roots",
             )
         conflicts = [
             f"{other}:{other_path}"
             for other, other_path in owners
             if (other, other_path) != (role, role_path)
-            and (
-                role_path.is_relative_to(other_path)
-                or other_path.is_relative_to(role_path)
-            )
+            and (role_path.is_relative_to(other_path) or other_path.is_relative_to(role_path))
         ]
         if conflicts:
             _reject(
-                "DISC-PROJECT-006", path,
+                "DISC-PROJECT-006",
+                path,
                 f"roles.{role} path {role_path} overlaps {', '.join(conflicts)}",
             )
     return parsed
@@ -532,7 +545,8 @@ def _parse_foreign_ownership(
     raw_records = table.get("foreign_dependencies") or []
     if not isinstance(raw_records, list):
         _reject(
-            "DISC-PROJECT-010", path,
+            "DISC-PROJECT-010",
+            path,
             "foreign_dependencies must be an array of TOML tables",
         )
     parsed: dict[str, PurePosixPath] = {}
@@ -540,25 +554,28 @@ def _parse_foreign_ownership(
     for index, raw_record in enumerate(raw_records):
         if not isinstance(raw_record, dict):
             _reject(
-                "DISC-PROJECT-010", path,
+                "DISC-PROJECT-010",
+                path,
                 f"foreign_dependencies[{index}] must be a TOML table",
             )
         unknown = set(raw_record) - {"import_name", "owner"}
         if unknown:
             _reject(
-                "DISC-PROJECT-010", path,
-                f"foreign_dependencies[{index}] has unknown fields "
-                f"{', '.join(sorted(unknown))}",
+                "DISC-PROJECT-010",
+                path,
+                f"foreign_dependencies[{index}] has unknown fields {', '.join(sorted(unknown))}",
             )
         import_name = raw_record.get("import_name")
         if not isinstance(import_name, str) or IMPORT_ROOT.fullmatch(import_name) is None:
             _reject(
-                "DISC-PROJECT-011", path,
+                "DISC-PROJECT-011",
+                path,
                 f"foreign_dependencies[{index}].import_name must be one Python import root",
             )
         if import_name in parsed:
             _reject(
-                "DISC-PROJECT-011", path,
+                "DISC-PROJECT-011",
+                path,
                 f"foreign import {import_name!r} has more than one owner",
             )
         owner = _relative_path(
@@ -568,20 +585,22 @@ def _parse_foreign_ownership(
         )
         if not any(owner == adapter or owner.is_relative_to(adapter) for adapter in adapter_paths):
             _reject(
-                "DISC-PROJECT-012", path,
+                "DISC-PROJECT-012",
+                path,
                 f"owner {owner} for {import_name!r} is not inside a declared adapter role",
             )
         if boundaries and not any(
             owner == boundary or owner.is_relative_to(boundary) for boundary in boundaries
         ):
             _reject(
-                "DISC-PROJECT-012", path,
-                f"owner {owner} for {import_name!r} is not inside a declared "
-                "adapter boundary",
+                "DISC-PROJECT-012",
+                path,
+                f"owner {owner} for {import_name!r} is not inside a declared adapter boundary",
             )
         if not any(owner == root or owner.is_relative_to(root) for root in roots):
             _reject(
-                "DISC-PROJECT-012", path,
+                "DISC-PROJECT-012",
+                path,
                 f"owner {owner} for {import_name!r} lies outside source_roots",
             )
         parsed[import_name] = owner
@@ -608,21 +627,23 @@ def _parse_adapter_boundaries(
     adapter_paths = roles.get("adapters", ())
     for boundary in boundaries:
         if not any(
-            boundary == adapter or boundary.is_relative_to(adapter)
-            for adapter in adapter_paths
+            boundary == adapter or boundary.is_relative_to(adapter) for adapter in adapter_paths
         ):
             _reject(
-                "DISC-PROJECT-013", path,
+                "DISC-PROJECT-013",
+                path,
                 f"adapter boundary {boundary} lies outside the adapters role",
             )
         overlaps = [
-            other for other in boundaries
+            other
+            for other in boundaries
             if other != boundary
             and (boundary.is_relative_to(other) or other.is_relative_to(boundary))
         ]
         if overlaps:
             _reject(
-                "DISC-PROJECT-013", path,
+                "DISC-PROJECT-013",
+                path,
                 f"adapter boundary {boundary} overlaps {', '.join(map(str, overlaps))}",
             )
     return boundaries
@@ -638,20 +659,23 @@ def _parse_architecture(table: Mapping[str, object], path: Path) -> PurePosixPat
     raw = table.get("architecture")
     if raw is None:
         _reject(
-            "DISC-PROJECT-014", path,
+            "DISC-PROJECT-014",
+            path,
             "architecture is required and must name the canonical local JSON model",
         )
     architecture = _relative_path(raw, field_name="architecture", source=path)
     if architecture.suffix != ".json":
         _reject(
-            "DISC-PROJECT-014", path,
+            "DISC-PROJECT-014",
+            path,
             "architecture must name the repository-local canonical JSON model",
         )
     return architecture
 
 
 def _parse_contract_conformance(
-    table: Mapping[str, object], path: Path,
+    table: Mapping[str, object],
+    path: Path,
 ) -> PurePosixPath:
     """Parse the local contract-conformance registry path.
 
@@ -662,22 +686,27 @@ def _parse_contract_conformance(
     raw = table.get("contract_conformance")
     if raw is None:
         _reject(
-            "DISC-PROJECT-015", path,
+            "DISC-PROJECT-015",
+            path,
             "contract_conformance is required and must name the local JSON registry",
         )
     conformance = _relative_path(
-        raw, field_name="contract_conformance", source=path,
+        raw,
+        field_name="contract_conformance",
+        source=path,
     )
     if conformance.suffix != ".json":
         _reject(
-            "DISC-PROJECT-015", path,
+            "DISC-PROJECT-015",
+            path,
             "contract_conformance must name a repository-local JSON registry",
         )
     return conformance
 
 
 def _parse_capabilities(
-    table: Mapping[str, object], path: Path,
+    table: Mapping[str, object],
+    path: Path,
 ) -> frozenset[Capability]:
     """Parse the complete closed capability table.
 
@@ -693,7 +722,8 @@ def _parse_capabilities(
     raw = table.get("capabilities")
     if not isinstance(raw, dict):
         _reject(
-            "DISC-PROJECT-016", path,
+            "DISC-PROJECT-016",
+            path,
             "capabilities must be a complete TOML table of explicit booleans",
         )
     expected = {item.value for item in CAPABILITIES}
@@ -701,20 +731,23 @@ def _parse_capabilities(
     unknown = set(raw) - expected
     if missing or unknown:
         _reject(
-            "DISC-PROJECT-016", path,
+            "DISC-PROJECT-016",
+            path,
             f"capabilities missing={sorted(missing)}, unknown={sorted(unknown)}",
         )
     invalid = sorted(name for name, value in raw.items() if not isinstance(value, bool))
     if invalid:
         _reject(
-            "DISC-PROJECT-017", path,
+            "DISC-PROJECT-017",
+            path,
             f"capabilities must be booleans: {', '.join(invalid)}",
         )
     return frozenset(item for item in CAPABILITIES if raw[item.value] is True)
 
 
 def _parse_operational_model(
-    table: Mapping[str, object], path: Path,
+    table: Mapping[str, object],
+    path: Path,
 ) -> PurePosixPath:
     """Parse the canonical repository-local operational model path.
 
@@ -725,20 +758,23 @@ def _parse_operational_model(
     raw = table.get("operational_model")
     if raw is None:
         _reject(
-            "DISC-PROJECT-018", path,
+            "DISC-PROJECT-018",
+            path,
             "operational_model is required and must name the local JSON model",
         )
     model = _relative_path(raw, field_name="operational_model", source=path)
     if model.suffix != ".json":
         _reject(
-            "DISC-PROJECT-018", path,
+            "DISC-PROJECT-018",
+            path,
             "operational_model must name a repository-local JSON model",
         )
     return model
 
 
 def _parse_security_model(
-    table: Mapping[str, object], path: Path,
+    table: Mapping[str, object],
+    path: Path,
 ) -> PurePosixPath:
     """Parse the canonical repository-local security model path.
 
@@ -749,20 +785,23 @@ def _parse_security_model(
     raw = table.get("security_model")
     if raw is None:
         _reject(
-            "DISC-PROJECT-019", path,
+            "DISC-PROJECT-019",
+            path,
             "security_model is required and must name the local JSON model",
         )
     model = _relative_path(raw, field_name="security_model", source=path)
     if model.suffix != ".json":
         _reject(
-            "DISC-PROJECT-019", path,
+            "DISC-PROJECT-019",
+            path,
             "security_model must name a repository-local JSON model",
         )
     return model
 
 
 def _parse_adversarial_review(
-    table: Mapping[str, object], path: Path,
+    table: Mapping[str, object],
+    path: Path,
 ) -> PurePosixPath:
     """Parse the repository-local structured review path.
 
@@ -773,16 +812,43 @@ def _parse_adversarial_review(
     raw = table.get("adversarial_review")
     if raw is None:
         _reject(
-            "DISC-PROJECT-020", path,
+            "DISC-PROJECT-020",
+            path,
             "adversarial_review is required and must name the local JSON artifact",
         )
     review = _relative_path(raw, field_name="adversarial_review", source=path)
     if review.suffix != ".json":
         _reject(
-            "DISC-PROJECT-020", path,
+            "DISC-PROJECT-020",
+            path,
             "adversarial_review must name a repository-local JSON artifact",
         )
     return review
+
+
+def _parse_documentation_model(table: Mapping[str, object], path: Path) -> PurePosixPath:
+    """Parse the repository-local documentation-model path.
+
+    @param table decoded discipline declaration
+    @param path declaring project file
+    @return validated repository-relative JSON path
+    """
+    raw = table.get("documentation_model")
+    if raw is None:
+        _reject(
+            "DISC-PROJECT-022",
+            path,
+            "documentation_model is required; add "
+            'documentation_model = "documentation-model.json" and copy the v5 template',
+        )
+    model = _relative_path(raw, field_name="documentation_model", source=path)
+    if model.suffix != ".json":
+        _reject(
+            "DISC-PROJECT-022",
+            path,
+            "documentation_model must name a repository-local JSON artifact",
+        )
+    return model
 
 
 def _parse_doc_engine(table: Mapping[str, object], path: Path) -> str:
@@ -790,20 +856,28 @@ def _parse_doc_engine(table: Mapping[str, object], path: Path) -> str:
 
     @param table decoded discipline declaration
     @param path declaring project file
-    @return doxygen, sphinx, or none
+    @return doxygen
     """
     raw = table.get("doc_engine")
     if raw is None:
         _reject(
-            "DISC-PROJECT-007", path,
-            "doc_engine is required and must be doxygen, sphinx, or none",
+            "DISC-PROJECT-007",
+            path,
+            "doc_engine is required and must be doxygen",
         )
     engine = str(raw)
-    if engine not in DOC_ENGINES:
-        known = ", ".join(sorted(DOC_ENGINES))
+    if engine in LEGACY_DOC_ENGINES:
         _reject(
-            "DISC-PROJECT-007", path,
-            f"doc_engine {engine!r} is not one of {known}",
+            "DISC-PROJECT-021",
+            path,
+            f"doc_engine {engine!r} was valid before v5; replace it with 'doxygen', "
+            "add documentation_model, and migrate entity comments before rerunning the gate",
+        )
+    if engine not in DOC_ENGINES:
+        _reject(
+            "DISC-PROJECT-007",
+            path,
+            f"doc_engine {engine!r} is unknown; v5 accepts only 'doxygen'",
         )
     return engine
 
@@ -819,25 +893,28 @@ def parse(path: Path) -> Declaration:
     table = data.get("tool", {}).get(TABLE, {})
     if not isinstance(table, dict):
         _reject(
-            "DISC-PROJECT-001", path, f"[tool.{TABLE}] must be a TOML table",
+            "DISC-PROJECT-001",
+            path,
+            f"[tool.{TABLE}] must be a TOML table",
         )
 
     raw_unit = table.get("unit")
     if raw_unit is None:
         _reject(
-            "DISC-PROJECT-001", path, "unit is required (application or component)",
+            "DISC-PROJECT-001",
+            path,
+            "unit is required (application or component)",
         )
     try:
         unit = UnitKind(raw_unit)
     except ValueError:
         _reject(
-            "DISC-PROJECT-002", path,
+            "DISC-PROJECT-002",
+            path,
             f"unit {raw_unit!r} is not application or component",
         )
 
-    roots = _path_tuple(
-        table.get("source_roots"), field_name="source_roots", source=path
-    )
+    roots = _path_tuple(table.get("source_roots"), field_name="source_roots", source=path)
     architecture = _parse_architecture(table, path)
     contract_conformance = _parse_contract_conformance(table, path)
     capabilities = _parse_capabilities(table, path)
@@ -846,7 +923,8 @@ def parse(path: Path) -> Declaration:
     projection = table.get("pedagogical_full_projection", False)
     if not isinstance(projection, bool):
         _reject(
-            "DISC-PROJECT-008", path,
+            "DISC-PROJECT-008",
+            path,
             "pedagogical_full_projection must be true or false",
         )
 
@@ -858,7 +936,8 @@ def parse(path: Path) -> Declaration:
         if target not in CANONICAL_LAYERS:
             known = ", ".join(CANONICAL_LAYERS)
             _reject(
-                "DISC-PROJECT-005", path,
+                "DISC-PROJECT-005",
+                path,
                 f"layer {segment!r} maps to {target!r}, which is not one of {known}",
             )
         layers[str(segment)] = str(target)
@@ -873,12 +952,17 @@ def parse(path: Path) -> Declaration:
         operational_model=_parse_operational_model(table, path),
         security_model=_parse_security_model(table, path),
         adversarial_review=_parse_adversarial_review(table, path),
+        documentation_model=_parse_documentation_model(table, path),
         capabilities=capabilities,
         role_paths=roles,
         adapter_boundaries=boundaries,
         layers=layers,
         foreign_ownership=_parse_foreign_ownership(
-            table, path, roots, roles, boundaries,
+            table,
+            path,
+            roots,
+            roles,
+            boundaries,
         ),
         doc_engine=engine,
         doc_engine_declared=True,
@@ -900,7 +984,8 @@ def load(start: Path, explicit: Path | None = None) -> Declaration:
         chosen = explicit.resolve()
         if nearest is None or chosen != nearest.resolve():
             _reject(
-                "DISC-PROJECT-009", chosen,
+                "DISC-PROJECT-009",
+                chosen,
                 f"not the nearest pyproject.toml for {start.resolve()}",
             )
         return parse(chosen)

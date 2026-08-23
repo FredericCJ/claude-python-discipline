@@ -4,12 +4,12 @@
 
 This ledger keeps unlike claims unlike. A rule can be normatively binding while its verifier is absent; a verifier can exist while deciding only a proxy; a proxy can pass while its residual remains true; and a successful adopter does not prove universal benefit. No state below is a project-gate outcome.
 
-- **176** binding rules; **0** lack an available declared strategy.
+- **189** binding rules; **0** lack an available declared strategy.
 - **26** advisory rules and **0** open rules.
-- **190** exact strategy records: **32** direct and **158** proxy claims.
-- **166/166** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
-- **21/212** rules carry named field observations.
-- **105/105** named mechanisms resolve locally or delegate explicitly; **0** local mechanisms are absent.
+- **204** exact strategy records: **40** direct and **164** proxy claims.
+- **179/179** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
+- **21/225** rules carry named field observations.
+- **110/110** named mechanisms resolve locally or delegate explicitly; **0** local mechanisms are absent.
 
 ## Verifier-state census
 
@@ -17,9 +17,9 @@ Measured against this tree, not copied from the rule heading. `discipline/rules.
 
 | State | Rules | Means |
 |---|---|---|
-| `local-verifier` | 132 | repository-local code observes every strategy |
-| `external-verifier` | 24 | every strategy delegates to a configured tool |
-| `mixed-verifiers` | 10 | several verifier kinds contribute |
+| `local-verifier` | 143 | repository-local code observes every strategy |
+| `external-verifier` | 25 | every strategy delegates to a configured tool |
+| `mixed-verifiers` | 11 | several verifier kinds contribute |
 | `structured-review` | 10 | judgment is recorded in a checked review artifact |
 | `unbuilt` | 0 | at least one named local verifier is absent |
 | `undeclared` | 26 | the active rule has no strategy record |
@@ -134,7 +134,20 @@ An `external-verifier` state says the strategy delegates a proposition to a tool
 | `DOC-011` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:doxygen; it does not establish the full semantic benefit of the normative statement. | The documentation check generates output |
 | `DOC-012` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:generated_provenance; it does not establish the full semantic benefit of the normative statement. | Generated documentation is not committed |
 | `DOC-013` | ADVISORY | `undeclared` | n/a | n/a | n/a | none | n/a | Prefer one sentence that earns its place |
-| `DOC-014` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | `V3E-001` | A declared engine can still be misconfigured, absent from the gate environment, or unable to parse the project's actual documentation syntax; the project gate owns those configura… | A project declares which engine reads its documentation |
+| `DOC-014` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | `V3E-001` | An explicit selection can still name an unsupported engine or fail at execution; DOC-015 and the project gate decide those separate predicates. | A project declares which engine reads its documentation |
+| `DOC-015` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | none | A valid selection does not prove that Doxygen is installed, correctly configured, or able to render the governed content. | Doxygen is the sole structured engine |
+| `DOC-016` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | none | Association proves neither that the prose is true nor that it captures the value's important domain meaning. | Every local binding has semantic documentation |
+| `DOC-017` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | The bounded syntax and method vocabulary misses domain-specific semantic operations, and a present comment may still misdescribe the step. | Governed execution steps are narrated |
+| `DOC-018` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | none | Unique lexical proximity cannot establish that the selected prose is conceptually allocated to the right semantic step. | A semantic step has exactly one nearby owner |
+| `DOC-019` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Lexical novelty is only a proxy: sophisticated paraphrase can pass and concise domain vocabulary can be falsely suspected. | Narration states semantics, not Python tokens |
+| `DOC-022` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | none | A structurally valid model can still omit useful optional domain policy or declare a vocabulary that does not match stakeholder meaning. | The project declares a strict documentation model |
+| `DOC-023` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | none | The project can declare a syntactically consistent grammar whose dimensions are semantically incomplete or poorly chosen. | Declared identifier grammars preserve dimension order |
+| `DOC-024` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | All-uppercase constant tokens, lowercase contractions, and domain words that resemble abbreviations require semantic review rather than lexical classification. | Abbreviations have one controlled scoped meaning |
+| `DOC-025` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | A mapped canonical term can still be the wrong domain concept, and generated names lacking a configured marker remain invisible. | Generated vocabulary remains visibly derived |
+| `DOC-026` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Required words can occur in false or irrelevant prose, and semantics not inferable from annotations, literals, or the project model remain untested. | Applicable value semantics are explicit |
+| `DOC-027` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Unrecognized domain effects, dishonest purity markers, and inaccurate effect ordering remain semantic-review residuals. | Callable purity and effects are documented |
+| `DOC-028` | BINDING | `mixed-verifiers` | `direct` | `rule-level witnessed` | `linux`, `windows` | none | Artifact structure and freshness do not authenticate reviewer independence or make its semantic conclusions true.; Recorded conclusions remain judgments by a potentially non-indep… | Semantic agreement is reviewed against exact content |
+| `DOC-029` | BINDING | `external-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | none | Non-empty generated relationships do not establish that Doxygen inferred every intended semantic relationship or that rendered prose is true. | The Doxygen projection is non-vacuous and relational |
 | `EFCT-001` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes configured direct imports of effect-capable APIs; it does not prove that every call through a port is sequenced or recovered correctly. | Foreign effects stay behind ports |
 | `EFCT-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:explicit_effects; it does not establish the full semantic benefit of the normative statement. | Time, randomness and environment enter through ports |
 | `EFCT-003` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing covers only the cases and artifact shapes encoded by fitness:test_determinism; it does not establish every behavior in the normative statement. | Determinism is the default |
@@ -258,10 +271,10 @@ An `external-verifier` state says the strategy delegates a proposition to a tool
 
 | Kind | Rules |
 |---|---|
-| `auto` | 37 |
-| `check` | 84 |
+| `auto` | 38 |
+| `check` | 96 |
 | `fitness` | 58 |
-| `review` | 11 |
+| `review` | 12 |
 
 ## Advisory rationale
 

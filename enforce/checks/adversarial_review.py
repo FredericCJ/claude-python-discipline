@@ -56,12 +56,29 @@ QUESTION_CATEGORIES: Final = (
     "observability",
     "supply_chain",
     "test_oracles",
+    "documentation_truth",
+    "documentation_allocation",
+    "documentation_obsolescence",
+    "domain_naming",
 )
+## Documentation questions whose conclusions cannot be reduced to syntax.
+DOCUMENTATION_QUESTION_CATEGORIES: Final = QUESTION_CATEGORIES[-4:]
 ## Trees that are environment state, vendored doctrine, host mirrors, or build output.
 EXCLUDED_DIRECTORIES: Final = frozenset({
-    ".git", ".agent", ".agents", ".claude", ".hypothesis",
-    ".import_linter_cache", ".mypy_cache", ".pytest_cache", ".ruff_cache", ".tox",
-    ".venv", "__pycache__", "build", "dist",
+    ".git",
+    ".agent",
+    ".agents",
+    ".claude",
+    ".hypothesis",
+    ".import_linter_cache",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".tox",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
 })
 ## Replaceable packaging-metadata trees whose stem is project-specific.
 EXCLUDED_DIRECTORY_SUFFIXES: Final = (".egg-info",)
@@ -360,8 +377,15 @@ def _objection(record: Mapping[str, object], where: str) -> Objection:
     @return typed objection
     """
     fields = {
-        "id", "category", "severity", "statement", "disposition",
-        "resolution", "evidence", "owner", "review_trigger",
+        "id",
+        "category",
+        "severity",
+        "statement",
+        "disposition",
+        "resolution",
+        "evidence",
+        "owner",
+        "review_trigger",
     }
     _exact(record, fields, where)
     category = _identifier(record["category"], f"{where}.category")
@@ -401,8 +425,17 @@ def parse(path: Path) -> Review:
         _fail("REVIEW001_SCHEMA", str(path), str(problem))
     root = _object(raw, "$")
     fields = {
-        "schema_version", "review_id", "reviewed_commit", "scope", "authors",
-        "reviewer", "questions", "objections", "verdict", "conclusion", "residual",
+        "schema_version",
+        "review_id",
+        "reviewed_commit",
+        "scope",
+        "authors",
+        "reviewer",
+        "questions",
+        "objections",
+        "verdict",
+        "conclusion",
+        "residual",
     }
     _exact(root, fields, "$")
     if root["schema_version"] != 1:
@@ -487,8 +520,7 @@ def scope_paths(declaration: Declaration) -> tuple[Path, ...]:
         names[:] = sorted(
             name
             for name in names
-            if name not in EXCLUDED_DIRECTORIES
-            and not name.endswith(EXCLUDED_DIRECTORY_SUFFIXES)
+            if name not in EXCLUDED_DIRECTORIES and not name.endswith(EXCLUDED_DIRECTORY_SUFFIXES)
         )
         for name in sorted(files):
             path = (Path(directory) / name).resolve()
@@ -505,6 +537,7 @@ def scope_paths(declaration: Declaration) -> tuple[Path, ...]:
         declaration.contract_conformance_path(),
         declaration.operational_model_path(),
         declaration.security_model_path(),
+        declaration.documentation_model_path(),
     )
     for canonical_path in canonical:
         if canonical_path is None:
@@ -646,8 +679,13 @@ def _validate_questions(review: Review, root: Path) -> None:
     ids = [item.question_id for item in review.questions]
     _unique(ids, "$.questions", "REVIEW004_QUESTIONS")
     if tuple(ids) != QUESTION_CATEGORIES:
+        diagnostic = (
+            "REVIEW008_DOCUMENTATION"
+            if any(category not in ids for category in DOCUMENTATION_QUESTION_CATEGORIES)
+            else "REVIEW004_QUESTIONS"
+        )
         _fail(
-            "REVIEW004_QUESTIONS",
+            diagnostic,
             "$.questions",
             f"expected exactly {list(QUESTION_CATEGORIES)} in canonical order",
         )
@@ -734,7 +772,7 @@ class AdversarialReviewCheck(Check):
     ## Mechanism token for structured adversarial review rules.
     name = "adversarial_review"
     ## Independently diagnosable review obligations.
-    rules = ("SEC-003", "SEC-004")
+    rules = ("SEC-003", "SEC-004", "DOC-028")
 
     def run(self, paths: Sequence[Path]) -> list[Finding]:
         """Validate the canonical review from the nearest declaration.
@@ -759,18 +797,21 @@ class AdversarialReviewCheck(Check):
                 "REVIEW005": "SEC-004",
                 "REVIEW006": "SEC-004",
                 "REVIEW007": "SEC-004",
+                "REVIEW008": "DOC-028",
             }[prefix]
-            return [Finding(
-                rule_id=rule,
-                path=review_path,
-                line=1,
-                message=f"{problem.where}: {problem.detail}",
-                remediation=(
-                    "Repeat the adversarial review over the exact current local scope, "
-                    "close or explicitly reject its findings, and preserve the residual."
-                ),
-                diagnostic_id=problem.diagnostic_id,
-            )]
+            return [
+                Finding(
+                    rule_id=rule,
+                    path=review_path,
+                    line=1,
+                    message=f"{problem.where}: {problem.detail}",
+                    remediation=(
+                        "Repeat the adversarial review over the exact current local scope, "
+                        "close or explicitly reject its findings, and preserve the residual."
+                    ),
+                    diagnostic_id=problem.diagnostic_id,
+                )
+            ]
         return []
 
 

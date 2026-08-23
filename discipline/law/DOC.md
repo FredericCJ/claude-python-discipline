@@ -2,7 +2,7 @@
 id: law/DOC
 kind: law
 title: Documentation Comments
-tokens: 2408
+tokens: 3521
 load_when:
   - "docstring"
   - "documentation comment"
@@ -18,21 +18,27 @@ decay: none
 python: ">=3.11"
 ---
 
-# Documentation Comments
+# Structured Documentation
 
-**Every element of the code carries a documentation comment.** Not the public surface, not
-the non-obvious parts — every element. The comments are written for a full-featured Doxygen
-to consume, and they are in the code whether or not documentation is ever generated.
+**Every program entity carries structured documentation, and every local execution step
+carries ordinary narration.** Not the public surface, not the non-obvious parts — the
+complete governed Python surface. This module owns stable entity meaning; local bindings
+and execution procedure belong to [law/DOC-NARRATION].
 
 The generated site is optional. The comments are not. A repository that never runs Doxygen
 must still be one an agent can read without inferring intent from identifiers.
 
-Two forms, because Python offers only one slot and Doxygen needs two:
+The structured system has two storage forms, because Python offers only one slot and
+Doxygen needs another:
 
 - **Docstrings** for anything Python gives a docstring slot — module, package, class,
   function, method, property. Visible to `help()`, to editors and to every other tool.
 - **`##` blocks** for the elements Python has no slot for — module constants, class
   attributes, dataclass fields, enum members. A `##<` block documents the element before it.
+
+Ordinary `#` blocks are not a third structured form. They are deliberately not extracted
+and own only the procedural information allocated by [law/DOC-NARRATION]. Project naming
+and semantic-property declarations live in [law/DOC-NAMING].
 
 ---
 
@@ -155,8 +161,8 @@ sentence rather than a padded block.
 
 ### DOC-014 · A project declares which engine reads its documentation  [BINDING] [check:doc_coverage]
 A project MUST declare its documentation engine in `[tool.agent-discipline]`. An
-undeclared v4 project MUST be refused. A direct legacy invocation retains `none` only as
-a conspicuous diagnostic fallback and MUST emit DOC-014 rather than a narrower green run.
+undeclared project MUST be refused. A direct legacy invocation retains `none` only as a
+conspicuous diagnostic fallback and MUST emit DOC-014 rather than a narrower green run.
 - **Why** [DOC-002] and [DOC-007] name one engine's punctuation. Demanding it of a project
   documenting in another produced 1,064 findings of form against 18 of substance, which is
   how a check stops being read; leaving it undeclared and silent is worse, because a
@@ -164,3 +170,61 @@ a conspicuous diagnostic fallback and MUST emit DOC-014 rather than a narrower g
 - **Check** `python -m checks.doc_coverage`, which prints the declaration it found and
   every rule that declaration leaves inactive
 - **See** [DOC-002] · [DOC-007] · [meta/OPEN]
+
+### DOC-015 · Doxygen is the sole structured engine  [BINDING] [check:project]
+The explicitly selected engine MUST be `doxygen`. A former `sphinx` or `none` selection
+MUST fail once with an actionable migration diagnostic rather than deactivate any
+structured rule. Python docstrings remain Doxygen-readable storage; they are not a
+parallel pydoc contract.
+- **Why** One entity cannot have two canonical documentation owners. Conditional syntax
+  made the same package enforce three materially different disciplines under one version.
+- **Check** the strict parser in `enforce/checks/project.py`
+- **See** [fact/doxygen] · [meta/CONFLICTS]
+
+---
+
+## Semantic completeness
+
+### DOC-026 · Applicable value semantics are explicit  [BINDING] [check:doc_semantics]
+Documentation MUST define both states of a boolean and the element and ordering semantics
+of a collection. Units, ranges, encodings, and representations declared by the project
+model MUST appear at the owning entity or local semantic step. Stable properties belong
+to Doxygen entities; temporary conversions belong to ordinary narration.
+- **Why** A type says that a value is boolean or a collection, not what either state means,
+  what each member represents, or whether order changes behavior.
+- **Check** `python -m checks.doc_semantics`; it checks only mechanically inferable types,
+  literals, and project-declared property patterns and does not claim their prose is true.
+- **See** [DOC-016] · [law/TYPE]
+
+### DOC-027 · Callable purity and effects are documented  [BINDING] [check:doc_semantics]
+A callable with a mechanically detectable external effect MUST carry a Doxygen-compatible
+`@par Effects` contract naming visible state changes and ordering. A callable explicitly
+marked pure MUST state that it is pure and has no effects. Error outcomes remain owned by
+[DOC-007] and [law/ERR]; step-by-step effect sequencing belongs to [DOC-017].
+- **Why** A signature cannot distinguish a computation from a command. Callers need the
+  stable effect contract without importing volatile implementation order into it.
+- **Check** `python -m checks.doc_semantics` over the bounded effect vocabulary; unrecognized
+  domain effects and dishonest purity claims remain [DOC-028] residuals.
+- **See** [law/EFCT] · [law/API]
+
+### DOC-028 · Semantic agreement is reviewed against exact content  [BINDING] [check:adversarial_review] [review]
+An accepted content-bound adversarial review MUST challenge documentation truth,
+allocation, obsolescence, and domain naming against the exact current governed files.
+Changing any governed input MUST invalidate the prior acceptance. The artifact MUST state
+that role separation and recorded conclusions cannot authenticate independence or prove
+semantic truth.
+- **Why** Presence, association, syntax, and declared vocabulary are decidable; agreement
+  between prose and arbitrary behavior is the program-understanding problem. Calling a
+  lexical proxy proof would make the discipline less truthful than the comments it checks.
+- **Check** `python -m checks.adversarial_review`
+- **See** [law/FLOW] · [frame/documentation]
+
+### DOC-029 · The Doxygen projection is non-vacuous and relational  [BINDING] [auto:doxygen]
+The documentation gate MUST generate non-empty entity/source pages and exercised call,
+caller, and directory-dependency relationships. Enabling settings without producing their
+artifacts MUST fail. The generated first view MUST need no undeclared network resource;
+rendered output remains uncommitted under [DOC-012].
+- **Why** A configured feature is not evidence that the parser found a relationship, and
+  a clean run over filtered input is not documentation.
+- **Check** `python tools/doxygen_gate.py`; the pinned capability facts and reduced probes
+  live in [fact/doxygen].

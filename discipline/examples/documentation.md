@@ -1,8 +1,8 @@
 ---
 id: examples/documentation
 kind: meta
-title: Documentation, Worked
-tokens: 1373
+title: Evident Source, Worked
+tokens: 2386
 load_when:
   - "how do i document this"
   - "docstring example"
@@ -13,8 +13,9 @@ decay: none
 
 # Documentation, Worked
 
-Contrast pairs for [law/DOC]. Every "no" here was written by someone trying to satisfy the
-rule and missing the point of it; each is a shape the checks either catch or, worse, do not.
+Contrast pairs for [law/DOC], [law/DOC-NARRATION], and [law/DOC-NAMING]. Every "no" here
+was written by someone trying to satisfy the rule and missing the point of it; each is a
+shape the checks either catch or, worse, do not.
 
 The project's Doxyfile sets `PYTHON_DOCSTRING = NO`, so an ordinary triple-quoted docstring
 **is** a Doxygen block. There is no `"""!` marker to remember.
@@ -159,3 +160,107 @@ def render(self) -> str:
 
 The objection to documenting everything is that it produces filler. The answer is short and
 true — not absent.
+
+## One comment owns one semantic step
+
+```python
+# no -- translates each token and leaves the procedure implicit
+# Iterate over records.
+for record in records:
+    # Append the record path.
+    paths.append(record.path)
+
+# yes -- one comment owns the loop target, extracted value, and accumulation
+# Build the canonical-path index in input order so duplicate diagnostics retain
+# the same order in which the records were supplied.
+for record in records:
+    canonical_path = normalize(record.path)
+    paths.append(canonical_path)
+```
+
+The second block does not need a separate sentence for `record`, `canonical_path`, and
+`paths.append`. They are adjacent parts of one named operation. Moving the normalization
+into another branch would create another semantic step and therefore another owner.
+
+## Binding shapes
+
+```python
+# Decode the envelope once, retaining its declared kind beside the payload for dispatch.
+kind, payload = decode_envelope(raw)
+
+# Acquire the output stream for the complete emission transaction.
+with output_path.open("wb") as stream:
+    stream.write(payload)
+
+try:
+    persist(payload)
+except OSError as problem:
+    # Translate the substrate failure into the boundary error callers understand.
+    raise PersistenceFailure(output_path) from problem
+
+# Keep only accepted records while preserving their source order.
+accepted = [record for record in records if record.accepted]
+```
+
+Destructuring targets, context-manager aliases, exception aliases, comprehension targets,
+assignment expressions, loop targets, and pattern captures are bindings just as ordinary
+assignments are. Parameters are the exception: the callable's structured contract owns
+their meaning.
+
+## Boolean and collection meaning
+
+```python
+@dataclass(frozen=True, slots=True)
+class ScanPolicy:
+    """Constraints applied while reading a manifest."""
+
+    ## True permits absent optional records; false rejects the first absence.
+    allow_missing: bool
+    ## Patterns in evaluation order; the first matching pattern owns the record.
+    patterns: tuple[str, ...]
+```
+
+“Whether missing records are allowed” leaves one state to inference. “Record patterns”
+leaves element meaning and ordering to inference. The complete comments answer those
+questions at the entities that own the values.
+
+## Stable properties and temporary representations
+
+```python
+## Maximum wait in milliseconds; zero requests a non-blocking attempt.
+timeout_ms: int
+
+# Convert the configured millisecond budget to seconds for the subprocess API.
+timeout_seconds = timeout_ms / 1_000
+```
+
+The stable unit belongs to the field's Doxygen contract. The local conversion belongs to
+the implementation step. Repeating both in both places would create two truths to update.
+
+## Controlled vocabulary
+
+```python
+# no -- two undeclared contractions and dimensions in an unexplained order
+cfg_ch_map: dict[int, str]
+
+# yes, when the project model declares `channel`, `identifier`, and `mapping`
+# in this order and admits no contraction for them
+channel_identifier_mapping: dict[int, str]
+```
+
+A different domain may deliberately declare `cfg` as the canonical abbreviation for
+configuration. The package checks the declared choice; it does not choose the domain's
+words.
+
+## Generated names remain visibly derived
+
+```python
+# no -- a generated transport name looks canonical and has no origin mapping
+command_frame = schema_type()
+
+# yes -- the declared marker and mapping expose the representation boundary
+generated_wire_command_frame = schema_type()
+```
+
+The project documentation model maps `generated_wire_command_frame` back to its canonical
+concept. Generated vocabulary can then change without silently redefining domain terms.

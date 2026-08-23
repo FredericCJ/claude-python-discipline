@@ -18,19 +18,50 @@ import ast
 import re
 from typing import TYPE_CHECKING
 
-from . import Finding, ModuleCheck, is_test_path, main
+from . import Finding, ModuleCheck, main
 from .doc_coverage import EXEMPT_NAMES, _named_assignments
+from .documentation_model import governed_paths
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Iterator, Sequence
     from pathlib import Path
 
 ## Words that carry no information when they are all a docstring adds.
 FILLER = frozenset({
-    "a", "an", "the", "this", "that", "of", "for", "to", "and", "or", "is", "it",
-    "helper", "function", "method", "class", "module", "utility", "wrapper",
-    "returns", "return", "get", "gets", "set", "sets", "do", "does", "handle",
-    "handles", "process", "processes", "simple", "basic", "internal",
+    "a",
+    "an",
+    "the",
+    "this",
+    "that",
+    "of",
+    "for",
+    "to",
+    "and",
+    "or",
+    "is",
+    "it",
+    "helper",
+    "function",
+    "method",
+    "class",
+    "module",
+    "utility",
+    "wrapper",
+    "returns",
+    "return",
+    "get",
+    "gets",
+    "set",
+    "sets",
+    "do",
+    "does",
+    "handle",
+    "handles",
+    "process",
+    "processes",
+    "simple",
+    "basic",
+    "internal",
 })
 
 ## A type restated in prose -- naming a parameter's type in parens or after a
@@ -55,6 +86,8 @@ _TYPE_IN_RETURN = re.compile(
 
 ## Word tokens, for comparing a summary against an identifier.
 _WORD = re.compile(r"[a-z0-9]+")
+MAX_RESTATEMENT_WORDS = 4
+MIN_STEM_LENGTH = 3
 
 ## A code span whose content ends in a single period, which Doxygen cannot parse.
 ## Established by bisection against doxygen 1.10.0: a span holding foo. or x. or
@@ -81,6 +114,14 @@ class DocStyleCheck(ModuleCheck):
     ## Every id below has a distinct emitted syntax predicate and proof case.
     rules = ("DOC-004", "DOC-008", "DOC-009", "DOC-010")
 
+    def run(self, paths: Sequence[Path]) -> list[Finding]:
+        """Inspect all production, test, maintenance, and generated Python.
+
+        @param paths ordinary source-root fallback
+        @return structured-documentation form and content findings
+        """
+        return super().run(governed_paths(self.declaration, paths))
+
     def visit_module(self, tree: ast.Module, path: Path, _layer: str) -> Iterator[Finding]:
         """Yield findings for every badly formed documentation comment in `tree`.
 
@@ -89,10 +130,6 @@ class DocStyleCheck(ModuleCheck):
         @param _layer the architectural layer, unused here
         @return findings for documentation that will not carry its contract
         """
-        if is_test_path(path):
-            # A test may legitimately pin the very shape these rules police;
-            # is_test_path's own docstring says exactly that.
-            return
         source = path.read_text(encoding="utf-8").splitlines()
 
         for node in ast.walk(tree):
@@ -107,8 +144,7 @@ class DocStyleCheck(ModuleCheck):
 
         yield from self._hash_block_content(tree, path, source)
 
-    def _misplaced_block(self, node: ast.AST, path: Path,
-                         source: list[str]) -> Iterator[Finding]:
+    def _misplaced_block(self, node: ast.AST, path: Path, source: list[str]) -> Iterator[Finding]:
         """Report a `##` block used where a docstring belongs.
 
         @param node the element
@@ -122,7 +158,9 @@ class DocStyleCheck(ModuleCheck):
             if source[index].strip().startswith("##"):
                 name = getattr(node, "name", "element")
                 yield Finding(
-                    "DOC-004", path, lineno,
+                    "DOC-004",
+                    path,
+                    lineno,
                     f"{name} is documented with a ## block instead of a docstring",
                     "Move it into the docstring; a ## block is invisible to help(), "
                     "to editors and to every other Python tool.",
@@ -147,7 +185,9 @@ class DocStyleCheck(ModuleCheck):
         ):
             if pattern.search(docstring):
                 yield Finding(
-                    rule, path, lineno,
+                    rule,
+                    path,
+                    lineno,
                     f"{name}: {message}",
                     "The signature carries the type; the documentation carries the "
                     "meaning. A type written twice diverges once.",
@@ -155,9 +195,10 @@ class DocStyleCheck(ModuleCheck):
 
         for span in _TRAILING_DOT_SPAN.findall(docstring):
             yield Finding(
-                "DOC-010", path, lineno,
-                f"{name}: the code span `{span}` ends in a period, which breaks "
-                f"the Doxygen build",
+                "DOC-010",
+                path,
+                lineno,
+                f"{name}: the code span `{span}` ends in a period, which breaks the Doxygen build",
                 "Move the period outside the span: write `foo`. rather than "
                 '`foo.`. Doxygen reports this only as "end of comment block '
                 "while expecting command </tt>\", naming neither the file's real "
@@ -166,14 +207,17 @@ class DocStyleCheck(ModuleCheck):
 
         if _restates_the_name(name, docstring):
             yield Finding(
-                "DOC-009", path, lineno,
+                "DOC-009",
+                path,
+                lineno,
                 f"{name}: the documentation only restates the name",
                 "Say what it guarantees -- the result, the invariant, the failure mode. "
                 "A comment that repeats the identifier answers nothing.",
             )
 
-    def _hash_block_content(self, tree: ast.Module, path: Path,
-                            source: list[str]) -> Iterator[Finding]:
+    def _hash_block_content(
+        self, tree: ast.Module, path: Path, source: list[str]
+    ) -> Iterator[Finding]:
         """Report a `##` block that restates a name, a type, or breaks the Doxygen build.
 
         The same content rules DOC-008/DOC-009/DOC-010 hold docstrings to,
@@ -199,11 +243,16 @@ class DocStyleCheck(ModuleCheck):
                 if target in EXEMPT_NAMES:
                     continue
                 yield from self._hash_block_at(
-                    target, f"{node.name}.{target}", lineno, path, source,
+                    target,
+                    f"{node.name}.{target}",
+                    lineno,
+                    path,
+                    source,
                 )
 
-    def _hash_block_at(self, bare_name: str, display_name: str, lineno: int,
-                       path: Path, source: list[str]) -> Iterator[Finding]:
+    def _hash_block_at(
+        self, bare_name: str, display_name: str, lineno: int, path: Path, source: list[str]
+    ) -> Iterator[Finding]:
         """Report content faults in the `##` block documenting one named value.
 
         Silent when no block is found: absence is DOC-002's business, not
@@ -228,7 +277,9 @@ class DocStyleCheck(ModuleCheck):
         ):
             if pattern.search(text):
                 yield Finding(
-                    rule, path, lineno,
+                    rule,
+                    path,
+                    lineno,
                     f"{display_name}: {message}",
                     "The signature carries the type; the documentation carries the "
                     "meaning. A type written twice diverges once.",
@@ -236,7 +287,9 @@ class DocStyleCheck(ModuleCheck):
 
         for span in _TRAILING_DOT_SPAN.findall(text):
             yield Finding(
-                "DOC-010", path, lineno,
+                "DOC-010",
+                path,
+                lineno,
                 f"{display_name}: the code span `{span}` ends in a period, which "
                 f"breaks the Doxygen build",
                 "Move the period outside the span: write `foo`. rather than "
@@ -247,7 +300,9 @@ class DocStyleCheck(ModuleCheck):
 
         if _restates_the_name(bare_name, text):
             yield Finding(
-                "DOC-009", path, lineno,
+                "DOC-009",
+                path,
+                lineno,
                 f"{display_name}: the documentation only restates the name",
                 "Say what it guarantees -- the result, the invariant, the failure mode. "
                 "A comment that repeats the identifier answers nothing.",
@@ -320,7 +375,7 @@ def _restates_the_name(name: str, docstring: str) -> bool:
     """
     summary = docstring.strip().splitlines()[0] if docstring.strip() else ""
     words = {_stem(w) for w in _WORD.findall(summary.lower()) if w not in FILLER}
-    if not words or len(words) > 4:
+    if not words or len(words) > MAX_RESTATEMENT_WORDS:
         return False
     split_name = (name if name.isupper() else re.sub(r"(?<!^)(?=[A-Z])", " ", name)).lower()
     from_name = {_stem(w) for w in _WORD.findall(split_name)}
@@ -337,7 +392,7 @@ def _stem(word: str) -> str:
     @return its root form
     """
     for suffix in ("ing", "ed"):
-        if word.endswith(suffix) and len(word) - len(suffix) >= 3:
+        if word.endswith(suffix) and len(word) - len(suffix) >= MIN_STEM_LENGTH:
             word = word[: -len(suffix)]
             break
     return word.removesuffix("s").removesuffix("e")

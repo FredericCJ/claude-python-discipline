@@ -71,6 +71,30 @@
       "challenge": "Which claimed contract, fault, bound, or delivered behavior is exercised without an oracle able to detect its violation?",
       "conclusion": "Replace with a bounded conclusion from local evidence.",
       "evidence": ["tests/test_replace.py::test_replace"]
+    },
+    {
+      "id": "documentation_truth",
+      "challenge": "Which entity contract or implementation comment disagrees with the exact behavior it claims to explain?",
+      "conclusion": "Replace with a content-bound comparison against the current source and executable evidence.",
+      "evidence": ["documentation-model.json"]
+    },
+    {
+      "id": "documentation_allocation",
+      "challenge": "Which fact is owned by the wrong layer, duplicated between Doxygen and ordinary narration, or left without one owner?",
+      "conclusion": "Replace with the allocation judgment and exact inspected source paths.",
+      "evidence": ["documentation-model.json"]
+    },
+    {
+      "id": "documentation_obsolescence",
+      "challenge": "Which comment preserves old mechanics, an expired workaround, or a sequence no longer executed?",
+      "conclusion": "Replace with the stale-comment search and bounded conclusion.",
+      "evidence": ["documentation-model.json"]
+    },
+    {
+      "id": "domain_naming",
+      "challenge": "Which identifier hides a relevant semantic dimension, reverses declared ordering, or uses an ambiguous domain abbreviation?",
+      "conclusion": "Replace with the model-to-source comparison and remaining domain judgment.",
+      "evidence": ["documentation-model.json"]
     }
   ],
   "objections": [

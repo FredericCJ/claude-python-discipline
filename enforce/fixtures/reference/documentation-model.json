@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "engine": "doxygen",
+  "scopes": [
+    {
+      "path": "src",
+      "kind": "production",
+      "ownership": "governed"
+    },
+    {
+      "path": "tests",
+      "kind": "tests",
+      "ownership": "governed"
+    }
+  ],
+  "controlled_abbreviations": [],
+  "identifier_grammars": [],
+  "generated_names": {
+    "markers": [
+      "generated",
+      "derived"
+    ],
+    "mappings": {}
+  },
+  "semantic_properties": []
+}

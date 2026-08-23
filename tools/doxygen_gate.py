@@ -1,4 +1,4 @@
-"""Decide `law/DOC`'s generation rules by actually running Doxygen.
+"""Decide `law/DOC`'s generation and relationship rules by running Doxygen.
 
 Four rules -- `DOC-005`, `DOC-007`, `DOC-010`, `DOC-011` -- are tagged `external`
 on `auto:doxygen`. Doxygen was installed, pinned to 1.10.0, and version-verified
@@ -78,11 +78,13 @@ class GeneratedDocumentation:
     @var finished completed native process, including captured diagnostic streams
     @var output temporary output directory; valid only inside `generated()`
     @var source_pages number of generated Python source pages
+    @var relation_graphs call, caller, and directory-dependency SVG counts
     """
 
     finished: subprocess.CompletedProcess[str]
     output: Path
     source_pages: int
+    relation_graphs: tuple[int, int, int]
 
 
 @contextmanager
@@ -109,12 +111,24 @@ def generated(
             + extra_configuration
         )
         finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
-            (executable, "-"), input=configuration, cwd=root,
-            capture_output=True, text=True, encoding="utf-8", errors="replace",
-            check=False, timeout=600,
+            (executable, "-"),
+            input=configuration,
+            cwd=root,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+            timeout=600,
         )
         source_pages = len(list(output.rglob("*_source.html")))
-        yield GeneratedDocumentation(finished, output, source_pages)
+        html = output / "html"
+        relation_graphs = (
+            len(list(html.glob("*_cgraph.svg"))),
+            len(list(html.glob("*_icgraph.svg"))),
+            len(list(html.glob("*_dep.svg"))),
+        )
+        yield GeneratedDocumentation(finished, output, source_pages, relation_graphs)
     finally:
         shutil.rmtree(output, ignore_errors=True)
 
@@ -138,12 +152,12 @@ def run(root: Path, minimum: int) -> tuple[int, str]:
     with generated(executable, root) as result:
         finished = result.finished
         pages = result.source_pages
+        relations = result.relation_graphs
 
     if finished.returncode != 0:
         noise = (finished.stderr or finished.stdout).strip()
         return EXIT_FAILED, (
-            f"doxygen reported warnings, and WARN_AS_ERROR makes those "
-            f"failures:\n{noise[-1500:]}"
+            f"doxygen reported warnings, and WARN_AS_ERROR makes those failures:\n{noise[-1500:]}"
         )
     if pages < minimum:
         return EXIT_FAILED, (
@@ -151,7 +165,19 @@ def run(root: Path, minimum: int) -> tuple[int, str]:
             f"tree holds. It exited 0, so the files were not missing -- they were "
             f"filtered out, and a clean run over nothing is not a clean run."
         )
-    return EXIT_OK, f"doxygen: clean over {pages} file(s)"
+    if any(count == 0 for count in relations):
+        labels = ("call", "caller", "directory dependency")
+        missing = ", ".join(
+            label for label, count in zip(labels, relations, strict=True) if count == 0
+        )
+        return EXIT_FAILED, (
+            "doxygen generated entity pages but no "
+            f"{missing} relationship graph; enable and exercise the relation in source"
+        )
+    return EXIT_OK, (
+        f"doxygen: clean over {pages} file(s), relations="
+        f"call:{relations[0]}/caller:{relations[1]}/dependency:{relations[2]}"
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -162,8 +188,12 @@ def main(argv: list[str] | None = None) -> int:
     """
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--root", type=Path, default=DEFAULT_ROOT)
-    parser.add_argument("--minimum", type=int, default=MINIMUM_FILES,
-                        help="source pages required for a clean verdict")
+    parser.add_argument(
+        "--minimum",
+        type=int,
+        default=MINIMUM_FILES,
+        help="source pages required for a clean verdict",
+    )
     arguments = parser.parse_args(argv)
 
     status, line = run(arguments.root, arguments.minimum)

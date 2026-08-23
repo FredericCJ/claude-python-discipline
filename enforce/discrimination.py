@@ -613,6 +613,175 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         base="empty",
         write=(("src/pkg/module.py", '"""A documented probe module."""\n'),),
     ),
+    Mutation(
+        rule_id="DOC-015",
+        summary="a project retains the former sphinx or none engine selection",
+        source=(
+            "The companion sends both legacy v4 values through the strict project "
+            "parser and requires the actionable DISC-PROJECT-021 migration diagnostic."
+        ),
+        mechanism="check:project",
+        proof=(
+            "enforce/checks/test_project.py::"
+            "test_a_v4_engine_gets_one_actionable_migration_diagnostic"
+        ),
+    ),
+    Mutation(
+        rule_id="DOC-016",
+        summary="a local result binding loses its ordinary semantic owner",
+        source=(
+            "The companion constructs one otherwise documented callable with an "
+            "unowned local assignment and asserts DOC-016 for that exact binding."
+        ),
+        mechanism="check:doc_coverage",
+        proof=(
+            "enforce/checks/test_v5_documentation.py::"
+            "test_a_local_binding_without_an_owner_fails_doc_016"
+        ),
+    ),
+    Mutation(
+        rule_id="DOC-017",
+        summary="a conditional branch has no ordinary implementation narration",
+        source=(
+            "The companion removes only the branch owner while retaining narration "
+            "for its raise and return paths, then asserts DOC-017."
+        ),
+        mechanism="check:doc_narration",
+        proof=(
+            "enforce/checks/test_v5_documentation.py::"
+            "test_missing_branch_narration_fails_doc_017"
+        ),
+    ),
+    Mutation(
+        rule_id="DOC-018",
+        summary="a return path has both a preceding and a trailing owner",
+        source=(
+            "The companion gives one semantic operation two qualifying adjacent "
+            "comments and requires the ownership-ambiguity rule rather than a guess."
+        ),
+        mechanism="check:doc_narration",
+        proof=(
+            "enforce/checks/test_v5_documentation.py::"
+            "test_two_narration_owners_fail_doc_018"
+        ),
+    ),
+    Mutation(
+        rule_id="DOC-019",
+        summary="a return comment only translates the Python tokens",
+        source=(
+            "The companion's complete narration is `Return the value`, leaving no "
+            "informative vocabulary outside the owned operation's syntax."
+        ),
+        mechanism="check:doc_narration",
+        proof=(
+            "enforce/checks/test_v5_documentation.py::"
+            "test_syntactic_paraphrase_fails_doc_019"
+        ),
+    ),
+    Mutation(
+        rule_id="DOC-022",
+        summary="a documentation model selects a second structured engine",
+        source=(
+            "The companion changes the exact model engine field to sphinx and "
+            "asserts DOCMODEL-001 through check:documentation_model."
+        ),
+        mechanism="check:documentation_model",
+        proof=(
+            "enforce/checks/test_documentation_model.py::"
+            "test_the_check_reports_the_exact_schema_diagnostic"
+        ),
+    ),
+    Mutation(
+        rule_id="DOC-023",
+        summary="an identifier omits dimensions required by its scoped grammar",
+        source=(
+            "The companion declares concept-role order and supplies a one-token name, "
+            "then asserts the exact DOC-023 grammar finding."
+        ),
+        mechanism="check:doc_naming",
+        proof=(
+            "enforce/checks/test_v5_documentation.py::"
+            "test_identifier_outside_a_declared_grammar_fails_doc_023"
+        ),
+    ),
+    Mutation(
+        rule_id="DOC-024",
+        summary="an uppercase API initialism has no controlled vocabulary entry",
+        source=(
+            "The companion deletes the abbreviation declaration while retaining the "
+            "identifiable API token and asserts DOC-024."
+        ),
+        mechanism="check:doc_naming",
+        proof=(
+            "enforce/checks/test_v5_documentation.py::"
+            "test_deleting_an_abbreviation_entry_fails_doc_024"
+        ),
+    ),
+    Mutation(
+        rule_id="DOC-025",
+        summary="a visibly generated identifier has no canonical-term mapping",
+        source=(
+            "The companion retains a declared generated marker and deletes its exact "
+            "derived-to-domain mapping, then asserts DOC-025."
+        ),
+        mechanism="check:doc_naming",
+        proof=(
+            "enforce/checks/test_v5_documentation.py::"
+            "test_deleting_a_generated_mapping_fails_doc_025"
+        ),
+    ),
+    Mutation(
+        rule_id="DOC-026",
+        summary="a modeled millisecond value omits its declared unit",
+        source=(
+            "The companion declares the unit property for *_ms, removes that word "
+            "from the owning entity prose, and asserts DECLARED_PROPERTY."
+        ),
+        mechanism="check:doc_semantics",
+        proof=(
+            "enforce/checks/test_v5_documentation.py::"
+            "test_deleting_a_declared_unit_fails_doc_026"
+        ),
+    ),
+    Mutation(
+        rule_id="DOC-027",
+        summary="a callable writes bytes without an effects contract",
+        source=(
+            "The companion invokes a bounded external-effect method under a callable "
+            "whose docstring has no @par Effects paragraph and asserts DOC-027."
+        ),
+        mechanism="check:doc_semantics",
+        proof=(
+            "enforce/checks/test_v5_documentation.py::"
+            "test_detectable_effect_without_contract_fails_doc_027"
+        ),
+    ),
+    Mutation(
+        rule_id="DOC-028",
+        summary="an accepted review omits the documentation-truth attack angle",
+        source=(
+            "The companion deletes one documentation question while leaving generic "
+            "review categories present and requires REVIEW008_DOCUMENTATION."
+        ),
+        mechanism="check:adversarial_review",
+        proof=(
+            "enforce/checks/test_adversarial_review.py::"
+            "test_a_missing_documentation_question_fails_doc_028"
+        ),
+    ),
+    Mutation(
+        rule_id="DOC-029",
+        summary="Doxygen emits pages but no caller relationship graph",
+        source=(
+            "The companion supplies a successful generation result with call and "
+            "dependency graphs but zero caller graphs and requires gate rejection."
+        ),
+        mechanism="auto:doxygen",
+        proof=(
+            "tools/test_doxygen_gate.py::"
+            "test_a_projection_without_every_relation_is_rejected"
+        ),
+    ),
     # ---------------------------------------------------------------- law/TEST
     Mutation(
         rule_id="TEST-004",

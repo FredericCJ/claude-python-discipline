@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "engine": "doxygen",
+  "scopes": [
+    {
+      "path": "tools",
+      "kind": "maintenance",
+      "ownership": "governed"
+    },
+    {
+      "path": "enforce",
+      "kind": "maintenance",
+      "ownership": "governed"
+    }
+  ],
+  "controlled_abbreviations": [],
+  "identifier_grammars": [],
+  "generated_names": {
+    "markers": [
+      "generated",
+      "derived"
+    ],
+    "mappings": {}
+  },
+  "semantic_properties": []
+}

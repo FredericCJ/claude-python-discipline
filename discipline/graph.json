@@ -341,6 +341,78 @@
    }
   },
   {
+   "id": "CONF-036",
+   "type": "decision",
+   "label": "Implementation restatement required vs `DOC-009` rejecting implementation narration in entity docs",
+   "path": "discipline/meta/CONFLICTS.md",
+   "attrs": {
+    "ledger": "meta/CONFLICTS"
+   }
+  },
+  {
+   "id": "CONF-037",
+   "type": "decision",
+   "label": "Narrative completeness vs `DOC-013` preferring one sentence",
+   "path": "discipline/meta/CONFLICTS.md",
+   "attrs": {
+    "ledger": "meta/CONFLICTS"
+   }
+  },
+  {
+   "id": "CONF-038",
+   "type": "decision",
+   "label": "Every variable belongs to Doxygen vs Doxygen not representing Python locals",
+   "path": "discipline/meta/CONFLICTS.md",
+   "attrs": {
+    "ledger": "meta/CONFLICTS"
+   }
+  },
+  {
+   "id": "CONF-039",
+   "type": "decision",
+   "label": "Mandatory Doxygen vs `DOC-014` permitting `sphinx` or `none`",
+   "path": "discipline/meta/CONFLICTS.md",
+   "attrs": {
+    "ledger": "meta/CONFLICTS"
+   }
+  },
+  {
+   "id": "CONF-040",
+   "type": "decision",
+   "label": "Every Doxygen feature vs warning classes with false positives",
+   "path": "discipline/meta/CONFLICTS.md",
+   "attrs": {
+    "ledger": "meta/CONFLICTS"
+   }
+  },
+  {
+   "id": "CONF-041",
+   "type": "decision",
+   "label": "Controlled abbreviations vs domain-specific grammars",
+   "path": "discipline/meta/CONFLICTS.md",
+   "attrs": {
+    "ledger": "meta/CONFLICTS"
+   }
+  },
+  {
+   "id": "CONF-042",
+   "type": "decision",
+   "label": "Synchronized comments vs undecidable semantic agreement",
+   "path": "discipline/meta/CONFLICTS.md",
+   "attrs": {
+    "ledger": "meta/CONFLICTS"
+   }
+  },
+  {
+   "id": "CONF-043",
+   "type": "decision",
+   "label": "Generated elements need docs vs generated output not being hand-maintained",
+   "path": "discipline/meta/CONFLICTS.md",
+   "attrs": {
+    "ledger": "meta/CONFLICTS"
+   }
+  },
+  {
    "id": "OPEN-001",
    "type": "decision",
    "label": "Python floor 3.11, target 3.13",
@@ -812,10 +884,50 @@
    }
   },
   {
+   "id": "mech:check:doc_naming",
+   "type": "mechanism",
+   "label": "check:doc_naming",
+   "path": "enforce/checks/doc_naming.py",
+   "attrs": {
+    "family": "check",
+    "implemented": "true"
+   }
+  },
+  {
+   "id": "mech:check:doc_narration",
+   "type": "mechanism",
+   "label": "check:doc_narration",
+   "path": "enforce/checks/doc_narration.py",
+   "attrs": {
+    "family": "check",
+    "implemented": "true"
+   }
+  },
+  {
+   "id": "mech:check:doc_semantics",
+   "type": "mechanism",
+   "label": "check:doc_semantics",
+   "path": "enforce/checks/doc_semantics.py",
+   "attrs": {
+    "family": "check",
+    "implemented": "true"
+   }
+  },
+  {
    "id": "mech:check:doc_style",
    "type": "mechanism",
    "label": "check:doc_style",
    "path": "enforce/checks/doc_style.py",
+   "attrs": {
+    "family": "check",
+    "implemented": "true"
+   }
+  },
+  {
+   "id": "mech:check:documentation_model",
+   "type": "mechanism",
+   "label": "check:documentation_model",
+   "path": "enforce/checks/documentation_model.py",
    "attrs": {
     "family": "check",
     "implemented": "true"
@@ -989,6 +1101,14 @@
    "attrs": {
     "family": "check",
     "implemented": "true"
+   }
+  },
+  {
+   "id": "mech:check:project",
+   "type": "mechanism",
+   "label": "check:project",
+   "attrs": {
+    "family": "check"
    }
   },
   {
@@ -1464,9 +1584,9 @@
   {
    "id": "examples/documentation",
    "type": "module",
-   "label": "Documentation, Worked",
+   "label": "Evident Source, Worked",
    "path": "discipline/examples/documentation.md",
-   "tokens": 1373,
+   "tokens": 2386,
    "attrs": {
     "decay": "none",
     "kind": "meta"
@@ -1560,6 +1680,17 @@
    }
   },
   {
+   "id": "frame/documentation",
+   "type": "module",
+   "label": "Evident Source",
+   "path": "discipline/frame/documentation.md",
+   "tokens": 1147,
+   "attrs": {
+    "decay": "none",
+    "kind": "frame"
+   }
+  },
+  {
    "id": "frame/spec",
    "type": "module",
    "label": "Specification Discipline",
@@ -1635,7 +1766,31 @@
    "type": "module",
    "label": "Documentation Comments",
    "path": "discipline/law/DOC.md",
-   "tokens": 2408,
+   "tokens": 3521,
+   "attrs": {
+    "decay": "none",
+    "kind": "law",
+    "python": ">=3.11"
+   }
+  },
+  {
+   "id": "law/DOC-NAMING",
+   "type": "module",
+   "label": "Project Naming Model",
+   "path": "discipline/law/DOC-NAMING.md",
+   "tokens": 992,
+   "attrs": {
+    "decay": "none",
+    "kind": "law",
+    "python": ">=3.11"
+   }
+  },
+  {
+   "id": "law/DOC-NARRATION",
+   "type": "module",
+   "label": "Implementation Narration",
+   "path": "discipline/law/DOC-NARRATION.md",
+   "tokens": 1296,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1755,7 +1910,7 @@
    "type": "module",
    "label": "Conflict Ledger",
    "path": "discipline/meta/CONFLICTS.md",
-   "tokens": 3295,
+   "tokens": 3819,
    "attrs": {
     "decay": "none",
     "kind": "meta"
@@ -2735,7 +2890,7 @@
    "id": "DOC-001",
    "type": "rule",
    "label": "Every module, class, function and method is documented",
-   "path": "discipline/law/DOC.md:41",
+   "path": "discipline/law/DOC.md:47",
    "tokens": 53,
    "attrs": {
     "force": "BINDING",
@@ -2746,7 +2901,7 @@
    "id": "DOC-002",
    "type": "rule",
    "label": "Every named value is documented",
-   "path": "discipline/law/DOC.md:49",
+   "path": "discipline/law/DOC.md:55",
    "tokens": 71,
    "attrs": {
     "force": "BINDING",
@@ -2757,7 +2912,7 @@
    "id": "DOC-003",
    "type": "rule",
    "label": "Documentation is present whether or not it is generated",
-   "path": "discipline/law/DOC.md:58",
+   "path": "discipline/law/DOC.md:64",
    "tokens": 48,
    "attrs": {
     "force": "BINDING",
@@ -2768,7 +2923,7 @@
    "id": "DOC-004",
    "type": "rule",
    "label": "Documentation lives in docstrings wherever Python has a slot",
-   "path": "discipline/law/DOC.md:70",
+   "path": "discipline/law/DOC.md:76",
    "tokens": 41,
    "attrs": {
     "force": "BINDING",
@@ -2779,7 +2934,7 @@
    "id": "DOC-005",
    "type": "rule",
    "label": "Docstrings are parsed as documentation, not text",
-   "path": "discipline/law/DOC.md:77",
+   "path": "discipline/law/DOC.md:83",
    "tokens": 25,
    "attrs": {
     "force": "BINDING",
@@ -2790,7 +2945,7 @@
    "id": "DOC-006",
    "type": "rule",
    "label": "A brief statement comes first",
-   "path": "discipline/law/DOC.md:85",
+   "path": "discipline/law/DOC.md:91",
    "tokens": 35,
    "attrs": {
     "force": "BINDING",
@@ -2801,7 +2956,7 @@
    "id": "DOC-007",
    "type": "rule",
    "label": "Every parameter, result and raised exception is documented",
-   "path": "discipline/law/DOC.md:92",
+   "path": "discipline/law/DOC.md:98",
    "tokens": 65,
    "attrs": {
     "force": "BINDING",
@@ -2812,7 +2967,7 @@
    "id": "DOC-008",
    "type": "rule",
    "label": "Types are not restated in prose",
-   "path": "discipline/law/DOC.md:102",
+   "path": "discipline/law/DOC.md:108",
    "tokens": 37,
    "attrs": {
     "force": "BINDING",
@@ -2823,7 +2978,7 @@
    "id": "DOC-009",
    "type": "rule",
    "label": "Documentation states the contract, not the mechanism",
-   "path": "discipline/law/DOC.md:114",
+   "path": "discipline/law/DOC.md:120",
    "tokens": 47,
    "attrs": {
     "force": "BINDING",
@@ -2834,7 +2989,7 @@
    "id": "DOC-010",
    "type": "rule",
    "label": "A Doxygen run produces no warnings",
-   "path": "discipline/law/DOC.md:122",
+   "path": "discipline/law/DOC.md:128",
    "tokens": 33,
    "attrs": {
     "force": "BINDING",
@@ -2845,7 +3000,7 @@
    "id": "DOC-011",
    "type": "rule",
    "label": "The documentation check generates output",
-   "path": "discipline/law/DOC.md:129",
+   "path": "discipline/law/DOC.md:135",
    "tokens": 18,
    "attrs": {
     "force": "BINDING",
@@ -2856,7 +3011,7 @@
    "id": "DOC-012",
    "type": "rule",
    "label": "Generated documentation is not committed",
-   "path": "discipline/law/DOC.md:137",
+   "path": "discipline/law/DOC.md:143",
    "tokens": 33,
    "attrs": {
     "force": "BINDING",
@@ -2867,7 +3022,7 @@
    "id": "DOC-013",
    "type": "rule",
    "label": "Prefer one sentence that earns its place",
-   "path": "discipline/law/DOC.md:147",
+   "path": "discipline/law/DOC.md:153",
    "tokens": 33,
    "attrs": {
     "force": "ADVISORY",
@@ -2878,8 +3033,151 @@
    "id": "DOC-014",
    "type": "rule",
    "label": "A project declares which engine reads its documentation",
-   "path": "discipline/law/DOC.md:156",
-   "tokens": 70,
+   "path": "discipline/law/DOC.md:162",
+   "tokens": 69,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/DOC"
+   }
+  },
+  {
+   "id": "DOC-015",
+   "type": "rule",
+   "label": "Doxygen is the sole structured engine",
+   "path": "discipline/law/DOC.md:174",
+   "tokens": 75,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/DOC"
+   }
+  },
+  {
+   "id": "DOC-016",
+   "type": "rule",
+   "label": "Every local binding has semantic documentation",
+   "path": "discipline/law/DOC-NARRATION.md:37",
+   "tokens": 93,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/DOC-NARRATION"
+   }
+  },
+  {
+   "id": "DOC-017",
+   "type": "rule",
+   "label": "Governed execution steps are narrated",
+   "path": "discipline/law/DOC-NARRATION.md:52",
+   "tokens": 62,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/DOC-NARRATION"
+   }
+  },
+  {
+   "id": "DOC-018",
+   "type": "rule",
+   "label": "A semantic step has exactly one nearby owner",
+   "path": "discipline/law/DOC-NARRATION.md:62",
+   "tokens": 155,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/DOC-NARRATION"
+   }
+  },
+  {
+   "id": "DOC-019",
+   "type": "rule",
+   "label": "Narration states semantics, not Python tokens",
+   "path": "discipline/law/DOC-NARRATION.md:74",
+   "tokens": 94,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/DOC-NARRATION"
+   }
+  },
+  {
+   "id": "DOC-022",
+   "type": "rule",
+   "label": "The project declares a strict documentation model",
+   "path": "discipline/law/DOC-NAMING.md:30",
+   "tokens": 114,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/DOC-NAMING"
+   }
+  },
+  {
+   "id": "DOC-023",
+   "type": "rule",
+   "label": "Declared identifier grammars preserve dimension order",
+   "path": "discipline/law/DOC-NAMING.md:45",
+   "tokens": 62,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/DOC-NAMING"
+   }
+  },
+  {
+   "id": "DOC-024",
+   "type": "rule",
+   "label": "Abbreviations have one controlled scoped meaning",
+   "path": "discipline/law/DOC-NAMING.md:54",
+   "tokens": 81,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/DOC-NAMING"
+   }
+  },
+  {
+   "id": "DOC-025",
+   "type": "rule",
+   "label": "Generated vocabulary remains visibly derived",
+   "path": "discipline/law/DOC-NAMING.md:67",
+   "tokens": 63,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/DOC-NAMING"
+   }
+  },
+  {
+   "id": "DOC-026",
+   "type": "rule",
+   "label": "Applicable value semantics are explicit",
+   "path": "discipline/law/DOC.md:188",
+   "tokens": 91,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/DOC"
+   }
+  },
+  {
+   "id": "DOC-027",
+   "type": "rule",
+   "label": "Callable purity and effects are documented",
+   "path": "discipline/law/DOC.md:199",
+   "tokens": 94,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/DOC"
+   }
+  },
+  {
+   "id": "DOC-028",
+   "type": "rule",
+   "label": "Semantic agreement is reviewed against exact content",
+   "path": "discipline/law/DOC.md:210",
+   "tokens": 97,
+   "attrs": {
+    "force": "BINDING",
+    "module": "law/DOC"
+   }
+  },
+  {
+   "id": "DOC-029",
+   "type": "rule",
+   "label": "The Doxygen projection is non-vacuous and relational",
+   "path": "discipline/law/DOC.md:222",
+   "tokens": 86,
    "attrs": {
     "force": "BINDING",
     "module": "law/DOC"
@@ -4659,6 +4957,14 @@
    }
   },
   {
+   "id": "trigger:glob:documentation-model.json",
+   "type": "trigger",
+   "label": "documentation-model.json",
+   "attrs": {
+    "kind": "glob"
+   }
+  },
+  {
    "id": "trigger:glob:enforce/**/*",
    "type": "trigger",
    "label": "enforce/**/*",
@@ -4726,6 +5032,14 @@
    "id": "trigger:kw:__context__",
    "type": "trigger",
    "label": "__context__",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:abbreviation",
+   "type": "trigger",
+   "label": "abbreviation",
    "attrs": {
     "kind": "keyword"
    }
@@ -4923,6 +5237,22 @@
    }
   },
   {
+   "id": "trigger:kw:comment association",
+   "type": "trigger",
+   "label": "comment association",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:comment granularity",
+   "type": "trigger",
+   "label": "comment granularity",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:component repository",
    "type": "trigger",
    "label": "component repository",
@@ -4987,6 +5317,14 @@
    }
   },
   {
+   "id": "trigger:kw:control flow comment",
+   "type": "trigger",
+   "label": "control flow comment",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:correlation id",
    "type": "trigger",
    "label": "correlation id",
@@ -5006,6 +5344,14 @@
    "id": "trigger:kw:coverage tool",
    "type": "trigger",
    "label": "coverage tool",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:data flow comment",
+   "type": "trigger",
+   "label": "data flow comment",
    "attrs": {
     "kind": "keyword"
    }
@@ -5142,6 +5488,22 @@
    "id": "trigger:kw:documentation comment",
    "type": "trigger",
    "label": "documentation comment",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:documentation ownership",
+   "type": "trigger",
+   "label": "documentation ownership",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:documentation-model.json",
+   "type": "trigger",
+   "label": "documentation-model.json",
    "attrs": {
     "kind": "keyword"
    }
@@ -5395,6 +5757,14 @@
    }
   },
   {
+   "id": "trigger:kw:generated name",
+   "type": "trigger",
+   "label": "generated name",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:generic",
    "type": "trigger",
    "label": "generic",
@@ -5475,6 +5845,14 @@
    }
   },
   {
+   "id": "trigger:kw:identifier grammar",
+   "type": "trigger",
+   "label": "identifier grammar",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:import error",
    "type": "trigger",
    "label": "import error",
@@ -5526,6 +5904,14 @@
    "id": "trigger:kw:legacy code",
    "type": "trigger",
    "label": "legacy code",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:local variable comment",
+   "type": "trigger",
+   "label": "local variable comment",
    "attrs": {
     "kind": "keyword"
    }
@@ -5859,6 +6245,14 @@
    }
   },
   {
+   "id": "trigger:kw:quasi-literate",
+   "type": "trigger",
+   "label": "quasi-literate",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
    "id": "trigger:kw:raise",
    "type": "trigger",
    "label": "raise",
@@ -6006,6 +6400,22 @@
    "id": "trigger:kw:security model",
    "type": "trigger",
    "label": "security model",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:semantic dimension",
+   "type": "trigger",
+   "label": "semantic dimension",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:semantic step",
+   "type": "trigger",
+   "label": "semantic step",
    "attrs": {
     "kind": "keyword"
    }
@@ -6390,6 +6800,14 @@
    "id": "trigger:kw:why did this fail before",
    "type": "trigger",
    "label": "why did this fail before",
+   "attrs": {
+    "kind": "keyword"
+   }
+  },
+  {
+   "id": "trigger:kw:why document locals",
+   "type": "trigger",
+   "label": "why document locals",
    "attrs": {
     "kind": "keyword"
    }
@@ -7166,6 +7584,132 @@
    "type": "cites",
    "src": "DOC-014",
    "dst": "meta/OPEN",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-015",
+   "dst": "fact/doxygen",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-015",
+   "dst": "meta/CONFLICTS",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-016",
+   "dst": "DOC-002",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-016",
+   "dst": "examples/documentation",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-016",
+   "dst": "frame/documentation",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-017",
+   "dst": "law/EFCT",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-017",
+   "dst": "law/ERR",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-017",
+   "dst": "law/FLOW",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-019",
+   "dst": "DOC-009",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-019",
+   "dst": "examples/documentation",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-019",
+   "dst": "meta/CONFLICTS",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-022",
+   "dst": "frame/documentation",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-022",
+   "dst": "meta/SCOPE",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-025",
+   "dst": "examples/documentation",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-025",
+   "dst": "law/DEP",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-026",
+   "dst": "DOC-016",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-026",
+   "dst": "law/TYPE",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-027",
+   "dst": "law/API",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-027",
+   "dst": "law/EFCT",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-028",
+   "dst": "frame/documentation",
+   "origin": "derived"
+  },
+  {
+   "type": "cites",
+   "src": "DOC-028",
+   "dst": "law/FLOW",
    "origin": "derived"
   },
   {
@@ -8222,6 +8766,84 @@
    "type": "contains",
    "src": "law/DOC",
    "dst": "DOC-014",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/DOC",
+   "dst": "DOC-015",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/DOC",
+   "dst": "DOC-026",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/DOC",
+   "dst": "DOC-027",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/DOC",
+   "dst": "DOC-028",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/DOC",
+   "dst": "DOC-029",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/DOC-NAMING",
+   "dst": "DOC-022",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/DOC-NAMING",
+   "dst": "DOC-023",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/DOC-NAMING",
+   "dst": "DOC-024",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/DOC-NAMING",
+   "dst": "DOC-025",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/DOC-NARRATION",
+   "dst": "DOC-016",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/DOC-NARRATION",
+   "dst": "DOC-017",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/DOC-NARRATION",
+   "dst": "DOC-018",
+   "origin": "derived"
+  },
+  {
+   "type": "contains",
+   "src": "law/DOC-NARRATION",
+   "dst": "DOC-019",
    "origin": "derived"
   },
   {
@@ -9530,6 +10152,90 @@
    "type": "enforced_by",
    "src": "DOC-014",
    "dst": "mech:check:doc_coverage",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "DOC-015",
+   "dst": "mech:check:project",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "DOC-016",
+   "dst": "mech:check:doc_coverage",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "DOC-017",
+   "dst": "mech:check:doc_narration",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "DOC-018",
+   "dst": "mech:check:doc_narration",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "DOC-019",
+   "dst": "mech:check:doc_narration",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "DOC-022",
+   "dst": "mech:check:documentation_model",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "DOC-023",
+   "dst": "mech:check:doc_naming",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "DOC-024",
+   "dst": "mech:check:doc_naming",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "DOC-025",
+   "dst": "mech:check:doc_naming",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "DOC-026",
+   "dst": "mech:check:doc_semantics",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "DOC-027",
+   "dst": "mech:check:doc_semantics",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "DOC-028",
+   "dst": "mech:check:adversarial_review",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "DOC-028",
+   "dst": "mech:review",
+   "origin": "derived"
+  },
+  {
+   "type": "enforced_by",
+   "src": "DOC-029",
+   "dst": "mech:auto:doxygen",
    "origin": "derived"
   },
   {
@@ -11322,6 +12028,96 @@
   },
   {
    "type": "grounds_on",
+   "src": "DOC-015",
+   "dst": "fact/doxygen",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-015",
+   "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-015",
+   "dst": "fact/py-typing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-026",
+   "dst": "fact/doxygen",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-026",
+   "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-026",
+   "dst": "fact/py-typing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-027",
+   "dst": "fact/doxygen",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-027",
+   "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-027",
+   "dst": "fact/py-typing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-028",
+   "dst": "fact/doxygen",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-028",
+   "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-028",
+   "dst": "fact/py-typing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-029",
+   "dst": "fact/doxygen",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-029",
+   "dst": "fact/py-testing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
+   "src": "DOC-029",
+   "dst": "fact/py-typing",
+   "origin": "derived"
+  },
+  {
+   "type": "grounds_on",
    "src": "EFCT-001",
    "dst": "fact/py-testing",
    "origin": "derived"
@@ -12936,6 +13732,18 @@
   },
   {
    "type": "requires",
+   "src": "law/DOC-NAMING",
+   "dst": "law/DOC",
+   "origin": "derived"
+  },
+  {
+   "type": "requires",
+   "src": "law/DOC-NARRATION",
+   "dst": "law/DOC",
+   "origin": "derived"
+  },
+  {
+   "type": "requires",
    "src": "law/EFCT",
    "dst": "law/ARCH",
    "origin": "derived"
@@ -14054,6 +14862,36 @@
   },
   {
    "type": "triggered_by",
+   "src": "frame/documentation",
+   "dst": "trigger:kw:comment granularity",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "frame/documentation",
+   "dst": "trigger:kw:documentation ownership",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "frame/documentation",
+   "dst": "trigger:kw:quasi-literate",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "frame/documentation",
+   "dst": "trigger:kw:semantic step",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "frame/documentation",
+   "dst": "trigger:kw:why document locals",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
    "src": "frame/spec",
    "dst": "trigger:kw:design document",
    "origin": "derived"
@@ -14428,6 +15266,90 @@
    "type": "triggered_by",
    "src": "law/DOC",
    "dst": "trigger:kw:undocumented",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/DOC-NAMING",
+   "dst": "trigger:glob:**/*.py",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/DOC-NAMING",
+   "dst": "trigger:glob:documentation-model.json",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/DOC-NAMING",
+   "dst": "trigger:kw:abbreviation",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/DOC-NAMING",
+   "dst": "trigger:kw:documentation-model.json",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/DOC-NAMING",
+   "dst": "trigger:kw:generated name",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/DOC-NAMING",
+   "dst": "trigger:kw:identifier grammar",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/DOC-NAMING",
+   "dst": "trigger:kw:semantic dimension",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/DOC-NARRATION",
+   "dst": "trigger:glob:**/*.py",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/DOC-NARRATION",
+   "dst": "trigger:kw:comment association",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/DOC-NARRATION",
+   "dst": "trigger:kw:control flow comment",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/DOC-NARRATION",
+   "dst": "trigger:kw:data flow comment",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/DOC-NARRATION",
+   "dst": "trigger:kw:local variable comment",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/DOC-NARRATION",
+   "dst": "trigger:kw:quasi-literate",
+   "origin": "derived"
+  },
+  {
+   "type": "triggered_by",
+   "src": "law/DOC-NARRATION",
+   "dst": "trigger:kw:semantic step",
    "origin": "derived"
   },
   {

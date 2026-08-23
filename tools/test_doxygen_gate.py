@@ -23,6 +23,8 @@ from __future__ import annotations
 
 import re
 import shutil
+import subprocess  # ruff: ignore[suspicious-subprocess-import] -- inert result fixture
+from contextlib import contextmanager
 from hashlib import sha256
 from typing import TYPE_CHECKING, Final
 
@@ -31,6 +33,7 @@ import pytest
 import doxygen_gate
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
     from contextlib import AbstractContextManager
     from pathlib import Path
 
@@ -163,6 +166,47 @@ def test_generating_nothing_is_not_generating_cleanly(tmp_path: Path) -> None:
     status, line = doxygen_gate.run(tmp_path, doxygen_gate.MINIMUM_FILES)
     assert status == doxygen_gate.EXIT_FAILED
     assert "no files to be processed" in line.lower() or "source page" in line
+
+
+def test_a_projection_without_every_relation_is_rejected(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """DOC-029: enabled but unexercised relations cannot earn a green verdict.
+
+    @param tmp_path fixture directory
+    @param monkeypatch isolated gate substitution
+    """
+    (tmp_path / "src").mkdir()
+
+    @contextmanager
+    def relationless(
+        _executable: str,
+        _root: Path,
+        *,
+        extra_configuration: str = "",
+    ) -> Iterator[doxygen_gate.GeneratedDocumentation]:
+        """Yield a successful projection whose caller relation is empty.
+
+        @param _executable ignored executable selected by the gate
+        @param _root ignored fixture root
+        @param extra_configuration ignored Doxygen override
+        @return successful generation record with one absent relation family
+        """
+        del extra_configuration
+        finished = subprocess.CompletedProcess(("doxygen", "-"), 0, "", "")
+        yield doxygen_gate.GeneratedDocumentation(
+            finished=finished,
+            output=tmp_path,
+            source_pages=doxygen_gate.MINIMUM_FILES,
+            relation_graphs=(1, 0, 1),
+        )
+
+    monkeypatch.setattr(doxygen_gate, "locate_native", lambda _name: "doxygen")
+    monkeypatch.setattr(doxygen_gate, "generated", relationless)
+    status, line = doxygen_gate.run(tmp_path, doxygen_gate.MINIMUM_FILES)
+
+    assert status == doxygen_gate.EXIT_FAILED
+    assert "caller relationship graph" in line
 
 
 def test_no_src_is_refused_rather_than_passed(tmp_path: Path) -> None:

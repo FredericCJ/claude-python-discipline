@@ -71,6 +71,30 @@
       "challenge": "Could the worked example claim conformance while a real adapter, fake, faulty implementation, or irreversible dry run lacks a discriminating oracle?",
       "conclusion": "Contract, property, integration, and fault suites assert typed values, disk state, invariants, failure translation, and partial-progress containment across all registered variants.",
       "evidence": ["tests/contract/test_files_contract.py", "tests/integration/test_local_files.py", "tests/fault/test_containment.py"]
+    },
+    {
+      "id": "documentation_truth",
+      "challenge": "Could an entity contract or implementation comment state behavior the reference fixture no longer executes?",
+      "conclusion": "The review compared source contracts and narration with the contract, property, integration, and fault behaviors; lexical checks still cannot prove that every sentence is true.",
+      "evidence": ["documentation-model.json", "src/refpkg/app/prune.py", "tests/fault/test_containment.py"]
+    },
+    {
+      "id": "documentation_allocation",
+      "challenge": "Could stable entity meaning be stranded in ordinary narration, or execution detail be duplicated into Doxygen contracts?",
+      "conclusion": "The fixture uses docstrings and entity blocks for stable contracts and ordinary comments for local sequencing; review found no deliberate parallel owner.",
+      "evidence": ["documentation-model.json", "src/refpkg/domain/model.py", "src/refpkg/app/prune.py"]
+    },
+    {
+      "id": "documentation_obsolescence",
+      "challenge": "Could a comment retain an earlier algorithm, workaround, or state sequence after the implementation changed?",
+      "conclusion": "The reviewed comments describe only the current bounded planning, apply, translation, and envelope paths; semantic staleness remains a reviewer judgment.",
+      "evidence": ["src/refpkg/domain/plan.py", "src/refpkg/app/prune.py", "src/refpkg/shell/envelope.py"]
+    },
+    {
+      "id": "domain_naming",
+      "challenge": "Could a reference identifier collapse domain and filesystem representation, hide ordering, or introduce an undeclared abbreviation?",
+      "conclusion": "The small reference vocabulary keeps domain plans and filesystem paths distinct and declares no controlled abbreviations; broader domain adequacy is not claimed.",
+      "evidence": ["documentation-model.json", "src/refpkg/domain/model.py", "src/refpkg/ports/files.py"]
     }
   ],
   "objections": [

@@ -10,13 +10,13 @@ decay: none
 
 # Rule Index
 
-212 rules across 17 modules. Grep this file for a rule id, then open only the module that owns it.
+225 rules across 19 modules. Grep this file for a rule id, then open only the module that owns it.
 
 **The columns are different claims.** `Force` is the normative obligation. `Verifier` says what strategy is available, never that it passed. `Relation` says whether the observable proposition is the rule itself or only a proxy. `Rejection` records whether the current matrix has watched the rule reject a counterexample. `Platforms`, `Residual`, and `Field` state where the claim is supported, what can remain wrong, and what named adopters observed.
 
 **A proxy cannot decide its parent semantic rule.** Passing its proposition establishes only the stated syntax or behavior and leaves the printed residual. `rule-level witnessed` is deliberately weaker than v4's target: the inherited matrix proves that some strategy rejected a case for that rule, but cannot yet attribute the rejection to one exact strategy.
 
-0 of 176 binding rules lack an available declared strategy. 166 of 166 rules with automated strategies have inherited rule-level rejection evidence. 158 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
+0 of 189 binding rules lack an available declared strategy. 179 of 179 rules with automated strategies have inherited rule-level rejection evidence. 164 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
 
 ## Modules
 
@@ -28,13 +28,16 @@ decay: none
 | [fact/py-testing](fact/py-testing.md) | fact | 1585 | 0 | pytest version, fixture scope, hypothesis, coverage tool, mutation tool, pytest plugin |
 | [fact/py-typing](fact/py-typing.md) | fact | 1549 | 0 | mypy flags, pyright config, strict mode, Protocol, TypedDict, PEP 695 |
 | [frame/architecture](frame/architecture.md) | frame | 2338 | 0 | which paradigm, tradeoff, refactoring, legacy code, coupling, cohesion |
+| [frame/documentation](frame/documentation.md) | frame | 1147 | 0 | why document locals, comment granularity, semantic step, quasi-literate, documentation ownership |
 | [frame/spec](frame/spec.md) | frame | 1972 | 0 | write a spec, requirements, elicitation, design document, traceability, reusability |
 | [law/API](law/API.md) | law | 2445 | 15 | public API, contract, versioning, breaking change, CLI, JSON output |
 | [law/ARCH](law/ARCH.md) | law | 3361 | 19 | new module, package layout, port, adapter, hexagonal, dependency injection |
 | [law/ARCH-PORTS](law/ARCH-PORTS.md) | law | 841 | 6 | new port, boundary contract, adapter substitute, fake adapter, fault schedule, contract suite |
 | [law/DEP](law/DEP.md) | law | 2111 | 14 | add a dependency, third party library, lockfile, environment, code generation, generated file |
 | [law/DIAG](law/DIAG.md) | law | 2634 | 16 | exception, traceback, logging, error message, error code, correlation id |
-| [law/DOC](law/DOC.md) | law | 2408 | 14 | docstring, documentation comment, doxygen, @param, @return, document this function |
+| [law/DOC](law/DOC.md) | law | 3521 | 19 | docstring, documentation comment, doxygen, @param, @return, document this function |
+| [law/DOC-NAMING](law/DOC-NAMING.md) | law | 992 | 4 | identifier grammar, abbreviation, semantic dimension, generated name, documentation-model.json |
+| [law/DOC-NARRATION](law/DOC-NARRATION.md) | law | 1296 | 4 | local variable comment, semantic step, control flow comment, data flow comment, quasi-literate, comment association |
 | [law/EFCT](law/EFCT.md) | law | 2408 | 16 | write a file, mutation, state machine, transaction, rollback, dry run |
 | [law/ERR](law/ERR.md) | law | 2629 | 16 | raise, except, Result, error type, exception hierarchy, validation |
 | [law/EVID](law/EVID.md) | law | 1288 | 8 | why is this a rule, verification strategy, mechanism, proxy, residual, discrimination |
@@ -161,7 +164,30 @@ decay: none
 | `DOC-011` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:doxygen; it does not establis… | none | The documentation check generates output |
 | `DOC-012` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:generated_provenance; it doe… | none | Generated documentation is not committed |
 | `DOC-013` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Prefer one sentence that earns its place |
-| `DOC-014` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | A declared engine can still be misconfigured, absent from the gate environment, or unable to pa… | `V3E-001` | A project declares which engine reads its documentation |
+| `DOC-014` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | An explicit selection can still name an unsupported engine or fail at execution; DOC-015 and th… | `V3E-001` | A project declares which engine reads its documentation |
+| `DOC-015` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | A valid selection does not prove that Doxygen is installed, correctly configured, or able to re… | none | Doxygen is the sole structured engine |
+| `DOC-026` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Required words can occur in false or irrelevant prose, and semantics not inferable from annotat… | none | Applicable value semantics are explicit |
+| `DOC-027` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Unrecognized domain effects, dishonest purity markers, and inaccurate effect ordering remain se… | none | Callable purity and effects are documented |
+| `DOC-028` | BINDING | `mixed-verifiers` | `direct` | `rule-level witnessed` | `linux`, `windows` | Artifact structure and freshness do not authenticate reviewer independence or make its semantic… | none | Semantic agreement is reviewed against exact content |
+| `DOC-029` | BINDING | `external-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Non-empty generated relationships do not establish that Doxygen inferred every intended semanti… | none | The Doxygen projection is non-vacuous and relational |
+
+### law/DOC-NAMING
+
+| Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
+|---|---|---|---|---|---|---|---|---|
+| `DOC-022` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | A structurally valid model can still omit useful optional domain policy or declare a vocabulary… | none | The project declares a strict documentation model |
+| `DOC-023` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | The project can declare a syntactically consistent grammar whose dimensions are semantically in… | none | Declared identifier grammars preserve dimension order |
+| `DOC-024` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | All-uppercase constant tokens, lowercase contractions, and domain words that resemble abbreviat… | none | Abbreviations have one controlled scoped meaning |
+| `DOC-025` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | A mapped canonical term can still be the wrong domain concept, and generated names lacking a co… | none | Generated vocabulary remains visibly derived |
+
+### law/DOC-NARRATION
+
+| Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
+|---|---|---|---|---|---|---|---|---|
+| `DOC-016` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Association proves neither that the prose is true nor that it captures the value's important do… | none | Every local binding has semantic documentation |
+| `DOC-017` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | The bounded syntax and method vocabulary misses domain-specific semantic operations, and a pres… | none | Governed execution steps are narrated |
+| `DOC-018` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Unique lexical proximity cannot establish that the selected prose is conceptually allocated to… | none | A semantic step has exactly one nearby owner |
+| `DOC-019` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Lexical novelty is only a proxy: sophisticated paraphrase can pass and concise domain vocabular… | none | Narration states semantics, not Python tokens |
 
 ### law/EFCT
 

@@ -4,8 +4,8 @@
     {
       "id": "examples/documentation",
       "kind": "meta",
-      "title": "Documentation, Worked",
-      "tokens": 1373,
+      "title": "Evident Source, Worked",
+      "tokens": 2386,
       "load_when": [
         "how do i document this",
         "docstring example",
@@ -164,6 +164,24 @@
       "path": "discipline/frame/architecture.md"
     },
     {
+      "id": "frame/documentation",
+      "kind": "frame",
+      "title": "Evident Source",
+      "tokens": 1147,
+      "load_when": [
+        "why document locals",
+        "comment granularity",
+        "semantic step",
+        "quasi-literate",
+        "documentation ownership"
+      ],
+      "requires": [],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/frame/documentation.md"
+    },
+    {
       "id": "frame/spec",
       "kind": "frame",
       "title": "Specification Discipline",
@@ -315,7 +333,7 @@
       "id": "law/DOC",
       "kind": "law",
       "title": "Documentation Comments",
-      "tokens": 2408,
+      "tokens": 3521,
       "load_when": [
         "docstring",
         "documentation comment",
@@ -336,6 +354,47 @@
       "verified": null,
       "decay": "none",
       "path": "discipline/law/DOC.md"
+    },
+    {
+      "id": "law/DOC-NAMING",
+      "kind": "law",
+      "title": "Project Naming Model",
+      "tokens": 992,
+      "load_when": [
+        "identifier grammar",
+        "abbreviation",
+        "semantic dimension",
+        "generated name",
+        "documentation-model.json"
+      ],
+      "requires": [
+        "law/DOC"
+      ],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/law/DOC-NAMING.md"
+    },
+    {
+      "id": "law/DOC-NARRATION",
+      "kind": "law",
+      "title": "Implementation Narration",
+      "tokens": 1296,
+      "load_when": [
+        "local variable comment",
+        "semantic step",
+        "control flow comment",
+        "data flow comment",
+        "quasi-literate",
+        "comment association"
+      ],
+      "requires": [
+        "law/DOC"
+      ],
+      "grounds_on": [],
+      "verified": null,
+      "decay": "none",
+      "path": "discipline/law/DOC-NARRATION.md"
     },
     {
       "id": "law/EFCT",
@@ -579,7 +638,7 @@
       "id": "meta/CONFLICTS",
       "kind": "meta",
       "title": "Conflict Ledger",
-      "tokens": 3295,
+      "tokens": 3819,
       "load_when": [
         "contradiction",
         "which source wins",
@@ -5296,7 +5355,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DOC.md",
-      "line": 41,
+      "line": 47,
       "applicability": {
         "units": [
           "application",
@@ -5370,7 +5429,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/DOC.md",
-      "line": 49,
+      "line": 55,
       "applicability": {
         "units": [
           "application",
@@ -5429,7 +5488,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/DOC.md",
-      "line": 58,
+      "line": 64,
       "applicability": {
         "units": [
           "application",
@@ -5486,7 +5545,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DOC.md",
-      "line": 70,
+      "line": 76,
       "applicability": {
         "units": [
           "application",
@@ -5545,7 +5604,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/DOC.md",
-      "line": 77,
+      "line": 83,
       "applicability": {
         "units": [
           "application",
@@ -5602,7 +5661,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DOC.md",
-      "line": 85,
+      "line": 91,
       "applicability": {
         "units": [
           "application",
@@ -5661,7 +5720,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/DOC.md",
-      "line": 92,
+      "line": 98,
       "applicability": {
         "units": [
           "application",
@@ -5720,7 +5779,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/DOC.md",
-      "line": 102,
+      "line": 108,
       "applicability": {
         "units": [
           "application",
@@ -5781,7 +5840,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/DOC.md",
-      "line": 114,
+      "line": 120,
       "applicability": {
         "units": [
           "application",
@@ -5838,7 +5897,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DOC.md",
-      "line": 122,
+      "line": 128,
       "applicability": {
         "units": [
           "application",
@@ -5899,7 +5958,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/DOC.md",
-      "line": 129,
+      "line": 135,
       "applicability": {
         "units": [
           "application",
@@ -5958,7 +6017,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/DOC.md",
-      "line": 137,
+      "line": 143,
       "applicability": {
         "units": [
           "application",
@@ -6013,7 +6072,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/DOC.md",
-      "line": 147,
+      "line": 153,
       "applicability": {
         "units": [
           "application",
@@ -6048,7 +6107,7 @@
       "mechanisms": [
         "check:doc_coverage"
       ],
-      "statement": "A project MUST declare its documentation engine in `[tool.agent-discipline]`. An undeclared v4 project MUST be refused. A direct legacy invocation retains `none` only as a conspicuous diagnostic fallback and MUST emit DOC-014 rather than a narrower green run.",
+      "statement": "A project MUST declare its documentation engine in `[tool.agent-discipline]`. An undeclared project MUST be refused. A direct legacy invocation retains `none` only as a conspicuous diagnostic fallback and MUST emit DOC-014 rather than a narrower green run.",
       "why": "[DOC-002] and [DOC-007] name one engine's punctuation. Demanding it of a project documenting in another produced 1,064 findings of form against 18 of substance, which is how a check stops being read; leaving it undeclared and silent is worse, because a narrowed run and a clean one then look identical.",
       "check": "`python -m checks.doc_coverage`, which prints the declaration it found and every rule that declaration leaves inactive",
       "no_mechanism": null,
@@ -6059,7 +6118,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/DOC.md",
-      "line": 156,
+      "line": 162,
       "applicability": {
         "units": [
           "application",
@@ -6082,8 +6141,8 @@
             "mechanism": "check:doc_coverage",
             "kind": "static",
             "relation": "direct",
-            "proposition": "The v4 declaration parser requires one explicit doc_engine value from the closed doxygen, sphinx, or none set, and check:doc_coverage emits DOC_ENGINE_UNDECLARED once when a direct legacy fallback has no declaration.",
-            "residual": "A declared engine can still be misconfigured, absent from the gate environment, or unable to parse the project's actual documentation syntax; the project gate owns those configuration and execution probes.",
+            "proposition": "The declaration parser requires an explicit doc_engine field, and check:doc_coverage emits DOC_ENGINE_UNDECLARED when a direct legacy invocation has no local declaration.",
+            "residual": "An explicit selection can still name an unsupported engine or fail at execution; DOC-015 and the project gate decide those separate predicates.",
             "must_pass": "command:`python -m checks.doc_coverage`, which prints the declaration it found and every rule that declaration leaves inactive",
             "must_reject": "discrimination:DOC-014/check:doc_coverage",
             "platforms": [
@@ -6098,9 +6157,795 @@
         "V3E-001"
       ],
       "migration": {
-        "source": "v4.0.0",
+        "source": "v5.0.0",
         "disposition": "clarified",
-        "guidance": "Set doc_engine explicitly during migration, including none; v4 no longer treats field absence as a silent none declaration."
+        "guidance": "Add doc_engine = \"doxygen\". Former sphinx and none declarations are explicit migration errors under DOC-015."
+      }
+    },
+    {
+      "id": "DOC-015",
+      "module": "law/DOC",
+      "title": "Doxygen is the sole structured engine",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:project"
+      ],
+      "statement": "The explicitly selected engine MUST be `doxygen`. A former `sphinx` or `none` selection MUST fail once with an actionable migration diagnostic rather than deactivate any structured rule. Python docstrings remain Doxygen-readable storage; they are not a parallel pydoc contract.",
+      "why": "One entity cannot have two canonical documentation owners. Conditional syntax made the same package enforce three materially different disciplines under one version.",
+      "check": "the strict parser in `enforce/checks/project.py`",
+      "no_mechanism": null,
+      "see": [
+        "fact/doxygen",
+        "meta/CONFLICTS"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/DOC.md",
+      "line": 174,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "Allowing several structured engines makes one package carry conditional syntax and completeness rules, so changing configuration silently changes the meaning of conformance.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:project",
+            "kind": "static",
+            "relation": "direct",
+            "proposition": "The project declaration parser accepts doxygen and rejects legacy sphinx or none selections with one migration diagnostic.",
+            "residual": "A valid selection does not prove that Doxygen is installed, correctly configured, or able to render the governed content.",
+            "must_pass": "fixture:reference project declaration selecting doxygen",
+            "must_reject": "discrimination:DOC-015/check:project",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never while this rule is active for the governed repository"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Replace doc_engine = \"sphinx\" or \"none\" with \"doxygen\" and migrate entity documentation before running the gate."
+      }
+    },
+    {
+      "id": "DOC-016",
+      "module": "law/DOC-NARRATION",
+      "title": "Every local binding has semantic documentation",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:doc_coverage"
+      ],
+      "statement": "Every non-parameter name bound inside a callable MUST resolve to an ordinary comment that states what the value represents in that operation. This includes assignments, destructuring, loop and comprehension targets, context-manager aliases, exception aliases, assignment expressions, and pattern captures. Parameters remain owned by [DOC-007].",
+      "why": "A type and identifier constrain shape and hint at purpose; neither defines the temporary representation or its role in the procedure.",
+      "check": "`python -m checks.doc_coverage`; each finding names the binding shape, name, line, expected owner, and remediation.",
+      "no_mechanism": null,
+      "see": [
+        "DOC-002",
+        "frame/documentation",
+        "examples/documentation"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/DOC-NARRATION.md",
+      "line": 37,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "An undocumented local representation forces the reader to infer its role from a transient identifier and nearby syntax, which is especially unreliable during agent-operated changes.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:doc_coverage",
+            "kind": "static",
+            "relation": "direct",
+            "proposition": "Every mechanically enumerated non-parameter local binding has exactly one qualifying ordinary comment association.",
+            "residual": "Association proves neither that the prose is true nor that it captures the value's important domain meaning.",
+            "must_pass": "fixture:reference governed Python local bindings",
+            "must_reject": "discrimination:DOC-016/check:doc_coverage",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never for a governed non-parameter local binding"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Add ordinary semantic-step comments for assignments, targets, aliases, assignment expressions, and pattern captures."
+      }
+    },
+    {
+      "id": "DOC-017",
+      "module": "law/DOC-NARRATION",
+      "title": "Governed execution steps are narrated",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:doc_narration"
+      ],
+      "statement": "Every governed branch, loop, return path, loop exit or continuation, exception path, resource sequence, pattern dispatch, state transition, and mechanically identifiable external effect MUST have ordinary implementation narration.",
+      "why": "These are the points where execution changes direction, representation, state, or the outside world. Leaving them implicit forces a reader to execute the syntax mentally before deciding what procedure it implements.",
+      "check": "`python -m checks.doc_narration`",
+      "no_mechanism": null,
+      "see": [
+        "law/FLOW",
+        "law/ERR",
+        "law/EFCT"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/DOC-NARRATION.md",
+      "line": 52,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "Unnarrated changes in direction, representation, state, or external interaction require readers to mentally execute syntax before they can identify the procedure.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:doc_narration",
+            "kind": "static",
+            "relation": "proxy",
+            "proposition": "Each mechanically enumerated branch, loop, return, loop control, exception path, resource sequence, pattern dispatch, selected state change, or selected external effect has an ordinary comment owner.",
+            "residual": "The bounded syntax and method vocabulary misses domain-specific semantic operations, and a present comment may still misdescribe the step.",
+            "must_pass": "fixture:reference governed Python execution paths",
+            "must_reject": "discrimination:DOC-017/check:doc_narration",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never for an operation in the check's declared census"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Narrate governed control, data-flow, resource, state, and effect steps with ordinary comments."
+      }
+    },
+    {
+      "id": "DOC-018",
+      "module": "law/DOC-NARRATION",
+      "title": "A semantic step has exactly one nearby owner",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:doc_narration"
+      ],
+      "statement": "A qualifying full-line block immediately above the first statement starts a semantic step and owns contiguous statements in that same AST suite until a blank line or another qualifying block. A qualifying trailing comment owns only its statement and ends an inherited step. A compound operation also owns the bindings introduced by its target and directly contained expression. Nested suites inherit nothing; an exception handler may use the first comment inside its body. Zero owners and multiple owners MUST fail; distant file-level prose MUST NOT float into a local step.",
+      "why": "A checker choosing arbitrarily creates documentation that appears attached while a reader can reasonably attach it elsewhere. Ambiguity is information, not permission.",
+      "check": "`python -m checks.doc_narration`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DOC-NARRATION.md",
+      "line": 62,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "A distant or multiply attributable comment lets the checker choose an ownership relation that a human reader can reasonably interpret differently.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:doc_narration",
+            "kind": "static",
+            "relation": "direct",
+            "proposition": "A narrated operation resolves to one full-line semantic-step or trailing ordinary comment owner under same-suite and paragraph boundaries, and an operation with two owners is rejected as ambiguous.",
+            "residual": "Unique lexical proximity cannot establish that the selected prose is conceptually allocated to the right semantic step.",
+            "must_pass": "fixture:reference uniquely associated narration",
+            "must_reject": "discrimination:DOC-018/check:doc_narration",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never for an operation in the narration census"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Place one ordinary comment block immediately above or on each semantic step and remove competing owners."
+      }
+    },
+    {
+      "id": "DOC-019",
+      "module": "law/DOC-NARRATION",
+      "title": "Narration states semantics, not Python tokens",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:doc_narration"
+      ],
+      "statement": "Implementation narration MUST name the technical or domain operation, represented information, ordering, constraint, or reason. It MUST NOT merely translate syntax such as “iterate over items,” “set the value,” or “return the result.” Semantic restatement is permitted here and is distinct from implementation narration inside an entity contract.",
+      "why": "Token paraphrase adds another line to maintain without reducing inference. Semantic narration lets the source be followed as a documented procedure.",
+      "check": "`python -m checks.doc_narration` rejects the narrow case in which no informative vocabulary exists outside the operation's syntax. Truth and adequacy remain [DOC-028] review residuals.",
+      "no_mechanism": null,
+      "see": [
+        "DOC-009",
+        "meta/CONFLICTS",
+        "examples/documentation"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/DOC-NARRATION.md",
+      "line": 74,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "Token paraphrases increase maintenance surface without supplying domain meaning, constraints, ordering, or rationale.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:doc_narration",
+            "kind": "static",
+            "relation": "proxy",
+            "proposition": "Narration with no informative vocabulary beyond the owned operation's syntax and generic procedural words is rejected.",
+            "residual": "Lexical novelty is only a proxy: sophisticated paraphrase can pass and concise domain vocabulary can be falsely suspected.",
+            "must_pass": "fixture:reference semantically worded narration",
+            "must_reject": "discrimination:DOC-019/check:doc_narration",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never for a qualifying ordinary narration block"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Replace syntax translations with the represented information, constraint, ordering, operation, or reason."
+      }
+    },
+    {
+      "id": "DOC-022",
+      "module": "law/DOC-NAMING",
+      "title": "The project declares a strict documentation model",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:documentation_model"
+      ],
+      "statement": "Every application or component repository MUST declare one local JSON model covering its structured engine, production/test/maintenance scopes, explicit foreign and generated ownership, controlled abbreviations, optional identifier grammars, generated-name markers and mappings, and mechanically inferable semantic properties. Unknown fields, duplicate ownership, escaping paths, and a missing source-root owner MUST fail.",
+      "why": "Domain-specific policy left in prose cannot drive a check; permissive parsing turns every typo into a silent waiver.",
+      "check": "`python -m checks.documentation_model`",
+      "no_mechanism": null,
+      "see": [
+        "meta/SCOPE",
+        "frame/documentation"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/DOC-NAMING.md",
+      "line": 30,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "An informal or permissively parsed vocabulary model cannot bound ownership or drive reliable checks; misspellings then become silent waivers.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:documentation_model",
+            "kind": "static",
+            "relation": "direct",
+            "proposition": "The declared JSON model has the exact v1 schema, confined non-conflicting scopes, one owner for every source root, and internally consistent vocabulary declarations.",
+            "residual": "A structurally valid model can still omit useful optional domain policy or declare a vocabulary that does not match stakeholder meaning.",
+            "must_pass": "fixture:reference documentation-model.json",
+            "must_reject": "discrimination:DOC-022/check:documentation_model",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never while this rule is active for the governed repository"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Copy documentation-model.json, declare it in pyproject.toml, and classify every governed, generated, or foreign source scope."
+      }
+    },
+    {
+      "id": "DOC-023",
+      "module": "law/DOC-NAMING",
+      "title": "Declared identifier grammars preserve dimension order",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:doc_naming"
+      ],
+      "statement": "Where the model declares a scope grammar, every governed identifier in that scope MUST match it or appear in its narrow exclusion list. Named regular-expression groups MUST equal the declared dimensions in broad-to-specific order.",
+      "why": "Independent dimensions that collapse into an ad hoc token cannot be searched, reordered, or checked consistently. Group order makes the project's decision explicit without imposing one domain's dimensions on another.",
+      "check": "`python -m checks.doc_naming`",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DOC-NAMING.md",
+      "line": 45,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "Project-specific semantic dimensions collapsed into ad hoc identifier order cannot be searched or checked consistently.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:doc_naming",
+            "kind": "static",
+            "relation": "direct",
+            "proposition": "Every identifier under a declared grammar scope matches its regular expression or narrow exclusion, and named group order equals declared dimension order.",
+            "residual": "The project can declare a syntactically consistent grammar whose dimensions are semantically incomplete or poorly chosen.",
+            "must_pass": "fixture:declared identifier grammar with ordered named groups",
+            "must_reject": "discrimination:DOC-023/check:doc_naming",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "when the project declares no identifier grammar for the identifier's scope"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Declare only domain-supported identifier grammars; list dimensions broad-to-specific and add narrow explicit exclusions."
+      }
+    },
+    {
+      "id": "DOC-024",
+      "module": "law/DOC-NAMING",
+      "title": "Abbreviations have one controlled scoped meaning",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:doc_naming"
+      ],
+      "statement": "An abbreviation MUST use its exact declared spelling and one meaning in every overlapping scope. Mechanically identifiable undeclared initialisms MUST fail. Tokens in all-uppercase constant names, abbreviations, and contractions that syntax cannot distinguish from words remain a [DOC-028] challenge.",
+      "why": "An abbreviation is cheap only while every reader expands it the same way.",
+      "check": "`python -m checks.doc_naming` for declarations, casing, and unambiguous initialisms · `python -m checks.adversarial_review` through [DOC-028] for domain judgment",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DOC-NAMING.md",
+      "line": 54,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "An undeclared or inconsistently spelled abbreviation makes one identifier expand to different meanings for different readers.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:doc_naming",
+            "kind": "static",
+            "relation": "proxy",
+            "proposition": "Mechanically identifiable uppercase initialisms are declared for their scope, use declared spelling, and overlapping declarations do not assign conflicting meanings.",
+            "residual": "All-uppercase constant tokens, lowercase contractions, and domain words that resemble abbreviations require semantic review rather than lexical classification.",
+            "must_pass": "fixture:declared scoped abbreviation",
+            "must_reject": "discrimination:DOC-024/check:doc_naming",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "when an identifier contains no mechanically identifiable abbreviation"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Inventory project abbreviations, give each one scoped spelling and meaning, and rename conflicting uses."
+      }
+    },
+    {
+      "id": "DOC-025",
+      "module": "law/DOC-NAMING",
+      "title": "Generated vocabulary remains visibly derived",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:doc_naming"
+      ],
+      "statement": "Every identifier carrying a declared generated marker MUST map exactly to its canonical domain term. A mapping key without its marker MUST fail. Generated or serialization terms MUST NOT silently redefine canonical domain vocabulary.",
+      "why": "Code generation should expose a representation boundary, not let tool-owned spelling become the language in which the domain is specified.",
+      "check": "`python -m checks.doc_naming`",
+      "no_mechanism": null,
+      "see": [
+        "law/DEP",
+        "examples/documentation"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/DOC-NAMING.md",
+      "line": 67,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "Tool-derived vocabulary can silently replace canonical domain terminology when generated names have no explicit origin mapping.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:doc_naming",
+            "kind": "static",
+            "relation": "proxy",
+            "proposition": "Every identifier containing a declared generated-name marker has an exact canonical mapping, and each mapping key contains a marker.",
+            "residual": "A mapped canonical term can still be the wrong domain concept, and generated names lacking a configured marker remain invisible.",
+            "must_pass": "fixture:mapped generated identifier",
+            "must_reject": "discrimination:DOC-025/check:doc_naming",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "when the governed repository has no generated vocabulary boundary"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Declare visible generated-name markers and map every matching identifier to its canonical domain term."
+      }
+    },
+    {
+      "id": "DOC-026",
+      "module": "law/DOC",
+      "title": "Applicable value semantics are explicit",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:doc_semantics"
+      ],
+      "statement": "Documentation MUST define both states of a boolean and the element and ordering semantics of a collection. Units, ranges, encodings, and representations declared by the project model MUST appear at the owning entity or local semantic step. Stable properties belong to Doxygen entities; temporary conversions belong to ordinary narration.",
+      "why": "A type says that a value is boolean or a collection, not what either state means, what each member represents, or whether order changes behavior.",
+      "check": "`python -m checks.doc_semantics`; it checks only mechanically inferable types, literals, and project-declared property patterns and does not claim their prose is true.",
+      "no_mechanism": null,
+      "see": [
+        "DOC-016",
+        "law/TYPE"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/DOC.md",
+      "line": 188,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "Types identify boolean or collection shape but leave state meaning, element meaning, order, units, ranges, encoding, and representation unstated.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:doc_semantics",
+            "kind": "static",
+            "relation": "proxy",
+            "proposition": "Mechanically inferred booleans mention both states, inferred collections mention element and order semantics, and model-declared properties appear in owning documentation.",
+            "residual": "Required words can occur in false or irrelevant prose, and semantics not inferable from annotations, literals, or the project model remain untested.",
+            "must_pass": "fixture:documented boolean, collection, and declared unit",
+            "must_reject": "discrimination:DOC-026/check:doc_semantics",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "when no inferable or project-declared value semantic applies"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Document both boolean states, collection elements and ordering, and every modeled unit, range, encoding, or representation."
+      }
+    },
+    {
+      "id": "DOC-027",
+      "module": "law/DOC",
+      "title": "Callable purity and effects are documented",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:doc_semantics"
+      ],
+      "statement": "A callable with a mechanically detectable external effect MUST carry a Doxygen-compatible `@par Effects` contract naming visible state changes and ordering. A callable explicitly marked pure MUST state that it is pure and has no effects. Error outcomes remain owned by [DOC-007] and [law/ERR]; step-by-step effect sequencing belongs to [DOC-017].",
+      "why": "A signature cannot distinguish a computation from a command. Callers need the stable effect contract without importing volatile implementation order into it.",
+      "check": "`python -m checks.doc_semantics` over the bounded effect vocabulary; unrecognized domain effects and dishonest purity claims remain [DOC-028] residuals.",
+      "no_mechanism": null,
+      "see": [
+        "law/EFCT",
+        "law/API"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/DOC.md",
+      "line": 199,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "A caller cannot tell a computation from a command or order observable state changes when a signature omits purity and effects.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "verification": {
+        "state": "local-verifier",
+        "strategies": [
+          {
+            "mechanism": "check:doc_semantics",
+            "kind": "static",
+            "relation": "proxy",
+            "proposition": "A callable using a bounded set of externally visible effect operations has an @par Effects paragraph, and an explicitly pure callable declares no effects.",
+            "residual": "Unrecognized domain effects, dishonest purity markers, and inaccurate effect ordering remain semantic-review residuals.",
+            "must_pass": "fixture:callable with an explicit effects contract",
+            "must_reject": "discrimination:DOC-027/check:doc_semantics",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "when no detectable effect or explicit purity marker is present"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Add @par Effects to commands and an explicit no-effects statement to callables deliberately marked pure."
+      }
+    },
+    {
+      "id": "DOC-028",
+      "module": "law/DOC",
+      "title": "Semantic agreement is reviewed against exact content",
+      "force": "BINDING",
+      "mechanisms": [
+        "check:adversarial_review",
+        "review"
+      ],
+      "statement": "An accepted content-bound adversarial review MUST challenge documentation truth, allocation, obsolescence, and domain naming against the exact current governed files. Changing any governed input MUST invalidate the prior acceptance. The artifact MUST state that role separation and recorded conclusions cannot authenticate independence or prove semantic truth.",
+      "why": "Presence, association, syntax, and declared vocabulary are decidable; agreement between prose and arbitrary behavior is the program-understanding problem. Calling a lexical proxy proof would make the discipline less truthful than the comments it checks.",
+      "check": "`python -m checks.adversarial_review`",
+      "no_mechanism": null,
+      "see": [
+        "law/FLOW",
+        "frame/documentation"
+      ],
+      "superseded_by": null,
+      "path": "discipline/law/DOC.md",
+      "line": 210,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "Lexical checks can report complete documentation while prose is false, misplaced, obsolete, or uses the wrong domain concepts.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "limits",
+          "confidence": "high"
+        }
+      ],
+      "verification": {
+        "state": "mixed-verifiers",
+        "strategies": [
+          {
+            "mechanism": "check:adversarial_review",
+            "kind": "static",
+            "relation": "direct",
+            "proposition": "The current content-bound review contains documentation-truth, allocation, obsolescence, and domain-naming questions and is invalidated by governed input drift.",
+            "residual": "Artifact structure and freshness do not authenticate reviewer independence or make its semantic conclusions true.",
+            "must_pass": "fixture:reference content-bound adversarial review",
+            "must_reject": "discrimination:DOC-028/check:adversarial_review",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never while this rule is active for the governed repository"
+          },
+          {
+            "mechanism": "review",
+            "kind": "structured-review",
+            "relation": "direct",
+            "proposition": "A reviewer challenges documentation truth, allocation, obsolescence, and naming against exact current code and records bounded conclusions without claiming independent authentication.",
+            "residual": "Recorded conclusions remain judgments by a potentially non-independent reviewer and cannot prove arbitrary prose-code agreement.",
+            "must_pass": "artifact:accepted adversarial-review.json with question-level conclusions and explicit epistemic limits",
+            "must_reject": null,
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never; the structured judgment is the declared residual owner"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Regenerate the review scope, answer all four documentation question categories, and record the review's epistemic limits."
+      }
+    },
+    {
+      "id": "DOC-029",
+      "module": "law/DOC",
+      "title": "The Doxygen projection is non-vacuous and relational",
+      "force": "BINDING",
+      "mechanisms": [
+        "auto:doxygen"
+      ],
+      "statement": "The documentation gate MUST generate non-empty entity/source pages and exercised call, caller, and directory-dependency relationships. Enabling settings without producing their artifacts MUST fail. The generated first view MUST need no undeclared network resource; rendered output remains uncommitted under [DOC-012].",
+      "why": "A configured feature is not evidence that the parser found a relationship, and a clean run over filtered input is not documentation.",
+      "check": "`python tools/doxygen_gate.py`; the pinned capability facts and reduced probes live in [fact/doxygen].",
+      "no_mechanism": null,
+      "see": [],
+      "superseded_by": null,
+      "path": "discipline/law/DOC.md",
+      "line": 222,
+      "applicability": {
+        "units": [
+          "application",
+          "component"
+        ],
+        "capabilities": []
+      },
+      "failure_mode": "A clean documentation command can be vacuous when input is filtered out or relational features are enabled without producing any relation artifact.",
+      "warrants": [
+        {
+          "source": "source:CD",
+          "relation": "supports",
+          "confidence": "medium"
+        }
+      ],
+      "verification": {
+        "state": "external-verifier",
+        "strategies": [
+          {
+            "mechanism": "auto:doxygen",
+            "kind": "tool",
+            "relation": "direct",
+            "proposition": "The Doxygen gate rejects a generated projection with no entity/source pages or with zero call, caller, or directory-dependency relation SVGs.",
+            "residual": "Non-empty generated relationships do not establish that Doxygen inferred every intended semantic relationship or that rendered prose is true.",
+            "must_pass": "command:`python tools/doxygen_gate.py` on the conformant reference",
+            "must_reject": "discrimination:DOC-029/auto:doxygen",
+            "platforms": [
+              "windows",
+              "linux"
+            ],
+            "not_applicable": "never while Doxygen is the selected structured engine"
+          }
+        ]
+      },
+      "field_observations": [],
+      "migration": {
+        "source": "v5.0.0",
+        "disposition": "new",
+        "guidance": "Use the shipped Doxygen gate and configure governed inputs so entity, source, call, caller, and dependency projections are non-empty."
       }
     },
     {

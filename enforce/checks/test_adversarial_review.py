@@ -95,6 +95,9 @@ def _tree(
         "security-model.json",
     ):
         (tmp_path / name).write_text("{}\n", encoding="utf-8")
+    (tmp_path / "documentation-model.json").write_text(
+        '{"schema_version": 1}\n', encoding="utf-8"
+    )
     declaration = project.parse(declaration_path)
     payload = review_payload(declaration)
     review_path = tmp_path / "adversarial-review.json"
@@ -227,9 +230,24 @@ def test_every_semantic_question_is_required(tmp_path: Path) -> None:
     @param tmp_path fixture repository
     """
     check, source, path, payload = _tree(tmp_path)
-    _records(payload, "questions").pop()
+    _records(payload, "questions").pop(0)
     _write(path, payload)
     assert _diagnostic(check, source) == "REVIEW004_QUESTIONS"
+
+
+def test_a_missing_documentation_question_fails_doc_028(tmp_path: Path) -> None:
+    """Documentation judgment cannot disappear inside generic review coverage.
+
+    @param tmp_path fixture repository
+    """
+    check, source, path, payload = _tree(tmp_path)
+    questions = _records(payload, "questions")
+    questions[:] = [
+        question for question in questions if question["id"] != "documentation_truth"
+    ]
+    _write(path, payload)
+
+    assert _diagnostic(check, source) == "REVIEW008_DOCUMENTATION"
 
 
 def test_question_evidence_cannot_escape_repository(tmp_path: Path) -> None:
