@@ -11,6 +11,7 @@ coverage cannot prove that the package actually contains a working installer.
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess  # ruff: ignore[suspicious-subprocess-import] -- packaged CLI boundary
 import sys
@@ -21,6 +22,8 @@ import pytest
 
 import release
 import vendor
+from checks import project as discipline_project
+from checks.adversarial_review import scope_snapshot
 from discipline_core import REPO_ROOT
 
 if TYPE_CHECKING:
@@ -99,6 +102,53 @@ def _native_skill(root: Path, host: str) -> Path:
     @return host-native skill entry point
     """
     return root / host / "skills" / "python-discipline" / "SKILL.md"
+
+
+def _run_packaged_checks(root: Path) -> subprocess.CompletedProcess[str]:
+    """Run every shipped custom check without importing the source checkout.
+
+    @param root migrated repository carrying an extracted package
+    @return captured aggregate check result
+    """
+    environment = os.environ.copy()
+    environment["PYTHONPATH"] = str(root / ".agent" / "enforce")
+    return subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] -- fixed packaged module
+        (
+            sys.executable,
+            "-m",
+            "checks",
+            "src",
+            "tests",
+            "--root",
+            str(root),
+            "--project",
+            str(root / "pyproject.toml"),
+        ),
+        cwd=root,
+        env=environment,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+        timeout=60,
+    )
+
+
+def _refresh_fixture_review(root: Path) -> None:
+    """Bind copied reference-review evidence to its synthetic migrated scope.
+
+    @param root migrated synthetic repository
+    """
+    declaration = discipline_project.parse(root / "pyproject.toml")
+    count, digest = scope_snapshot(declaration)
+    path = root / "adversarial-review.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    scope = payload["scope"]
+    assert isinstance(scope, dict)
+    scope["file_count"] = count
+    scope["digest"] = digest
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 @pytest.fixture(scope="session")
@@ -301,6 +351,70 @@ def test_archive_upgrade_preserves_project_state_and_updates_both_hosts(
     assert canonical.read_bytes().endswith(marker)
     for host in (".claude", ".agents"):
         assert _native_skill(root, host).read_bytes() == canonical.read_bytes()
+
+
+@pytest.mark.parametrize(
+    ("unit", "legacy_engine"),
+    [("application", "none"), ("component", "sphinx")],
+)
+@pytest.mark.timeout(180)
+def test_archive_rejects_then_migrates_both_v4_repository_shapes(
+    tmp_path: Path,
+    built_archives: tuple[Path, Path],
+    unit: str,
+    legacy_engine: str,
+) -> None:
+    """The delivered v5 package gives a v4 project one bounded path to green.
+
+    @param tmp_path fresh synthetic adopter parent
+    @param built_archives independently staged packages
+    @param unit application or independently developed single component
+    @param legacy_engine former v4 structured-documentation selection
+    """
+    root = tmp_path / f"legacy-{unit}"
+    shutil.copytree(REPO_ROOT / "enforce" / "fixtures" / "reference", root)
+    project_file = root / "pyproject.toml"
+    project_text = project_file.read_text(encoding="utf-8")
+    project_text = project_text.replace('unit = "application"', f'unit = "{unit}"')
+    project_text = project_text.replace('doc_engine = "doxygen"', f'doc_engine = "{legacy_engine}"')
+    project_text = project_text.replace(
+        'documentation_model = "documentation-model.json"\n', ""
+    )
+    project_file.write_text(project_text, encoding="utf-8", newline="\n")
+    (root / "documentation-model.json").unlink()
+    architecture_path = root / "architecture.json"
+    architecture = json.loads(architecture_path.read_text(encoding="utf-8"))
+    architecture["unit"] = unit
+    architecture_path.write_text(
+        json.dumps(architecture, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
+    _extract_archive(built_archives[0], root)
+
+    refused = _run_script(
+        root,
+        root / ".agent" / "tools" / "project_gate.py",
+        "--root",
+        str(root),
+    )
+    assert refused.returncode == 1
+    assert "DISC-PROJECT-021" in refused.stdout
+    assert "migrate entity comments" in refused.stdout
+
+    migrated = _run_script(
+        root,
+        root / ".agent" / "tools" / "migrate_v5.py",
+        "--root",
+        str(root),
+        "--apply",
+    )
+    _assert_ok(migrated)
+    _refresh_fixture_review(root)
+
+    checked = _run_packaged_checks(root)
+    _assert_ok(checked)
+    assert "0 finding(s)" in checked.stdout
+    assert (root / "Doxyfile").is_file()
+    assert (root / "documentation-model.json").is_file()
 
 
 # ------------------------------------------------------------------- leak scan
