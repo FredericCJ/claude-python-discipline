@@ -24,11 +24,12 @@ from refpkg.domain.model import Entry, Instant
 from refpkg.ports.errors import StoreUnavailable
 from refpkg.ports.files import FileStore
 
+# Keep the temporary-directory path type out of the runtime contract suite.
 if TYPE_CHECKING:
     from pathlib import Path
 
-## Two entries, deliberately seeded out of path order so a store that returns
-## insertion order instead of path order fails rather than passing by luck.
+## Each seed entry, deliberately ordered opposite to path order so a store that
+## preserves insertion order instead of sorting fails rather than passing by luck.
 SEED: tuple[Entry, ...] = (
     Entry(path="b.log", size_bytes=20, modified_at=Instant(1_700_000_100)),
     Entry(path="a.log", size_bytes=10, modified_at=Instant(1_700_000_000)),
@@ -42,13 +43,22 @@ def store(request: pytest.FixtureRequest, tmp_path: Path) -> FileStore:
     @param request pytest's request object, carrying the parameter
     @param tmp_path a directory for the real adapter to be bound to
     @return a freshly constructed adapter holding `SEED`
+    @par Effects
+    The real-adapter case writes each seed file beneath the isolated temporary directory.
     """
+    # Materialize real filesystem state only for the production adapter case.
     if request.param == "real":
+        # Write each seed element in its declared fixture order under the isolated root.
         for entry in SEED:
+            # Materialize the exact byte count represented by the current entry.
             (tmp_path / entry.path).write_bytes(b"x" * entry.size_bytes)
+        # Bind the production adapter after all seed files exist.
         return LocalFileStore(tmp_path)
+    # Select the in-memory implementation without touching the filesystem.
     if request.param == "fake":
+        # Seed the ordinary fake with the identical contract values.
         return MemoryFileStore(SEED)
+    # Exercise the scheduled-fault implementation in its explicit healthy mode.
     return FaultyFileStore(SEED, FaultSchedule.healthy())
 
 
@@ -63,6 +73,7 @@ def names(store: FileStore) -> list[str]:
     @param store the adapter under test
     @return each entry's path, in the order the store reported them
     """
+    # Project each reported entry to its path while preserving adapter order.
     return [entry.path for entry in store.entries()]
 
 
@@ -95,6 +106,7 @@ def test_delete_removes_exactly_one_entry(store: FileStore) -> None:
 
     @param store the adapter under test
     """
+    # Select the first path-ordered entry as the sole deletion subject.
     target = store.entries()[0]
     store.delete(target.path)
     assert names(store) == ["b.log"]
@@ -105,5 +117,6 @@ def test_deleting_an_absent_path_is_an_error(store: FileStore) -> None:
 
     @param store the adapter under test
     """
+    # Require the port's stable error family for a missing entry.
     with pytest.raises(StoreUnavailable):
         store.delete("no-such-entry.log")

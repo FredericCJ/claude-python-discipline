@@ -28,18 +28,21 @@ def aged(days: int, *, name: str = "f", size: int = 1) -> Entry:
     @param size the entry's size in bytes
     @return the entry
     """
+    # Convert the requested age to an epoch-relative instant under the fixed reference.
     return Entry(path=name, size_bytes=size,
                  modified_at=Instant(NOW.epoch_seconds - days * SECONDS_PER_DAY))
 
 
 def test_an_empty_store_yields_an_empty_plan() -> None:
     """Nothing to consider is a plan, not a refusal."""
+    # Plan the empty ordered population under an otherwise ordinary policy.
     outcome = plan_prune([], Policy.parse(30, 0), NOW)
     assert outcome == Plan(doomed=(), kept=())
 
 
 def test_an_entry_older_than_the_limit_is_doomed() -> None:
     """The rule's principal clause."""
+    # Isolate one entry beyond the threshold and inspect its complete outcome.
     old = aged(60, name="old")
     outcome = plan_prune([old], Policy.parse(30, 0), NOW)
     assert isinstance(outcome, Plan)
@@ -48,6 +51,7 @@ def test_an_entry_older_than_the_limit_is_doomed() -> None:
 
 def test_an_entry_younger_than_the_limit_is_kept() -> None:
     """The complement, which a check that only tested doom would miss."""
+    # Isolate one entry inside the threshold and inspect both plan partitions.
     fresh = aged(5, name="fresh")
     outcome = plan_prune([fresh], Policy.parse(30, 0), NOW)
     assert isinstance(outcome, Plan)
@@ -57,6 +61,7 @@ def test_an_entry_younger_than_the_limit_is_kept() -> None:
 
 def test_an_entry_exactly_at_the_limit_is_kept() -> None:
     """The boundary, stated so the comparison cannot silently become `<=`."""
+    # Place one entry exactly on the inclusive retention boundary.
     edge = aged(30, name="edge")
     outcome = plan_prune([edge], Policy.parse(30, 0), NOW)
     assert isinstance(outcome, Plan)
@@ -69,6 +74,7 @@ def test_keep_newest_spares_entries_the_age_policy_condemns() -> None:
     Every entry here is far past the age limit, so anything spared is spared by
     `keep_newest` alone.
     """
+    # Build each old entry in descending age order, then apply the newest reservation.
     entries = [aged(days, name=f"f{days}") for days in (90, 80, 70)]
     outcome = plan_prune(entries, Policy.parse(30, 2), NOW)
     assert isinstance(outcome, Plan)
@@ -77,6 +83,7 @@ def test_keep_newest_spares_entries_the_age_policy_condemns() -> None:
 
 def test_keep_newest_larger_than_the_store_dooms_nothing() -> None:
     """A policy that spares more than exists must not index past the end."""
+    # Build each old entry in deliberate input order under an oversized reservation.
     entries = [aged(90, name="a"), aged(80, name="b")]
     outcome = plan_prune(entries, Policy.parse(30, 10), NOW)
     assert isinstance(outcome, Plan)
@@ -85,6 +92,7 @@ def test_keep_newest_larger_than_the_store_dooms_nothing() -> None:
 
 def test_an_entry_from_the_future_is_refused() -> None:
     """The refusal arm: a result the caller handles, never an exception."""
+    # Submit one future-dated element and retain the resulting refusal for inspection.
     outcome = plan_prune([aged(-1, name="tomorrow")], Policy.parse(30, 0), NOW)
     assert isinstance(outcome, Refusal)
     assert outcome.code == "refpkg.domain.entry_from_the_future"
@@ -93,6 +101,7 @@ def test_an_entry_from_the_future_is_refused() -> None:
 
 def test_reclaimed_bytes_totals_only_the_doomed() -> None:
     """The figure a caller decides on; counting the kept would overstate it."""
+    # Plan one doomed and one kept element with distinct byte contributions.
     outcome = plan_prune(
         [aged(90, name="old", size=100), aged(1, name="new", size=7)],
         Policy.parse(30, 0), NOW,
@@ -103,6 +112,7 @@ def test_reclaimed_bytes_totals_only_the_doomed() -> None:
 
 def test_every_entry_appears_exactly_once() -> None:
     """A plan partitions its input; an entry both doomed and kept is nonsense."""
+    # Build each differently aged element in non-sorted order to test full partitioning.
     entries = [aged(days, name=f"f{days}") for days in (90, 10, 50)]
     outcome = plan_prune(entries, Policy.parse(30, 1), NOW)
     assert isinstance(outcome, Plan)
@@ -112,6 +122,7 @@ def test_every_entry_appears_exactly_once() -> None:
 
 def test_planning_refuses_work_beyond_its_input_and_cleanup_budget() -> None:
     """The operational bound is enforced before sorting or destructive planning."""
+    # Repeat one element past the exact declared planning population ceiling.
     entry = aged(90, name="same_value")
     outcome = plan_prune([entry] * (MAX_PLAN_ENTRIES + 1), Policy.parse(30, 0), NOW)
     assert isinstance(outcome, Refusal)
@@ -126,5 +137,6 @@ def test_a_negative_policy_is_refused_at_its_constructor(max_age: int, keep: int
     @param max_age the age limit under test
     @param keep the spare count under test
     """
+    # Require constructor refusal before either invalid setting reaches planning.
     with pytest.raises(InvariantViolated):
         Policy.parse(max_age, keep)

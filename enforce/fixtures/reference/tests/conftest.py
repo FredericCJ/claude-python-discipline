@@ -14,5 +14,6 @@ from pathlib import Path
 ## The reference package's source root, two levels up from this file then into src.
 _SRC = Path(__file__).resolve().parent.parent / "src"
 
+# Add the fixture source only when this test process has not already exposed it.
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))

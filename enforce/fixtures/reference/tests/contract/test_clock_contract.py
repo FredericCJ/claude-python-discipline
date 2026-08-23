@@ -26,12 +26,13 @@ from refpkg.adapters.faults import FaultSchedule
 from refpkg.domain.model import Instant
 from refpkg.ports.clock import Clock
 
+# Keep the adapter-factory callable type out of the runtime contract suite.
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-## Every adapter for this port, named for the failure message. The faulty one
-## appears in healthy mode, which is what `TEST-020` demands and what stops it
-## from being a second implementation nobody holds to the contract.
+## Each adapter-name and factory element, ordered real then fake then healthy-faulty
+## for stable case display. The faulty one appears in healthy mode, which is what
+## `TEST-020` demands and what stops it becoming an ungoverned second implementation.
 ADAPTERS: tuple[tuple[str, Callable[[], Clock]], ...] = (
     ("real", SystemClock),
     ("fake", lambda: FakeClock(Instant(1_700_000_000))),
@@ -39,6 +40,7 @@ ADAPTERS: tuple[tuple[str, Callable[[], Clock]], ...] = (
 )
 
 
+# Derive each displayed case identity in the adapter registry's declared order.
 @pytest.fixture(params=list(ADAPTERS), ids=[name for name, _ in ADAPTERS])
 def clock(request: pytest.FixtureRequest) -> Clock:
     """One adapter under test, one per parameterisation.
@@ -46,6 +48,7 @@ def clock(request: pytest.FixtureRequest) -> Clock:
     @param request pytest's request object, carrying the parameter
     @return a freshly constructed adapter
     """
+    # Select the factory paired with this parameterized adapter identity.
     _, build = request.param
     return build()
 
@@ -75,6 +78,7 @@ def test_now_is_non_decreasing(clock: Clock) -> None:
 
     @param clock the adapter under test
     """
+    # Observe two ordered readings from the same adapter instance for comparison.
     first = clock.now()
     second = clock.now()
     assert second.epoch_seconds >= first.epoch_seconds

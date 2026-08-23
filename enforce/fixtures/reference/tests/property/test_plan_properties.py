@@ -41,7 +41,7 @@ POLICIES = st.builds(
 def test_planning_is_total(entries: list[Entry], policy: Policy, now: int) -> None:
     """It always returns one arm of the union and never raises.
 
-    @param entries the generated store contents
+    @param entries each generated store entry, in generator order
     @param policy the generated policy
     @param now the generated instant
     """
@@ -53,12 +53,14 @@ def test_a_plan_partitions_its_input(entries: list[Entry], policy: Policy,
                                      now: int) -> None:
     """Every entry is doomed or kept, never both and never neither.
 
-    @param entries the generated store contents
+    @param entries each generated store entry, in generator order
     @param policy the generated policy
     @param now the generated instant
     """
+    # Compute one generated outcome before narrowing expected refusals from plans.
     outcome = plan_prune(entries, policy, Instant(now))
     if isinstance(outcome, Refusal):
+        # A time-inconsistent generated case has no plan partition to inspect.
         return
     # Compared as multisets: two entries may be equal, and a partition that
     # silently collapsed them is the defect this suite found in the planner.
@@ -72,12 +74,14 @@ def test_keep_newest_is_never_exceeded(entries: list[Entry], policy: Policy,
 
     The clause that makes an aggressive age policy safe to run.
 
-    @param entries the generated store contents
+    @param entries each generated store entry, in generator order
     @param policy the generated policy
     @param now the generated instant
     """
+    # Compute one generated outcome before inspecting the plan's spared population.
     outcome = plan_prune(entries, policy, Instant(now))
     if isinstance(outcome, Refusal):
+        # A time-inconsistent generated case has no kept partition to inspect.
         return
     assert len(outcome.kept) >= min(policy.keep_newest, len(entries))
 
@@ -87,10 +91,11 @@ def test_planning_is_deterministic(entries: list[Entry], policy: Policy,
                                    now: int) -> None:
     """`EFCT-003`: the same inputs give the same plan, every time.
 
-    @param entries the generated store contents
+    @param entries each generated store entry, in generator order
     @param policy the generated policy
     @param now the generated instant
     """
+    # Evaluate identical generated values twice without changing ambient inputs.
     first = plan_prune(entries, policy, Instant(now))
     second = plan_prune(entries, policy, Instant(now))
     assert first == second
