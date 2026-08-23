@@ -536,3 +536,27 @@ def test_deleting_a_generated_mapping_fails_doc_025(tmp_path: Path) -> None:
     findings = _run(DocNamingCheck(), module, declaration)
 
     assert any(item.rule_id == "DOC-025" for item in findings)
+
+
+def test_generated_concept_mentioned_inside_a_name_is_not_a_marker(tmp_path: Path) -> None:
+    """A generated-output predicate is not itself generated vocabulary.
+
+    @param tmp_path fixture repository
+    """
+    module, declaration = _fixture(
+        tmp_path,
+        '''
+        """! Fixture module."""
+        def is_generated_output(value: object) -> bool:
+            """Whether a value represents generated output.
+            @param value candidate value
+            @return true for generated output; false for authored output
+            """
+            # Distinguish generated output from the authored alternative.
+            return value is not None
+        ''',
+    )
+
+    findings = _run(DocNamingCheck(), module, declaration)
+
+    assert not any(item.rule_id == "DOC-025" for item in findings)

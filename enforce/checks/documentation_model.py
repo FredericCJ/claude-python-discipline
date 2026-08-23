@@ -466,10 +466,10 @@ def _generated_names(raw: object, source: Path) -> GeneratedNames:
     _closed(record, {"markers", "mappings"}, source, "generated_names")
     markers = _strings(record.get("markers"), source, "generated_names.markers")
     mappings = _object(record.get("mappings"), source, "generated_names.mappings")
-    for generated, canonical in mappings.items():
+    for mapped_name, canonical in mappings.items():
         if (
-            not isinstance(generated, str)
-            or IDENTIFIER_TOKEN.fullmatch(generated) is None
+            not isinstance(mapped_name, str)
+            or IDENTIFIER_TOKEN.fullmatch(mapped_name) is None
             or not isinstance(canonical, str)
             or not canonical.strip()
         ):
@@ -478,11 +478,11 @@ def _generated_names(raw: object, source: Path) -> GeneratedNames:
                 source,
                 "generated-name mappings require identifier keys and non-empty canonical terms",
             )
-        if not any(marker in generated.split("_") for marker in markers):
+        if not any(marker in mapped_name.split("_") for marker in markers):
             _reject(
                 "DOCMODEL-010",
                 source,
-                f"generated mapping {generated!r} carries none of the declared markers",
+                f"generated mapping {mapped_name!r} carries none of the declared markers",
             )
     return GeneratedNames(markers, {str(key): str(value) for key, value in mappings.items()})
 

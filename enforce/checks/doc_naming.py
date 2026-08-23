@@ -234,16 +234,16 @@ def _constant_style(identifier: str) -> bool:
 def _generated_findings(
     identifier: Identifier, path: Path, model: DocumentationModel
 ) -> Iterator[Finding]:
-    """Require every visibly generated identifier to map to canonical vocabulary.
+    """Require every marker-prefixed identifier to map to canonical vocabulary.
 
     @param identifier source identifier
     @param path source file
     @param model project documentation model
     @return one missing-boundary finding when applicable
     """
-    tokens = set(_tokens(identifier.name))
+    tokens = _tokens(identifier.name)
     markers = set(model.generated_names.markers)
-    if not tokens.intersection(markers):
+    if not tokens or tokens[0] not in markers:
         return
     if identifier.name in model.generated_names.mappings:
         return

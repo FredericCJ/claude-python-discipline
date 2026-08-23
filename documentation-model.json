@@ -20,7 +20,15 @@
       "generated",
       "derived"
     ],
-    "mappings": {}
+    "mappings": {
+      "_generated_findings": "generated-name boundary findings",
+      "generated_names": "derived identifier policy",
+      "_generated_names": "derived identifier policy parser",
+      "generated": "temporary documentation projection",
+      "derived": "defects requiring inference",
+      "generated_rules": "registry-projected rule records",
+      "_generated_probe": "temporary documentation projection fixture"
+    }
   },
   "semantic_properties": []
 }
