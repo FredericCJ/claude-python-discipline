@@ -19,6 +19,7 @@ from checks.domain_purity import DomainPurityCheck
 from checks.no_test_branches import NoTestBranchesCheck
 from checks.raise_from import RaiseFromCheck
 
+# Import fixture and checker protocols only during static analysis.
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from pathlib import Path
@@ -39,10 +40,16 @@ def write(tmp_path: Path, source: str, *, layer: str = "domain", name: str = "mo
     @param name the file's name -- a `test_` prefix would make every check skip
         the file, which is why the default does not have one
     @return the written file, ready to hand to a check
+
+    @par Effects
+    Creates or replaces one isolated Python module beneath the synthetic source tree.
     """
+    # Resolve the module path whose layer segment controls checker applicability.
     target = tmp_path / "src" / "mypkg" / layer / name
+    # Materialize the package directory and normalized probe source in that order.
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(dedent(source), encoding="utf-8")
+    # Return the persisted module path as the checker subject.
     return target
 
 
@@ -54,8 +61,9 @@ def rules_fired(check: Check, path: Path) -> set[str]:
 
     @param check any check; it is driven over this one file rather than a tree
     @param path the file to run it over
-    @return every rule id reported, empty when the file conforms
+    @return unordered reported rule-id string elements, empty when conformant
     """
+    # Collapse finding records to the unique governing rule identifiers reported.
     return {f.rule_id for f in check.run([path])}
 
 
@@ -63,24 +71,31 @@ def rules_fired(check: Check, path: Path) -> set[str]:
 
 def test_domain_io_import_fires(tmp_path: Path) -> None:
     """An I/O module reached from the domain is reported, import alone sufficing."""
+    # Materialize a domain module whose only prohibited reach is pathlib.
     path = write(tmp_path, "import pathlib\n\ndef load() -> str:\n    return 'x'\n")
     assert "ARCH-002" in rules_fired(DomainPurityCheck(), path)
 
 
 def test_domain_any_annotation_fires(tmp_path: Path) -> None:
     """`Any` in a domain signature is reported: it erases the contract."""
+    # Materialize a domain callable whose parameter annotation admits every value.
     path = write(tmp_path, "from typing import Any\n\ndef f(x: Any) -> None: ...\n")
     assert "TYPE-002" in rules_fired(DomainPurityCheck(), path)
 
 
 def test_domain_literal_union_fires(tmp_path: Path) -> None:
     """A `Literal` union standing in for a named enum is reported."""
-    path = write(tmp_path, "from typing import Literal\n\ndef f(s: Literal['a', 'b']) -> None: ...\n")
+    # Materialize a domain signature using an anonymous closed literal set.
+    path = write(
+        tmp_path,
+        "from typing import Literal\n\ndef f(s: Literal['a', 'b']) -> None: ...\n",
+    )
     assert "TYPE-006" in rules_fired(DomainPurityCheck(), path)
 
 
 def test_domain_unfrozen_dataclass_fires(tmp_path: Path) -> None:
     """A bare `@dataclass` in the domain is reported: TYPE-007 wants frozen and slots both."""
+    # Materialize a mutable nonslotted domain dataclass as the focused violation.
     path = write(tmp_path, """
         from dataclasses import dataclass
 
@@ -93,12 +108,14 @@ def test_domain_unfrozen_dataclass_fires(tmp_path: Path) -> None:
 
 def test_domain_foreign_type_fires(tmp_path: Path) -> None:
     """A known framework type convicts on its name alone; no import has to declare it."""
+    # Materialize a domain boundary whose signature leaks a framework request type.
     path = write(tmp_path, "def handle(request: Request) -> None: ...\n")
     assert "ARCH-013" in rules_fired(DomainPurityCheck(), path)
 
 
 def test_conforming_domain_module_is_silent(tmp_path: Path) -> None:
     """Frozen slotted values, an enum and non-I/O imports leave all five rules silent."""
+    # Materialize a typed immutable domain module as the accepting control.
     path = write(tmp_path, """
         from dataclasses import dataclass
         from enum import StrEnum
@@ -120,6 +137,7 @@ def test_conforming_domain_module_is_silent(tmp_path: Path) -> None:
 
 def test_adapter_layer_is_allowed_io(tmp_path: Path) -> None:
     """The same import outside the domain is fine -- that is the whole point."""
+    # Place the pathlib reach at its owning adapter boundary as a layer control.
     path = write(tmp_path, "import pathlib\n", layer="adapters")
     assert rules_fired(DomainPurityCheck(), path) == set()
 
@@ -128,6 +146,7 @@ def test_adapter_layer_is_allowed_io(tmp_path: Path) -> None:
 
 def test_raise_without_from_fires(tmp_path: Path) -> None:
     """Raising inside a handler with no `from` clause is reported; the cause is lost."""
+    # Materialize an exception translation that drops explicit causal chaining.
     path = write(tmp_path, """
         def load() -> None:
             try:
@@ -140,6 +159,7 @@ def test_raise_without_from_fires(tmp_path: Path) -> None:
 
 def test_bare_except_fires(tmp_path: Path) -> None:
     """A bare handler is reported even when it does work rather than nothing."""
+    # Materialize a handler whose unbounded catch destroys failure classification.
     path = write(tmp_path, """
         def load() -> None:
             try:
@@ -152,6 +172,7 @@ def test_bare_except_fires(tmp_path: Path) -> None:
 
 def test_catch_and_pass_fires(tmp_path: Path) -> None:
     """A named exception discarded by `pass` is reported under the same rule."""
+    # Materialize a named handler that silently discards its caught failure.
     path = write(tmp_path, """
         def load() -> None:
             try:
@@ -164,6 +185,7 @@ def test_catch_and_pass_fires(tmp_path: Path) -> None:
 
 def test_from_none_without_reason_fires(tmp_path: Path) -> None:
     """Suppressing the cause is reported when no comment on or just above the raise argues it."""
+    # Materialize explicit cause suppression with no adjacent rationale.
     path = write(tmp_path, """
         def load() -> None:
             try:
@@ -176,6 +198,7 @@ def test_from_none_without_reason_fires(tmp_path: Path) -> None:
 
 def test_from_none_with_a_stated_reason_is_accepted(tmp_path: Path) -> None:
     """A preceding comment is the escape hatch: suppression is allowed once argued."""
+    # Materialize justified suppression as the accepting documentation control.
     path = write(tmp_path, """
         def load() -> None:
             try:
@@ -190,6 +213,7 @@ def test_from_none_with_a_stated_reason_is_accepted(tmp_path: Path) -> None:
 
 def test_bare_reraise_is_not_flagged(tmp_path: Path) -> None:
     """It preserves the traceback. One source document said otherwise; see CONFLICTS C4."""
+    # Materialize a traceback-preserving bare reraise as the semantic control.
     path = write(tmp_path, """
         def load() -> None:
             try:
@@ -203,6 +227,7 @@ def test_bare_reraise_is_not_flagged(tmp_path: Path) -> None:
 
 def test_explicit_chaining_is_silent(tmp_path: Path) -> None:
     """Chaining with `from err` is the conforming form and draws nothing."""
+    # Materialize an explicit cause-preserving translation as the accepting control.
     path = write(tmp_path, """
         def load() -> None:
             try:
@@ -218,6 +243,7 @@ def test_rewrapping_only_to_add_context_fires(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize broad rewrapping whose only new information is message context.
     path = write(tmp_path, """
         def load() -> None:
             try:
@@ -232,6 +258,7 @@ def test_rewrapping_only_to_add_context_fires(tmp_path: Path) -> None:
 
 def test_assert_on_a_parameter_fires(tmp_path: Path) -> None:
     """Guarding a caller-supplied argument with an assert is reported; `-O` deletes it."""
+    # Materialize caller-input validation implemented as an optimizable assertion.
     path = write(tmp_path, """
         def save(name: str) -> None:
             assert name, "name is required"
@@ -241,6 +268,7 @@ def test_assert_on_a_parameter_fires(tmp_path: Path) -> None:
 
 def test_assert_on_external_input_fires(tmp_path: Path) -> None:
     """Asserting over freshly parsed data is reported: that is validation, not an invariant."""
+    # Materialize an assertion over newly parsed external data.
     path = write(tmp_path, """
         def load() -> None:
             assert json.loads(raw)["ok"]
@@ -250,6 +278,7 @@ def test_assert_on_external_input_fires(tmp_path: Path) -> None:
 
 def test_assert_with_a_validation_message_fires(tmp_path: Path) -> None:
     """The message alone convicts: user-facing wording marks the assert as validation."""
+    # Materialize a user-facing validation refusal expressed as an assertion.
     path = write(tmp_path, """
         def run() -> None:
             assert flag, "permission denied"
@@ -259,6 +288,7 @@ def test_assert_with_a_validation_message_fires(tmp_path: Path) -> None:
 
 def test_internal_invariant_assert_is_allowed(tmp_path: Path) -> None:
     """An assert over a locally computed value survives, which is the point of the rule."""
+    # Materialize a local post-computation invariant as the accepting assertion control.
     path = write(tmp_path, """
         def reduce() -> None:
             total = compute()
@@ -271,6 +301,7 @@ def test_internal_invariant_assert_is_allowed(tmp_path: Path) -> None:
 
 def test_env_test_branch_fires(tmp_path: Path) -> None:
     """Behaviour switched by a test-named environment variable is reported."""
+    # Materialize production behavior conditional on a test-only environment flag.
     path = write(tmp_path, """
         def run() -> None:
             if os.environ.get("TESTING"):
@@ -281,6 +312,7 @@ def test_env_test_branch_fires(tmp_path: Path) -> None:
 
 def test_sys_modules_probe_fires(tmp_path: Path) -> None:
     """Asking `sys.modules` whether pytest is loaded is the same defect in disguise."""
+    # Materialize production behavior conditional on pytest import state.
     path = write(tmp_path, """
         def run() -> None:
             if "pytest" in sys.modules:
@@ -291,6 +323,7 @@ def test_sys_modules_probe_fires(tmp_path: Path) -> None:
 
 def test_import_probe_fires(tmp_path: Path) -> None:
     """A guarded import of the test framework is caught at module scope, outside any function."""
+    # Materialize a module-level test-framework availability probe.
     path = write(tmp_path, """
         try:
             import pytest
@@ -302,6 +335,7 @@ def test_import_probe_fires(tmp_path: Path) -> None:
 
 def test_ordinary_branch_is_silent(tmp_path: Path) -> None:
     """A branch on domain data is untouched; only test-awareness is forbidden."""
+    # Materialize an ordinary domain-state branch as the accepting control.
     path = write(tmp_path, """
         def run(stage: str) -> None:
             if stage == "draft":
@@ -323,12 +357,19 @@ def test_every_check_declares_the_rules_it_enforces(check: Check) -> None:
     @param check each concrete check in turn; the list is written out by hand,
         so a new check has to be added to it to be covered here
     """
+    # Require a non-empty rule declaration before validating each rule-id element.
     assert check.rules, f"{check.name} enforces no named rule"
+    # Require normalized family prefixes and separators on every declared identifier.
     assert all(r[:3].isupper() and "-" in r for r in check.rules)
 
 
 def test_test_files_are_exempt(tmp_path: Path) -> None:
-    """Tests assert and catch broadly by nature; the checks must not police them."""
+    """Tests assert and catch broadly by nature; the checks must not police them.
+
+    @par Effects
+    Writes one isolated test module before exercising two production-only checks.
+    """
+    # Materialize a test module combining assertion and broad exception handling.
     target = tmp_path / "tests" / "test_thing.py"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(dedent("""
@@ -339,10 +380,15 @@ def test_test_files_are_exempt(tmp_path: Path) -> None:
             except Exception:
                 pass
     """), encoding="utf-8")
+    # Hold checker-instance elements in explicit diagnostic order.
     checks: Sequence[Check] = (AssertUsageCheck(), RaiseFromCheck())
+    # Verify each production-only checker against the same test-path subject.
     for check in checks:
+        # Require test-path exemption to suppress every otherwise valid finding.
         assert rules_fired(check, target) == set(), check.name
 
 
+# Execute this focused companion suite only at its standalone script boundary.
 if __name__ == "__main__":
+    # Propagate pytest's verdict as this process's exit status.
     raise SystemExit(pytest.main([__file__, "-q"]))

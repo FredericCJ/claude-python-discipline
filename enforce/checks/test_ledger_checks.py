@@ -33,6 +33,7 @@ from checks.promotion_due import PromotionDueCheck
 from checks.session_recorded import SessionRecordedCheck
 from checks.test_weakening import TestWeakeningCheck
 
+# Import fixture and checker protocols only during static analysis.
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -43,15 +44,26 @@ def ledger_of(tmp_path: Path, *events: dict[str, object]) -> Path:
     """Write a ledger holding the given events, numbered in order.
 
     @param tmp_path the directory to write into
-    @param events the event payloads, in order; `seq` is filled in unless given
+    @param events ordered event-mapping elements whose keys and values become
+        JSON record fields; `seq` is filled in unless given
     @return the written ledger
+
+    @par Effects
+    Creates or replaces one isolated JSON-lines ledger after serializing all events.
     """
+    # Select the one ledger path inspected by every learning check in this fixture.
     path = tmp_path / "ledger.jsonl"
+    # Preserve one serialized-record string element per event in caller order.
     lines = []
+    # Number each ordered event element with its stable one-based ledger position.
     for number, event in enumerate(events, start=1):
+        # Merge event key/value fields over deterministic record defaults;
+        # mapping order is immaterial.
         record = {"seq": number, "session": "S-1", "payload": {}, **event}
         lines.append(json.dumps(record))
+    # Publish the complete contiguous ledger only after every record is serialized.
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    # Return the persisted ledger as the check subject.
     return path
 
 
@@ -60,9 +72,14 @@ def found(check: Check, path: Path) -> set[str]:
 
     @param check the mechanism under test
     @param path the file to run it over
-    @return every rule id reported
+    @return unordered reported rule-id string elements, empty when conformant
+
+    @par Effects
+    Rebinds the supplied check to the complete default project declaration.
     """
+    # Give the focused check a complete declaration independent of the host repository.
     check.declaration = project.DEFAULT
+    # Collapse finding elements to the unique governing rule identifiers reported.
     return {f.rule_id for f in check.run([path])}
 
 
@@ -73,10 +90,16 @@ def written(tmp_path: Path, name: str, body: str) -> Path:
     @param name the file's name, whose suffix decides which checks see it
     @param body the contents
     @return the written file
+
+    @par Effects
+    Creates parent directories and creates or replaces one isolated fixture file.
     """
+    # Resolve the fixture location whose suffix and path govern checker applicability.
     path = tmp_path / name
+    # Materialize the parent tree before publishing normalized fixture contents.
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(dedent(body), encoding="utf-8")
+    # Return the persisted file as the check subject.
     return path
 
 
@@ -85,6 +108,7 @@ def test_a_rendered_documentation_tree_fires(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize an HTML artifact beneath the reserved rendered-site tree.
     path = written(tmp_path, "site/index.html", "<html><body>built</body></html>")
     assert "DOC-012" in found(GeneratedProvenanceCheck(), path)
 
@@ -97,6 +121,7 @@ def test_a_gap_in_the_sequence_fires(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize a ledger whose second record jumps beyond its contiguous position.
     path = ledger_of(tmp_path, {"kind": "session"}, {"kind": "learn", "seq": 5})
     assert "LEARN-005" in found(LedgerAppendOnlyCheck(), path)
 
@@ -106,6 +131,7 @@ def test_a_contiguous_ledger_is_silent(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize consecutive session and learning records as the accepting control.
     path = ledger_of(tmp_path, {"kind": "session"},
                      {"kind": "learn", "payload": {"id": "L-1"}})
     assert found(LedgerAppendOnlyCheck(), path) == set()
@@ -116,6 +142,7 @@ def test_a_duplicated_learning_id_fires(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize two learning records that claim the same durable identity.
     path = ledger_of(tmp_path,
                      {"kind": "learn", "payload": {"id": "L-1"}},
                      {"kind": "learn", "payload": {"id": "L-1"}})
@@ -130,6 +157,7 @@ def test_an_unscoped_learning_fires(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize a learning whose payload omits its intended governance scope.
     path = ledger_of(tmp_path, {"kind": "learn", "payload": {
         "id": "L-1", "claim": "c", "action": "a", "kind": "defect"}})
     assert "LEARN-004" in found(LearningScopeCheck(), path)
@@ -140,6 +168,7 @@ def test_a_learning_with_no_action_fires(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize a scoped learning that records no consequent action.
     path = ledger_of(tmp_path, {"kind": "learn", "payload": {
         "id": "L-1", "claim": "c", "kind": "defect", "scope": "project"}})
     assert "LEARN-004" in found(LearningScopeCheck(), path)
@@ -150,6 +179,7 @@ def test_a_complete_learning_is_silent(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize a fully scoped, actionable learning as the accepting control.
     path = ledger_of(tmp_path, {"kind": "learn", "payload": {
         "id": "L-1", "claim": "c", "action": "a", "kind": "defect",
         "scope": "discipline"}})
@@ -164,6 +194,7 @@ def test_a_session_that_recorded_nothing_fires(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize a session with no associated learning or usage outcome.
     path = ledger_of(tmp_path, {"kind": "session", "session": "S-quiet"})
     assert "LEARN-001" in found(SessionRecordedCheck(), path)
 
@@ -173,6 +204,7 @@ def test_a_session_that_reported_an_outcome_is_silent(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize a session followed by a concrete learning-usage outcome.
     path = ledger_of(tmp_path, {"kind": "session", "session": "S-1"},
                      {"kind": "used", "session": "S-1",
                       "payload": {"id": "L-1", "outcome": "noise"}})
@@ -186,9 +218,15 @@ def test_an_oversized_active_set_fires(tmp_path: Path) -> None:
     """A set nobody prunes becomes a set nobody reads.
 
     @param tmp_path the fixture directory
+
+    @par Effects
+    Writes an isolated ledger and its active-learning ceiling configuration.
     """
+    # Produce five ordered learning-event mapping elements, one per distinct identity.
     events = [{"kind": "learn", "payload": {"id": f"L-{n}"}} for n in range(5)]
+    # Materialize an active set larger than the ceiling configured below.
     path = ledger_of(tmp_path, *events)
+    # Set the active-learning ceiling below the five-record fixture size.
     (tmp_path / "config.toml").write_text("max_active = 2\n", encoding="utf-8")
     assert "LEARN-010" in found(LearningSizeCheck(), path)
 
@@ -197,8 +235,13 @@ def test_a_set_inside_the_ceiling_is_silent(tmp_path: Path) -> None:
     """The accepting case, with the ceiling read from configuration.
 
     @param tmp_path the fixture directory
+
+    @par Effects
+    Writes an isolated ledger and its active-learning ceiling configuration.
     """
+    # Materialize one active learning as the within-ceiling accepting control.
     path = ledger_of(tmp_path, {"kind": "learn", "payload": {"id": "L-1"}})
+    # Set a ceiling that comfortably contains the one-record active set.
     (tmp_path / "config.toml").write_text("max_active = 200\n", encoding="utf-8")
     assert found(LearningSizeCheck(), path) == set()
 
@@ -207,12 +250,17 @@ def test_a_verified_learning_over_the_bar_fires(tmp_path: Path) -> None:
     """A learning that can be enforced once should not be re-read every session.
 
     @param tmp_path the fixture directory
+
+    @par Effects
+    Writes an isolated ledger and its promotion-threshold configuration.
     """
+    # Materialize one mechanically verifiable learning with one reported outcome.
     path = ledger_of(
         tmp_path,
         {"kind": "learn", "payload": {"id": "L-1", "verification": "pytest -q"}},
         {"kind": "used", "payload": {"id": "L-1", "outcome": "helped"}},
     )
+    # Set the evidence bar at the single outcome already present in the ledger.
     (tmp_path / "config.toml").write_text("min_evidence_verified = 1\n", encoding="utf-8")
     assert "LEARN-009" in found(PromotionDueCheck(), path)
 
@@ -222,6 +270,7 @@ def test_a_learning_with_no_verification_is_silent(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize an evidenced learning that has no mechanical verification command.
     path = ledger_of(tmp_path, {"kind": "learn", "payload": {"id": "L-1"}},
                      {"kind": "used", "payload": {"id": "L-1", "outcome": "helped"}})
     assert found(PromotionDueCheck(), path) == set()
@@ -235,6 +284,7 @@ def test_a_generated_file_naming_no_generator_fires(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize generated-marked prose with no reproducible generator identity.
     path = written(tmp_path, "out.md", """
         <!-- GENERATED -->
 
@@ -248,6 +298,7 @@ def test_a_generation_stamp_fires(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize generated output containing a nondeterministic build timestamp.
     path = written(tmp_path, "out.md", """
         <!-- GENERATED by `tools/build.py` -->
 
@@ -265,6 +316,7 @@ def test_a_bare_date_in_generated_output_is_silent(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize reproducible generated data that happens to contain a date value.
     path = written(tmp_path, "out.md", """
         <!-- GENERATED by `tools/build.py` -->
 
@@ -278,6 +330,7 @@ def test_a_document_about_generation_is_not_generated_output(tmp_path: Path) -> 
 
     @param tmp_path the fixture directory
     """
+    # Materialize authored governance prose that discusses generated artifacts.
     path = written(tmp_path, "rule.md", """
         ---
         id: law/DEP
@@ -297,6 +350,7 @@ def test_a_model_named_in_prose_fires(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize prose that binds work allocation directly to a model name.
     path = written(tmp_path, "doc.md", """
         # A document
 
@@ -310,6 +364,7 @@ def test_a_configuration_binding_is_silent(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize the declared agent configuration where model binding is owned.
     path = written(tmp_path, "agent.md", """
         ---
         name: an-agent
@@ -326,6 +381,7 @@ def test_the_mapping_document_is_exempt(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize the canonical tier-to-model mapping where coupling is explicit.
     path = written(tmp_path, "map.md", """
         ## Tier to model
 
@@ -342,6 +398,7 @@ def test_a_bare_suppression_fires(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize a static-analysis suppression with no decision rationale.
     path = written(tmp_path, "mod.py", '''
         """M."""
         import os  # noqa: F401
@@ -354,6 +411,7 @@ def test_a_suppression_with_a_reason_is_silent(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize a suppression whose adjacent reason makes the deviation reviewable.
     path = written(tmp_path, "mod.py", '''
         """M."""
         import os  # noqa: F401 - re-exported for the package surface
@@ -366,6 +424,7 @@ def test_a_bare_atomicity_claim_fires(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize an atomicity claim with no named observer or failure boundary.
     path = written(tmp_path, "mod.py", '''
         """M."""
         def save(data):
@@ -380,6 +439,7 @@ def test_a_qualified_atomicity_claim_is_silent(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize a claim qualified against the concurrent-reader observer.
     path = written(tmp_path, "mod.py", '''
         """M."""
         def save(data):
@@ -394,6 +454,7 @@ def test_an_over_compound_decision_fires(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize one decision gate coupling three independent boolean operands.
     path = written(tmp_path, "mod.py", '''
         """M."""
         def decide(a, b, c):
@@ -410,6 +471,7 @@ def test_two_operands_are_silent(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize the permitted two-operand decision as the accepting control.
     path = written(tmp_path, "mod.py", '''
         """M."""
         def decide(a, b):
@@ -426,6 +488,7 @@ def test_a_skip_without_a_reason_fires(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize an unconditionally skipped test with no recorded reason.
     path = written(tmp_path, "test_thing.py", '''
         """Tests. Oracle: contract."""
         import pytest
@@ -442,6 +505,7 @@ def test_a_tautological_assertion_fires(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize a test whose constant assertion cannot discriminate behavior.
     path = written(tmp_path, "test_thing.py", '''
         """Tests. Oracle: contract."""
         def test_it():
@@ -456,6 +520,7 @@ def test_a_skip_with_a_reason_is_silent(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Materialize a skipped test with an explicit environmental reason.
     path = written(tmp_path, "test_thing.py", '''
         """Tests. Oracle: contract."""
         import pytest
