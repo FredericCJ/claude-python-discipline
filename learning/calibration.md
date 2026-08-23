@@ -2,14 +2,14 @@
 
 # Calibration
 
-As of **2026-08-23**. Regenerate with `python tools/learn.py calibrate --as-of 2026-08-23`.
+As of **2026-08-24**. Regenerate with `python tools/learn.py calibrate --as-of 2026-08-24`.
 
 ## Totals
 
 | Measure | Value |
 |---|---|
 | sessions recorded | 6 |
-| learnings recorded | 112 |
+| learnings recorded | 113 |
 | outcomes reported | 11 |
 | of those, helped | 9 |
 | of those, noise | 2 |
@@ -27,7 +27,7 @@ As of **2026-08-23**. Regenerate with `python tools/learn.py calibrate --as-of 2
 | constraint | 14 |
 | defect | 51 |
 | diagnostic | 13 |
-| procedure | 30 |
+| procedure | 31 |
 | rule-application | 4 |
 
 ## Parameters in force

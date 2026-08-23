@@ -9,7 +9,7 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 | Status | Count |
 |---|---|
 | active | 6 |
-| candidate | 105 |
+| candidate | 106 |
 | superseded | 1 |
 
 ## active
@@ -963,6 +963,15 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Kind** rule-application · **scope** discipline · **evidence** inferred (+0/-0 over 1 session(s))
 - **Confidence** 0.25, last seen 2026-08-23
 - **Triggers** `rule:DOC-009`, `term:implementation-narration`
+
+### L-0113 · A real v4 application can complete the structural v5 migration while correctly failing only the new project-authored documentation and content-review obligations; unrelated project-gate evidence remains independently reportable.
+
+- **Do** Classify field-upgrade verdicts by gate step, preserve the migrator's no-invented-prose boundary, and do not turn expected documentation debt into unrelated adopter repair work.
+- **Kind** procedure · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-23
+- **Triggers** `error:MIGRATE-V5-003_AUTHORING_REQUIRED`, `glob:tools/migrate_v5.py`, `glob:tools/project_gate.py`
+- **About** DOC-028
+- **Verify** `python -m pytest -q tools/test_migrate_v5.py tools/test_project_gate.py`
 
 ## superseded
 
