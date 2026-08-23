@@ -89,6 +89,9 @@ def test_cosmic_ray_rejects_a_suite_that_only_executes_the_core(tmp_path: Path) 
     assert report.status == "fail", report.as_dict()
     assert report.diagnostic_id == "MUTATION-009_SURVIVOR"
     assert "zero-survivor score" in report.summary
+    assert "SURVIVOR 1" in report.output
+    assert "--- mutation diff ---" in report.output
+    assert "short test summary" not in report.output
 
 
 def test_a_positive_survival_allowance_is_refused(tmp_path: Path) -> None:
@@ -100,7 +103,8 @@ def test_a_positive_survival_allowance_is_refused(tmp_path: Path) -> None:
     project = tmp_path / "pyproject.toml"
     project.write_text(
         project.read_text(encoding="utf-8").replace(
-            "maximum_survival = 0.0", "maximum_survival = 1.0",
+            "maximum_survival = 0.0",
+            "maximum_survival = 1.0",
         ),
         encoding="utf-8",
     )

@@ -39,29 +39,32 @@ EXIT_GREEN: Final = 0
 EXIT_RED: Final = 1
 ## Mutation execution is deliberately stricter than the ordinary test order.
 PYTEST_ARGUMENTS: Final = (
-    "-m", "pytest", "-q", "-p", "no:randomly", "--disable-socket",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:randomly",
+    "--disable-socket",
 )
 ## Repository material that cannot affect a unit-level mutation verdict.
-IGNORED_DIRECTORIES: Final = frozenset(
-    {
-        ".agent",
-        ".git",
-        ".hypothesis",
-        ".import_linter_cache",
-        ".mypy_cache",
-        ".pytest_cache",
-        ".ruff_cache",
-        ".tox",
-        ".venv",
-        "__pycache__",
-        "build",
-        "dist",
-        "htmlcov",
-        "mutants",
-    }
-)
-## Maximum retained process output in a diagnostic report.
-OUTPUT_LIMIT: Final = 6000
+IGNORED_DIRECTORIES: Final = frozenset({
+    ".agent",
+    ".git",
+    ".hypothesis",
+    ".import_linter_cache",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".tox",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+    "htmlcov",
+    "mutants",
+})
+## Maximum retained actionable survivor output in a diagnostic report.
+OUTPUT_LIMIT: Final = 30000
 ## Cosmic Ray dump lines are exactly ``[work_item, work_result]``.
 WORK_ITEM_PAIR_SIZE: Final = 2
 ## A baseline session must contain exactly its one unmutated test execution.
@@ -87,7 +90,10 @@ class MutationGateError(ValueError):
     """
 
     def __init__(
-        self, diagnostic_id: str, detail: str, output: str = "",
+        self,
+        diagnostic_id: str,
+        detail: str,
+        output: str = "",
     ) -> None:
         """Preserve structured failure data across the CLI boundary.
 
@@ -299,10 +305,14 @@ def load_configuration(root: Path) -> Configuration:
     roles = _table(document, ("tool", "agent-discipline", "roles"))
     gate = _table(document, ("tool", "agent-discipline-gate", "mutation"))
     source_roots = _paths(
-        declaration.get("source_roots"), "tool.agent-discipline.source_roots", root,
+        declaration.get("source_roots"),
+        "tool.agent-discipline.source_roots",
+        root,
     )
     domains = _paths(
-        roles.get("domain"), "tool.agent-discipline.roles.domain", root,
+        roles.get("domain"),
+        "tool.agent-discipline.roles.domain",
+        root,
     )
     targets = _paths(
         gate.get("test_targets"),
@@ -573,10 +583,7 @@ def _baseline_passed(output: str) -> None:
             output,
         )
     result = results[0]
-    if (
-        result.get("worker_outcome") != "normal"
-        or result.get("test_outcome") != "survived"
-    ):
+    if result.get("worker_outcome") != "normal" or result.get("test_outcome") != "survived":
         raise _problem(
             BASELINE_DIAGNOSTIC,
             "unmutated tests did not complete normally and pass",
@@ -584,12 +591,12 @@ def _baseline_passed(output: str) -> None:
         )
 
 
-def _survivors(output: str, expected: int) -> int:
-    """Count survivors only after proving every mutant completed competently.
+def _survivors(output: str, expected: int) -> tuple[Mapping[str, object], ...]:
+    """Return survivors only after proving every mutant completed competently.
 
     @param output complete post-execution JSON-lines dump
     @param expected mutant count established before execution
-    @return number of surviving mutants
+    @return completed result records for every surviving mutant
     @throws MutationGateError for pending, missing, abnormal, or incompetent work
     """
     results = _result_records(output)
@@ -611,7 +618,26 @@ def _survivors(output: str, expected: int) -> int:
             f"{len(invalid)} mutant(s) were abnormal or incompetent, not killed",
             output,
         )
-    return sum(result.get("test_outcome") == "survived" for result in results)
+    return tuple(result for result in results if result.get("test_outcome") == "survived")
+
+
+def _survivor_output(survivors: Sequence[Mapping[str, object]]) -> str:
+    """Render only mutation diffs that the selected tests failed to reject.
+
+    Raw Cosmic Ray dumps include the complete pytest output for every killed
+    mutant. Retaining their tail hid the surviving mutations that require a
+    developer's attention. A red gate therefore reports each survivor's diff
+    and excludes unrelated killed-test output.
+
+    @param survivors completed surviving-mutant result records
+    @return bounded, human-readable survivor diagnostics
+    """
+    blocks: list[str] = []
+    for index, result in enumerate(survivors, 1):
+        diff = result.get("diff")
+        rendered = diff if isinstance(diff, str) and diff.strip() else "<mutation diff unavailable>"
+        blocks.append(f"SURVIVOR {index}\n{rendered.strip()}")
+    return "\n\n".join(blocks)
 
 
 def execute(configuration: Configuration) -> tuple[DomainResult, ...]:
@@ -683,13 +709,12 @@ def execute(configuration: Configuration) -> tuple[DomainResult, ...]:
                 diagnostic_id="MUTATION-006_REPORT",
                 activity=f"completed mutation report for {domain}",
             )
-            survivor_count = _survivors(completed, mutants)
-            if survivor_count:
+            survivors = _survivors(completed, mutants)
+            if survivors:
                 raise _problem(
                     SURVIVOR_DIAGNOSTIC,
-                    f"zero-survivor score for {domain} found "
-                    f"{survivor_count} surviving mutant(s)",
-                    completed,
+                    f"zero-survivor score for {domain} found {len(survivors)} surviving mutant(s)",
+                    _survivor_output(survivors),
                 )
             _run_command(
                 (
@@ -729,7 +754,8 @@ def run(root: Path) -> Report:
     except PackageNotFoundError:
         tool = "cosmic-ray unavailable"
         problem = _problem(
-            "MUTATION-010_TOOL", "required distribution 'cosmic-ray' is not installed",
+            "MUTATION-010_TOOL",
+            "required distribution 'cosmic-ray' is not installed",
         )
     else:
         try:
