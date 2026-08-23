@@ -14,7 +14,14 @@ from pathlib import PurePosixPath
 from typing import TYPE_CHECKING, Final
 
 from . import Finding, ModuleCheck, main
-from .comment_association import CommentBlock, associate, bindings, comment_blocks
+from .comment_association import (
+    Association,
+    CommentBlock,
+    associate,
+    bindings,
+    comment_blocks,
+    semantic_associations,
+)
 from .doc_narration import EFFECT_METHODS
 from .doc_style import _hash_block_text
 from .documentation_model import (
@@ -105,7 +112,8 @@ class DocSemanticsCheck(ModuleCheck):
             return
         relative = PurePosixPath(path.resolve().relative_to(root.resolve()).as_posix())
 
-        for value in documented_values(tree, lines, blocks):
+        associations = semantic_associations(tree, source, blocks)
+        for value in documented_values(tree, lines, blocks, associations):
             yield from _value_findings(value, path, model.properties_for(value.name, relative))
 
         for node in ast.walk(tree):
@@ -200,16 +208,21 @@ def _callable_findings(
 
 
 def documented_values(
-    tree: ast.Module, source: list[str], blocks: Sequence[CommentBlock]
+    tree: ast.Module,
+    source: list[str],
+    blocks: Sequence[CommentBlock],
+    associations: Mapping[ast.AST, Association] | None = None,
 ) -> tuple[DocumentedValue, ...]:
     """Allocate entity, parameter, and local value semantics to their owners.
 
     @param tree parsed module
     @param source source lines for Doxygen hash blocks
     @param blocks ordinary comment blocks from `comment_association`
+    @param associations optional semantic-step ownership map
     @return documented-value subjects in source order
     """
     parents = _parents(tree)
+    ownership = associations or semantic_associations(tree, "\n".join(source), blocks)
     values: list[DocumentedValue] = []
     for node in ast.walk(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -218,7 +231,7 @@ def documented_values(
             names = _target_names(node.targets if isinstance(node, ast.Assign) else (node.target,))
             boolean, collection = _value_categories(node)
             if _inside_function(node, parents):
-                owner = associate(node, blocks).owner
+                owner = ownership.get(node, associate(node, blocks)).owner
                 text = None if owner is None else owner.text
             else:
                 text = _hash_block_text(source, node.lineno)
@@ -231,7 +244,9 @@ def documented_values(
         key = (binding.name, binding.line)
         if key in local_by_key:
             continue
-        owner = associate(binding.owner_node, blocks).owner
+        owner = ownership.get(
+            binding.owner_node, associate(binding.owner_node, blocks)
+        ).owner
         text = None if owner is None else owner.text
         values.append(
             DocumentedValue(
@@ -345,11 +360,18 @@ def _has_detectable_effect(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool
     @param node callable definition
     @return true for known effect calls or state-target assignments
     """
-    for child in ast.walk(node):
-        if child is not node and isinstance(
-            child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
-        ):
-            continue
+    parameter_names = {
+        argument.arg
+        for argument in (
+            *node.args.posonlyargs,
+            *node.args.args,
+            *node.args.kwonlyargs,
+            *((node.args.vararg,) if node.args.vararg is not None else ()),
+            *((node.args.kwarg,) if node.args.kwarg is not None else ()),
+        )
+        if argument.arg not in {"self", "cls"}
+    }
+    for child in _owned_nodes(node):
         if (
             isinstance(child, ast.Call)
             and isinstance(child.func, ast.Attribute)
@@ -358,13 +380,43 @@ def _has_detectable_effect(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool
             return True
         if isinstance(child, (ast.Assign, ast.AnnAssign, ast.AugAssign)):
             targets = child.targets if isinstance(child, ast.Assign) else (child.target,)
-            if any(
-                isinstance(part, (ast.Attribute, ast.Subscript))
-                for target in targets
-                for part in ast.walk(target)
+            roots = {_target_root(target) for target in targets}
+            if node.name != "__init__" and (
+                "self" in roots or bool(roots.intersection(parameter_names))
             ):
                 return True
     return False
+
+
+def _owned_nodes(
+    node: ast.FunctionDef | ast.AsyncFunctionDef,
+) -> Iterator[ast.AST]:
+    """Walk one callable without borrowing effects from nested definitions.
+
+    @param node callable whose own behavior is inspected
+    @return descendants belonging to this callable's execution scope
+    """
+    pending = list(reversed(node.body))
+    while pending:
+        current = pending.pop()
+        yield current
+        if isinstance(current, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
+        pending.extend(reversed(list(ast.iter_child_nodes(current))))
+
+
+def _target_root(node: ast.AST) -> str | None:
+    """Return the base name whose attribute or item an assignment changes.
+
+    @param node assignment target
+    @return root identifier for attribute/subscript targets, otherwise None
+    """
+    if isinstance(node, ast.Name):
+        return None
+    current = node
+    while isinstance(current, (ast.Attribute, ast.Subscript)):
+        current = current.value
+    return current.id if isinstance(current, ast.Name) else None
 
 
 def _declares_pure(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:

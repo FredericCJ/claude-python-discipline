@@ -628,11 +628,14 @@ def governed_modules(
 
 
 def governed_paths(declaration: project.Declaration, fallback: Sequence[Path]) -> tuple[Path, ...]:
-    """Select model-governed files while leaving model errors to their owner.
+    """Select model-governed files while respecting an explicit narrow target.
 
-    Other documentation checks use the ordinary production roots when the model
-    itself is invalid. `DocumentationModelCheck` reports that root defect once;
-    dependent checks do not crash or emit a cascade against an unreadable model.
+    The aggregate gate passes the declaration's production roots and therefore
+    expands to every governed production, test, and maintenance scope. A caller
+    naming another file or directory receives the intersection with the model,
+    which keeps focused inventory and editor invocations usable. Other checks use
+    the supplied fallback unchanged when the model is invalid; its owning check
+    reports the root defect once rather than causing a dependent-check crash.
 
     @param declaration owning project declaration
     @param fallback paths supplied to the ordinary check runner
@@ -645,4 +648,15 @@ def governed_paths(declaration: project.Declaration, fallback: Sequence[Path]) -
     except DocumentationModelError:
         return tuple(fallback)
     root = declaration.root
-    return tuple(fallback) if root is None else model.governed_files(root)
+    if root is None:
+        return tuple(fallback)
+    governed = model.governed_files(root)
+    requested = tuple(path.resolve() for path in fallback)
+    production = tuple(path.resolve() for path in declaration.source_paths())
+    if requested == production:
+        return governed
+    return tuple(
+        path
+        for path in governed
+        if any(path == target or path.is_relative_to(target) for target in requested)
+    )

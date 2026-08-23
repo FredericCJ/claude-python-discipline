@@ -13,6 +13,7 @@ from checks.documentation_model import (
     DocumentationModelCheck,
     DocumentationModelError,
     Ownership,
+    governed_paths,
     parse,
 )
 
@@ -192,3 +193,21 @@ def test_the_check_reports_the_exact_schema_diagnostic(tmp_path: Path) -> None:
     assert len(findings) == 1
     assert findings[0].rule_id == "DOC-022"
     assert findings[0].diagnostic_id == "DOCMODEL-001"
+
+
+def test_explicit_inventory_target_intersects_governed_scopes(tmp_path: Path) -> None:
+    """A focused check does not unexpectedly inventory every model scope.
+
+    @param tmp_path fixture repository
+    """
+    payload = _payload()
+    for relative in ("src/pkg/domain/model.py", "tests/unit/test_model.py"):
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text('"""! Fixture module."""\n', encoding="utf-8")
+    _write(tmp_path, payload)
+    declaration = _declaration(tmp_path)
+
+    selected = governed_paths(declaration, (tmp_path / "src/pkg/domain",))
+
+    assert selected == ((tmp_path / "src/pkg/domain/model.py").resolve(),)

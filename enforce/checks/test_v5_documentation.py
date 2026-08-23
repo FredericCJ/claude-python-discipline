@@ -382,6 +382,42 @@ def test_detectable_effect_without_contract_fails_doc_027(tmp_path: Path) -> Non
     assert any(item.rule_id == "DOC-027" for item in findings)
 
 
+def test_constructor_and_local_projection_are_not_external_effects(tmp_path: Path) -> None:
+    """Fresh-object initialization and local assembly do not mutate caller state.
+
+    @param tmp_path fixture repository
+    """
+    module, declaration = _fixture(
+        tmp_path,
+        '''
+        """! Fixture module."""
+        class Record:
+            """One initialized record."""
+            def __init__(self, value: int) -> None:
+                """Initialize the record.
+                @param value stored domain value
+                """
+                # Establish the record's validated state before publication.
+                self.value = value
+
+        def project(value: int) -> dict[str, int]:
+            """Build a detached projection.
+            @param value source domain value
+            @return one key mapped to the source value, with insertion order preserved
+            """
+            # Assemble a fresh result that shares no mutable state with the caller.
+            result: dict[str, int] = {}
+            result["value"] = value
+            # Expose the completed detached projection.
+            return result
+        ''',
+    )
+
+    findings = _run(DocSemanticsCheck(), module, declaration)
+
+    assert not any(item.rule_id == "DOC-027" for item in findings)
+
+
 def test_deleting_an_abbreviation_entry_fails_doc_024(tmp_path: Path) -> None:
     """An identifiable initialism cannot outlive its controlled vocabulary row.
 
