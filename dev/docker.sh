@@ -11,7 +11,7 @@ else
     packaged=false
 fi
 
-image=${PYTHON_DISCIPLINE_IMAGE:-python-discipline-dev:v4.1.0}
+image=${PYTHON_DISCIPLINE_IMAGE:-python-discipline-dev:v5.0.0}
 
 # WSL distributions do not all expose Docker Desktop's Linux shim. Its Windows
 # CLI is still callable from WSL, so support that normal Windows 11 topology

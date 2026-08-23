@@ -44,7 +44,7 @@ if TYPE_CHECKING:
 ## in a managed block, so the release name travels beside it. This constant lives
 ## under `tools`, which is hashed, so bumping it moves the content hash too -- the
 ## two can never disagree about which corpus is installed.
-RELEASE: Final = "v4.1.0"
+RELEASE: Final = "v5.0.0"
 
 ## Copied on every install and replaced wholesale. Nothing here is project-owned.
 ## Each element is one upstream-owned directory name; tuple order fixes copy and manifest

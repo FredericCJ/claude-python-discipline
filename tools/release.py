@@ -1,6 +1,6 @@
 """Build the redistributable archive of this discipline.
 
-    python tools/release.py                  # -> dist/agent-discipline-v4.1.0.zip
+    python tools/release.py                  # -> dist/agent-discipline-v5.0.0.zip
     python tools/release.py --keep-staging    # leave the staged tree for inspection
 
 The archive is produced by running the real installer against a scratch

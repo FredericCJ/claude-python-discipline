@@ -70,7 +70,7 @@ python tools/learn.py calibrate                           # is any of this worki
 doxygen enforce/Doxyfile                                  # the documentation gate
 ```
 
-**Reachability is the navigability metric**: every one of the 212 rules is reachable from
+**Reachability is the navigability metric**: every one of the 225 rules is reachable from
 some module within three hops, checked as `V092` on every validation run.
 
 ## Shipped development environment
