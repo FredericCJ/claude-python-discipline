@@ -9,7 +9,7 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 | Status | Count |
 |---|---|
 | active | 5 |
-| candidate | 101 |
+| candidate | 104 |
 | superseded | 1 |
 
 ## active
@@ -925,6 +925,30 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `glob:skills/python-discipline/**`, `glob:tools/integrate.py`
 - **About** FLOW-009
 - **Verify** `python tools/build_skill_mirror.py --check; python -m pytest tools/test_integrate.py -q`
+
+### L-0108 · On Windows PowerShell 5.1, a native Conda command can surface stderr as a NativeCommandError even though its process exit status is authoritative.
+
+- **Do** Permit native stderr temporarily, capture LASTEXITCODE immediately, restore strict error handling, and decide the Conda transaction from that exit status.
+- **Kind** diagnostic · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-23
+- **Triggers** `glob:dev/windows.ps1`
+- **Verify** `python -m pytest tools/test_dev_environment.py -q`
+
+### L-0109 · Pyright can create a hidden Node environment when the declared Node executable is not on PATH before Pyright is invoked.
+
+- **Do** Put the locked Node executable on PATH before invoking Pyright and require its global-Node mode in the container image.
+- **Kind** constraint · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-23
+- **Triggers** `glob:dev/Dockerfile`
+- **Verify** `python -m pytest tools/test_dev_environment.py -q`
+
+### L-0110 · Inspecting only a pre-existing Docker image cannot prove that the image reflects the current Dockerfile, lock file, checker, and entrypoint inputs.
+
+- **Do** Run the cache-aware Docker build on every launcher invocation so Docker reconciles the declared inputs before execution.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-23
+- **Triggers** `glob:dev/docker.sh`
+- **Verify** `python -m pytest tools/test_dev_environment.py -q`
 
 ## superseded
 
