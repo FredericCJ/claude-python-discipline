@@ -11,6 +11,10 @@ about the SIGSIM parent application.
   evidence that made it actionable.
 - `scope.json` is the negative boundary: it prevents later work from turning a
   component observation into a parent-repository or whole-system obligation.
+- `adopter-certification.json` freezes the five v4 adopter commits and all ten
+  Windows/Linux project-gate verdicts, including report identities, test and
+  mutation counts, artifact probes, environments, and the explicit repository
+  boundary attestation.
 
 ## Reproduction contract
 
@@ -33,6 +37,11 @@ The source adopter worktrees were clean before and after measurement. No parent
 or sibling checkout was read by an adopter gate. The independent Linux clone
 was detached at the recorded discipline commit. Manual ledger observations are
 marked `observed`; they cannot satisfy a future automated gate.
+
+The certification summary deliberately does not embed the raw project-gate
+reports. Those reports contain checkout-local absolute paths. It instead records
+their SHA-256 identities and the complete release-relevant outcomes without
+shipping machine-specific path material as doctrine evidence.
 
 ## Interpretation limits
 

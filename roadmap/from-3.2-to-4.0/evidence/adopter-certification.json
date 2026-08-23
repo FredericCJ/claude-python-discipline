@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "certified_at": "2026-08-23",
+  "release": "v4.0.0",
+  "scope": {
+    "governed_unit": "exactly one repository",
+    "application_repositories": 1,
+    "component_repositories": 4,
+    "platforms": ["Windows", "Linux"],
+    "excluded": [
+      "the SIGSIM parent repository",
+      "sibling component repositories",
+      "cross-repository wiring",
+      "counterpart compatibility",
+      "whole-application behavior"
+    ]
+  },
+  "discipline_package": {
+    "release": "v4.0.0",
+    "manifest_version": "63e94ede1f86",
+    "manifest_sha256": "4ef60163ab4abec8ad51cda426126d113db8839414d5911cd1c88cae8b9fd79c",
+    "environment_lock_sha256": "4e5e3d95f405b3d02a79ac0b73d0209bec67e23a5f940e73f4d1447ab42e4061"
+  },
+  "environments": {
+    "Windows": {
+      "platform": "Microsoft Windows 11 Pro 10.0.26200 build 26200 AMD64",
+      "environment": "claude",
+      "python": "3.13.14",
+      "conda": "26.5.3",
+      "doxygen": "1.10.0",
+      "conda_explicit_sha256": "b23b0d21096eb718e5b76fea94d8dd3610a1a4f3a5a7e12dfd3f9a7aa0e20b41"
+    },
+    "Linux": {
+      "platform": "Linux 6.18.33.1-microsoft-standard-WSL2 x86_64 GNU/Linux",
+      "checkout": "independent clean detached clone on the Linux filesystem",
+      "python": "3.13.14",
+      "conda": "25.3.1",
+      "doxygen": "1.10.0",
+      "conda_explicit_sha256": "a15753abd8f3ee446a4c3445d1e1be2fa0dc530f1d18ae01e1eb12f37dbcd9a8"
+    }
+  },
+  "gate_contract": {
+    "command": "python .agent/tools/project_gate.py --root . --json <report>",
+    "required_steps_per_run": 11,
+    "required_status": "pass",
+    "steps": [
+      "declaration",
+      "discipline-checks",
+      "ruff",
+      "mypy",
+      "pyright",
+      "import-contracts",
+      "documentation",
+      "pytest",
+      "mutation",
+      "artifact-build",
+      "clean-install"
+    ],
+    "report_retention": "Raw reports contain checkout-local absolute paths and are not shipped. Their SHA-256 identities and complete release-relevant outcome summaries are frozen in this certificate."
+  },
+  "adopters": [
+    {
+      "name": "python-doctrine-test",
+      "unit": "application",
+      "commit": "b6cf08c3da6343e1f65f5bf97e5b4c89f339e648",
+      "platforms": {
+        "Windows": {
+          "verdict": "pass",
+          "report_sha256": "7e1cbee9f4c0f441b8ca6233be6d4f19fc5662917628b6db21b3676b9c239e5a",
+          "outcome_duration_ms": 188067,
+          "pytest_passed": 98,
+          "mutation": "137 of 137 killed",
+          "artifact": "sumtwo 1.0.0 wheel and sdist; one module and four entry-point probes passed"
+        },
+        "Linux": {
+          "verdict": "pass",
+          "report_sha256": "0f13241fa91094ce624170c56f2498f0c11ff0f4b0ab6829c7e53a8fa55864c1",
+          "outcome_duration_ms": 66828,
+          "pytest_passed": 98,
+          "mutation": "137 of 137 killed",
+          "artifact": "sumtwo 1.0.0 wheel and sdist; one module and four entry-point probes passed"
+        }
+      }
+    },
+    {
+      "name": "console-sink",
+      "unit": "component",
+      "commit": "cf6cf39cee90d6d60eb2566c31e1794a54dc3e76",
+      "platforms": {
+        "Windows": {
+          "verdict": "pass",
+          "report_sha256": "2ae77283b7a626507a04422370280274bc28f95e4cf32098bf5dd2613623d969",
+          "outcome_duration_ms": 647701,
+          "pytest_passed": 258,
+          "mutation": "481 of 481 killed",
+          "artifact": "consink 1.2.0 wheel and sdist; one module and one entry-point probe passed"
+        },
+        "Linux": {
+          "verdict": "pass",
+          "report_sha256": "1a076dc8855a37d20899363f73da858e0b5f7424b7440f8cf67b8f2ad7da3979",
+          "outcome_duration_ms": 353304,
+          "pytest_passed": 258,
+          "mutation": "481 of 481 killed",
+          "artifact": "consink 1.2.0 wheel and sdist; one module and one entry-point probe passed"
+        }
+      }
+    },
+    {
+      "name": "sine-generator",
+      "unit": "component",
+      "commit": "481249b0710555ebb5f3791b19492dcf26125815",
+      "platforms": {
+        "Windows": {
+          "verdict": "pass",
+          "report_sha256": "359cd7c7bc91a010f7de0766ea4906c1e4d5ed5d1973dd2d205aa6616c012298",
+          "outcome_duration_ms": 1033985,
+          "pytest_passed": 361,
+          "mutation": "235 of 235 killed",
+          "artifact": "sinegen 0.1.0 wheel and sdist; one module and one entry-point probe passed"
+        },
+        "Linux": {
+          "verdict": "pass",
+          "report_sha256": "8a1705a6e0b40ce0efcf6537ec28762dbfb356093a0e7a76a020e4b50010e8ae",
+          "outcome_duration_ms": 1113673,
+          "pytest_passed": 361,
+          "mutation": "235 of 235 killed",
+          "artifact": "sinegen 0.1.0 wheel and sdist; one module and one entry-point probe passed"
+        }
+      }
+    },
+    {
+      "name": "signal-invocator",
+      "unit": "component",
+      "commit": "0a86528397ee740f669f7045084860408f95e0f0",
+      "platforms": {
+        "Windows": {
+          "verdict": "pass",
+          "report_sha256": "78ad3badf283ed373fa99d4cc3703ae1bbe983a10cb6cd06eb9ec19c8a145b8b",
+          "outcome_duration_ms": 760822,
+          "pytest_passed": 261,
+          "mutation": "735 of 735 killed",
+          "artifact": "signal-invocator 1.0.0 wheel and sdist; one module and one entry-point probe passed"
+        },
+        "Linux": {
+          "verdict": "pass",
+          "report_sha256": "35a9b5a2c2c431c929849b61b11804b02a864e128593cade0148eba5ae068f47",
+          "outcome_duration_ms": 348268,
+          "pytest_passed": 261,
+          "mutation": "735 of 735 killed",
+          "artifact": "signal-invocator 1.0.0 wheel and sdist; one module and one entry-point probe passed"
+        }
+      }
+    },
+    {
+      "name": "sim-scheduler",
+      "unit": "component",
+      "commit": "c986a7672627d39f24e51f81c31716dd5b4a9b2e",
+      "platforms": {
+        "Windows": {
+          "verdict": "pass",
+          "report_sha256": "e3ac87b8555042723cfa85e34ac02755d8a0d834294531d2735f2bd59a13d2e7",
+          "outcome_duration_ms": 913314,
+          "pytest_passed": 388,
+          "mutation": "938 of 938 killed",
+          "artifact": "simsched 1.2.0 wheel and sdist; one module and one entry-point probe passed"
+        },
+        "Linux": {
+          "verdict": "pass",
+          "report_sha256": "9b299c406f77b303d68985a8cfc561bd5496fb99f5f065395a914f0487e2a76c",
+          "outcome_duration_ms": 495819,
+          "pytest_passed": 387,
+          "mutation": "938 of 938 killed",
+          "artifact": "simsched 1.2.0 wheel and sdist; one module and one entry-point probe passed"
+        }
+      }
+    }
+  ],
+  "aggregate": {
+    "repositories": 5,
+    "platform_verdicts": 10,
+    "required_step_verdicts": 110,
+    "non_pass_required_steps": 0,
+    "pytest_passed": {
+      "Windows": 1366,
+      "Linux": 1365,
+      "both_platforms": 2731
+    },
+    "mutation_results": {
+      "Windows": "2526 of 2526 killed",
+      "Linux": "2526 of 2526 killed",
+      "both_platforms": "5052 of 5052 killed"
+    },
+    "built_artifacts": 20,
+    "clean_install_verdicts": 10
+  },
+  "boundary_attestation": {
+    "adopter_gate_read_parent_or_sibling": false,
+    "parent_repository_modified": false,
+    "claim": "These are five standalone repository verdicts. They are not a multi-component application verdict."
+  }
+}
