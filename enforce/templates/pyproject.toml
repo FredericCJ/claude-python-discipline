@@ -104,6 +104,7 @@ artifact_imports = ["package"]
 # finite budget and exact expected status.
 # artifact_probes = [
 #   { name = "help", command = ["package-cli", "--help"], expected_exit = 0, timeout_seconds = 10 },
+#   { name = "behavior", command = ["package-cli", "--json"], stdin = "1\n2\n", expected_exit = 0, expected_stdout = "result text\n", expected_stderr = "", timeout_seconds = 10 },
 # ]
 
 [tool.agent-discipline-gate.mutation]

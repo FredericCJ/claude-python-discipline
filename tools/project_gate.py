@@ -528,6 +528,10 @@ class CommandExecution:
     output: str
     ## Measured wall time.
     duration_ms: int
+    ## Captured stdout when the caller requires stream-specific evidence.
+    stdout: str = ""
+    ## Captured stderr when the caller requires stream-specific evidence.
+    stderr: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -624,7 +628,9 @@ def _string_list(value: object, field: str) -> tuple[str, ...]:
 
 
 def _local_targets(
-    context: GateContext, values: Sequence[str], field: str,
+    context: GateContext,
+    values: Sequence[str],
+    field: str,
 ) -> tuple[tuple[str, ...], int]:
     """Resolve explicit targets while refusing parent, sibling, and empty scans.
 
@@ -652,7 +658,8 @@ def _local_targets(
 
 
 def _project_configuration(
-    context: GateContext, fields: Sequence[str],
+    context: GateContext,
+    fields: Sequence[str],
 ) -> ConfigurationUse:
     """Reuse the declaration digest while narrowing the consumed field set.
 
@@ -708,7 +715,10 @@ def _gate_table(context: GateContext) -> Mapping[str, object]:
 
 
 def _require_value(
-    table: Mapping[str, object], key: str, expected: object, field: str,
+    table: Mapping[str, object],
+    key: str,
+    expected: object,
+    field: str,
 ) -> None:
     """Require one exact configuration posture value.
 
@@ -853,11 +863,7 @@ def _prepare_pytest(context: GateContext) -> PreparedCommand:
         "tool.pytest.ini_options.testpaths",
     )
     timeout = table.get("timeout")
-    if (
-        not isinstance(timeout, (int, float))
-        or isinstance(timeout, bool)
-        or timeout <= 0
-    ):
+    if not isinstance(timeout, (int, float)) or isinstance(timeout, bool) or timeout <= 0:
         _raise_probe(
             "tool.pytest.ini_options.timeout",
             "expected a positive per-test timeout",
@@ -917,7 +923,8 @@ def _prepare_mutation(context: GateContext) -> PreparedCommand:
     domains, domain_files = _local_targets(
         context,
         _string_list(
-            roles.get("domain"), "tool.agent-discipline.roles.domain",
+            roles.get("domain"),
+            "tool.agent-discipline.roles.domain",
         ),
         "tool.agent-discipline.roles.domain",
     )
@@ -1002,7 +1009,8 @@ def _positive_count(value: object) -> bool:
 
 
 def _mutation_evaluation(
-    execution: CommandExecution, command: PreparedCommand,
+    execution: CommandExecution,
+    command: PreparedCommand,
 ) -> Evaluation:
     """Require the mutation gate's structured, non-vacuous zero-survivor report.
 
@@ -1045,7 +1053,10 @@ def _mutation_evaluation(
 
 
 def _import_root_present(
-    context: GateContext, package: str, source_roots: Sequence[str], field: str,
+    context: GateContext,
+    package: str,
+    source_roots: Sequence[str],
+    field: str,
 ) -> None:
     """Require an import-linter root package to exist under a declared source root.
 
@@ -1057,8 +1068,10 @@ def _import_root_present(
     """
     relative = Path(*package.split("."))
     if any(
-        ((context.root / source / relative).is_dir()
-         or (context.root / source / relative).with_suffix(".py").is_file())
+        (
+            (context.root / source / relative).is_dir()
+            or (context.root / source / relative).with_suffix(".py").is_file()
+        )
         for source in source_roots
     ):
         return
@@ -1114,11 +1127,7 @@ def _prepare_import_contracts(context: GateContext) -> PreparedCommand:
         context,
         ("tool.agent-discipline-gate.import_contracts", "tool.agent-discipline.source_roots"),
     )
-    source_arguments = tuple(
-        item
-        for source in source_roots
-        for item in ("--source-root", source)
-    )
+    source_arguments = tuple(item for source in source_roots for item in ("--source-root", source))
     return PreparedCommand(
         command=(
             sys.executable,
@@ -1154,8 +1163,9 @@ def _doxygen_values(text: str, key: str, field: str) -> tuple[str, ...]:
     @return shell-like tokens after the equals sign
     @throws ConfigurationProbeError when absent, repeated, or malformed
     """
-    matches = [match.group(2) for match in _DOXYGEN_ASSIGNMENT.finditer(text)
-               if match.group(1) == key]
+    matches = [
+        match.group(2) for match in _DOXYGEN_ASSIGNMENT.finditer(text) if match.group(1) == key
+    ]
     if len(matches) != 1:
         raise _probe_error(field, f"expected exactly one {key} assignment")
     try:
@@ -1250,7 +1260,9 @@ def _native_version(executable: str) -> str:
 
 
 def _execute_doxygen(
-    executable: str, plan: DoxygenPlan, context: GateContext,
+    executable: str,
+    plan: DoxygenPlan,
+    context: GateContext,
 ) -> DocumentationExecution:
     """Run Doxygen into the ephemeral workspace and count generated source pages.
 
@@ -1290,7 +1302,9 @@ def _execute_doxygen(
 
 
 def _documentation_configuration_failure(
-    context: GateContext, rules: tuple[str, ...], problem: ConfigurationProbeError,
+    context: GateContext,
+    rules: tuple[str, ...],
+    problem: ConfigurationProbeError,
 ) -> StepResult:
     """Render a documentation configuration-load failure.
 
@@ -1312,7 +1326,8 @@ def _documentation_configuration_failure(
 
 
 def _run_doxygen_documentation(
-    context: GateContext, rules: tuple[str, ...],
+    context: GateContext,
+    rules: tuple[str, ...],
 ) -> StepResult:
     """Run the configured Doxygen gate with version and output probes.
 
@@ -1423,10 +1438,7 @@ def _prepare_sphinx(context: GateContext) -> tuple[PreparedCommand, Path]:
     if not config.is_file():
         raise _probe_error(field, f"{roots[0]}/conf.py does not exist")
     authored = sum(
-        1
-        for suffix in ("*.rst", "*.md")
-        for path in source.rglob(suffix)
-        if path.is_file()
+        1 for suffix in ("*.rst", "*.md") for path in source.rglob(suffix) if path.is_file()
     )
     if authored == 0:
         raise _probe_error(field, "documentation root contains no .rst or .md source")
@@ -1461,7 +1473,8 @@ def _prepare_sphinx(context: GateContext) -> tuple[PreparedCommand, Path]:
 
 
 def _run_sphinx_documentation(
-    context: GateContext, rules: tuple[str, ...],
+    context: GateContext,
+    rules: tuple[str, ...],
 ) -> StepResult:
     """Run the configured Sphinx gate and require generated HTML.
 
@@ -1634,13 +1647,31 @@ class ArtifactProbe:
     expected_exit: int
     ## Finite execution budget.
     timeout_seconds: int
+    ## Optional exact standard input supplied to the installed command.
+    stdin: str | None
+    ## Optional exact expected standard output.
+    expected_stdout: str | None
+    ## Optional exact expected standard error.
+    expected_stderr: str | None
 
 
 ## Repository content that cannot influence the delivered artifact and must not be copied.
 _ISOLATION_EXCLUDES: Final = frozenset({
-    ".agent", ".agents", ".claude", ".git", ".hypothesis", ".import_linter_cache",
-    ".mypy_cache", ".pytest_cache", ".ruff_cache", ".tox", ".venv", "__pycache__",
-    "build", "dist", "node_modules",
+    ".agent",
+    ".agents",
+    ".claude",
+    ".git",
+    ".hypothesis",
+    ".import_linter_cache",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".tox",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+    "node_modules",
 })
 
 ## Import names accepted by the installed smoke probe.
@@ -1671,10 +1702,7 @@ def _copy_isolated(root: Path, destination: Path) -> int:
             path = current / name
             if path.is_symlink():
                 relative = path.relative_to(root).as_posix()
-                detail = (
-                    f"build isolation refuses symlink {relative!r}; "
-                    "materialize or package it"
-                )
+                detail = f"build isolation refuses symlink {relative!r}; materialize or package it"
                 raise _artifact_error(detail)
     shutil.copytree(
         root,
@@ -1808,8 +1836,7 @@ def _wheel_identity(path: Path) -> tuple[str, str]:
     """
     try:
         with zipfile.ZipFile(path) as archive:
-            members = [name for name in archive.namelist()
-                       if name.endswith(".dist-info/METADATA")]
+            members = [name for name in archive.namelist() if name.endswith(".dist-info/METADATA")]
             if len(members) != 1:
                 detail = f"{path.name} contains {len(members)} METADATA files"
                 raise _artifact_error(detail)
@@ -1830,9 +1857,7 @@ def _read_sdist_identity(path: Path) -> tuple[str, str]:
         members = [
             member
             for member in archive.getmembers()
-            if member.isfile()
-            and member.name.count("/") == 1
-            and member.name.endswith("/PKG-INFO")
+            if member.isfile() and member.name.count("/") == 1 and member.name.endswith("/PKG-INFO")
         ]
         if len(members) != 1:
             detail = f"{path.name} contains {len(members)} root PKG-INFO files"
@@ -1868,9 +1893,7 @@ def _validate_artifacts(plan: BuildPlan) -> BuiltArtifacts:
     wheels = sorted(plan.artifacts.glob("*.whl"))
     sdists = sorted(plan.artifacts.glob("*.tar.gz"))
     if len(wheels) != 1 or len(sdists) != 1:
-        detail = (
-            f"expected one wheel and one sdist, found {len(wheels)} and {len(sdists)}"
-        )
+        detail = f"expected one wheel and one sdist, found {len(wheels)} and {len(sdists)}"
         raise _artifact_error(detail)
     wheel_identity = _wheel_identity(wheels[0])
     sdist_identity = _sdist_identity(sdists[0])
@@ -1979,8 +2002,7 @@ class ArtifactBuildAdapter:
             required=True,
             diagnostic_id=None,
             summary=(
-                f"built and inspected wheel plus sdist for "
-                f"{artifacts.name} {artifacts.version}"
+                f"built and inspected wheel plus sdist for {artifacts.name} {artifacts.version}"
             ),
             command=command.command,
             configuration=command.configuration,
@@ -1992,6 +2014,74 @@ class ArtifactBuildAdapter:
                 ("sdist", f"{artifacts.sdist.name} sha256:{_digest(artifacts.sdist)}"),
             ),
         )
+
+
+def _optional_probe_text(value: object, field: str) -> str | None:
+    """Validate one optional exact stream value without stripping it.
+
+    @param value decoded TOML value
+    @param field configuration field for diagnostics
+    @return exact text or absence
+    @throws ConfigurationProbeError when a non-text value is present
+    """
+    if value is not None and not isinstance(value, str):
+        raise _probe_error(field, "must be text or absent")
+    return value
+
+
+def _artifact_probe(raw: object, field: str) -> ArtifactProbe:
+    """Parse one exact installed-command probe.
+
+    @param raw decoded TOML table
+    @param field configuration location
+    @return validated probe
+    @throws ConfigurationProbeError when the declaration is unsafe or ambiguous
+    """
+    if not isinstance(raw, Mapping):
+        raise _probe_error(field, "expected a table")
+    allowed = {
+        "name",
+        "command",
+        "expected_exit",
+        "timeout_seconds",
+        "stdin",
+        "expected_stdout",
+        "expected_stderr",
+    }
+    unknown = set(raw) - allowed
+    if unknown:
+        raise _probe_error(field, f"unknown fields {sorted(unknown)}")
+    name = raw.get("name")
+    expected = raw.get("expected_exit", 0)
+    timeout = raw.get("timeout_seconds", 10)
+    if not isinstance(name, str) or not name.strip():
+        raise _probe_error(field, "name must be non-empty text")
+    if not isinstance(expected, int) or isinstance(expected, bool):
+        raise _probe_error(field, "expected_exit must be an integer")
+    if not (
+        isinstance(timeout, int)
+        and not isinstance(timeout, bool)
+        and 1 <= timeout <= _MAX_PROBE_TIMEOUT
+    ):
+        raise _probe_error(
+            field,
+            f"timeout_seconds must be between 1 and {_MAX_PROBE_TIMEOUT}",
+        )
+    return ArtifactProbe(
+        name=name.strip(),
+        command=_string_list(raw.get("command"), f"{field}.command"),
+        expected_exit=expected,
+        timeout_seconds=timeout,
+        stdin=_optional_probe_text(raw.get("stdin"), f"{field}.stdin"),
+        expected_stdout=_optional_probe_text(
+            raw.get("expected_stdout"),
+            f"{field}.expected_stdout",
+        ),
+        expected_stderr=_optional_probe_text(
+            raw.get("expected_stderr"),
+            f"{field}.expected_stderr",
+        ),
+    )
 
 
 def _parse_artifact_probes(
@@ -2013,37 +2103,12 @@ def _parse_artifact_probes(
     raw_probes = gate.get("artifact_probes", [])
     if not isinstance(raw_probes, list):
         raise _probe_error(probes_field, "expected an array")
-    probes: list[ArtifactProbe] = []
-    for index, raw in enumerate(raw_probes):
-        field = f"tool.agent-discipline-gate.artifact_probes[{index}]"
-        if not isinstance(raw, Mapping):
-            raise _probe_error(field, "expected a table")
-        unknown = set(raw) - {"name", "command", "expected_exit", "timeout_seconds"}
-        if unknown:
-            raise _probe_error(field, f"unknown fields {sorted(unknown)}")
-        name = raw.get("name")
-        command = raw.get("command")
-        expected = raw.get("expected_exit", 0)
-        timeout = raw.get("timeout_seconds", 10)
-        if not isinstance(name, str) or not name.strip():
-            raise _probe_error(field, "name must be non-empty text")
-        argv = _string_list(command, f"{field}.command")
-        if not isinstance(expected, int) or isinstance(expected, bool):
-            raise _probe_error(field, "expected_exit must be an integer")
-        timeout_valid = (
-            isinstance(timeout, int)
-            and not isinstance(timeout, bool)
-            and 1 <= timeout <= _MAX_PROBE_TIMEOUT
-        )
-        if not timeout_valid:
-            raise _probe_error(
-                field,
-                f"timeout_seconds must be between 1 and {_MAX_PROBE_TIMEOUT}",
-            )
-        probes.append(ArtifactProbe(name.strip(), argv, expected, timeout))
+    probes = tuple(
+        _artifact_probe(raw, f"{probes_field}[{index}]") for index, raw in enumerate(raw_probes)
+    )
     if len({probe.name for probe in probes}) != len(probes):
         raise _probe_error(probes_field, "probe names repeat")
-    return imports, tuple(probes)
+    return imports, probes
 
 
 def _fresh_python(environment: Path) -> Path:
@@ -2084,8 +2149,7 @@ def _probe_argv(probe: ArtifactProbe, interpreter: Path) -> tuple[str, ...]:
     """
     scripts = interpreter.parent
     resolved = [
-        str(interpreter) if argument == "{python}" else argument
-        for argument in probe.command
+        str(interpreter) if argument == "{python}" else argument for argument in probe.command
     ]
     first = Path(resolved[0])
     if resolved[0] == str(interpreter):
@@ -2100,13 +2164,17 @@ def _probe_argv(probe: ArtifactProbe, interpreter: Path) -> tuple[str, ...]:
 
 
 def _execute_with_timeout(
-    command: tuple[str, ...], root: Path, timeout: int,
+    command: tuple[str, ...],
+    root: Path,
+    timeout: int,
+    stdin: str | None = None,
 ) -> CommandExecution:
     """Execute a declared installed probe with its own finite budget.
 
     @param command resolved venv-local argv
     @param root source-free working directory
     @param timeout seconds before refusal
+    @param stdin optional exact text supplied to standard input
     @return process observation
     @throws CommandExecutionError when launch or timeout fails
     """
@@ -2116,6 +2184,7 @@ def _execute_with_timeout(
         finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
             prepared.command,
             cwd=root,
+            input=stdin,
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -2129,6 +2198,8 @@ def _execute_with_timeout(
         finished.returncode,
         finished.stdout + finished.stderr,
         round((time.perf_counter() - started) * 1000),
+        finished.stdout,
+        finished.stderr,
     )
 
 
@@ -2151,7 +2222,9 @@ class InstallPlan:
 
 
 def _prepare_install(
-    context: GateContext, step_id: str, rules: tuple[str, ...],
+    context: GateContext,
+    step_id: str,
+    rules: tuple[str, ...],
 ) -> InstallPlan | StepResult:
     """Locate the validated wheel, parse probes, and create the fresh environment.
 
@@ -2204,8 +2277,13 @@ def _prepare_install(
     )
     install = PreparedCommand(
         (
-            str(interpreter), "-m", "pip", "install", "--disable-pip-version-check",
-            "--no-input", str(wheels[0]),
+            str(interpreter),
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--no-input",
+            str(wheels[0]),
         ),
         (use,),
         1,
@@ -2216,7 +2294,10 @@ def _prepare_install(
 
 
 def _install_wheel(
-    context: GateContext, plan: InstallPlan, step_id: str, rules: tuple[str, ...],
+    context: GateContext,
+    plan: InstallPlan,
+    step_id: str,
+    rules: tuple[str, ...],
 ) -> CommandExecution | StepResult:
     """Install one wheel and translate process failure into a gate result.
 
@@ -2330,7 +2411,12 @@ def _verify_installed_commands(
     for probe in plan.probes:
         try:
             argv = _probe_argv(probe, plan.interpreter)
-            observed = _execute_with_timeout(argv, context.scratch, probe.timeout_seconds)
+            observed = _execute_with_timeout(
+                argv,
+                context.scratch,
+                probe.timeout_seconds,
+                probe.stdin,
+            )
         except (ConfigurationProbeError, CommandExecutionError) as problem:
             return StepResult(
                 step_id=step_id,
@@ -2355,6 +2441,24 @@ def _verify_installed_commands(
                     f"probe {probe.name!r} returned {observed.returncode}, "
                     f"expected {probe.expected_exit}"
                 ),
+                command=argv,
+                configuration=plan.install.configuration,
+                duration_ms=total,
+                output=_tail(observed.output),
+            )
+        mismatches = []
+        if probe.expected_stdout is not None and observed.stdout != probe.expected_stdout:
+            mismatches.append("stdout")
+        if probe.expected_stderr is not None and observed.stderr != probe.expected_stderr:
+            mismatches.append("stderr")
+        if mismatches:
+            return StepResult(
+                step_id=step_id,
+                rules=rules,
+                status=Status.FAIL,
+                required=True,
+                diagnostic_id="GATE-INSTALL-006_OUTPUT",
+                summary=(f"probe {probe.name!r} did not match exact {', '.join(mismatches)}"),
                 command=argv,
                 configuration=plan.install.configuration,
                 duration_ms=total,
@@ -2385,12 +2489,20 @@ class CleanInstallAdapter:
         if isinstance(installed, StepResult):
             return installed
         imported = _verify_installed_imports(
-            context, prepared, installed, self.step_id, self.rules,
+            context,
+            prepared,
+            installed,
+            self.step_id,
+            self.rules,
         )
         if isinstance(imported, StepResult):
             return imported
         probed = _verify_installed_commands(
-            context, prepared, imported, self.step_id, self.rules,
+            context,
+            prepared,
+            imported,
+            self.step_id,
+            self.rules,
         )
         if isinstance(probed, StepResult):
             return probed
@@ -2411,12 +2523,9 @@ class CleanInstallAdapter:
             tool="fresh venv pip",
             duration_ms=probed,
             evidence=tuple(
-                (f"import[{index}]", value)
-                for index, value in enumerate(prepared.imports)
-            ) + tuple(
-                (f"probe[{index}]", probe.name)
-                for index, probe in enumerate(prepared.probes)
-            ),
+                (f"import[{index}]", value) for index, value in enumerate(prepared.imports)
+            )
+            + tuple((f"probe[{index}]", probe.name) for index, probe in enumerate(prepared.probes)),
         )
 
 
@@ -2481,7 +2590,8 @@ def _distribution_version(name: str) -> str:
 
 
 def _ordinary_evaluation(
-    execution: CommandExecution, command: PreparedCommand,
+    execution: CommandExecution,
+    command: PreparedCommand,
 ) -> Evaluation:
     """Interpret a conventional zero-success tool without hiding its subject count.
 
@@ -2502,7 +2612,8 @@ def _ordinary_evaluation(
 
 
 def _pyright_evaluation(
-    execution: CommandExecution, command: PreparedCommand,
+    execution: CommandExecution,
+    command: PreparedCommand,
 ) -> Evaluation:
     """Require pyright's own report to confirm that it analysed files.
 
@@ -2550,7 +2661,8 @@ _PYTEST_PASSED: Final = re.compile(r"(?:^|\s)(\d+) passed(?:,|\s|$)")
 
 
 def _pytest_evaluation(
-    execution: CommandExecution, command: PreparedCommand,
+    execution: CommandExecution,
+    command: PreparedCommand,
 ) -> Evaluation:
     """Refuse a zero-test or all-skipped pytest success.
 
@@ -2593,7 +2705,9 @@ class ConfiguredToolAdapter:
     supported_platforms: tuple[str, ...] = ("Windows", "Linux")
 
     def _configuration_failure(
-        self, context: GateContext, problem: ConfigurationProbeError,
+        self,
+        context: GateContext,
+        problem: ConfigurationProbeError,
     ) -> StepResult:
         """Render one failed configuration-load probe.
 
@@ -2684,12 +2798,25 @@ class ConfiguredToolAdapter:
 
 ## Ruff predicates presently named by binding rules.
 RUFF_RULES: Final = (
-    "ARCH-016", "DIAG-008", "DIAG-012", "DIAG-015", "DOC-001", "DOC-003",
-    "DOC-006", "ERR-008", "ERR-009", "TYPE-003",
+    "ARCH-016",
+    "DIAG-008",
+    "DIAG-012",
+    "DIAG-015",
+    "DOC-001",
+    "DOC-003",
+    "DOC-006",
+    "ERR-008",
+    "ERR-009",
+    "TYPE-003",
 )
 ## Mypy predicates presently named by binding rules.
 MYPY_RULES: Final = (
-    "ARCH-006", "ERR-002", "ERR-005", "TYPE-001", "TYPE-002", "TYPE-003",
+    "ARCH-006",
+    "ERR-002",
+    "ERR-005",
+    "TYPE-001",
+    "TYPE-002",
+    "TYPE-003",
     "TYPE-013",
 )
 ## Pyright supplies a deliberately independent strict type oracle.
@@ -2700,29 +2827,54 @@ PYTEST_RULES: Final = ("TEST-003", "TEST-017")
 MUTATION_RULES: Final = ("TEST-013",)
 ## Import-linter predicates presently named by binding rules.
 IMPORT_CONTRACT_RULES: Final = (
-    "API-004", "ARCH-001", "ARCH-002", "ARCH-003", "DEP-001", "EFCT-001",
+    "API-004",
+    "ARCH-001",
+    "ARCH-002",
+    "ARCH-003",
+    "DEP-001",
+    "EFCT-001",
     "EFCT-012",
 )
 
 ## Canonical Ruff adapter.
 RUFF_STEP: Final = ConfiguredToolAdapter(
-    "ruff", RUFF_RULES, "ruff", _prepare_ruff, _ordinary_evaluation,
+    "ruff",
+    RUFF_RULES,
+    "ruff",
+    _prepare_ruff,
+    _ordinary_evaluation,
 )
 ## Canonical mypy adapter.
 MYPY_STEP: Final = ConfiguredToolAdapter(
-    "mypy", MYPY_RULES, "mypy", _prepare_mypy, _ordinary_evaluation,
+    "mypy",
+    MYPY_RULES,
+    "mypy",
+    _prepare_mypy,
+    _ordinary_evaluation,
 )
 ## Canonical pyright adapter.
 PYRIGHT_STEP: Final = ConfiguredToolAdapter(
-    "pyright", PYRIGHT_RULES, "pyright", _prepare_pyright, _pyright_evaluation,
+    "pyright",
+    PYRIGHT_RULES,
+    "pyright",
+    _prepare_pyright,
+    _pyright_evaluation,
 )
 ## Canonical pytest adapter.
 PYTEST_STEP: Final = ConfiguredToolAdapter(
-    "pytest", PYTEST_RULES, "pytest", _prepare_pytest, _pytest_evaluation,
+    "pytest",
+    PYTEST_RULES,
+    "pytest",
+    _prepare_pytest,
+    _pytest_evaluation,
 )
 ## Canonical portable mutation adapter.
 MUTATION_STEP: Final = ConfiguredToolAdapter(
-    "mutation", MUTATION_RULES, "cosmic-ray", _prepare_mutation, _mutation_evaluation,
+    "mutation",
+    MUTATION_RULES,
+    "cosmic-ray",
+    _prepare_mutation,
+    _mutation_evaluation,
 )
 ## Canonical import-linter adapter using the portable API wrapper.
 IMPORT_CONTRACTS_STEP: Final = ConfiguredToolAdapter(

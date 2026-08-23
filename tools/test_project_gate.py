@@ -28,22 +28,36 @@ from fixtures import reference_root
 def test_only_pass_and_valid_not_applicable_are_green() -> None:
     """Unsupported and not-run required work cannot be reported as success."""
     passed = project_gate.StepResult(
-        step_id="probe", rules=(), status=project_gate.Status.PASS,
-        required=True, diagnostic_id=None, summary="ran",
+        step_id="probe",
+        rules=(),
+        status=project_gate.Status.PASS,
+        required=True,
+        diagnostic_id=None,
+        summary="ran",
     )
     inapplicable = project_gate.StepResult(
-        step_id="conditional", rules=(), status=project_gate.Status.NOT_APPLICABLE,
-        required=False, diagnostic_id="GATE-NOT-APPLICABLE",
+        step_id="conditional",
+        rules=(),
+        status=project_gate.Status.NOT_APPLICABLE,
+        required=False,
+        diagnostic_id="GATE-NOT-APPLICABLE",
         summary="capability is false",
     )
     unsupported = project_gate.StepResult(
-        step_id="platform", rules=(), status=project_gate.Status.UNSUPPORTED,
-        required=True, diagnostic_id="GATE-UNSUPPORTED",
+        step_id="platform",
+        rules=(),
+        status=project_gate.Status.UNSUPPORTED,
+        required=True,
+        diagnostic_id="GATE-UNSUPPORTED",
         summary="required tool has no Windows implementation",
     )
     not_run = project_gate.StepResult(
-        step_id="blocked", rules=(), status=project_gate.Status.NOT_RUN,
-        required=True, diagnostic_id="GATE-NOT-RUN", summary="declaration failed",
+        step_id="blocked",
+        rules=(),
+        status=project_gate.Status.NOT_RUN,
+        required=True,
+        diagnostic_id="GATE-NOT-RUN",
+        summary="declaration failed",
     )
 
     assert passed.green
@@ -56,8 +70,12 @@ def test_ambiguous_result_records_are_refused() -> None:
     """A non-pass result without a reason code cannot enter a report."""
     with pytest.raises(ValueError, match="stable diagnostic"):
         project_gate.StepResult(
-            step_id="ambiguous", rules=(), status=project_gate.Status.FAIL,
-            required=True, diagnostic_id=None, summary="failed",
+            step_id="ambiguous",
+            rules=(),
+            status=project_gate.Status.FAIL,
+            required=True,
+            diagnostic_id=None,
+            summary="failed",
         )
 
 
@@ -100,13 +118,11 @@ def test_reference_loads_one_declaration_for_every_check() -> None:
 def test_ordinary_gate_schedules_documentation_presence() -> None:
     """Documentation presence is part of the default gate, not a doc-only job."""
     scheduled = [
-        step for step in project_gate.DEFAULT_STEPS
+        step
+        for step in project_gate.DEFAULT_STEPS
         if isinstance(step, project_gate.DisciplineChecksAdapter)
     ]
-    discovered = {
-        type(check).__module__.rsplit(".", maxsplit=1)[-1]
-        for check in discover()
-    }
+    discovered = {type(check).__module__.rsplit(".", maxsplit=1)[-1] for check in discover()}
 
     assert len(scheduled) == 1
     assert "DOC-003" in scheduled[0].rules
@@ -211,15 +227,13 @@ def _configured_tool_project(tmp_path: Path) -> Path:
         (project_gate.PYTEST_STEP, "1 passed in 0.01s\n", "tests"),
         (
             project_gate.MUTATION_STEP,
-            json.dumps(
-                {
-                    "status": "pass",
-                    "diagnostic_id": None,
-                    "summary": "killed",
-                    "mutants": 3,
-                    "domains": 1,
-                }
-            ),
+            json.dumps({
+                "status": "pass",
+                "diagnostic_id": None,
+                "summary": "killed",
+                "mutants": 3,
+                "domains": 1,
+            }),
             "--root",
         ),
     ],
@@ -244,7 +258,8 @@ def test_external_adapters_bind_config_and_non_empty_targets(
     commands: list[project_gate.PreparedCommand] = []
 
     def execute(
-        command: project_gate.PreparedCommand, _root: Path,
+        command: project_gate.PreparedCommand,
+        _root: Path,
     ) -> project_gate.CommandExecution:
         """Capture one prepared command and return the declared observation.
 
@@ -283,7 +298,8 @@ def test_missing_tool_configuration_is_a_failed_probe(tmp_path: Path) -> None:
 
 
 def test_pyright_zero_file_report_is_not_green(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Pyright must corroborate that its configured target produced subjects."""
     root = _configured_tool_project(tmp_path)
@@ -291,7 +307,9 @@ def test_pyright_zero_file_report_is_not_green(
         project_gate,
         "_execute",
         lambda _command, _root: project_gate.CommandExecution(
-            0, '{"summary":{"filesAnalyzed":0,"errorCount":0}}', 1,
+            0,
+            '{"summary":{"filesAnalyzed":0,"errorCount":0}}',
+            1,
         ),
     )
     monkeypatch.setattr(project_gate, "_distribution_version", lambda _name: "test")
@@ -303,7 +321,8 @@ def test_pyright_zero_file_report_is_not_green(
 
 
 def test_pytest_all_skipped_report_is_not_green(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A configured suite that executes no passing oracle remains a failure."""
     root = _configured_tool_project(tmp_path)
@@ -387,7 +406,8 @@ def test_doxygen_input_cannot_escape_to_a_parent(tmp_path: Path) -> None:
 
 
 def test_doxygen_pass_requires_generated_source_pages(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A clean process counts only after output corroborates every Python input."""
     root = _configured_tool_project(tmp_path)
@@ -423,7 +443,8 @@ def test_doxygen_pass_requires_generated_source_pages(
 
 
 def test_doxygen_zero_output_is_not_green(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Doxygen returning zero after filtering every file is a vacuous failure."""
     root = _configured_tool_project(tmp_path)
@@ -464,8 +485,7 @@ def _write_sphinx_project(root: Path) -> None:
     documentation = root / "docs"
     documentation.mkdir(exist_ok=True)
     (documentation / "conf.py").write_text(
-        '"""Configuration consumed by the Sphinx gate proof."""\n\n'
-        'project = "Reference"\n',
+        '"""Configuration consumed by the Sphinx gate proof."""\n\nproject = "Reference"\n',
         encoding="utf-8",
     )
     (documentation / "index.rst").write_text(
@@ -494,7 +514,8 @@ def test_real_sphinx_build_is_supported_and_non_empty(tmp_path: Path) -> None:
 
 
 def test_sphinx_zero_output_is_not_green(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A zero exit without generated HTML remains a failed observation.
 
@@ -538,7 +559,8 @@ def _write_artifacts(output: Path, name: str = "refpkg", version: str = "1.0.0")
 
 
 def test_artifact_build_uses_only_an_isolated_repository_copy(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Build input excludes the agent bundle and produces content-bound archives."""
     root = _configured_tool_project(tmp_path)
@@ -547,7 +569,8 @@ def test_artifact_build_uses_only_an_isolated_repository_copy(
     (agent / "ambient.txt").write_text("must not build", encoding="utf-8")
 
     def execute(
-        command: project_gate.PreparedCommand, _root: Path,
+        command: project_gate.PreparedCommand,
+        _root: Path,
     ) -> project_gate.CommandExecution:
         """Assert isolation and synthesize the declared artifact pair.
 
@@ -578,13 +601,15 @@ def test_artifact_build_uses_only_an_isolated_repository_copy(
 
 
 def test_artifact_metadata_mismatch_is_rejected(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A filename cannot conceal a wheel and sdist for another distribution."""
     root = _configured_tool_project(tmp_path)
 
     def execute(
-        command: project_gate.PreparedCommand, _root: Path,
+        command: project_gate.PreparedCommand,
+        _root: Path,
     ) -> project_gate.CommandExecution:
         """Write internally consistent but incorrectly identified artifacts.
 
@@ -631,14 +656,16 @@ def test_unpinned_build_backend_is_rejected(tmp_path: Path) -> None:
 
 
 def test_clean_install_runs_without_a_source_tree_on_pythonpath(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The wheel is installed fresh and imports run under Python isolated mode."""
     root = _configured_tool_project(tmp_path)
     commands: list[tuple[str, ...]] = []
 
     def execute(
-        command: project_gate.PreparedCommand, _root: Path,
+        command: project_gate.PreparedCommand,
+        _root: Path,
     ) -> project_gate.CommandExecution:
         """Synthesize build output and accept the fresh pip invocation.
 
@@ -664,7 +691,9 @@ def test_clean_install_runs_without_a_source_tree_on_pythonpath(
         return interpreter
 
     def execute_timeout(
-        command: tuple[str, ...], _root: Path, _timeout: int,
+        command: tuple[str, ...],
+        _root: Path,
+        _timeout: int,
     ) -> project_gate.CommandExecution:
         """Capture the isolated import command and accept it.
 
@@ -690,6 +719,92 @@ def test_clean_install_runs_without_a_source_tree_on_pythonpath(
     assert report.outcomes[2].status is project_gate.Status.PASS
     assert any("-I" in command for command in commands)
     assert all("PYTHONPATH" not in argument for command in commands for argument in command)
+
+
+def test_installed_probe_checks_exact_input_and_output(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A wheel probe fails when its exact public stdout contract drifts.
+
+    @param tmp_path isolated project root
+    @param monkeypatch replaces artifact processes while preserving their bindings
+    """
+    root = _configured_tool_project(tmp_path)
+    project_file = root / "pyproject.toml"
+    project_file.write_text(
+        project_file.read_text(encoding="utf-8").replace(
+            "artifact_imports = ['refpkg']\n",
+            "artifact_imports = ['refpkg']\n"
+            "artifact_probes = [{ name = 'behavior', command = ['refcmd'], "
+            'stdin = "2\\n3\\n", expected_exit = 0, expected_stdout = "sum: 6\\n", '
+            "expected_stderr = '', timeout_seconds = 5 }]\n",
+        ),
+        encoding="utf-8",
+    )
+    observed_input: list[str | None] = []
+
+    def execute(
+        command: project_gate.PreparedCommand,
+        _root: Path,
+    ) -> project_gate.CommandExecution:
+        """Synthesize a wheel and accept its installation.
+
+        @param command explicit build or install command
+        @param _root source-free working directory
+        @return successful process observation
+        """
+        if "build" in command.command:
+            output = Path(command.command[command.command.index("--outdir") + 1])
+            _write_artifacts(output)
+        return project_gate.CommandExecution(0, "ok", 1)
+
+    def create(environment: Path) -> Path:
+        """Create the synthetic interpreter and installed command paths.
+
+        @param environment fresh environment root
+        @return synthetic interpreter
+        """
+        scripts = environment / "Scripts"
+        scripts.mkdir(parents=True)
+        interpreter = scripts / "python.exe"
+        interpreter.write_bytes(b"")
+        (scripts / "refcmd.exe").write_bytes(b"")
+        return interpreter
+
+    def execute_timeout(
+        command: tuple[str, ...],
+        _root: Path,
+        _timeout: int,
+        stdin: str | None = None,
+    ) -> project_gate.CommandExecution:
+        """Return exact import output and deliberately wrong command output.
+
+        @param command fresh-environment argv
+        @param _root source-free working directory
+        @param _timeout finite probe budget
+        @param stdin configured public input
+        @return captured stream-specific observation
+        """
+        if "-I" in command:
+            return project_gate.CommandExecution(0, "", 1, "", "")
+        observed_input.append(stdin)
+        return project_gate.CommandExecution(0, "sum: 5\n", 1, "sum: 5\n", "")
+
+    monkeypatch.setattr(project_gate, "_execute", execute)
+    monkeypatch.setattr(project_gate, "_create_venv", create)
+    monkeypatch.setattr(project_gate, "_distribution_version", lambda _name: "1.3.0")
+    monkeypatch.setattr(project_gate, "_execute_with_timeout", execute_timeout)
+
+    report = project_gate.run(
+        root,
+        steps=(project_gate.ArtifactBuildAdapter(), project_gate.CleanInstallAdapter()),
+    )
+
+    assert observed_input == ["2\n3\n"]
+    assert report.outcomes[2].status is project_gate.Status.FAIL
+    assert report.outcomes[2].diagnostic_id == "GATE-INSTALL-006_OUTPUT"
+    assert "stdout" in report.outcomes[2].summary
 
 
 @pytest.mark.timeout(120)
