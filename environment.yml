@@ -46,8 +46,9 @@ dependencies:
   - git=2.51.2
 
   # Pyright is a Python distribution which executes a Node program. Providing a
-  # pinned Node runtime removes its hidden first-use download and makes offline
-  # runs after environment/image construction honest.
+  # pinned Node runtime, and putting this environment first on PATH in both
+  # launchers, removes its hidden first-use download and makes offline runs after
+  # environment/image construction honest.
   - nodejs=22.21.1
 
   # DOC-005/007/010/011. Doxygen is a native binary, not a pip package, and 1.10.0

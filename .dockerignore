@@ -1,0 +1,12 @@
+# The image executes a bind-mounted checkout. Sending repository source, Git
+# history, caches, or credentials to the builder would widen both the build
+# context and the supply-chain trust boundary for no runtime benefit.
+**
+!environment.yml
+!tools/
+tools/**
+!tools/check_env.py
+!dev/
+dev/**
+!dev/Dockerfile
+!dev/container-entrypoint.sh
