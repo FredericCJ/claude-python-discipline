@@ -2,7 +2,7 @@
 id: meta/OPEN
 kind: meta
 title: Open Decisions
-tokens: 3836
+tokens: 3950
 load_when: ["open question", "undecided", "which tool", "pin a version"]
 decay: none
 ---
@@ -41,12 +41,15 @@ its validation survives `python -O` where an `assert` would not.
 
 *Consequence:* v1 idioms are a migration defect, not a style preference.
 
-### OPEN-003 · mutmut as the mutation engine
+### OPEN-003 · Cosmic Ray as the portable mutation engine
 
 The sources mandated mutation testing and then declined to name an engine, which left the
-requirement unenforceable. mutmut is chosen for having a workable incremental mode over a
-pytest suite. The requirement is on the capability, not the tool, so the pin lives in a
-`fact` file and can be swapped without touching any rule.
+requirement unenforceable. mutmut was initially chosen for its incremental pytest mode, but
+its fork requirement made the resulting binding rule unsupported on native Windows. v4
+replaces it with Cosmic Ray 8.7.0 and a repository-owned adapter that runs on Windows and
+Linux, creates a throwaway source copy, requires a normal passing baseline, refuses zero
+mutants, independently rejects abnormal or incompetent workers, and admits no survivors.
+The requirement remains on the capability; the dated tool pin stays in `fact/py-testing`.
 
 ### OPEN-004 · pytest-socket for network isolation
 
@@ -172,14 +175,14 @@ history, or a disagreement about a baselined finding.
 
 *Closes when:* one repository depends on this in daily use and reports back.
 
-### OPEN-012 · Mutation testing cannot run on the maintaining platform
+### OPEN-012 · Mutation testing cannot run on the maintaining platform — closed
 
-`TEST-013` is `external` on `auto:mutmut`. mutmut 3.3.1 does an unconditional module-scope
-`import resource`, which is Unix-only, so it fails before parsing an argument. Not pinned:
-a lock demanding an unusable package is worse than an absent one.
-
-*Closes when:* a Unix runner exists, or a win32-capable engine is chosen and `OPEN-003`
-revisited. Until then `TEST-013` is delegated and undecided, and `ENFORCEMENT.md` says so.
+The original `auto:mutmut` mechanism could not run natively on Windows; current upstream
+still requires fork support and directs Windows users to WSL. This was a mechanism defect,
+not permission to narrow `TEST-013`. Closed in v4 by `OPEN-003`: `auto:cosmic-ray` is pinned,
+run by the project gate on a throwaway copy, and held against real kill/survive control
+experiments on the maintaining Windows platform. Independent Linux evidence remains a
+release criterion rather than an excuse to call either platform unsupported.
 
 ### OPEN-013 · Three tools decide against one 26-file layout
 

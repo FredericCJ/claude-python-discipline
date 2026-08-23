@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "review_id": "v4_security_slice_adversarial_acceptance",
-  "reviewed_commit": "187246a5328bb802dd11504fe3b4c13fb459161d",
+  "reviewed_commit": "a5a649593ec0eac5732edc59fa499a1fa91134ac",
   "scope": {
     "algorithm": "sha256",
-    "digest": "sha256:49717d4c0eeeb387822cb8a21bb903bb7fb53b408420ca24ffcd889cddce5fa8",
-    "file_count": 283,
+    "digest": "sha256:789859af6d6099cfe035f66e2894cccbf942cc632740ea5c985b4dc3ad93e4f8",
+    "file_count": 285,
     "categories": [
       "project_declaration",
       "canonical_models",
@@ -69,7 +69,7 @@
     {
       "id": "test_oracles",
       "challenge": "Can a mechanism be counted as enforcement without a mutation proving that its stated observable proposition is rejected?",
-      "conclusion": "The evidence registry separates direct, proxy, behavioral, tool, and review claims; review-only obligations no longer enter the mutation census, while mechanical claims remain bound to witnessed rejection. The legacy rejection gap remains a release blocker.",
+      "conclusion": "The evidence registry separates direct, proxy, behavioral, tool, and review claims; review-only obligations do not enter the mutation census, and all 179 exact mechanical strategies now have witnessed rejection. The portable core-mutation adapter additionally refuses zero work, survivors, and non-verdict tool outcomes.",
       "evidence": ["discipline/meta/evidence.json", "enforce/discrimination.py", "tools/discrimination_gate.py"]
     }
   ],
@@ -174,12 +174,23 @@
       "review_trigger": "Review again whenever build isolation, archive metadata, dependency installation, entry-point declaration, venv behavior, or artifact probe configuration changes."
     },
     {
+      "id": "mutation_engine_incompetence_false_green",
+      "category": "test_oracles",
+      "severity": "critical",
+      "statement": "Cosmic Ray 8.7.0 treats an unlaunchable test command as an incompetent outcome, but its baseline exits green and its survival-rate calculation counts that outcome as a killed mutant; a quoting or environment defect can therefore manufacture a perfect score.",
+      "disposition": "resolved",
+      "resolution": "Generate a shlex-safe command with portable path spellings, dump both baseline and mutation sessions independently, require a normal surviving baseline, require every generated mutant to complete normally as killed or survived, and reject every incompetent, abnormal, pending, empty, or surviving result before consulting the score tool.",
+      "evidence": "tools/test_mutation_gate.py::test_cosmic_ray_rejects_a_suite_that_only_executes_the_core",
+      "owner": "mutation_gate_maintainer",
+      "review_trigger": "Review again whenever Cosmic Ray's command parser, baseline semantics, work-result schema, survival calculation, or Windows process behavior changes."
+    },
+    {
       "id": "release_gate_debt",
       "category": "test_oracles",
       "severity": "high",
-      "statement": "The repository records zero unbuilt mechanisms but still has 20 exact rule-mechanism claims without witnessed rejection, so this development snapshot cannot support a v4.0 release verdict.",
+      "statement": "The repository now records zero unbuilt mechanisms and zero exact rejection gap, but combined Claude/Codex package lifecycle tests, five adopter migrations, and independent Linux release evidence are not yet complete, so this snapshot cannot support a v4.0 release verdict.",
       "disposition": "accepted_risk",
-      "resolution": "Acceptance is limited to the current gate-rebuild workstream as a base for continued implementation; the roadmap makes zero unbuilt mechanisms and zero rejection gap mandatory before release.",
+      "resolution": "Acceptance is limited to the completed enforcement workstream as a base for packaging and migration; the remaining roadmap gates stay mandatory before release.",
       "evidence": "roadmap/from-3.2-to-4.0/README.md",
       "owner": "codex_v4_implementation",
       "review_trigger": "Regenerate and independently review this artifact before any beta, release-candidate, or v4.0 conformance claim."

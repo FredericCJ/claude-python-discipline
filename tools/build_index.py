@@ -207,10 +207,8 @@ EXTERNAL_TOOLS: Final[dict[str, str]] = {
     "import-linter": "import contracts",
     "mypy": "types",
     "pyright": "types",
-    "mutmut": "NOT RUN -- mutmut 3.3.1 does an unconditional `import resource` at "
-    "module scope, and `resource` is Unix-only. It raises "
-    "ModuleNotFoundError on Windows before parsing an argument, so it "
-    "cannot be pinned or wired here. TEST-013 is delegated and undecided.",
+    "cosmic-ray": "PROJECT GATE -- `mutation`; the adapter independently rejects "
+    "zero mutants, survivors, abnormal workers, and Cosmic Ray's `incompetent` outcome.",
 }
 
 
@@ -227,7 +225,7 @@ def _external_tool_section() -> list[str]:
     unknown = [
         f"{tool} -> {where}"
         for tool, where in EXTERNAL_TOOLS.items()
-        if not where.startswith("NOT RUN") and where not in entries
+        if not where.startswith(("NOT RUN", "PROJECT GATE")) and where not in entries
     ]
     if unknown:
         message = f"EXTERNAL_TOOLS names gate entries that do not exist: {'; '.join(unknown)}"
@@ -246,7 +244,11 @@ def _external_tool_section() -> list[str]:
         "|---|---|",
     ]
     for tool, where in sorted(EXTERNAL_TOOLS.items()):
-        cell = where if where.startswith("NOT RUN") else f"yes -- gate step `{where}`"
+        cell = (
+            where
+            if where.startswith(("NOT RUN", "PROJECT GATE"))
+            else f"yes -- gate step `{where}`"
+        )
         lines.append(f"| `{tool}` | {cell} |")
     lines.append("")
     return lines

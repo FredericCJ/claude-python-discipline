@@ -132,7 +132,7 @@ discipline/
   meta/              SCOPE SCHEMA GLOSSARY CONFLICTS OPEN PROVENANCE edges.yaml
 enforce/
   templates/         copied into a consuming project, never live here
-    pyproject.toml   ruff / mypy / pyright / pytest / coverage / mutmut
+    pyproject.toml   ruff / mypy / pyright / pytest / coverage / Cosmic Ray
   importlinter.toml  layer, purity, independence contracts (needs --config)
   checks/            AST checks for what no linter covers, with failure proofs
   ENFORCEMENT.md     generated: every rule against its mechanism

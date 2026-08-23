@@ -372,6 +372,7 @@ _PINNED_TOOLS: Final = (
     "hypothesis",
     "coverage",
     "mutmut",
+    "cosmic-ray",
     "pydantic",
     "python",
     "cpython",

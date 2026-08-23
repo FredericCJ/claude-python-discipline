@@ -106,6 +106,16 @@ artifact_imports = ["package"]
 #   { name = "help", command = ["package-cli", "--help"], expected_exit = 0, timeout_seconds = 10 },
 # ]
 
+[tool.agent-discipline-gate.mutation]
+# TEST-013. The gate derives mutation subjects from roles.domain, makes a
+# throwaway repository copy, and rebinds imports to that copy before Cosmic Ray
+# starts. Zero mutants, abnormal workers, incompetent tests, and any survivor
+# are red; none can be converted into a percentage allowance.
+test_targets = ["tests/unit"]
+mutant_timeout = 30
+command_timeout = 14400
+maximum_survival = 0.0
+
 # ---------------------------------------------------------------------------- ruff
 
 [tool.ruff]
@@ -274,6 +284,7 @@ addopts = [
     "--strict-markers",            # fact/py-testing: an unregistered marker selects
     "--strict-config",             #   nothing and the suite passes by running none
     "--import-mode=importlib",
+    "--disable-socket",
     "-ra",
 ]
 markers = [
@@ -321,10 +332,8 @@ exclude_also = [
 # what DOC-003 requires: the comments are in the code whether or not documentation
 # is ever generated.
 
-# -------------------------------------------------------------------------- mutmut
-
-[tool.mutmut]
-# TEST-013. Scoped to the domain: it is the layer whose logic the suite must be
-# shown to discriminate, and the layer where a surviving mutant is cheapest to fix.
-paths_to_mutate = ["src/*/domain/"]
-tests_dir = "tests/unit/"
+# ------------------------------------------------------------------------ mutation
+#
+# Cosmic Ray's generated operational TOML is deliberately not stored here. The
+# project gate derives it from the declaration and mutation table above inside
+# an isolated copy, so an interrupted run cannot leave a source mutant behind.

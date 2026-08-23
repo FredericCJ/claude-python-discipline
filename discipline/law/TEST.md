@@ -2,7 +2,7 @@
 id: law/TEST
 kind: law
 title: Systematic Testing and Oracles
-tokens: 2987
+tokens: 3040
 load_when:
   - "write a test"
   - "pytest"
@@ -148,12 +148,14 @@ effect, asserting that recovery reaches a defined state.
 
 ## Confirming the suite discriminates
 
-### TEST-013 · Mutation score is gated on the core  [BINDING] [auto:mutmut]
-Seeded defects in domain modules MUST be detected at or above the configured score.
-Surviving mutants are dispositioned in a ledger, never ignored.
+### TEST-013 · Every generated core mutant is killed  [BINDING] [auto:cosmic-ray]
+The declared unit suite MUST kill a non-empty mutation set generated from every declared
+domain path. An abnormal or incompetent worker, zero generated mutants, or any survivor
+MUST fail the gate; none is a percentage allowance. Mutation runs MUST use an isolated
+source copy so interruption cannot leave a mutant in the governed tree.
 - **Why** This is the only check that tests the tests; line execution cannot distinguish
   "this ran" from "this was verified".
-- **Check** the configured mutation run and its score gate
+- **Check** `python .agent/tools/mutation_gate.py --root .`
 - **See** [TEST-004]
 
 ### TEST-014 · Compound decisions are decomposed and tabulated  [BINDING] [check:compound_gate]

@@ -99,6 +99,13 @@ dependencies:
       # refuses absence as unsupported rather than silently omitting delivery.
       - build==1.3.0
 
+      # --------------------------------------------------------- project gate
+      # TEST-013. Cosmic Ray 8.7.0 is exercised natively on both Windows and
+      # Linux by tools/mutation_gate.py. The wrapper independently rejects its
+      # upstream ``incompetent`` outcome because Cosmic Ray's own baseline and
+      # survival-rate commands otherwise count that non-verdict as green/killed.
+      - cosmic-ray==8.7.0
+
       # ---------------------------------------------------------- gate step 9
       # Not named as any rule's mechanism, and pinned anyway: the reference
       # package's property layer imports it, and those 49 tests are collected by
@@ -111,7 +118,7 @@ dependencies:
 # ---------------------------------------------------------------------------
 # NOT PINNED HERE, deliberately.
 #
-# mutmut (TEST-013, OPEN-003) and pydantic (OPEN-002) remain unpinned.
+# pydantic (OPEN-002) remains unpinned.
 #
 # This paragraph used to cover mypy, pyright, import-linter and hypothesis too,
 # and gave a reason that has since stopped being true: "this repository is a
@@ -119,16 +126,6 @@ dependencies:
 # -- enforce/fixtures/reference/ -- so those four moved above into gate steps 7,
 # 8 and 9, where they decide something. The four rules they carry were tagged
 # `external` and were being settled by nothing at all.
-#
-# mutmut did not move with them, and the reason is harder than "not yet wired":
-# MUTMUT 3.3.1 DOES NOT RUN ON WINDOWS. Its entry point,
-# mutmut/__main__.py, does an unconditional `import resource` at module scope,
-# and `resource` is a Unix-only standard-library module. Installed and invoked on
-# this machine it raises ModuleNotFoundError before parsing an argument. Pinning
-# it here would make `check_env.py` demand a package that cannot be used, and
-# wiring a gate step on it would make the gate unrunnable on the only platform it
-# has ever run on. TEST-013 therefore stays `external` and undecided here; see
-# enforce/ENFORCEMENT.md, which records this rather than implying a tool runs.
 #
 # pydantic is a consuming project's choice, not this repository's -- nothing here
 # parses an external boundary.

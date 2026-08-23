@@ -64,12 +64,14 @@ def imports_of(path: Path) -> set[str]:
 
 
 @decides("DEP-005", "DEP-006")
-def test_environment_locked() -> None:
+def test_environment_locked(tmp_path: Path) -> None:
     """DEP-005, DEP-006: the environment is pinned, and something checks it.
 
     A lock nobody compares against is a comment. The verifier is run for real
     here rather than merely required to exist, because "the file is present" is
     exactly the standard this corpus refuses everywhere else.
+
+    @param tmp_path holds a deliberately drifted declaration
     """
     assert ENVIRONMENT.is_file(), "no environment declaration; nothing is locked"
     assert VERIFIER.is_file(), "no verifier; the lock is a comment"
@@ -82,6 +84,17 @@ def test_environment_locked() -> None:
     assert finished.returncode == 0, (
         f"the running interpreter does not match the lock:\n{finished.stderr[-600:]}"
     )
+    drifted = tmp_path / "environment.yml"
+    drifted.write_text(
+        "dependencies:\n  - pip:\n      - package-that-cannot-be-present==0.0.0\n",
+        encoding="utf-8",
+    )
+    rejected = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
+        (sys.executable, str(VERIFIER), "--quiet", "--file", str(drifted)),
+        cwd=REPO_ROOT, capture_output=True, text=True,
+        encoding="utf-8", errors="replace", check=False, timeout=120,
+    )
+    assert rejected.returncode != 0, "the verifier accepted a deliberately drifted lock"
 
 
 def test_the_lock_pins_exact_versions() -> None:

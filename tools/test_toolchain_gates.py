@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import importlib
 import shutil
+import subprocess  # ruff: ignore[suspicious-subprocess-import]
 import sys
 from pathlib import Path
 from typing import Final
@@ -238,6 +239,90 @@ def test_the_guard_does_not_fire_upstream(module: object) -> None:
     """
     assert module.vendored() is False  # type: ignore[attr-defined]
     assert module.main([]) == 0  # type: ignore[attr-defined]
+
+
+def _pytest_control(*arguments: str, cwd: Path) -> subprocess.CompletedProcess[str]:
+    """Run an isolated pytest control experiment.
+
+    @param arguments pytest options and subjects
+    @param cwd temporary experiment directory
+    @return completed process with combined output available to the oracle
+    """
+    return subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
+        (sys.executable, "-m", "pytest", "-q", *arguments),
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+        timeout=60,
+    )
+
+
+def test_pytest_timeout_terminates_a_slow_test(tmp_path: Path) -> None:
+    """The real timeout plugin rejects a test beyond its finite budget.
+
+    @param tmp_path isolated pytest project
+    """
+    test = tmp_path / "test_slow.py"
+    test.write_text(
+        "import time\n\n\ndef test_slow() -> None:\n    time.sleep(2)\n",
+        encoding="utf-8",
+    )
+    finished = _pytest_control(
+        "-p", "no:randomly", "--timeout=0.05", str(test), cwd=tmp_path,
+    )
+    output = finished.stdout + finished.stderr
+    assert finished.returncode != 0
+    assert "Timeout" in output or "timeout" in output
+
+
+def test_pytest_socket_blocks_ambient_network(tmp_path: Path) -> None:
+    """The real socket plugin rejects creation of an unapproved socket.
+
+    @param tmp_path isolated pytest project
+    """
+    test = tmp_path / "test_network.py"
+    test.write_text(
+        "import socket\n\n\ndef test_network() -> None:\n    socket.socket()\n",
+        encoding="utf-8",
+    )
+    finished = _pytest_control(
+        "-p", "no:randomly", "--disable-socket", str(test), cwd=tmp_path,
+    )
+    output = finished.stdout + finished.stderr
+    assert finished.returncode != 0
+    assert "SocketBlockedError" in output
+
+
+@pytest.mark.timeout(30)
+def test_pytest_randomly_exposes_an_order_dependency(tmp_path: Path) -> None:
+    """At least one bounded seed runs a consumer before its hidden producer.
+
+    @param tmp_path isolated pytest project
+    """
+    marker = tmp_path / "produced"
+    test = tmp_path / "test_order.py"
+    test.write_text(
+        "from pathlib import Path\n\n"
+        "MARKER = Path(__file__).with_name('produced')\n\n\n"
+        "def test_producer() -> None:\n    MARKER.write_text('ready')\n\n\n"
+        "def test_consumer() -> None:\n"
+        "    assert MARKER.exists(), 'order dependency exposed'\n",
+        encoding="utf-8",
+    )
+    exposed = False
+    for seed in range(1, 11):
+        marker.unlink(missing_ok=True)
+        finished = _pytest_control(
+            f"--randomly-seed={seed}", "-p", "no:socket", str(test), cwd=tmp_path,
+        )
+        output = finished.stdout + finished.stderr
+        if finished.returncode != 0 and "order dependency exposed" in output:
+            exposed = True
+            break
+    assert exposed, "ten explicit randomized orders all concealed the dependency"
 
 
 def test_a_stale_import_does_not_decide_the_verdict(tree: Path) -> None:

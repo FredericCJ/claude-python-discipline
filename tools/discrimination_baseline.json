@@ -1,7 +1,7 @@
 {
   "generated_by": "tools/discrimination_gate.py --update-baseline",
   "note": "D -- rules with at least one mutation observed provoking them. May rise, never fall. The entries are in enforce/discrimination.py and are meant to be read; the count alone says nothing about whether they are good.",
-  "count": 150,
+  "count": 167,
   "rules": [
     "ALLOC-001",
     "ALLOC-002",
@@ -39,8 +39,16 @@
     "ARCH-025",
     "DEP-001",
     "DEP-002",
+    "DEP-005",
+    "DEP-006",
     "DEP-007",
     "DEP-008",
+    "DEP-009",
+    "DEP-010",
+    "DEP-011",
+    "DEP-012",
+    "DEP-013",
+    "DEP-014",
     "DIAG-001",
     "DIAG-002",
     "DIAG-003",
@@ -111,10 +119,16 @@
     "FLOW-011",
     "FLOW-012",
     "LEARN-001",
+    "LEARN-002",
+    "LEARN-003",
     "LEARN-004",
     "LEARN-005",
+    "LEARN-006",
+    "LEARN-007",
+    "LEARN-008",
     "LEARN-009",
     "LEARN-010",
+    "LEARN-011",
     "OPS-001",
     "OPS-002",
     "OPS-003",
@@ -132,6 +146,7 @@
     "TEAMS-003",
     "TEST-001",
     "TEST-002",
+    "TEST-003",
     "TEST-004",
     "TEST-007",
     "TEST-008",
@@ -139,9 +154,11 @@
     "TEST-010",
     "TEST-011",
     "TEST-012",
+    "TEST-013",
     "TEST-014",
     "TEST-015",
     "TEST-016",
+    "TEST-017",
     "TEST-018",
     "TEST-020",
     "TYPE-001",
@@ -154,8 +171,8 @@
     "TYPE-010",
     "TYPE-013"
   ],
-  "gap": 17,
-  "strategy_count": 159,
+  "gap": 0,
+  "strategy_count": 179,
   "strategies": [
     {
       "rule": "ALLOC-001",
@@ -310,12 +327,48 @@
       "mechanism": "fitness:test_dependency_position"
     },
     {
+      "rule": "DEP-005",
+      "mechanism": "fitness:test_environment_locked"
+    },
+    {
+      "rule": "DEP-006",
+      "mechanism": "fitness:test_environment_locked"
+    },
+    {
       "rule": "DEP-007",
       "mechanism": "check:generated_provenance"
     },
     {
       "rule": "DEP-008",
       "mechanism": "check:generated_provenance"
+    },
+    {
+      "rule": "DEP-009",
+      "mechanism": "fitness:test_regeneration_stable"
+    },
+    {
+      "rule": "DEP-010",
+      "mechanism": "fitness:test_regeneration_stable"
+    },
+    {
+      "rule": "DEP-011",
+      "mechanism": "fitness:test_regeneration_stable"
+    },
+    {
+      "rule": "DEP-012",
+      "mechanism": "auto:integrate"
+    },
+    {
+      "rule": "DEP-013",
+      "mechanism": "auto:integrate"
+    },
+    {
+      "rule": "DEP-013",
+      "mechanism": "fitness:test_an_existing_block_is_replaced_not_duplicated"
+    },
+    {
+      "rule": "DEP-014",
+      "mechanism": "fitness:test_a_dry_run_writes_nothing"
     },
     {
       "rule": "DIAG-001",
@@ -614,6 +667,18 @@
       "mechanism": "check:session_recorded"
     },
     {
+      "rule": "LEARN-002",
+      "mechanism": "auto:learn"
+    },
+    {
+      "rule": "LEARN-003",
+      "mechanism": "auto:learn"
+    },
+    {
+      "rule": "LEARN-003",
+      "mechanism": "fitness:test_a_credential_is_refused"
+    },
+    {
       "rule": "LEARN-004",
       "mechanism": "check:learning_scope"
     },
@@ -622,12 +687,28 @@
       "mechanism": "check:ledger_append_only"
     },
     {
+      "rule": "LEARN-006",
+      "mechanism": "fitness:test_the_database_is_reconstructible_from_the_ledger"
+    },
+    {
+      "rule": "LEARN-007",
+      "mechanism": "fitness:test_retrieval_is_reproducible"
+    },
+    {
+      "rule": "LEARN-008",
+      "mechanism": "fitness:test_confidence_decays_with_time"
+    },
+    {
       "rule": "LEARN-009",
       "mechanism": "check:promotion_due"
     },
     {
       "rule": "LEARN-010",
       "mechanism": "check:learning_size"
+    },
+    {
+      "rule": "LEARN-011",
+      "mechanism": "auto:learn"
     },
     {
       "rule": "OPS-001",
@@ -698,6 +779,10 @@
       "mechanism": "fitness:test_layers_populated"
     },
     {
+      "rule": "TEST-003",
+      "mechanism": "auto:pytest-timeout"
+    },
+    {
       "rule": "TEST-004",
       "mechanism": "check:oracle_declared"
     },
@@ -726,6 +811,10 @@
       "mechanism": "fitness:test_interruption_recovers"
     },
     {
+      "rule": "TEST-013",
+      "mechanism": "auto:cosmic-ray"
+    },
+    {
       "rule": "TEST-014",
       "mechanism": "check:compound_gate"
     },
@@ -736,6 +825,14 @@
     {
       "rule": "TEST-016",
       "mechanism": "check:test_weakening"
+    },
+    {
+      "rule": "TEST-017",
+      "mechanism": "auto:pytest-randomly"
+    },
+    {
+      "rule": "TEST-017",
+      "mechanism": "auto:pytest-socket"
     },
     {
       "rule": "TEST-018",
@@ -794,6 +891,6 @@
       "mechanism": "auto:mypy"
     }
   ],
-  "strategy_gap": 20,
-  "why": "Witness storage ownership, strict result typing, local diagnostics, and real Doxygen rejection strategies."
+  "strategy_gap": 0,
+  "why": "v4 closes every automated rule-mechanism gap with executable Windows-compatible rejection witnesses"
 }

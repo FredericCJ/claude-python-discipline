@@ -38,7 +38,7 @@ from email.parser import BytesParser
 from email.policy import default as email_policy
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, Protocol, cast
+from typing import TYPE_CHECKING, Final, Never, Protocol, cast
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
@@ -574,6 +574,17 @@ def _probe_error(field: str, detail: str) -> ConfigurationProbeError:
     return ConfigurationProbeError(field, detail)
 
 
+def _raise_probe(field: str, detail: str) -> Never:
+    """Raise a configuration refusal from already-named values.
+
+    @param field exact dotted configuration field
+    @param detail actionable refusal reason
+    @return never; always raises
+    @throws ConfigurationProbeError unconditionally
+    """
+    raise _probe_error(field, detail)
+
+
 def _table(document: Mapping[str, object], path: tuple[str, ...]) -> Mapping[str, object]:
     """Read one required nested TOML table.
 
@@ -841,9 +852,36 @@ def _prepare_pytest(context: GateContext) -> PreparedCommand:
         _string_list(table.get("testpaths"), "tool.pytest.ini_options.testpaths"),
         "tool.pytest.ini_options.testpaths",
     )
+    timeout = table.get("timeout")
+    if (
+        not isinstance(timeout, (int, float))
+        or isinstance(timeout, bool)
+        or timeout <= 0
+    ):
+        _raise_probe(
+            "tool.pytest.ini_options.timeout",
+            "expected a positive per-test timeout",
+        )
+    if table.get("timeout_method") != "thread":
+        _raise_probe(
+            "tool.pytest.ini_options.timeout_method",
+            "expected 'thread', the common Windows/Linux timeout method",
+        )
+    addopts = _string_list(table.get("addopts"), "tool.pytest.ini_options.addopts")
+    if "--disable-socket" not in addopts:
+        _raise_probe(
+            "tool.pytest.ini_options.addopts",
+            "expected --disable-socket so ordinary pytest invocations fail closed",
+        )
     use = _project_configuration(
         context,
-        ("tool.pytest.ini_options", "tool.pytest.ini_options.testpaths"),
+        (
+            "tool.pytest.ini_options",
+            "tool.pytest.ini_options.testpaths",
+            "tool.pytest.ini_options.timeout",
+            "tool.pytest.ini_options.timeout_method",
+            "tool.pytest.ini_options.addopts",
+        ),
     )
     return PreparedCommand(
         command=(
@@ -856,6 +894,9 @@ def _prepare_pytest(context: GateContext) -> PreparedCommand:
             str(context.root),
             "--strict-config",
             "--strict-markers",
+            f"--timeout={timeout}",
+            "--randomly-seed=default",
+            "--disable-socket",
             "-q",
             *targets,
         ),
@@ -863,6 +904,143 @@ def _prepare_pytest(context: GateContext) -> PreparedCommand:
         subjects=subjects,
         failure_diagnostic="GATE-PYTEST-003_FAILURE",
         subject_label="test files",
+    )
+
+
+def _prepare_mutation(context: GateContext) -> PreparedCommand:
+    """Bind mutation execution to declared domain paths, tests, and budgets.
+
+    @param context exact governed repository
+    @return explicit portable mutation-gate command
+    """
+    roles = _table(context.pyproject, ("tool", "agent-discipline", "roles"))
+    domains, domain_files = _local_targets(
+        context,
+        _string_list(
+            roles.get("domain"), "tool.agent-discipline.roles.domain",
+        ),
+        "tool.agent-discipline.roles.domain",
+    )
+    mutation = _table(
+        context.pyproject,
+        ("tool", "agent-discipline-gate", "mutation"),
+    )
+    targets, test_files = _local_targets(
+        context,
+        _string_list(
+            mutation.get("test_targets"),
+            "tool.agent-discipline-gate.mutation.test_targets",
+        ),
+        "tool.agent-discipline-gate.mutation.test_targets",
+    )
+    mutant_timeout = mutation.get("mutant_timeout")
+    if (
+        not isinstance(mutant_timeout, (int, float))
+        or isinstance(mutant_timeout, bool)
+        or mutant_timeout <= 0
+    ):
+        _raise_probe(
+            "tool.agent-discipline-gate.mutation.mutant_timeout",
+            "expected a positive per-mutant test timeout",
+        )
+    command_timeout = mutation.get("command_timeout")
+    if (
+        not isinstance(command_timeout, int)
+        or isinstance(command_timeout, bool)
+        or command_timeout <= 0
+    ):
+        _raise_probe(
+            "tool.agent-discipline-gate.mutation.command_timeout",
+            "expected a positive integer command timeout",
+        )
+    maximum_survival = mutation.get("maximum_survival")
+    if (
+        not isinstance(maximum_survival, (int, float))
+        or isinstance(maximum_survival, bool)
+        or maximum_survival < 0
+        or maximum_survival > 0
+    ):
+        _raise_probe(
+            "tool.agent-discipline-gate.mutation.maximum_survival",
+            "expected 0.0; known survivors cannot be a percentage allowance",
+        )
+    use = _project_configuration(
+        context,
+        (
+            "tool.agent-discipline.source_roots",
+            "tool.agent-discipline.roles.domain",
+            "tool.agent-discipline-gate.mutation.test_targets",
+            "tool.agent-discipline-gate.mutation.mutant_timeout",
+            "tool.agent-discipline-gate.mutation.command_timeout",
+            "tool.agent-discipline-gate.mutation.maximum_survival",
+        ),
+    )
+    return PreparedCommand(
+        command=(
+            sys.executable,
+            str(BUNDLE_ROOT / "tools" / "mutation_gate.py"),
+            "--root",
+            str(context.root),
+            "--json",
+        ),
+        configuration=(use,),
+        subjects=domain_files + test_files,
+        failure_diagnostic="MUTATION-008_EXECUTION",
+        subject_label=(
+            f"domain/test files ({len(domains)} domain and {len(targets)} test target(s))"
+        ),
+    )
+
+
+def _positive_count(value: object) -> bool:
+    """Whether a decoded report value is a positive non-Boolean integer.
+
+    @param value decoded JSON value
+    @return true only for a positive subject count
+    """
+    return isinstance(value, int) and not isinstance(value, bool) and value > 0
+
+
+def _mutation_evaluation(
+    execution: CommandExecution, command: PreparedCommand,
+) -> Evaluation:
+    """Require the mutation gate's structured, non-vacuous zero-survivor report.
+
+    @param execution process observation
+    @param command prepared command and expected source/test files
+    @return pass or exact mutation failure
+    """
+    start = execution.output.find("{")
+    try:
+        report = json.loads(execution.output[start:]) if start >= 0 else None
+    except json.JSONDecodeError:
+        report = None
+    if not isinstance(report, Mapping):
+        return Evaluation(
+            "MUTATION-006_REPORT",
+            "mutation gate emitted no parseable JSON report",
+            _tail(execution.output),
+        )
+    diagnostic = report.get("diagnostic_id")
+    status = report.get("status")
+    mutants = report.get("mutants")
+    domains = report.get("domains")
+    if execution.returncode != 0 or status != "pass":
+        code = diagnostic if isinstance(diagnostic, str) else command.failure_diagnostic
+        return Evaluation(
+            code,
+            str(report.get("summary", "mutation gate failed without a summary")),
+            str(report.get("output", _tail(execution.output))),
+        )
+    if not _positive_count(mutants) or not _positive_count(domains):
+        return Evaluation(
+            "MUTATION-007_NO_MUTANTS",
+            "mutation gate reported success without positive mutant and domain counts",
+            _tail(execution.output),
+        )
+    return Evaluation(
+        None,
+        f"Cosmic Ray killed all {mutants} mutant(s) across {domains} domain path(s)",
     )
 
 
@@ -2512,12 +2690,14 @@ RUFF_RULES: Final = (
 ## Mypy predicates presently named by binding rules.
 MYPY_RULES: Final = (
     "ARCH-006", "ERR-002", "ERR-005", "TYPE-001", "TYPE-002", "TYPE-003",
-    "TYPE-006", "TYPE-013",
+    "TYPE-013",
 )
 ## Pyright supplies a deliberately independent strict type oracle.
 PYRIGHT_RULES: Final = ("ERR-002", "TYPE-001")
 ## Pytest execution activates the configured timeout, randomization, and socket controls.
 PYTEST_RULES: Final = ("TEST-003", "TEST-017")
+## Cosmic Ray supplies an isolated, non-empty zero-survivor mutation verdict.
+MUTATION_RULES: Final = ("TEST-013",)
 ## Import-linter predicates presently named by binding rules.
 IMPORT_CONTRACT_RULES: Final = (
     "API-004", "ARCH-001", "ARCH-002", "ARCH-003", "DEP-001", "EFCT-001",
@@ -2540,6 +2720,10 @@ PYRIGHT_STEP: Final = ConfiguredToolAdapter(
 PYTEST_STEP: Final = ConfiguredToolAdapter(
     "pytest", PYTEST_RULES, "pytest", _prepare_pytest, _pytest_evaluation,
 )
+## Canonical portable mutation adapter.
+MUTATION_STEP: Final = ConfiguredToolAdapter(
+    "mutation", MUTATION_RULES, "cosmic-ray", _prepare_mutation, _mutation_evaluation,
+)
 ## Canonical import-linter adapter using the portable API wrapper.
 IMPORT_CONTRACTS_STEP: Final = ConfiguredToolAdapter(
     "import-contracts",
@@ -2559,6 +2743,7 @@ DEFAULT_STEPS: Final[tuple[StepAdapter, ...]] = (
     IMPORT_CONTRACTS_STEP,
     DocumentationAdapter(),
     PYTEST_STEP,
+    MUTATION_STEP,
     ArtifactBuildAdapter(),
     CleanInstallAdapter(),
 )

@@ -64,6 +64,7 @@ def run(command: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
 
 
 @pytest.mark.parametrize("name", [n for n, _ in GENERATORS])
+@pytest.mark.timeout(360)
 @decides("DEP-009", "DEP-010", "DEP-011")
 def test_regeneration_stable(name: str) -> None:
     """DEP-009, DEP-010, DEP-011: the artefact on disk is what the builder makes.
@@ -96,6 +97,7 @@ def test_generated_output_is_committed(name: str, artefacts: tuple[str, ...]) ->
     assert not missing, f"{name} owns uncommitted artefact(s): {', '.join(missing)}"
 
 
+@pytest.mark.timeout(360)
 def test_the_check_form_can_fail() -> None:
     """FLOW-007: the staleness check is observed failing, not assumed to work.
 

@@ -185,6 +185,56 @@ def test_a_learning_without_a_trigger_can_never_be_found(store: learn.Store) -> 
     assert config["write"]["require_trigger"] is True
 
 
+@pytest.mark.parametrize("omitted", ["--claim", "--action"])
+def test_record_refuses_a_missing_claim_or_action(
+    store: learn.Store,
+    omitted: str,
+) -> None:
+    """The CLI rejects either required half before touching the ledger.
+
+    @param store isolated learning store
+    @param omitted required option removed from the otherwise complete invocation
+    """
+    arguments = [
+        "--root", str(store.root), "record", "--kind", "diagnostic",
+        "--claim", "the parser failed", "--action", "inspect the input",
+        "--trigger", "rule:LEARN-002",
+    ]
+    position = arguments.index(omitted)
+    del arguments[position:position + 2]
+    with pytest.raises(SystemExit) as stopped:
+        learn.main(arguments)
+    assert stopped.value.code == 2
+    assert not store.ledger.exists()
+
+
+def test_record_refuses_a_missing_trigger(store: learn.Store) -> None:
+    """A write-only learning is refused and leaves no event behind.
+
+    @param store isolated learning store
+    """
+    status = learn.main([
+        "--root", str(store.root), "record", "--kind", "diagnostic",
+        "--claim", "the parser failed", "--action", "inspect the input",
+    ])
+    assert status == 1
+    assert not store.ledger.exists()
+
+
+def test_record_command_refuses_a_credential(store: learn.Store) -> None:
+    """The public tool path applies the credential guard before append.
+
+    @param store isolated learning store
+    """
+    status = learn.main([
+        "--root", str(store.root), "record", "--kind", "diagnostic",
+        "--claim", "token=ghp_abcdefghijklmnopqrstuvwxyz0123",
+        "--action", "redact it", "--trigger", "rule:LEARN-003",
+    ])
+    assert status == 1
+    assert not store.ledger.exists()
+
+
 def test_an_unknown_trigger_type_is_rejected() -> None:
     """A misspelled type is refused with the valid ones named in the message.
 
@@ -258,12 +308,17 @@ def test_retrieval_is_reproducible(store: learn.Store) -> None:
     Ordering is part of the result: entries tied on confidence are broken by id,
     so nothing depends on how the rows happened to come back.
     """
-    for _ in range(3):
-        record(store)
+    for index in range(3):
+        record(store, learning_id=f"L-{index + 1:04d}")
     connection = learn.sync(store)
-    first = learn.retrieve(store, connection, file="src/a.py", today=dt.date(2026, 8, 1))
-    second = learn.retrieve(store, connection, file="src/a.py", today=dt.date(2026, 8, 1))
+    first = learn.retrieve(
+        store, connection, file="src/pkg/a.py", today=dt.date(2026, 8, 1)
+    )
+    second = learn.retrieve(
+        store, connection, file="src/pkg/a.py", today=dt.date(2026, 8, 1)
+    )
     connection.close()
+    assert len(first) == 3, "the determinism comparison must not run over an empty answer"
     assert first == second
 
 
@@ -795,6 +850,21 @@ def test_a_parameter_change_needs_a_reason(store: learn.Store) -> None:
     changed = learn._apply_settings(store, ["retrieval.max_learnings=3"])
     assert changed["retrieval.max_learnings"] == ["8", "3"]
     assert store.config()["retrieval"]["max_learnings"] == 3
+
+
+def test_calibrate_refuses_a_change_without_a_reason(store: learn.Store) -> None:
+    """The public calibration command leaves both config and ledger untouched.
+
+    @param store isolated learning store
+    """
+    before = store.config_path.read_bytes()
+    status = learn.main([
+        "--root", str(store.root), "calibrate",
+        "--set", "retrieval.max_learnings=3",
+    ])
+    assert status == 1
+    assert store.config_path.read_bytes() == before
+    assert not store.ledger.exists()
 
 
 def test_an_unknown_parameter_is_refused(store: learn.Store) -> None:

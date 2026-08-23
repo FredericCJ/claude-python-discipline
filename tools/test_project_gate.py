@@ -137,7 +137,7 @@ def test_report_records_every_non_pass_as_a_deviation(tmp_path: Path) -> None:
 
 
 def _configured_tool_project(tmp_path: Path) -> Path:
-    """Copy the worked reference and add all four external-tool tables.
+    """Copy the worked reference and add every external-tool table.
 
     @param tmp_path isolated pytest directory
     @return configured repository root
@@ -165,11 +165,21 @@ def _configured_tool_project(tmp_path: Path) -> Path:
             "include = ['src']\n"
             "\n[tool.pytest.ini_options]\n"
             "testpaths = ['tests']\n"
+            "addopts = ['--disable-socket']\n"
+            "timeout = 5\n"
+            "timeout_method = 'thread'\n"
             "\n[tool.agent-discipline-gate]\n"
             "import_contracts = 'importlinter.toml'\n"
             "doxyfile = 'Doxyfile'\n"
             "documentation_root = 'docs'\n"
             "artifact_imports = ['refpkg']\n",
+        )
+        stream.write(
+            "\n[tool.agent-discipline-gate.mutation]\n"
+            "test_targets = ['tests']\n"
+            "mutant_timeout = 5\n"
+            "command_timeout = 120\n"
+            "maximum_survival = 0.0\n"
         )
     tests = root / "tests"
     tests.mkdir(exist_ok=True)
@@ -199,8 +209,21 @@ def _configured_tool_project(tmp_path: Path) -> Path:
             "src",
         ),
         (project_gate.PYTEST_STEP, "1 passed in 0.01s\n", "tests"),
+        (
+            project_gate.MUTATION_STEP,
+            json.dumps(
+                {
+                    "status": "pass",
+                    "diagnostic_id": None,
+                    "summary": "killed",
+                    "mutants": 3,
+                    "domains": 1,
+                }
+            ),
+            "--root",
+        ),
     ],
-    ids=("ruff", "mypy", "pyright", "import-contracts", "pytest"),
+    ids=("ruff", "mypy", "pyright", "import-contracts", "pytest", "mutation"),
 )
 def test_external_adapters_bind_config_and_non_empty_targets(
     tmp_path: Path,
@@ -599,6 +622,7 @@ def test_clean_install_runs_without_a_source_tree_on_pythonpath(
     assert all("PYTHONPATH" not in argument for command in commands for argument in command)
 
 
+@pytest.mark.timeout(120)
 def test_real_build_and_clean_install_pipeline(tmp_path: Path) -> None:
     """The configured reference really builds, installs, and imports from its wheel."""
     root = _configured_tool_project(tmp_path)

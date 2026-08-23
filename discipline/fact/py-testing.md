@@ -2,7 +2,7 @@
 id: fact/py-testing
 kind: fact
 title: Python Testing Tooling
-tokens: 1423
+tokens: 1585
 load_when:
   - "pytest version"
   - "fixture scope"
@@ -11,7 +11,7 @@ load_when:
   - "mutation tool"
   - "pytest plugin"
   - "markers"
-verified: 2026-08-18
+verified: 2026-08-23
 decay: quarters
 python: ">=3.11"
 ---
@@ -30,7 +30,7 @@ ground truth those obligations are satisfiable against.
 | pytest | 9.1.1 | runner |
 | hypothesis | 6.165.10 | property-based generation |
 | coverage.py | 7.15.4 | line and branch measurement |
-| mutmut | 3.7.0 | mutation engine |
+| Cosmic Ray | 8.7.0 | cross-platform mutation engine |
 | pytest-randomly | 4.1.0 | order randomization |
 | pytest-timeout | 2.4.0 | per-test budget |
 | pytest-socket | 0.8.0 | network isolation |
@@ -85,6 +85,14 @@ rather than a diagnostic, it is a textbook Goodhart failure.
 `ESTABLISHED` — mutation testing is the measurement that does discriminate: it seeds a
 defect and asks whether the suite notices. It is the only available check on the suite
 itself.
+
+`VERSION-DEPENDENT` — Cosmic Ray 8.7.0 runs natively on the tested Python 3.13 Windows
+environment. Its own baseline treats an `incompetent` test launch as successful, and its
+survival-rate calculation counts every outcome other than `survived` as killed. The v4
+mutation adapter therefore inspects the session records independently: the unmutated suite
+must complete normally and pass, every mutant must complete normally, and only an actual
+test failure counts as a kill. It also runs against a throwaway source copy so interruption
+cannot leave a mutant in the governed tree.
 
 `OPEN` — no mainstream tool measures `modified condition/decision coverage` for this
 language. [law/TEST] therefore meets the requirement by construction — decomposed

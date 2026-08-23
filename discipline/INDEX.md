@@ -16,7 +16,7 @@ decay: none
 
 **A proxy cannot decide its parent semantic rule.** Passing its proposition establishes only the stated syntax or behavior and leaves the printed residual. `rule-level witnessed` is deliberately weaker than v4's target: the inherited matrix proves that some strategy rejected a case for that rule, but cannot yet attribute the rejection to one exact strategy.
 
-0 of 176 binding rules lack an available declared strategy. 138 of 166 rules with automated strategies have inherited rule-level rejection evidence. 159 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
+0 of 176 binding rules lack an available declared strategy. 166 of 166 rules with automated strategies have inherited rule-level rejection evidence. 158 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
 
 ## Modules
 
@@ -25,7 +25,7 @@ decay: none
 | [fact/doxygen](fact/doxygen.md) | fact | 2540 | 0 | doxygen, documentation comment, docstring format, @param, @return, generate documentation |
 | [fact/py-errors](fact/py-errors.md) | fact | 1441 | 0 | raise from, __cause__, __context__, add_note, ExceptionGroup, except star |
 | [fact/py-logging](fact/py-logging.md) | fact | 1509 | 0 | log level, getLogger, basicConfig, NullHandler, handler, formatter |
-| [fact/py-testing](fact/py-testing.md) | fact | 1423 | 0 | pytest version, fixture scope, hypothesis, coverage tool, mutation tool, pytest plugin |
+| [fact/py-testing](fact/py-testing.md) | fact | 1585 | 0 | pytest version, fixture scope, hypothesis, coverage tool, mutation tool, pytest plugin |
 | [fact/py-typing](fact/py-typing.md) | fact | 1549 | 0 | mypy flags, pyright config, strict mode, Protocol, TypedDict, PEP 695 |
 | [frame/architecture](frame/architecture.md) | frame | 2338 | 0 | which paradigm, tradeoff, refactoring, legacy code, coupling, cohesion |
 | [frame/spec](frame/spec.md) | frame | 1972 | 0 | write a spec, requirements, elicitation, design document, traceability, reusability |
@@ -42,7 +42,7 @@ decay: none
 | [law/LEARN](law/LEARN.md) | law | 1888 | 12 | learning, record what i learned, session memory, why did this fail before, calibration, promote a learning |
 | [law/OPS](law/OPS.md) | law | 1575 | 8 | capability manifest, operational behavior, subprocess lifecycle, network io, persistent state, generated artifact |
 | [law/SEC](law/SEC.md) | law | 1095 | 4 | security model, trust boundary, sensitive data, classification, redaction, least exposure |
-| [law/TEST](law/TEST.md) | law | 2987 | 20 | write a test, pytest, fixture, hypothesis, property test, mutation |
+| [law/TEST](law/TEST.md) | law | 3040 | 20 | write a test, pytest, fixture, hypothesis, property test, mutation |
 | [law/TYPE](law/TYPE.md) | law | 2211 | 15 | type hint, mypy, pyright, Protocol, generic, dataclass |
 | [ops/ALLOC](ops/ALLOC.md) | ops | 2163 | 10 | dispatch a subagent, which model, how much effort, delegate, escalate, sub-agent |
 | [ops/teams](ops/teams.md) | ops | 2592 | 6 | agent team, teammate, subagent definition, spawn an agent, task list, slash command |
@@ -56,7 +56,7 @@ decay: none
 | `API-001` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_contract_documented;… | none | A contract states more than a signature |
 | `API-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_contract_documented;… | none | The implementation is not the contract |
 | `API-003` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:single_wiring_point; it does… | none | Public operations speak the domain, not the store |
-| `API-004` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | none | The persistent representation is private |
+| `API-004` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | none | The persistent representation is private |
 | `API-005` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_structured_output; it… | none | Structured output is the primary interface |
 | `API-006` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_structured_output; it… | none | Human output renders the same result object |
 | `API-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_exit_codes; it does n… | none | Exit status is part of the contract |
@@ -78,7 +78,7 @@ decay: none
 | `ARCH-003` | BINDING | `mixed-verifiers` | `direct`, `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | none | Adapter boundaries remain independent |
 | `ARCH-004` | RETIRED | `retired` | n/a | n/a | n/a | n/a | `V3E-002` | Each foreign dependency has one importer module |
 | `ARCH-005` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:explicit_effects; it does no… | none | Effects are named in the signature |
-| `ARCH-006` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | Domain functions are total or return a typed result |
+| `ARCH-006` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | Domain functions are total or return a typed result |
 | `ARCH-011` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:single_wiring_point; it does… | none | Adapters are selected at one local wiring root |
 | `ARCH-012` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:no_test_branches; it does no… | none | No test-mode branch in production code |
 | `ARCH-013` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:domain_purity; it does not e… | none | Framework and transport types stay out of the domain |
@@ -112,16 +112,16 @@ decay: none
 | `DEP-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_dependency_position;… | none | A dependency is judged by its architectural position |
 | `DEP-003` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | An adapter owns its dependency's failure modes |
 | `DEP-004` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Do not reimplement a solved, specified problem |
-| `DEP-005` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_environment_locked; i… | none | The environment is locked by content hash |
-| `DEP-006` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_environment_locked; i… | none | A command verifies the environment matches the lock |
+| `DEP-005` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_environment_locked; i… | none | The environment is locked by content hash |
+| `DEP-006` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_environment_locked; i… | none | A command verifies the environment matches the lock |
 | `DEP-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:generated_provenance; it doe… | none | Generated files carry a provenance header |
 | `DEP-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:generated_provenance; it doe… | none | Generated output contains no timestamp |
-| `DEP-009` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_regeneration_stable;… | none | Regeneration is idempotent and byte-stable |
-| `DEP-010` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_regeneration_stable;… | none | Drift between model and output fails the build |
-| `DEP-011` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_regeneration_stable;… | none | Generated output is committed |
-| `DEP-012` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:integrate; it does not establ… | none | A vendored discipline is announced, not merely present |
-| `DEP-013` | BINDING | `mixed-verifiers` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:integrate; it does not establ… | none | The announcement is generated, never hand-edited |
-| `DEP-014` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_a_dry_run_writes_noth… | none | Configuration is changed by plan, then apply |
+| `DEP-009` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_regeneration_stable;… | none | Regeneration is idempotent and byte-stable |
+| `DEP-010` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_regeneration_stable;… | none | Drift between model and output fails the build |
+| `DEP-011` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_regeneration_stable;… | none | Generated output is committed |
+| `DEP-012` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:integrate; it does not establ… | none | A vendored discipline is announced, not merely present |
+| `DEP-013` | BINDING | `mixed-verifiers` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:integrate; it does not establ… | none | The announcement is generated, never hand-edited |
+| `DEP-014` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_a_dry_run_writes_noth… | none | Configuration is changed by plan, then apply |
 
 ### law/DIAG
 
@@ -132,10 +132,10 @@ decay: none
 | `DIAG-003` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:exception_has_code; it does… | none | Error detail is carried in attributes, not interpolated away |
 | `DIAG-004` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | A code is a public contract |
 | `DIAG-005` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:raise_from; it does not esta… | none | Every cross-layer re-raise uses explicit chaining |
-| `DIAG-006` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:raise_from; it does not esta… | none | Context is accreted with notes, not by re-wrapping |
+| `DIAG-006` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:raise_from; it does not esta… | none | Context is accreted with notes, not by re-wrapping |
 | `DIAG-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:raise_from; it does not esta… | none | Suppressing the cause requires a stated reason |
 | `DIAG-008` | BINDING | `mixed-verifiers` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:ruff:BLE001; it does not esta… | none | Exceptions are never silently swallowed |
-| `DIAG-009` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:assert_usage; it does not es… | none | Assertions are not validation |
+| `DIAG-009` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:assert_usage; it does not es… | none | Assertions are not validation |
 | `DIAG-010` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:log_once; it does not establ… | none | Each exception is logged once, at its handling boundary |
 | `DIAG-011` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:library_logging; it does not… | `V3E-001` | Library code configures no logging |
 | `DIAG-012` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:ruff:G004; it does not establ… | none | Log arguments are deferred, never pre-formatted |
@@ -152,14 +152,14 @@ decay: none
 | `DOC-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:doc_coverage; it does not es… | none | Every named value is documented |
 | `DOC-003` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Passing does not constrain project-owned wrappers that bypass the canonical gate; those wrapper… | none | Documentation is present whether or not it is generated |
 | `DOC-004` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:doc_style; it does not estab… | none | Documentation lives in docstrings wherever Python has a slot |
-| `DOC-005` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:doxygen; it does not establis… | none | Docstrings are parsed as documentation, not text |
+| `DOC-005` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:doxygen; it does not establis… | none | Docstrings are parsed as documentation, not text |
 | `DOC-006` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:ruff:D205; it does not establ… | none | A brief statement comes first |
 | `DOC-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:doc_coverage; it does not es… | none | Every parameter, result and raised exception is documented |
 | `DOC-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing does not detect every custom, qualified, aliased, natural-language, or differently form… | none | Types are not restated in prose |
 | `DOC-009` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:doc_style; it does not estab… | none | Documentation states the contract, not the mechanism |
-| `DOC-010` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:doxygen; it does not establis… | `V3E-004` | A Doxygen run produces no warnings |
-| `DOC-011` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:doxygen; it does not establis… | none | The documentation check generates output |
-| `DOC-012` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:generated_provenance; it doe… | none | Generated documentation is not committed |
+| `DOC-010` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:doxygen; it does not establis… | `V3E-004` | A Doxygen run produces no warnings |
+| `DOC-011` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:doxygen; it does not establis… | none | The documentation check generates output |
+| `DOC-012` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:generated_provenance; it doe… | none | Generated documentation is not committed |
 | `DOC-013` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Prefer one sentence that earns its place |
 | `DOC-014` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | A declared engine can still be misconfigured, absent from the gate environment, or unable to pa… | `V3E-001` | A project declares which engine reads its documentation |
 
@@ -178,7 +178,7 @@ decay: none
 | `EFCT-009` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_what_is_not_guarantee… | none | What is not guaranteed is stated |
 | `EFCT-010` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:plan_apply; it does not esta… | none | State transitions are explicit and closed |
 | `EFCT-011` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | The exercised illegal transitions may not cover every runtime state or hidden effect, and mocks… | none | Illegal transitions are refused before any effect |
-| `EFCT-012` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | none | Persistent state has exactly one owning path |
+| `EFCT-012` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:import-linter; it does not es… | none | Persistent state has exactly one owning path |
 | `EFCT-013` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_concurrency_documente… | none | Concurrency is introduced only with stated semantics |
 | `EFCT-014` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_concurrency_documente… | none | Shared mutable state is guarded by a stated lock order |
 | `EFCT-015` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_single_writer; it doe… | none | Writer exclusion is enforced; contention is a result |
@@ -189,10 +189,10 @@ decay: none
 | Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
 |---|---|---|---|---|---|---|---|---|
 | `ERR-001` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:error_channels; it does not… | none | Exactly two propagation channels exist |
-| `ERR-002` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | Result unions are exhaustively handled |
+| `ERR-002` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | Result unions are exhaustively handled |
 | `ERR-003` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | Dynamic exception paths and callbacks may evade the trace, and one named seam can still perform… | none | Conversion between channels happens at one named seam |
 | `ERR-004` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:error_channels; it does not… | none | A layer produces only its own error family |
-| `ERR-005` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | A new variant is declared at its definition site |
+| `ERR-005` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | A new variant is declared at its definition site |
 | `ERR-006` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:exception_shape; it does not… | none | Exceptions form one narrow hierarchy under a package base |
 | `ERR-007` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Define an exception only when a caller must distinguish it |
 | `ERR-008` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:ruff:BLE001; it does not esta… | none | Catch narrowly |
@@ -241,16 +241,16 @@ decay: none
 | Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |
 |---|---|---|---|---|---|---|---|---|
 | `LEARN-001` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:session_recorded; it does no… | none | A session records what it learned before reporting done |
-| `LEARN-002` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:learn; it does not establish… | none | A learning states a claim, an action and a trigger |
-| `LEARN-003` | BINDING | `mixed-verifiers` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:learn; it does not establish… | none | Credentials never enter the ledger |
+| `LEARN-002` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:learn; it does not establish… | none | A learning states a claim, an action and a trigger |
+| `LEARN-003` | BINDING | `mixed-verifiers` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:learn; it does not establish… | none | Credentials never enter the ledger |
 | `LEARN-004` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:learning_scope; it does not… | none | A learning is scoped by who it is about |
 | `LEARN-005` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:ledger_append_only; it does… | none | A contradicted learning is refuted, never deleted |
-| `LEARN-006` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_the_database_is_recon… | none | The ledger and its index do not drift |
-| `LEARN-007` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_retrieval_is_reproduc… | none | Retrieval is deterministic |
-| `LEARN-008` | BINDING | `local-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_confidence_decays_wit… | none | Confidence decays, and staleness is shown |
+| `LEARN-006` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_the_database_is_recon… | none | The ledger and its index do not drift |
+| `LEARN-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_retrieval_is_reproduc… | none | Retrieval is deterministic |
+| `LEARN-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_confidence_decays_wit… | none | Confidence decays, and staleness is shown |
 | `LEARN-009` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:promotion_due; it does not e… | none | A learning that can be checked becomes a check |
 | `LEARN-010` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:learning_size; it does not e… | none | The active set is triaged before it outgrows its ceiling |
-| `LEARN-011` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:learn; it does not establish… | none | A parameter change is recorded with its reason |
+| `LEARN-011` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:learn; it does not establish… | none | A parameter change is recorded with its reason |
 | `LEARN-012` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Prefer the smallest true entry |
 
 ### law/OPS
@@ -281,7 +281,7 @@ decay: none
 |---|---|---|---|---|---|---|---|---|
 | `TEST-001` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_unit_layer_is_pure; i… | none | Unit tests touch no external resource |
 | `TEST-002` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_layers_populated; it… | none | Each test layer exists and is populated |
-| `TEST-003` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:pytest-timeout; it does not e… | none | Per-test time is budgeted and enforced |
+| `TEST-003` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:pytest-timeout; it does not e… | none | Per-test time is budgeted and enforced |
 | `TEST-004` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:oracle_declared; it does not… | none | Every test module declares its oracle |
 | `TEST-005` | RETIRED | `retired` | n/a | n/a | n/a | n/a | none | One contract suite runs against every adapter |
 | `TEST-006` | RETIRED | `retired` | n/a | n/a | n/a | n/a | none | A fake that can drift from the real adapter is worthless |
@@ -291,11 +291,11 @@ decay: none
 | `TEST-010` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_fault_catalogue; it d… | none | The fault catalogue is covered per port |
 | `TEST-011` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_fault_containment; it… | none | Propagation and containment are tested, not assumed |
 | `TEST-012` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_interruption_recovers… | none | Interruption is tested at every effect boundary |
-| `TEST-013` | BINDING | `external-verifier` | `proxy` | `pending` | `linux` | Passing excludes only the configured patterns implemented by auto:mutmut; it does not establish… | `V3E-005` | Mutation score is gated on the core |
+| `TEST-013` | BINDING | `external-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Cosmic Ray's operator catalogue is finite and cannot represent every semantic defect; a zero-su… | `V3E-005` | Every generated core mutant is killed |
 | `TEST-014` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:compound_gate; it does not e… | none | Compound decisions are decomposed and tabulated |
 | `TEST-015` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_checks_can_fail; it d… | none | Every check has a proof-of-failure companion |
 | `TEST-016` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:test_weakening; it does not… | none | A test that weakens must say so |
-| `TEST-017` | BINDING | `external-verifier` | `proxy` | `pending` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:pytest-randomly; it does not… | none | Tests are order-independent and network-isolated |
+| `TEST-017` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:pytest-randomly; it does not… | none | Tests are order-independent and network-isolated |
 | `TEST-018` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing covers only the cases and artifact shapes encoded by fitness:test_no_rerun_dismissal; i… | none | A flaky failure is a defect in the harness |
 | `TEST-019` | ADVISORY | `undeclared` | n/a | n/a | n/a | n/a | none | Test names state the behaviour |
 | `TEST-020` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Source spelling and path existence do not prove pytest collects or passes a node, that a parame… | `V3E-008` | Contract suites cover implementations and observable terms |

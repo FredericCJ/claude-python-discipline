@@ -361,7 +361,7 @@
   {
    "id": "OPEN-003",
    "type": "decision",
-   "label": "mutmut as the mutation engine",
+   "label": "Cosmic Ray as the portable mutation engine",
    "path": "discipline/meta/OPEN.md",
    "attrs": {
     "ledger": "meta/OPEN"
@@ -442,7 +442,7 @@
   {
    "id": "OPEN-012",
    "type": "decision",
-   "label": "Mutation testing cannot run on the maintaining platform",
+   "label": "Mutation testing cannot run on the maintaining platform — closed",
    "path": "discipline/meta/OPEN.md",
    "attrs": {
     "ledger": "meta/OPEN"
@@ -546,6 +546,14 @@
    "label": "shell"
   },
   {
+   "id": "mech:auto:cosmic-ray",
+   "type": "mechanism",
+   "label": "auto:cosmic-ray",
+   "attrs": {
+    "family": "auto"
+   }
+  },
+  {
    "id": "mech:auto:doxygen",
    "type": "mechanism",
    "label": "auto:doxygen",
@@ -573,14 +581,6 @@
    "id": "mech:auto:learn",
    "type": "mechanism",
    "label": "auto:learn",
-   "attrs": {
-    "family": "auto"
-   }
-  },
-  {
-   "id": "mech:auto:mutmut",
-   "type": "mechanism",
-   "label": "auto:mutmut",
    "attrs": {
     "family": "auto"
    }
@@ -1527,12 +1527,12 @@
    "type": "module",
    "label": "Python Testing Tooling",
    "path": "discipline/fact/py-testing.md",
-   "tokens": 1423,
+   "tokens": 1585,
    "attrs": {
     "decay": "quarters",
     "kind": "fact",
     "python": ">=3.11",
-    "verified": "2026-08-18"
+    "verified": "2026-08-23"
    }
   },
   {
@@ -1731,7 +1731,7 @@
    "type": "module",
    "label": "Systematic Testing and Oracles",
    "path": "discipline/law/TEST.md",
-   "tokens": 2987,
+   "tokens": 3040,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -1788,7 +1788,7 @@
    "type": "module",
    "label": "Open Decisions",
    "path": "discipline/meta/OPEN.md",
-   "tokens": 3836,
+   "tokens": 3950,
    "attrs": {
     "decay": "none",
     "kind": "meta"
@@ -3933,9 +3933,9 @@
   {
    "id": "TEST-013",
    "type": "rule",
-   "label": "Mutation score is gated on the core",
+   "label": "Every generated core mutant is killed",
    "path": "discipline/law/TEST.md:151",
-   "tokens": 40,
+   "tokens": 91,
    "attrs": {
     "force": "BINDING",
     "module": "law/TEST"
@@ -3945,7 +3945,7 @@
    "id": "TEST-014",
    "type": "rule",
    "label": "Compound decisions are decomposed and tabulated",
-   "path": "discipline/law/TEST.md:159",
+   "path": "discipline/law/TEST.md:161",
    "tokens": 54,
    "attrs": {
     "force": "BINDING",
@@ -3956,7 +3956,7 @@
    "id": "TEST-015",
    "type": "rule",
    "label": "Every check has a proof-of-failure companion",
-   "path": "discipline/law/TEST.md:167",
+   "path": "discipline/law/TEST.md:169",
    "tokens": 36,
    "attrs": {
     "force": "BINDING",
@@ -3967,7 +3967,7 @@
    "id": "TEST-016",
    "type": "rule",
    "label": "A test that weakens must say so",
-   "path": "discipline/law/TEST.md:174",
+   "path": "discipline/law/TEST.md:176",
    "tokens": 42,
    "attrs": {
     "force": "BINDING",
@@ -3978,7 +3978,7 @@
    "id": "TEST-017",
    "type": "rule",
    "label": "Tests are order-independent and network-isolated",
-   "path": "discipline/law/TEST.md:185",
+   "path": "discipline/law/TEST.md:187",
    "tokens": 25,
    "attrs": {
     "force": "BINDING",
@@ -3989,7 +3989,7 @@
    "id": "TEST-018",
    "type": "rule",
    "label": "A flaky failure is a defect in the harness",
-   "path": "discipline/law/TEST.md:192",
+   "path": "discipline/law/TEST.md:194",
    "tokens": 46,
    "attrs": {
     "force": "BINDING",
@@ -4000,7 +4000,7 @@
    "id": "TEST-019",
    "type": "rule",
    "label": "Test names state the behaviour",
-   "path": "discipline/law/TEST.md:198",
+   "path": "discipline/law/TEST.md:200",
    "tokens": 24,
    "attrs": {
     "force": "ADVISORY",
@@ -4011,7 +4011,7 @@
    "id": "TEST-020",
    "type": "rule",
    "label": "Contract suites cover implementations and observable terms",
-   "path": "discipline/law/TEST.md:204",
+   "path": "discipline/law/TEST.md:206",
    "tokens": 117,
    "attrs": {
     "force": "BINDING",
@@ -10037,7 +10037,7 @@
   {
    "type": "enforced_by",
    "src": "TEST-013",
-   "dst": "mech:auto:mutmut",
+   "dst": "mech:auto:cosmic-ray",
    "origin": "derived"
   },
   {

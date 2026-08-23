@@ -103,7 +103,7 @@
       "id": "fact/py-testing",
       "kind": "fact",
       "title": "Python Testing Tooling",
-      "tokens": 1423,
+      "tokens": 1585,
       "load_when": [
         "pytest version",
         "fixture scope",
@@ -115,7 +115,7 @@
       ],
       "requires": [],
       "grounds_on": [],
-      "verified": "2026-08-18",
+      "verified": "2026-08-23",
       "decay": "quarters",
       "path": "discipline/fact/py-testing.md"
     },
@@ -520,7 +520,7 @@
       "id": "law/TEST",
       "kind": "law",
       "title": "Systematic Testing and Oracles",
-      "tokens": 2987,
+      "tokens": 3040,
       "load_when": [
         "write a test",
         "pytest",
@@ -630,7 +630,7 @@
       "id": "meta/OPEN",
       "kind": "meta",
       "title": "Open Decisions",
-      "tokens": 3836,
+      "tokens": 3950,
       "load_when": [
         "open question",
         "undecided",
@@ -11533,14 +11533,14 @@
     {
       "id": "TEST-013",
       "module": "law/TEST",
-      "title": "Mutation score is gated on the core",
+      "title": "Every generated core mutant is killed",
       "force": "BINDING",
       "mechanisms": [
-        "auto:mutmut"
+        "auto:cosmic-ray"
       ],
-      "statement": "Seeded defects in domain modules MUST be detected at or above the configured score. Surviving mutants are dispositioned in a ledger, never ignored.",
+      "statement": "The declared unit suite MUST kill a non-empty mutation set generated from every declared domain path. An abnormal or incompetent worker, zero generated mutants, or any survivor MUST fail the gate; none is a percentage allowance. Mutation runs MUST use an isolated source copy so interruption cannot leave a mutant in the governed tree.",
       "why": "This is the only check that tests the tests; line execution cannot distinguish \"this ran\" from \"this was verified\".",
-      "check": "the configured mutation run and its score gate",
+      "check": "`python .agent/tools/mutation_gate.py --root .`",
       "no_mechanism": null,
       "see": [
         "TEST-004"
@@ -11567,14 +11567,15 @@
         "state": "external-verifier",
         "strategies": [
           {
-            "mechanism": "auto:mutmut",
+            "mechanism": "auto:cosmic-ray",
             "kind": "tool",
-            "relation": "proxy",
-            "proposition": "auto:mutmut reports no diagnostic corresponding to TEST-013 under the repository configuration and declared scan roots.",
-            "residual": "Passing excludes only the configured patterns implemented by auto:mutmut; it does not establish the full semantic benefit of the normative statement.",
-            "must_pass": "command:the configured mutation run and its score gate",
+            "relation": "direct",
+            "proposition": "The isolated Cosmic Ray adapter reports pass only when a normal unmutated baseline passes, every declared domain path generates mutants, every worker completes normally, and every mutant is killed by the declared unit targets.",
+            "residual": "Cosmic Ray's operator catalogue is finite and cannot represent every semantic defect; a zero-survivor run proves discrimination only for the generated mutant set.",
+            "must_pass": "command:python .agent/tools/mutation_gate.py --root .",
             "must_reject": "pending:TEST-013",
             "platforms": [
+              "windows",
               "linux"
             ],
             "not_applicable": "never while this rule is active for the governed repository"
@@ -11605,7 +11606,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/TEST.md",
-      "line": 159,
+      "line": 161,
       "applicability": {
         "units": [
           "application",
@@ -11662,7 +11663,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/TEST.md",
-      "line": 167,
+      "line": 169,
       "applicability": {
         "units": [
           "application",
@@ -11719,7 +11720,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/TEST.md",
-      "line": 174,
+      "line": 176,
       "applicability": {
         "units": [
           "application",
@@ -11777,7 +11778,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/TEST.md",
-      "line": 185,
+      "line": 187,
       "applicability": {
         "units": [
           "application",
@@ -11848,7 +11849,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/TEST.md",
-      "line": 192,
+      "line": 194,
       "applicability": {
         "units": [
           "application",
@@ -11903,7 +11904,7 @@
       "see": [],
       "superseded_by": null,
       "path": "discipline/law/TEST.md",
-      "line": 198,
+      "line": 200,
       "applicability": {
         "units": [
           "application",
@@ -11949,7 +11950,7 @@
       ],
       "superseded_by": null,
       "path": "discipline/law/TEST.md",
-      "line": 204,
+      "line": 206,
       "applicability": {
         "units": [
           "application",
