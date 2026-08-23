@@ -10,6 +10,7 @@ Layout in the target::
       enforce/      upstream-owned
       tools/        upstream-owned, the navigator and the learning CLI
       skills/       upstream-owned, the shared Claude Code and Codex skill source
+      dev/          upstream-owned, the Windows and Linux development legs
       learning/     PROJECT-OWNED, created once and never overwritten
       overrides/    PROJECT-OWNED, local waivers
       MANIFEST.json content hashes of everything upstream-owned
@@ -24,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import json
 import shutil
 import sys
@@ -41,16 +43,21 @@ if TYPE_CHECKING:
 ## in a managed block, so the release name travels beside it. This constant lives
 ## under `tools`, which is hashed, so bumping it moves the content hash too -- the
 ## two can never disagree about which corpus is installed.
-RELEASE: Final = "v4.0.0"
+RELEASE: Final = "v4.1.0"
 
 ## Copied on every install and replaced wholesale. Nothing here is project-owned.
-UPSTREAM: Final[tuple[str, ...]] = ("discipline", "enforce", "tools", "skills")
+UPSTREAM: Final[tuple[str, ...]] = (
+    "discipline", "enforce", "tools", "skills", "dev",
+)
 
 ## Root-level files copied alongside the upstream directories. INTEGRATION.md is
 ## what an agent reads when told to wire the discipline into a repository;
-## requirements.txt names the two packages a vendored `.agent/` needs, which the
-## adopter previously had to discover from an ImportError.
-UPSTREAM_FILES: Final[tuple[str, ...]] = ("INTEGRATION.md", "requirements.txt")
+## requirements.txt names the Python verifier set a vendored `.agent/` needs;
+## environment.yml constructs both development legs; and .dockerignore confines
+## the Linux image build context to declared inputs.
+UPSTREAM_FILES: Final[tuple[str, ...]] = (
+    "INTEGRATION.md", "requirements.txt", "environment.yml", ".dockerignore",
+)
 
 ## Created once if absent, then never touched again.
 PROJECT_OWNED: Final[tuple[str, ...]] = ("learning", "overrides")
@@ -305,7 +312,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     """
     # The console encoding is not ours to choose, and a tool that dies on one is
     # worse than one that renders a character imperfectly.
-    if hasattr(sys.stdout, "reconfigure"):
+    if isinstance(sys.stdout, io.TextIOWrapper):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description="Vendor the discipline into a repository.")
     parser.add_argument("command", choices=("install", "check"))

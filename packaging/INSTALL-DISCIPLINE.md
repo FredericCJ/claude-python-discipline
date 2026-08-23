@@ -1,6 +1,6 @@
 # A Python engineering discipline was unzipped here
 
-**Release v4.0.0.** The archive placed one directory at the root of this repository:
+**Release v4.1.0.** The archive placed one directory at the root of this repository:
 
 ```
 .agent/
@@ -8,24 +8,42 @@
   enforce/        the mechanisms — AST checks, fitness tests, config templates
   tools/          the navigator, the learning CLI, the validator, the integrator
   skills/         one shared Claude Code and Codex skill source
+  dev/            native Windows Conda and Linux Docker development legs
   learning/       project-owned; seeded with schema.sql and config.toml only, so this
                   repository's own record starts empty
   overrides/      project-owned, for local waivers
+  environment.yml the shared executable toolchain declaration
+  .dockerignore   the deliberately restricted Linux image build context
   MANIFEST.json   a content hash of every upstream file, plus the release name
   INTEGRATION.md  the detail behind everything below
 ```
 
 `.agent/` is hidden, which is why this file is not. It exists to be found and then deleted.
 
-Install the exact Python verifier set before running the canonical project gate:
+## Construct the development environment
 
-```bash
-python -m pip install -r .agent/requirements.txt
+On Windows, the only host prerequisite is Conda on the user `PATH`:
+
+```powershell
+.agent\dev\windows.cmd
 ```
 
-The integrator and updater themselves use only the standard library. A repository that
-declares `doc_engine = "doxygen"` additionally needs the native Doxygen 1.10.0 executable;
-the Sphinx branch is included in the Python manifest.
+On Linux, including WSL on a Windows 11 host, the only host prerequisite is Docker:
+
+```bash
+sh .agent/dev/docker.sh
+```
+
+Either command constructs the same exact direct verifier set from
+`.agent/environment.yml`, checks Python and every native executable, and runs the canonical
+project gate. The Windows launcher creates or repairs the `claude` environment. The Linux
+launcher builds its digest-pinned image when absent, then bind-mounts this repository and
+runs as the invoking uid/gid. Append a command such as `python -m pytest -q` to either
+launcher for a focused run.
+
+The first construction needs network access. The image supplies the discipline verifiers,
+not undeclared project runtime dependencies. `requirements.txt` remains the exact direct
+Python-only manifest for CI systems which intentionally manage their own native tools.
 
 For an **upgrade**, extract the new archive into a scratch directory rather than over the
 existing checkout, then use the packaged vendor path:
@@ -36,8 +54,9 @@ python .agent/tools/integrate.py
 python .agent/tools/integrate.py --check
 ```
 
-That replaces only `.agent/discipline/`, `.agent/enforce/`, `.agent/tools/`, `.agent/skills/`,
-and the two upstream root files. It preserves project-owned learning, overrides, the
+That replaces only `.agent/discipline/`, `.agent/enforce/`, `.agent/tools/`,
+`.agent/skills/`, `.agent/dev/`, and the upstream root files. It preserves project-owned
+learning, overrides, the
 integration record, host configuration, and locally edited native skills. Overlay
 extraction cannot provide that conditional ownership guarantee.
 
@@ -123,7 +142,7 @@ overwritten by the next update.
 **This file has done its job — delete it.** Nothing references it, and re-running the
 integrator does not need it.
 
-`RELEASE-NOTES-v4.0.0.md` beside it is worth reading once before you rely on the discipline:
+`RELEASE-NOTES-v4.1.0.md` beside it is worth reading once before you rely on the discipline:
 it states what is mechanically enforced and, more usefully, what is not. Delete it too when
 you have.
 

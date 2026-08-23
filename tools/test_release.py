@@ -170,6 +170,10 @@ def test_two_clean_archive_builds_are_byte_identical(
         canonical = archive.read(".agent/skills/python-discipline/SKILL.md")
     assert manifest["release"] == vendor.RELEASE
     assert "skills/python-discipline/SKILL.md" in manifest["files"]
+    assert "dev/docker.sh" in manifest["files"]
+    assert "dev/windows.ps1" in manifest["files"]
+    assert "environment.yml" in manifest["files"]
+    assert ".dockerignore" in manifest["files"]
     assert canonical.startswith(b"---\nname: python-discipline\n")
 
 

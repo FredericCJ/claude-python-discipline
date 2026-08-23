@@ -90,12 +90,20 @@ prompt says:
 
 ## The interpreter
 
-`python` on PATH is miniforge **base**: no pytest, no jsonschema, no ruff plugins. A gate
-run against it is meaningless and will look like it passed. Every agent uses:
+Do not infer the verifier environment from whichever `python` happens to be on `PATH`.
+Windows maintenance starts through:
 
 ```
-C:/Users/frede/miniforge3/envs/claude/python.exe
+dev\windows.cmd <optional command>
 ```
 
-That this has to be written down in prose, in nine places, is precisely the defect
-`conda-steward` exists to remove.
+It requires only Conda, creates or repairs the named environment from `environment.yml`,
+and verifies the result independently. Linux and WSL maintenance starts through:
+
+```
+sh dev/docker.sh <optional command>
+```
+
+It requires only Docker, uses the same declaration in a digest-pinned image, and mounts
+this checkout as the invoking uid/gid. With no optional command, either leg runs the full
+source gate.

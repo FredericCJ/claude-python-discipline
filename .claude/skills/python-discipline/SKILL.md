@@ -28,6 +28,19 @@ or one independently developed component. For a component, its contracts and loc
 owned behavior are in scope; counterpart repositories, parent wiring and whole-application
 verification are not. Read `discipline/meta/SCOPE.md` when that boundary is relevant.
 
+## Development environment
+
+Use the development leg shipped beside this skill instead of assembling verifier tools on
+the host. In a source checkout, Windows runs `<bundle-root>/dev/windows.cmd` and Linux runs
+`sh <bundle-root>/dev/docker.sh`. In an installed repository those resolve to
+`.agent/dev/windows.cmd` and `.agent/dev/docker.sh`.
+
+The Windows leg requires only Conda on `PATH`; the Linux leg requires only Docker. With no
+extra arguments each verifies the shared declaration and runs the appropriate source or
+project gate. Append an explicit command for focused work. Do not silently install an
+undeclared project dependency into the shared environment or image: project-specific
+dependencies remain owned by the governed repository.
+
 ## Prime Directive
 
 > **A failure must be machine-diagnosable and machine-repairable.** An agent meeting a

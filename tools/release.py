@@ -1,6 +1,6 @@
 """Build the redistributable archive of this discipline.
 
-    python tools/release.py                  # -> dist/agent-discipline-v4.0.0.zip
+    python tools/release.py                  # -> dist/agent-discipline-v4.1.0.zip
     python tools/release.py --keep-staging    # leave the staged tree for inspection
 
 The archive is produced by running the real installer against a scratch
@@ -38,6 +38,7 @@ recalled:
 from __future__ import annotations
 
 import argparse
+import io
 import os
 import platform
 import re
@@ -78,11 +79,18 @@ DOCUMENT_SOURCES: Final[tuple[str, ...]] = ("packaging", ".")
 ## Members that must exist in the finished archive. Each is load-bearing for one
 ## of the two scenarios, so their absence is a build failure and not a warning.
 REQUIRED_MEMBERS: Final[tuple[str, ...]] = (
+    ".agent/.dockerignore",
+    ".agent/dev/Dockerfile",
+    ".agent/dev/container-entrypoint.sh",
+    ".agent/dev/docker.sh",
+    ".agent/dev/windows.cmd",
+    ".agent/dev/windows.ps1",
     ".agent/tools/integrate.py",
     ".agent/discipline/KERNEL.md",
     ".agent/skills/python-discipline/SKILL.md",
     ".agent/INTEGRATION.md",
     ".agent/MANIFEST.json",
+    ".agent/environment.yml",
     ".agent/requirements.txt",
     "INSTALL-DISCIPLINE.md",
 )
@@ -711,7 +719,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     @param argv command-line arguments, defaulting to `sys.argv`
     @return 0 when the archive was written, 1 when a gate refused it
     """
-    if hasattr(sys.stdout, "reconfigure"):
+    if isinstance(sys.stdout, io.TextIOWrapper):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description="Build the redistributable archive.")
     parser.add_argument("--source", type=Path, default=REPO_ROOT,

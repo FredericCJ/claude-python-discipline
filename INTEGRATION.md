@@ -19,6 +19,22 @@ sibling repositories, wiring and whole-application verification remain out of sc
 
 ## The procedure
 
+The package ships the interpreter and verifier environment used by these commands. On
+Windows, with only Conda on `PATH`, prefix a command with `.agent\dev\windows.cmd`. On
+Linux or WSL, with only Docker available, prefix it with `sh .agent/dev/docker.sh`. For
+example:
+
+```powershell
+.agent\dev\windows.cmd python .agent\tools\integrate.py --dry-run
+```
+
+```bash
+sh .agent/dev/docker.sh python .agent/tools/integrate.py --dry-run
+```
+
+If an already verified Python environment is active, the direct standard-library command
+remains valid:
+
 ```bash
 python .agent/tools/integrate.py --dry-run    # read the plan first
 python .agent/tools/integrate.py              # apply it
@@ -35,12 +51,12 @@ happens — not a prediction made by a second implementation.
 It manages one clearly delimited block in each of `CLAUDE.md` and `AGENTS.md`:
 
 ```
-<!-- BEGIN AGENT DISCIPLINE v4.0.0 (manifest content hash) -- managed by ... -->
+<!-- BEGIN AGENT DISCIPLINE v4.1.0 (manifest content hash) -- managed by ... -->
    ... the pointer, the thesis, the three commands that matter ...
 <!-- END AGENT DISCIPLINE -->
 ```
 
-The marker names two things. `v4.0.0` is the release, so a reader can tell at a glance
+The marker names two things. `v4.1.0` is the release, so a reader can tell at a glance
 what is installed. The value in brackets is the content hash from
 `.agent/MANIFEST.json`, computed over every upstream file: it is what `--check` compares,
 and unlike a release name it cannot be claimed, only computed. If you edited a vendored
@@ -187,6 +203,11 @@ UTF-8 CRLF and LF checkout projections deliberately share one digest so the acce
 content remains portable across Windows and Linux; binary assets remain byte-exact.
 
 ## After integrating
+
+Use `.agent\dev\windows.cmd` or `sh .agent/dev/docker.sh` with no appended command to run
+the canonical project gate. The Windows leg reconciles the shared lock before execution;
+the Linux leg mounts this repository into its image as the invoking uid/gid. Neither leg
+governs a parent or sibling repository.
 
 Read `.agent/discipline/KERNEL.md`. It is about 2,000 tokens and it routes everything
 else; do not read the modules speculatively. From then on:

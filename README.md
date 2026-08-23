@@ -66,6 +66,33 @@ doxygen enforce/Doxyfile                                  # the documentation ga
 **Reachability is the navigability metric**: every one of the 212 rules is reachable from
 some module within three hops, checked as `V092` on every validation run.
 
+## Shipped development environment
+
+The discipline package carries its verifier environment instead of asking each developer
+to assemble Python, Doxygen, Node, and the gate tools independently.
+
+On native Windows, the only host prerequisite is Conda on `PATH`:
+
+```powershell
+dev\windows.cmd                         # source checkout: verify, then run its gate
+.agent\dev\windows.cmd                  # adopter: verify, then run the project gate
+dev\windows.cmd python -m pytest -q     # run an explicit in-environment command
+```
+
+On Linux, including WSL on a Windows 11 host, the only host prerequisite is Docker:
+
+```bash
+sh dev/docker.sh                         # source checkout
+sh .agent/dev/docker.sh                  # adopter
+sh .agent/dev/docker.sh python -m pytest -q
+```
+
+Both legs are constructed from the same `environment.yml`. The Windows launcher creates
+or repairs the named Conda environment and verifies it after the transaction. The Linux
+launcher builds a digest-pinned image when absent, mounts the repository rather than
+baking it into a layer, and runs as the invoking uid/gid. Project-specific dependencies
+remain the governed repository's declared responsibility.
+
 ## Vendoring and integration
 
 ```bash
@@ -101,7 +128,7 @@ is reported and left untouched; the other host can still be integrated safely.
 ```bash
 python tools/vendor.py check   ../some-repo   # local edits to read-only files
 python tools/harvest.py        ../some-repo   # discipline-level findings, upstream
-python tools/release.py                       # -> dist/agent-discipline-v4.0.0.zip
+python tools/release.py                       # -> dist/agent-discipline-v4.1.0.zip
 ```
 
 `release.py` builds the redistributable archive by running `vendor.py install` against a
@@ -111,8 +138,9 @@ non-empty, scans every member for absolute paths and credential shapes, and emit
 byte-reproducible zip whose members are `.agent/` plus `INSTALL-DISCIPLINE.md` and the
 release notes. Unzipped at a repository root it lands exactly where `integrate.py` expects.
 
-`.agent/discipline/`, `.agent/enforce/`, `.agent/tools/` and `.agent/skills/` are
-upstream-owned and replaced wholesale on update. `.agent/learning/` and
+`.agent/discipline/`, `.agent/enforce/`, `.agent/tools/`, `.agent/skills/`, `.agent/dev/`,
+`.agent/environment.yml`, and `.agent/.dockerignore` are upstream-owned and replaced
+wholesale on update. `.agent/learning/` and
 `.agent/overrides/` are project-owned and never touched. A content-hash manifest makes a
 local edit to a read-only file visible rather than silently carried, and `harvest` exports
 `scope: discipline` findings as a report plus proposed rule text for review.
@@ -139,10 +167,13 @@ enforce/
 learning/            schema.sql  config.toml  ledger.jsonl  INDEX.md  calibration.md
 tools/               validate.py build_index.py build_graph.py nav.py learn.py
                      vendor.py integrate.py migrate_v4.py harvest.py release.py
+dev/                 Windows Conda and Linux Docker launchers, image, entry point
 skills/python-discipline/
   SKILL.md            the one authored Claude Code and Codex skill entry point
 packaging/           INSTALL-DISCIPLINE.md, the archive-root pointer for adopters
 INTEGRATION.md       what an agent reads when told to wire the discipline in
+environment.yml      shared, executable Windows/container toolchain declaration
+.dockerignore        minimal image build context
 sources/             the eleven originals, frozen and superseded
 .claude/skills/python-discipline/   generated Claude Code discovery copy
 .agents/skills/python-discipline/   generated Codex discovery copy
@@ -184,7 +215,12 @@ Running `--apply` again is a no-op.
 
 ## Working on the discipline itself
 
-Requires the conda environment named `claude`.
+Start with `dev\windows.cmd` on Windows or `sh dev/docker.sh` on Linux. The former requires
+only Conda; the latter requires only Docker. Both verify the environment before running the
+complete source gate. To invoke an individual maintenance command, append it to the
+launcher, for example `dev\windows.cmd python tools\validate.py`.
+
+Inside the resulting environment, the constituent commands are:
 
 ```bash
 python tools/build_index.py       # refresh tokens:, INDEX.md, rules.json, ENFORCEMENT.md

@@ -74,7 +74,7 @@ def _install(target: Path, **kwargs: bool) -> tuple[int, list[str]]:
     @param kwargs forwarded to `install`, for `force`
     @return what `install` returned
     """
-    return vendor.install(vendor.Plan(SOURCE, target), **kwargs)  # type: ignore[arg-type]
+    return vendor.install(vendor.Plan(SOURCE, target), **kwargs)
 
 
 # ------------------------------------------------------------------ manifest
@@ -131,6 +131,25 @@ def test_install_carries_one_shared_agent_skill_source(target: Path) -> None:
     assert installed.read_bytes() == source.read_bytes()
     assert not (target / ".claude").exists()
     assert not (target / ".agents").exists()
+
+
+def test_install_carries_both_development_legs_and_their_shared_lock(target: Path) -> None:
+    """One install must support Windows and Linux without a second package.
+
+    @param target an empty repository
+    """
+    _install(target)
+    required = (
+        "dev/Dockerfile",
+        "dev/container-entrypoint.sh",
+        "dev/docker.sh",
+        "dev/windows.cmd",
+        "dev/windows.ps1",
+        "environment.yml",
+        ".dockerignore",
+    )
+    for relative in required:
+        assert (target / ".agent" / relative).read_bytes() == (SOURCE / relative).read_bytes()
 
 
 def test_the_manifest_excludes_build_products(target: Path) -> None:
