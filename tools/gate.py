@@ -37,6 +37,7 @@ REPO_ROOT: Final = Path(__file__).resolve().parent.parent
 ## `python` on a machine with more than one environment is a coin toss -- and on
 ## the machine this was written on it resolves to an interpreter with no pytest,
 ## where the suite reports nothing and looks like it passed.
+## Each GATE element represents one step-name and command pair; execution order is preserved.
 GATE: Final[tuple[tuple[str, tuple[str, ...]], ...]] = (
     ("format and lint", (sys.executable, "tools/lint_gate.py")),
     ("rule corpus", (sys.executable, "tools/validate.py")),
@@ -82,33 +83,51 @@ def run(*, stop_early: bool = False) -> int:
     @param stop_early whether to stop at the first failing step rather than
         running all of them; running on is the default because a reader usually
         wants the whole picture
+        True enables stop early; false selects its disabled alternative.
     @return 0 when every step passed, 1 otherwise
     """
+    # Each failed element names one unsuccessful gate step; execution order is preserved.
     failed: list[str] = []
+    # Preserve the external command representation and its observed completion outcome.
+    # Process each candidate element in deterministic source order.
     for name, command in GATE:
+        # Preserve the external command representation and its observed completion outcome.
         finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
             command, cwd=REPO_ROOT, capture_output=True, text=True,
             encoding="utf-8", errors="replace", check=False, timeout=1800,
         )
+        # Each lines element represents one decoded record; lexical order is preserved.
         lines = [x for x in (finished.stdout + finished.stderr).splitlines() if x.strip()]
+        # Preserve the completed operation outcome for validation and publication.
         verdict = "ok  " if finished.returncode == 0 else "FAIL"
         print(f"{verdict} {name:22s} {lines[-1][:90] if lines else ''}")
+        # Enter the failure path only when the subprocess reports a nonzero status.
         if finished.returncode != 0:
             failed.append(name)
+            # Emit captured diagnostic detail only when nonblank output is available.
             if lines:
+                # Treat the current x as the candidate element consumed by the enclosing
+                # transformation.
                 print("\n".join(f"       {x[:110]}" for x in lines[-12:]))
+            # Stop after this failure only when the caller selected early termination.
             if stop_early:
+                # Stop the scan once the decisive match has been established.
                 break
+    # Report aggregate failure only when at least one gate step was unsuccessful.
     if failed:
         print(f"\ngate: {len(failed)} of {len(GATE)} step(s) failed -- "
               f"{', '.join(failed)}", file=sys.stderr)
+        # Expose the completed run outcome to its caller.
         return 1
     print(f"\ngate: all {len(GATE)} steps passed")
+    # Expose the completed run outcome to its caller.
     return 0
 
 
+# Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--stop-early", action="store_true",
                         help="stop at the first failing step")
+    # Propagate the localized failure so callers cannot mistake it for success.
     raise SystemExit(run(stop_early=parser.parse_args().stop_early))
