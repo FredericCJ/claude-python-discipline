@@ -185,6 +185,18 @@ def test_replaceable_tool_cache_is_outside_review_identity(tmp_path: Path) -> No
     assert check.run([source]) == []
 
 
+def test_replaceable_packaging_metadata_is_outside_review_identity(tmp_path: Path) -> None:
+    """A clean package build cannot invalidate the source it just reviewed.
+
+    @param tmp_path fixture repository
+    """
+    check, source, _, _ = _tree(tmp_path)
+    metadata = tmp_path / "src/pkg.egg-info/SOURCES.txt"
+    metadata.parent.mkdir()
+    metadata.write_text("src/pkg/module.py\n", encoding="utf-8")
+    assert check.run([source]) == []
+
+
 def test_scope_categories_are_closed_and_ordered(tmp_path: Path) -> None:
     """An author cannot omit tests from review by editing the category list.
 

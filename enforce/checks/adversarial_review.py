@@ -63,6 +63,8 @@ EXCLUDED_DIRECTORIES: Final = frozenset({
     ".import_linter_cache", ".mypy_cache", ".pytest_cache", ".ruff_cache", ".tox",
     ".venv", "__pycache__", "build", "dist",
 })
+## Replaceable packaging-metadata trees whose stem is project-specific.
+EXCLUDED_DIRECTORY_SUFFIXES: Final = (".egg-info",)
 ## Replaceable runtime projections and coverage products excluded from semantic review.
 EXCLUDED_FILES: Final = frozenset({".coverage", "coverage.xml"})
 ## Replaceable interpreter and local-database products excluded by suffix.
@@ -482,7 +484,12 @@ def scope_paths(declaration: Declaration) -> tuple[Path, ...]:
     review_path = declaration.adversarial_review_path()
     excluded_review = None if review_path is None else review_path.resolve()
     for directory, names, files in os.walk(root):
-        names[:] = sorted(name for name in names if name not in EXCLUDED_DIRECTORIES)
+        names[:] = sorted(
+            name
+            for name in names
+            if name not in EXCLUDED_DIRECTORIES
+            and not name.endswith(EXCLUDED_DIRECTORY_SUFFIXES)
+        )
         for name in sorted(files):
             path = (Path(directory) / name).resolve()
             if (
