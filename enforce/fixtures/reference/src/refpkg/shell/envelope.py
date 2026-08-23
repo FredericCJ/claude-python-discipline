@@ -20,12 +20,13 @@ from refpkg.app.errors import AppError, PruneInterrupted
 from refpkg.domain.errors import DomainError, InvariantViolated
 from refpkg.ports.errors import PortError
 
+# Keep the domain refusal type available for checking without a runtime shell dependency.
 if TYPE_CHECKING:
     from refpkg.domain.plan import Refusal
 
-## Which family means which layer. The mapping is exhaustive over the three
-## families the package defines; anything else is an escape the shell did not
-## anticipate, and is reported as such rather than silently attributed.
+## Each exception-family key maps to its canonical layer value. Insertion order is
+## significant because the first matching family determines attribution; anything
+## else is reported as an unanticipated shell escape.
 _LAYER_OF: dict[type[Exception], str] = {
     DomainError: "domain",
     AppError: "app",
@@ -40,9 +41,13 @@ def layer_of(error: BaseException) -> str:
     @return the canonical layer name, or `shell` for anything outside the three
         families -- an unattributed error is reported honestly, never guessed
     """
+    # Test each family-layer pair in declared precedence order for stable attribution.
     for family, layer in _LAYER_OF.items():
+        # Test the current family without letting a later, broader family override it.
         if isinstance(error, family):
+            # Publish the canonical layer paired with the first matching family.
             return layer
+    # Attribute an unknown family honestly to the final shell containment boundary.
     return "shell"
 
 
@@ -53,6 +58,7 @@ def causes(error: BaseException) -> list[dict[str, str]]:
     @return one record per chained cause; empty when nothing was chained, which
         is a claim that nothing was, not that nobody looked
     """
+    # Accumulate each cause record from outer to inner before reversing its final order.
     chain: list[dict[str, str]] = []
     current = error.__cause__
     while current is not None:
@@ -62,7 +68,9 @@ def causes(error: BaseException) -> list[dict[str, str]]:
             "code": getattr(current, "code", ""),
             "layer": layer_of(current),
         })
+        # Follow the explicit causal link to the next inner exception.
         current = current.__cause__
+    # Publish the records innermost first, preserving causal traversal within each element.
     chain.reverse()
     return chain
 
@@ -73,6 +81,7 @@ def from_error(error: BaseException) -> dict[str, Any]:
     @param error the exception about to leave the process
     @return a record conforming to the published schema
     """
+    # Derive attribution, then assemble each schema key and value in stable insertion order.
     layer = layer_of(error)
     envelope: dict[str, Any] = {
         "code": getattr(error, "code", "refpkg.shell.unexpected"),
@@ -88,13 +97,17 @@ def from_error(error: BaseException) -> dict[str, Any]:
         # rule instead of inferring it from a message.
         "rule_ids": list(getattr(error, "rule_ids", ())),
     }
+    # Add port-only fields exactly when the error family can supply them truthfully.
     if isinstance(error, PortError):
         # The schema requires both of these for an adapter fault, and only an
         # adapter knows them; deriving them further out would be inventing them.
         envelope["port"] = error.port
         envelope["operation"] = error.operation
+    # Preserve the rejected domain representation only for an invariant violation.
     if isinstance(error, InvariantViolated):
+        # Add the original rejected value without flattening it into the message.
         envelope["value"] = repr(error.actual)
+    # Expose the completed schema projection after every applicable specialization.
     return envelope
 
 
@@ -108,6 +121,7 @@ def from_refusal(refusal: Refusal) -> dict[str, Any]:
     @param refusal the planner's refusal
     @return a record conforming to the published schema
     """
+    # Project the expected result-channel failure into the same boundary schema.
     return {
         "code": refusal.code,
         "layer": "domain",
@@ -125,12 +139,19 @@ def _expected(error: BaseException) -> str:
     @param error the escaping exception
     @return the predicate, phrased so it can be compared against `actual`
     """
+    # Select the most specific structured predicate available from the error family.
     if isinstance(error, InvariantViolated):
+        # Reuse the predicate captured at the domain boundary.
         return error.invariant
+    # Describe partial destructive completion as the failed orchestration guarantee.
     if isinstance(error, PruneInterrupted):
+        # State the all-or-complete expectation that the partial journal disproved.
         return "every entry named by the plan was deleted"
+    # Derive a port predicate from the exact boundary and operation fields.
     if isinstance(error, PortError):
+        # Form the expected completion from structured port identities.
         return f"{error.port}.{error.operation} completed"
+    # Retain a truthful generic predicate for an otherwise unknown shell escape.
     return "the operation completed"
 
 
@@ -144,13 +165,20 @@ def _remediation(error: BaseException) -> str:
     @param error the escaping exception
     @return the remediation line
     """
+    # Lead with irreversible progress when retrying an interrupted destructive operation.
     if isinstance(error, PruneInterrupted):
+        # Preserve both completed and remaining counts in the retry instruction.
         return (
             f"{len(error.deleted)} deletion(s) already happened and are not undone. "
             f"Re-run to retry the {len(error.remaining)} that remain."
         )
+    # Direct a port failure to the concrete adapter dependency that can repair it.
     if isinstance(error, PortError):
+        # Name the exact port owner whose dependency needs inspection.
         return f"Check the {error.port} adapter's dependency, then re-run."
+    # Direct an invariant violation to the boundary that admitted the invalid value.
     if isinstance(error, DomainError):
+        # Keep remediation at the admission boundary rather than inside valid domain logic.
         return "Fix the value at the boundary that admitted it; the domain is not at fault."
+    # Classify an unknown shell escape as a defect instead of inventing recovery advice.
     return "Unhandled at the shell boundary; this is a defect in refpkg."

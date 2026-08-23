@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 from refpkg.adapters.clock.real import SystemClock
 from refpkg.adapters.files.real import LocalFileStore
 
+# Keep path and abstract port types available without changing runtime wiring ownership.
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -45,4 +46,5 @@ def production(root: Path) -> Wiring:
     @param root the directory the store is bound to
     @return the wiring, with every port bound to its real adapter
     """
+    # Bind each required port to its sole production adapter at the composition root.
     return Wiring(store=LocalFileStore(root), clock=SystemClock())

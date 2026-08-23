@@ -13,4 +13,5 @@ def runtime_identity() -> Mapping[str, str]:
 
     @return immutable-facing version and build-id mapping
     """
+    # Expose both stable identity fields without granting callers mutable package state.
     return {"version": VERSION, "build_id": BUILD_ID}

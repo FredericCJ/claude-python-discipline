@@ -26,6 +26,7 @@ from refpkg.domain.plan import Outcome, Plan, Refusal, narrow
 from refpkg.shell import envelope
 from refpkg.shell.composition import Wiring, production
 
+# Keep the command argument sequence contract out of runtime shell imports.
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
@@ -49,6 +50,7 @@ def build_parser() -> argparse.ArgumentParser:
     @return the parser; `--apply` is opt-in because the default for a
         destructive command must be the one that changes nothing (`EFCT-005`)
     """
+    # Assemble the complete destructive command surface before publishing its parser.
     parser = argparse.ArgumentParser(prog="refpkg", description="Prune stale files.")
     parser.add_argument("root", type=Path, help="the directory to prune")
     parser.add_argument("--max-age-days", type=int, default=30)
@@ -65,12 +67,15 @@ def render(payload: dict[str, Any], *, as_json: bool) -> str:
     computed separately would be a second implementation of the answer, free to
     disagree with the machine-readable one.
 
-    @param payload the result object
-    @param as_json whether to emit the machine-readable form
+    @param payload each result field keyed by schema name; key order is normalized here
+    @param as_json True emits canonical JSON; False emits sorted human-readable fields
     @return the text to print
     """
+    # Select one rendering over the same result object without recomputing its meaning.
     if as_json:
+        # Preserve every field and normalize key order in the machine representation.
         return json.dumps(payload, indent=1, sort_keys=True)
+    # Preserve the same fields in deterministic key order for a human reader.
     return "\n".join(f"{key}: {value}" for key, value in sorted(payload.items()))
 
 
@@ -78,9 +83,10 @@ def describe(plan: Plan, deleted: tuple[str, ...] | None) -> dict[str, Any]:
     """The result object for a completed run.
 
     @param plan what was decided
-    @param deleted what was actually removed, or None when nothing was applied
+    @param deleted each removed path in execution order, or None when nothing was applied
     @return the payload, identical in shape whether or not the plan was applied
     """
+    # Project each plan partition and execution fact into one stable payload shape.
     return {
         "schema_version": SCHEMA_VERSION,
         "doomed": [entry.path for entry in plan.doomed],
@@ -99,9 +105,10 @@ def run(wiring: Wiring, policy: Policy, *, apply_it: bool) -> tuple[int, dict[st
 
     @param wiring the bound ports
     @param policy what the caller considers stale
-    @param apply_it whether to perform the plan
+    @param apply_it True performs the accepted plan; False reports it without mutation
     @return the exit code and the object to render
     """
+    # Compute the complete domain outcome before choosing any destructive continuation.
     outcome: Outcome = survey(wiring.store, wiring.clock, policy)
     # A `match` rather than a chain of `isinstance`, because with the union at
     # exactly two variants the second test is provably redundant and pyright
@@ -110,11 +117,14 @@ def run(wiring: Wiring, policy: Policy, *, apply_it: bool) -> tuple[int, dict[st
     # checker rejects this function until the arm is written (`ERR-002`).
     match outcome:
         case Refusal():
+            # Preserve the expected refusal as a structured domain envelope.
             return EXIT_REFUSED, envelope.from_refusal(outcome)
         case Plan():
+            # Apply only when explicitly selected, retaining None as the dry-run marker.
             deleted = apply(wiring.store, outcome) if apply_it else None
             return EXIT_OK, describe(outcome, deleted)
         case _:
+            # Make any future unhandled outcome arm fail static exhaustiveness checking.
             return narrow(outcome)
 
 
@@ -124,17 +134,24 @@ def main(argv: Sequence[str] | None = None) -> int:
     @param argv the command-line arguments, or None to read `sys.argv`
     @return one of the `EXIT_*` codes
     """
+    # Parse one invocation before entering the process boundary's final containment scope.
     args = build_parser().parse_args(argv)
+    # Translate every boundary failure exactly once after argument parsing succeeds.
     try:
+        # Validate policy values and execute the fully composed application pipeline.
         policy = Policy.parse(args.max_age_days, args.keep_newest)
         code, payload = run(production(args.root), policy, apply_it=args.apply)
     except Exception as exc:  # ruff: ignore[blind-except] - the process boundary; see ERR-015
+        # Render the captured failure through the one diagnostic-envelope owner.
         print(render(envelope.from_error(exc), as_json=True), file=sys.stderr)
         return EXIT_REFUSED
+    # Route the completed payload by stable status without changing its schema.
     stream = sys.stdout if code == EXIT_OK else sys.stderr
     print(render(payload, as_json=True), file=stream)
     return code
 
 
+# Convert the library-style result into the process exit status only at execution time.
 if __name__ == "__main__":
+    # Terminate the interpreter with the stable command status returned above.
     raise SystemExit(main())
