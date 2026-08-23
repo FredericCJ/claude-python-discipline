@@ -3231,11 +3231,24 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         replace=(
             (
                 "tools/learn.py",
-                "    store.dir.mkdir(parents=True, exist_ok=True)\n    connection = connect(store)",
                 (
-                    "    if store.db.exists():\n"
-                    "        return connect(store)\n"
+                    "    # Publish the externally visible effect after all required inputs "
+                    "are ready.\n"
                     "    store.dir.mkdir(parents=True, exist_ok=True)\n"
+                    "    # Compute connection using connect for later sync logic.\n"
+                    "    connection = connect(store)"
+                ),
+                (
+                    "    # Reuse the existing derived index instead of reconstructing it "
+                    "from the ledger.\n"
+                    "    if store.db.exists():\n"
+                    "        # Return the trusted projection without replaying authoritative "
+                    "events.\n"
+                    "        return connect(store)\n"
+                    "    # Publish the externally visible effect after all required inputs "
+                    "are ready.\n"
+                    "    store.dir.mkdir(parents=True, exist_ok=True)\n"
+                    "    # Compute connection using connect for later sync logic.\n"
                     "    connection = connect(store)"
                 ),
             ),
