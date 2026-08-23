@@ -26,10 +26,12 @@ from typing import TYPE_CHECKING, Final
 from decides import decides
 from fixtures import broken_copy, reference_root
 
+# Import path typing only while static analyzers evaluate fixture contracts.
 if TYPE_CHECKING:
     from pathlib import Path
 
-## What a golden file looks like on disk, in the conventions people actually use.
+## Golden-path glob string elements in explicit convention-coverage order. Search
+## order is normalized away before results are returned.
 GOLDEN_GLOBS: Final[tuple[str, ...]] = (
     "**/golden/**/*", "**/goldens/**/*", "**/__snapshots__/**/*",
     "**/*.golden", "**/*.approved.*", "**/*.snap",
@@ -49,14 +51,18 @@ def goldens_in(root: Path) -> list[Path]:
     """Every golden file a project commits.
 
     @param root the project root
-    @return the files matching any golden convention, excluding caches
+    @return unique golden-file path elements in sorted path order, excluding caches
     """
+    # Accumulate file-path elements in glob traversal order before final sorting.
     found: list[Path] = []
+    # Apply each supported naming convention in the declared coverage order.
     for pattern in GOLDEN_GLOBS:
+        # Extend the candidate list only with real files outside interpreter caches.
         found += [
             p for p in root.glob(pattern)
             if p.is_file() and "__pycache__" not in p.parts
         ]
+    # Return unique golden paths in deterministic repository-relative order.
     return sorted(set(found))
 
 
@@ -67,14 +73,19 @@ def test_goldens_reviewed() -> None:
     Vacuous on the reference by design. The two tests below are what stop that
     from being a free pass.
     """
+    # Inventory the selected project before choosing the vacuous or governed path.
     root = reference_root()
     goldens = goldens_in(root)
+    # Accept a project that commits no golden oracle and therefore needs no updater.
     if not goldens:
+        # End the conditional obligation without manufacturing regeneration machinery.
         return
 
+    # Combine ordered test-source contents into the regeneration-interface search corpus.
     harness = "\n".join(
         m.read_text(encoding="utf-8") for m in sorted(root.rglob("tests/**/*.py"))
     )
+    # Require deliberate regeneration while rejecting ambient environment switches.
     assert _DELIBERATE.search(harness), (
         f"{len(goldens)} golden file(s) and no explicit regeneration path. A "
         f"golden regenerated on failure records the new behaviour as correct "
@@ -93,6 +104,7 @@ def test_the_reference_commits_no_goldens() -> None:
     If this fails, the test above stopped being vacuous -- which is fine, and
     should be noticed rather than discovered later.
     """
+    # Keep the reference's intended vacuous precondition explicit and executable.
     assert goldens_in(reference_root()) == []
 
 
@@ -100,7 +112,11 @@ def test_a_golden_with_no_deliberate_path_is_caught(tmp_path: Path) -> None:
     """The negative case, and the reason this suite is not a free pass.
 
     @param tmp_path the fixture directory
+
+    @par Effects
+    Creates an isolated damaged project containing a golden and its test harness.
     """
+    # Build a negative project with a committed oracle but no regeneration interface.
     root = broken_copy(tmp_path, write={
         "tests/golden/expected.txt": "some output\n",
         "tests/integration/test_golden.py":
@@ -109,10 +125,13 @@ def test_a_golden_with_no_deliberate_path_is_caught(tmp_path: Path) -> None:
             '    expected = Path("tests/golden/expected.txt").read_text()\n'
             '    assert expected\n',
     })
+    # Prove the subject contains a golden before evaluating the missing-interface oracle.
     assert goldens_in(root), "the fixture did not create a golden"
+    # Combine test-source elements in sorted path order for deliberate-switch detection.
     harness = "\n".join(
         m.read_text(encoding="utf-8") for m in sorted(root.rglob("tests/**/*.py"))
     )
+    # Require the negative harness to remain free of an explicit regeneration path.
     assert not _DELIBERATE.search(harness)
 
 
@@ -120,7 +139,11 @@ def test_an_ambient_regeneration_switch_is_caught(tmp_path: Path) -> None:
     """The subtler negative case: a path that can be taken by accident.
 
     @param tmp_path the fixture directory
+
+    @par Effects
+    Creates an isolated damaged project containing an ambient golden updater.
     """
+    # Build a negative project whose environment can update committed expected output.
     root = broken_copy(tmp_path, write={
         "tests/golden/expected.txt": "some output\n",
         "tests/integration/test_golden.py":
@@ -131,7 +154,9 @@ def test_an_ambient_regeneration_switch_is_caught(tmp_path: Path) -> None:
             '        target.write_text("new output")\n'
             '    assert target.read_text()\n',
     })
+    # Combine test-source elements in sorted path order for ambient-switch detection.
     harness = "\n".join(
         m.read_text(encoding="utf-8") for m in sorted(root.rglob("tests/**/*.py"))
     )
+    # Require the configured environment-variable regeneration path to be detected.
     assert _AMBIENT.search(harness)
