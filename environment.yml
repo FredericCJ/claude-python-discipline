@@ -75,6 +75,11 @@ dependencies:
       # tools/validate.py checks front-matter against tools/frontmatter.schema.json.
       - jsonschema==4.26.0
 
+      # DOC-005/010/011 for repositories selecting the supported Sphinx branch.
+      # 8.2.3 is the last stable line compatible with the Python 3.11 floor;
+      # Sphinx 9.1.0 requires Python 3.12 or newer.
+      - Sphinx==8.2.3
+
       # ---------------------------------------------------------- gate step 7
       # ARCH-001..004 and ARCH-011 as executable contracts, held against
       # enforce/fixtures/reference/ by tools/import_gate.py.

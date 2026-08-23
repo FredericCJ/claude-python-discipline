@@ -1,23 +1,33 @@
-# What a vendored `.agent/` needs to run, and nothing more.
+# Exact Python dependencies for the vendored tools and canonical project gate.
 #
 #     pip install -r .agent/requirements.txt
 #
-# This is the ADOPTER manifest. It is not the environment this discipline is
-# maintained in -- that is `environment.yml` upstream, which additionally pins
-# ruff, pytest and three pytest plugins for the corpus's own gate. An adopting
-# repository runs its own gate against its own code and needs none of that.
+# This is the ADOPTER manifest. The maintainer lock is `environment.yml`, but a
+# consuming repository runs these verifier adapters against its own code. A
+# missing tool is an explicit red/unsupported outcome, never a narrower green gate.
 #
 # Python 3.11 or newer (discipline/fact/py-typing.md).
 
-# tools/nav.py imports build_graph, which imports discipline_core, which parses
-# front-matter with PyYAML. The navigator reads a generated JSON graph and never
-# parses YAML itself, but the import chain reaches it, so it is required rather
-# than optional.
 PyYAML==6.0.3
-
-# tools/validate.py checks module front-matter against tools/frontmatter.schema.json.
-# Needed only if you validate the corpus; harmless otherwise.
 jsonschema==4.26.0
+
+# Static, typing, import-boundary, test-control, build, mutation, and generated-doc
+# adapters. Each is exact because its diagnostics and exit semantics are evidence.
+ruff==0.16.3
+mypy==2.3.0
+pyright==1.1.407
+import-linter==2.13
+pytest==9.1.1
+pytest-timeout==2.4.0
+pytest-randomly==4.1.0
+pytest-socket==0.8.0
+build==1.3.0
+cosmic-ray==8.7.0
+
+# Sphinx remains on the last stable line supporting the discipline's Python 3.11
+# floor. Projects declaring doc_engine="doxygen" instead need the native Doxygen
+# 1.10.0 executable; pip cannot install or verify that binary.
+Sphinx==8.2.3
 
 # NOT required, and deliberately not listed as such:
 #
@@ -25,9 +35,8 @@ jsonschema==4.26.0
 #   tools/integrate.py   standard library only
 #   tools/vendor.py      standard library only
 #
-# Those three are what an adopter uses most -- announcing the discipline,
-# recording what a session learned, and updating the vendored copy -- so the
-# common path needs no installation at all.
+# Those three announce, learn, and update, so package lifecycle operations
+# themselves remain standard-library-only.
 #
 # tiktoken is NOT required. tools/build_index.py measures the `tokens:` field
 # with a character-ratio estimate defined in tools/discipline_core.py, so its

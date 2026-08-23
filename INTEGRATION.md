@@ -119,6 +119,19 @@ Worth putting in the repository's own gate. After updating the vendored discipli
 stale until the integrator is run again. Applying then updates both native skill files if
 they are still the unchanged files recorded by the prior integration.
 
+When the update arrives as a release archive, extract it into a scratch directory and run
+its installer against this checkout; do not overlay-extract it onto an existing `.agent/`:
+
+```bash
+python <scratch>/.agent/tools/vendor.py install . --source <scratch>/.agent
+python .agent/tools/integrate.py
+python .agent/tools/integrate.py --check
+```
+
+The source and destination are distinct so `vendor.py` can replace upstream-owned trees
+while leaving `.agent/learning/`, `.agent/overrides/`, and `integration-record.json`
+untouched. The archive lifecycle test exercises this exact public command path.
+
 To take it back out cleanly:
 
 ```bash

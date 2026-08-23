@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "review_id": "v4_security_slice_adversarial_acceptance",
-  "reviewed_commit": "7fb63c2080eed73ae2b3960e52d65bde7371bc8e",
+  "reviewed_commit": "8f4cc822ffbcf3f411467cec5b764e438fc955e8",
   "scope": {
     "algorithm": "sha256",
-    "digest": "sha256:59b4efdc99bb04a3744b88cf9dbbbf9d13c2abd2d85992b7bc880c96b8e930a7",
+    "digest": "sha256:4be5a24faf0201808975b42534e645bd18a1d14202af452c30941191c2af7635",
     "file_count": 285,
     "categories": [
       "project_declaration",
@@ -63,8 +63,8 @@
     {
       "id": "supply_chain",
       "challenge": "Can generated doctrine views, mirrored host skills, vendored manifests, or a delivered archive drift from the authored source while the gate stays green?",
-      "conclusion": "Generated drift and byte-identical host mirrors are checked, vendoring preserves a manifest, and the project gate verifies built and freshly installed artifacts. Two independently staged archives must be byte-identical, and the extracted package now proves combined-host install, collision, upgrade, check, and conservative removal through its public CLIs. Adopter and independent-Linux certification remain release-gate debt.",
-      "evidence": ["tools/build_skill_mirror.py", "tools/test_build_skill_mirror.py", "tools/test_release.py", "roadmap/from-3.2-to-4.0/README.md"]
+      "conclusion": "Generated drift and byte-identical host mirrors are checked, vendoring preserves a manifest, and the project gate verifies built and freshly installed artifacts. Two independently staged archives must be byte-identical, the extracted package proves both-host lifecycle behavior through public CLIs, and archive construction refuses any missing or floating Python verifier dependency. Adopter and independent-Linux certification remain release-gate debt.",
+      "evidence": ["requirements.txt", "tools/build_skill_mirror.py", "tools/test_build_skill_mirror.py", "tools/test_release.py", "roadmap/from-3.2-to-4.0/README.md"]
     },
     {
       "id": "test_oracles",
@@ -183,6 +183,17 @@
       "evidence": "tools/test_mutation_gate.py::test_cosmic_ray_rejects_a_suite_that_only_executes_the_core",
       "owner": "mutation_gate_maintainer",
       "review_trigger": "Review again whenever Cosmic Ray's command parser, baseline semantics, work-result schema, survival calculation, or Windows process behavior changes."
+    },
+    {
+      "id": "incomplete_adopter_dependency_manifest",
+      "category": "supply_chain",
+      "severity": "critical",
+      "statement": "The delivered requirements file carried only YAML and JSON-schema support even though the canonical adopter gate invokes Ruff, mypy, pyright, import-linter, three pytest controls, build, mutation, and optionally Sphinx. A fresh package could therefore be structurally installed while most required verification was unavailable.",
+      "disposition": "resolved",
+      "resolution": "Ship exact pins for every Python gate branch, retain Doxygen as an explicit native prerequisite, make archive construction reject absent or non-exact pins, choose the Sphinx 8.2 line compatible with the Python 3.11 floor, and execute a real non-empty Sphinx build in the maintainer environment.",
+      "evidence": "tools/test_release.py::test_a_floating_or_missing_gate_dependency_is_refused",
+      "owner": "release_dependency_maintainer",
+      "review_trigger": "Review again whenever a gate adapter, supported documentation engine, Python floor, distribution name, or verifier version changes."
     },
     {
       "id": "release_gate_debt",

@@ -17,7 +17,7 @@ able to see that something arrived.
 The eleven-step gate runs first, from `tools/gate.py`: an archive is never cut
 from a tree that fails it. Until v1.1.0 nothing here checked that, so a release
 could be, and was, buildable from a tree with stale generated artifacts and a
-failing suite. Three more gates then stand between the staged tree and the zip,
+failing suite. Four more gates then stand between the staged tree and the zip,
 because a defective release ships silently to every adopter and cannot be
 recalled:
 
@@ -28,7 +28,9 @@ recalled:
    in this repository's own is about this repository, several naming absolute
    paths on the machine that wrote them. A release carrying them would hand each
    adopter another project's notes as if they were rules.
-3. **Leak scan.** Every shipped text file is read and matched against absolute
+3. **Dependency closure.** Every Python distribution the canonical project gate
+   can require has an exact pin in the shipped requirements file.
+4. **Leak scan.** Every shipped text file is read and matched against absolute
    user paths, the building account's own identifiers, and credential shapes. A
    blocking match fails the build; a reviewable match is printed and counted.
 """
@@ -84,6 +86,26 @@ REQUIRED_MEMBERS: Final[tuple[str, ...]] = (
     ".agent/requirements.txt",
     "INSTALL-DISCIPLINE.md",
 )
+
+## Python distributions needed by the vendored tools and every supported gate branch.
+## Doxygen is checked separately as a native executable and cannot appear here.
+REQUIRED_PYTHON_DISTRIBUTIONS: Final[frozenset[str]] = frozenset({
+    "build",
+    "cosmic-ray",
+    "import-linter",
+    "jsonschema",
+    "mypy",
+    "pyright",
+    "pytest",
+    "pytest-randomly",
+    "pytest-socket",
+    "pytest-timeout",
+    "pyyaml",
+    "ruff",
+    "sphinx",
+})
+## PEP 503 normalization for names in the deliberately simple exact-pin manifest.
+_DISTRIBUTION_PUNCTUATION: Final = re.compile(r"[-_.]+")
 
 ## Directories deleted from the staged tree wholesale.
 PRUNED_DIRS: Final[frozenset[str]] = frozenset({
@@ -401,6 +423,57 @@ def ledger_problems(agent_dir: Path) -> list[str]:
     return problems
 
 
+def requirement_problems(path: Path) -> list[str]:
+    """Find absent, duplicate, or non-exact Python verifier requirements.
+
+    The adopter manifest intentionally accepts only plain ``name==version`` lines.
+    Environment markers and ranges could select different verifier bytes on two
+    release platforms while both claimed to follow the same archive.
+
+    @param path shipped requirements manifest
+    @return stable diagnostics; empty only for complete exact pins
+    """
+    if not path.is_file():
+        return [f"required dependency manifest is missing: {path}"]
+    pins: dict[str, str] = {}
+    problems: list[str] = []
+    for number, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        name, separator, version = line.partition("==")
+        normalized = _DISTRIBUTION_PUNCTUATION.sub("-", name.strip()).lower()
+        if not separator or not normalized or not version.strip() or ";" in version:
+            problems.append(f"requirements.txt:{number}: expected one exact name==version pin")
+            continue
+        if normalized in pins:
+            problems.append(f"requirements.txt:{number}: duplicate pin for {normalized}")
+            continue
+        pins[normalized] = version.strip()
+    problems.extend(
+        f"requirements.txt: missing required distribution {missing}"
+        for missing in sorted(REQUIRED_PYTHON_DISTRIBUTIONS - pins.keys())
+    )
+    return problems
+
+
+def verify_requirements(agent_dir: Path) -> None:
+    """Refuse a staged package whose adopter verifier set is incomplete.
+
+    @param agent_dir staged `.agent` bundle
+    @throws RuntimeError when the manifest is absent, floating, or incomplete
+    """
+    problems = requirement_problems(agent_dir / "requirements.txt")
+    if problems:
+        raise RuntimeError(
+            "the adopter dependency manifest is incomplete:\n  " + "\n  ".join(problems)
+        )
+    print(
+        "adopter dependency manifest closes "
+        f"{len(REQUIRED_PYTHON_DISTRIBUTIONS)} required Python distribution(s)"
+    )
+
+
 def members_of(root: Path) -> list[str]:
     """Every file in a staged tree, named as it will be in the archive.
 
@@ -579,6 +652,7 @@ def build(source: Path, destination: Path, staging: Path) -> tuple[int, list[Fin
     absent = [name for name in REQUIRED_MEMBERS if name not in members]
     if absent:
         raise RuntimeError("required member(s) missing: " + ", ".join(absent))
+    verify_requirements(staging / ".agent")
 
     for label, value, reason in unusable_identifiers(*build_identity()):
         print(f"  leak scan dropped the {label} ({value!r}): {reason}")
@@ -601,8 +675,9 @@ def build(source: Path, destination: Path, staging: Path) -> tuple[int, list[Fin
 def run_gate(source: Path) -> list[str]:
     """Run the seven-step gate and report which steps refused.
 
-    Until v1.1.0 nothing here checked it. The three gates in this module -- prune,
-    empty ledger, leak scan -- all ask whether the ARCHIVE is well formed, and
+    Until v1.1.0 nothing here checked it. The four gates in this module -- prune,
+    empty ledger, dependency closure, and leak scan -- all ask whether the ARCHIVE
+    is well formed, and
     none of them asks whether the corpus it was cut from is. An archive could be,
     and was, buildable from a tree whose tests failed and whose generated
     artifacts were stale.

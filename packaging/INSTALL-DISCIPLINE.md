@@ -17,6 +17,30 @@
 
 `.agent/` is hidden, which is why this file is not. It exists to be found and then deleted.
 
+Install the exact Python verifier set before running the canonical project gate:
+
+```bash
+python -m pip install -r .agent/requirements.txt
+```
+
+The integrator and updater themselves use only the standard library. A repository that
+declares `doc_engine = "doxygen"` additionally needs the native Doxygen 1.10.0 executable;
+the Sphinx branch is included in the Python manifest.
+
+For an **upgrade**, extract the new archive into a scratch directory rather than over the
+existing checkout, then use the packaged vendor path:
+
+```bash
+python <scratch>/.agent/tools/vendor.py install . --source <scratch>/.agent
+python .agent/tools/integrate.py
+python .agent/tools/integrate.py --check
+```
+
+That replaces only `.agent/discipline/`, `.agent/enforce/`, `.agent/tools/`, `.agent/skills/`,
+and the two upstream root files. It preserves project-owned learning, overrides, the
+integration record, host configuration, and locally edited native skills. Overlay
+extraction cannot provide that conditional ownership guarantee.
+
 ## Announce it
 
 The files are present but nothing announces them: Claude Code and Codex discover the

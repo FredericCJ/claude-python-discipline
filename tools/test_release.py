@@ -20,6 +20,8 @@ from typing import TYPE_CHECKING
 import pytest
 
 import release
+import vendor
+from discipline_core import REPO_ROOT
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -109,8 +111,8 @@ def built_archives(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path
     root = tmp_path_factory.mktemp("release-archives")
     first = root / "first.zip"
     second = root / "second.zip"
-    first_count, _ = release.build(release.REPO_ROOT, first, root / "stage-first")
-    second_count, _ = release.build(release.REPO_ROOT, second, root / "stage-second")
+    first_count, _ = release.build(REPO_ROOT, first, root / "stage-first")
+    second_count, _ = release.build(REPO_ROOT, second, root / "stage-second")
     assert first_count == second_count > 0
     return first, second
 
@@ -122,27 +124,27 @@ def _copy_release_source(destination: Path) -> None:
     """
     destination.mkdir(parents=True)
     ignored = shutil.ignore_patterns(
-        *release.vendor.SKIP_DIRS,
+        *vendor.SKIP_DIRS,
         "build",
         "dist",
         ".git",
     )
-    for name in release.vendor.UPSTREAM:
-        shutil.copytree(release.REPO_ROOT / name, destination / name, ignore=ignored)
-    for name in release.vendor.UPSTREAM_FILES:
-        shutil.copy2(release.REPO_ROOT / name, destination / name)
+    for name in vendor.UPSTREAM:
+        shutil.copytree(REPO_ROOT / name, destination / name, ignore=ignored)
+    for name in vendor.UPSTREAM_FILES:
+        shutil.copy2(REPO_ROOT / name, destination / name)
     learning = destination / "learning"
     learning.mkdir()
-    for name in release.vendor.LEARNING_SEED:
-        shutil.copy2(release.REPO_ROOT / "learning" / name, learning / name)
+    for name in vendor.LEARNING_SEED:
+        shutil.copy2(REPO_ROOT / "learning" / name, learning / name)
     packaging = destination / "packaging"
     packaging.mkdir()
     shutil.copy2(
-        release.REPO_ROOT / "packaging" / "INSTALL-DISCIPLINE.md",
+        REPO_ROOT / "packaging" / "INSTALL-DISCIPLINE.md",
         packaging / "INSTALL-DISCIPLINE.md",
     )
-    notes = f"RELEASE-NOTES-{release.vendor.RELEASE}.md"
-    shutil.copy2(release.REPO_ROOT / notes, destination / notes)
+    notes = f"RELEASE-NOTES-{vendor.RELEASE}.md"
+    shutil.copy2(REPO_ROOT / notes, destination / notes)
 
 
 # ----------------------------------------------------------- archive lifecycle
@@ -166,7 +168,7 @@ def test_two_clean_archive_builds_are_byte_identical(
         assert all(info.date_time == release.ZIP_EPOCH for info in infos)
         manifest = json.loads(archive.read(".agent/MANIFEST.json"))
         canonical = archive.read(".agent/skills/python-discipline/SKILL.md")
-    assert manifest["release"] == release.vendor.RELEASE
+    assert manifest["release"] == vendor.RELEASE
     assert "skills/python-discipline/SKILL.md" in manifest["files"]
     assert canonical.startswith(b"---\nname: python-discipline\n")
 
@@ -519,3 +521,29 @@ def test_a_missing_learning_directory_is_refused(tmp_path: Path) -> None:
     assert release.ledger_problems(tmp_path / ".agent") == [
         "learning/ is missing; the installer did not seed it"
     ]
+
+
+# --------------------------------------------------------- dependency closure
+
+
+def test_the_adopter_manifest_closes_every_python_gate_branch() -> None:
+    """The shipped source manifest exactly pins the declared verifier set."""
+    assert release.requirement_problems(REPO_ROOT / "requirements.txt") == []
+
+
+def test_a_floating_or_missing_gate_dependency_is_refused(tmp_path: Path) -> None:
+    """One range cannot substitute for the absent exact verifier pin.
+
+    @param tmp_path isolated malformed manifest
+    """
+    requirements = tmp_path / "requirements.txt"
+    exact = sorted(release.REQUIRED_PYTHON_DISTRIBUTIONS - {"ruff"})
+    requirements.write_text(
+        "\n".join([*(f"{name}==1" for name in exact), "ruff>=0.16"]) + "\n",
+        encoding="utf-8",
+    )
+
+    problems = release.requirement_problems(requirements)
+
+    assert any("expected one exact name==version pin" in problem for problem in problems)
+    assert "requirements.txt: missing required distribution ruff" in problems

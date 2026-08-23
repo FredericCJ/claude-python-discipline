@@ -448,6 +448,76 @@ def test_doxygen_zero_output_is_not_green(
     assert result.diagnostic_id == "GATE-DOCUMENTATION-004_NO_OUTPUT"
 
 
+def _write_sphinx_project(root: Path) -> None:
+    """Select Sphinx and author the smallest non-vacuous documentation tree.
+
+    @param root configured reference repository
+    """
+    project_file = root / "pyproject.toml"
+    project_file.write_text(
+        project_file.read_text(encoding="utf-8").replace(
+            'doc_engine = "doxygen"',
+            'doc_engine = "sphinx"',
+        ),
+        encoding="utf-8",
+    )
+    documentation = root / "docs"
+    documentation.mkdir(exist_ok=True)
+    (documentation / "conf.py").write_text(
+        '"""Configuration consumed by the Sphinx gate proof."""\n\n'
+        'project = "Reference"\n',
+        encoding="utf-8",
+    )
+    (documentation / "index.rst").write_text(
+        "Reference\n=========\n\nA generated project-gate page.\n",
+        encoding="utf-8",
+    )
+
+
+@pytest.mark.timeout(60)
+def test_real_sphinx_build_is_supported_and_non_empty(tmp_path: Path) -> None:
+    """The packaged Sphinx pin produces HTML through the real adapter.
+
+    @param tmp_path isolated configured reference
+    """
+    root = _configured_tool_project(tmp_path)
+    _write_sphinx_project(root)
+
+    result = project_gate.run(
+        root,
+        steps=(project_gate.DocumentationAdapter(),),
+    ).outcomes[1]
+
+    assert result.status is project_gate.Status.PASS
+    assert result.subjects == 1
+    assert result.tool == "Sphinx 8.2.3"
+
+
+def test_sphinx_zero_output_is_not_green(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A zero exit without generated HTML remains a failed observation.
+
+    @param tmp_path isolated configured reference
+    @param monkeypatch substitutes only the process execution
+    """
+    root = _configured_tool_project(tmp_path)
+    _write_sphinx_project(root)
+    monkeypatch.setattr(
+        project_gate,
+        "_execute",
+        lambda _command, _root: project_gate.CommandExecution(0, "", 1),
+    )
+
+    result = project_gate.run(
+        root,
+        steps=(project_gate.DocumentationAdapter(),),
+    ).outcomes[1]
+
+    assert result.status is project_gate.Status.FAIL
+    assert result.diagnostic_id == "GATE-DOCUMENTATION-004_NO_OUTPUT"
+
+
 def _write_artifacts(output: Path, name: str = "refpkg", version: str = "1.0.0") -> None:
     """Create minimal wheel and sdist archives carrying shared core metadata.
 
