@@ -19,15 +19,16 @@ from typing import TYPE_CHECKING
 
 from . import Finding, TextCheck, ledger, main
 
+# Import annotation-only contracts without runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
 
-## The two scopes, and the only two. `project` stays here; `discipline` is
-## harvested upstream as a proposed change to the corpus.
+## Unordered learning-scope set whose each element decides local retention or upstream
+## harvesting: ``project`` stays here and ``discipline`` proposes a corpus change.
 SCOPES = frozenset({"project", "discipline"})
 
-## Fields without which an entry cannot be acted on or retrieved.
+## Required payload-field elements in stable diagnostic order for actionable retrieval.
 REQUIRED = ("claim", "action", "kind")
 
 
@@ -36,9 +37,9 @@ class LearningScopeCheck(TextCheck):
 
     ## Invoked as `python -m checks.learning_scope`.
     name = "learning_scope"
-    ## The law/LEARN rule this check decides.
+    ## Rule-id elements in deterministic reporting order decided by this check.
     rules = ("LEARN-004",)
-    ## The ledger is JSONL.
+    ## File-suffix elements in deterministic matching order for JSONL ledgers.
     suffixes = (".jsonl",)
 
     def visit_text(self, text: str, path: Path) -> Iterator[Finding]:
@@ -46,19 +47,29 @@ class LearningScopeCheck(TextCheck):
 
         @param text the ledger's contents
         @param path the file it was read from
-        @return one finding per defective entry
+        @return finding elements in event then predicate order, one per defective property
         """
+        # Ignore JSONL files that do not declare the learning-ledger schema.
         if not ledger.is_ledger(path):
+            # Stop iteration without presenting unrelated JSONL as conforming ledger data.
             return
 
+        # Decode event elements in append order; parsing diagnostics are owned by ``ledger``.
         events, _ = ledger.read(text)
+        # Inspect each event-record element in append order.
         for event in events:
+            # Only original learn events own scope and actionable payload fields.
             if event.kind != "learn":
+                # Advance without applying declaration obligations to transition events.
                 continue
+            # Normalize the learning identity for standalone diagnostics.
             identifier = str(event.payload.get("id", "?"))
+            # Select the authored scope value without coercing absence.
             scope = event.payload.get("scope")
 
+            # Missing scope prevents routing the learning to project or discipline ownership.
             if scope is None:
+                # Yield the missing-scope finding at the exact learn-event line.
                 yield Finding(
                     "LEARN-004", path, event.line,
                     f"{identifier} states no scope",
@@ -66,7 +77,9 @@ class LearningScopeCheck(TextCheck):
                     "the discipline is wrong is invisible to the harvest, so every "
                     "other adopter rediscovers it.",
                 )
+            # A third scope value belongs to neither supported lifecycle.
             elif scope not in SCOPES:
+                # Yield the unknown-scope finding with accepted values sorted for stability.
                 yield Finding(
                     "LEARN-004", path, event.line,
                     f"{identifier} is scoped {scope!r}, which is not one of "
@@ -75,8 +88,11 @@ class LearningScopeCheck(TextCheck):
                     "means it goes nowhere.",
                 )
 
+            # Preserve required-field order while collecting each absent or empty payload key.
             missing = [f for f in REQUIRED if not event.payload.get(f)]
+            # Any missing actionable field makes retrieval return an unusable observation.
             if missing:
+                # Yield one aggregate payload finding in stable required-field order.
                 yield Finding(
                     "LEARN-004", path, event.line,
                     f"{identifier} is missing {', '.join(missing)}",
@@ -85,5 +101,7 @@ class LearningScopeCheck(TextCheck):
                 )
 
 
+# Permit direct module execution through the common checker command-line adapter.
 if __name__ == "__main__":
+    # Translate the checker result into the process exit status.
     raise SystemExit(main(LearningScopeCheck()))

@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING
 
 from . import Finding, ModuleCheck, main
 
+# Import annotation-only contracts without runtime dependencies.
 if TYPE_CHECKING:
     import ast
     from collections.abc import Iterator
@@ -51,7 +52,7 @@ class DeviationRecordedCheck(ModuleCheck):
 
     ## Invoked as `python -m checks.deviation_recorded`.
     name = "deviation_recorded"
-    ## The law/FLOW rules this check decides.
+    ## Rule-id elements in deterministic reporting order decided by this check.
     ## Narrowed to what this check can actually REPORT. FLOW-012
     ## were named here and never emitted, so they counted as `mechanized` while
     ## being decided by nothing -- and this module's own docstring said so in
@@ -68,16 +69,27 @@ class DeviationRecordedCheck(ModuleCheck):
         @param _tree the module's syntax tree, unused: comments are not in it
         @param path the file it was parsed from
         @param _layer the architectural layer, unused -- the rule binds everywhere
-        @return one finding per bare suppression
+        @return finding elements in source-line order, one per bare suppression
+
+        @par Effects
+        Reads the source file at ``path`` once because suppression comments are absent from ASTs.
         """
+        # Examine each decoded source-line element in increasing one-based order.
         for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(),
                                       start=1):
+            # Search the current line for one admitted suppression-comment form.
             found = _SUPPRESSION.search(line)
+            # A line without a suppression has no deviation-record obligation.
             if found is None:
+                # Advance to the next source line.
                 continue
+            # Normalize surrounding punctuation away from the authored reason prose.
             reason = found.group("reason").strip(" -:#")
+            # Sufficient prose meets the deliberately shallow mechanical predicate.
             if len(reason) >= MIN_REASON:
+                # Advance without claiming the reason is semantically true.
                 continue
+            # Yield the bare-suppression finding at its exact source line.
             yield Finding(
                 "FLOW-008", path, number,
                 f"`{found.group('kind').strip()}` suppression states no reason",
@@ -87,5 +99,7 @@ class DeviationRecordedCheck(ModuleCheck):
             )
 
 
+# Permit direct module execution through the common checker command-line adapter.
 if __name__ == "__main__":
+    # Translate the checker result into the process exit status.
     raise SystemExit(main(DeviationRecordedCheck()))

@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING
 
 from . import Finding, ModuleCheck, is_test_path, main
 
+# Import annotation-only contracts without runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
@@ -36,7 +37,7 @@ class CompoundGateCheck(ModuleCheck):
 
     ## Invoked as `python -m checks.compound_gate`.
     name = "compound_gate"
-    ## The law/TEST rule this check decides.
+    ## Rule-id elements in deterministic reporting order decided by this check.
     rules = ("TEST-014",)
 
     def visit_module(self, tree: ast.Module, path: Path, _layer: str) -> Iterator[Finding]:
@@ -49,17 +50,26 @@ class CompoundGateCheck(ModuleCheck):
         @param tree the module's syntax tree
         @param path the file it was parsed from
         @param _layer the architectural layer, unused -- the rule binds everywhere
-        @return one finding per condition over the threshold
+        @return finding elements in AST walk order, one per condition over the threshold
         """
+        # Test control flow is fixture machinery rather than a production decision under test.
         if is_test_path(path):
+            # Stop iteration because assertion-shape tooling owns test conditions.
             return
 
+        # Inspect each syntax-node element in deterministic AST walk order.
         for node in ast.walk(tree):
+            # Only conditional expressions and branch/loop tests define decisions here.
             if not isinstance(node, (ast.If, ast.While, ast.IfExp)):
+                # Advance without counting operands in unrelated expressions.
                 continue
+            # Recursively count boolean leaves joined by this decision.
             operands = _operands(node.test)
+            # Decisions at or below the explicit threshold need no forced truth table.
             if operands <= MAX_OPERANDS:
+                # Advance to the next syntax node.
                 continue
+            # Yield the compound-decision finding with its exponential combination count.
             yield Finding(
                 "TEST-014", path, node.lineno,
                 f"the decision joins {operands} operands, giving "
@@ -79,12 +89,19 @@ def _operands(test: ast.expr) -> int:
     @param test the condition expression
     @return the number of leaves, or 1 for a condition that joins nothing
     """
+    # A boolean operator joins the leaves contributed by each value element in source order.
     if isinstance(test, ast.BoolOp):
+        # Sum recursive leaf counts across the ordered operand sequence.
         return sum(_operands(value) for value in test.values)
+    # Logical negation changes one operand's truth but does not add a new operand.
     if isinstance(test, ast.UnaryOp) and isinstance(test.op, ast.Not):
+        # Delegate the leaf count to the negated expression.
         return _operands(test.operand)
+    # Every other condition expression contributes one indivisible operand.
     return 1
 
 
+# Permit direct module execution through the common checker command-line adapter.
 if __name__ == "__main__":
+    # Translate the checker result into the process exit status.
     raise SystemExit(main(CompoundGateCheck()))
