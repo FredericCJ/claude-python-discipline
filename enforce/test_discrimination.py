@@ -39,7 +39,9 @@ def test_every_entry_names_one_rule() -> None:
     The same reason `broken_copy` breaks one thing at a time: with two changes in
     flight, a finding attributes to neither.
     """
+    # Inspect mutation records in declaration order for one resolvable rule identity.
     for mutation in discrimination.MUTATIONS:
+        # Reject both an absent identifier and whitespace suggesting multiple identifiers.
         assert mutation.rule_id, f"{mutation.summary!r} names no rule"
         assert " " not in mutation.rule_id.strip(), (
             f"{mutation.rule_id!r} looks like more than one id"
@@ -53,7 +55,9 @@ def test_every_entry_states_why_this_mutation() -> None:
     and a rubber stamp raises the number while leaving the mechanism unwatched --
     which is the exact condition the matrix was built to end.
     """
+    # Inspect each declared witness for a minimally substantive provenance statement.
     for mutation in discrimination.MUTATIONS:
+        # Reject a source too short to identify a finding or exercised rule clause.
         assert len(mutation.source) >= MIN_SOURCE, (
             f"{mutation.rule_id} carries {len(mutation.source)} characters of "
             f"source. Name the finding it came from, or the clause it exercises."
@@ -67,15 +71,19 @@ def test_mutation_shapes_differ() -> None:
     rule. This does not prove the mutations are *good*; it refuses the one
     degenerate case a count cannot see.
     """
+    # Count mutation-shape tuple keys against occurrence values without ordering semantics.
     shapes = Counter(
         (bool(m.drop), bool(m.write), bool(m.replace), m.base)
         for m in discrimination.MUTATIONS
     )
+    # Require more than one structural way of damaging the conformant control.
     assert len(shapes) > 1, (
         f"every mutation has the same shape {next(iter(shapes))}; the matrix is "
         f"testing one idea against many rules"
     )
+    # Extract the most frequent shape and its count from descending-frequency order.
     commonest, count = shapes.most_common(1)[0]
+    # Reject a table whose entire census still collapses to that one shape.
     assert count < len(discrimination.MUTATIONS), (
         f"all {count} entries share the shape {commonest}"
     )
@@ -86,11 +94,15 @@ def test_every_rule_named_exists() -> None:
 
     @throws pytest.skip.Exception when the generated index has not been built
     """
+    # Decode the generated ordered rule records without importing the discipline corpus.
     rules = pytest.importorskip("json").loads(
         (discrimination_root() / "rules.json").read_text(encoding="utf-8")
     )
+    # Collapse generated rule-id string elements to an unordered membership set.
     known = {rule["id"] for rule in rules["rules"]}
+    # Sort mutation rule-id elements missing from the generated corpus for diagnosis.
     unknown = sorted(discrimination.covered() - known)
+    # Reject every witness that could never resolve to a governing normative rule.
     assert not unknown, f"mutations name rules the corpus does not carry: {unknown}"
 
 
@@ -100,8 +112,11 @@ def test_no_rule_is_declared_twice_without_reason() -> None:
     More than one is often right -- a rule with two clauses deserves two -- but
     two entries with the same summary are one entry written twice.
     """
+    # Inspect each rule key against its mutation-record values in declaration order.
     for rule_id, entries in discrimination.by_rule().items():
+        # Preserve summary-string elements in declaration order for duplicate comparison.
         summaries = [m.summary for m in entries]
+        # Reject repeated summaries that describe one witness entered more than once.
         assert len(summaries) == len(set(summaries)), (
             f"{rule_id} declares the same mutation twice"
         )
@@ -109,7 +124,9 @@ def test_no_rule_is_declared_twice_without_reason() -> None:
 
 def test_the_base_is_one_of_the_known_kinds() -> None:
     """An unknown base would be built by nothing and silently provoke nothing."""
+    # Validate every mutation record against the closed supported base-kind set.
     for mutation in discrimination.MUTATIONS:
+        # Reject a base identity for which the runner has no construction strategy.
         assert mutation.base in discrimination.BASES, (
             f"{mutation.rule_id} names base {mutation.base!r}, which the runner "
             f"cannot build"
@@ -118,13 +135,18 @@ def test_the_base_is_one_of_the_known_kinds() -> None:
 
 def test_every_entry_chooses_one_observation_mode() -> None:
     """A rejection cannot be credited simultaneously through different oracles."""
+    # Inspect each witness independently for mutually exclusive observation mechanisms.
     for mutation in discrimination.MUTATIONS:
+        # Count enabled observation-mode values across node, proof, and external tool.
         modes = sum(bool(value) for value in (mutation.node, mutation.proof, mutation.tool))
+        # Reject ambiguous observation and incomplete external-tool diagnostic pairs.
         assert modes <= 1, f"{mutation.rule_id} declares {modes} observation modes"
         assert bool(mutation.tool) is bool(mutation.diagnostic), (
             f"{mutation.rule_id} must pair an external tool with its exact diagnostic"
         )
+        # Keep proof-owned fixture damage out of the central mutation declaration.
         if mutation.proof:
+            # Reject every duplicate damage form when a companion proof owns the input.
             assert not mutation.drop, f"{mutation.rule_id} proof also drops fixture paths"
             assert not mutation.write, f"{mutation.rule_id} proof also writes fixture paths"
             assert not mutation.replace, (
@@ -134,21 +156,28 @@ def test_every_entry_chooses_one_observation_mode() -> None:
 
 def test_multimechanism_rules_name_the_observed_strategy() -> None:
     """One verifier cannot lend rejection credit to another verifier."""
+    # Decode rule-keyed evidence values while preserving their authored strategy order.
     evidence = json.loads(
         (discrimination_root() / "meta" / "evidence.json").read_text(encoding="utf-8")
     )["rules"]
+    # Join every mutation witness to the automated strategies declared for its rule.
     for mutation in discrimination.MUTATIONS:
+        # Retain automated mechanism-name elements in evidence declaration order.
         strategies = [
             strategy["mechanism"]
             for strategy in evidence[mutation.rule_id]["strategies"]
             if strategy["kind"] != "structured-review"
         ]
+        # Require explicit attribution whenever more than one automated verifier exists.
         if len(strategies) > 1:
+            # Reject an ambiguous witness that cannot identify the mechanism observed.
             assert mutation.mechanism, (
                 f"{mutation.rule_id} has {len(strategies)} automated strategies; "
                 "the mutation must name the one it observed"
             )
+        # Validate any explicit attribution against the rule's automated strategy set.
         if mutation.mechanism:
+            # Reject rejection credit assigned to a mechanism absent from evidence.
             assert mutation.mechanism in strategies, (
                 f"{mutation.rule_id} attributes rejection to undeclared "
                 f"mechanism {mutation.mechanism!r}"
@@ -160,4 +189,5 @@ def discrimination_root() -> Path:
 
     @return the `discipline/` directory holding `rules.json`
     """
+    # Resolve the generated-corpus directory from this repository-owned test module.
     return Path(__file__).resolve().parent.parent / "discipline"

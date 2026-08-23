@@ -31,9 +31,8 @@ from decides import decides
 ## The repository root, three levels up from this file.
 REPO_ROOT: Final = Path(__file__).resolve().parent.parent.parent
 
-## Each generator against representative artefacts it owns. The `--check` form writes
-## nothing and exits non-zero when what is on disk differs from what it would
-## produce, which is `DEP-010` made runnable.
+## Generator-name and owned-artifact-path tuple elements in canonical gate order.
+## Each `--check` form writes nothing and exits non-zero on generated drift.
 GENERATORS: Final[tuple[tuple[str, tuple[str, ...]], ...]] = (
     ("source_extraction", ("tools/extraction.yaml",)),
     (
@@ -54,7 +53,8 @@ GENERATORS: Final[tuple[tuple[str, tuple[str, ...]], ...]] = (
     ),
 )
 
-## How the three builders are invoked.
+## Generator-name keys mapped to ordered command-line argument values. Mapping
+## insertion order follows `GENERATORS`, although lookup rather than order is used.
 COMMANDS: Final[dict[str, tuple[str, ...]]] = {
     "source_extraction": (sys.executable, "tools/extract_sources.py"),
     "provenance": (sys.executable, "tools/build_provenance.py"),
@@ -67,9 +67,13 @@ COMMANDS: Final[dict[str, tuple[str, ...]]] = {
 def run(command: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
     """Run one builder from the repository root.
 
-    @param command the argv to run
+    @param command ordered command-line argument elements to run
     @return the finished process
+
+    @par Effects
+    Starts one bounded child process and captures its text output without writing here.
     """
+    # Execute the exact builder argv under the repository root without a shell.
     return subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv from GENERATORS, no shell
         command,
         cwd=REPO_ROOT,
@@ -82,7 +86,7 @@ def run(command: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
     )
 
 
-@pytest.mark.parametrize("name", [n for n, _ in GENERATORS])
+@pytest.mark.parametrize("name", tuple(dict(GENERATORS)))
 @pytest.mark.timeout(360)
 @decides("DEP-009", "DEP-010", "DEP-011")
 def test_regeneration_stable(name: str) -> None:
@@ -95,23 +99,27 @@ def test_regeneration_stable(name: str) -> None:
 
     @param name the generator under test
     """
+    # Invoke the selected generator's non-writing comparison boundary.
     finished = run((*COMMANDS[name], "--check"))
+    # Require exact agreement between committed bytes and freshly derived output.
     assert finished.returncode == 0, (
         f"the {name} artefacts differ from what the builder produces:\n"
         f"{finished.stdout[-600:]}{finished.stderr[-400:]}"
     )
 
 
-@pytest.mark.parametrize(("name", "artefacts"), GENERATORS, ids=[n for n, _ in GENERATORS])
+@pytest.mark.parametrize(("name", "artefacts"), GENERATORS, ids=tuple(dict(GENERATORS)))
 def test_generated_output_is_committed(name: str, artefacts: tuple[str, ...]) -> None:
     """DEP-011: the artefact is in the tree, not produced on demand.
 
     Without this, `--check` would pass against a file nobody has ever seen.
 
     @param name the generator under test
-    @param artefacts the files it owns
+    @param artefacts owned artifact-path string elements in declared order
     """
+    # Retain missing artifact-path string elements in their declared generator order.
     missing = [a for a in artefacts if not (REPO_ROOT / a).is_file()]
+    # Reject every generator whose expected durable product is absent.
     assert not missing, f"{name} owns uncommitted artefact(s): {', '.join(missing)}"
 
 
@@ -126,15 +134,25 @@ def test_the_check_form_can_fail() -> None:
     The damage is done in place and undone in a `finally`, because `--check`
     compares the builder's output against the tree it is pointed at; a copy in a
     temporary directory would not be the file the builder reads.
+
+    @par Effects
+    Temporarily appends drift to the committed index and restores its original bytes
+    after the real generator comparison, including when the assertion fails.
     """
+    # Capture the exact target and original bytes before introducing deliberate drift.
     target = REPO_ROOT / "discipline" / "INDEX.md"
     original = target.read_bytes()
+    # Guarantee restoration around the mutation, generator process, and oracle.
     try:
+        # Persist a deterministic byte difference before invoking the check form.
         target.write_bytes(original + b"\ndrift\n")
         finished = run((*COMMANDS["index"], "--check"))
+        # Require the real index builder to reject the altered committed product.
         assert finished.returncode != 0, (
             "the staleness check passed against a file that had been changed; "
             "every drift guarantee downstream of it is decorative"
         )
+    # Restore repository state regardless of process or assertion outcome.
     finally:
+        # Replace the temporary drift with the byte-identical captured index.
         target.write_bytes(original)

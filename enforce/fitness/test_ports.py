@@ -17,8 +17,11 @@ from fixtures import reference_root
 @decides("ARCH-024", "ARCH-025", "TEST-020")
 def test_reference_contract_conformance() -> None:
     """The reference registry is complete without prescribing a physical triad."""
+    # Construct the checker against the validated reference project declaration.
     root = reference_root()
     check = ContractConformanceCheck()
+    # Attach the declaration before running the checker over its governed source root.
     check.declaration = project.parse(root / "pyproject.toml")
     findings = check.run([root / "src"])
+    # Require the complete port and adapter evidence join to remain conformant.
     assert findings == [], "\n".join(finding.render(root) for finding in findings)
