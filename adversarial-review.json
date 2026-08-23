@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "review_id": "v4_security_slice_adversarial_acceptance",
-  "reviewed_commit": "2af179077985bfcd631ea9a83797760058e0e7b7",
+  "reviewed_commit": "187246a5328bb802dd11504fe3b4c13fb459161d",
   "scope": {
     "algorithm": "sha256",
-    "digest": "sha256:30abff618585685460f8a1edad8221a648997371cdf2d999b81f6f0045974822",
+    "digest": "sha256:49717d4c0eeeb387822cb8a21bb903bb7fb53b408420ca24ffcd889cddce5fa8",
     "file_count": 283,
     "categories": [
       "project_declaration",
@@ -177,7 +177,7 @@
       "id": "release_gate_debt",
       "category": "test_oracles",
       "severity": "high",
-      "statement": "The repository records zero unbuilt mechanisms but still has 32 exact rule-mechanism claims without witnessed rejection, so this development snapshot cannot support a v4.0 release verdict.",
+      "statement": "The repository records zero unbuilt mechanisms but still has 20 exact rule-mechanism claims without witnessed rejection, so this development snapshot cannot support a v4.0 release verdict.",
       "disposition": "accepted_risk",
       "resolution": "Acceptance is limited to the current gate-rebuild workstream as a base for continued implementation; the roadmap makes zero unbuilt mechanisms and zero rejection gap mandatory before release.",
       "evidence": "roadmap/from-3.2-to-4.0/README.md",

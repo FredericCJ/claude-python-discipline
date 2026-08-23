@@ -80,6 +80,15 @@ def written(tmp_path: Path, name: str, body: str) -> Path:
     return path
 
 
+def test_a_rendered_documentation_tree_fires(tmp_path: Path) -> None:
+    """Committed documentation output is rejected by its build-tree path.
+
+    @param tmp_path the fixture directory
+    """
+    path = written(tmp_path, "site/index.html", "<html><body>built</body></html>")
+    assert "DOC-012" in found(GeneratedProvenanceCheck(), path)
+
+
 # ------------------------------------------------------------------ LEARN-005
 
 

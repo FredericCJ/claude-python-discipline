@@ -1,7 +1,7 @@
 {
   "generated_by": "tools/discrimination_gate.py --update-baseline",
   "note": "D -- rules with at least one mutation observed provoking them. May rise, never fall. The entries are in enforce/discrimination.py and are meant to be read; the count alone says nothing about whether they are good.",
-  "count": 139,
+  "count": 150,
   "rules": [
     "ALLOC-001",
     "ALLOC-002",
@@ -11,6 +11,7 @@
     "API-001",
     "API-002",
     "API-003",
+    "API-004",
     "API-005",
     "API-006",
     "API-007",
@@ -22,6 +23,7 @@
     "ARCH-003",
     "ARCH-004",
     "ARCH-005",
+    "ARCH-006",
     "ARCH-011",
     "ARCH-012",
     "ARCH-013",
@@ -43,8 +45,10 @@
     "DIAG-002",
     "DIAG-003",
     "DIAG-005",
+    "DIAG-006",
     "DIAG-007",
     "DIAG-008",
+    "DIAG-009",
     "DIAG-010",
     "DIAG-011",
     "DIAG-012",
@@ -54,10 +58,14 @@
     "DOC-002",
     "DOC-003",
     "DOC-004",
+    "DOC-005",
     "DOC-006",
     "DOC-007",
     "DOC-008",
     "DOC-009",
+    "DOC-010",
+    "DOC-011",
+    "DOC-012",
     "DOC-014",
     "EFCT-001",
     "EFCT-002",
@@ -68,11 +76,14 @@
     "EFCT-008",
     "EFCT-009",
     "EFCT-010",
+    "EFCT-012",
     "EFCT-013",
     "EFCT-014",
     "EFCT-015",
     "ERR-001",
+    "ERR-002",
     "ERR-004",
+    "ERR-005",
     "ERR-006",
     "ERR-008",
     "ERR-009",
@@ -143,8 +154,8 @@
     "TYPE-010",
     "TYPE-013"
   ],
-  "gap": 28,
-  "strategy_count": 147,
+  "gap": 17,
+  "strategy_count": 159,
   "strategies": [
     {
       "rule": "ALLOC-001",
@@ -177,6 +188,10 @@
     {
       "rule": "API-003",
       "mechanism": "check:single_wiring_point"
+    },
+    {
+      "rule": "API-004",
+      "mechanism": "auto:import-linter"
     },
     {
       "rule": "API-005",
@@ -229,6 +244,10 @@
     {
       "rule": "ARCH-005",
       "mechanism": "check:explicit_effects"
+    },
+    {
+      "rule": "ARCH-006",
+      "mechanism": "auto:mypy"
     },
     {
       "rule": "ARCH-011",
@@ -315,6 +334,10 @@
       "mechanism": "check:raise_from"
     },
     {
+      "rule": "DIAG-006",
+      "mechanism": "check:raise_from"
+    },
+    {
       "rule": "DIAG-007",
       "mechanism": "check:raise_from"
     },
@@ -325,6 +348,10 @@
     {
       "rule": "DIAG-008",
       "mechanism": "check:raise_from"
+    },
+    {
+      "rule": "DIAG-009",
+      "mechanism": "check:assert_usage"
     },
     {
       "rule": "DIAG-010",
@@ -371,6 +398,10 @@
       "mechanism": "check:doc_style"
     },
     {
+      "rule": "DOC-005",
+      "mechanism": "auto:doxygen"
+    },
+    {
       "rule": "DOC-006",
       "mechanism": "auto:ruff:D205"
     },
@@ -385,6 +416,18 @@
     {
       "rule": "DOC-009",
       "mechanism": "check:doc_style"
+    },
+    {
+      "rule": "DOC-010",
+      "mechanism": "auto:doxygen"
+    },
+    {
+      "rule": "DOC-011",
+      "mechanism": "auto:doxygen"
+    },
+    {
+      "rule": "DOC-012",
+      "mechanism": "check:generated_provenance"
     },
     {
       "rule": "DOC-014",
@@ -427,6 +470,10 @@
       "mechanism": "check:plan_apply"
     },
     {
+      "rule": "EFCT-012",
+      "mechanism": "auto:import-linter"
+    },
+    {
       "rule": "EFCT-013",
       "mechanism": "fitness:test_concurrency_documented"
     },
@@ -443,8 +490,20 @@
       "mechanism": "check:error_channels"
     },
     {
+      "rule": "ERR-002",
+      "mechanism": "auto:mypy"
+    },
+    {
+      "rule": "ERR-002",
+      "mechanism": "auto:pyright"
+    },
+    {
       "rule": "ERR-004",
       "mechanism": "check:error_channels"
+    },
+    {
+      "rule": "ERR-005",
+      "mechanism": "auto:mypy"
     },
     {
       "rule": "ERR-006",
@@ -735,6 +794,6 @@
       "mechanism": "auto:mypy"
     }
   ],
-  "strategy_gap": 32,
-  "why": "Ratchet exact rule-mechanism witnesses and add the nine missing observers for previously multi-mechanism rules."
+  "strategy_gap": 20,
+  "why": "Witness storage ownership, strict result typing, local diagnostics, and real Doxygen rejection strategies."
 }

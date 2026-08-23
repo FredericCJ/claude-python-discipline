@@ -2546,6 +2546,204 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             ),
         ),),
     ),
+    # ------------------------------------------ remaining external graph/types
+    Mutation(
+        rule_id="API-004",
+        summary="domain code imports the private storage representation",
+        source=(
+            "The EFCT-012 ownership contract is the mechanism API-004 names; an "
+            "unsanctioned reader makes the persistent representation public in fact."
+        ),
+        mechanism="auto:import-linter",
+        tool="import-linter",
+        diagnostic="EFCT-012 storage has one owner",
+        write=((
+            "src/refpkg/domain/storage_breach.py",
+            (
+                '"""An unsanctioned storage reader."""\n\n'
+                "from refpkg.adapters.files import raw\n\n"
+                "REPRESENTATION = raw\n"
+            ),
+        ),),
+    ),
+    Mutation(
+        rule_id="EFCT-012",
+        summary="application code imports the private storage representation",
+        source=(
+            "EFCT-012's configured import contract forbids every non-owning path "
+            "from reaching the raw representation directly; this seeds such a writer."
+        ),
+        mechanism="auto:import-linter",
+        tool="import-linter",
+        diagnostic="EFCT-012 storage has one owner",
+        write=((
+            "src/refpkg/app/storage_breach.py",
+            (
+                '"""An unsanctioned storage writer."""\n\n'
+                "from refpkg.adapters.files import raw\n\n"
+                "REPRESENTATION = raw\n"
+            ),
+        ),),
+    ),
+    Mutation(
+        rule_id="ARCH-006",
+        summary="a domain result function returns None outside its declared union",
+        source=(
+            "Mypy cannot prove arbitrary totality, but it can reject a path whose "
+            "returned value lies outside the function's explicit result union."
+        ),
+        mechanism="auto:mypy",
+        tool="mypy",
+        diagnostic="[return-value]",
+        replace=((
+            "src/refpkg/domain/plan.py",
+            "Outcome: TypeAlias = Plan | Refusal",
+            (
+                "Outcome: TypeAlias = Plan | Refusal\n\n\n"
+                "def partial(flag: bool) -> Outcome:\n"
+                '    """Return an invalid arm on one path.\n\n'
+                '    @param flag which path to take\n    @return an alleged outcome\n    """\n'
+                "    if flag:\n"
+                '        return Refusal(code="deferred", expected="now", actual="later")\n'
+                "    return None"
+            ),
+        ),),
+    ),
+    Mutation(
+        rule_id="ERR-002",
+        summary="mypy sees a newly added result arm left unhandled",
+        source=(
+            "Adding Deferred at the union definition makes the shell's final "
+            "Never narrowing receive Deferred, which mypy must reject by arg-type."
+        ),
+        mechanism="auto:mypy",
+        tool="mypy",
+        diagnostic="[arg-type]",
+        replace=((
+            "src/refpkg/domain/plan.py",
+            "Outcome: TypeAlias = Plan | Refusal",
+            (
+                "@dataclass(frozen=True, slots=True)\n"
+                "class Deferred:\n"
+                '    """A newly introduced unhandled result arm."""\n\n\n'
+                "Outcome: TypeAlias = Plan | Refusal | Deferred"
+            ),
+        ),),
+    ),
+    Mutation(
+        rule_id="ERR-002",
+        summary="pyright sees a newly added result arm left unhandled",
+        source=(
+            "The same union extension must independently make pyright reject the "
+            "Deferred value passed to the shell's Never-typed narrowing function."
+        ),
+        mechanism="auto:pyright",
+        tool="pyright",
+        diagnostic='cannot be assigned to parameter "outcome" of type "Never"',
+        replace=((
+            "src/refpkg/domain/plan.py",
+            "Outcome: TypeAlias = Plan | Refusal",
+            (
+                "@dataclass(frozen=True, slots=True)\n"
+                "class Deferred:\n"
+                '    """A newly introduced unhandled result arm."""\n\n\n'
+                "Outcome: TypeAlias = Plan | Refusal | Deferred"
+            ),
+        ),),
+    ),
+    Mutation(
+        rule_id="ERR-005",
+        summary="a function returns an error variant absent from its result union",
+        source=(
+            "The declaration-site rule's mechanical predicate is return-type "
+            "membership: mypy rejects a NovelFailure returned as the closed Outcome."
+        ),
+        mechanism="auto:mypy",
+        tool="mypy",
+        diagnostic="[return-value]",
+        replace=((
+            "src/refpkg/domain/plan.py",
+            "Outcome: TypeAlias = Plan | Refusal",
+            (
+                "Outcome: TypeAlias = Plan | Refusal\n\n\n"
+                "@dataclass(frozen=True, slots=True)\n"
+                "class NovelFailure:\n"
+                '    """An error not declared in Outcome."""\n\n\n'
+                "def undeclared() -> Outcome:\n"
+                '    """Return the undeclared arm.\n\n    @return an invalid arm\n    """\n'
+                "    return NovelFailure()"
+            ),
+        ),),
+    ),
+    Mutation(
+        rule_id="DIAG-006",
+        summary="a broad catch is rewrapped only to change its message",
+        source=(
+            "The companion constructs the exact broad single-raise shape and "
+            "asserts DIAG-006 rather than borrowing another raise_from diagnostic."
+        ),
+        mechanism="check:raise_from",
+        proof="enforce/checks/test_checks.py::test_rewrapping_only_to_add_context_fires",
+    ),
+    Mutation(
+        rule_id="DIAG-009",
+        summary="an assertion validates a caller-controlled parameter",
+        source=(
+            "The assertion companion now requires both sides of the prohibition; "
+            "DIAG-009 is observed directly rather than inferred from ERR-012."
+        ),
+        mechanism="check:assert_usage",
+        proof="enforce/checks/test_checks.py::test_assert_on_a_parameter_fires",
+    ),
+    Mutation(
+        rule_id="DOC-012",
+        summary="a rendered HTML page is committed beneath a site build tree",
+        source=(
+            "The generated-provenance companion places a real HTML subject under "
+            "site and asserts DOC-012, the check's exact path predicate."
+        ),
+        mechanism="check:generated_provenance",
+        proof=(
+            "enforce/checks/test_ledger_checks.py::"
+            "test_a_rendered_documentation_tree_fires"
+        ),
+    ),
+    Mutation(
+        rule_id="DOC-005",
+        summary="Doxygen rejects a documented parameter absent from the signature",
+        source=(
+            "Only parsed documentation can relate @param ghost to the Python "
+            "signature; the companion runs real Doxygen and requires that rejection."
+        ),
+        mechanism="auto:doxygen",
+        proof=(
+            "tools/test_doxygen_gate.py::"
+            "test_a_documented_parameter_that_does_not_exist_is_caught"
+        ),
+    ),
+    Mutation(
+        rule_id="DOC-010",
+        summary="a Doxygen documentation warning makes the run fail",
+        source=(
+            "The bogus parameter produces a real engine warning and the companion "
+            "requires a failed verdict, directly witnessing warnings-as-errors."
+        ),
+        mechanism="auto:doxygen",
+        proof=(
+            "tools/test_doxygen_gate.py::"
+            "test_a_documented_parameter_that_does_not_exist_is_caught"
+        ),
+    ),
+    Mutation(
+        rule_id="DOC-011",
+        summary="a Doxygen run with no input cannot earn a clean verdict",
+        source=(
+            "The companion runs the real engine against an empty src tree and "
+            "requires failure, covering both native refusal and the page-count guard."
+        ),
+        mechanism="auto:doxygen",
+        proof="tools/test_doxygen_gate.py::test_generating_nothing_is_not_generating_cleanly",
+    ),
 )
 
 

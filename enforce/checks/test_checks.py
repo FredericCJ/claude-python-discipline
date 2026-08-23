@@ -213,6 +213,21 @@ def test_explicit_chaining_is_silent(tmp_path: Path) -> None:
     assert rules_fired(RaiseFromCheck(), path) == set()
 
 
+def test_rewrapping_only_to_add_context_fires(tmp_path: Path) -> None:
+    """Changing only the message buries a useful exception type.
+
+    @param tmp_path the fixture directory
+    """
+    path = write(tmp_path, """
+        def load() -> None:
+            try:
+                parse()
+            except Exception as err:
+                raise RuntimeError(f"loading failed: {err}") from err
+    """)
+    assert "DIAG-006" in rules_fired(RaiseFromCheck(), path)
+
+
 # ------------------------------------------------------------------- assert_usage
 
 def test_assert_on_a_parameter_fires(tmp_path: Path) -> None:
@@ -221,7 +236,7 @@ def test_assert_on_a_parameter_fires(tmp_path: Path) -> None:
         def save(name: str) -> None:
             assert name, "name is required"
     """)
-    assert "ERR-012" in rules_fired(AssertUsageCheck(), path)
+    assert rules_fired(AssertUsageCheck(), path) == {"DIAG-009", "ERR-012"}
 
 
 def test_assert_on_external_input_fires(tmp_path: Path) -> None:
