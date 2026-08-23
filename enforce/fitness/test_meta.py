@@ -293,7 +293,7 @@ def test_gate_suite_defined() -> None:
 
 
 @pytest.mark.parametrize("name,command", GATE, ids=[n for n, _ in GATE])
-@pytest.mark.timeout(240)
+@pytest.mark.timeout(480)
 def test_every_gate_entry_is_runnable(name: str, command: tuple[str, ...]) -> None:
     """FLOW-009: each gate command starts and reports, rather than erroring out.
 
@@ -314,6 +314,11 @@ def test_every_gate_entry_is_runnable(name: str, command: tuple[str, ...]) -> No
     # Encoding is pinned rather than left to the locale: on a cp932 machine the
     # default codec raised on ruff's own output, so the gate died deciding
     # nothing -- exactly the failure this test exists to catch.
+    # Native Windows certification observed the complete discrimination entry at
+    # about 341 seconds with no competing verifier. The former 180-second process
+    # budget therefore rejected a healthy supported-host run. Keep a finite
+    # margin inside the test's own outer timeout; this still detects a stuck
+    # entry and does not reduce the 181-case rejection census.
     finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv, no shell
         command,
         capture_output=True,
@@ -322,7 +327,7 @@ def test_every_gate_entry_is_runnable(name: str, command: tuple[str, ...]) -> No
         errors="replace",
         cwd=REPO_ROOT,
         check=False,
-        timeout=180,
+        timeout=420,
     )
     assert finished.returncode in (0, 1), (
         f"gate entry {name!r} exited {finished.returncode}, which means it failed to run "
