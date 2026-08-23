@@ -6,3 +6,6 @@
 - [Python Engineering Discipline v4.0 to v4.1](from-4.0-to-4.1/README.md) — ship the
   pinned Windows Conda and Linux Docker development legs inside the combined discipline
   package, with no adopter-repository changes.
+- [Python Engineering Discipline v4.1 to v5.0](from-4.1-to-5.0/README.md) — integrate the
+  Doxygen-first entity documentation, quasi-literate implementation narration and
+  project-owned naming discipline as mechanically governed v5 obligations.
