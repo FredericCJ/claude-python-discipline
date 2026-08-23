@@ -38,12 +38,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
+# Import annotation-only protocols without adding runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
 ## The repository root, one level up from `tools/`.
 REPO_ROOT: Final = Path(__file__).resolve().parent.parent
 
+# Prepend the local tools directory only when import resolution does not already contain it.
 if str(REPO_ROOT / "tools") not in sys.path:
     sys.path.insert(0, str(REPO_ROOT / "tools"))
 
@@ -80,9 +82,13 @@ class GeneratedDocumentation:
     @var relation_graphs call, caller, and directory-dependency SVG counts
     """
 
+    ## Completed Doxygen process carrying status and captured output.
     finished: subprocess.CompletedProcess[str]
+    ## Isolated generated-documentation root removed when the context closes.
     output: Path
+    ## Count of generated Python source pages used for the non-vacuity verdict.
     source_pages: int
+    ## Call, caller, and directory-dependency graph-count elements in that order.
     relation_graphs: tuple[int, int, int]
 
 
@@ -100,7 +106,9 @@ def generated(
     @param extra_configuration newline-delimited overrides appended last
     @return a context yielding the process result and temporary output
     """
+    # Create the isolated Doxygen output root whose lifetime is confined by this context.
     output = Path(tempfile.mkdtemp(prefix="doxygen-gate-"))
+    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
         # Later Doxygen assignments win, so the gate can redirect products and a
         # qualification probe can enable an additional machine-readable view.
@@ -122,6 +130,7 @@ def generated(
         )
         source_pages = len(list(output.rglob("*_source.html")))
         html = output / "html"
+        # Preserve call, caller, and directory graph-count elements in declared relation order.
         relation_graphs = (
             len(list(html.glob("*_cgraph.svg"))),
             len(list(html.glob("*_icgraph.svg"))),
@@ -139,40 +148,61 @@ def run(root: Path, minimum: int) -> tuple[int, str]:
     @param minimum how many source pages must appear for the verdict to count
     @return the exit status and the line to print
     """
+    # Resolve the qualified native Doxygen executable required by this gate.
     executable = locate_native("doxygen")
+    # Use the absence path when executable has no available value.
     if executable is None:
+        # Return the missing-tool refusal and its environment remediation.
         return EXIT_FAILED, (
             "doxygen is not installed in this environment or on PATH. It is "
             "pinned in environment.yml; `conda env update -f environment.yml`."
         )
+    # Refuse the target when its declared source directory is absent.
     if not (root / "src").is_dir():
+        # Return the empty-target refusal before invoking the documentation tool.
         return EXIT_FAILED, f"no src/ under {root}; nothing would be examined"
 
+    # Generate into an isolated directory that is removed on every return path.
     with generated(executable, root) as result:
+        # Preserve the external command representation and its observed completion outcome.
         finished = result.finished
+        # Preserve the generated source-page count used to reject a vacuous build.
         pages = result.source_pages
+        # Preserve call, caller, and directory graph counts in declared relation order.
         relations = result.relation_graphs
 
+    # Enter the failure path only when the subprocess reports a nonzero status.
     if finished.returncode != 0:
+        # Select the captured Doxygen diagnostics that explain the failed build.
         noise = (finished.stderr or finished.stdout).strip()
+        # Return the tool-failure verdict with bounded diagnostic context.
         return EXIT_FAILED, (
             f"doxygen reported warnings, and WARN_AS_ERROR makes those failures:\n{noise[-1500:]}"
         )
+    # Refuse a vacuous documentation build whose generated source coverage is below the floor.
     if pages < minimum:
+        # Return the coverage refusal with observed and required page counts.
         return EXIT_FAILED, (
             f"doxygen generated {pages} source page(s), below the {minimum} this "
             f"tree holds. It exited 0, so the files were not missing -- they were "
             f"filtered out, and a clean run over nothing is not a clean run."
         )
+    # Require every ordered relation-count element to prove one graph class is nonempty.
+    # Refuse documentation that omits any required relationship-graph class.
     if any(count == 0 for count in relations):
+        # Preserve relationship-label string elements in the same order as graph counts.
         labels = ("call", "caller", "directory dependency")
+        # Format the relationship labels whose generated graph count is zero.
         missing = ", ".join(
+            # Pair each label with its same-position count before selecting absent graphs.
             label for label, count in zip(labels, relations, strict=True) if count == 0
         )
+        # Return the relationship refusal with every absent graph class named.
         return EXIT_FAILED, (
             "doxygen generated entity pages but no "
             f"{missing} relationship graph; enable and exercise the relation in source"
         )
+    # Return the successful page and relationship counts to the command-line boundary.
     return EXIT_OK, (
         f"doxygen: clean over {pages} file(s), relations="
         f"call:{relations[0]}/caller:{relations[1]}/dependency:{relations[2]}"
@@ -185,6 +215,7 @@ def main(argv: list[str] | None = None) -> int:
     @param argv the command line, or None to read `sys.argv`
     @return the process exit status
     """
+    # Configure the command-line parser that defines this tool's invocation contract.
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--root", type=Path, default=DEFAULT_ROOT)
     parser.add_argument(
@@ -193,12 +224,17 @@ def main(argv: list[str] | None = None) -> int:
         default=MINIMUM_FILES,
         help="source pages required for a clean verdict",
     )
+    # Capture the validated invocation arguments that govern this execution.
     arguments = parser.parse_args(argv)
 
+    # Capture the gate status and its single user-facing diagnostic line together.
     status, line = run(arguments.root, arguments.minimum)
     print(line, file=sys.stderr if status else sys.stdout)
+    # Return the aggregate process status to the command-line boundary.
     return status
 
 
+# Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
+    # Propagate the localized failure so callers cannot mistake it for success.
     raise SystemExit(main())

@@ -33,6 +33,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
+# Import annotation-only protocols without adding runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from types import ModuleType
@@ -74,7 +75,9 @@ class SourceRootError(ValueError):
 
         @param root governed repository root
         @param sources configured repository-relative values
+            Each element is one declared import-root path; declaration order is preserved.
         """
+        # Render every offending source-root path in declaration order for the refusal.
         values = ", ".join(str(source) for source in sources)
         super().__init__(f"source roots escape {root}: {values}")
 
@@ -100,21 +103,34 @@ def check(
     @throws FileNotFoundError when the contract file is absent, because a missing
         config is the one case where reporting "nothing broken" would be a lie
     """
+    # Resolve the repository-local import-linter configuration selected by the caller.
     configuration = root / config
+    # Refuse an absent contract declaration before import-linter can report vacuous success.
     if not configuration.is_file():
+        # Propagate the localized failure so callers cannot mistake it for success.
         raise FileNotFoundError(configuration)
 
+    # Preserve declared import-root path elements in caller order, defaulting to `src`.
     sources = tuple(source_roots or (Path("src"),))
+    # Canonicalize the repository boundary once for every confinement decision.
     exact_root = root.resolve()
+    # Resolve each source-root element against the canonical boundary in declaration order.
     resolved_sources = tuple((exact_root / source).resolve() for source in sources)
+    # Refuse the complete set when any resolved source path escapes the repository boundary.
     if any(not source.is_relative_to(exact_root) for source in resolved_sources):
+        # Propagate the localized failure so callers cannot mistake it for success.
         raise SourceRootError(exact_root, sources)
+    # Map each evicted module-name key to its live module-object value; key order is unused.
     evicted: dict[str, ModuleType] = {}
+    # Snapshot import-path string elements in their current resolution order for restoration.
     previous_path = list(sys.path)
+    # Snapshot the process working directory so the temporary import context is reversible.
     previous_directory = Path.cwd()
+    # Prepend resolved roots in reverse so their final search precedence matches declaration.
     for source in reversed(resolved_sources):
         sys.path.insert(0, str(source))
     os.chdir(root)
+    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
         # A private name, deliberately. import-linter exposes no public way to
         # register the built-in contract types, and `create_report` does not do
@@ -147,18 +163,26 @@ def check(
     finally:
         sys.modules.update(evicted)
         os.chdir(previous_directory)
+        # Restore the caller's exact import search path after modules and cwd are restored.
         sys.path[:] = previous_path
 
+    # Preserve each broken contract-name element in import-linter result order.
     broken = [contract.name for contract, outcome in results if not outcome.kept]
+    # Report explicit contract failures before considering the non-vacuity floor.
     if broken:
+        # Format broken contract names in their evaluation order for one diagnostic line.
         listed = "; ".join(broken)
+        # Return a broken verdict with every failed contract named for remediation.
         return EXIT_BROKEN, f"import contracts: {len(broken)} broken -- {listed}"
+    # Refuse a vacuous run when fewer contracts were evaluated than the declared floor.
     if len(results) < minimum:
+        # Return a broken verdict because too few evaluated contracts cannot prove conformance.
         return EXIT_BROKEN, (
             f"import contracts: only {len(results)} contract(s) evaluated, below "
             f"the {minimum} this tree declares. A configuration that resolves no "
             f"package reports nothing broken, which is not the same as passing."
         )
+    # Return success only after the declared non-vacuity floor and every contract pass.
     return EXIT_OK, f"import contracts: {len(results)} kept, 0 broken"
 
 
@@ -181,19 +205,32 @@ def _evict(roots: object) -> dict[str, ModuleType]:
     @param roots the root package names from the contract configuration
     @return each evicted module name against the module object, for restoring
     """
+    # Normalize a single root-package string to the same iterable contract as many roots.
     if isinstance(roots, str):
+        # Preserve the sole root-package value as one ordered iterable element.
         values: Iterable[object] = (roots,)
+    # Reuse a caller-supplied iterable when it already represents multiple root packages.
     elif isinstance(roots, Iterable):
+        # Preserve root-package elements in caller iteration order.
         values = roots
     else:
+        # Represent malformed root metadata as an empty ordered element sequence.
         values = ()
+    # Convert every root-package element to its canonical import-name string in order.
     names = tuple(str(name) for name in values)
+    # Map matching module-name keys to live module-object values for restoration, preserving
+    # the interpreter cache's iteration order.
     evicted: dict[str, ModuleType] = {
+        # Retain the current module-name key and object value when any configured root owns it.
         name: module for name, module in sys.modules.items()
+        # Match both the root package itself and every dotted descendant module.
         if any(name == root or name.startswith(f"{root}.") for root in names)
     }
+    # Remove captured governed modules so import-linter resolves them from the selected roots.
     for name in evicted:
+        # Delete the current cached module while its object remains recoverable in `evicted`.
         del sys.modules[name]
+    # Return the complete restoration mapping to the guarded import context.
     return evicted
 
 
@@ -207,6 +244,7 @@ def vendored() -> bool:
 
     @return True when this file sits inside a vendored install
     """
+    # Report whether this tool is executing from an installed `.agent` bundle.
     return REPO_ROOT.name == ".agent"
 
 
@@ -216,6 +254,7 @@ def main(argv: list[str] | None = None) -> int:
     @param argv the command line, or None to read `sys.argv`
     @return the process exit status
     """
+    # Configure the command-line parser that defines this tool's invocation contract.
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--root", type=Path, default=None,
                         help="the tree holding src/ and the contract file")
@@ -230,35 +269,52 @@ def main(argv: list[str] | None = None) -> int:
         dest="source_roots",
         help="repository-relative import root; repeat for multiple roots",
     )
+    # Capture the validated invocation arguments that govern this execution.
     arguments = parser.parse_args(argv)
 
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = arguments.root
+    # Use the absence path when root has no available value.
     if root is None:
+        # Refuse implicit target selection inside a vendored installation.
         if vendored():
             print("import contracts: this is a vendored install, so the default "
                   "target would be the shipped reference package rather than "
                   "your code. Pass --root pointing at the tree holding your "
                   "src/ and an importlinter.toml naming your packages.",
                   file=sys.stderr)
+            # Return the aggregate process status to the command-line boundary.
             return EXIT_BROKEN
+        # Resolve the repository-confined path used by this operation before filesystem access.
         root = DEFAULT_ROOT
 
+    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
+        # Evaluate contracts once and retain the status/message pair for terminal publication.
         status, line = check(
             root,
             arguments.config,
             arguments.minimum,
             arguments.source_roots,
         )
+    # Preserve the missing configuration path carried by the filesystem refusal.
+    # Translate the expected failure into this mechanism's stable diagnostic path.
     except FileNotFoundError as absent:
         print(f"import contracts: no configuration at {absent}", file=sys.stderr)
+        # Return the aggregate process status to the command-line boundary.
         return EXIT_BROKEN
+    # Preserve the confinement refusal that names every escaping source root.
+    # Translate the expected failure into this mechanism's stable diagnostic path.
     except SourceRootError as problem:
         print(f"import contracts: invalid target: {problem}", file=sys.stderr)
+        # Return the aggregate process status to the command-line boundary.
         return EXIT_BROKEN
     print(line, file=sys.stderr if status else sys.stdout)
+    # Return the aggregate process status to the command-line boundary.
     return status
 
 
+# Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
+    # Propagate the localized failure so callers cannot mistake it for success.
     raise SystemExit(main())

@@ -35,6 +35,7 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
+# Import annotation-only protocols without adding runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
@@ -81,29 +82,43 @@ def run_ruff(root: Path, config: Path | None = None) -> tuple[list[dict[str, obj
     @throws RuntimeError when ruff cannot be run at all, which must never be
         mistaken for a clean tree
     """
+    # Preserve one process-argument string element per Ruff invocation token, in argv order.
     common = [sys.executable, "-m", "ruff", "check"]
+    # Bind an explicit configuration only when the caller supplied one.
     if config is not None:
+        # Extend the shared argv prefix before selecting either output representation.
         common += ["--config", str(config)]
+    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
+        # Capture Ruff's machine-readable verdict for exact pair comparison.
         structured = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv, no shell
             [*common, "--output-format", "json"],
             capture_output=True, text=True, encoding="utf-8", errors="replace",
             cwd=root, check=False,
         )
+        # Capture the same verdict in concise prose for a failing gate diagnostic.
         human = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv, no shell
             [*common, "--output-format", "concise"],
             capture_output=True, text=True, encoding="utf-8", errors="replace",
             cwd=root, check=False,
         )
+    # Preserve the caught failure that explains why the external result is unusable.
+    # Translate the expected failure into this mechanism's stable diagnostic path.
     except OSError as exc:
+        # Localize process-launch failure before translating it to the gate exception.
         message = f"could not run ruff: {exc}"
+        # Propagate the localized failure so callers cannot mistake it for success.
         raise RuntimeError(message) from exc
+    # Distinguish Ruff's verdict statuses from an invocation failure status.
     if structured.returncode not in (0, 1):
+        # Retain the unexpected status and bounded stderr as the refusal cause.
         message = (
             f"ruff exited {structured.returncode}, which means it failed to run rather "
             f"than reporting a verdict:\n{structured.stderr[:400]}"
         )
+        # Propagate the localized failure so callers cannot mistake it for success.
         raise RuntimeError(message)
+    # Return structured finding elements and their matching human-readable report together.
     return json.loads(structured.stdout or "[]"), human.stdout
 
 
@@ -114,23 +129,36 @@ def pairs_of(findings: Sequence[dict[str, object]], root: Path) -> set[tuple[str
     finding and would make the baseline unreviewable. The count is what catches a
     second instance of a code already present in a file.
 
-    @param findings ruff's structured output
+    @param findings each element is one structured Ruff diagnostic mapping;
+        Ruff emission order is preserved
     @param root the repository root, for expressing paths portably
     @return each (file, code) pair, POSIX-relative so the file reads the same on
         either platform
     """
+    # Collect unique `(file, code)` tuple elements; set order is deliberately unordered.
     pairs: set[tuple[str, str]] = set()
+    # Reduce structured Ruff findings in emission order to stable path/code identities.
     for finding in findings:
+        # Extract the stable Ruff code, normalizing a missing value to empty text.
         code = str(finding.get("code") or "")
+        # Extract the reported filename spelling before repository relativization.
         raw = str(finding.get("filename") or "")
+        # Ignore malformed findings that cannot form a stable `(file, code)` pair.
         if not code or not raw:
+            # Advance after the current candidate has been conclusively excluded.
             continue
+        # Interpret the reported filename as a path for portable normalization.
         path = Path(raw)
+        # Protect the fallible operation so expected failures remain explicitly classified.
         try:
+            # Prefer a repository-relative POSIX spelling for stable cross-platform baselines.
             name = path.relative_to(root).as_posix()
+        # Translate the expected failure into this mechanism's stable diagnostic path.
         except ValueError:
+            # Retain an external path in POSIX form when it cannot be made repository-relative.
             name = path.as_posix()
         pairs.add((name, code))
+    # Return the unordered exact-pair set consumed by the ratchet.
     return pairs
 
 
@@ -143,9 +171,14 @@ def load_baseline(path: Path = BASELINE_PATH) -> tuple[int, set[tuple[str, str]]
     @param path the baseline file
     @return the recorded finding count and the recorded pairs
     """
+    # Treat first use as an explicit zero ceiling rather than accepting undisclosed debt.
     if not path.exists():
+        # Treat first use as a zero ceiling so existing debt is never silently accepted.
         return 0, set()
+    # Decode the recorded count and exact-pair payload from the baseline artifact.
     data = json.loads(path.read_text(encoding="utf-8"))
+    # Reconstruct unordered `(file, code)` tuple elements from serialized pair values.
+    # Return the recorded count and exact-pair set together.
     return int(data.get("count", 0)), {(f, c) for f, c in data.get("pairs", [])}
 
 
@@ -155,10 +188,15 @@ def write_baseline(
     """Record a new ceiling, with the reason it moved.
 
     @param count the finding total being recorded
-    @param pairs the exact (file, code) pairs being recorded
+    @param pairs each element is one exact `(file, code)` tuple being recorded;
+        set order is deliberately unordered
     @param why why the ceiling is moving, which is never optional
     @param path the baseline file to write
+
+    @par Effects
+    Creates or replaces the baseline only after the complete deterministic payload exists.
     """
+    # Assemble baseline key/value fields, with sorted pair values providing deterministic output.
     payload = {
         "generated_by": "tools/lint_gate.py --update-baseline",
         "note": (
@@ -170,8 +208,10 @@ def write_baseline(
         ),
         "count": count,
         "why": why,
+        # Project each tuple to JSON values after sorting by file then code.
         "pairs": sorted([list(pair) for pair in pairs]),
     }
+    # Publish the new ceiling only after the complete deterministic payload exists.
     path.write_text(
         json.dumps(payload, indent=1, ensure_ascii=False) + "\n",
         encoding="utf-8",
@@ -185,33 +225,45 @@ def judge(
 ) -> tuple[list[str], list[str]]:
     """Decide the run against the ceiling.
 
-    @param pairs the (file, code) pairs found now
+    @param pairs each element is one current `(file, code)` tuple; set order is unordered
     @param count how many findings were reported now
-    @param recorded_pairs the pairs the baseline records
+    @param recorded_pairs each element is one baseline `(file, code)` tuple;
+        set order is unordered
     @param recorded_count the total the baseline records
     @return the errors that fail the gate, and the notices that do not
     """
+    # Preserve failing diagnostic-string elements in decision order.
     errors: list[str] = []
+    # Preserve non-failing improvement-note string elements in decision order.
     notices: list[str] = []
 
+    # Sort protected `(file, code)` renderings so refusal order is deterministic.
     protected = sorted(f"{name}: {code}" for name, code in pairs if code in PROTECTED)
+    # Add every protected mechanism breach before ordinary ratchet growth.
     errors += [f"protected code, never baselined -- {entry}" for entry in protected]
 
+    # Sort current pairs absent from the baseline to expose newly introduced debt.
     fresh = sorted(pairs - recorded_pairs)
+    # Add only non-protected fresh pairs because protected breaches were already classified.
     errors += [f"new finding -- {name}: {code}" for name, code in fresh
                if code not in PROTECTED]
 
+    # Detect duplicate growth when the total rises without a new exact pair.
     if count > recorded_count and not fresh:
         errors.append(
             f"finding total rose from {recorded_count} to {count} with no new "
             f"(file, code) pair: an existing code gained instances"
         )
 
+    # Sort baseline pairs no longer observed so the ceiling can be lowered deliberately.
     gone = sorted(recorded_pairs - pairs)
+    # Report exact-pair improvement only when at least one recorded pair disappeared.
     if gone:
         notices.append(f"{len(gone)} recorded pair(s) no longer found")
+    # Report multiplicity improvement independently from exact-pair disappearance.
     if count < recorded_count:
         notices.append(f"total fell from {recorded_count} to {count}")
+    # Return failing errors and informational notices as separate ordered sequences.
     return errors, notices
 
 
@@ -221,55 +273,80 @@ def main(argv: Sequence[str] | None = None) -> int:
     @param argv the command-line arguments, or None to read `sys.argv`
     @return 0 when nothing grew, 1 when something did, 2 when ruff would not run
     """
+    # Configure the command-line parser that defines this tool's invocation contract.
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--update-baseline", action="store_true",
                         help="record the tree as it stands as the new ceiling")
     parser.add_argument("--why", help="required with --update-baseline")
     parser.add_argument("--root", type=Path, default=REPO_ROOT)
+    # Capture the validated invocation arguments that govern this execution.
     args = parser.parse_args(argv)
 
+    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
+        # Preserve finding-record elements in checker emission order for the final verdict.
         findings, human = run_ruff(args.root)
+    # Preserve the caught failure that explains why the external result is unusable.
+    # Translate the expected failure into this mechanism's stable diagnostic path.
     except RuntimeError as exc:
         print(str(exc), file=sys.stderr)
+        # Return the aggregate process status to the command-line boundary.
         return 2
 
+    # Reduce volatile Ruff diagnostics to stable repository-relative path/code pairs.
     pairs = pairs_of(findings, args.root)
+    # Retain the raw finding count so duplicate pairs cannot shrink the ceiling silently.
     count = len(findings)
 
+    # Enter the audited ceiling-update workflow only on an explicit request.
     if args.update_baseline:
+        # Reject an unreasoned update because it would erase the debt trail.
         if not args.why:
             print("--update-baseline needs --why; an untraced ceiling is drift",
                   file=sys.stderr)
+            # Return the aggregate process status to the command-line boundary.
             return 2
+        # Identify protected diagnostics that policy forbids recording as accepted debt.
         blocked = sorted(code for _, code in pairs if code in PROTECTED)
+        # Refuse the whole update when any protected code is present.
         if blocked:
             print("refusing to baseline a protected code: " + ", ".join(blocked),
                   file=sys.stderr)
+            # Return the aggregate process status to the command-line boundary.
             return 2
         write_baseline(count, pairs, args.why, args.root / "tools" / "lint_baseline.json")
         print(f"recorded {count} finding(s) across {len(pairs)} (file, code) pair(s)")
+        # Return the aggregate process status to the command-line boundary.
         return 0
 
+    # Load both baseline dimensions: total count and distinct stable path/code identities.
     recorded_count, recorded_pairs = load_baseline(args.root / "tools" / "lint_baseline.json")
+    # Preserve finding-record elements in checker emission order for the final verdict.
     errors, notices = judge(pairs, count, recorded_pairs, recorded_count)
 
+    # Emit the full Ruff report and localized ratchet failures only when debt grew.
     if errors:
         print(human, end="" if human.endswith("\n") else "\n")
         print(f"lint gate: {len(errors)} finding(s) above the recorded ceiling",
               file=sys.stderr)
+        # Report each deterministic ratchet violation in judgement order.
         for entry in errors:
             print(f"  {entry}", file=sys.stderr)
         print('  fix them, or move the ceiling with --update-baseline --why "..."',
               file=sys.stderr)
+        # Return the aggregate process status to the command-line boundary.
         return 1
 
+    # Report debt reductions as actionable opportunities to lower the recorded ceiling.
     for notice in notices:
         print(f"  {notice} -- lock it in with --update-baseline")
     print(f"lint gate: {count} finding(s), none above the recorded ceiling of "
           f"{recorded_count}")
+    # Return the aggregate process status to the command-line boundary.
     return 0
 
 
+# Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
+    # Propagate the localized failure so callers cannot mistake it for success.
     raise SystemExit(main())

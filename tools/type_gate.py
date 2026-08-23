@@ -65,18 +65,25 @@ def run_mypy(root: Path, *, config: Path | None = None) -> tuple[bool, int, str]
     @param config explicit project configuration, or None for root discovery
     @return whether it passed, how many files it analysed, and its output
     """
+    # Build the child-process environment with the governed source root on its import path.
     environment = dict(os.environ, MYPYPATH=str(root / "src"))
+    # Each arguments element is one process argument string; invocation order is preserved.
     arguments = [sys.executable, "-m", "mypy"]
+    # Use the available-value path only when config is present.
     if config is not None:
         arguments.extend(("--config-file", str(config.resolve())))
     arguments.extend(("--strict", "--explicit-package-bases", "-p", PACKAGE))
+    # Preserve the external command representation and its observed completion outcome.
     finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
         arguments,
         cwd=root, env=environment, capture_output=True, text=True,
         encoding="utf-8", errors="replace", check=False, timeout=600,
     )
+    # Combine the checker's captured diagnostic streams without losing emission text.
     output = finished.stdout + finished.stderr
+    # Preserve the optional pattern match that carries the reported analysis count.
     found = _MYPY_COUNT.search(output)
+    # Return checker success, analyzed-file count, and diagnostics to the type gate.
     return finished.returncode == 0, int(found.group(1)) if found else 0, output
 
 
@@ -89,6 +96,7 @@ def run_pyright(root: Path) -> tuple[bool, int, str]:
     @param root the tree holding `src/` and `pyrightconfig.json`
     @return whether it passed, how many files it analysed, and its output
     """
+    # Preserve the external command representation and its observed completion outcome.
     finished = subprocess.run(
         (sys.executable, "-m", "pyright", "--outputjson"),
         cwd=root, capture_output=True, text=True,
@@ -97,20 +105,31 @@ def run_pyright(root: Path) -> tuple[bool, int, str]:
     # pyright prints node-provisioning chatter before the JSON on a first run,
     # so the document is found rather than assumed to start at byte zero.
     start = finished.stdout.find("{")
+    # Refuse checker output that contains no JSON report boundary.
     if start < 0:
+        # Return checker failure with the unparseable captured output.
         return False, 0, finished.stdout + finished.stderr
 
+    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
+        # Hold the decoded checker report mapping for summary and diagnostic extraction.
         report = json.loads(finished.stdout[start:])
+    # Preserve the caught failure that explains why the external result is unusable.
+    # Translate the expected failure into this mechanism's stable diagnostic path.
     except json.JSONDecodeError as broken:
+        # Return checker failure with the localized JSON decoding cause.
         return False, 0, f"pyright emitted no parseable report: {broken}"
 
+    # Select the checker summary mapping that carries analyzed-file metrics.
     summary = report.get("summary", {})
+    # Each problems element is one emitted error string; checker order is preserved.
     problems = [
         f"{d.get('file', '?')}: {d.get('message', '').splitlines()[0]}"
+        # Project the current Pyright diagnostic record to one concise error line.
         for d in report.get("generalDiagnostics", [])
         if d.get("severity") == "error"
     ]
+    # Return checker success, analyzed-file count, and diagnostics to the type gate.
     return not problems, int(summary.get("filesAnalyzed", 0)), "\n".join(problems)
 
 
@@ -124,6 +143,7 @@ def vendored() -> bool:
 
     @return True when this file sits inside a vendored install
     """
+    # Report whether this tool is executing from an installed `.agent` bundle.
     return REPO_ROOT.name == ".agent"
 
 
@@ -133,43 +153,62 @@ def main(argv: list[str] | None = None) -> int:
     @param argv the command line, or None to read `sys.argv`
     @return the process exit status
     """
+    # Configure the command-line parser that defines this tool's invocation contract.
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--root", type=Path, default=None)
     parser.add_argument("--minimum", type=int, default=MINIMUM_FILES,
                         help="files each checker must analyse to count")
+    # Capture the validated invocation arguments that govern this execution.
     arguments = parser.parse_args(argv)
 
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = arguments.root
+    # Use the absence path when root has no available value.
     if root is None:
+        # Refuse implicit target selection inside a vendored installation.
         if vendored():
             print("type gate: this is a vendored install, so the default target "
                   "would be the shipped reference package rather than your code. "
                   "Pass --root pointing at the tree holding your src/.",
                   file=sys.stderr)
+            # Reject invocation outside a discoverable project unless the root was explicit.
             return EXIT_FAILED
+        # Resolve the repository-confined path used by this operation before filesystem access.
         root = DEFAULT_ROOT
 
+    # Refuse the target when its declared source directory is absent.
     if not (root / "src").is_dir():
         print(f"type gate: no src/ under {root}", file=sys.stderr)
+        # Reject a project root that cannot provide the required typed source tree.
         return EXIT_FAILED
 
+    # Start optimistic and downgrade the aggregate verdict on any checker failure or vacuity.
     status = EXIT_OK
+    # Run both independent type checkers in the declared diagnostic order.
     for name, runner in (("mypy --strict", run_mypy), ("pyright strict", run_pyright)):
+        # Capture checker success, analyzed-file count, and diagnostic output together.
         passed, analysed, output = runner(root)
+        # Report the current mechanism when its checker outcome is unsuccessful.
         if not passed:
             print(f"type gate: {name} reported findings:\n{output[-2000:]}",
                   file=sys.stderr)
+            # Preserve failure after reporting the checker's bounded diagnostic tail.
             status = EXIT_FAILED
+        # Refuse a vacuous type-check run whose analyzed coverage is below the required floor.
         elif analysed < arguments.minimum:
             print(f"type gate: {name} analysed {analysed} file(s), below the "
                   f"{arguments.minimum} this tree holds. A checker pointed at "
                   f"nothing exits 0, which is not the same as passing.",
                   file=sys.stderr)
+            # Preserve failure after reporting insufficient analyzed-file coverage.
             status = EXIT_FAILED
         else:
             print(f"type gate: {name} clean over {analysed} file(s)")
+    # Return the aggregate process status to the command-line boundary.
     return status
 
 
+# Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
+    # Propagate the localized failure so callers cannot mistake it for success.
     raise SystemExit(main())
