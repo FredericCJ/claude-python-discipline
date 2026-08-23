@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING
 
 from . import Finding, TextCheck, main
 
+# Import annotation-only contracts without runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
@@ -54,8 +55,7 @@ _TIMESTAMP = re.compile(
     re.IGNORECASE,
 )
 
-## Path segments that name a documentation build tree. Anything scanned from one
-## of these is rendered output that should never have been committed.
+## Unordered build-directory set whose each element identifies rendered documentation output.
 BUILD_DIRS = frozenset({"_build", "site"})
 
 
@@ -64,9 +64,9 @@ class GeneratedProvenanceCheck(TextCheck):
 
     ## Invoked as `python -m checks.generated_provenance`.
     name = "generated_provenance"
-    ## The law/DEP and law/DOC rules this check decides.
+    ## Rule-id elements in deterministic reporting order decided by this check.
     rules = ("DEP-007", "DEP-008", "DOC-012")
-    ## Generated output is markdown, JSON or TOML far more often than Python.
+    ## File-suffix elements in deterministic matching order for likely generated artifacts.
     suffixes = (".md", ".json", ".toml", ".yaml", ".yml", ".html")
 
     def visit_text(self, text: str, path: Path) -> Iterator[Finding]:
@@ -74,9 +74,11 @@ class GeneratedProvenanceCheck(TextCheck):
 
         @param text the file's contents
         @param path the file it was read from
-        @return one finding per defect
+        @return finding elements in rendered, provenance, then timestamp order
         """
+        # Rendered documentation is forbidden independently of generated-header content.
         if _is_rendered_documentation(path):
+            # Yield the committed-build finding at the artifact root.
             yield Finding(
                 "DOC-012", path, 1,
                 "rendered documentation is present in the tree",
@@ -84,14 +86,21 @@ class GeneratedProvenanceCheck(TextCheck):
                 "rendered tree in every diff is how reviewers are trained to wave "
                 "generated output through.",
             )
+            # Stop because provenance details cannot make rendered output admissible.
             return
 
+        # Preserve source-line elements in authored order for header and location checks.
         lines = text.splitlines()
+        # Join the bounded leading line sequence that can own a provenance banner.
         header = "\n".join(lines[:HEADER_LINES])
+        # Files not claiming generated ownership are outside this mechanism's remaining rules.
         if not _CLAIMS.search(header):
+            # Stop without guessing authorship from extension or content shape.
             return
 
+        # A generated claim must identify the command or script that reproduces it.
         if not _NAMES_GENERATOR.search(header):
+            # Yield the missing-generator finding at the header location.
             yield Finding(
                 "DEP-007", path, 1,
                 "the file says it is generated but does not say by what",
@@ -99,10 +108,15 @@ class GeneratedProvenanceCheck(TextCheck):
                 "regenerate a file will eventually edit it instead.",
             )
 
+        # Examine each source-line element in increasing one-based order for unstable stamps.
         for number, line in enumerate(lines, start=1):
+            # Search only for clock readings or explicitly generation-introduced dates.
             found = _TIMESTAMP.search(line)
+            # A line without such a timestamp preserves byte stability.
             if found is None:
+                # Advance to the next source line.
                 continue
+            # Yield the first timestamp defect at its exact source line.
             yield Finding(
                 "DEP-008", path, number,
                 f"generated output carries the timestamp {found.group(0)!r}",
@@ -110,6 +124,7 @@ class GeneratedProvenanceCheck(TextCheck):
                 "different bytes, so a staleness check can never mean 'this is "
                 "current' -- only 'this was rebuilt just now'.",
             )
+            # Stop after the first actionable timestamp in this generated artifact.
             return
 
 
@@ -117,13 +132,19 @@ def _is_rendered_documentation(path: Path) -> bool:
     """Whether a path sits inside a documentation build tree.
 
     @param path the file being examined
-    @return True when a build-output directory is on its path
+    @return true when a build-output directory is on its path; false otherwise
     """
+    # Build an unordered set whose each element is one path segment.
     parts = set(path.parts)
+    # Explicit Doxygen/Sphinx output directory names identify rendered trees directly.
     if parts & BUILD_DIRS:
+        # Classify the path as rendered documentation.
         return True
+    # Also recognize the conventional nested ``build/doc`` spelling.
     return "build" in parts and "doc" in parts
 
 
+# Permit direct module execution through the common checker command-line adapter.
 if __name__ == "__main__":
+    # Translate the checker result into the process exit status.
     raise SystemExit(main(GeneratedProvenanceCheck()))

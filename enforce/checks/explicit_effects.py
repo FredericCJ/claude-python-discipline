@@ -21,14 +21,13 @@ from typing import TYPE_CHECKING
 
 from . import Finding, ModuleCheck, is_test_path, main
 
+# Import annotation-only contracts without runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
 
-## Module-level calls that reach outside the process or make a result
-## irreproducible, against the port each belongs behind. The message names the
-## port, because "this is an effect" is a diagnosis and "put it behind a Clock"
-## is a repair.
+## Mapping from each effect-call-name key to its required port-description value; insertion
+## order is explanatory only because direct lookup owns classification.
 REACHED_FOR: dict[str, str] = {
     "time": "a Clock port",
     "monotonic": "a Clock port",
@@ -49,13 +48,11 @@ REACHED_FOR: dict[str, str] = {
     "run": "a Process port",
 }
 
-## Modules whose mere presence in a domain or app file means an effect is being
-## reached for, whatever is called on them.
+## Unordered effect-module set whose each element is forbidden in the governed core.
 REACHED_MODULES = frozenset({"os", "time", "random", "secrets", "subprocess",
                              "socket", "shutil", "tempfile", "webbrowser"})
 
-## Layers the rule binds. An adapter reaching for an effect is an adapter doing
-## its job; the shell composing them is the composition root doing its job.
+## Unordered governed-layer set whose each element must receive effects through ports.
 GOVERNED = frozenset({"domain", "app"})
 
 
@@ -64,7 +61,7 @@ class ExplicitEffectsCheck(ModuleCheck):
 
     ## Invoked as `python -m checks.explicit_effects`.
     name = "explicit_effects"
-    ## The law/ARCH and law/EFCT rules this check decides.
+    ## Rule-id elements in deterministic reporting order decided by this check.
     rules = ("ARCH-005", "EFCT-002")
 
     def visit_module(self, tree: ast.Module, path: Path, layer: str) -> Iterator[Finding]:
@@ -73,15 +70,22 @@ class ExplicitEffectsCheck(ModuleCheck):
         @param tree the module's syntax tree
         @param path the file it was parsed from
         @param layer the architectural layer; only `domain` and `app` are governed
-        @return one finding per reached-for effect
+        @return finding elements in AST walk order, one per reached-for effect
         """
+        # Only non-test domain and application code owns this effect-injection obligation.
         if layer not in GOVERNED or is_test_path(path):
+            # Stop iteration outside the rule's exact architectural subject.
             return
 
+        # Inspect each syntax-node element in deterministic AST walk order.
         for node in ast.walk(tree):
+            # Imports expose direct acquisition of effectful modules.
             if isinstance(node, (ast.Import, ast.ImportFrom)):
+                # Yield each forbidden imported root in statement order.
                 yield from self._imports(node, path)
+            # Calls expose acquisition through imported aliases such as datetime.
             elif isinstance(node, ast.Call):
+                # Yield a call-level finding when its receiver and method are closed matches.
                 yield from self._call(node, path, layer)
 
     def _imports(self, node: ast.Import | ast.ImportFrom, path: Path) -> Iterator[Finding]:
@@ -89,15 +93,19 @@ class ExplicitEffectsCheck(ModuleCheck):
 
         @param node the import statement
         @param path the file it came from
-        @return one finding per offending module
+        @return finding elements in imported-name order, one per offending module
         """
+        # Collect imported root-name elements in authored import order.
         roots = (
             [a.name.split(".", 1)[0] for a in node.names] if isinstance(node, ast.Import)
             else [node.module.split(".", 1)[0]] if node.module
             else []
         )
+        # Inspect each imported root-name element in statement order.
         for root in roots:
+            # Any closed effect-module root is direct capability acquisition.
             if root in REACHED_MODULES:
+                # Yield the import finding at the exact statement line.
                 yield Finding(
                     "EFCT-002", path, node.lineno,
                     f"the core imports `{root}`, which is an effect it reaches for",
@@ -116,16 +124,25 @@ class ExplicitEffectsCheck(ModuleCheck):
         @param node the call expression
         @param path the file it came from
         @param layer the architectural layer, named in the message
-        @return one finding when the call reaches for an effect
+        @return zero or one finding element when the call reaches for an effect
         """
+        # Bare calls commonly target injected port methods and are intentionally excluded.
         if not isinstance(node.func, ast.Attribute):
+            # Stop iteration for a call shape outside the narrow reliable predicate.
             return
+        # Select the receiver expression of the qualified call.
         owner = node.func.value
+        # Only direct known module names establish a reliable reached-for effect.
         if not isinstance(owner, ast.Name) or owner.id not in REACHED_MODULES | {"datetime", "dt"}:
+            # Stop without guessing what a complex receiver represents.
             return
+        # Resolve the terminal method name to its required port description.
         port = REACHED_FOR.get(node.func.attr)
+        # Unknown methods on an effect module are outside this check's claimed proposition.
         if port is None:
+            # Stop without over-reporting module operations that may be pure.
             return
+        # Yield the reached-for-effect finding with a concrete injection repair.
         yield Finding(
             "ARCH-005", path, node.lineno,
             f"{layer} reaches for `{owner.id}.{node.func.attr}()`",
@@ -134,5 +151,7 @@ class ExplicitEffectsCheck(ModuleCheck):
         )
 
 
+# Permit direct module execution through the common checker command-line adapter.
 if __name__ == "__main__":
+    # Translate the checker result into the process exit status.
     raise SystemExit(main(ExplicitEffectsCheck()))
