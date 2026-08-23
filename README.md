@@ -9,7 +9,7 @@ governs its contracts and locally owned behavior; a parent repository, counterpa
 and whole-application verification are out of scope. The complete boundary is
 `discipline/meta/SCOPE.md`.
 
-Agents start at **`discipline/KERNEL.md`** (~1,800 tokens). It carries the thesis, the
+Agents start at **`discipline/KERNEL.md`** (~2,000 tokens). It carries the thesis, the
 always-apply invariants, a router table, and the two commands that replace reading
 speculatively. Everything else is loaded on demand.
 
@@ -42,7 +42,7 @@ and the mechanisms still to build, so the gap is tracked rather than assumed clo
 ## Navigating it, and remembering what it taught
 
 Two systems, one graph. The **navigation graph** is a directed typed multigraph over
-modules, rules, mechanisms, layers, decisions and triggers — 573 nodes and 1,162 edges,
+modules, rules, mechanisms, layers, decisions and triggers — 690 nodes and 1,465 edges,
 generated from the corpus and byte-stable. Agents never load it; they ask `tools/nav.py`,
 which returns a few hundred tokens: what to read, why, and what it costs.
 
@@ -63,7 +63,7 @@ python tools/learn.py calibrate                           # is any of this worki
 doxygen enforce/Doxyfile                                  # the documentation gate
 ```
 
-**Reachability is the navigability metric**: every one of the 183 rules is reachable from
+**Reachability is the navigability metric**: every one of the 212 rules is reachable from
 some module within three hops, checked as `V092` on every validation run.
 
 ## Vendoring and integration
@@ -101,7 +101,7 @@ is reported and left untouched; the other host can still be integrated safely.
 ```bash
 python tools/vendor.py check   ../some-repo   # local edits to read-only files
 python tools/harvest.py        ../some-repo   # discipline-level findings, upstream
-python tools/release.py                       # -> dist/agent-discipline-v3.3.0.zip
+python tools/release.py                       # -> dist/agent-discipline-v4.0.0.zip
 ```
 
 `release.py` builds the redistributable archive by running `vendor.py install` against a

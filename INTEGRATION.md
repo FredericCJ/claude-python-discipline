@@ -35,12 +35,12 @@ happens — not a prediction made by a second implementation.
 It manages one clearly delimited block in each of `CLAUDE.md` and `AGENTS.md`:
 
 ```
-<!-- BEGIN AGENT DISCIPLINE v3.3.0 (3f9c1a20b7d4) -- managed by ... -->
+<!-- BEGIN AGENT DISCIPLINE v4.0.0 (manifest content hash) -- managed by ... -->
    ... the pointer, the thesis, the three commands that matter ...
 <!-- END AGENT DISCIPLINE -->
 ```
 
-The marker names two things. `v3.3.0` is the release, so a reader can tell at a glance
+The marker names two things. `v4.0.0` is the release, so a reader can tell at a glance
 what is installed. The value in brackets is the content hash from
 `.agent/MANIFEST.json`, computed over every upstream file: it is what `--check` compares,
 and unlike a release name it cannot be claimed, only computed. If you edited a vendored
@@ -188,7 +188,7 @@ content remains portable across Windows and Linux; binary assets remain byte-exa
 
 ## After integrating
 
-Read `.agent/discipline/KERNEL.md`. It is about 1,800 tokens and it routes everything
+Read `.agent/discipline/KERNEL.md`. It is about 2,000 tokens and it routes everything
 else; do not read the modules speculatively. From then on:
 
 ```bash
