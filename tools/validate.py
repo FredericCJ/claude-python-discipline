@@ -865,7 +865,9 @@ def write_v080_baseline(
         "pairs": sorted(pairs),
         "why": why,
     }
-    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(payload, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
 
 
 def check_v080_ratchet(

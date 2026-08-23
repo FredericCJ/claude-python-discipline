@@ -2984,6 +2984,7 @@ def main(argv: list[str] | None = None) -> int:
         arguments.json.write_text(
             json.dumps(report.as_dict(), indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8",
+            newline="\n",
         )
     return EXIT_GREEN if report.green else EXIT_RED
 

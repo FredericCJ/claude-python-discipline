@@ -664,7 +664,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print("stale: discipline/graph.json" if stale else "up to date.")
         return 1 if stale else 0
 
-    target.write_text(text, encoding="utf-8")
+    target.write_text(text, encoding="utf-8", newline="\n")
     counts: dict[str, int] = {}
     for node in graph.nodes.values():
         counts[str(node.type)] = counts.get(str(node.type), 0) + 1

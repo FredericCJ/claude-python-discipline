@@ -23,13 +23,13 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING
 
+import pytest
+
 import discrimination
 import discrimination_gate
 
 if TYPE_CHECKING:
     from pathlib import Path
-
-    import pytest
 
 ## A mutation known to provoke its rule: an undocumented function in the domain.
 _WORKS = discrimination.Mutation(
@@ -210,6 +210,7 @@ def test_moving_the_floor_requires_a_reason(monkeypatch: pytest.MonkeyPatch,
     assert not baseline.exists()
 
 
+@pytest.mark.timeout(900)
 def test_the_committed_table_holds() -> None:
     """The real table, against the real reference, with nothing substituted.
 
@@ -394,9 +395,11 @@ def test_the_gap_counts_only_rules_a_mechanism_actually_decides() -> None:
     semantic judgment. Mixed review-plus-check rules remain in the gap through
     their check arm.
     """
-    gap = set(discrimination_gate.undiscriminated(set(discrimination.covered())))
+    provoked = set(discrimination.covered())
+    provoked.remove("TYPE-001")
+    gap = set(discrimination_gate.undiscriminated(provoked))
     assert "ALLOC-005" not in gap, (
         "ALLOC-005 is decided by structured review; it must not be counted as an "
         "unwitnessed mechanical claim"
     )
-    assert gap, "the gap is empty, so this assertion proves nothing"
+    assert "TYPE-001" in gap, "a deliberately unwitnessed mechanical rule was not counted"

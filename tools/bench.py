@@ -242,7 +242,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if arguments.record:
         BASELINE_PATH.write_text(json.dumps(report, indent=2) + "\n",
-                                 encoding="utf-8")
+                                 encoding="utf-8", newline="\n")
         print(f"\nrecorded to {BASELINE_PATH.name}")
     return 0
 

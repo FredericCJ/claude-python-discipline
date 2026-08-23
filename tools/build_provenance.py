@@ -319,7 +319,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     payload = yaml.safe_load(args.extraction.read_text(encoding="utf-8"))
     rows = build_rows(payload.get("sections", []))
-    args.out.write_text(render(rows), encoding="utf-8")
+    args.out.write_text(render(rows), encoding="utf-8", newline="\n")
 
     counts = Counter(r.disposition for r in rows)
     print(f"wrote {args.out.relative_to(REPO_ROOT).as_posix()}: {len(rows)} sections")

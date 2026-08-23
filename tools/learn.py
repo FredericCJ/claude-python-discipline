@@ -1347,9 +1347,11 @@ def write_views(store: Store, connection: sqlite3.Connection, as_of: dt.date) ->
     @param as_of the date the calibration report is measured to
     """
     config = store.config()
-    store.index.write_text(render_index(connection, config), encoding="utf-8")
+    store.index.write_text(
+        render_index(connection, config), encoding="utf-8", newline="\n"
+    )
     store.calibration.write_text(
-        render_calibration(connection, config, as_of), encoding="utf-8"
+        render_calibration(connection, config, as_of), encoding="utf-8", newline="\n"
     )
 
 
@@ -1681,7 +1683,7 @@ def _apply_settings(store: Store, assignments: Sequence[str]) -> dict[str, list[
             raise LearnError(message)
         changed[dotted.strip()] = [found.group(2).strip(), value.strip()]
         text = pattern.sub(lambda m: m.group(1) + value.strip(), text, count=1)
-    store.config_path.write_text(text, encoding="utf-8")
+    store.config_path.write_text(text, encoding="utf-8", newline="\n")
     return changed
 
 

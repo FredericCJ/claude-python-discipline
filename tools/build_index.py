@@ -103,7 +103,7 @@ class Artifact:
         in the intended state either way.
         """
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(self.text, encoding="utf-8")
+        self.path.write_text(self.text, encoding="utf-8", newline="\n")
 
 
 @dataclass(frozen=True, slots=True)
@@ -188,7 +188,7 @@ def refresh_tokens(documents: Sequence[Document], *, write: bool) -> list[Path]:
             if candidate == updated:
                 break
             updated = candidate
-        doc.path.write_text(updated, encoding="utf-8")
+        doc.path.write_text(updated, encoding="utf-8", newline="\n")
     return stale
 
 

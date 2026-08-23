@@ -211,7 +211,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     print(render_report(target, found, args.min_evidence))
     if args.patch:
-        args.patch.write_text(render_patch(found), encoding="utf-8")
+        args.patch.write_text(render_patch(found), encoding="utf-8", newline="\n")
         print(f"proposed rule text written to {args.patch}")
     return 0
 

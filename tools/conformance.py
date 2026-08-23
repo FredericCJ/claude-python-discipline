@@ -69,6 +69,7 @@ REPO_ROOT: Final = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT / "enforce") not in sys.path:
     sys.path.insert(0, str(REPO_ROOT / "enforce"))
 
+from checks import project  # ruff: ignore[module-import-not-at-top-of-file]
 from checks.__main__ import discover  # ruff: ignore[module-import-not-at-top-of-file]
 
 if TYPE_CHECKING:
@@ -132,7 +133,9 @@ def findings_for(paths: Sequence[Path]) -> list[Finding]:
     @return the findings, in check-name then walk order
     """
     collected: list[Finding] = []
+    declaration = project.load(paths[0] if paths else Path.cwd())
     for check in discover():
+        check.declaration = declaration
         collected.extend(check.run(list(paths)))
     return collected
 
@@ -203,6 +206,7 @@ def write_baseline(path: Path, count: int, pairs: set[tuple[str, str]],
             "why": why,
         }, indent=2) + "\n",
         encoding="utf-8",
+        newline="\n",
     )
 
 

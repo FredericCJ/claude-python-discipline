@@ -431,7 +431,7 @@ def _cosmic_configuration(
         "[cosmic-ray.distributor]\n"
         'name = "local"\n'
     )
-    path.write_text(body, encoding="utf-8")
+    path.write_text(body, encoding="utf-8", newline="\n")
 
 
 def _environment(configuration: Configuration, copied_root: Path) -> dict[str, str]:

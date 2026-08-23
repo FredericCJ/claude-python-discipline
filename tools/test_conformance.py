@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import conformance
-from checks import Finding
+from checks import Finding, project
 from checks.__main__ import discover
 
 if TYPE_CHECKING:
@@ -76,16 +76,65 @@ def accept(root: Path, why: str = "adoption") -> int:
     )
 
 
-def test_a_clean_tree_passes_without_a_baseline(tmp_path: Path) -> None:
+def test_a_clean_tree_passes_without_a_baseline(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """A greenfield project needs no baseline and must not be asked for one.
 
     @param tmp_path the scratch directory
     """
-    documented = ('"""A module."""\n\n\ndef widget(value: int) -> int:\n'
-                  '    """Do a thing.\n\n    @param value the input\n'
-                  '    @return the value\n    """\n    return value\n')
-    root = tree(tmp_path, widget=documented)
+    root = tree(tmp_path, widget='"""A module."""\n')
+    monkeypatch.setattr(conformance, "findings_for", lambda _paths: [])
     assert judge(root) == conformance.EXIT_OK
+
+
+def test_project_declaration_reaches_every_check(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The migration ratchet evaluates checks under the adopter's v4 declaration.
+
+    @param tmp_path scratch repository
+    @param monkeypatch substitutes one declaration-observing check
+    """
+    root = tree(tmp_path, widget='"""A module."""\n')
+    declaration = root / "pyproject.toml"
+    declaration.write_text(
+        "[tool.agent-discipline]\n"
+        'unit = "application"\n'
+        'source_roots = ["src"]\n'
+        'architecture = "architecture.json"\n'
+        'contract_conformance = "contract-conformance.json"\n'
+        'operational_model = "operational-model.json"\n'
+        'security_model = "security-model.json"\n'
+        'adversarial_review = "adversarial-review.json"\n'
+        'doc_engine = "none"\n\n'
+        "[tool.agent-discipline.capabilities]\n"
+        "public_api = false\nfilesystem_io = false\npersistent_state = false\n"
+        "generated_artifacts = false\nnetwork_io = false\n"
+        "launches_subprocesses = false\nowns_subprocess_lifecycle = false\n"
+        "concurrency = false\ndestructive_effects = false\n"
+        "bounded_latency = false\nsensitive_data = false\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+
+    class DeclarationProbe:
+        """One check that records the declaration supplied by conformance."""
+
+        ## Declaration installed by the migration ratchet before the check runs.
+        declaration = project.DEFAULT
+
+        def run(self, _paths: list[Path]) -> list[Finding]:
+            """Require the parsed declaration at the check boundary.
+
+            @param _paths governed source paths, unused by this declaration probe
+            @return no findings after the assertion succeeds
+            """
+            assert self.declaration.source == declaration.resolve()
+            return []
+
+    monkeypatch.setattr(conformance, "discover", lambda: [DeclarationProbe()])
+    assert conformance.findings_for([root / "src"]) == []
 
 
 def test_an_unbaselined_finding_fails(tmp_path: Path) -> None:

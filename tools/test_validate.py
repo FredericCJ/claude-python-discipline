@@ -644,7 +644,8 @@ def test_index_md_carries_the_distinct_evidence_columns() -> None:
     assert (
         "| Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |"
     ) in text
-    assert "`unbuilt`" in text
+    assert "`local-verifier`" in text
+    assert "`external-verifier`" in text
     assert "`proxy`" in text
     assert "rule-level witnessed" in text
 
@@ -833,6 +834,7 @@ def test_update_baseline_requires_why(tmp_path: Path) -> None:
 # --------------------------------------------------------------- the real corpus
 
 
+@pytest.mark.timeout(90)
 def test_the_live_corpus_is_clean() -> None:
     """The repository itself passes every check."""
     findings = [f for f in run() if f.severity is Severity.ERROR]  # type: ignore[attr-defined]

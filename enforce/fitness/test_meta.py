@@ -252,6 +252,30 @@ def test_no_source_file_carries_a_control_character() -> None:
     assert not offenders, "control characters in source:\n" + "\n".join(offenders)
 
 
+@decides("DEP-009")
+def test_durable_tool_text_writes_pin_lf() -> None:
+    """DEP-009: host newline policy cannot change generated or recorded bytes."""
+    offenders: list[str] = []
+    for path in sorted((REPO_ROOT / "tools").glob("*.py")):
+        if path.stem.startswith("test_"):
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if not (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and node.func.attr == "write_text"
+            ):
+                continue
+            newline = next(
+                (keyword.value for keyword in node.keywords if keyword.arg == "newline"),
+                None,
+            )
+            if not (isinstance(newline, ast.Constant) and newline.value == "\n"):
+                offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}:{node.lineno}")
+    assert not offenders, "write_text calls without newline='\\n':\n" + "\n".join(offenders)
+
+
 @decides("FLOW-009")
 def test_gate_suite_defined() -> None:
     """FLOW-009: the gate is a list, in one place, not prose that drifts.

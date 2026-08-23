@@ -126,7 +126,7 @@ def damaged(mutation: discrimination.Mutation, workspace: Path) -> Path:
         for name, contents in written.items():
             target = root / name
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(contents, encoding="utf-8")
+            target.write_text(contents, encoding="utf-8", newline="\n")
         return root
     return broken_copy(workspace, drop=mutation.drop, write=written or None,
                        replace=mutation.replace)
@@ -151,7 +151,7 @@ def _apply_damage(root: Path, mutation: discrimination.Mutation) -> None:
     for relative, body in mutation.write:
         target = root / relative
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(body, encoding="utf-8")
+        target.write_text(body, encoding="utf-8", newline="\n")
     for relative, old, new in mutation.replace:
         target = root / relative
         if not target.exists():
@@ -161,7 +161,9 @@ def _apply_damage(root: Path, mutation: discrimination.Mutation) -> None:
         if old not in source:
             message = f"{relative} does not contain {old!r}; the repository has moved"
             raise FileNotFoundError(message)
-        target.write_text(source.replace(old, new, 1), encoding="utf-8")
+        target.write_text(
+            source.replace(old, new, 1), encoding="utf-8", newline="\n"
+        )
 
 
 def fails_against(node: str, root: Path, *, repository: bool = False) -> bool:
@@ -649,6 +651,7 @@ def main(argv: list[str] | None = None) -> int:
                 "why": arguments.why,
             }, indent=2) + "\n",
             encoding="utf-8",
+            newline="\n",
         )
         print(
             f"discrimination: floor recorded at D={len(provoked)}, "

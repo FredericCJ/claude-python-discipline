@@ -288,6 +288,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args.out.write_text(
         yaml.safe_dump(payload, sort_keys=False, allow_unicode=True, width=100),
         encoding="utf-8",
+        newline="\n",
     )
 
     by_source = Counter(c.source for c in all_candidates)

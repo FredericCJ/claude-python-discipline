@@ -1,8 +1,8 @@
 {
  "generated_by": "tools/lint_gate.py --update-baseline",
  "note": "Ratchet ceiling for gate step 1. lint_gate.py fails when a (file, code) pair appears that is not recorded here, or when the total rises. Move it with `python tools/lint_gate.py --update-baseline --why \"...\"`, never by hand -- the pairs must stay exactly what the tool itself measured. A code in lint_gate.PROTECTED is refused before this file is consulted.",
- "count": 92,
- "why": "Phase 3 removed one excess local from the project declaration parser while adding the operational model field.",
+ "count": 91,
+ "why": "Canonical LF writes remove one residual formatting finding; preserve the lower exact pair set.",
  "pairs": [
   [
    "enforce/checks/__init__.py",
@@ -211,10 +211,6 @@
   [
    "tools/validate.py",
    "PLR2004"
-  ],
-  [
-   "tools/vendor.py",
-   "PERF401"
   ]
  ]
 }

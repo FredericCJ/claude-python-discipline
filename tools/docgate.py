@@ -280,7 +280,9 @@ def _write_baseline_document(
         document["note"] = note
     document["files"] = {name: entry.to_json() for name, entry in sorted(files.items())}
     BASELINE_PATH.write_text(
-        json.dumps(document, indent=1, sort_keys=True) + "\n", encoding="utf-8",
+        json.dumps(document, indent=1, sort_keys=True) + "\n",
+        encoding="utf-8",
+        newline="\n",
     )
 
 
