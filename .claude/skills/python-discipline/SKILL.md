@@ -75,6 +75,13 @@ practice, whatever its tag claims.
 13. Destructive work plans before it applies. `EFCT-005`
 14. Every test module declares its oracle. `TEST-004`
 15. Every check has a proof-of-failure companion. `TEST-015`, `FLOW-007`
+16. Every governed entity and local binding carries its semantic contract in the
+    comment form assigned to that owner. `DOC-001/002/016`
+17. Governed execution is narrated by logical operation, including branches, exits,
+    translations, state transitions, and effect sequences. `DOC-017/018/019`
+18. Doxygen is the sole structured engine; the project model owns scope, vocabulary,
+    naming grammar, generated-name mappings, and inferable semantic properties.
+    `DOC-015/022/023/024/025/029`
 
 ## Router
 
@@ -92,6 +99,7 @@ Read only what the task needs.
 | writing tests, fixtures, properties, fault injection, mutation | `discipline/law/TEST.md` + `discipline/fact/py-testing.md` |
 | public surface, CLI, structured output, versioning, migrations | `discipline/law/API.md` |
 | adding a dependency, lockfiles, generated files | `discipline/law/DEP.md` |
+| comments, docstrings, local bindings, naming, Doxygen, documentation model | `discipline/law/DOC.md` + `discipline/law/DOC-COMMENTS.md` + `discipline/law/DOC-NAMING.md` + `discipline/frame/documentation.md` |
 | what to do first, definition of done, decision records | `discipline/law/FLOW.md` |
 | choosing a paradigm, refactoring, legacy code, tradeoffs | `discipline/frame/architecture.md` |
 | writing a spec, requirements, traceability, reusability | `discipline/frame/spec.md` |
@@ -125,6 +133,20 @@ grounding in `frame/`. More specific guidance beats more general guidance.
 
 ## Applying it to a project
 
-`enforce/templates/pyproject.toml` and `enforce/importlinter.toml` below the bundle root are
-the canonical tool configuration. `enforce/checks/` holds AST checks for rules no linter
-covers, and `enforce/ENFORCEMENT.md` maps every rule to its deciding mechanism.
+`enforce/templates/pyproject.toml`, `enforce/templates/documentation-model.json`,
+`enforce/Doxyfile`, and `enforce/importlinter.toml` below the bundle root are the canonical
+tool configuration. `enforce/checks/` holds AST checks for rules no linter covers, and
+`enforce/ENFORCEMENT.md` maps every rule to its deciding mechanism.
+
+For a v4 repository, preview the v5 structural migration before authoring comments:
+
+```bash
+python <bundle-root>/tools/migrate_v5.py --root .
+python <bundle-root>/tools/migrate_v5.py --root . --apply
+python -m checks src tests --root . --project pyproject.toml
+```
+
+The migrator selects Doxygen and creates only missing, mechanically derivable project
+artifacts. It preserves existing artifacts and never invents semantic prose, vocabulary,
+generated-code ownership, or naming rules; resolve every reported inventory item from the
+actual implementation before accepting the migration.

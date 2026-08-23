@@ -5,7 +5,7 @@ Doxygen, declares the project-owned documentation model, names a local
 ``Doxyfile``, and creates missing canonical artifacts. It does not invent
 semantic comments, naming grammars, abbreviations, generated-code ownership, or
 semantic properties. Those remain explicit authoring work reported by the
-inventory command after migration.
+aggregate checks after migration.
 
 Run without ``--apply`` to inspect every byte that would change::
 
@@ -550,7 +550,8 @@ def plan(root: Path) -> MigrationPlan:
             "MIGRATE-V5-003_AUTHORING_REQUIRED",
             "warning",
             "the structural migration cannot invent semantic comments or project vocabulary; "
-            "run `python -m checks --inventory` and author every reported v5 obligation",
+            "run `python -m checks src tests --root . --project pyproject.toml` and "
+            "author every reported v5 obligation",
         ))
     return MigrationPlan(
         root,
