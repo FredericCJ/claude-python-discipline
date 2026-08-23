@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "review_id": "v4_release_adversarial_acceptance",
-  "reviewed_commit": "c64662878729e88c7c72098543da8753aeb6d590",
+  "review_id": "v4_1_release_adversarial_acceptance",
+  "reviewed_commit": "1480333b5671da2271240219dc14dc9673e6945f",
   "scope": {
     "algorithm": "sha256",
-    "digest": "sha256:fc42827525f753b503e08b086e22405020e6d86924cf6de6ce117534d5a225df",
-    "file_count": 288,
+    "digest": "sha256:1c6bb80c6300191678be753164378cd9618025e737ed938562db0f3cc9e18e80",
+    "file_count": 298,
     "categories": [
       "project_declaration",
       "canonical_models",
@@ -16,12 +16,12 @@
       "repository_assets"
     ]
   },
-  "authors": ["codex_v4_implementation", "codex_v4_certification"],
+  "authors": ["codex_v4_implementation", "codex_v4_certification", "codex_v4_1_development_environment"],
   "reviewer": {
-    "identity": "codex_v4_release_adversarial_pass",
+    "identity": "codex_v4_1_release_adversarial_pass",
     "role": "adversarial_reviewer",
     "independence": "role_separated",
-    "basis": "A separate hostile review pass challenged the completed implementation, package lifecycle, five adopter migrations, and dual-platform certification evidence. It was performed in the same Codex session as authorship, so this records cognitive role separation rather than personal or organizational independence."
+    "basis": "A separate hostile review pass challenged the completed v4.1 environment implementation, remote build inputs, package lifecycle, native Windows bootstrap, WSL bridge, container identity, and qualification evidence. It was performed in the same Codex session as authorship, so this records cognitive role separation rather than personal or organizational independence."
   },
   "questions": [
     {
@@ -62,9 +62,9 @@
     },
     {
       "id": "supply_chain",
-      "challenge": "Can generated doctrine views, mirrored host skills, vendored manifests, or a delivered archive drift from the authored source while the gate stays green?",
-      "conclusion": "Generated drift and byte-identical host mirrors are checked, vendoring preserves a manifest, and the project gate verifies built and freshly installed artifacts. Two independently staged archives are required to be byte-identical, the extracted package proves both-host lifecycle behavior through public CLIs, and archive construction refuses any missing or floating Python verifier dependency. Five named adopter commits passed build and clean-install probes on native Windows and independent Linux checkouts.",
-      "evidence": ["requirements.txt", "tools/build_skill_mirror.py", "tools/test_build_skill_mirror.py", "tools/test_release.py", "roadmap/from-3.2-to-4.0/evidence/adopter-certification.json"]
+      "challenge": "Can generated doctrine views, mirrored host skills, development images, vendored manifests, or a delivered archive drift from authored source while the gate stays green?",
+      "conclusion": "Generated drift and byte-identical host mirrors are checked, vendoring preserves a manifest, and every Linux invocation reconciles current build inputs. The Docker frontend and base are digest-pinned, the context admits only three declared inputs, and the application checkout enters only through a non-root runtime mount. Independent archive staging is byte-identical, both extracted development legs execute, and archive construction refuses absent or floating direct Python verifier dependencies.",
+      "evidence": ["environment.yml", ".dockerignore", "dev/Dockerfile", "dev/docker.sh", "tools/test_dev_environment.py", "tools/test_release.py", "roadmap/from-4.0-to-4.1/evidence/development-environment-qualification.json"]
     },
     {
       "id": "test_oracles",
@@ -249,9 +249,86 @@
       "evidence": "enforce/fitness/test_meta.py::test_every_gate_entry_is_runnable[discrimination]",
       "owner": "gate_entry_budget_maintainer",
       "review_trigger": "Review again whenever the discrimination census, process-launch strategy, supported Windows environment, or gate-entry timeout policy changes."
+    },
+    {
+      "id": "container_remote_inputs_or_context_could_drift",
+      "category": "supply_chain",
+      "severity": "critical",
+      "statement": "A floating Dockerfile frontend or base tag can change executable bytes without a repository diff, while a broad build context can send source history, credentials, or application code to a remote builder even when no later COPY retains it.",
+      "disposition": "resolved",
+      "resolution": "Pin both frontend and multi-platform Miniforge base by sha256 digest, exclude the complete context first, re-admit only the environment declaration, dependency-free checker, Dockerfile, and entry point, and test that exact allowlist.",
+      "evidence": "tools/test_dev_environment.py::test_every_remote_docker_build_input_is_immutable",
+      "owner": "development_environment_maintainer",
+      "review_trigger": "Review again whenever a remote image, Dockerfile frontend, build-context member, secret mount, or build service changes."
+    },
+    {
+      "id": "pyright_could_download_an_undeclared_node_runtime",
+      "category": "supply_chain",
+      "severity": "high",
+      "statement": "The Python Pyright launcher silently provisions Node through nodeenv when the declared Node executable is not visible, adding a network action and a second unverified runtime to an apparently locked gate.",
+      "disposition": "resolved",
+      "resolution": "Pin Node in the shared Conda declaration, execution-check it, put the declared environment first on PATH before Pyright starts, disable the alternative Node wheel strategy, and require a successful image-build Pyright probe. The first hostile build exposed the fallback and the corrected build ran Pyright 1.1.407 through Node 22.21.1 without nodeenv provisioning.",
+      "evidence": "roadmap/from-4.0-to-4.1/evidence/development-environment-qualification.json",
+      "owner": "development_environment_maintainer",
+      "review_trigger": "Review again whenever Pyright's Python wrapper, Node resolution strategy, PATH construction, or pinned runtime changes."
+    },
+    {
+      "id": "mutable_local_image_tag_could_bypass_current_inputs",
+      "category": "supply_chain",
+      "severity": "high",
+      "statement": "Accepting a pre-existing local v4.1.0 image tag as proof of content could run an image built from earlier or dirty inputs against the current repository.",
+      "disposition": "resolved",
+      "resolution": "Route every Linux invocation through the digest-pinned Docker build. Content-addressed cached layers keep unchanged runs bounded while Docker re-evaluates the current lock, checker, entry point, context policy, and Dockerfile before retagging.",
+      "evidence": "tools/test_dev_environment.py::test_every_linux_invocation_reconciles_the_image_inputs",
+      "owner": "development_environment_maintainer",
+      "review_trigger": "Review again whenever image naming, cache use, build invocation, or build-input membership changes."
+    },
+    {
+      "id": "wsl_stub_could_shadow_working_docker_desktop_cli",
+      "category": "failure_containment",
+      "severity": "high",
+      "statement": "Docker Desktop may expose a discoverable but deliberately nonfunctional docker command inside a WSL distribution with integration disabled, causing the Linux leg to fail before trying the working Windows Docker CLI.",
+      "disposition": "resolved",
+      "resolution": "Accept a discovered Linux docker command only after its engine answers docker version; otherwise select Docker Desktop's Windows executable and convert the context and mount through wslpath. The actual host topology exercised this fallback successfully.",
+      "evidence": "tools/test_dev_environment.py::test_the_wsl_fallback_rejects_a_nonfunctional_docker_stub",
+      "owner": "development_environment_maintainer",
+      "review_trigger": "Review again whenever Docker Desktop's WSL integration, executable locations, engine probe, or path conversion changes."
+    },
+    {
+      "id": "powershell_native_stderr_preempted_conda_status",
+      "category": "failure_containment",
+      "severity": "high",
+      "statement": "Windows PowerShell 5.1 promotes native stderr from conda.bat to ErrorRecord; under a global stop policy, the expected absent-environment probe terminated before the launcher could enter its create-or-repair path.",
+      "disposition": "resolved",
+      "resolution": "Temporarily use non-terminating native stderr semantics only around each Conda process, capture LASTEXITCODE before restoring the strict policy, and make that status the sole success decision. A freshly packaged launcher then created, verified, used, and removed an isolated environment.",
+      "evidence": "roadmap/from-4.0-to-4.1/evidence/development-environment-qualification.json",
+      "owner": "development_environment_maintainer",
+      "review_trigger": "Review again whenever the supported PowerShell version, Conda entry point, native error policy, or process invocation changes."
+    },
+    {
+      "id": "container_identity_or_pid1_could_lose_ownership",
+      "category": "failure_containment",
+      "severity": "high",
+      "statement": "Running the container as root can leave root-owned build products on the bind mount, while a wrapper that does not exec the requested tool can absorb stop signals and orphan verifier subprocesses.",
+      "disposition": "resolved",
+      "resolution": "Run with the invoking numeric uid/gid, create disposable writable home and XDG directories for identities absent from passwd, trust only /workspace for Git ownership, use Docker init, prohibit privileged mode, and exec the requested command. A mounted run observed uid 1000 and direct tool execution.",
+      "evidence": "tools/test_dev_environment.py::test_the_linux_leg_preserves_identity_and_signal_delivery",
+      "owner": "development_environment_maintainer",
+      "review_trigger": "Review again whenever mount ownership, user namespaces, entry-point behavior, init handling, or stop semantics change."
+    },
+    {
+      "id": "exact_versions_are_not_artifact_hashes",
+      "category": "supply_chain",
+      "severity": "medium",
+      "statement": "The shared environment pins direct versions but does not hash Conda packages, wheels, or transitive Python resolutions; a repository diff therefore cannot alone prove the exact downloaded artifact bytes.",
+      "disposition": "accepted_risk",
+      "resolution": "State the limitation in the executable declaration and release notes, execution-check every native tool and direct Python distribution, pin both remote container roots by digest, and keep byte-exact reproducibility claims confined to the discipline archive. A hash-locked cross-platform wheelhouse remains future supply-chain work.",
+      "evidence": "RELEASE-NOTES-v4.1.0.md",
+      "owner": "release_dependency_maintainer",
+      "review_trigger": "Replace this acceptance when Conda explicit locks and hash-checked Python artifacts exist for both supported legs, or review whenever channels and dependency resolution change."
     }
   ],
   "verdict": "accepted",
-  "conclusion": "The v4.0 doctrine, combined Claude/Codex package lifecycle, five standalone adopter migrations, and dual-platform certification evidence are acceptable for release. No unresolved blocker, critical, or high-severity objection remains.",
-  "residual": "Structured fields and local evidence cannot authenticate reviewer identity, establish intellectual independence, prove oracle sufficiency, or establish behavior outside the five governed repositories. Later bytes, field evidence, composition evidence, and independent review may refute this judgment."
+  "conclusion": "The v4.1 development environment and combined Claude/Codex package are acceptable for the final release gate. The Windows Conda and Linux Docker legs share one checked declaration, both packaged paths executed, and no unresolved blocker, critical, or high-severity objection remains.",
+  "residual": "Structured fields and local evidence cannot authenticate reviewer identity, establish intellectual independence, prove oracle sufficiency, hash every resolved dependency artifact, reproduce BuildKit provenance attestations byte-for-byte, supply undeclared project dependencies, or establish behavior outside one governed repository. v4.1 does not refresh or broaden the frozen v4.0 adopter and component certification. Later bytes, field evidence, composition evidence, and independent review may refute this judgment."
 }
