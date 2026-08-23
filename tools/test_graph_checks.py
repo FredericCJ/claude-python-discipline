@@ -17,6 +17,7 @@ import pytest
 
 from test_validate import CONFORMANT_RULE, codes, module, run_on, write
 
+# Import annotation-only protocols without adding runtime dependencies.
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -31,6 +32,7 @@ def edges_yaml(root: Path, body: str) -> Path:
     @param body the YAML mapping, dedented before writing
     @return the path written
     """
+    # Return the path written to the caller.
     return write(root / "discipline" / "meta" / "edges.yaml", "version: 1\n" + dedent(body))
 
 
@@ -42,8 +44,13 @@ def add_front_matter(path: Path, line: str) -> None:
 
     @param path the module to rewrite in place
     @param line the front-matter entry to add, without a trailing newline
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Retain the immutable source representation consumed by subsequent analysis.
     text = path.read_text(encoding="utf-8")
+    # Publish the externally visible effect after all required inputs are ready.
     path.write_text(text.replace("decay: ", f"{line}\ndecay: ", 1), encoding="utf-8")
 
 
@@ -61,7 +68,9 @@ def test_v090_dangling_edge_endpoint(tmp_path: Path) -> None:
 
 def test_v091_requires_cycle(tmp_path: Path) -> None:
     """Two modules each requiring the other leaves load order undefined."""
+    # Compute first using module for later test v091 requires cycle logic.
     first = module(tmp_path, name="TYPE", title="Typing")
+    # Compute second using module for later test v091 requires cycle logic.
     second = module(
         tmp_path, name="ERR", title="Errors",
         body=CONFORMANT_RULE.replace("TYPE-001", "ERR-001"),
@@ -112,6 +121,7 @@ def test_a_declared_edge_between_real_rules_is_accepted(tmp_path: Path) -> None:
           - pair: [TYPE-001, ERR-001]
         """,
     )
+    # Preserve the optional pattern match that carries the reported analysis count.
     found = codes(run_on(tmp_path))
     assert "V093" not in found
     assert "V090" not in found
@@ -163,5 +173,7 @@ def test_v095_stays_quiet_when_no_fact_pins_the_tool(tmp_path: Path) -> None:
     assert "V095" not in codes(run_on(tmp_path))
 
 
+# Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
+    # Propagate the localized failure so callers cannot mistake it for success.
     raise SystemExit(pytest.main([__file__, "-q"]))

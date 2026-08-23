@@ -49,6 +49,7 @@ from evidence_model import (
     verification_state,
 )
 
+# Import annotation-only protocols without adding runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
@@ -92,8 +93,11 @@ class Artifact:
 
         @return True when writing would change the tree
         """
+        # Select the existing-artifact path only when `not self.path.exists()` is satisfied.
         if not self.path.exists():
+            # Return true when writing would change the tree to the caller.
             return True
+        # Return true when writing would change the tree to the caller.
         return self.path.read_text(encoding="utf-8") != self.text
 
     def write(self) -> None:
@@ -101,8 +105,13 @@ class Artifact:
 
         Unconditional. Staleness is the caller's question; this leaves the file
         in the intended state either way.
+
+        @par Effects
+        Creates, replaces, or removes repository artifacts in implementation order.
         """
+        # Publish the externally visible effect after all required inputs are ready.
         self.path.parent.mkdir(parents=True, exist_ok=True)
+        # Publish the externally visible effect after all required inputs are ready.
         self.path.write_text(self.text, encoding="utf-8", newline="\n")
 
 
@@ -111,16 +120,23 @@ class EvidenceCensus:
     """The aggregate facts rendered above the per-rule evidence table."""
 
     ## Rules grouped by normative force.
+    ## Each element is one binding rule record; canonical rule order is preserved.
     binding: tuple[Rule, ...]
     ## Advisory rules retained for the rationale section.
+    ## Each element is one advisory rule record; canonical rule order is preserved.
     advisory: tuple[Rule, ...]
     ## Open rules retained for the blocked-decision section.
+    ## Each element is one unresolved rule record; canonical rule order is preserved.
     open_rules: tuple[Rule, ...]
     ## Declared mechanism tags and the local subset that cannot be resolved.
+    ## Collect unique named mechanisms element values; their order is deliberately unordered.
     named_mechanisms: frozenset[str]
     ## Local mechanism tags whose implementation cannot be resolved.
+    ## Each element is one unresolved local mechanism tag; lexical tag order is preserved.
     pending_mechanisms: tuple[str, ...]
     ## Binding rules whose declared strategy is missing or not built.
+    ## Each element is one binding rule lacking a built strategy; canonical rule order is
+    ## preserved.
     unavailable: tuple[Rule, ...]
     ## VerificationState value against number of rules in that state.
     state_counts: Counter[str]
@@ -148,14 +164,24 @@ def load(root: Path) -> list[Document]:
     @param root the repository root
     @return the documents that parsed, in path order
     """
+    # Each documents element is one successfully parsed canonical document; lexical path order
+    # is preserved.
     documents: list[Document] = []
+    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Process each candidate element in deterministic source order.
     for path in sorted((root / "discipline").rglob("*.md")):
+        # Select the guarded path only after `path.name == 'INDEX.md'` is satisfied.
         if path.name == "INDEX.md":
+            # Advance after the current candidate has been conclusively excluded.
             continue
+        # Protect the fallible operation so expected failures remain explicitly classified.
         try:
             documents.append(parse_document(path))
+        # Preserve the caught failure that explains why the external result is unusable.
+        # Translate the expected failure into this mechanism's stable diagnostic path.
         except ParseError as exc:
             print(f"skipping unparsable {path}: {exc.reason}", file=sys.stderr)
+    # Return the documents that parsed, in path order to the caller.
     return documents
 
 
@@ -168,27 +194,50 @@ def refresh_tokens(documents: Sequence[Document], *, write: bool) -> list[Path]:
     over rounding.
 
     @param documents the parsed corpus
+        Each element is one canonical `Document`; lexical document-path order is
+        preserved.
     @param write False to measure only, touching nothing
+        True enables write; false selects its disabled alternative.
     @return the modules whose declared count was wrong, whether or not it was fixed
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Each stale element is one document path whose authored token count differs; input document
+    # order is preserved.
     stale: list[Path] = []
+    # Select doc as the current element from documents while refresh tokens preserves traversal
+    # Details: order.
+    # Process each candidate element in deterministic source order.
     for doc in documents:
+        # Retain the immutable source representation consumed by subsequent analysis.
         text = doc.path.read_text(encoding="utf-8")
+        # Compute measured using count tokens for later refresh tokens logic.
         measured = count_tokens(text)
+        # Compute declared using doc.front matter.get for later refresh tokens logic.
         declared = doc.front_matter.get("tokens")
         # Rewriting changes length, so converge rather than assume one pass.
         if isinstance(declared, int) and abs(declared - measured) <= _TOKEN_DRIFT:
+            # Advance after the current candidate has been conclusively excluded.
             continue
         stale.append(doc.path)
         if not write:
+            # Advance after the current candidate has been conclusively excluded.
             continue
         updated = text
         for _ in range(4):
+            # Treat the current candidate as the candidate element consumed by the enclosing
+            # Details: transformation.
             candidate = _TOKENS_LINE.sub(f"tokens: {count_tokens(updated)}", updated, count=1)
+            # Select the guarded path only after `candidate == updated` is satisfied.
             if candidate == updated:
+                # Stop the scan once the decisive match has been established.
                 break
+            # Compute updated using candidate for later refresh tokens logic.
             updated = candidate
         doc.path.write_text(updated, encoding="utf-8", newline="\n")
+    # Return the modules whose declared count was wrong, whether or not it was fixed to the
+    # Details: caller.
     return stale
 
 
@@ -202,6 +251,8 @@ def refresh_tokens(documents: Sequence[Document], *, write: bool) -> list[Path]:
 ## The value is either the gate entry that runs the tool, or the reason it is not
 ## run here. `_external_tool_section` cross-checks the former against
 ## `tools/gate.py::GATE`, so a claim that a step exists cannot outlive the step.
+## Treat EXTERNAL TOOLS as mapping elements whose keys identify fields and values carry their
+## content; key order is deliberately unused.
 EXTERNAL_TOOLS: Final[dict[str, str]] = {
     "ruff": "format and lint",
     "import-linter": "import contracts",
@@ -221,16 +272,24 @@ def _external_tool_section() -> list[str]:
     """
     import gate  # ruff: ignore[import-outside-top-level] - a sibling in tools/
 
+    # Collect unique entries element values; their order is deliberately unordered.
     entries = {name for name, _ in gate.GATE}
+    # Each unknown element is one external-tool mapping absent from the aggregate gate; external
+    # tool mapping order is preserved for diagnostics.
     unknown = [
         f"{tool} -> {where}"
         for tool, where in EXTERNAL_TOOLS.items()
         if not where.startswith(("NOT RUN", "PROJECT GATE")) and where not in entries
     ]
+    # Handle the non-empty or enabled unknown state.
     if unknown:
+        # Derive message from f"EXTERNAL_TOOLS names gate entries that do not exist: {'; ' for
+        # Details: the next  external tool section decision.
         message = f"EXTERNAL_TOOLS names gate entries that do not exist: {'; '.join(unknown)}"
+        # Propagate the localized failure so callers cannot mistake it for success.
         raise ValueError(message)
 
+    # Each lines element represents one decoded record; lexical order is preserved.
     lines = [
         "## External tool integration",
         "",
@@ -243,7 +302,11 @@ def _external_tool_section() -> list[str]:
         "| Tool | Run by this repository's gate |",
         "|---|---|",
     ]
+    # Select tool, where as the current element from sorted(EXTERNAL_TOOLS.items()) while
+    # Details: external tool section preserves traversal order.
+    # Process each candidate element in deterministic source order.
     for tool, where in sorted(EXTERNAL_TOOLS.items()):
+        # Compute cell using ( for later external tool section logic.
         cell = (
             where
             if where.startswith(("NOT RUN", "PROJECT GATE"))
@@ -251,6 +314,7 @@ def _external_tool_section() -> list[str]:
         )
         lines.append(f"| `{tool}` | {cell} |")
     lines.append("")
+    # Return the rendered lines to the caller.
     return lines
 
 
@@ -261,8 +325,12 @@ def _sorted_rules(documents: Sequence[Document]) -> list[Rule]:
     corpus rather than the order the files happened to be read in.
 
     @param documents the parsed corpus
+        Each element is one canonical `Document`; lexical document-path order is
+        preserved.
     @return the rules, flattened out of the modules that own them
     """
+    # Bind doc, rule to the current value used by the next  sorted rules decision.
+    # Return the rules, flattened out of the modules that own them to the caller.
     return sorted(
         (rule for doc in documents for rule in doc.rules),
         key=lambda r: (r.prefix, r.ordinal),
@@ -275,6 +343,7 @@ def registry_for(root: Path) -> EvidenceRegistry:
     @param root repository whose generated views are being built
     @return structurally validated evidence records
     """
+    # Return structurally validated evidence records to the caller.
     return load_evidence(root / "discipline" / "meta" / "evidence.json")
 
 
@@ -284,6 +353,7 @@ def observations_for(root: Path) -> ObservationRegistry:
     @param root repository whose generated views are being built
     @return structurally validated observation records
     """
+    # Return structurally validated observation records to the caller.
     return load_observations(root / "discipline" / "meta" / "observations.json")
 
 
@@ -297,10 +367,14 @@ def statuses_for(
     the strategy passed; only the project gate can report that runtime fact.
 
     @param rules corpus rules, in any order
+        Each element is one canonical `Rule`; caller order is deliberately
+        irrelevant because this operation sorts by rule id.
     @param root repository the local mechanism paths are resolved against
     @param registry evidence joined to every stable rule id
     @return each rule id against its verifier-availability state
     """
+    # Bind rule to the current value used by the next statuses for decision.
+    # Return each rule id against its verifier-availability state to the caller.
     return {
         rule.rule_id: verification_state(rule, registry.rules[rule.rule_id], root) for rule in rules
     }
@@ -313,11 +387,16 @@ def _status_cell(rule: Rule, status: VerificationState) -> str:
     @param status verifier availability, never an execution result
     @return greppable state with a loud marker only for absence or missing code
     """
+    # Select the guarded path only after `rule.force is Force.BINDING and status in
+    # Details: {VerificationState.UNBUILT, VerificationState.UNDECLARED}` is satisfied.
     if rule.force is Force.BINDING and status in {
         VerificationState.UNBUILT,
         VerificationState.UNDECLARED,
     }:
+        # Return greppable state with a loud marker only for absence or missing code to the
+        # Details: caller.
         return f"`{status}` **(!)**"
+    # Return greppable state with a loud marker only for absence or missing code to the caller.
     return f"`{status}`"
 
 
@@ -327,7 +406,12 @@ def _relations(evidence: RuleEvidence) -> str:
     @param evidence authored strategies for one rule
     @return distinct relation labels, or not-applicable when there are no strategies
     """
+    # Preserve call, caller, and directory graph counts in declared relation order.
     relations = sorted({str(strategy.relation) for strategy in evidence.strategies})
+    # Select relation as the current element from relations) or "n/a" while  relations preserves
+    # Details: traversal order.
+    # Return distinct relation labels, or not-applicable when there are no strategies to the
+    # Details: caller.
     return ", ".join(f"`{relation}`" for relation in relations) or "n/a"
 
 
@@ -337,9 +421,13 @@ def _platforms(evidence: RuleEvidence) -> str:
     @param evidence authored strategies for one rule
     @return distinct supported platform labels
     """
+    # Unpack platforms, platform, strategy from sorted for the next  platforms decision.
     platforms = sorted({
         platform for strategy in evidence.strategies for platform in strategy.platforms
     })
+    # Select platform as the current element from platforms) or "n/a" while  platforms preserves
+    # Details: traversal order.
+    # Return distinct supported platform labels to the caller.
     return ", ".join(f"`{platform}`" for platform in platforms) or "n/a"
 
 
@@ -355,13 +443,22 @@ def _discrimination(rule: Rule, evidence: RuleEvidence, covered: frozenset[str] 
     @param covered rule ids loaded from the inherited matrix, or None if absent
     @return precise label for the available discrimination evidence
     """
+    # Each automated element is one automated strategy for this rule; strategy declaration order
+    # is preserved.
     automated = [strategy for strategy in evidence.strategies if strategy.is_automated]
+    # Select the empty-or-disabled path when automated has no usable value.
     if not automated:
+        # Return precise label for the available discrimination evidence to the caller.
         return "n/a"
+    # Use the absence path when covered has no available value.
     if covered is None:
+        # Return precise label for the available discrimination evidence to the caller.
         return "`unknown`"
+    # Select the guarded path only after `rule.rule_id in covered` is satisfied.
     if rule.rule_id in covered:
+        # Return precise label for the available discrimination evidence to the caller.
         return "`rule-level witnessed`"
+    # Return precise label for the available discrimination evidence to the caller.
     return "`pending`"
 
 
@@ -372,12 +469,20 @@ def _residual(evidence: RuleEvidence, *, limit: int = 96) -> str:
     @param limit maximum rendered characters before an ellipsis
     @return escaped residual text suitable for a Markdown table cell
     """
+    # Each residuals element is one escaped strategy-residual string; strategy declaration order
+    # is preserved.
     residuals = [strategy.residual.replace("|", "\\|") for strategy in evidence.strategies]
+    # Select the empty-or-disabled path when residuals has no usable value.
     if not residuals:
+        # Return escaped residual text suitable for a Markdown table cell to the caller.
         return "n/a"
+    # Retain the immutable source representation consumed by subsequent analysis.
     text = "; ".join(residuals)
+    # Select the guarded path only after `len(text) <= limit` is satisfied.
     if len(text) <= limit:
+        # Return escaped residual text suitable for a Markdown table cell to the caller.
         return text
+    # Return escaped residual text suitable for a Markdown table cell to the caller.
     return f"{text[: limit - 1].rstrip()}…"
 
 
@@ -387,6 +492,8 @@ def _observations(evidence: RuleEvidence) -> str:
     @param evidence authored observation links
     @return observation identifiers or an explicit absence
     """
+    # Treat the current item as the candidate element consumed by the enclosing transformation.
+    # Return observation identifiers or an explicit absence to the caller.
     return ", ".join(f"`{item}`" for item in evidence.observations) or "none"
 
 
@@ -404,13 +511,20 @@ def build_index(documents: Sequence[Document], root: Path) -> Artifact:
     columns. None of those facts is allowed to stand in for another.
 
     @param documents the parsed corpus
+        Each element is one canonical `Document`; lexical document-path order is
+        preserved.
     @param root the repository root, fixing both the destination and the links
     @return the intended path and contents; nothing is written
     """
+    # Compute rules using  sorted rules for later build index logic.
     rules = _sorted_rules(documents)
+    # Compute registry using registry for for later build index logic.
     registry = registry_for(root)
+    # Preserve the completed operation outcome for validation and publication.
     status = statuses_for(rules, root, registry)
+    # Compute covered using discrimination covered for later build index logic.
     covered = discrimination_covered(root)
+    # Unpack unavailable, r from sum for the next build index decision.
     unavailable = sum(
         1
         for r in rules
@@ -421,21 +535,30 @@ def build_index(documents: Sequence[Document], root: Path) -> Artifact:
             VerificationState.UNDECLARED,
         }
     )
+    # Each automated element is one binding rule with at least one automated strategy; canonical
+    # rule order is preserved.
     automated = [
         rule
         for rule in rules
         if any(strategy.is_automated for strategy in registry.rules[rule.rule_id].strategies)
     ]
+    # Select rule, witnessed as the current element from automated) while build index preserves
+    # Details: traversal order.
     witnessed = 0 if covered is None else sum(rule.rule_id in covered for rule in automated)
+    # Unpack proxies, evidence, strategy from sum for the next build index decision.
     proxies = sum(
         strategy.relation is DecisionRelation.PROXY
         for evidence in registry.rules.values()
         for strategy in evidence.strategies
     )
+    # Compute by module using defaultdict for later build index logic.
     by_module: defaultdict[str, list[Rule]] = defaultdict(list)
+    # Select rule as the current element from rules while build index preserves traversal order.
+    # Process each candidate element in deterministic source order.
     for rule in rules:
         by_module[rule.module_id].append(rule)
 
+    # Each lines element represents one decoded record; lexical order is preserved.
     lines = [
         "---",
         "id: meta/INDEX",
@@ -481,19 +604,28 @@ def build_index(documents: Sequence[Document], root: Path) -> Artifact:
         "",
     ]
 
+    # Unpack catalogue, d from sorted for the next build index decision.
     catalogue = sorted(
         (d for d in documents if d.kind in {Kind.LAW, Kind.FACT, Kind.FRAME, Kind.OPS}),
         key=lambda d: (str(d.kind), d.doc_id),
     )
+    # Handle the non-empty or enabled catalogue state.
     if catalogue:
+        # Preserve lines element values in deterministic source order.
         lines += [
             "## Modules",
             "",
             "| Module | Kind | Tokens | Rules | Load when |",
             "|---|---|---|---|---|",
         ]
+        # Select doc as the current element from catalogue while build index preserves traversal
+        # Details: order.
+        # Process each candidate element in deterministic source order.
         for doc in catalogue:
+            # Compute keywords using doc.front matter.get for later build index logic.
             keywords = doc.front_matter.get("load_when")
+            # Select hint, k as the current element from keywords[ while build index preserves
+            # Details: traversal order.
             hint = ", ".join(str(k) for k in keywords[:6]) if isinstance(keywords, list) else ""
             lines.append(
                 f"| [{doc.doc_id}]({_link(doc, root)}) | {doc.kind} | "
@@ -501,16 +633,27 @@ def build_index(documents: Sequence[Document], root: Path) -> Artifact:
             )
         lines.append("")
 
+    # Handle the non-empty or enabled rules state.
     if rules:
+        # Preserve lines element values in deterministic source order.
         lines += ["## Rules", ""]
+        # Select module id, module rules as the current element from sorted(by_module.items())
+        # Details: while build index preserves traversal order.
+        # Process each candidate element in deterministic source order.
         for module_id, module_rules in sorted(by_module.items()):
+            # Preserve lines element values in deterministic source order.
             lines += [
                 f"### {module_id}",
                 "",
                 _INDEX_RULE_HEADER,
                 "|---|---|---|---|---|---|---|---|---|",
             ]
+            # Select rule as the current element from module_rules while build index preserves
+            # Details: traversal order.
+            # Process each candidate element in deterministic source order.
             for rule in module_rules:
+                # Derive evidence from registry.rules[rule.rule_id] for the next build index
+                # Details: decision.
                 evidence = registry.rules[rule.rule_id]
                 lines.append(
                     f"| `{rule.rule_id}` | {rule.force} | "
@@ -521,6 +664,7 @@ def build_index(documents: Sequence[Document], root: Path) -> Artifact:
                 )
             lines.append("")
 
+    # Return the intended path and contents; nothing is written to the caller.
     return Artifact(root / "discipline" / "INDEX.md", "\n".join(lines).rstrip() + "\n")
 
 
@@ -534,6 +678,7 @@ def _link(doc: Document, root: Path) -> str:
     @throws ValueError when the module lies outside `discipline/`, which would
         mean it was never part of the corpus this index describes
     """
+    # Return the path relative to `discipline/`, the directory INDEX.md is to the caller.
     return doc.path.relative_to(root / "discipline").as_posix()
 
 
@@ -551,13 +696,21 @@ def build_rules_json(documents: Sequence[Document], root: Path) -> Artifact:
     fields so a consumer cannot accidentally turn one into a verdict about another.
 
     @param documents the parsed corpus
+        Each element is one canonical `Document`; lexical document-path order is
+        preserved.
     @param root the repository root, for the relative paths in the payload
     @return the intended path and contents; nothing is written
     """
+    # Compute rules using  sorted rules for later build rules json logic.
     rules = _sorted_rules(documents)
+    # Compute registry using registry for for later build rules json logic.
     registry = registry_for(root)
+    # Compute observation registry using observations for for later build rules json logic.
     observation_registry = observations_for(root)
+    # Preserve the completed operation outcome for validation and publication.
     status = statuses_for(rules, root, registry)
+    # Treat payload as mapping elements whose keys identify fields and values carry their
+    # Details: content; key order is deliberately unused.
     payload = {
         "generated_by": "tools/build_index.py",
         "modules": [
@@ -595,6 +748,7 @@ def build_rules_json(documents: Sequence[Document], root: Path) -> Artifact:
             for rule in rules
         ],
     }
+    # Return the intended path and contents; nothing is written to the caller.
     return Artifact(
         root / "discipline" / "rules.json",
         json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
@@ -615,6 +769,8 @@ def _rule_payload(
     @param root repository root used to make the source path relative
     @return JSON-shaped record without collapsing distinct claims
     """
+    # Bind unit, warrant, strategy to the current value used by the next  rule payload decision.
+    # Return jSON-shaped record without collapsing distinct claims to the caller.
     return {
         "id": rule.rule_id,
         "module": rule.module_id,
@@ -678,28 +834,42 @@ def _evidence_census(
     """Compute summary values once without obscuring the renderer.
 
     @param rules sorted normative corpus
+        Each element is one canonical `Rule`; rule-id order is preserved.
     @param root repository against which local mechanisms resolve
     @param registry evidence records joined to the rules
     @param states verifier availability by stable rule id
+        Treat states as mapping elements whose keys identify fields and values carry their
+        content; key order is deliberately unused.
     @param covered rule-level mutations inherited from the v3 matrix
     @return all counts and subsets shown in the generated ledger
     """
+    # Select binding, rule as the current element from rules if rule.force is Force.BINDING)
+    # Details: while  evidence census preserves traversal order.
     binding = tuple(rule for rule in rules if rule.force is Force.BINDING)
+    # Select mechanism, named, rule as the current element from rules for mechanism in
+    # Details: rule.mechanisms) while  evidence census preserves traversal order.
     named = frozenset(mechanism for rule in rules for mechanism in rule.mechanisms)
+    # Unpack pending, mechanism from tuple for the next  evidence census decision.
     pending = tuple(
         sorted(
             mechanism for mechanism in named if mechanism_is_implemented(mechanism, root) is False
         )
     )
+    # Unpack strategies, evidence, strategy from tuple for the next  evidence census decision.
     strategies = tuple(
         strategy for evidence in registry.rules.values() for strategy in evidence.strategies
     )
+    # Unpack automated, rule, strategy from tuple for the next  evidence census decision.
     automated = tuple(
         rule
         for rule in rules
         if any(strategy.is_automated for strategy in registry.rules[rule.rule_id].strategies)
     )
+    # Select proxy count, strategy as the current element from strategies) while  evidence
+    # Details: census preserves traversal order.
     proxy_count = sum(strategy.relation is DecisionRelation.PROXY for strategy in strategies)
+    # Bind rule, evidence to the current value used by the next  evidence census decision.
+    # Return all counts and subsets shown in the generated ledger to the caller.
     return EvidenceCensus(
         binding=binding,
         advisory=tuple(rule for rule in rules if rule.force is Force.ADVISORY),
@@ -735,15 +905,23 @@ def build_enforcement(documents: Sequence[Document], root: Path) -> Artifact:
     residual left by each strategy.
 
     @param documents the parsed corpus
+        Each element is one canonical `Document`; lexical document-path order is
+        preserved.
     @param root the repository root, fixing the destination and locating mechanisms
     @return the intended path and contents; nothing is written
     """
+    # Compute rules using  sorted rules for later build enforcement logic.
     rules = _sorted_rules(documents)
+    # Compute registry using registry for for later build enforcement logic.
     registry = registry_for(root)
+    # Preserve the completed operation outcome for validation and publication.
     status = statuses_for(rules, root, registry)
+    # Compute covered using discrimination covered for later build enforcement logic.
     covered = discrimination_covered(root)
+    # Compute census using  evidence census for later build enforcement logic.
     census = _evidence_census(rules, root, registry, status, covered)
 
+    # Each lines element represents one decoded record; lexical order is preserved.
     lines = [
         GENERATED_BANNER,
         "",
@@ -822,9 +1000,12 @@ def build_enforcement(documents: Sequence[Document], root: Path) -> Artifact:
         "",
     ]
 
+    # Preserve lines element values in deterministic source order.
     lines += _external_tool_section()
 
+    # Select the guarded path only after `census.unavailable` is satisfied.
     if census.unavailable:
+        # Preserve lines element values in deterministic source order.
         lines += [
             "## Binding rules without an available strategy",
             "",
@@ -836,14 +1017,21 @@ def build_enforcement(documents: Sequence[Document], root: Path) -> Artifact:
             "| Rule | Verifier | Mechanism | Title |",
             "|---|---|---|---|",
         ]
+        # Select rule as the current element from census.unavailable while build enforcement
+        # Details: preserves traversal order.
+        # Process each candidate element in deterministic source order.
         for rule in census.unavailable:
+            # Select m, mechanisms as the current element from rule.mechanisms) or "—" while
+            # Details: build enforcement preserves traversal order.
             mechanisms = " ".join(f"`{m}`" for m in rule.mechanisms) or "—"
             lines.append(
                 f"| `{rule.rule_id}` | `{status[rule.rule_id]}` | {mechanisms} | {rule.title} |"
             )
         lines.append("")
 
+    # Select the guarded path only after `census.pending_mechanisms` is satisfied.
     if census.pending_mechanisms:
+        # Preserve lines element values in deterministic source order.
         lines += [
             (
                 "> **Mechanisms still to build.** Listed rather than assumed closed: a rule "
@@ -854,19 +1042,31 @@ def build_enforcement(documents: Sequence[Document], root: Path) -> Artifact:
             "| Mechanism | Rules |",
             "|---|---|",
         ]
+        # Select mechanism as the current element from census.pending_mechanisms while build
+        # Details: enforcement preserves traversal order.
+        # Process each candidate element in deterministic source order.
         for mechanism in census.pending_mechanisms:
+            # Select owners, r as the current element from rules if mechanism in r.mechanisms)
+            # Details: while build enforcement preserves traversal order.
             owners = ", ".join(f"`{r.rule_id}`" for r in rules if mechanism in r.mechanisms)
             lines.append(f"| `{mechanism}` | {owners} |")
         lines.append("")
 
+    # Handle the non-empty or enabled rules state.
     if rules:
+        # Preserve lines element values in deterministic source order.
         lines += [
             "## Rule evidence",
             "",
             _LEDGER_RULE_HEADER,
             "|---|---|---|---|---|---|---|---|---|",
         ]
+        # Select rule as the current element from rules while build enforcement preserves
+        # Details: traversal order.
+        # Process each candidate element in deterministic source order.
         for rule in rules:
+            # Derive evidence from registry.rules[rule.rule_id] for the next build enforcement
+            # Details: decision.
             evidence = registry.rules[rule.rule_id]
             lines.append(
                 f"| `{rule.rule_id}` | {rule.force} | "
@@ -877,12 +1077,18 @@ def build_enforcement(documents: Sequence[Document], root: Path) -> Artifact:
             )
         lines.append("")
 
+        # Select counts, m, r as the current element from rules for m in r.mechanisms) while
+        # Details: build enforcement preserves traversal order.
         counts = Counter(m.split(":", 1)[0] for r in rules for m in r.mechanisms)
+        # Preserve lines element values in deterministic source order.
         lines += ["### Mechanisms in use", "", "| Kind | Rules |", "|---|---|"]
+        # Preserve kind, lines, n element values in deterministic source order.
         lines += [f"| `{kind}` | {n} |" for kind, n in sorted(counts.items())]
         lines.append("")
 
+    # Select the guarded path only after `census.advisory` is satisfied.
     if census.advisory:
+        # Preserve lines element values in deterministic source order.
         lines += [
             "## Advisory rationale",
             "",
@@ -894,22 +1100,29 @@ def build_enforcement(documents: Sequence[Document], root: Path) -> Artifact:
             "| Rule | Why no mechanism exists | Title |",
             "|---|---|---|",
         ]
+        # Select rule as the current element from census.advisory while build enforcement
+        # Details: preserves traversal order.
+        # Process each candidate element in deterministic source order.
         for rule in census.advisory:
             lines.append(
                 f"| `{rule.rule_id}` | {rule.no_mechanism or '**unjustified**'} | {rule.title} |"
             )
         lines.append("")
 
+    # Select the guarded path only after `census.open_rules` is satisfied.
     if census.open_rules:
+        # Preserve lines element values in deterministic source order.
         lines += [
             "## Blocked on an open decision",
             "",
             "| Rule | Title |",
             "|---|---|",
         ]
+        # Preserve lines, r element values in deterministic source order.
         lines += [f"| `{r.rule_id}` | {r.title} |" for r in census.open_rules]
         lines.append("")
 
+    # Return the intended path and contents; nothing is written to the caller.
     return Artifact(root / "enforce" / "ENFORCEMENT.md", "\n".join(lines).rstrip() + "\n")
 
 
@@ -923,6 +1136,9 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     @param argv command-line arguments, defaulting to `sys.argv`
     @return 0 on success, 1 when `--check` finds anything out of date
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
     # The console encoding is not ours to choose, and a tool that dies on one is
     # worse than one that renders a character imperfectly.
@@ -934,36 +1150,60 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     root = args.root.resolve()
 
+    # Compute documents using load for later main logic.
     documents = load(root)
+    # Compute stale tokens using refresh tokens for later main logic.
     stale_tokens = refresh_tokens(documents, write=not args.check)
+    # Reload the model only when write mode refreshed authored token counts.
     if stale_tokens and not args.check:
-        documents = load(root)  # re-read so the artifacts carry the new counts
+        # Re-read source documents so every derived artifact carries the new counts.
+        documents = load(root)
 
+    # Each artifacts element is one derived index/rules/enforcement file plan; publication order
+    # is fixed by this list.
     artifacts = [
         build_index(documents, root),
         build_rules_json(documents, root),
         build_enforcement(documents, root),
     ]
+    # Each stale element is one derived artifact whose target bytes differ; artifact plan order
+    # is preserved.
     stale = [a for a in artifacts if a.is_stale()]
 
+    # Select the guarded path only after `args.check` is satisfied.
     if args.check:
+        # Resolve the repository-confined path used by this operation before filesystem access.
+        # Process each candidate element in deterministic source order.
         for path in stale_tokens:
             print(f"stale tokens: {path.relative_to(root).as_posix()}")
+        # Select artifact as the current element from stale while main preserves traversal
+        # Details: order.
+        # Process each candidate element in deterministic source order.
         for artifact in stale:
             print(f"stale artifact: {artifact.path.relative_to(root).as_posix()}")
+        # Compute total using len for later main logic.
         total = len(stale_tokens) + len(stale)
         print(f"{total} stale file(s)." if total else "up to date.")
+        # Return the aggregate process status to the command-line boundary.
         return 1 if total else 0
 
+    # Select artifact as the current element from artifacts while main preserves traversal
+    # Details: order.
+    # Process each candidate element in deterministic source order.
     for artifact in artifacts:
+        # Publish the externally visible effect after all required inputs are ready.
         artifact.write()
+    # Select d, rules as the current element from documents) while main preserves traversal
+    # Details: order.
     rules = sum(len(d.rules) for d in documents)
     print(
         f"wrote {len(artifacts)} artifact(s); {len(documents)} modules, {rules} rules, "
         f"{len(stale_tokens)} token count(s) refreshed."
     )
+    # Return the aggregate process status to the command-line boundary.
     return 0
 
 
+# Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
     sys.exit(main())

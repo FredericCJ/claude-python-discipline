@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING
 
 import learn
 
+# Import annotation-only protocols without adding runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
@@ -41,24 +42,44 @@ def collect(store: learn.Store, min_evidence: int) -> list[dict[str, object]]:
     @param min_evidence how many recorded outcomes a finding needs to qualify
     @return one mapping per qualifying learning, ordered by id; empty when the
             target has no ledger at all
+
+    @par Effects
+    May mutate caller-visible or process-local state in implementation order.
     """
+    # Select the existing-artifact path only when `not store.ledger.exists()` is satisfied.
     if not store.ledger.exists():
+        # Return one mapping per qualifying learning, ordered by id; empty when the to the
+        # Details: caller.
         return []
+    # Compute connection using learn.sync for later collect logic.
     connection = learn.sync(store)
+    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
+        # Preserve rows element values in deterministic source order.
         rows = connection.execute(
             "SELECT * FROM learning WHERE scope = 'discipline' "
             "AND status NOT IN ('superseded','refuted') ORDER BY id"
         ).fetchall()
+        # Treat found as mapping elements whose keys identify fields and values carry their
+        # Details: content; key order is deliberately unused.
         found: list[dict[str, object]] = []
+        # Select row as the current element from rows while collect preserves traversal order.
+        # Process each candidate element in deterministic source order.
         for row in rows:
+            # Select the guarded path only after `row['helped'] < min_evidence and (not
+            # Details: row['verification'])` is satisfied.
             if row["helped"] < min_evidence and not row["verification"]:
+                # Advance after the current candidate has been conclusively excluded.
                 continue
+            # Each links element is one graph-node id attached to this learning; SQL lexical
+            # node order is preserved.
             links = [
                 r["node"] for r in connection.execute(
                     "SELECT node FROM link WHERE learning_id = ? ORDER BY node", (row["id"],)
                 )
             ]
+            # Each triggers element is one `type:pattern` selector attached to this learning;
+            # SQL type/pattern order is preserved.
             triggers = [
                 f"{r['type']}:{r['pattern']}" for r in connection.execute(
                     "SELECT type, pattern FROM trigger WHERE learning_id = ? "
@@ -72,8 +93,11 @@ def collect(store: learn.Store, min_evidence: int) -> list[dict[str, object]]:
                 "verification": row["verification"], "links": links,
                 "triggers": triggers, "status": row["status"],
             })
+        # Return one mapping per qualifying learning, ordered by id; empty when the to the
+        # Details: caller.
         return found
     finally:
+        # Publish the externally visible effect after all required inputs are ready.
         connection.close()
 
 
@@ -86,9 +110,12 @@ def render_report(target: Path, found: Sequence[dict[str, object]], min_evidence
 
     @param target the repository the findings were read from
     @param found the qualifying learnings
+        Treat found as mapping elements whose keys identify fields and values carry their
+        content; key order is deliberately unused.
     @param min_evidence the threshold applied, restated for the reader
     @return Markdown text, newline-terminated
     """
+    # Each lines element represents one decoded record; lexical order is preserved.
     lines = [
         "# Harvest",
         "",
@@ -96,17 +123,24 @@ def render_report(target: Path, found: Sequence[dict[str, object]], min_evidence
         "recorded outcome(s), or a verification command.",
         "",
     ]
+    # Select the empty-or-disabled path when found has no usable value.
     if not found:
+        # Preserve lines element values in deterministic source order.
         lines += [
             "Nothing to harvest. Either the repository has recorded no discipline-level",
             "findings, or none has enough evidence yet. Both are ordinary states: a",
             "single session disagreeing with a rule is not evidence the rule is wrong.",
             "",
         ]
+        # Return markdown text, newline-terminated to the caller.
         return "\n".join(lines)
 
+    # Preserve lines element values in deterministic source order.
     lines += ["| Learning | Kind | Evidence | About | Claim |", "|---|---|---|---|---|"]
+    # Treat the current item as the candidate element consumed by the enclosing transformation.
+    # Process each candidate element in deterministic source order.
     for item in found:
+        # Preserve the observed item count used by the non-vacuity verdict.
         about = ", ".join(f"`{n}`" for n in item["links"]) or "—"  # type: ignore[arg-type]
         lines.append(
             f"| `{item['id']}` | {item['kind']} | {item['evidence']}"
@@ -114,17 +148,23 @@ def render_report(target: Path, found: Sequence[dict[str, object]], min_evidence
         )
     lines.append("")
 
+    # Treat the current item as the candidate element consumed by the enclosing transformation.
+    # Process each candidate element in deterministic source order.
     for item in found:
+        # Preserve lines, t element values in deterministic source order.
         lines += [
             f"## {item['id']} — {item['claim']}",
             "",
             f"- **Proposed action** {item['action']}",
             f"- **Triggers** {', '.join(f'`{t}`' for t in item['triggers'])}",  # type: ignore[arg-type]
         ]
+        # Select the guarded path only after `item['verification']` is satisfied.
         if item["verification"]:
             lines.append(f"- **Verification offered** `{item['verification']}`")
+        # Select the guarded path only after `item['links']` is satisfied.
         if item["links"]:
             lines.append(f"- **Concerns** {', '.join(item['links'])}")  # type: ignore[arg-type]
+        # Preserve lines element values in deterministic source order.
         lines += [
             "",
             "*Review question:* is this a defect in the rule, a gap in its mechanism, or a",
@@ -132,6 +172,7 @@ def render_report(target: Path, found: Sequence[dict[str, object]], min_evidence
             "belong upstream.",
             "",
         ]
+    # Return markdown text, newline-terminated to the caller.
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -148,8 +189,11 @@ def render_patch(found: Sequence[dict[str, object]]) -> str:
     than absent.
 
     @param found the qualifying learnings
+        Treat found as mapping elements whose keys identify fields and values carry their
+        content; key order is deliberately unused.
     @return Markdown holding one proposed rule block per learning
     """
+    # Each lines element represents one decoded record; lexical order is preserved.
     lines = [
         "# Proposed rules",
         "",
@@ -158,17 +202,23 @@ def render_patch(found: Sequence[dict[str, object]]) -> str:
         "mechanism — the three things a harvest cannot decide for you.",
         "",
     ]
+    # Treat the current item as the candidate element consumed by the enclosing transformation.
+    # Process each candidate element in deterministic source order.
     for item in found:
+        # Compute mechanism using ( for later render patch logic.
         mechanism = (
             f"[check:{str(item['id']).lower().replace('-', '_')}]"
             if item["verification"] else "[review]"
         )
+        # Compute check line using ( for later render patch logic.
         check_line = (
             f"- **Check** `{item['verification']}`" if item["verification"]
             else "- **Check** TODO: no mechanism proposed; the rule cannot be binding "
                  "without one"
         )
+        # Preserve the observed item count used by the non-vacuity verdict.
         see = ", ".join(f"[{n}]" for n in item["links"])  # type: ignore[arg-type]
+        # Preserve lines element values in deterministic source order.
         lines += [
             "```markdown",
             f"### TODO-000 · {str(item['claim'])[:58]}  [BINDING] {mechanism}",
@@ -180,6 +230,7 @@ def render_patch(found: Sequence[dict[str, object]]) -> str:
             "```",
             "",
         ]
+    # Return markdown holding one proposed rule block per learning to the caller.
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -192,6 +243,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     @param argv command-line arguments, defaulting to `sys.argv`
     @return 0 always; finding nothing to harvest is an ordinary outcome, not a
             failure, and must not fail a build that runs this
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
     # The console encoding is not ours to choose, and a tool that dies on one is
     # worse than one that renders a character imperfectly.
@@ -203,6 +257,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--min-evidence", type=int, default=DEFAULT_MIN_EVIDENCE)
     args = parser.parse_args(argv)
 
+    # Resolve the repository-confined path used by this operation before filesystem access.
     target = args.target.resolve()
     # A vendored install keeps its learning database under .agent/; a source
     # checkout keeps it at the root.
@@ -210,11 +265,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     found = collect(learn.Store(root), args.min_evidence)
 
     print(render_report(target, found, args.min_evidence))
+    # Select the guarded path only after `args.patch` is satisfied.
     if args.patch:
+        # Publish the externally visible effect after all required inputs are ready.
         args.patch.write_text(render_patch(found), encoding="utf-8", newline="\n")
         print(f"proposed rule text written to {args.patch}")
+    # Return the aggregate process status to the command-line boundary.
     return 0
 
 
+# Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
     sys.exit(main())

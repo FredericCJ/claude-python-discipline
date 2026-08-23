@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
+# Import annotation-only protocols without adding runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator, Sequence
 
@@ -165,9 +166,16 @@ class Node:
         @param key the attribute name
         @return the stored value, or None when this node carries no such attribute
         """
+        # Normalize the current repository path to its portable baseline key spelling.
+        # Process each candidate element in deterministic source order.
         for name, value in self.attrs:
+            # Select the guarded path only after `name == key` is satisfied.
             if name == key:
+                # Return the stored value, or None when this node carries no such attribute to
+                # Details: the caller.
                 return value
+        # Return the stored value, or None when this node carries no such attribute to the
+        # Details: caller.
         return None
 
 
@@ -205,6 +213,7 @@ class Edge:
         @return `src--type-->dst`, equal for two edges exactly when they assert
             the same relation
         """
+        # Return `src--type-->dst`, equal for two edges exactly when they assert to the caller.
         return f"{self.src}--{self.type}-->{self.dst}"
 
 
@@ -218,14 +227,23 @@ class Graph:
     """
 
     ## Keyed by node id. A second add under the same id replaces the first.
+    ## Treat nodes as mapping elements whose keys identify fields and values carry their
+    ## content; key order is deliberately unused.
     nodes: dict[str, Node] = field(default_factory=dict)
     ## In arrival order, which is builder order; `to_dict` sorts instead of trusting it.
+    ## Each element is one directed typed edge; builder arrival order is preserved until
+    ## serialization imposes its stable sort.
     edges: list[Edge] = field(default_factory=list)
     ## Outgoing adjacency, kept in step with `edges` by `add_edge`.
+    ## Treat  out as mapping elements whose keys identify fields and values carry their content;
+    ## key order is deliberately unused.
     _out: dict[str, list[Edge]] = field(default_factory=lambda: defaultdict(list))
     ## Incoming adjacency, the mirror of `_out`.
+    ## Treat  in as mapping elements whose keys identify fields and values carry their content;
+    ## key order is deliberately unused.
     _in: dict[str, list[Edge]] = field(default_factory=lambda: defaultdict(list))
     ## Edge identity plus origin, the set that makes `add_edge` idempotent.
+    ## Collect unique  seen element values; their order is deliberately unordered.
     _seen: set[str] = field(default_factory=set)
 
     # ------------------------------------------------------------------ build
@@ -237,7 +255,11 @@ class Graph:
         a node the static build already made, instead of duplicating it.
 
         @param node the node to hold under its own id
+
+        @par Effects
+        May mutate caller-visible or process-local state in implementation order.
         """
+        # Update add node state only after the required source facts are available.
         self.nodes[node.id] = node
 
     def add_edge(self, edge: Edge) -> bool:
@@ -250,13 +272,18 @@ class Graph:
         @param edge the relation to record; its endpoints need not exist yet
         @return True when it was stored, False when it was already present
         """
+        # Treat the current key as the candidate element consumed by the enclosing
+        # Details: transformation.
         key = f"{edge.id}#{edge.origin}"
+        # Select the guarded path only after `key in self._seen` is satisfied.
         if key in self._seen:
+            # Return true when it was stored, False when it was already present to the caller.
             return False
         self._seen.add(key)
         self.edges.append(edge)
         self._out[edge.src].append(edge)
         self._in[edge.dst].append(edge)
+        # Return true when it was stored, False when it was already present to the caller.
         return True
 
     def merge(self, other: Graph) -> None:
@@ -268,8 +295,14 @@ class Graph:
 
         @param other the graph to fold in; it is left untouched
         """
+        # Treat the current node as the candidate element consumed by the enclosing
+        # Details: transformation.
+        # Process each candidate element in deterministic source order.
         for node in other.nodes.values():
             self.nodes.setdefault(node.id, node)
+        # Select edge as the current element from other.edges while merge preserves traversal
+        # Details: order.
+        # Process each candidate element in deterministic source order.
         for edge in other.edges:
             self.add_edge(edge)
 
@@ -283,7 +316,11 @@ class Graph:
         @return a list built for this call, so sorting or trimming it cannot
             disturb the adjacency index behind it
         """
+        # Compute wanted using set for later out edges logic.
         wanted = set(types) if types is not None else None
+        # Select e as the current element from self._out.get(node_id, ()) if wanted is None or
+        # Details: e.type in wanted] while out edges preserves traversal order.
+        # Return a list built for this call, so sorting or trimming it cannot to the caller.
         return [e for e in self._out.get(node_id, ()) if wanted is None or e.type in wanted]
 
     def in_edges(self, node_id: str, types: Iterable[EdgeType] | None = None) -> list[Edge]:
@@ -293,7 +330,11 @@ class Graph:
         @param types the relation types to keep, or None to keep every type
         @return the matching edges, in the order they were added
         """
+        # Compute wanted using set for later in edges logic.
         wanted = set(types) if types is not None else None
+        # Select e as the current element from self._in.get(node_id, ()) if wanted is None or
+        # Details: e.type in wanted] while in edges preserves traversal order.
+        # Return the matching edges, in the order they were added to the caller.
         return [e for e in self._in.get(node_id, ()) if wanted is None or e.type in wanted]
 
     def neighbors(
@@ -308,15 +349,26 @@ class Graph:
         @param node_id the node to look from
         @param types the relation types to follow, or None to follow every type
         @param undirected also follow relations arriving at the node, not only those leaving
+            True enables undirected; false selects its disabled alternative.
         @return the ids alone; parallel relations between the same pair collapse
             to one entry, so this counts neighbours and never edges
         """
+        # Each found element is one adjacent destination node id; outgoing edge order is
+        # preserved before optional reverse neighbors are appended.
         found = [e.dst for e in self.out_edges(node_id, types)]
+        # Handle the non-empty or enabled undirected state.
         if undirected:
+            # Preserve the optional pattern match that carries the reported analysis count.
             found += [e.src for e in self.in_edges(node_id, types)]
+        # Treat seen as mapping elements whose keys identify fields and values carry their
+        # Details: content; key order is deliberately unused.
         seen: dict[str, None] = {}
+        # Treat the current item as the candidate element consumed by the enclosing
+        # Details: transformation.
+        # Process each candidate element in deterministic source order.
         for item in found:
             seen.setdefault(item, None)
+        # Return the ids alone; parallel relations between the same pair collapse to the caller.
         return list(seen)
 
     def of_type(self, node_type: NodeType) -> list[Node]:
@@ -327,6 +379,8 @@ class Graph:
         @return the matching nodes; every call rescans the whole node table, so
             hoist it out of a loop rather than calling it per candidate
         """
+        # Preserve the observed item count used by the non-vacuity verdict.
+        # Return the matching nodes; every call rescans the whole node table, so to the caller.
         return sorted(
             (n for n in self.nodes.values() if n.type is node_type), key=lambda n: n.id
         )
@@ -346,23 +400,48 @@ class Graph:
         calibrated or reviewed.
 
         @param seeds the starting ids; any the graph does not hold are dropped silently
+            Each element is one starting node id; caller order is preserved
+            before stable frontier sorting.
         @param types the relation types to follow, or None to follow every type
         @param depth how many hops out to go; the walk stops early once nothing new appears
         @param undirected follow relations in both directions
+            True enables undirected; false selects its disabled alternative.
         @return every reached id mapped to its hop count, the seeds at zero
         """
+        # Treat distance as mapping elements whose keys identify fields and values carry their
+        # Details: content; key order is deliberately unused.
         distance: dict[str, int] = {s: 0 for s in seeds if s in self.nodes}
+        # Compute frontier using sorted for later expand logic.
         frontier = sorted(distance)
+        # Select hop as the current element from range(1, depth + 1) while expand preserves
+        # Details: traversal order.
+        # Process each candidate element in deterministic source order.
         for hop in range(1, depth + 1):
+            # Each following element is one next-hop node id discovered at this depth; frontier
+            # then adjacency order is preserved before deduplication.
             following: list[str] = []
+            # Select node id as the current element from frontier while expand preserves
+            # Details: traversal order.
+            # Process each candidate element in deterministic source order.
             for node_id in frontier:
+                # Select neighbor as the current element from self.neighbors(node_id, types,
+                # Details: undirected=undirected) while expand preserves traversal order.
+                # Process each candidate element in deterministic source order.
                 for neighbor in self.neighbors(node_id, types, undirected=undirected):
+                    # Select the guarded path only after `neighbor not in distance` is
+                    # Details: satisfied.
                     if neighbor not in distance:
+                        # Update expand state only after the required source facts are
+                        # Details: available.
                         distance[neighbor] = hop
                         following.append(neighbor)
+            # Select the empty-or-disabled path when following has no usable value.
             if not following:
+                # Stop the scan once the decisive match has been established.
                 break
+            # Compute frontier using sorted for later expand logic.
             frontier = sorted(set(following))
+        # Return every reached id mapped to its hop count, the seeds at zero to the caller.
         return distance
 
     def shortest_path(
@@ -380,25 +459,52 @@ class Graph:
             includes `src == dst`, treated as unreachable rather than as an
             empty path, and either endpoint being absent from the graph
         """
+        # Select the guarded path only after `src not in self.nodes or dst not in self.nodes` is
+        # Details: satisfied.
         if src not in self.nodes or dst not in self.nodes:
+            # Return the edges in travel order, or None when no path exists -- which to the
+            # Details: caller.
             return None
+        # Treat previous as mapping elements whose keys identify fields and values carry their
+        # Details: content; key order is deliberately unused.
         previous: dict[str, Edge] = {}
+        # Collect unique visited element values; their order is deliberately unordered.
         visited = {src}
+        # Each frontier element is one node id at the current breadth-first depth; discovery
+        # order is preserved until the next lexical sort.
         frontier = [src]
+        # Process each candidate element in deterministic source order.
         while frontier:
+            # Each following element is one newly reached node id for the next breadth-first
+            # depth; current frontier and edge order are preserved.
             following: list[str] = []
+            # Select node id as the current element from sorted(frontier) while shortest path
+            # Details: preserves traversal order.
+            # Process each candidate element in deterministic source order.
             for node_id in sorted(frontier):
+                # Select edge as the current element from sorted( while shortest path preserves
+                # Details: traversal order.
+                # Process each candidate element in deterministic source order.
                 for edge in sorted(
                     self.out_edges(node_id, types), key=lambda e: (str(e.type), e.dst)
                 ):
+                    # Select the guarded path only after `edge.dst in visited` is satisfied.
                     if edge.dst in visited:
+                        # Advance after the current candidate has been conclusively excluded.
                         continue
                     visited.add(edge.dst)
+                    # Update shortest path state only after the required source facts are
+                    # Details: available.
                     previous[edge.dst] = edge
+                    # Select the guarded path only after `edge.dst == dst` is satisfied.
                     if edge.dst == dst:
+                        # Return the edges in travel order, or None when no path exists -- which
+                        # Details: to the caller.
                         return _unwind(previous, src, dst)
                     following.append(edge.dst)
+            # Compute frontier using following for later shortest path logic.
             frontier = following
+        # Return the edges in travel order, or None when no path exists -- which to the caller.
         return None
 
     def unreachable_from(
@@ -418,12 +524,18 @@ class Graph:
         reader who lands on a rule has found it whichever way the link was drawn.
 
         @param seeds the entry points an agent really starts from
+            Each element is one starting node id; caller order is preserved
+            before stable reachability expansion.
         @param node_type the kind of node whose findability is being measured
         @param depth the hop budget, standing in for how far an agent will follow links
         @param types the relation types an agent is assumed to follow, or None for every type
         @return the ids that were missed, sorted; empty means the kind is fully navigable
         """
+        # Compute reached using self.expand for later unreachable from logic.
         reached = self.expand(seeds, types=types, depth=depth, undirected=True)
+        # Preserve the observed item count used by the non-vacuity verdict.
+        # Return the ids that were missed, sorted; empty means the kind is fully navigable to
+        # Details: the caller.
         return sorted(
             n.id for n in self.of_type(node_type) if n.id not in reached
         )
@@ -440,8 +552,14 @@ class Graph:
         @param edge_type the single relation type to walk
         @return one node-id list per cycle found, each ending on the node it began at
         """
+        # Each found element is one directed cycle represented by node-id strings ending at its
+        # start; discovery order is preserved.
         found: list[list[str]] = []
+        # Treat colour as mapping elements whose keys identify fields and values carry their
+        # Details: content; key order is deliberately unused.
         colour: dict[str, int] = {}
+        # Each stack element is one active depth-first node id; traversal order is preserved for
+        # cycle slicing.
         stack: list[str] = []
 
         def walk(node_id: str) -> None:
@@ -449,21 +567,36 @@ class Graph:
 
             @param node_id the node to visit; recursion depth follows the longest chain
             """
+            # Update walk state only after the required source facts are available.
             colour[node_id] = 1
             stack.append(node_id)
+            # Select edge as the current element from sorted(self.out_edges(node_id,
+            # Details: [edge_type]), key=lambda e while walk preserves traversal order.
+            # Process each candidate element in deterministic source order.
             for edge in sorted(self.out_edges(node_id, [edge_type]), key=lambda e: e.dst):
+                # Compute state using colour.get for later walk logic.
                 state = colour.get(edge.dst, 0)
+                # Select the guarded path only after `state == 0` is satisfied.
                 if state == 0:
                     walk(edge.dst)
+                # Select the guarded path only after `state == 1` is satisfied.
                 elif state == 1:
+                    # Locate the structural boundary used to parse the external result safely.
                     start = stack.index(edge.dst)
                     found.append([*stack[start:], edge.dst])
             stack.pop()
+            # Update walk state only after the required source facts are available.
             colour[node_id] = 2
 
+        # Select node id as the current element from sorted(self.nodes) while cycles in
+        # Details: preserves traversal order.
+        # Process each candidate element in deterministic source order.
         for node_id in sorted(self.nodes):
+            # Select the guarded path only after `colour.get(node_id, 0) == 0` is satisfied.
             if colour.get(node_id, 0) == 0:
                 walk(node_id)
+        # Return one node-id list per cycle found, each ending on the node it began at to the
+        # Details: caller.
         return found
 
     def dangling(self) -> list[Edge]:
@@ -474,6 +607,9 @@ class Graph:
 
         @return every unresolved edge, in the order it was added
         """
+        # Select e as the current element from self.edges if e.src not in self.nodes or e.dst
+        # Details: not in self.nodes] while dangling preserves traversal order.
+        # Return every unresolved edge, in the order it was added to the caller.
         return [e for e in self.edges if e.src not in self.nodes or e.dst not in self.nodes]
 
     def orphans(self, node_type: NodeType) -> list[str]:
@@ -485,6 +621,8 @@ class Graph:
         @param node_type the kind to inspect
         @return the isolated ids, sorted
         """
+        # Preserve the observed item count used by the non-vacuity verdict.
+        # Return the isolated ids, sorted to the caller.
         return sorted(
             n.id
             for n in self.of_type(node_type)
@@ -502,6 +640,8 @@ class Graph:
         @return the graph as `nodes` and `edges` lists of plain values, losing
             nothing `from_dict` needs to rebuild it
         """
+        # Preserve the observed item count used by the non-vacuity verdict.
+        # Return the graph as `nodes` and `edges` lists of plain values, losing to the caller.
         return {
             "nodes": [
                 {
@@ -538,13 +678,20 @@ class Graph:
         rather than a silently dropped relation.
 
         @param payload a mapping with `nodes` and `edges` entries, both optional
+            Treat payload as mapping elements whose keys identify fields and values carry their
+            content; key order is deliberately unused.
         @return a graph holding what the payload described
         @throws KeyError when a record leaves out a field that has no default
         @throws ValueError when a node, edge or origin name is not one this model defines
         """
+        # Compute graph using cls for later from dict logic.
         graph = cls()
+        # Retain the immutable source representation consumed by subsequent analysis.
+        # Process each candidate element in deterministic source order.
         for raw in payload.get("nodes", []):  # type: ignore[union-attr]
+            # Compute attrs using raw.get for later from dict logic.
             attrs = raw.get("attrs") or {}
+            # Bind k, v to the current value used by the next from dict decision.
             graph.add_node(
                 Node(
                     id=str(raw["id"]),
@@ -555,6 +702,8 @@ class Graph:
                     attrs=tuple(sorted((str(k), str(v)) for k, v in attrs.items())),
                 )
             )
+        # Retain the immutable source representation consumed by subsequent analysis.
+        # Process each candidate element in deterministic source order.
         for raw in payload.get("edges", []):  # type: ignore[union-attr]
             graph.add_edge(
                 Edge(
@@ -566,6 +715,7 @@ class Graph:
                     note=raw.get("note"),
                 )
             )
+        # Return a graph holding what the payload described to the caller.
         return graph
 
     def __len__(self) -> int:
@@ -573,6 +723,7 @@ class Graph:
 
         @return the node count, so a graph carrying edges and no node is falsy
         """
+        # Return the node count, so a graph carrying edges and no node is falsy to the caller.
         return len(self.nodes)
 
 
@@ -580,18 +731,27 @@ def _unwind(previous: dict[str, Edge], src: str, dst: str) -> list[Edge]:
     """Turn a search's predecessor map back into a forward path.
 
     @param previous each node mapped to the edge that first reached it
+        Treat previous as mapping elements whose keys identify fields and values carry their
+        content; key order is deliberately unused.
     @param src the node the walk started at
     @param dst the node that was reached
     @return the edges from `src` to `dst`, in travel order
     @throws KeyError when the map does not in fact join the two, which would mean
         the caller unwound a search that never reached `dst`
     """
+    # Each path element is one predecessor edge collected destination-to-source; reverse unwind
+    # order is preserved until the final reversal.
     path: list[Edge] = []
+    # Compute cursor using dst for later unwind logic.
     cursor = dst
+    # Process each candidate element in deterministic source order.
     while cursor != src:
+        # Compute edge using previous[cursor] for later unwind logic.
         edge = previous[cursor]
         path.append(edge)
+        # Compute cursor using edge.src for later unwind logic.
         cursor = edge.src
+    # Return the edges from `src` to `dst`, in travel order to the caller.
     return list(reversed(path))
 
 
@@ -602,8 +762,12 @@ def iter_edge_types(names: Sequence[str]) -> Iterator[EdgeType]:
     clean, empty result, which is the worst answer a gate can give.
 
     @param names the words as written on the command line
+        Each element is one candidate node-name string; caller order is
+        preserved while the best lexical match is selected.
     @return one edge type per name, yielded lazily
     @throws ValueError on iteration, as soon as a word names no edge type
     """
+    # Normalize the current repository path to its portable baseline key spelling.
+    # Process each candidate element in deterministic source order.
     for name in names:
         yield EdgeType(name)

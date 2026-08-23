@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Final
 
 import yaml
 
+# Import annotation-only protocols without adding runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Iterator, Mapping, Sequence
 
@@ -37,6 +38,8 @@ GENERATED_NAMES: Final[frozenset[str]] = frozenset({"INDEX.md", "rules.json", "E
 ## Ceilings from SCHEMA.md section 2, keyed by file stem with ``*`` as the fallback.
 ## Exceeding one is an error and not a warning: the budget is what lets an agent
 ## decide to open a module without first paying to read it.
+## Treat TOKEN BUDGETS as mapping elements whose keys identify fields and values carry their
+## content; key order is deliberately unused.
 TOKEN_BUDGETS: Final[Mapping[str, int]] = {"KERNEL": 2_000, "*": 4_000}
 
 ## The divisor ``count_tokens`` measures by, and therefore the definition of the
@@ -133,6 +136,8 @@ class Enforcement(StrEnum):
 
         @return True only for the two statuses under which a tool decides the rule
         """
+        # Return true only for the two statuses under which a tool decides the rule to the
+        # Details: caller.
         return self in {Enforcement.MECHANIZED, Enforcement.EXTERNAL}
 
 
@@ -146,22 +151,45 @@ def rules_claimed_by(check: str, root: Path = REPO_ROOT) -> frozenset[str] | Non
     @param root the tree to look in
     @return the rule ids it names, or None when the module or the tuple is absent
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     path = root / "enforce" / "checks" / f"{check}.py"
+    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
+        # Parse the Python source into the syntax tree used for structural fingerprinting.
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    # Translate the expected failure into this mechanism's stable diagnostic path.
     except (OSError, SyntaxError):
+        # Return the rule ids it names, or None when the module or the tuple is absent to the
+        # Details: caller.
         return None
+    # Treat the current node as the candidate element consumed by the enclosing transformation.
+    # Process each candidate element in deterministic source order.
     for node in ast.walk(tree):
+        # Select the empty-or-disabled path when isinstance(node, ast.Assign) has no usable
+        # Details: value.
         if not isinstance(node, ast.Assign):
+            # Advance after the current candidate has been conclusively excluded.
             continue
+        # Select t as the current element from node.targets) while rules claimed by preserves
+        # Details: traversal order.
+        # Select the empty-or-disabled path when any((getattr(t, 'id', '') == 'rules' for t in
+        # Details: node.targets)) has no usable value.
         if not any(getattr(t, "id", "") == "rules" for t in node.targets):
+            # Advance after the current candidate has been conclusively excluded.
             continue
+        # Select the guarded path only after `isinstance(node.value, (ast.Tuple, ast.List))` is
+        # Details: satisfied.
         if isinstance(node.value, (ast.Tuple, ast.List)):
+            # Bind element to the current value used by the next rules claimed by decision.
+            # Return the rule ids it names, or None when the module or the tuple is absent to
+            # Details: the caller.
             return frozenset(
                 element.value
                 for element in node.value.elts
                 if isinstance(element, ast.Constant) and isinstance(element.value, str)
             )
+    # Return the rule ids it names, or None when the module or the tuple is absent to the
+    # Details: caller.
     return None
 
 
@@ -185,23 +213,49 @@ def rules_declared_by(function: str, root: Path = REPO_ROOT) -> frozenset[str] |
     @param root the tree to look in
     @return the union of the ids it declares, or None when no such function exists
     """
+    # True enables found; false selects its disabled alternative.
     found = False
+    # Collect unique declared element values; their order is deliberately unordered.
     declared: set[str] = set()
+    # Select directory as the current element from (root / "enforce" / "fitness", root /
+    # Details: "tools") while rules declared by preserves traversal order.
+    # Process each candidate element in deterministic source order.
     for directory in (root / "enforce" / "fitness", root / "tools"):
+        # Select the existing-artifact path only when `not directory.exists()` is satisfied.
         if not directory.exists():
+            # Advance after the current candidate has been conclusively excluded.
             continue
+        # Resolve the repository-confined path used by this operation before filesystem access.
+        # Process each candidate element in deterministic source order.
         for path in directory.rglob("*.py"):
+            # Protect the fallible operation so expected failures remain explicitly classified.
             try:
+                # Parse the Python source into the syntax tree used for structural
+                # Details: fingerprinting.
                 tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            # Translate the expected failure into this mechanism's stable diagnostic path.
             except (OSError, SyntaxError):
+                # Advance after the current candidate has been conclusively excluded.
                 continue
+            # Treat the current node as the candidate element consumed by the enclosing
+            # Details: transformation.
+            # Process each candidate element in deterministic source order.
             for node in ast.walk(tree):
+                # Select the empty-or-disabled path when isinstance(node, (ast.FunctionDef,
+                # Details: ast.AsyncFunctionDef)) has no usable value.
                 if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    # Advance after the current candidate has been conclusively excluded.
                     continue
+                # Select the guarded path only after `node.name != function` is satisfied.
                 if node.name != function:
+                    # Advance after the current candidate has been conclusively excluded.
                     continue
+                # True enables found; false selects its disabled alternative.
                 found = True
+                # Compute declared using  declared on for later rules declared by logic.
                 declared |= _declared_on(node)
+    # Return the union of the ids it declares, or None when no such function exists to the
+    # Details: caller.
     return frozenset(declared) if found else None
 
 
@@ -211,19 +265,32 @@ def _declared_on(node: ast.FunctionDef | ast.AsyncFunctionDef) -> set[str]:
     @param node the function definition to inspect
     @return the literal string arguments, or an empty set when it is undecorated
     """
+    # Collect unique ids element values; their order is deliberately unordered.
     ids: set[str] = set()
+    # Select decorator as the current element from node.decorator_list while  declared on
+    # Details: preserves traversal order.
+    # Process each candidate element in deterministic source order.
     for decorator in node.decorator_list:
+        # Select the empty-or-disabled path when isinstance(decorator, ast.Call) has no usable
+        # Details: value.
         if not isinstance(decorator, ast.Call):
+            # Advance after the current candidate has been conclusively excluded.
             continue
+        # Resolve the repository-confined path used by this operation before filesystem access.
         target = decorator.func
+        # Normalize the current repository path to its portable baseline key spelling.
         name = target.attr if isinstance(target, ast.Attribute) else getattr(target, "id", "")
+        # Select the guarded path only after `name != 'decides'` is satisfied.
         if name != "decides":
+            # Advance after the current candidate has been conclusively excluded.
             continue
+        # Unpack ids, argument from { for the next  declared on decision.
         ids |= {
             argument.value
             for argument in decorator.args
             if isinstance(argument, ast.Constant) and isinstance(argument.value, str)
         }
+    # Return the literal string arguments, or an empty set when it is undecorated to the caller.
     return ids
 
 
@@ -262,11 +329,20 @@ def mechanism_is_implemented(
     @return True when something that names this rule is present, False when the
         tag is checkable and nothing answers it, None when it is not checkable
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     kind, _, target = mechanism.partition(":")
+    # Select the guarded path only after `kind == 'check'` is satisfied.
     if kind == "check":
+        # Select the existing-artifact path only when `not (root / 'enforce' / 'checks' /
+        # Details: f'{target}.py').exists()` is satisfied.
         if not (root / "enforce" / "checks" / f"{target}.py").exists():
+            # Return true when something that names this rule is present, False when the to the
+            # Details: caller.
             return False
+        # Use the absence path when rule id has no available value.
         if rule_id is None:
+            # Return true when something that names this rule is present, False when the to the
+            # Details: caller.
             return True
         # Existence is not enough, and assuming it was is how fifteen binding
         # rules came to be counted decided by checks that could never report
@@ -274,11 +350,19 @@ def mechanism_is_implemented(
         # their `rules` tuple claimed the rule anyway; nothing read the tuple.
         claimed = rules_claimed_by(target, root)
         return True if claimed is None else rule_id in claimed
+    # Select the guarded path only after `kind == 'fitness'` is satisfied.
     if kind == "fitness":
+        # Compute declared using rules declared by for later mechanism is implemented logic.
         declared = rules_declared_by(target, root)
+        # Use the absence path when declared has no available value.
         if declared is None:
+            # Return true when something that names this rule is present, False when the to the
+            # Details: caller.
             return False
+        # Return true when something that names this rule is present, False when the to the
+        # Details: caller.
         return True if rule_id is None else rule_id in declared
+    # Return true when something that names this rule is present, False when the to the caller.
     return None
 
 
@@ -293,21 +377,42 @@ def enforcement_of(
 
     @param mechanisms the rule's tags with the force tag already removed, in the
         order the heading wrote them
+        Each element is one declared mechanism tag; heading order is preserved.
     @param root the tree the mechanisms are resolved against
     @param rule_id the rule being classified, so a ``check:`` tag is resolved
         against what that check claims rather than against its mere existence
     @return the status; never ``MECHANIZED`` for an empty set, and never a
         mechanical status for a rule decided only by ``review``
     """
+    # Select the empty-or-disabled path when mechanisms has no usable value.
     if not mechanisms:
+        # Return the status; never ``MECHANIZED`` for an empty set, and never a to the caller.
         return Enforcement.UNMECHANIZED
+    # Each resolved element is one mechanism implementation verdict; heading mechanism order is
+    # preserved.
     resolved = [mechanism_is_implemented(m, root, rule_id) for m in mechanisms]
+    # Select state as the current element from resolved) while enforcement of preserves
+    # Details: traversal order.
+    # Select the guarded path only after `any((state is False for state in resolved))` is
+    # Details: satisfied.
     if any(state is False for state in resolved):
+        # Return the status; never ``MECHANIZED`` for an empty set, and never a to the caller.
         return Enforcement.UNBUILT
+    # Select state as the current element from resolved) while enforcement of preserves
+    # Details: traversal order.
+    # Select the guarded path only after `all((state is True for state in resolved))` is
+    # Details: satisfied.
     if all(state is True for state in resolved):
+        # Return the status; never ``MECHANIZED`` for an empty set, and never a to the caller.
         return Enforcement.MECHANIZED
+    # Select m as the current element from mechanisms) while enforcement of preserves traversal
+    # Details: order.
+    # Select the guarded path only after `all((m == 'review' for m in mechanisms))` is
+    # Details: satisfied.
     if all(m == "review" for m in mechanisms):
+        # Return the status; never ``MECHANIZED`` for an empty set, and never a to the caller.
         return Enforcement.REVIEW
+    # Return the status; never ``MECHANIZED`` for an empty set, and never a to the caller.
     return Enforcement.EXTERNAL
 
 
@@ -323,10 +428,14 @@ def has_mechanical_claim(
     than an external mechanical claim.
 
     @param mechanisms heading tags after the normative force
+        Each element is one declared mechanism tag; heading order is preserved.
     @param root tree against which local mechanisms resolve
     @param rule_id rule each local mechanism must claim, when known
     @return True for at least one local or external mechanical arm, never review alone
     """
+    # Bind mechanism to the current value used by the next has mechanical claim decision.
+    # Return true for at least one local or external mechanical arm, never review alone to the
+    # Details: caller.
     return any(
         mechanism != "review"
         and mechanism_is_implemented(mechanism, root, rule_id) is not False
@@ -364,6 +473,8 @@ _XREF = re.compile(
 ## The tools whose versions belong in a dated ``fact`` file and nowhere else.
 ## Naming them explicitly is what keeps an ordinary number in prose from reading
 ## as a pin.
+## Each element is one native or Python tool name whose numeric version can denote a pin;
+## declaration order is preserved for grammar matching.
 _PINNED_TOOLS: Final = (
     "mypy",
     "pyright",
@@ -407,6 +518,7 @@ class Rule:
     ## Normative weight, taken from the single force tag the heading carried.
     force: Force
     ## The remaining tags, naming what decides the rule. Empty means nothing does.
+    ## Each element is one declared mechanism tag; heading order is preserved.
     mechanisms: tuple[str, ...]
     ## The normative prose between the heading and the first field, joined to one line.
     statement: str
@@ -435,6 +547,8 @@ class Rule:
         @return the part before the ordinal, which must match the ``NAME`` half of
             the owning file's id, upper-cased
         """
+        # Return the part before the ordinal, which must match the ``NAME`` half of to the
+        # Details: caller.
         return self.rule_id.rsplit("-", 1)[0]
 
     @property
@@ -448,6 +562,7 @@ class Rule:
         @return the three-digit ordinal as a number, leading zeros dropped
         @throws ValueError when the id does not end in digits
         """
+        # Return the three-digit ordinal as a number, leading zeros dropped to the caller.
         return int(self.rule_id.rsplit("-", 1)[1])
 
 
@@ -459,12 +574,15 @@ class Document:
     path: Path
     ## The YAML header as loaded, with dates normalized back to ISO strings. Typed as
     ## ``object`` because nothing here validates it — that is the validator's job.
+    ## Treat front matter as mapping elements whose keys identify fields and values carry their
+    ## content; key order is deliberately unused.
     front_matter: Mapping[str, object]
     ## Everything after the closing delimiter, verbatim and unstripped.
     body: str
     ## How many lines the header occupied, added back to make body positions absolute.
     body_offset: int
     ## The rules found in the body, in source order. Empty for the genres that carry none.
+    ## Each element is one parsed rule record; document source order is preserved.
     rules: tuple[Rule, ...] = field(default=())
 
     @property
@@ -476,7 +594,10 @@ class Document:
 
         @return the front-matter ``id`` when it is a string, else the empty string
         """
+        # Retain the immutable source representation consumed by subsequent analysis.
         raw = self.front_matter.get("id")
+        # Return the front-matter ``id`` when it is a string, else the empty string to the
+        # Details: caller.
         return raw if isinstance(raw, str) else ""
 
     @property
@@ -485,12 +606,19 @@ class Document:
 
         @return the matching genre, or None for anything unrecognized
         """
+        # Retain the immutable source representation consumed by subsequent analysis.
         raw = self.front_matter.get("kind")
+        # Select the guarded path only after `isinstance(raw, str)` is satisfied.
         if isinstance(raw, str):
+            # Protect the fallible operation so expected failures remain explicitly classified.
             try:
+                # Return the matching genre, or None for anything unrecognized to the caller.
                 return Kind(raw)
+            # Translate the expected failure into this mechanism's stable diagnostic path.
             except ValueError:
+                # Return the matching genre, or None for anything unrecognized to the caller.
                 return None
+        # Return the matching genre, or None for anything unrecognized to the caller.
         return None
 
     @property
@@ -501,6 +629,7 @@ class Document:
 
         @return the half after the slash, or the whole id when there is no slash
         """
+        # Return the half after the slash, or the whole id when there is no slash to the caller.
         return self.doc_id.split("/", 1)[-1] if "/" in self.doc_id else self.doc_id
 
     @property
@@ -514,7 +643,9 @@ class Document:
 
         @return uppercase rule prefix
         """
+        # Retain the immutable source representation consumed by subsequent analysis.
         raw = self.front_matter.get("rule_prefix")
+        # Return uppercase rule prefix to the caller.
         return raw if isinstance(raw, str) else self.module_name.upper()
 
     @property
@@ -524,6 +655,7 @@ class Document:
         @return the path below the repository root, with forward slashes
         @throws ValueError when the document lies outside the repository
         """
+        # Return the path below the repository root, with forward slashes to the caller.
         return self.path.relative_to(REPO_ROOT).as_posix()
 
     @property
@@ -535,6 +667,7 @@ class Document:
 
         @return True when the filename is one the builders produce
         """
+        # Return true when the filename is one the builders produce to the caller.
         return self.path.name in GENERATED_NAMES
 
 
@@ -551,7 +684,9 @@ class ParseError(ValueError):
         @param reason what stopped the parse, as a statement about that file
         """
         super().__init__(f"{path}: {reason}")
+        # Update   init   state only after the required source facts are available.
         self.path = path
+        # Update   init   state only after the required source facts are available.
         self.reason = reason
 
 
@@ -564,20 +699,33 @@ def _strip_code(text: str, *, inline: bool = True) -> str:
 
     @param text the document body to redact
     @param inline whether backtick spans go too, or only fenced blocks
+        True enables inline; false selects its disabled alternative.
     @return the same number of lines, fenced and fence lines emptied, inline spans
         overwritten with as many spaces as they occupied so columns outside them hold
     """
+    # Each out element is one source character outside fenced examples or a masking space inside;
+    # exact character order is preserved.
     out: list[str] = []
+    # True enables inside; false selects its disabled alternative.
     inside = False
+    # Preserve the current decoded diagnostic line before location normalization.
+    # Process each candidate element in deterministic source order.
     for line in text.splitlines():
+        # Select the guarded path only after `_CODE_FENCE.match(line)` is satisfied.
         if _CODE_FENCE.match(line):
+            # Compute inside using not inside for later strip code logic.
             inside = not inside
             out.append("")
+            # Advance after the current candidate has been conclusively excluded.
             continue
+        # Handle the non-empty or enabled inside state.
         if inside:
             out.append("")
+            # Advance after the current candidate has been conclusively excluded.
             continue
         out.append(_INLINE_CODE.sub(lambda m: " " * len(m.group(0)), line) if inline else line)
+    # Return the same number of lines, fenced and fence lines emptied, inline spans to the
+    # Details: caller.
     return "\n".join(out)
 
 
@@ -591,27 +739,46 @@ def parse_document(path: Path) -> Document:
     @return the document, its rules carrying line numbers absolute in the file
     @throws ParseError when the header is absent, is not valid YAML, or is not a mapping
     """
+    # Retain the immutable source representation consumed by subsequent analysis.
     text = path.read_text(encoding="utf-8")
+    # Preserve the optional pattern match that carries the reported analysis count.
     match = _FRONT_MATTER.match(text)
+    # Use the absence path when match has no available value.
     if match is None:
+        # Propagate the localized failure so callers cannot mistake it for success.
         raise ParseError(path, "no YAML front-matter")
+    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
+        # Compute loaded using yaml.safe load for later parse document logic.
         loaded = yaml.safe_load(match.group("yaml"))
+    # Preserve the caught failure that explains why the external result is unusable.
+    # Translate the expected failure into this mechanism's stable diagnostic path.
     except yaml.YAMLError as exc:
+        # Propagate the localized failure so callers cannot mistake it for success.
         raise ParseError(path, f"front-matter is not valid YAML: {exc}") from exc
+    # Select the empty-or-disabled path when isinstance(loaded, dict) has no usable value.
     if not isinstance(loaded, dict):
+        # Propagate the localized failure so callers cannot mistake it for success.
         raise ParseError(path, "front-matter is not a mapping")
     # YAML parses an unquoted ISO date into a date object. Normalize back to the
     # string form the schema declares, so authors need not remember to quote it.
+    # Treat loaded as mapping elements whose keys identify fields and values carry their
+    # Details: content; key order is deliberately unused.
     loaded = {
         key: value.isoformat() if isinstance(value, datetime.date) else value
         for key, value in loaded.items()
     }
 
+    # Retain the immutable source representation consumed by subsequent analysis.
     body = text[match.end() :]
+    # Derive body offset from text[: match.end()].count("\n") for the next parse document
+    # Details: decision.
     body_offset = text[: match.end()].count("\n")
+    # Compute doc using Document for later parse document logic.
     doc = Document(path=path, front_matter=loaded, body=body, body_offset=body_offset)
+    # Compute rules using tuple for later parse document logic.
     rules = tuple(_parse_rules(doc))
+    # Return the document, its rules carrying line numbers absolute in the file to the caller.
     return Document(
         path=path,
         front_matter=loaded,
@@ -634,14 +801,25 @@ def _parse_rules(doc: Document) -> Iterator[Rule]:
     # is kept so a statement may quote an identifier.
     lines = _strip_code(doc.body, inline=False).splitlines()
     for index, line in enumerate(lines):
+        # Compute heading using  RULE HEADING.match for later parse rules logic.
         heading = _RULE_HEADING.match(line)
+        # Use the absence path when heading has no available value.
         if heading is None:
+            # Advance after the current candidate has been conclusively excluded.
             continue
+        # Each tags element is one normalized rule-heading tag; authored heading order is
+        # preserved.
         tags = [t.strip() for t in _TAG.findall(heading.group("tags"))]
+        # Compute force using  force from tags for later parse rules logic.
         force = _force_from_tags(tags)
+        # Use the absence path when force has no available value.
         if force is None:
+            # Advance after the current candidate has been conclusively excluded.
             continue
+        # Select f, mechanisms, t as the current element from tags if t not in {f.value for f in
+        # Details: Force}) while  parse rules preserves traversal order.
         mechanisms = tuple(t for t in tags if t not in {f.value for f in Force})
+        # Compute block using  block after for later parse rules logic.
         block = _block_after(lines, index)
         yield Rule(
             rule_id=heading.group("id"),
@@ -667,13 +845,23 @@ def _force_from_tags(tags: Sequence[str]) -> Force | None:
     to start with an id-shaped word is left alone.
 
     @param tags the bracketed tags from a heading, in written order
+        Each element is one normalized heading tag; authored tag order is
+        preserved.
     @return the weight found, or None when none of them name one
     """
+    # Select tag as the current element from tags while  force from tags preserves traversal
+    # Details: order.
+    # Process each candidate element in deterministic source order.
     for tag in tags:
+        # Protect the fallible operation so expected failures remain explicitly classified.
         try:
+            # Return the weight found, or None when none of them name one to the caller.
             return Force(tag)
+        # Translate the expected failure into this mechanism's stable diagnostic path.
         except ValueError:
+            # Advance after the current candidate has been conclusively excluded.
             continue
+    # Return the weight found, or None when none of them name one to the caller.
     return None
 
 
@@ -684,14 +872,22 @@ def _block_after(lines: Sequence[str], index: int) -> list[str]:
     the section beneath it.
 
     @param lines the body, already split, with fenced blocks blanked
+        Each lines element represents one decoded record; lexical order is preserved.
     @param index position of the heading line
     @return the lines under it, up to the next heading or the end
     """
+    # Each block element is one source line owned by the selected heading; document order is
+    # preserved.
     block: list[str] = []
+    # Preserve the current decoded diagnostic line before location normalization.
+    # Process each candidate element in deterministic source order.
     for line in lines[index + 1 :]:
+        # Select the guarded path only after `line.startswith('#')` is satisfied.
         if line.startswith("#"):
+            # Stop the scan once the decisive match has been established.
             break
         block.append(line)
+    # Return the lines under it, up to the next heading or the end to the caller.
     return block
 
 
@@ -702,14 +898,24 @@ def _statement_of(block: Sequence[str]) -> str:
     one that did not.
 
     @param block the lines under a rule heading
+        Each element is one source line from the rule block; document order is
+        preserved.
     @return the statement as a single line, empty when the rule states nothing
     """
+    # Each parts element is one prose line from the rule statement; source order is preserved
+    # before whitespace joining.
     parts: list[str] = []
+    # Preserve the current decoded diagnostic line before location normalization.
+    # Process each candidate element in deterministic source order.
     for line in block:
+        # Select the guarded path only after `_FIELD.match(line)` is satisfied.
         if _FIELD.match(line):
+            # Stop the scan once the decisive match has been established.
             break
+        # Select the guarded path only after `line.strip()` is satisfied.
         if line.strip():
             parts.append(line.strip())
+    # Return the statement as a single line, empty when the rule states nothing to the caller.
     return " ".join(parts)
 
 
@@ -720,24 +926,42 @@ def _field_of(block: Sequence[str], name: str) -> str | None:
     line belongs to the field above it while the paragraph after a gap does not.
 
     @param block the lines under a rule heading
+        Each element is one source line from the rule block; document order is
+        preserved.
     @param name the field wanted, spelled as it is in the source
     @return the field on one line, or None when the rule does not carry it
     """
+    # Each collected element is one continuation line from the selected rule field; source order
+    # is preserved before joining.
     collected: list[str] = []
+    # True enables capturing; false selects its disabled alternative.
     capturing = False
+    # Preserve the current decoded diagnostic line before location normalization.
+    # Process each candidate element in deterministic source order.
     for line in block:
+        # Preserve the optional pattern match that carries the reported analysis count.
         found = _FIELD.match(line)
+        # Use the available-value path only when found is present.
         if found is not None:
+            # Handle the non-empty or enabled capturing state.
             if capturing:
+                # Stop the scan once the decisive match has been established.
                 break
+            # Select the guarded path only after `found.group('name') == name` is satisfied.
             if found.group("name") == name:
+                # True enables capturing; false selects its disabled alternative.
                 capturing = True
                 collected.append(found.group("body").strip())
+            # Advance after the current candidate has been conclusively excluded.
             continue
+        # Handle the non-empty or enabled capturing state.
         if capturing:
+            # Select the empty-or-disabled path when line.strip() has no usable value.
             if not line.strip():
+                # Stop the scan once the decisive match has been established.
                 break
             collected.append(line.strip())
+    # Return the field on one line, or None when the rule does not carry it to the caller.
     return " ".join(collected) if collected else None
 
 
@@ -751,8 +975,12 @@ def iter_documents(root: Path = DISCIPLINE_DIR) -> Iterator[Document]:
     @return each authored document beneath it, sorted by path
     @throws ParseError when a file below the root cannot be parsed
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Process each candidate element in deterministic source order.
     for path in sorted(root.rglob("*.md")):
+        # Select the guarded path only after `path.name in GENERATED_NAMES` is satisfied.
         if path.name in GENERATED_NAMES:
+            # Advance after the current candidate has been conclusively excluded.
             continue
         yield parse_document(path)
 
@@ -766,6 +994,7 @@ def prose_of(doc: Document) -> str:
     @param doc the document to redact
     @return the body with fenced blocks and backtick spans blanked
     """
+    # Return the body with fenced blocks and backtick spans blanked to the caller.
     return _strip_code(doc.body)
 
 
@@ -778,6 +1007,7 @@ def body_without_fences(doc: Document) -> str:
     @param doc the document to redact
     @return the body with fences blanked and backtick spans left as written
     """
+    # Return the body with fences blanked and backtick spans left as written to the caller.
     return _strip_code(doc.body, inline=False)
 
 
@@ -790,6 +1020,9 @@ def find_version_literals(prose: str) -> list[tuple[str, str]]:
     @param prose text with code already stripped, so a fenced example is not read as a pin
     @return each tool with the version literal found beside it, in source order
     """
+    # Select m as the current element from _VERSION_NEAR_TOOL.finditer(prose)] while find
+    # Details: version literals preserves traversal order.
+    # Return each tool with the version literal found beside it, in source order to the caller.
     return [(m.group("tool"), m.group("ver")) for m in _VERSION_NEAR_TOOL.finditer(prose)]
 
 
@@ -802,6 +1035,8 @@ def find_xrefs(text: str) -> list[str]:
     @param text the passage to scan, usually a body with fences already removed
     @return the raw targets, e.g. ``TYPE-012`` or ``fact/py-typing#strict-flags``
     """
+    # Return the raw targets, e.g. ``TYPE-012`` or ``fact/py-typing#strict-flags`` to the
+    # Details: caller.
     return _XREF.findall(text)
 
 
@@ -820,6 +1055,7 @@ def count_tokens(text: str) -> int:
     @param text the passage to measure
     @return the count, by `CHARACTERS_PER_TOKEN`, identical on every machine
     """
+    # Return the count, by `CHARACTERS_PER_TOKEN`, identical on every machine to the caller.
     return round(len(text) / CHARACTERS_PER_TOKEN)
 
 
@@ -832,4 +1068,5 @@ def budget_for(doc: Document) -> int:
     @param doc the document whose ceiling is wanted
     @return the ceiling in tokens, falling back to the general module limit
     """
+    # Return the ceiling in tokens, falling back to the general module limit to the caller.
     return TOKEN_BUDGETS.get(doc.path.stem, TOKEN_BUDGETS["*"])
