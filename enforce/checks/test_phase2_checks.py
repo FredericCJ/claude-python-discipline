@@ -34,6 +34,7 @@ from checks.oracle_declared import OracleDeclaredCheck
 from checks.plan_apply import PlanApplyCheck
 from checks.single_wiring_point import SingleWiringPointCheck
 
+# Import path typing only while static analyzers evaluate fixture contracts.
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -47,12 +48,20 @@ def fired(check: Check, tmp_path: Path, source: str, *,
     @param source the module text, dedented before writing
     @param layer the segment under `src/mypkg/`, which decides layer scoping
     @param name the file's name; a `test_` prefix makes most checks skip it
-    @return every rule id reported, empty when the module conforms
+    @return unordered reported rule-id string elements, empty when conformant
+
+    @par Effects
+    Creates one isolated source module, then attaches the default declaration to
+    the supplied checker before executing it.
     """
+    # Resolve the synthetic module path within the requested architectural layer.
     target = tmp_path / "src" / "mypkg" / layer / name
+    # Materialize the package directory and dedented source before checker execution.
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(dedent(source), encoding="utf-8")
+    # Configure the checker with the canonical synthetic-project declaration.
     check.declaration = project.DEFAULT
+    # Collapse emitted finding records to unordered governing rule-id elements.
     return {f.rule_id for f in check.run([target])}
 
 
@@ -385,7 +394,9 @@ def test_every_check_names_the_rules_it_decides(check: Check) -> None:
 
     @param check the mechanism under test
     """
+    # Require a non-empty declared rule set before validating each identifier family.
     assert check.rules
+    # Require every rule-id element to begin with a normalized uppercase family.
     assert all(rule[:3].isupper() for rule in check.rules)
 
 
@@ -541,13 +552,21 @@ def dispatched(tmp_path: Path, body: str, *, name: str = "an-agent.md") -> set[s
     @param tmp_path pytest's per-test directory
     @param body the record's markdown, dedented before writing
     @param name the file's name inside the `agents/` directory
-    @return every rule id reported, empty when the record conforms
+    @return unordered reported rule-id string elements, empty when conformant
+
+    @par Effects
+    Creates one isolated agent record, then attaches the default declaration to
+    a new dispatch checker before executing it.
     """
+    # Resolve the synthetic dispatch path beneath the Claude agent directory.
     target = tmp_path / ".claude" / "agents" / name
+    # Materialize the agent directory and dedented markdown before checker execution.
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(dedent(body), encoding="utf-8")
+    # Construct and configure the dispatch checker for the synthetic project.
     check = DispatchRecordedCheck()
     check.declaration = project.DEFAULT
+    # Collapse emitted finding records to unordered governing rule-id elements.
     return {f.rule_id for f in check.run([target])}
 
 
@@ -705,11 +724,17 @@ def test_markdown_outside_an_agents_directory_is_ignored(tmp_path: Path) -> None
     """A check cannot guess which markdown is a dispatch; the directory says so.
 
     @param tmp_path the fixture directory
+
+    @par Effects
+    Creates one isolated markdown file outside every recognized agent directory.
     """
+    # Resolve and materialize an ordinary documentation path outside dispatch scope.
     target = tmp_path / "docs" / "notes.md"
     target.parent.mkdir(parents=True, exist_ok=True)
+    # Persist inert prose before constructing the dispatch mechanism.
     target.write_text("# Just prose\n", encoding="utf-8")
     check = DispatchRecordedCheck()
+    # Require an out-of-scope markdown file to produce no dispatch finding.
     assert check.run([target]) == []
 
 

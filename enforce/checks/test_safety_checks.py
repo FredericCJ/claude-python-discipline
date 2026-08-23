@@ -24,6 +24,7 @@ from checks.log_once import LogOnceCheck
 from checks.no_magic_in_domain import NoMagicInDomainCheck
 from checks.redaction import RedactionCheck
 
+# Import test-only protocols only while static analyzers evaluate fixture contracts.
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -39,12 +40,19 @@ def fired(check: Check, tmp_path: Path, source: str, *,
     @param source the module text, dedented before writing
     @param layer the segment under `src/mypkg/`, which decides layer scoping
     @param name the file's name; a `test_` prefix makes every check skip it
-    @return every rule id reported, empty when the module conforms
+    @return unordered reported rule-id string elements, empty when conformant
+
+    @par Effects
+    Creates one isolated source module, then attaches the default declaration to
+    the supplied checker before executing it.
     """
+    # Resolve the synthetic module path within the requested architectural layer.
     target = tmp_path / "src" / "mypkg" / layer / name
+    # Materialize the source and configure its checker before evaluation.
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(dedent(source), encoding="utf-8")
     check.declaration = project.DEFAULT
+    # Collapse finding records to unordered governing rule-id elements.
     return {f.rule_id for f in check.run([target])}
 
 
@@ -305,13 +313,19 @@ def test_a_dispatch_with_no_mapping_fires(tmp_path: Path) -> None:
     upward, which is how the check looks for one.
 
     @param tmp_path the fixture directory
+
+    @par Effects
+    Creates an isolated agent dispatch with no allocation mapping.
     """
+    # Resolve and materialize the dispatch record beneath an isolated agent root.
     agent = tmp_path / ".claude" / "agents" / "thing.md"
     agent.parent.mkdir(parents=True)
     agent.write_text(
         "---\nname: thing\n---\n\n## Dispatch record (ops/ALLOC-002)\n\n"
         "A3 B2 C1 D2 E2 F1 G0 = 11 -> T2/E2\n", encoding="utf-8")
+    # Execute the allocation check and preserve finding elements in checker order.
     found = AllocationDeclaredCheck().run([tmp_path / ".claude"])
+    # Require the absent project mapping to produce the exact governing rule.
     assert [f.rule_id for f in found] == ["ALLOC-010"]
 
 
@@ -322,16 +336,22 @@ def test_a_declared_mapping_satisfies_it(tmp_path: Path) -> None:
     is the whole reason this rule could be closed at all.
 
     @param tmp_path the fixture directory
+
+    @par Effects
+    Creates an isolated agent dispatch and a project-owned allocation mapping.
     """
+    # Resolve and materialize the dispatch record beneath an isolated agent root.
     agent = tmp_path / ".claude" / "agents" / "thing.md"
     agent.parent.mkdir(parents=True)
     agent.write_text(
         "---\nname: thing\n---\n\n## Dispatch record (ops/ALLOC-002)\n\n"
         "A3 B2 C1 D2 E2 F1 G0 = 11 -> T2/E2\n", encoding="utf-8")
+    # Create the project-owned override directory before writing its tier mapping.
     overrides = tmp_path / "overrides"
     overrides.mkdir()
     (overrides / "allocation.toml").write_text(
         '[tiers]\nT0 = "cheap"\nT1 = "default"\nT2 = "strong"\n', encoding="utf-8")
+    # Require the declared tier to resolve without an allocation finding.
     assert AllocationDeclaredCheck().run([tmp_path / ".claude"]) == []
 
 
@@ -343,9 +363,14 @@ def test_a_file_that_dispatches_nothing_is_silent(tmp_path: Path) -> None:
     project has no use for.
 
     @param tmp_path the fixture directory
+
+    @par Effects
+    Writes one isolated ordinary markdown file outside all agent directories.
     """
+    # Materialize prose with no dispatch record as the conditional no-subject case.
     plain = tmp_path / "notes.md"
     plain.write_text("# Notes\n\nNothing here dispatches anything.\n", encoding="utf-8")
+    # Require a repository without dispatch to need no allocation declaration.
     assert AllocationDeclaredCheck().run([tmp_path]) == []
 
 
@@ -361,22 +386,31 @@ def test_the_unedited_template_does_not_satisfy_the_rule(tmp_path: Path) -> None
     two cannot drift apart.
 
     @param tmp_path the fixture directory
+
+    @par Effects
+    Creates an isolated dispatch and copies the real unedited allocation template
+    beside it before executing the checker.
     """
     import shutil  # ruff: ignore[import-outside-top-level]
     from pathlib import Path as RealPath  # ruff: ignore[import-outside-top-level]
 
+    # Resolve and materialize the dispatch record beneath an isolated agent root.
     agent = tmp_path / ".claude" / "agents" / "thing.md"
     agent.parent.mkdir(parents=True)
     agent.write_text(
         "---\nname: thing\n---\n\n## Dispatch record (ops/ALLOC-002)\n\n"
         "A3 B2 C1 D2 E2 F1 G0 = 11 -> T2/E2\n", encoding="utf-8")
+    # Create project-owned override space and locate the shipped template control.
     overrides = tmp_path / "overrides"
     overrides.mkdir()
     template = (RealPath(__file__).resolve().parent.parent / "templates"
                 / "allocation.toml")
+    # Copy the byte-level template into the exact project override location.
     shutil.copy2(template, overrides / "allocation.toml")
 
+    # Execute the check and preserve finding elements in checker order.
     found = AllocationDeclaredCheck().run([tmp_path / ".claude"])
+    # Require placeholder template values to fail rather than masquerade as a decision.
     assert [f.rule_id for f in found] == ["ALLOC-010"], (
         "the shipped template satisfies the rule it is meant to prompt filling in"
     )
