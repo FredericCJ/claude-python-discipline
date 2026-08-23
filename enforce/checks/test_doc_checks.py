@@ -538,15 +538,15 @@ def test_a_self_describing_hash_block_written_safely_is_accepted(tmp_path: Path)
     assert rules_fired(DocStyleCheck(), path) == set()
 
 
-def test_hash_block_content_is_exempt_in_tests(tmp_path: Path) -> None:
-    """The style check's `##`-block content rules skip a test path just as the rest do."""
+def test_hash_block_content_is_governed_in_tests(tmp_path: Path) -> None:
+    """Test implementation entity blocks obey the same semantic-content rules."""
     target = tmp_path / "tests" / "test_thing.py"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(
         '"""! Tests."""\n\n## @param retries (int) how many.\nMAX_RETRIES = 3\n',
         encoding="utf-8",
     )
-    assert rules_fired(DocStyleCheck(), target) == set()
+    assert rules_fired(DocStyleCheck(), target) == {"DOC-008"}
 
 
 def test_an_upper_case_constant_restating_its_name_fires(tmp_path: Path) -> None:
