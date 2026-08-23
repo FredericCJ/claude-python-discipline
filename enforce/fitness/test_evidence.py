@@ -55,6 +55,20 @@ def evidence(root: Path) -> EvidenceRegistry:
     return load_evidence(root / "discipline" / "meta" / "evidence.json")
 
 
+def declared_witnesses(registry: EvidenceRegistry) -> frozenset[tuple[str, str]]:
+    """Return exact pairs for checks unrelated to matrix execution.
+
+    @param registry evidence whose other invariants are under test
+    @return every declared automated strategy pair
+    """
+    return frozenset(
+        (rule_id, strategy.mechanism)
+        for rule_id, record in registry.rules.items()
+        for strategy in record.strategies
+        if strategy.is_automated
+    )
+
+
 def observations(root: Path) -> ObservationRegistry:
     """Load one subject's field observations.
 
@@ -92,7 +106,7 @@ def test_evidence_registry_joins_rules() -> None:
     """EVID-001: the normative and evidence ID sets are identical."""
     root = subject_root()
     registry = evidence(root)
-    findings = validate_evidence(registry, rules(root), frozenset(registry.rules))
+    findings = validate_evidence(registry, rules(root), declared_witnesses(registry))
     assert not [finding for finding in findings if finding.code in {"E001", "E002"}]
 
 
@@ -101,8 +115,8 @@ def test_strategy_claims_are_explicit() -> None:
     """EVID-002: heading mechanisms and complete strategy records agree."""
     root = subject_root()
     registry = evidence(root)
-    findings = validate_evidence(registry, rules(root), frozenset(registry.rules))
-    structural = {"E003", "E004", "E008", "E010"}
+    findings = validate_evidence(registry, rules(root), declared_witnesses(registry))
+    structural = {"E003", "E004", "E008", "E010", "E012", "E013"}
     assert not [finding for finding in findings if finding.code in structural]
 
 
@@ -145,12 +159,7 @@ def test_rejection_credit_is_witnessed() -> None:
         for strategy in record.strategies
         if (strategy.must_reject or "").startswith("discrimination:")
     }
-    missing = {
-        pair for pair in credited
-        if pair not in witnessed
-        and (pair[0], "") not in witnessed
-        and pair[0] not in witnessed
-    }
+    missing = credited - witnessed
     assert not missing, sorted(missing)
 
 
@@ -194,7 +203,7 @@ def test_rule_migrations_are_total() -> None:
     """EVID-008: historical dispositions and successor headings agree."""
     root = subject_root()
     registry = evidence(root)
-    findings = validate_evidence(registry, rules(root), frozenset(registry.rules))
+    findings = validate_evidence(registry, rules(root), declared_witnesses(registry))
     historical = {"E005", "E006", "E007"}
     assert not [finding for finding in findings if finding.code in historical]
     assert all(

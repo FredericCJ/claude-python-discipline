@@ -27,8 +27,8 @@ if TYPE_CHECKING:
 
     from discipline_core import Rule
 
-## Either a legacy rule wildcard or an exact `(rule, mechanism)` witness.
-DiscriminationWitness: TypeAlias = str | tuple[str, str]
+## One exact `(rule, mechanism)` rejection witness.
+DiscriminationWitness: TypeAlias = tuple[str, str]
 
 ## The authored registry. It is deliberately not generated: evidence judgments
 ## must be reviewed rather than inferred from the existence of a checker.
@@ -43,6 +43,12 @@ _CAPABILITY = re.compile(r"^[a-z][a-z0-9_]*$")
 _OBSERVATION_ID = re.compile(r"^V[0-9]+E-[0-9]{3}$")
 ## Exact arity of a `(rule id, mechanism)` discrimination witness.
 _WITNESS_PARTS: Final = 2
+## Generated placeholder prose cannot stand in for an observable proposition.
+_VAGUE_PROPOSITION: Final[tuple[str, ...]] = (
+    "reports no diagnostic corresponding to",
+    "passes against the repository artifacts and behavioral cases selected by that test",
+    "emits a finding tagged",
+)
 
 ## Type variable preserving the concrete string-enum class passed to `_enum`.
 _EnumT = TypeVar("_EnumT", bound=StrEnum)
@@ -560,7 +566,7 @@ def validate_evidence(
 
     @param registry parsed evidence layer
     @param rules normative rules to join by stable id
-    @param discriminated exact rule/mechanism pairs, or legacy rule-id wildcards
+    @param discriminated exact rule/mechanism pairs
     @param observation_ids resolvable field-evidence ids, when the registry is available
     @return every mismatch in stable rule-id order
     """
@@ -590,7 +596,7 @@ def _validate_record(
 
     @param rule normative source record
     @param evidence evidence record with the same id
-    @param discriminated exact rule/mechanism pairs, or legacy rule-id wildcards
+    @param discriminated exact rule/mechanism pairs
     @param observation_ids resolvable field-evidence ids, or None when unavailable
     @return semantic mismatches for this pair
     """
@@ -614,6 +620,27 @@ def _validate_record(
             findings.append(
                 EvidenceFinding(
                     "E008", rule.rule_id, f"{strategy.mechanism} has no must-reject case"
+                )
+            )
+        if strategy.is_automated and strategy.must_reject is not None:
+            expected_marker = f"discrimination:{rule.rule_id}/{strategy.mechanism}"
+            if strategy.must_reject != expected_marker:
+                findings.append(
+                    EvidenceFinding(
+                        "E012",
+                        rule.rule_id,
+                        f"{strategy.mechanism} must-reject marker is not {expected_marker!r}",
+                    )
+                )
+        if strategy.is_automated and any(
+            placeholder in strategy.proposition for placeholder in _VAGUE_PROPOSITION
+        ):
+            findings.append(
+                EvidenceFinding(
+                    "E013",
+                    rule.rule_id,
+                    f"{strategy.mechanism} states a generated placeholder, not an "
+                    "observable proposition",
                 )
             )
         if strategy.is_automated and not _strategy_witnessed(
@@ -643,20 +670,16 @@ def _strategy_witnessed(
 ) -> bool:
     """Whether this exact strategy has a rejection witness.
 
-    A bare rule id remains a supported input for synthetic tests and v3 matrices.
     Native v4 matrices publish exact pairs so one mechanism cannot lend credit to
-    another mechanism attached to the same rule.
+    another mechanism attached to the same rule. Rule-only v3 witnesses are not
+    admissible evidence for a v4 claim.
 
     @param rule_id normative stable id
     @param mechanism exact heading mechanism
-    @param discriminated exact pairs or legacy rule-id wildcards
+    @param discriminated exact pairs
     @return whether rejection credit resolves
     """
-    return (
-        rule_id in discriminated
-        or (rule_id, mechanism) in discriminated
-        or (rule_id, "") in discriminated
-    )
+    return (rule_id, mechanism) in discriminated
 
 
 def _retirement_findings(rule: Rule, evidence: RuleEvidence) -> list[EvidenceFinding]:
@@ -804,17 +827,20 @@ def discrimination_covered(root: Path = REPO_ROOT) -> frozenset[str] | None:
 def discrimination_witnesses(
     root: Path = REPO_ROOT,
 ) -> frozenset[DiscriminationWitness] | None:
-    """Load exact strategy witnesses, falling back to legacy rule wildcards.
+    """Load and resolve exact strategy witnesses from a native v4 matrix.
+
+    An older table entry may omit its mechanism only while the joined active
+    evidence record has exactly one automated strategy. The returned value is
+    always exact; retired entries are ignored and ambiguous entries invalidate
+    the matrix.
 
     @param root repository whose matrix supplies the evidence
-    @return exact pairs or v3 rule-id wildcards, None for a malformed matrix
+    @return exact pairs, or None for an absent, legacy, or malformed matrix
     """
     result = _discrimination_value(root, "covered_strategies")
-    if result is None:
-        return discrimination_covered(root)
     if not isinstance(result, (set, frozenset)):
         return None
-    witnesses: set[DiscriminationWitness] = set()
+    raw: set[DiscriminationWitness] = set()
     for item in result:
         if not (
             isinstance(item, tuple)
@@ -822,7 +848,31 @@ def discrimination_witnesses(
             and all(isinstance(part, str) for part in item)
         ):
             return None
-        witnesses.add(item)
+        raw.add(item)
+
+    try:
+        registry = load_evidence(root / "discipline" / "meta" / "evidence.json")
+    except (EvidenceParseError, OSError):
+        return None
+    automated = {
+        rule_id: tuple(
+            strategy.mechanism for strategy in record.strategies if strategy.is_automated
+        )
+        for rule_id, record in registry.rules.items()
+    }
+    witnesses: set[DiscriminationWitness] = set()
+    for rule_id, mechanism in raw:
+        candidates = automated.get(rule_id, ())
+        if not candidates:
+            continue
+        if mechanism:
+            if mechanism not in candidates:
+                return None
+            witnesses.add((rule_id, mechanism))
+        elif len(candidates) == 1:
+            witnesses.add((rule_id, candidates[0]))
+        else:
+            return None
     return frozenset(witnesses)
 
 

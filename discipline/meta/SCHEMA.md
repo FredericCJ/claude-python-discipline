@@ -2,7 +2,7 @@
 id: meta/SCHEMA
 kind: meta
 title: Document Format Specification
-tokens: 3961
+tokens: 3933
 load_when: ["authoring a rule", "new module", "front-matter", "rule id", "validate"]
 decay: none
 ---
@@ -218,23 +218,22 @@ Every record carries exactly:
 - `observations`: adopter or audit evidence IDs, never an unlabeled anecdote; and
 - `migration`: source version, controlled disposition, and adopter guidance.
 
-`meta/observations.json` resolves every field-evidence ID independently from the rule
-records that cite it. Each observation states a defect/fact classification, bounded claim,
-evidence kind, named evidence locations, reproduction (or explicit manual synthesis),
-repository-local scope, and the source from which the packaged record was transcribed.
-Observation presence does not prove generality beyond that scope.
+`meta/observations.json` resolves field-evidence IDs independently. Each observation
+states its classification, bounded claim, kind, evidence locations, reproduction (or
+manual synthesis), repository-local scope, and transcribed source. Presence proves
+nothing beyond that scope.
 
-Each strategy carries `mechanism`, `kind`, `relation`, `proposition`, `residual`,
-`must_pass`, `must_reject`, `platforms`, and `not_applicable`. Kinds are `static`, `tool`,
-`behavioral`, `generated-drift`, and `structured-review`. A relation is `direct` only
-when the proposition is the normative condition itself; otherwise it is `proxy`, and the
-residual says what semantic claim it does not decide.
+Strategies carry `mechanism`, `kind`, `relation`, `proposition`, `residual`, `must_pass`,
+`must_reject`, `platforms`, and `not_applicable`. Kinds are `static`, `tool`, `behavioral`,
+`generated-drift`, and `structured-review`. A relation is `direct` only when proposition
+and obligation coincide; otherwise it is `proxy`, with the undecided claim in `residual`.
 
-Every automated strategy names a conformant reference and a deliberate case it must
-reject. A `must_reject` label earns no credit until the discrimination gate witnesses the
-mechanism reject it. Structured review instead verifies the review artifact's commit,
+Automated strategies name a conformant reference and deliberate violation.
+`must_reject` is exactly `discrimination:<rule-id>/<mechanism>`; rule-only and `pending`
+labels are invalid. `proposition` states the concrete tested condition, never generated
+boilerplate. Credit requires its matrix witness. Structured review verifies commit,
 scope, freshness, reviewer, objections, conclusion, and residual; artifact integrity does
-not make the judgment mechanically correct.
+not make its judgment mechanically correct.
 
 Generated views describe verifier availability as `local-verifier`, `external-verifier`,
 `mixed-verifiers`, `structured-review`, `unbuilt`, `undeclared`, or `retired`. Those are

@@ -422,9 +422,8 @@ def check_rules(documents: Sequence[Document], layout: Layout) -> Iterator[Findi
                 seen[rule.rule_id] = rule
 
             partitioned = doc.module_name.upper().startswith(f"{doc.rule_prefix}-")
-            prefix_allowed = (
-                rule.prefix == doc.rule_prefix
-                and ("rule_prefix" not in doc.front_matter or partitioned)
+            prefix_allowed = rule.prefix == doc.rule_prefix and (
+                "rule_prefix" not in doc.front_matter or partitioned
             )
             if not prefix_allowed:
                 yield Finding(
@@ -1242,13 +1241,23 @@ _EVIDENCE_CODES: Final[dict[str, tuple[str, Severity, str]]] = {
         Severity.ERROR,
         "Add the named observation to meta/observations.json or remove the reference.",
     ),
+    "E012": (
+        "V110",
+        Severity.ERROR,
+        "Name the exact discrimination:<rule>/<mechanism> witness for this strategy.",
+    ),
+    "E013": (
+        "V111",
+        Severity.ERROR,
+        "Replace generated verifier prose with the exact proposition the mechanism observes.",
+    ),
 }
 
 
 def check_evidence(
     documents: Sequence[Document], layout: Layout, *, required: bool | None = None
 ) -> Iterator[Finding]:
-    """V100-V109 -- evidence records join honestly to every stable rule id.
+    """V100-V111 -- evidence records join honestly to every stable rule id.
 
     V107 remains a warning while the frozen v3 discrimination debt is removed;
     unlike the old V098 count, it counts exact rule/mechanism strategies. Every

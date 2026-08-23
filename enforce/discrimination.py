@@ -130,7 +130,8 @@ _EVID_RECORD: Final = (
     '"warrants":[{"source":"fixture","relation":"supports","confidence":"high"}],'
     '"strategies":[{"mechanism":"fitness:test_fixture","kind":"behavioral",'
     '"relation":"proxy","proposition":"fixture is joined","residual":"semantic gap",'
-    '"must_pass":"fixture:pass","must_reject":"pending:EVID-900",'
+    '"must_pass":"fixture:pass","must_reject":'
+    '"discrimination:EVID-900/fitness:test_fixture",'
     '"platforms":["windows"],"not_applicable":"never"}],"observations":[],'
     '"migration":{"source":"v4.0.0","disposition":"new","guidance":"none"}}'
 )
@@ -165,6 +166,9 @@ _EVID_MATRIX: Final = (
     '"""Evidence discrimination fixture."""\n\n\n'
     "def covered() -> frozenset[str]:\n"
     '    """Return no credited rule.\n\n    @return empty set\n    """\n'
+    "    return frozenset()\n\n\n"
+    "def covered_strategies() -> frozenset[tuple[str, str]]:\n"
+    '    """Return no credited strategy.\n\n    @return empty set\n    """\n'
     "    return frozenset()\n"
 )
 
@@ -238,7 +242,7 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         write=(
             (
                 "discipline/meta/evidence.json",
-                _EVID_REGISTRY.replace("pending:EVID-900", "discrimination:EVID-900"),
+                _EVID_REGISTRY,
             ),
             ("enforce/discrimination.py", _EVID_MATRIX),
         ),
@@ -575,11 +579,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "caller and must fail the scheduling fitness test."
         ),
         base="repository",
-        replace=((
-            "tools/project_gate.py",
-            "    DisciplineChecksAdapter(),\n    RUFF_STEP,",
-            "    RUFF_STEP,",
-        ),),
+        replace=(
+            (
+                "tools/project_gate.py",
+                "    DisciplineChecksAdapter(),\n    RUFF_STEP,",
+                "    RUFF_STEP,",
+            ),
+        ),
         node="tools/test_project_gate.py::test_ordinary_gate_schedules_documentation_presence",
     ),
     Mutation(
@@ -589,11 +595,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "DOC-008's exact syntax predicate: an @param record repeats the "
             "annotated int type in parentheses instead of stating only meaning."
         ),
-        replace=((
-            "src/refpkg/domain/model.py",
-            "@param epoch_seconds whole seconds since the Unix epoch",
-            "@param epoch_seconds (int) whole seconds since the Unix epoch",
-        ),),
+        replace=(
+            (
+                "src/refpkg/domain/model.py",
+                "@param epoch_seconds whole seconds since the Unix epoch",
+                "@param epoch_seconds (int) whole seconds since the Unix epoch",
+            ),
+        ),
     ),
     Mutation(
         rule_id="DOC-014",
@@ -726,11 +734,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "though each outcome remains known to the report."
         ),
         base="repository",
-        replace=((
-            "tools/project_gate.py",
-            "            if result.status is not Status.PASS\n",
-            "            if result.status is Status.FAIL\n",
-        ),),
+        replace=(
+            (
+                "tools/project_gate.py",
+                "            if result.status is not Status.PASS\n",
+                "            if result.status is Status.FAIL\n",
+            ),
+        ),
         node="tools/test_project_gate.py::test_report_records_every_non_pass_as_a_deviation",
     ),
     # ------------------------------------------------------------------- ops
@@ -906,14 +916,16 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "not select its implementation. This mutation crosses that exact seam "
             "without importing the foreign clock technology directly."
         ),
-        replace=((
-            "src/refpkg/app/prune.py",
-            "from __future__ import annotations",
+        replace=(
             (
-                "from __future__ import annotations\n\n"
-                "from refpkg.adapters.clock.real import SystemClock"
+                "src/refpkg/app/prune.py",
+                "from __future__ import annotations",
+                (
+                    "from __future__ import annotations\n\n"
+                    "from refpkg.adapters.clock.real import SystemClock"
+                ),
             ),
-        ),),
+        ),
     ),
     Mutation(
         rule_id="ARCH-020",
@@ -923,11 +935,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "one boundary and shell's transitive reach, while requiring a second "
             "adapter boundary's direct import to fail by its own diagnostic."
         ),
-        replace=((
-            "src/refpkg/adapters/files/real.py",
-            "from __future__ import annotations",
-            "from __future__ import annotations\n\nimport time",
-        ),),
+        replace=(
+            (
+                "src/refpkg/adapters/files/real.py",
+                "from __future__ import annotations",
+                "from __future__ import annotations\n\nimport time",
+            ),
+        ),
     ),
     Mutation(
         rule_id="ARCH-021",
@@ -937,11 +951,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "that silently changes application to component makes every conditional "
             "obligation ambiguous."
         ),
-        replace=((
-            "architecture.json",
-            '"unit": "application"',
-            '"unit": "component"',
-        ),),
+        replace=(
+            (
+                "architecture.json",
+                '"unit": "application"',
+                '"unit": "component"',
+            ),
+        ),
     ),
     Mutation(
         rule_id="ARCH-022",
@@ -1235,11 +1251,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "ARCH-024's exact representation predicate: the registry selects "
             "nominal while Clock still derives from Protocol."
         ),
-        replace=((
-            "contract-conformance.json",
-            '"representation": "structural"',
-            '"representation": "nominal"',
-        ),),
+        replace=(
+            (
+                "contract-conformance.json",
+                '"representation": "structural"',
+                '"representation": "nominal"',
+            ),
+        ),
     ),
     Mutation(
         rule_id="ARCH-025",
@@ -1248,11 +1266,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "ARCH-025 permits one test implementation to combine capabilities "
             "but still requires scheduled failure to remain observable."
         ),
-        replace=((
-            "contract-conformance.json",
-            '"controllable",\n            "scheduled_fault"',
-            '"controllable"',
-        ),),
+        replace=(
+            (
+                "contract-conformance.json",
+                '"controllable",\n            "scheduled_fault"',
+                '"controllable"',
+            ),
+        ),
     ),
     Mutation(
         rule_id="TEST-020",
@@ -1261,11 +1281,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "TEST-020's exact registry predicate: every implementation parameter "
             "must be visible in the one declared suite."
         ),
-        replace=((
-            "contract-conformance.json",
-            '"parameter": "faulty-healthy"',
-            '"parameter": "not-in-suite"',
-        ),),
+        replace=(
+            (
+                "contract-conformance.json",
+                '"parameter": "faulty-healthy"',
+                '"parameter": "not-in-suite"',
+            ),
+        ),
     ),
     Mutation(
         rule_id="OPS-001",
@@ -1274,11 +1296,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "OPS-001's closed relationship: lifecycle ownership is meaningful only "
             "for a repository that also declares subprocess launch."
         ),
-        replace=((
-            "pyproject.toml",
-            "owns_subprocess_lifecycle = false",
-            "owns_subprocess_lifecycle = true",
-        ),),
+        replace=(
+            (
+                "pyproject.toml",
+                "owns_subprocess_lifecycle = false",
+                "owns_subprocess_lifecycle = true",
+            ),
+        ),
     ),
     Mutation(
         rule_id="OPS-002",
@@ -1287,11 +1311,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "OPS-002's one-way inference predicate: the reference file adapter "
             "imports filesystem vocabulary and calls unlink."
         ),
-        replace=((
-            "pyproject.toml",
-            "filesystem_io = true",
-            "filesystem_io = false",
-        ),),
+        replace=(
+            (
+                "pyproject.toml",
+                "filesystem_io = true",
+                "filesystem_io = false",
+            ),
+        ),
     ),
     Mutation(
         rule_id="OPS-003",
@@ -1300,11 +1326,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "OPS-003's local join predicate: the capability record names a "
             "recovery identity that architecture.json does not own."
         ),
-        replace=((
-            "operational-model.json",
-            '"recoveries": ["apply_interrupted"]',
-            '"recoveries": ["peer_recovers_it"]',
-        ),),
+        replace=(
+            (
+                "operational-model.json",
+                '"recoveries": ["apply_interrupted"]',
+                '"recoveries": ["peer_recovers_it"]',
+            ),
+        ),
     ),
     Mutation(
         rule_id="OPS-004",
@@ -1313,18 +1341,17 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "OPS-004 requires executable interruption evidence when destructive "
             "effects are active; a prose excuse cannot satisfy that phase."
         ),
-        replace=((
-            "operational-model.json",
+        replace=(
             (
-                '"test": "tests/fault/test_containment.py::'
-                'test_an_interrupted_apply_reports_how_far_it_got",\n'
-                '      "not_applicable": null'
+                "operational-model.json",
+                (
+                    '"test": "tests/fault/test_containment.py::'
+                    'test_an_interrupted_apply_reports_how_far_it_got",\n'
+                    '      "not_applicable": null'
+                ),
+                ('"test": null,\n      "not_applicable": "Interruption is delegated elsewhere."'),
             ),
-            (
-                '"test": null,\n'
-                '      "not_applicable": "Interruption is delegated elsewhere."'
-            ),
-        ),),
+        ),
     ),
     Mutation(
         rule_id="OPS-005",
@@ -1333,11 +1360,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "OPS-005's ordinary-outcome predicate: changing preview completion to "
             "exceptional leaves no observable non-exception terminal outcome."
         ),
-        replace=((
-            "operational-model.json",
-            '"id": "preview_complete",\n      "exceptional": false',
-            '"id": "preview_complete",\n      "exceptional": true',
-        ),),
+        replace=(
+            (
+                "operational-model.json",
+                '"id": "preview_complete",\n      "exceptional": false',
+                '"id": "preview_complete",\n      "exceptional": true',
+            ),
+        ),
     ),
     Mutation(
         rule_id="OPS-006",
@@ -1346,20 +1375,22 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "OPS-006 requires a measured finite input-size budget because public_api "
             "is true; a not-applicable rationale cannot override activation."
         ),
-        replace=((
-            "operational-model.json",
+        replace=(
             (
-                '"bound": {"value": 10000, "unit": "items"},\n'
-                '      "not_applicable": null,\n'
-                '      "measurement": "tests/unit/test_plan.py::'
-                'test_planning_refuses_work_beyond_its_input_and_cleanup_budget"'
+                "operational-model.json",
+                (
+                    '"bound": {"value": 10000, "unit": "items"},\n'
+                    '      "not_applicable": null,\n'
+                    '      "measurement": "tests/unit/test_plan.py::'
+                    'test_planning_refuses_work_beyond_its_input_and_cleanup_budget"'
+                ),
+                (
+                    '"bound": null,\n'
+                    '      "not_applicable": "The public surface accepts every size.",\n'
+                    '      "measurement": null'
+                ),
             ),
-            (
-                '"bound": null,\n'
-                '      "not_applicable": "The public surface accepts every size.",\n'
-                '      "measurement": null'
-            ),
-        ),),
+        ),
     ),
     Mutation(
         rule_id="OPS-007",
@@ -1368,11 +1399,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "OPS-007's exact identity predicate requires both version and build_id; "
             "the version alone cannot distinguish two builds of one release."
         ),
-        replace=((
-            "operational-model.json",
-            '"runtime_fields": ["version", "build_id"]',
-            '"runtime_fields": ["version"]',
-        ),),
+        replace=(
+            (
+                "operational-model.json",
+                '"runtime_fields": ["version", "build_id"]',
+                '"runtime_fields": ["version"]',
+            ),
+        ),
     ),
     Mutation(
         rule_id="OPS-008",
@@ -1381,11 +1414,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "OPS-008's closed generated-set predicate: replacing installed_surface "
             "simultaneously leaves one required id missing and one stale id present."
         ),
-        replace=((
-            "operational-model.json",
-            '"id": "installed_surface"',
-            '"id": "source_tree_surface"',
-        ),),
+        replace=(
+            (
+                "operational-model.json",
+                '"id": "installed_surface"',
+                '"id": "source_tree_surface"',
+            ),
+        ),
     ),
     Mutation(
         rule_id="SEC-001",
@@ -1394,11 +1429,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "SEC-001's exact coverage predicate: replacing prune_command leaves the "
             "published contract uncovered and introduces one unknown contract id."
         ),
-        replace=((
-            "security-model.json",
-            '"contracts": ["prune_command"]',
-            '"contracts": ["peer_command"]',
-        ),),
+        replace=(
+            (
+                "security-model.json",
+                '"contracts": ["prune_command"]',
+                '"contracts": ["peer_command"]',
+            ),
+        ),
     ),
     Mutation(
         rule_id="SEC-002",
@@ -1407,11 +1444,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "SEC-002's capability-coherence predicate: a secret classification "
             "directly refutes the model's explicit sensitive-data absence."
         ),
-        replace=((
-            "security-model.json",
-            '"classification": "internal"',
-            '"classification": "secret"',
-        ),),
+        replace=(
+            (
+                "security-model.json",
+                '"classification": "internal"',
+                '"classification": "secret"',
+            ),
+        ),
     ),
     Mutation(
         rule_id="SEC-003",
@@ -1420,11 +1459,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "SEC-003 fixes both the selected inputs and digest algorithm; changing "
             "sha256 means the artifact no longer matches the recomputed snapshot."
         ),
-        replace=((
-            "adversarial-review.json",
-            '"algorithm": "sha256"',
-            '"algorithm": "sha1"',
-        ),),
+        replace=(
+            (
+                "adversarial-review.json",
+                '"algorithm": "sha256"',
+                '"algorithm": "sha1"',
+            ),
+        ),
     ),
     Mutation(
         rule_id="SEC-004",
@@ -1433,11 +1474,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "SEC-004's mechanically decidable separation predicate: the same stable "
             "identity cannot occur in both the authors list and reviewer record."
         ),
-        replace=((
-            "adversarial-review.json",
-            '"identity": "reference_adversarial_reviewer"',
-            '"identity": "reference_fixture_author"',
-        ),),
+        replace=(
+            (
+                "adversarial-review.json",
+                '"identity": "reference_adversarial_reviewer"',
+                '"identity": "reference_fixture_author"',
+            ),
+        ),
     ),
     Mutation(
         rule_id="EFCT-015",
@@ -1966,16 +2009,18 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "The fitness mechanism requires a non-void protocol method to state "
             "its result; this replaces that contract with a title-only docstring."
         ),
-        replace=((
-            "src/refpkg/ports/clock.py",
+        replace=(
             (
-                '        """The current instant.\n\n'
-                "        @return the current instant, at or after the epoch\n"
-                "        @throws ClockUnavailable when no reading can be taken\n"
-                '        """'
+                "src/refpkg/ports/clock.py",
+                (
+                    '        """The current instant.\n\n'
+                    "        @return the current instant, at or after the epoch\n"
+                    "        @throws ClockUnavailable when no reading can be taken\n"
+                    '        """'
+                ),
+                '        """The current instant."""',
             ),
-            '        """The current instant."""',
-        ),),
+        ),
         node="enforce/fitness/test_api.py::test_contract_documented",
     ),
     Mutation(
@@ -1985,17 +2030,19 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "The mechanism permits documentation plus ellipsis only; replacing "
             "that ellipsis with a return makes the contract carry implementation."
         ),
-        replace=((
-            "src/refpkg/ports/clock.py",
+        replace=(
             (
-                '        @throws ClockUnavailable when no reading can be taken\n'
-                '        """\n        ...'
+                "src/refpkg/ports/clock.py",
+                (
+                    "        @throws ClockUnavailable when no reading can be taken\n"
+                    '        """\n        ...'
+                ),
+                (
+                    "        @throws ClockUnavailable when no reading can be taken\n"
+                    '        """\n        return Instant(0)'
+                ),
             ),
-            (
-                '        @throws ClockUnavailable when no reading can be taken\n'
-                '        """\n        return Instant(0)'
-            ),
-        ),),
+        ),
         node="enforce/fitness/test_api.py::test_contract_documented",
     ),
     Mutation(
@@ -2005,11 +2052,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "The structured-output mechanism requires an explicit renderer at "
             "the boundary; renaming it removes that observable shared interface."
         ),
-        replace=((
-            "src/refpkg/shell/cli.py",
-            "def render(payload: dict[str, Any], *, as_json: bool) -> str:",
-            "def display(payload: dict[str, Any], *, as_json: bool) -> str:",
-        ),),
+        replace=(
+            (
+                "src/refpkg/shell/cli.py",
+                "def render(payload: dict[str, Any], *, as_json: bool) -> str:",
+                "def display(payload: dict[str, Any], *, as_json: bool) -> str:",
+            ),
+        ),
         node="enforce/fitness/test_api.py::test_structured_output",
     ),
     Mutation(
@@ -2019,11 +2068,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "The mechanism recognizes payload/result/data parameters as the shared "
             "object seam; renaming the renderer input removes that exact evidence."
         ),
-        replace=((
-            "src/refpkg/shell/cli.py",
-            "def render(payload: dict[str, Any], *, as_json: bool) -> str:",
-            "def render(message: dict[str, Any], *, as_json: bool) -> str:",
-        ),),
+        replace=(
+            (
+                "src/refpkg/shell/cli.py",
+                "def render(payload: dict[str, Any], *, as_json: bool) -> str:",
+                "def render(message: dict[str, Any], *, as_json: bool) -> str:",
+            ),
+        ),
         node="enforce/fitness/test_api.py::test_structured_output",
     ),
     Mutation(
@@ -2046,11 +2097,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "The mechanism rejects caller-identity branches by name; inserting an "
             "is_agent switch creates the relaxed automation path the rule forbids."
         ),
-        replace=((
-            "src/refpkg/shell/cli.py",
-            "from __future__ import annotations",
-            "from __future__ import annotations\n\nis_agent = False",
-        ),),
+        replace=(
+            (
+                "src/refpkg/shell/cli.py",
+                "from __future__ import annotations",
+                "from __future__ import annotations\n\nis_agent = False",
+            ),
+        ),
         node="enforce/fitness/test_api.py::test_agent_parity",
     ),
     Mutation(
@@ -2060,16 +2113,18 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "The replacement remains an entry-point module with a renderer but "
             "contains neither a schema-version declaration nor payload field."
         ),
-        write=((
-            "src/refpkg/shell/cli.py",
+        write=(
             (
-                '"""An unversioned entry point."""\n\n'
-                "from typing import Any\n\n"
-                "def render(payload: dict[str, Any], *, as_json: bool) -> str:\n"
-                '    """Render one payload."""\n'
-                "    return str(payload)\n"
+                "src/refpkg/shell/cli.py",
+                (
+                    '"""An unversioned entry point."""\n\n'
+                    "from typing import Any\n\n"
+                    "def render(payload: dict[str, Any], *, as_json: bool) -> str:\n"
+                    '    """Render one payload."""\n'
+                    "    return str(payload)\n"
+                ),
             ),
-        ),),
+        ),
         node="enforce/fitness/test_api.py::test_schema_versioned",
     ),
     Mutation(
@@ -2079,16 +2134,18 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "The replacement raises the format to version two in the published "
             "entry point while the repository still contains no migration artifact."
         ),
-        write=((
-            "src/refpkg/shell/cli.py",
+        write=(
             (
-                '"""A changed entry point with no migration."""\n\n'
-                'SCHEMA_VERSION = "2"\n\n'
-                "def render(payload: object) -> str:\n"
-                '    """Render one payload."""\n'
-                "    return str(payload)\n"
+                "src/refpkg/shell/cli.py",
+                (
+                    '"""A changed entry point with no migration."""\n\n'
+                    'SCHEMA_VERSION = "2"\n\n'
+                    "def render(payload: object) -> str:\n"
+                    '    """Render one payload."""\n'
+                    "    return str(payload)\n"
+                ),
             ),
-        ),),
+        ),
         node="enforce/fitness/test_api.py::test_migrations",
     ),
     Mutation(
@@ -2098,11 +2155,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "The dependency-position mechanism classifies requests as foreign and "
             "rejects it when introduced into policy rather than an adapter."
         ),
-        replace=((
-            "src/refpkg/domain/model.py",
-            "from __future__ import annotations",
-            "from __future__ import annotations\n\nimport requests",
-        ),),
+        replace=(
+            (
+                "src/refpkg/domain/model.py",
+                "from __future__ import annotations",
+                "from __future__ import annotations\n\nimport requests",
+            ),
+        ),
         node="enforce/fitness/test_deps.py::test_dependency_position",
     ),
     Mutation(
@@ -2112,11 +2171,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "The behavioral mechanism serializes real errors and validates them "
             "against the schema; removing code makes every case non-conformant."
         ),
-        replace=((
-            "src/refpkg/shell/envelope.py",
-            '        "code": getattr(error, "code", "refpkg.shell.unexpected"),',
-            '        "broken_code": getattr(error, "code", "refpkg.shell.unexpected"),',
-        ),),
+        replace=(
+            (
+                "src/refpkg/shell/envelope.py",
+                '        "code": getattr(error, "code", "refpkg.shell.unexpected"),',
+                '        "broken_code": getattr(error, "code", "refpkg.shell.unexpected"),',
+            ),
+        ),
         node="enforce/fitness/test_diagnostics.py::test_envelope_conforms",
     ),
     Mutation(
@@ -2126,11 +2187,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "FLOW-011 requires inspection rather than assumption; the same real-error "
             "case rejects a producer that renames the required code field."
         ),
-        replace=((
-            "src/refpkg/shell/envelope.py",
-            '        "code": getattr(error, "code", "refpkg.shell.unexpected"),',
-            '        "broken_code": getattr(error, "code", "refpkg.shell.unexpected"),',
-        ),),
+        replace=(
+            (
+                "src/refpkg/shell/envelope.py",
+                '        "code": getattr(error, "code", "refpkg.shell.unexpected"),',
+                '        "broken_code": getattr(error, "code", "refpkg.shell.unexpected"),',
+            ),
+        ),
         node="enforce/fitness/test_diagnostics.py::test_envelope_conforms",
     ),
     Mutation(
@@ -2140,11 +2203,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "The determinism fitness test enumerates ambient nondeterminism imports; "
             "adding random to the domain makes identical inputs no longer sufficient."
         ),
-        replace=((
-            "src/refpkg/domain/plan.py",
-            "from __future__ import annotations",
-            "from __future__ import annotations\n\nimport random",
-        ),),
+        replace=(
+            (
+                "src/refpkg/domain/plan.py",
+                "from __future__ import annotations",
+                "from __future__ import annotations\n\nimport random",
+            ),
+        ),
         node="enforce/fitness/test_determinism.py::test_determinism",
     ),
     Mutation(
@@ -2154,13 +2219,15 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "The journal obligation is observed through scheduled partial progress; "
             "replacing the fault suite with an unrelated assertion removes that evidence."
         ),
-        write=((
-            "tests/fault/test_containment.py",
+        write=(
             (
-                '"""Tests. Oracle: contract."""\n\n\ndef test_unrelated() -> None:\n'
-                '    """Exercise no interruption."""\n    assert True\n'
+                "tests/fault/test_containment.py",
+                (
+                    '"""Tests. Oracle: contract."""\n\n\ndef test_unrelated() -> None:\n'
+                    '    """Exercise no interruption."""\n    assert True\n'
+                ),
             ),
-        ),),
+        ),
         node="enforce/fitness/test_effects.py::test_interruption_recovers",
     ),
     Mutation(
@@ -2170,13 +2237,15 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "The test obligation requires scheduled interruption evidence; replacing "
             "the only fault suite leaves the behavioral mechanism with no such case."
         ),
-        write=((
-            "tests/fault/test_containment.py",
+        write=(
             (
-                '"""Tests. Oracle: contract."""\n\n\ndef test_unrelated() -> None:\n'
-                '    """Exercise no interruption."""\n    assert True\n'
+                "tests/fault/test_containment.py",
+                (
+                    '"""Tests. Oracle: contract."""\n\n\ndef test_unrelated() -> None:\n'
+                    '    """Exercise no interruption."""\n    assert True\n'
+                ),
             ),
-        ),),
+        ),
         node="enforce/fitness/test_effects.py::test_interruption_recovers",
     ),
     Mutation(
@@ -2186,19 +2255,23 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "The mechanism searches published port contracts for an explicit limit; "
             "removing the sole partial-progress statement makes the guarantee implicit."
         ),
-        replace=((
-            "src/refpkg/ports/files.py",
-            "* `delete` is **not** atomic across a sequence of calls, and the port says so",
-            "* `delete` reports failures across a sequence of calls",
-        ), (
-            "src/refpkg/ports/files.py",
-            "an interrupted\n  run leaves some entries deleted and the rest present.",
-            "a failed\n  run reports an error.",
-        ), (
-            "src/refpkg/ports/errors.py",
-            "report an interrupted",
-            "report a failed",
-        )),
+        replace=(
+            (
+                "src/refpkg/ports/files.py",
+                "* `delete` is **not** atomic across a sequence of calls, and the port says so",
+                "* `delete` reports failures across a sequence of calls",
+            ),
+            (
+                "src/refpkg/ports/files.py",
+                "an interrupted\n  run leaves some entries deleted and the rest present.",
+                "a failed\n  run reports an error.",
+            ),
+            (
+                "src/refpkg/ports/errors.py",
+                "report an interrupted",
+                "report a failed",
+            ),
+        ),
         node="enforce/fitness/test_effects.py::test_what_is_not_guaranteed_is_stated",
     ),
     Mutation(
@@ -2208,18 +2281,20 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "The mechanism inventories concurrency primitives and requires lock-order "
             "or ownership prose; the new pooled adapter states neither."
         ),
-        write=((
-            "src/refpkg/adapters/files/pooled.py",
+        write=(
             (
-                '"""A store sharing state across threads without semantics."""\n\n'
-                "import threading\n\n"
-                "class PooledStore:\n"
-                '    """Share a dictionary."""\n\n'
-                "    def __init__(self) -> None:\n"
-                '        """Build it."""\n'
-                "        self._entries: dict[str, str] = {}\n"
+                "src/refpkg/adapters/files/pooled.py",
+                (
+                    '"""A store sharing state across threads without semantics."""\n\n'
+                    "import threading\n\n"
+                    "class PooledStore:\n"
+                    '    """Share a dictionary."""\n\n'
+                    "    def __init__(self) -> None:\n"
+                    '        """Build it."""\n'
+                    "        self._entries: dict[str, str] = {}\n"
+                ),
             ),
-        ),),
+        ),
         node="enforce/fitness/test_concurrency.py::test_concurrency_documented",
     ),
     Mutation(
@@ -2229,11 +2304,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "The fitness mechanism parses the entry point for a broad final handler; "
             "narrowing it permits every other unexpected exception to escape."
         ),
-        replace=((
-            "src/refpkg/shell/cli.py",
-            "except Exception as exc:",
-            "except ValueError as exc:",
-        ),),
+        replace=(
+            (
+                "src/refpkg/shell/cli.py",
+                "except Exception as exc:",
+                "except ValueError as exc:",
+            ),
+        ),
         node="enforce/fitness/test_diagnostics.py::test_no_unhandled_escape",
     ),
     Mutation(
@@ -2243,16 +2320,18 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "The containment fitness test requires cause-chain and layer evidence; "
             "the replacement demonstrates neither and therefore cannot localize failure."
         ),
-        write=((
-            "tests/fault/test_containment.py",
+        write=(
             (
-                '"""Tests. Oracle: contract."""\n\nimport pytest\n\n'
-                "def test_it_raises() -> None:\n"
-                '    """Observe only that something broke."""\n'
-                "    with pytest.raises(ValueError):\n"
-                "        raise ValueError\n"
+                "tests/fault/test_containment.py",
+                (
+                    '"""Tests. Oracle: contract."""\n\nimport pytest\n\n'
+                    "def test_it_raises() -> None:\n"
+                    '    """Observe only that something broke."""\n'
+                    "    with pytest.raises(ValueError):\n"
+                    "        raise ValueError\n"
+                ),
             ),
-        ),),
+        ),
         node="enforce/fitness/test_faults.py::test_fault_containment",
     ),
     Mutation(
@@ -2274,11 +2353,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "renaming OPEN-002 to OPEN-001 simulates rewriting historical identity."
         ),
         base="repository",
-        replace=((
-            "discipline/meta/OPEN.md",
-            "### OPEN-002",
-            "### OPEN-001",
-        ),),
+        replace=(
+            (
+                "discipline/meta/OPEN.md",
+                "### OPEN-002",
+                "### OPEN-001",
+            ),
+        ),
         node="enforce/fitness/test_decisions.py::test_decision_records_are_appended",
     ),
     Mutation(
@@ -2289,13 +2370,15 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "it answered; replacing the ledger with bare decisions erases that history."
         ),
         base="repository",
-        write=((
-            "discipline/meta/OPEN.md",
+        write=(
             (
-                "### OPEN-001 · Choose one\n\n"
-                "This decision has reasoning but records no contrary view.\n"
+                "discipline/meta/OPEN.md",
+                (
+                    "### OPEN-001 · Choose one\n\n"
+                    "This decision has reasoning but records no contrary view.\n"
+                ),
             ),
-        ),),
+        ),
         node="enforce/fitness/test_decisions.py::test_overruled_objections_are_kept",
     ),
     Mutation(
@@ -2306,13 +2389,15 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "the minimal generated rule deliberately breaks every required join field."
         ),
         base="repository",
-        write=((
-            "discipline/rules.json",
+        write=(
             (
-                '{"rules":[{"id":"FIX-001","force":"BINDING","mechanisms":[],'
-                '"check":"","verification":{"strategies":[]}}]}\n'
+                "discipline/rules.json",
+                (
+                    '{"rules":[{"id":"FIX-001","force":"BINDING","mechanisms":[],'
+                    '"check":"","verification":{"strategies":[]}}]}\n'
+                ),
             ),
-        ),),
+        ),
         node="enforce/fitness/test_meta.py::test_binding_rules_have_mechanisms",
     ),
     Mutation(
@@ -2345,14 +2430,16 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "would otherwise let every change report success without verification."
         ),
         base="repository",
-        write=((
-            "tools/gate.py",
+        write=(
             (
-                '"""An intentionally empty gate fixture."""\n\n'
-                "from typing import Final\n\n"
-                "GATE: Final[tuple[tuple[str, tuple[str, ...]], ...]] = ()\n"
+                "tools/gate.py",
+                (
+                    '"""An intentionally empty gate fixture."""\n\n'
+                    "from typing import Final\n\n"
+                    "GATE: Final[tuple[tuple[str, tuple[str, ...]], ...]] = ()\n"
+                ),
             ),
-        ),),
+        ),
         node="enforce/fitness/test_meta.py::test_gate_suite_defined",
     ),
     Mutation(
@@ -2363,10 +2450,12 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "hook with an unconditional success turns verification back into a request."
         ),
         base="repository",
-        write=((
-            "enforce/templates/hooks/pre-push",
-            "#!/bin/sh\necho pushing\nexit 0\n",
-        ),),
+        write=(
+            (
+                "enforce/templates/hooks/pre-push",
+                "#!/bin/sh\necho pushing\nexit 0\n",
+            ),
+        ),
         node="enforce/fitness/test_meta.py::test_completion_hook_enforces_the_gate",
     ),
     Mutation(
@@ -2389,11 +2478,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "this entry runs dependency_boundaries itself against the outward edge."
         ),
         mechanism="check:dependency_boundaries",
-        replace=((
-            "src/refpkg/domain/plan.py",
-            "from __future__ import annotations",
-            "from __future__ import annotations\n\nfrom refpkg.shell import envelope",
-        ),),
+        replace=(
+            (
+                "src/refpkg/domain/plan.py",
+                "from __future__ import annotations",
+                "from __future__ import annotations\n\nfrom refpkg.shell import envelope",
+            ),
+        ),
     ),
     Mutation(
         rule_id="ARCH-002",
@@ -2405,11 +2496,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         mechanism="auto:import-linter",
         tool="import-linter",
         diagnostic="ARCH-002 domain is pure",
-        replace=((
-            "src/refpkg/domain/model.py",
-            "from __future__ import annotations",
-            "from __future__ import annotations\n\nfrom pathlib import Path",
-        ),),
+        replace=(
+            (
+                "src/refpkg/domain/model.py",
+                "from __future__ import annotations",
+                "from __future__ import annotations\n\nfrom pathlib import Path",
+            ),
+        ),
     ),
     Mutation(
         rule_id="ARCH-003",
@@ -2419,14 +2512,16 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "import-linter independence contract and must reject the same breach."
         ),
         mechanism="check:dependency_boundaries",
-        replace=((
-            "src/refpkg/adapters/clock/real.py",
-            "from __future__ import annotations",
+        replace=(
             (
-                "from __future__ import annotations\n\n"
-                "from refpkg.adapters.files import real as _files"
+                "src/refpkg/adapters/clock/real.py",
+                "from __future__ import annotations",
+                (
+                    "from __future__ import annotations\n\n"
+                    "from refpkg.adapters.files import real as _files"
+                ),
             ),
-        ),),
+        ),
     ),
     Mutation(
         rule_id="DIAG-008",
@@ -2438,17 +2533,19 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         mechanism="auto:ruff:BLE001",
         tool="ruff",
         diagnostic="BLE001",
-        replace=((
-            "src/refpkg/app/prune.py",
-            "from __future__ import annotations",
+        replace=(
             (
-                "from __future__ import annotations\n\n\n"
-                "def swallow() -> None:\n"
-                '    """Catch an unbounded family.\n\n    @return nothing\n    """\n'
-                "    try:\n        pass\n"
-                "    except Exception:\n        return"
+                "src/refpkg/app/prune.py",
+                "from __future__ import annotations",
+                (
+                    "from __future__ import annotations\n\n\n"
+                    "def swallow() -> None:\n"
+                    '    """Catch an unbounded family.\n\n    @return nothing\n    """\n'
+                    "    try:\n        pass\n"
+                    "    except Exception:\n        return"
+                ),
             ),
-        ),),
+        ),
     ),
     Mutation(
         rule_id="DIAG-015",
@@ -2460,16 +2557,18 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         mechanism="auto:ruff:G004",
         tool="ruff",
         diagnostic="G004",
-        replace=((
-            "src/refpkg/shell/cli.py",
-            "from __future__ import annotations",
+        replace=(
             (
-                "from __future__ import annotations\n\nimport logging\n\n\n"
-                "def report(error: Exception) -> None:\n"
-                '    """Log a failure.\n\n    @param error the failure\n    """\n'
-                '    logging.getLogger(__name__).error(f"failed: {error}")'
+                "src/refpkg/shell/cli.py",
+                "from __future__ import annotations",
+                (
+                    "from __future__ import annotations\n\nimport logging\n\n\n"
+                    "def report(error: Exception) -> None:\n"
+                    '    """Log a failure.\n\n    @param error the failure\n    """\n'
+                    '    logging.getLogger(__name__).error(f"failed: {error}")'
+                ),
             ),
-        ),),
+        ),
     ),
     Mutation(
         rule_id="DOC-001",
@@ -2493,17 +2592,19 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         mechanism="auto:pyright",
         tool="pyright",
         diagnostic='Type annotation is missing for parameter "value"',
-        replace=((
-            "src/refpkg/domain/plan.py",
-            "from __future__ import annotations",
+        replace=(
             (
-                "from __future__ import annotations\n\n\n"
-                "def unchecked(value):\n"
-                '    """Return an unchecked value.\n\n'
-                '    @param value unknown input\n    @return unknown output\n    """\n'
-                "    return value"
+                "src/refpkg/domain/plan.py",
+                "from __future__ import annotations",
+                (
+                    "from __future__ import annotations\n\n\n"
+                    "def unchecked(value):\n"
+                    '    """Return an unchecked value.\n\n'
+                    '    @param value unknown input\n    @return unknown output\n    """\n'
+                    "    return value"
+                ),
             ),
-        ),),
+        ),
     ),
     Mutation(
         rule_id="TYPE-002",
@@ -2515,17 +2616,19 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         mechanism="auto:mypy",
         tool="mypy",
         diagnostic="[explicit-any]",
-        replace=((
-            "src/refpkg/domain/plan.py",
-            "from __future__ import annotations",
+        replace=(
             (
-                "from __future__ import annotations\n\nfrom typing import Any\n\n\n"
-                "def widen(value: Any) -> Any:\n"
-                '    """Erase both sides.\n\n'
-                '    @param value anything\n    @return anything\n    """\n'
-                "    return value"
+                "src/refpkg/domain/plan.py",
+                "from __future__ import annotations",
+                (
+                    "from __future__ import annotations\n\nfrom typing import Any\n\n\n"
+                    "def widen(value: Any) -> Any:\n"
+                    '    """Erase both sides.\n\n'
+                    '    @param value anything\n    @return anything\n    """\n'
+                    "    return value"
+                ),
             ),
-        ),),
+        ),
     ),
     Mutation(
         rule_id="TYPE-003",
@@ -2537,14 +2640,16 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         mechanism="auto:mypy",
         tool="mypy",
         diagnostic="[ignore-without-code]",
-        replace=((
-            "src/refpkg/domain/plan.py",
-            "from __future__ import annotations",
+        replace=(
             (
-                "from __future__ import annotations\n\n"
-                '_ANYTHING: int = "not an int"  # type: ignore'
+                "src/refpkg/domain/plan.py",
+                "from __future__ import annotations",
+                (
+                    "from __future__ import annotations\n\n"
+                    '_ANYTHING: int = "not an int"  # type: ignore'
+                ),
             ),
-        ),),
+        ),
     ),
     # ------------------------------------------ remaining external graph/types
     Mutation(
@@ -2557,14 +2662,16 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         mechanism="auto:import-linter",
         tool="import-linter",
         diagnostic="EFCT-012 storage has one owner",
-        write=((
-            "src/refpkg/domain/storage_breach.py",
+        write=(
             (
-                '"""An unsanctioned storage reader."""\n\n'
-                "from refpkg.adapters.files import raw\n\n"
-                "REPRESENTATION = raw\n"
+                "src/refpkg/domain/storage_breach.py",
+                (
+                    '"""An unsanctioned storage reader."""\n\n'
+                    "from refpkg.adapters.files import raw\n\n"
+                    "REPRESENTATION = raw\n"
+                ),
             ),
-        ),),
+        ),
     ),
     Mutation(
         rule_id="EFCT-012",
@@ -2576,14 +2683,16 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         mechanism="auto:import-linter",
         tool="import-linter",
         diagnostic="EFCT-012 storage has one owner",
-        write=((
-            "src/refpkg/app/storage_breach.py",
+        write=(
             (
-                '"""An unsanctioned storage writer."""\n\n'
-                "from refpkg.adapters.files import raw\n\n"
-                "REPRESENTATION = raw\n"
+                "src/refpkg/app/storage_breach.py",
+                (
+                    '"""An unsanctioned storage writer."""\n\n'
+                    "from refpkg.adapters.files import raw\n\n"
+                    "REPRESENTATION = raw\n"
+                ),
             ),
-        ),),
+        ),
     ),
     Mutation(
         rule_id="ARCH-006",
@@ -2595,19 +2704,21 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         mechanism="auto:mypy",
         tool="mypy",
         diagnostic="[return-value]",
-        replace=((
-            "src/refpkg/domain/plan.py",
-            "Outcome: TypeAlias = Plan | Refusal",
+        replace=(
             (
-                "Outcome: TypeAlias = Plan | Refusal\n\n\n"
-                "def partial(flag: bool) -> Outcome:\n"
-                '    """Return an invalid arm on one path.\n\n'
-                '    @param flag which path to take\n    @return an alleged outcome\n    """\n'
-                "    if flag:\n"
-                '        return Refusal(code="deferred", expected="now", actual="later")\n'
-                "    return None"
+                "src/refpkg/domain/plan.py",
+                "Outcome: TypeAlias = Plan | Refusal",
+                (
+                    "Outcome: TypeAlias = Plan | Refusal\n\n\n"
+                    "def partial(flag: bool) -> Outcome:\n"
+                    '    """Return an invalid arm on one path.\n\n'
+                    '    @param flag which path to take\n    @return an alleged outcome\n    """\n'
+                    "    if flag:\n"
+                    '        return Refusal(code="deferred", expected="now", actual="later")\n'
+                    "    return None"
+                ),
             ),
-        ),),
+        ),
     ),
     Mutation(
         rule_id="ERR-002",
@@ -2619,16 +2730,18 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         mechanism="auto:mypy",
         tool="mypy",
         diagnostic="[arg-type]",
-        replace=((
-            "src/refpkg/domain/plan.py",
-            "Outcome: TypeAlias = Plan | Refusal",
+        replace=(
             (
-                "@dataclass(frozen=True, slots=True)\n"
-                "class Deferred:\n"
-                '    """A newly introduced unhandled result arm."""\n\n\n'
-                "Outcome: TypeAlias = Plan | Refusal | Deferred"
+                "src/refpkg/domain/plan.py",
+                "Outcome: TypeAlias = Plan | Refusal",
+                (
+                    "@dataclass(frozen=True, slots=True)\n"
+                    "class Deferred:\n"
+                    '    """A newly introduced unhandled result arm."""\n\n\n'
+                    "Outcome: TypeAlias = Plan | Refusal | Deferred"
+                ),
             ),
-        ),),
+        ),
     ),
     Mutation(
         rule_id="ERR-002",
@@ -2640,16 +2753,18 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         mechanism="auto:pyright",
         tool="pyright",
         diagnostic='cannot be assigned to parameter "outcome" of type "Never"',
-        replace=((
-            "src/refpkg/domain/plan.py",
-            "Outcome: TypeAlias = Plan | Refusal",
+        replace=(
             (
-                "@dataclass(frozen=True, slots=True)\n"
-                "class Deferred:\n"
-                '    """A newly introduced unhandled result arm."""\n\n\n'
-                "Outcome: TypeAlias = Plan | Refusal | Deferred"
+                "src/refpkg/domain/plan.py",
+                "Outcome: TypeAlias = Plan | Refusal",
+                (
+                    "@dataclass(frozen=True, slots=True)\n"
+                    "class Deferred:\n"
+                    '    """A newly introduced unhandled result arm."""\n\n\n'
+                    "Outcome: TypeAlias = Plan | Refusal | Deferred"
+                ),
             ),
-        ),),
+        ),
     ),
     Mutation(
         rule_id="ERR-005",
@@ -2661,19 +2776,21 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         mechanism="auto:mypy",
         tool="mypy",
         diagnostic="[return-value]",
-        replace=((
-            "src/refpkg/domain/plan.py",
-            "Outcome: TypeAlias = Plan | Refusal",
+        replace=(
             (
-                "Outcome: TypeAlias = Plan | Refusal\n\n\n"
-                "@dataclass(frozen=True, slots=True)\n"
-                "class NovelFailure:\n"
-                '    """An error not declared in Outcome."""\n\n\n'
-                "def undeclared() -> Outcome:\n"
-                '    """Return the undeclared arm.\n\n    @return an invalid arm\n    """\n'
-                "    return NovelFailure()"
+                "src/refpkg/domain/plan.py",
+                "Outcome: TypeAlias = Plan | Refusal",
+                (
+                    "Outcome: TypeAlias = Plan | Refusal\n\n\n"
+                    "@dataclass(frozen=True, slots=True)\n"
+                    "class NovelFailure:\n"
+                    '    """An error not declared in Outcome."""\n\n\n'
+                    "def undeclared() -> Outcome:\n"
+                    '    """Return the undeclared arm.\n\n    @return an invalid arm\n    """\n'
+                    "    return NovelFailure()"
+                ),
             ),
-        ),),
+        ),
     ),
     Mutation(
         rule_id="DIAG-006",
@@ -2703,10 +2820,7 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "site and asserts DOC-012, the check's exact path predicate."
         ),
         mechanism="check:generated_provenance",
-        proof=(
-            "enforce/checks/test_ledger_checks.py::"
-            "test_a_rendered_documentation_tree_fires"
-        ),
+        proof=("enforce/checks/test_ledger_checks.py::test_a_rendered_documentation_tree_fires"),
     ),
     Mutation(
         rule_id="DOC-005",
@@ -2717,8 +2831,7 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         ),
         mechanism="auto:doxygen",
         proof=(
-            "tools/test_doxygen_gate.py::"
-            "test_a_documented_parameter_that_does_not_exist_is_caught"
+            "tools/test_doxygen_gate.py::test_a_documented_parameter_that_does_not_exist_is_caught"
         ),
     ),
     Mutation(
@@ -2730,8 +2843,7 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         ),
         mechanism="auto:doxygen",
         proof=(
-            "tools/test_doxygen_gate.py::"
-            "test_a_documented_parameter_that_does_not_exist_is_caught"
+            "tools/test_doxygen_gate.py::test_a_documented_parameter_that_does_not_exist_is_caught"
         ),
     ),
     Mutation(
@@ -2753,10 +2865,7 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "test and requires its timeout diagnostic rather than wrapper timing."
         ),
         mechanism="auto:pytest-timeout",
-        proof=(
-            "tools/test_toolchain_gates.py::"
-            "test_pytest_timeout_terminates_a_slow_test"
-        ),
+        proof=("tools/test_toolchain_gates.py::test_pytest_timeout_terminates_a_slow_test"),
     ),
     Mutation(
         rule_id="TEST-013",
@@ -2779,10 +2888,7 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "precedes its undeclared producer and the exact dependency assertion fails."
         ),
         mechanism="auto:pytest-randomly",
-        proof=(
-            "tools/test_toolchain_gates.py::"
-            "test_pytest_randomly_exposes_an_order_dependency"
-        ),
+        proof=("tools/test_toolchain_gates.py::test_pytest_randomly_exposes_an_order_dependency"),
     ),
     Mutation(
         rule_id="TEST-017",
@@ -2792,10 +2898,7 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "socket construction must fail with its own SocketBlockedError diagnostic."
         ),
         mechanism="auto:pytest-socket",
-        proof=(
-            "tools/test_toolchain_gates.py::"
-            "test_pytest_socket_blocks_ambient_network"
-        ),
+        proof=("tools/test_toolchain_gates.py::test_pytest_socket_blocks_ambient_network"),
     ),
     # -------------------------------------- environment and generated products
     Mutation(
@@ -2849,11 +2952,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "line to a generated artifact must make its --check form non-zero."
         ),
         base="repository",
-        replace=((
-            "discipline/INDEX.md",
-            "<!-- GENERATED by tools/build_index.py",
-            "drift\n<!-- GENERATED by tools/build_index.py",
-        ),),
+        replace=(
+            (
+                "discipline/INDEX.md",
+                "<!-- GENERATED by tools/build_index.py",
+                "drift\n<!-- GENERATED by tools/build_index.py",
+            ),
+        ),
         node="enforce/fitness/test_generated.py::test_regeneration_stable",
     ),
     Mutation(
@@ -2896,10 +3001,7 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "requires exactly one marker block with the newer identity."
         ),
         mechanism="fitness:test_an_existing_block_is_replaced_not_duplicated",
-        proof=(
-            "tools/test_integrate.py::"
-            "test_an_existing_block_is_replaced_not_duplicated"
-        ),
+        proof=("tools/test_integrate.py::test_an_existing_block_is_replaced_not_duplicated"),
     ),
     Mutation(
         rule_id="DEP-014",
@@ -2959,20 +3061,19 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "return for existing databases makes its before and rebuilt states diverge."
         ),
         base="repository",
-        replace=((
-            "tools/learn.py",
-            "    store.dir.mkdir(parents=True, exist_ok=True)\n    connection = connect(store)",
+        replace=(
             (
-                "    if store.db.exists():\n"
-                "        return connect(store)\n"
-                "    store.dir.mkdir(parents=True, exist_ok=True)\n"
-                "    connection = connect(store)"
+                "tools/learn.py",
+                "    store.dir.mkdir(parents=True, exist_ok=True)\n    connection = connect(store)",
+                (
+                    "    if store.db.exists():\n"
+                    "        return connect(store)\n"
+                    "    store.dir.mkdir(parents=True, exist_ok=True)\n"
+                    "    connection = connect(store)"
+                ),
             ),
-        ),),
-        node=(
-            "tools/test_learn.py::"
-            "test_the_database_is_reconstructible_from_the_ledger"
         ),
+        node=("tools/test_learn.py::test_the_database_is_reconstructible_from_the_ledger"),
     ),
     Mutation(
         rule_id="LEARN-007",
@@ -2982,17 +3083,19 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "orders, the exact determinism property the cited test compares."
         ),
         base="repository",
-        replace=((
-            "tools/learn.py",
-            "    candidates.sort(key=lambda c: (-c.effective, c.id))",
+        replace=(
             (
-                "    candidates.sort(key=lambda c: (-c.effective, c.id))\n"
-                "    flip = bool(getattr(retrieve, '_flip', False))\n"
-                "    setattr(retrieve, '_flip', not flip)\n"
-                "    if flip:\n"
-                "        candidates.reverse()"
+                "tools/learn.py",
+                "    candidates.sort(key=lambda c: (-c.effective, c.id))",
+                (
+                    "    candidates.sort(key=lambda c: (-c.effective, c.id))\n"
+                    "    flip = bool(getattr(retrieve, '_flip', False))\n"
+                    "    setattr(retrieve, '_flip', not flip)\n"
+                    "    if flip:\n"
+                    "        candidates.reverse()"
+                ),
             ),
-        ),),
+        ),
         node="tools/test_learn.py::test_retrieval_is_reproducible",
     ),
     Mutation(
@@ -3003,11 +3106,13 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "exactly one half-life, so changing the decay base must be rejected."
         ),
         base="repository",
-        replace=((
-            "tools/learn.py",
-            "return round(stored * (0.5 ** (days / half_life)), 4)",
-            "return round(stored * (0.75 ** (days / half_life)), 4)",
-        ),),
+        replace=(
+            (
+                "tools/learn.py",
+                "return round(stored * (0.5 ** (days / half_life)), 4)",
+                "return round(stored * (0.75 ** (days / half_life)), 4)",
+            ),
+        ),
         node="tools/test_learn.py::test_confidence_decays_with_time",
     ),
     Mutation(

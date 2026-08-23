@@ -20,10 +20,10 @@
           "mechanism": "check:no_model_names",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:no_model_names emits a finding tagged ALLOC-001 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:no_model_names passes its declared conformant control and rejects the witnessed ALLOC-001 defect: a doctrine document names a concrete model.",
           "residual": "Passing excludes only the configured patterns implemented by check:no_model_names; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.no_model_names`",
-          "must_reject": "pending:ALLOC-001",
+          "must_reject": "discrimination:ALLOC-001/check:no_model_names",
           "platforms": [
             "windows",
             "linux"
@@ -57,10 +57,10 @@
           "mechanism": "check:dispatch_recorded",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:dispatch_recorded emits a finding tagged ALLOC-002 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:dispatch_recorded passes its declared conformant control and rejects the witnessed ALLOC-002 defect: a dispatch record carries no signal scores at all.",
           "residual": "Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.dispatch_recorded`",
-          "must_reject": "discrimination:ALLOC-002",
+          "must_reject": "discrimination:ALLOC-002/check:dispatch_recorded",
           "platforms": [
             "windows",
             "linux"
@@ -94,10 +94,10 @@
           "mechanism": "check:dispatch_recorded",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:dispatch_recorded emits a finding tagged ALLOC-003 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:dispatch_recorded passes its declared conformant control and rejects the witnessed ALLOC-003 defect: a named dispatch category understates its computed tier.",
           "residual": "Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.dispatch_recorded`",
-          "must_reject": "pending:ALLOC-003",
+          "must_reject": "discrimination:ALLOC-003/check:dispatch_recorded",
           "platforms": [
             "windows",
             "linux"
@@ -131,10 +131,10 @@
           "mechanism": "check:dispatch_recorded",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:dispatch_recorded emits a finding tagged ALLOC-004 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:dispatch_recorded passes its declared conformant control and rejects the witnessed ALLOC-004 defect: a signal scores 3 and the effort floor is not raised.",
           "residual": "Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.dispatch_recorded`",
-          "must_reject": "discrimination:ALLOC-004",
+          "must_reject": "discrimination:ALLOC-004/check:dispatch_recorded",
           "platforms": [
             "windows",
             "linux"
@@ -338,10 +338,10 @@
           "mechanism": "check:allocation_declared",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:allocation_declared emits a finding tagged ALLOC-010 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:allocation_declared passes its declared conformant control and rejects the witnessed ALLOC-010 defect: a dispatch record cites T2 with no tier mapping anywhere above it.",
           "residual": "Passing excludes only the configured patterns implemented by check:allocation_declared; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.allocation_declared`",
-          "must_reject": "discrimination:ALLOC-010",
+          "must_reject": "discrimination:ALLOC-010/check:allocation_declared",
           "platforms": [
             "windows",
             "linux"
@@ -375,10 +375,10 @@
           "mechanism": "fitness:test_contract_documented",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_contract_documented passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_contract_documented passes its declared conformant control and rejects the witnessed API-001 defect: a protocol docstring states no result contract.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_contract_documented; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_api.py::test_contract_documented`",
-          "must_reject": "pending:API-001",
+          "must_reject": "discrimination:API-001/fitness:test_contract_documented",
           "platforms": [
             "windows",
             "linux"
@@ -412,10 +412,10 @@
           "mechanism": "fitness:test_contract_documented",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_contract_documented passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_contract_documented passes its declared conformant control and rejects the witnessed API-002 defect: a protocol method acquires an implementation body.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_contract_documented; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_api.py::test_contract_documented`",
-          "must_reject": "pending:API-002",
+          "must_reject": "discrimination:API-002/fitness:test_contract_documented",
           "platforms": [
             "windows",
             "linux"
@@ -449,10 +449,10 @@
           "mechanism": "check:single_wiring_point",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:single_wiring_point emits a finding tagged API-003 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:single_wiring_point passes its declared conformant control and rejects the witnessed API-003 defect: a public signature exposes a concrete storage type.",
           "residual": "Passing excludes only the configured patterns implemented by check:single_wiring_point; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.single_wiring_point`",
-          "must_reject": "pending:API-003",
+          "must_reject": "discrimination:API-003/check:single_wiring_point",
           "platforms": [
             "windows",
             "linux"
@@ -486,10 +486,10 @@
           "mechanism": "auto:import-linter",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:import-linter reports no diagnostic corresponding to API-004 under the repository configuration and declared scan roots.",
+          "proposition": "auto:import-linter passes its declared conformant control and rejects the witnessed API-004 defect: domain code imports the private storage representation.",
           "residual": "Passing excludes only the configured patterns implemented by auto:import-linter; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`lint-imports --config enforce/importlinter.toml` contract `EFCT-012 storage has one owner` · `python tools/import_gate.py`",
-          "must_reject": "pending:API-004",
+          "must_reject": "discrimination:API-004/auto:import-linter",
           "platforms": [
             "windows",
             "linux"
@@ -523,10 +523,10 @@
           "mechanism": "fitness:test_structured_output",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_structured_output passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_structured_output passes its declared conformant control and rejects the witnessed API-005 defect: the entry point exposes no recognized result renderer.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_structured_output; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_api.py::test_structured_output`",
-          "must_reject": "pending:API-005",
+          "must_reject": "discrimination:API-005/fitness:test_structured_output",
           "platforms": [
             "windows",
             "linux"
@@ -560,10 +560,10 @@
           "mechanism": "fitness:test_structured_output",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_structured_output passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_structured_output passes its declared conformant control and rejects the witnessed API-006 defect: the human renderer no longer accepts the result object.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_structured_output; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_api.py::test_structured_output`",
-          "must_reject": "pending:API-006",
+          "must_reject": "discrimination:API-006/fitness:test_structured_output",
           "platforms": [
             "windows",
             "linux"
@@ -597,10 +597,10 @@
           "mechanism": "fitness:test_exit_codes",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_exit_codes passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_exit_codes passes its declared conformant control and rejects the witnessed API-007 defect: success and refusal statuses cease to be named exit constants.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_exit_codes; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_api.py::test_exit_codes`",
-          "must_reject": "pending:API-007",
+          "must_reject": "discrimination:API-007/fitness:test_exit_codes",
           "platforms": [
             "windows",
             "linux"
@@ -656,10 +656,10 @@
           "mechanism": "fitness:test_agent_parity",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_agent_parity passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_agent_parity passes its declared conformant control and rejects the witnessed API-009 defect: the shell introduces an automation-specific validation branch.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_agent_parity; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_api.py::test_agent_parity`",
-          "must_reject": "pending:API-009",
+          "must_reject": "discrimination:API-009/fitness:test_agent_parity",
           "platforms": [
             "windows",
             "linux"
@@ -693,10 +693,10 @@
           "mechanism": "fitness:test_schema_versioned",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_schema_versioned passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_schema_versioned passes its declared conformant control and rejects the witnessed API-010 defect: the published entry point carries no schema-version field.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_schema_versioned; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_api.py::test_schema_versioned`",
-          "must_reject": "pending:API-010",
+          "must_reject": "discrimination:API-010/fitness:test_schema_versioned",
           "platforms": [
             "windows",
             "linux"
@@ -752,10 +752,10 @@
           "mechanism": "fitness:test_migrations",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_migrations passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_migrations passes its declared conformant control and rejects the witnessed API-012 defect: a version-two payload ships without any migration.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_migrations; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_api.py::test_migrations`",
-          "must_reject": "pending:API-012",
+          "must_reject": "discrimination:API-012/fitness:test_migrations",
           "platforms": [
             "windows",
             "linux"
@@ -855,10 +855,10 @@
           "mechanism": "auto:import-linter",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:import-linter reports no diagnostic corresponding to ARCH-001 under the repository configuration and declared scan roots.",
+          "proposition": "auto:import-linter passes its declared conformant control and rejects the witnessed ARCH-001 defect: the domain imports the shell, reversing the dependency arrow.",
           "residual": "Passing excludes only the configured patterns implemented by auto:import-linter; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`lint-imports --config enforce/importlinter.toml` contract `ARCH-001 layers point inward` · `python tools/import_gate.py`",
-          "must_reject": "discrimination:ARCH-001",
+          "must_reject": "discrimination:ARCH-001/auto:import-linter",
           "platforms": [
             "windows",
             "linux"
@@ -872,7 +872,7 @@
           "proposition": "No direct local import crosses outward from domain, ports, application, or adapters under the declared repository-relative role paths; adapter-selection and cross-adapter edges are reported separately.",
           "residual": "Passing decides direct Python imports only; runtime service lookup, plugin loading, and semantically misplaced declarations remain outside this strategy.",
           "must_pass": "fixture:enforce/fixtures/reference",
-          "must_reject": "discrimination:ARCH-001",
+          "must_reject": "discrimination:ARCH-001/check:dependency_boundaries",
           "platforms": [
             "windows",
             "linux"
@@ -906,10 +906,10 @@
           "mechanism": "auto:import-linter",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:import-linter reports no diagnostic corresponding to ARCH-002 under the repository configuration and declared scan roots.",
+          "proposition": "auto:import-linter passes its declared conformant control and rejects the witnessed ARCH-002 defect: import-linter sees pathlib enter the domain.",
           "residual": "Passing excludes only the configured patterns implemented by auto:import-linter; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`lint-imports --config enforce/importlinter.toml` contract `ARCH-002 domain is pure` · `python tools/import_gate.py` · `python -m checks.domain_purity`",
-          "must_reject": "discrimination:ARCH-002",
+          "must_reject": "discrimination:ARCH-002/auto:import-linter",
           "platforms": [
             "windows",
             "linux"
@@ -920,10 +920,10 @@
           "mechanism": "check:domain_purity",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:domain_purity emits a finding tagged ARCH-002 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:domain_purity passes its declared conformant control and rejects the witnessed ARCH-002 defect: the domain imports pathlib.Path, which can read a disk.",
           "residual": "Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`lint-imports --config enforce/importlinter.toml` contract `ARCH-002 domain is pure` · `python tools/import_gate.py` · `python -m checks.domain_purity`",
-          "must_reject": "discrimination:ARCH-002",
+          "must_reject": "discrimination:ARCH-002/check:domain_purity",
           "platforms": [
             "windows",
             "linux"
@@ -957,10 +957,10 @@
           "mechanism": "auto:import-linter",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:import-linter reports no diagnostic corresponding to ARCH-003 under the repository configuration and declared scan roots.",
+          "proposition": "auto:import-linter passes its declared conformant control and rejects the witnessed ARCH-003 defect: the clock adapter imports the files adapter.",
           "residual": "Passing excludes only the configured patterns implemented by auto:import-linter; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`lint-imports --config enforce/importlinter.toml` contract `ARCH-003 adapters are independent` · `python tools/import_gate.py`",
-          "must_reject": "discrimination:ARCH-003",
+          "must_reject": "discrimination:ARCH-003/auto:import-linter",
           "platforms": [
             "windows",
             "linux"
@@ -974,7 +974,7 @@
           "proposition": "No direct local import crosses between two distinct first-level boundaries beneath a declared adapters role path.",
           "residual": "Passing does not detect runtime plugin lookup or decide whether several modules grouped inside one adapter boundary are cohesive.",
           "must_pass": "fixture:enforce/fixtures/reference",
-          "must_reject": "discrimination:ARCH-003",
+          "must_reject": "discrimination:ARCH-003/check:dependency_boundaries",
           "platforms": [
             "windows",
             "linux"
@@ -1032,10 +1032,10 @@
           "mechanism": "check:explicit_effects",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:explicit_effects emits a finding tagged ARCH-005 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:explicit_effects passes its declared conformant control and rejects the witnessed ARCH-005 defect: application policy reaches directly for a system clock.",
           "residual": "Passing excludes only the configured patterns implemented by check:explicit_effects; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.explicit_effects`",
-          "must_reject": "pending:ARCH-005",
+          "must_reject": "discrimination:ARCH-005/check:explicit_effects",
           "platforms": [
             "windows",
             "linux"
@@ -1069,10 +1069,10 @@
           "mechanism": "auto:mypy",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:mypy reports no diagnostic corresponding to ARCH-006 under the repository configuration and declared scan roots.",
+          "proposition": "auto:mypy passes its declared conformant control and rejects the witnessed ARCH-006 defect: a domain result function returns None outside its declared union.",
           "residual": "Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`mypy --strict` with exhaustiveness on the result union",
-          "must_reject": "pending:ARCH-006",
+          "must_reject": "discrimination:ARCH-006/auto:mypy",
           "platforms": [
             "windows",
             "linux"
@@ -1198,10 +1198,10 @@
           "mechanism": "check:single_wiring_point",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:single_wiring_point emits a finding tagged ARCH-011 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:single_wiring_point passes its declared conformant control and rejects the witnessed ARCH-011 defect: application policy imports a concrete adapter.",
           "residual": "Passing excludes only the configured patterns implemented by check:single_wiring_point; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.single_wiring_point`",
-          "must_reject": "pending:ARCH-011",
+          "must_reject": "discrimination:ARCH-011/check:single_wiring_point",
           "platforms": [
             "windows",
             "linux"
@@ -1235,10 +1235,10 @@
           "mechanism": "check:no_test_branches",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:no_test_branches emits a finding tagged ARCH-012 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:no_test_branches passes its declared conformant control and rejects the witnessed ARCH-012 defect: a production branch reads a test switch out of the environment.",
           "residual": "Passing excludes only the configured patterns implemented by check:no_test_branches; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.no_test_branches`",
-          "must_reject": "discrimination:ARCH-012",
+          "must_reject": "discrimination:ARCH-012/check:no_test_branches",
           "platforms": [
             "windows",
             "linux"
@@ -1272,10 +1272,10 @@
           "mechanism": "check:domain_purity",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:domain_purity emits a finding tagged ARCH-013 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:domain_purity passes its declared conformant control and rejects the witnessed ARCH-013 defect: a domain class inherits pydantic.BaseModel.",
           "residual": "Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.domain_purity`",
-          "must_reject": "discrimination:ARCH-013",
+          "must_reject": "discrimination:ARCH-013/check:domain_purity",
           "platforms": [
             "windows",
             "linux"
@@ -1346,10 +1346,10 @@
           "mechanism": "check:no_magic_in_domain",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:no_magic_in_domain emits a finding tagged ARCH-015 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:no_magic_in_domain passes its declared conformant control and rejects the witnessed ARCH-015 defect: the domain reaches an attribute by a computed name.",
           "residual": "Passing excludes only the configured patterns implemented by check:no_magic_in_domain; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.no_magic_in_domain`",
-          "must_reject": "discrimination:ARCH-015",
+          "must_reject": "discrimination:ARCH-015/check:no_magic_in_domain",
           "platforms": [
             "windows",
             "linux"
@@ -1383,10 +1383,10 @@
           "mechanism": "auto:ruff:C901",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:ruff:C901 reports no diagnostic corresponding to ARCH-016 under the repository configuration and declared scan roots.",
+          "proposition": "auto:ruff:C901 passes its declared conformant control and rejects the witnessed ARCH-016 defect: a domain function whose branching exceeds the complexity budget.",
           "residual": "Passing excludes only the configured patterns implemented by auto:ruff:C901; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`ruff check` (rule `C901`)",
-          "must_reject": "discrimination:ARCH-016",
+          "must_reject": "discrimination:ARCH-016/auto:ruff:C901",
           "platforms": [
             "windows",
             "linux"
@@ -1445,7 +1445,7 @@
           "proposition": "Every Python file beneath every declared source_root exists and matches exactly one declared repository-relative architectural role path.",
           "residual": "Passing proves path coverage only; it cannot establish that a human assigned each file to the semantically correct role.",
           "must_pass": "fixture:enforce/fixtures/reference",
-          "must_reject": "discrimination:ARCH-018",
+          "must_reject": "discrimination:ARCH-018/check:source_roles",
           "platforms": [
             "windows",
             "linux"
@@ -1484,7 +1484,7 @@
           "proposition": "No application-role Python module directly imports a local module assigned to the adapters role.",
           "residual": "Passing does not detect dynamic imports or prove that an injected object actually satisfies the declared port's behavior.",
           "must_pass": "fixture:enforce/fixtures/reference",
-          "must_reject": "discrimination:ARCH-019",
+          "must_reject": "discrimination:ARCH-019/check:dependency_boundaries",
           "platforms": [
             "windows",
             "linux"
@@ -1523,7 +1523,7 @@
           "proposition": "Every direct import of a registered foreign import root occurs at or beneath its one declared owning adapter boundary path.",
           "residual": "Passing covers registered direct Python imports; capability inference must separately detect undeclared technology, and runtime plugin lookup remains a review subject.",
           "must_pass": "fixture:enforce/fixtures/reference",
-          "must_reject": "discrimination:ARCH-020",
+          "must_reject": "discrimination:ARCH-020/check:dependency_boundaries",
           "platforms": [
             "windows",
             "linux"
@@ -1562,7 +1562,7 @@
           "proposition": "The declared local architecture JSON exists, names the same unit kind as pyproject.toml, and carries at least one exact decision record with an owner role and non-empty change scenarios.",
           "residual": "Passing verifies record structure and the declaration join; it cannot decide whether the named volatility is real or the boundary would actually absorb the scenario.",
           "must_pass": "fixture:enforce/fixtures/reference",
-          "must_reject": "discrimination:ARCH-021",
+          "must_reject": "discrimination:ARCH-021/check:architecture_model",
           "platforms": [
             "windows",
             "linux"
@@ -1599,7 +1599,7 @@
           "proposition": "The canonical model has exact, typed contract-operation, resource-ownership or explicit-absence, and recovery records whose ids are unique and owner roles are local.",
           "residual": "Passing proves the records are complete in form and internally joined; behavioral tests and review must establish that runtime behavior agrees with them.",
           "must_pass": "fixture:enforce/fixtures/reference",
-          "must_reject": "discrimination:ARCH-022",
+          "must_reject": "discrimination:ARCH-022/check:architecture_model",
           "platforms": [
             "windows",
             "linux"
@@ -1635,7 +1635,7 @@
           "proposition": "A component model's role fields are lower_snake identifiers and no model string matches the declared repository, topology, URI, IP-address, or filesystem-path predicates.",
           "residual": "A neutral-looking identifier can still be a disguised counterpart name, and lexical passing cannot prove the prose makes no implementation assumption; structured adversarial review owns that residual.",
           "must_pass": "fixture:component-neutral architecture model",
-          "must_reject": "discrimination:ARCH-023",
+          "must_reject": "discrimination:ARCH-023/check:architecture_model",
           "platforms": [
             "windows",
             "linux"
@@ -1677,7 +1677,7 @@
           "proposition": "Internal architecture contract ids and conformance ids are equal; each record resolves one local boundary class whose Protocol or abstract nominal form matches the declared representation, and nominal implementation classes name that base.",
           "residual": "Source form and symbol resolution do not prove structural method-signature compatibility or any implementation behavior; strict generated type witnesses and executed suites own those separate propositions.",
           "must_pass": "fixture:reference contract-conformance registry",
-          "must_reject": "discrimination:ARCH-024",
+          "must_reject": "discrimination:ARCH-024/check:contract_conformance",
           "platforms": [
             "windows",
             "linux"
@@ -1714,7 +1714,7 @@
           "proposition": "Each internal contract registry resolves at least one real class and test classes whose declared capability union contains controllable and scheduled_fault; one class may carry both.",
           "residual": "A capability label and resolvable class do not establish that control is deterministic or a scheduled fault actually fires; the referenced fault cases and adversarial execution must discriminate those behaviors.",
           "must_pass": "fixture:reference contract-conformance registry",
-          "must_reject": "discrimination:ARCH-025",
+          "must_reject": "discrimination:ARCH-025/check:contract_conformance",
           "platforms": [
             "windows",
             "linux"
@@ -1750,10 +1750,10 @@
           "mechanism": "auto:import-linter",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:import-linter reports no diagnostic corresponding to DEP-001 under the repository configuration and declared scan roots.",
+          "proposition": "auto:import-linter passes its declared conformant control and rejects the witnessed DEP-001 defect: the domain imports pydantic, a third-party package.",
           "residual": "Passing excludes only the configured patterns implemented by auto:import-linter; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`lint-imports` contract `domain-is-pure`",
-          "must_reject": "discrimination:DEP-001",
+          "must_reject": "discrimination:DEP-001/auto:import-linter",
           "platforms": [
             "windows",
             "linux"
@@ -1787,10 +1787,10 @@
           "mechanism": "fitness:test_dependency_position",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_dependency_position passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_dependency_position passes its declared conformant control and rejects the witnessed DEP-002 defect: the domain directly imports a third-party dependency.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_dependency_position; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_deps.py::test_dependency_position`",
-          "must_reject": "pending:DEP-002",
+          "must_reject": "discrimination:DEP-002/fitness:test_dependency_position",
           "platforms": [
             "windows",
             "linux"
@@ -1868,10 +1868,10 @@
           "mechanism": "fitness:test_environment_locked",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_environment_locked passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_environment_locked passes its declared conformant control and rejects the witnessed DEP-005 defect: the environment declaration loosens one exact version to a range.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_environment_locked; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_deps.py::test_environment_locked`",
-          "must_reject": "pending:DEP-005",
+          "must_reject": "discrimination:DEP-005/fitness:test_environment_locked",
           "platforms": [
             "windows",
             "linux"
@@ -1905,10 +1905,10 @@
           "mechanism": "fitness:test_environment_locked",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_environment_locked passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_environment_locked passes its declared conformant control and rejects the witnessed DEP-006 defect: the environment verifier ignores every detected drift.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_environment_locked; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_deps.py::test_environment_locked`",
-          "must_reject": "pending:DEP-006",
+          "must_reject": "discrimination:DEP-006/fitness:test_environment_locked",
           "platforms": [
             "windows",
             "linux"
@@ -1942,10 +1942,10 @@
           "mechanism": "check:generated_provenance",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:generated_provenance emits a finding tagged DEP-007 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:generated_provenance passes its declared conformant control and rejects the witnessed DEP-007 defect: a generated artifact names no generator.",
           "residual": "Passing excludes only the configured patterns implemented by check:generated_provenance; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.generated_provenance`",
-          "must_reject": "pending:DEP-007",
+          "must_reject": "discrimination:DEP-007/check:generated_provenance",
           "platforms": [
             "windows",
             "linux"
@@ -1979,10 +1979,10 @@
           "mechanism": "check:generated_provenance",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:generated_provenance emits a finding tagged DEP-008 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:generated_provenance passes its declared conformant control and rejects the witnessed DEP-008 defect: a generated artifact carries a generation timestamp.",
           "residual": "Passing excludes only the configured patterns implemented by check:generated_provenance; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.generated_provenance`",
-          "must_reject": "pending:DEP-008",
+          "must_reject": "discrimination:DEP-008/check:generated_provenance",
           "platforms": [
             "windows",
             "linux"
@@ -2016,10 +2016,10 @@
           "mechanism": "fitness:test_regeneration_stable",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_regeneration_stable passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_regeneration_stable passes its declared conformant control and rejects the witnessed DEP-009 defect: the index generator injects the current nanosecond into its output.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_regeneration_stable; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_generated.py::test_regeneration_stable`",
-          "must_reject": "pending:DEP-009",
+          "must_reject": "discrimination:DEP-009/fitness:test_regeneration_stable",
           "platforms": [
             "windows",
             "linux"
@@ -2053,10 +2053,10 @@
           "mechanism": "fitness:test_regeneration_stable",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_regeneration_stable passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_regeneration_stable passes its declared conformant control and rejects the witnessed DEP-010 defect: the committed index differs from what its generator produces.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_regeneration_stable; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_generated.py::test_regeneration_stable`",
-          "must_reject": "pending:DEP-010",
+          "must_reject": "discrimination:DEP-010/fitness:test_regeneration_stable",
           "platforms": [
             "windows",
             "linux"
@@ -2090,10 +2090,10 @@
           "mechanism": "fitness:test_regeneration_stable",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_regeneration_stable passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_regeneration_stable passes its declared conformant control and rejects the witnessed DEP-011 defect: one declared generated artifact is absent from the repository.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_regeneration_stable; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_generated.py::test_regeneration_stable`",
-          "must_reject": "pending:DEP-011",
+          "must_reject": "discrimination:DEP-011/fitness:test_regeneration_stable",
           "platforms": [
             "windows",
             "linux"
@@ -2127,10 +2127,10 @@
           "mechanism": "auto:integrate",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:integrate reports no diagnostic corresponding to DEP-012 under the repository configuration and declared scan roots.",
+          "proposition": "auto:integrate passes its declared conformant control and rejects the witnessed DEP-012 defect: integrate --check rejects a missing top-level announcement.",
           "residual": "Passing excludes only the configured patterns implemented by auto:integrate; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python .agent/tools/integrate.py --check`",
-          "must_reject": "pending:DEP-012",
+          "must_reject": "discrimination:DEP-012/auto:integrate",
           "platforms": [
             "windows",
             "linux"
@@ -2164,10 +2164,10 @@
           "mechanism": "auto:integrate",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:integrate reports no diagnostic corresponding to DEP-013 under the repository configuration and declared scan roots.",
+          "proposition": "auto:integrate passes its declared conformant control and rejects the witnessed DEP-013 defect: integrate --check rejects a stale managed announcement.",
           "residual": "Passing excludes only the configured patterns implemented by auto:integrate; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python .agent/tools/integrate.py --check` · `pytest tools/test_integrate.py`",
-          "must_reject": "pending:DEP-013",
+          "must_reject": "discrimination:DEP-013/auto:integrate",
           "platforms": [
             "windows",
             "linux"
@@ -2178,10 +2178,10 @@
           "mechanism": "fitness:test_an_existing_block_is_replaced_not_duplicated",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_an_existing_block_is_replaced_not_duplicated passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_an_existing_block_is_replaced_not_duplicated passes its declared conformant control and rejects the witnessed DEP-013 defect: an update replaces its managed block instead of duplicating it.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_an_existing_block_is_replaced_not_duplicated; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`python .agent/tools/integrate.py --check` · `pytest tools/test_integrate.py`",
-          "must_reject": "pending:DEP-013",
+          "must_reject": "discrimination:DEP-013/fitness:test_an_existing_block_is_replaced_not_duplicated",
           "platforms": [
             "windows",
             "linux"
@@ -2215,10 +2215,10 @@
           "mechanism": "fitness:test_a_dry_run_writes_nothing",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_a_dry_run_writes_nothing passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_a_dry_run_writes_nothing passes its declared conformant control and rejects the witnessed DEP-014 defect: the installer dry run leaves every owned path absent.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_a_dry_run_writes_nothing; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest tools/test_integrate.py::test_a_dry_run_writes_nothing`",
-          "must_reject": "pending:DEP-014",
+          "must_reject": "discrimination:DEP-014/fitness:test_a_dry_run_writes_nothing",
           "platforms": [
             "windows",
             "linux"
@@ -2252,10 +2252,10 @@
           "mechanism": "fitness:test_envelope_conforms",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_envelope_conforms passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_envelope_conforms passes its declared conformant control and rejects the witnessed DIAG-001 defect: the diagnostic producer omits its stable code field.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_envelope_conforms; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_diagnostics.py::test_envelope_conforms`",
-          "must_reject": "pending:DIAG-001",
+          "must_reject": "discrimination:DIAG-001/fitness:test_envelope_conforms",
           "platforms": [
             "windows",
             "linux"
@@ -2289,10 +2289,10 @@
           "mechanism": "check:exception_has_code",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:exception_has_code emits a finding tagged DIAG-002 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:exception_has_code passes its declared conformant control and rejects the witnessed DIAG-002 defect: an exception type carries no code.",
           "residual": "Passing excludes only the configured patterns implemented by check:exception_has_code; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.exception_has_code`",
-          "must_reject": "discrimination:DIAG-002",
+          "must_reject": "discrimination:DIAG-002/check:exception_has_code",
           "platforms": [
             "windows",
             "linux"
@@ -2328,10 +2328,10 @@
           "mechanism": "check:exception_has_code",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:exception_has_code emits a finding tagged DIAG-003 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:exception_has_code passes its declared conformant control and rejects the witnessed DIAG-003 defect: an exception formats detail into prose only.",
           "residual": "Passing excludes only the configured patterns implemented by check:exception_has_code; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.exception_has_code`",
-          "must_reject": "pending:DIAG-003",
+          "must_reject": "discrimination:DIAG-003/check:exception_has_code",
           "platforms": [
             "windows",
             "linux"
@@ -2387,10 +2387,10 @@
           "mechanism": "check:raise_from",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:raise_from emits a finding tagged DIAG-005 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:raise_from passes its declared conformant control and rejects the witnessed DIAG-005 defect: a translated exception drops its causal chain.",
           "residual": "Passing excludes only the configured patterns implemented by check:raise_from; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.raise_from`",
-          "must_reject": "pending:DIAG-005",
+          "must_reject": "discrimination:DIAG-005/check:raise_from",
           "platforms": [
             "windows",
             "linux"
@@ -2424,10 +2424,10 @@
           "mechanism": "check:raise_from",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:raise_from emits a finding tagged DIAG-006 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:raise_from passes its declared conformant control and rejects the witnessed DIAG-006 defect: a broad catch is rewrapped only to change its message.",
           "residual": "Passing excludes only the configured patterns implemented by check:raise_from; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.raise_from`",
-          "must_reject": "pending:DIAG-006",
+          "must_reject": "discrimination:DIAG-006/check:raise_from",
           "platforms": [
             "windows",
             "linux"
@@ -2461,10 +2461,10 @@
           "mechanism": "check:raise_from",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:raise_from emits a finding tagged DIAG-007 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:raise_from passes its declared conformant control and rejects the witnessed DIAG-007 defect: cause suppression carries no documented reason.",
           "residual": "Passing excludes only the configured patterns implemented by check:raise_from; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.raise_from`",
-          "must_reject": "pending:DIAG-007",
+          "must_reject": "discrimination:DIAG-007/check:raise_from",
           "platforms": [
             "windows",
             "linux"
@@ -2498,10 +2498,10 @@
           "mechanism": "auto:ruff:BLE001",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:ruff:BLE001 reports no diagnostic corresponding to DIAG-008 under the repository configuration and declared scan roots.",
+          "proposition": "auto:ruff:BLE001 passes its declared conformant control and rejects the witnessed DIAG-008 defect: Ruff sees a broad Exception catch outside the process boundary.",
           "residual": "Passing excludes only the configured patterns implemented by auto:ruff:BLE001; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`ruff check` (rules `E722`, `BLE001`, `S110`) · `python -m checks.raise_from`",
-          "must_reject": "discrimination:DIAG-008",
+          "must_reject": "discrimination:DIAG-008/auto:ruff:BLE001",
           "platforms": [
             "windows",
             "linux"
@@ -2512,10 +2512,10 @@
           "mechanism": "check:raise_from",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:raise_from emits a finding tagged DIAG-008 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:raise_from passes its declared conformant control and rejects the witnessed DIAG-008 defect: an except block swallows the exception.",
           "residual": "Passing excludes only the configured patterns implemented by check:raise_from; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`ruff check` (rules `E722`, `BLE001`, `S110`) · `python -m checks.raise_from`",
-          "must_reject": "discrimination:DIAG-008",
+          "must_reject": "discrimination:DIAG-008/check:raise_from",
           "platforms": [
             "windows",
             "linux"
@@ -2549,10 +2549,10 @@
           "mechanism": "check:assert_usage",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:assert_usage emits a finding tagged DIAG-009 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:assert_usage passes its declared conformant control and rejects the witnessed DIAG-009 defect: an assertion validates a caller-controlled parameter.",
           "residual": "Passing excludes only the configured patterns implemented by check:assert_usage; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.assert_usage` · `ruff check` (rule `S101` outside tests)",
-          "must_reject": "pending:DIAG-009",
+          "must_reject": "discrimination:DIAG-009/check:assert_usage",
           "platforms": [
             "windows",
             "linux"
@@ -2586,10 +2586,10 @@
           "mechanism": "check:log_once",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:log_once emits a finding tagged DIAG-010 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:log_once passes its declared conformant control and rejects the witnessed DIAG-010 defect: one layer logs a failure and then re-raises it.",
           "residual": "Passing excludes only the configured patterns implemented by check:log_once; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.log_once`",
-          "must_reject": "pending:DIAG-010",
+          "must_reject": "discrimination:DIAG-010/check:log_once",
           "platforms": [
             "windows",
             "linux"
@@ -2623,10 +2623,10 @@
           "mechanism": "check:library_logging",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:library_logging emits a finding tagged DIAG-011 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:library_logging passes its declared conformant control and rejects the witnessed DIAG-011 defect: library code configures the process logging policy.",
           "residual": "Passing excludes only the configured patterns implemented by check:library_logging; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.library_logging`",
-          "must_reject": "pending:DIAG-011",
+          "must_reject": "discrimination:DIAG-011/check:library_logging",
           "platforms": [
             "windows",
             "linux"
@@ -2662,10 +2662,10 @@
           "mechanism": "auto:ruff:G004",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:ruff:G004 reports no diagnostic corresponding to DIAG-012 under the repository configuration and declared scan roots.",
+          "proposition": "auto:ruff:G004 passes its declared conformant control and rejects the witnessed DIAG-012 defect: a log call formats its argument eagerly with an f-string.",
           "residual": "Passing excludes only the configured patterns implemented by auto:ruff:G004; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`ruff check` (rules `G004`, `G010`)",
-          "must_reject": "discrimination:DIAG-012",
+          "must_reject": "discrimination:DIAG-012/auto:ruff:G004",
           "platforms": [
             "windows",
             "linux"
@@ -2721,10 +2721,10 @@
           "mechanism": "check:redaction",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:redaction emits a finding tagged DIAG-014 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:redaction passes its declared conformant control and rejects the witnessed DIAG-014 defect: a value named as a secret is passed to a logger.",
           "residual": "Passing excludes only the configured patterns implemented by check:redaction; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.redaction`",
-          "must_reject": "pending:DIAG-014",
+          "must_reject": "discrimination:DIAG-014/check:redaction",
           "platforms": [
             "windows",
             "linux"
@@ -2758,10 +2758,10 @@
           "mechanism": "auto:ruff:G004",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:ruff:G004 reports no diagnostic corresponding to DIAG-015 under the repository configuration and declared scan roots.",
+          "proposition": "auto:ruff:G004 passes its declared conformant control and rejects the witnessed DIAG-015 defect: Ruff sees an exception interpolated eagerly into a log string.",
           "residual": "Passing excludes only the configured patterns implemented by auto:ruff:G004; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`ruff check` · `python -m checks.log_once`",
-          "must_reject": "pending:DIAG-015",
+          "must_reject": "discrimination:DIAG-015/auto:ruff:G004",
           "platforms": [
             "windows",
             "linux"
@@ -2772,10 +2772,10 @@
           "mechanism": "check:log_once",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:log_once emits a finding tagged DIAG-015 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:log_once passes its declared conformant control and rejects the witnessed DIAG-015 defect: a logging call interpolates an exception eagerly.",
           "residual": "Passing excludes only the configured patterns implemented by check:log_once; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`ruff check` · `python -m checks.log_once`",
-          "must_reject": "pending:DIAG-015",
+          "must_reject": "discrimination:DIAG-015/check:log_once",
           "platforms": [
             "windows",
             "linux"
@@ -2831,10 +2831,10 @@
           "mechanism": "auto:ruff:D100",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:ruff:D100 reports no diagnostic corresponding to DOC-001 under the repository configuration and declared scan roots.",
+          "proposition": "auto:ruff:D100 passes its declared conformant control and rejects the witnessed DOC-001 defect: Ruff sees a production module without a module docstring.",
           "residual": "Passing excludes only the configured patterns implemented by auto:ruff:D100; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`ruff check` (rules `D100`–`D107`) · `python -m checks.doc_coverage`",
-          "must_reject": "discrimination:DOC-001",
+          "must_reject": "discrimination:DOC-001/auto:ruff:D100",
           "platforms": [
             "windows",
             "linux"
@@ -2845,10 +2845,10 @@
           "mechanism": "check:doc_coverage",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:doc_coverage emits a finding tagged DOC-001 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:doc_coverage passes its declared conformant control and rejects the witnessed DOC-001 defect: a public function carries no docstring.",
           "residual": "Passing excludes only the configured patterns implemented by check:doc_coverage; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`ruff check` (rules `D100`–`D107`) · `python -m checks.doc_coverage`",
-          "must_reject": "discrimination:DOC-001",
+          "must_reject": "discrimination:DOC-001/check:doc_coverage",
           "platforms": [
             "windows",
             "linux"
@@ -2882,10 +2882,10 @@
           "mechanism": "check:doc_coverage",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:doc_coverage emits a finding tagged DOC-002 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:doc_coverage passes its declared conformant control and rejects the witnessed DOC-002 defect: a module constant has no documentation block.",
           "residual": "Passing excludes only the configured patterns implemented by check:doc_coverage; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.doc_coverage`, which reads the declared engine",
-          "must_reject": "pending:DOC-002",
+          "must_reject": "discrimination:DOC-002/check:doc_coverage",
           "platforms": [
             "windows",
             "linux"
@@ -2922,7 +2922,7 @@
           "proposition": "The canonical default project gate schedules exactly one aggregate discipline-check adapter, that adapter claims DOC-003, discovers doc_coverage, and examines a non-empty conformant source tree.",
           "residual": "Passing does not constrain project-owned wrappers that bypass the canonical gate; those wrappers are outside the shipped gate contract and cannot certify v4 conformance.",
           "must_pass": "command:`pytest tools/test_project_gate.py::test_ordinary_gate_schedules_documentation_presence`",
-          "must_reject": "discrimination:DOC-003",
+          "must_reject": "discrimination:DOC-003/fitness:test_ordinary_gate_schedules_documentation_presence",
           "platforms": [
             "windows",
             "linux"
@@ -2956,10 +2956,10 @@
           "mechanism": "check:doc_style",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:doc_style emits a finding tagged DOC-004 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:doc_style passes its declared conformant control and rejects the witnessed DOC-004 defect: a hash block substitutes for a callable docstring.",
           "residual": "Passing excludes only the configured patterns implemented by check:doc_style; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.doc_style`",
-          "must_reject": "pending:DOC-004",
+          "must_reject": "discrimination:DOC-004/check:doc_style",
           "platforms": [
             "windows",
             "linux"
@@ -2993,10 +2993,10 @@
           "mechanism": "auto:doxygen",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:doxygen reports no diagnostic corresponding to DOC-005 under the repository configuration and declared scan roots.",
+          "proposition": "auto:doxygen passes its declared conformant control and rejects the witnessed DOC-005 defect: Doxygen rejects a documented parameter absent from the signature.",
           "residual": "Passing excludes only the configured patterns implemented by auto:doxygen; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`doxygen enforce/Doxyfile` with the setting in force",
-          "must_reject": "pending:DOC-005",
+          "must_reject": "discrimination:DOC-005/auto:doxygen",
           "platforms": [
             "windows",
             "linux"
@@ -3030,10 +3030,10 @@
           "mechanism": "auto:ruff:D205",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:ruff:D205 reports no diagnostic corresponding to DOC-006 under the repository configuration and declared scan roots.",
+          "proposition": "auto:ruff:D205 passes its declared conformant control and rejects the witnessed DOC-006 defect: a docstring runs its summary straight into the description.",
           "residual": "Passing excludes only the configured patterns implemented by auto:ruff:D205; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`ruff check` (rules `D205`, `D400`, `D415`)",
-          "must_reject": "discrimination:DOC-006",
+          "must_reject": "discrimination:DOC-006/auto:ruff:D205",
           "platforms": [
             "windows",
             "linux"
@@ -3067,10 +3067,10 @@
           "mechanism": "check:doc_coverage",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:doc_coverage emits a finding tagged DOC-007 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:doc_coverage passes its declared conformant control and rejects the witnessed DOC-007 defect: a callable docstring omits one parameter.",
           "residual": "Passing excludes only the configured patterns implemented by check:doc_coverage; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`doxygen enforce/Doxyfile` with `WARN_NO_PARAMDOC` and `WARN_IF_INCOMPLETE_DOC` · `python -m checks.doc_coverage`, which reads the declared engine",
-          "must_reject": "pending:DOC-007",
+          "must_reject": "discrimination:DOC-007/check:doc_coverage",
           "platforms": [
             "windows",
             "linux"
@@ -3107,7 +3107,7 @@
           "proposition": "check:doc_style emits DOC-008 when a docstring or Doxygen hash block restates one of the configured common parameter or return types in the recognized @param/@return forms.",
           "residual": "Passing does not detect every custom, qualified, aliased, natural-language, or differently formatted type restatement, and cannot decide whether prose and a signature duplicate the same semantic constraint.",
           "must_pass": "command:`python -m checks.doc_style`",
-          "must_reject": "discrimination:DOC-008",
+          "must_reject": "discrimination:DOC-008/check:doc_style",
           "platforms": [
             "windows",
             "linux"
@@ -3141,10 +3141,10 @@
           "mechanism": "check:doc_style",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:doc_style emits a finding tagged DOC-009 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:doc_style passes its declared conformant control and rejects the witnessed DOC-009 defect: documentation merely restates the element name.",
           "residual": "Passing excludes only the configured patterns implemented by check:doc_style; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.doc_style`",
-          "must_reject": "pending:DOC-009",
+          "must_reject": "discrimination:DOC-009/check:doc_style",
           "platforms": [
             "windows",
             "linux"
@@ -3178,10 +3178,10 @@
           "mechanism": "auto:doxygen",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:doxygen reports no diagnostic corresponding to DOC-010 under the repository configuration and declared scan roots.",
+          "proposition": "auto:doxygen passes its declared conformant control and rejects the witnessed DOC-010 defect: a Doxygen documentation warning makes the run fail.",
           "residual": "Passing excludes only the configured patterns implemented by auto:doxygen; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`doxygen enforce/Doxyfile` with `WARN_AS_ERROR = FAIL_ON_WARNINGS`",
-          "must_reject": "pending:DOC-010",
+          "must_reject": "discrimination:DOC-010/auto:doxygen",
           "platforms": [
             "windows",
             "linux"
@@ -3217,10 +3217,10 @@
           "mechanism": "auto:doxygen",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:doxygen reports no diagnostic corresponding to DOC-011 under the repository configuration and declared scan roots.",
+          "proposition": "auto:doxygen passes its declared conformant control and rejects the witnessed DOC-011 defect: a Doxygen run with no input cannot earn a clean verdict.",
           "residual": "Passing excludes only the configured patterns implemented by auto:doxygen; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`doxygen enforce/Doxyfile` exits 0 on a conformant tree",
-          "must_reject": "pending:DOC-011",
+          "must_reject": "discrimination:DOC-011/auto:doxygen",
           "platforms": [
             "windows",
             "linux"
@@ -3254,10 +3254,10 @@
           "mechanism": "check:generated_provenance",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:generated_provenance emits a finding tagged DOC-012 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:generated_provenance passes its declared conformant control and rejects the witnessed DOC-012 defect: a rendered HTML page is committed beneath a site build tree.",
           "residual": "Passing excludes only the configured patterns implemented by check:generated_provenance; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.generated_provenance`",
-          "must_reject": "pending:DOC-012",
+          "must_reject": "discrimination:DOC-012/check:generated_provenance",
           "platforms": [
             "windows",
             "linux"
@@ -3316,7 +3316,7 @@
           "proposition": "The v4 declaration parser requires one explicit doc_engine value from the closed doxygen, sphinx, or none set, and check:doc_coverage emits DOC_ENGINE_UNDECLARED once when a direct legacy fallback has no declaration.",
           "residual": "A declared engine can still be misconfigured, absent from the gate environment, or unable to parse the project's actual documentation syntax; the project gate owns those configuration and execution probes.",
           "must_pass": "command:`python -m checks.doc_coverage`, which prints the declaration it found and every rule that declaration leaves inactive",
-          "must_reject": "discrimination:DOC-014",
+          "must_reject": "discrimination:DOC-014/check:doc_coverage",
           "platforms": [
             "windows",
             "linux"
@@ -3352,10 +3352,10 @@
           "mechanism": "auto:import-linter",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:import-linter reports no diagnostic corresponding to EFCT-001 under the repository configuration and declared scan roots.",
+          "proposition": "auto:import-linter passes its declared conformant control and rejects the witnessed EFCT-001 defect: the app opens a socket, performing an effect outside the shell.",
           "residual": "Passing excludes configured direct imports of effect-capable APIs; it does not prove that every call through a port is sequenced or recovered correctly.",
           "must_pass": "command:`lint-imports --config enforce/importlinter.toml` contract `ARCH-002 domain is pure` · `python tools/import_gate.py`",
-          "must_reject": "discrimination:EFCT-001",
+          "must_reject": "discrimination:EFCT-001/auto:import-linter",
           "platforms": [
             "windows",
             "linux"
@@ -3389,10 +3389,10 @@
           "mechanism": "check:explicit_effects",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:explicit_effects emits a finding tagged EFCT-002 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:explicit_effects passes its declared conformant control and rejects the witnessed EFCT-002 defect: the core imports os and reaches for an effect.",
           "residual": "Passing excludes only the configured patterns implemented by check:explicit_effects; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.explicit_effects`",
-          "must_reject": "discrimination:EFCT-002",
+          "must_reject": "discrimination:EFCT-002/check:explicit_effects",
           "platforms": [
             "windows",
             "linux"
@@ -3426,10 +3426,10 @@
           "mechanism": "fitness:test_determinism",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_determinism passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_determinism passes its declared conformant control and rejects the witnessed EFCT-003 defect: domain policy imports a random-number source.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_determinism; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_determinism.py`",
-          "must_reject": "pending:EFCT-003",
+          "must_reject": "discrimination:EFCT-003/fitness:test_determinism",
           "platforms": [
             "windows",
             "linux"
@@ -3500,10 +3500,10 @@
           "mechanism": "check:plan_apply",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:plan_apply emits a finding tagged EFCT-005 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:plan_apply passes its declared conformant control and rejects the witnessed EFCT-005 defect: application code performs destructive work without a plan gate.",
           "residual": "Passing excludes only the configured patterns implemented by check:plan_apply; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.plan_apply`",
-          "must_reject": "pending:EFCT-005",
+          "must_reject": "discrimination:EFCT-005/check:plan_apply",
           "platforms": [
             "windows",
             "linux"
@@ -3537,10 +3537,10 @@
           "mechanism": "fitness:test_dry_run_matches_apply",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_dry_run_matches_apply passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_dry_run_matches_apply passes its declared conformant control and rejects the witnessed EFCT-006 defect: the applier loses the plan and recomputes what it should apply.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_dry_run_matches_apply; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_effects.py::test_dry_run_matches_apply`",
-          "must_reject": "discrimination:EFCT-006",
+          "must_reject": "discrimination:EFCT-006/fitness:test_dry_run_matches_apply",
           "platforms": [
             "windows",
             "linux"
@@ -3574,10 +3574,10 @@
           "mechanism": "fitness:test_interruption_recovers",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_interruption_recovers passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_interruption_recovers passes its declared conformant control and rejects the witnessed EFCT-007 defect: the fault layer contains no interruption or recovery evidence.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_interruption_recovers; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_effects.py::test_interruption_recovers`",
-          "must_reject": "pending:EFCT-007",
+          "must_reject": "discrimination:EFCT-007/fitness:test_interruption_recovers",
           "platforms": [
             "windows",
             "linux"
@@ -3611,10 +3611,10 @@
           "mechanism": "check:atomicity_qualified",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:atomicity_qualified emits a finding tagged EFCT-008 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:atomicity_qualified passes its declared conformant control and rejects the witnessed EFCT-008 defect: documentation makes an unqualified atomicity claim.",
           "residual": "Passing excludes only the configured patterns implemented by check:atomicity_qualified; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.atomicity_qualified`",
-          "must_reject": "pending:EFCT-008",
+          "must_reject": "discrimination:EFCT-008/check:atomicity_qualified",
           "platforms": [
             "windows",
             "linux"
@@ -3648,10 +3648,10 @@
           "mechanism": "fitness:test_what_is_not_guaranteed_is_stated",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_what_is_not_guaranteed_is_stated passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_what_is_not_guaranteed_is_stated passes its declared conformant control and rejects the witnessed EFCT-009 defect: the file port stops stating its non-atomic limit.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_what_is_not_guaranteed_is_stated; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_effects.py::test_what_is_not_guaranteed_is_stated`",
-          "must_reject": "pending:EFCT-009",
+          "must_reject": "discrimination:EFCT-009/fitness:test_what_is_not_guaranteed_is_stated",
           "platforms": [
             "windows",
             "linux"
@@ -3685,10 +3685,10 @@
           "mechanism": "check:plan_apply",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:plan_apply emits a finding tagged EFCT-010 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:plan_apply passes its declared conformant control and rejects the witnessed EFCT-010 defect: state is compared to an open string value.",
           "residual": "Passing excludes only the configured patterns implemented by check:plan_apply; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.plan_apply`",
-          "must_reject": "pending:EFCT-010",
+          "must_reject": "discrimination:EFCT-010/check:plan_apply",
           "platforms": [
             "windows",
             "linux"
@@ -3759,10 +3759,10 @@
           "mechanism": "auto:import-linter",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:import-linter reports no diagnostic corresponding to EFCT-012 under the repository configuration and declared scan roots.",
+          "proposition": "auto:import-linter passes its declared conformant control and rejects the witnessed EFCT-012 defect: application code imports the private storage representation.",
           "residual": "Passing excludes only the configured patterns implemented by auto:import-linter; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`lint-imports --config enforce/importlinter.toml` contract `EFCT-012 storage has one owner` · `python tools/import_gate.py`",
-          "must_reject": "pending:EFCT-012",
+          "must_reject": "discrimination:EFCT-012/auto:import-linter",
           "platforms": [
             "windows",
             "linux"
@@ -3796,10 +3796,10 @@
           "mechanism": "fitness:test_concurrency_documented",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_concurrency_documented passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_concurrency_documented passes its declared conformant control and rejects the witnessed EFCT-013 defect: a module shares state across threads and states no semantics.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_concurrency_documented; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_concurrency.py::test_concurrency_documented`",
-          "must_reject": "discrimination:EFCT-013",
+          "must_reject": "discrimination:EFCT-013/fitness:test_concurrency_documented",
           "platforms": [
             "windows",
             "linux"
@@ -3833,10 +3833,10 @@
           "mechanism": "fitness:test_concurrency_documented",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_concurrency_documented passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_concurrency_documented passes its declared conformant control and rejects the witnessed EFCT-014 defect: a module introduces shared threading state without semantics.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_concurrency_documented; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_concurrency.py::test_concurrency_documented`",
-          "must_reject": "pending:EFCT-014",
+          "must_reject": "discrimination:EFCT-014/fitness:test_concurrency_documented",
           "platforms": [
             "windows",
             "linux"
@@ -3870,10 +3870,10 @@
           "mechanism": "fitness:test_single_writer",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_single_writer passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_single_writer passes its declared conformant control and rejects the witnessed EFCT-015 defect: a writer takes a lock and never reports losing the race.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_single_writer; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_concurrency.py::test_single_writer`",
-          "must_reject": "discrimination:EFCT-015",
+          "must_reject": "discrimination:EFCT-015/fitness:test_single_writer",
           "platforms": [
             "windows",
             "linux"
@@ -3929,10 +3929,10 @@
           "mechanism": "check:error_channels",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:error_channels emits a finding tagged ERR-001 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:error_channels passes its declared conformant control and rejects the witnessed ERR-001 defect: one operation mixes an explicit result union with raised failure.",
           "residual": "Passing excludes only the configured patterns implemented by check:error_channels; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.error_channels`",
-          "must_reject": "pending:ERR-001",
+          "must_reject": "discrimination:ERR-001/check:error_channels",
           "platforms": [
             "windows",
             "linux"
@@ -3966,10 +3966,10 @@
           "mechanism": "auto:mypy",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:mypy reports no diagnostic corresponding to ERR-002 under the repository configuration and declared scan roots.",
+          "proposition": "auto:mypy passes its declared conformant control and rejects the witnessed ERR-002 defect: mypy sees a newly added result arm left unhandled.",
           "residual": "Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`mypy --strict` · `pyright --strict`",
-          "must_reject": "pending:ERR-002",
+          "must_reject": "discrimination:ERR-002/auto:mypy",
           "platforms": [
             "windows",
             "linux"
@@ -3980,10 +3980,10 @@
           "mechanism": "auto:pyright",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:pyright reports no diagnostic corresponding to ERR-002 under the repository configuration and declared scan roots.",
+          "proposition": "auto:pyright passes its declared conformant control and rejects the witnessed ERR-002 defect: pyright sees a newly added result arm left unhandled.",
           "residual": "Passing excludes only the configured patterns implemented by auto:pyright; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`mypy --strict` · `pyright --strict`",
-          "must_reject": "pending:ERR-002",
+          "must_reject": "discrimination:ERR-002/auto:pyright",
           "platforms": [
             "windows",
             "linux"
@@ -4054,10 +4054,10 @@
           "mechanism": "check:error_channels",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:error_channels emits a finding tagged ERR-004 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:error_channels passes its declared conformant control and rejects the witnessed ERR-004 defect: a governed layer raises an unowned built-in exception.",
           "residual": "Passing excludes only the configured patterns implemented by check:error_channels; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.error_channels`",
-          "must_reject": "pending:ERR-004",
+          "must_reject": "discrimination:ERR-004/check:error_channels",
           "platforms": [
             "windows",
             "linux"
@@ -4091,10 +4091,10 @@
           "mechanism": "auto:mypy",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:mypy reports no diagnostic corresponding to ERR-005 under the repository configuration and declared scan roots.",
+          "proposition": "auto:mypy passes its declared conformant control and rejects the witnessed ERR-005 defect: a function returns an error variant absent from its result union.",
           "residual": "Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`mypy --strict`",
-          "must_reject": "pending:ERR-005",
+          "must_reject": "discrimination:ERR-005/auto:mypy",
           "platforms": [
             "windows",
             "linux"
@@ -4128,10 +4128,10 @@
           "mechanism": "check:exception_shape",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:exception_shape emits a finding tagged ERR-006 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:exception_shape passes its declared conformant control and rejects the witnessed ERR-006 defect: a public exception sits outside the project hierarchy.",
           "residual": "Passing excludes only the configured patterns implemented by check:exception_shape; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.exception_shape`",
-          "must_reject": "pending:ERR-006",
+          "must_reject": "discrimination:ERR-006/check:exception_shape",
           "platforms": [
             "windows",
             "linux"
@@ -4187,10 +4187,10 @@
           "mechanism": "auto:ruff:BLE001",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:ruff:BLE001 reports no diagnostic corresponding to ERR-008 under the repository configuration and declared scan roots.",
+          "proposition": "auto:ruff:BLE001 passes its declared conformant control and rejects the witnessed ERR-008 defect: an except clause catches Exception and names nothing.",
           "residual": "Passing excludes only the configured patterns implemented by auto:ruff:BLE001; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`ruff check` (rules `E722`, `BLE001`)",
-          "must_reject": "discrimination:ERR-008",
+          "must_reject": "discrimination:ERR-008/auto:ruff:BLE001",
           "platforms": [
             "windows",
             "linux"
@@ -4224,10 +4224,10 @@
           "mechanism": "auto:ruff:TRY300",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:ruff:TRY300 reports no diagnostic corresponding to ERR-009 under the repository configuration and declared scan roots.",
+          "proposition": "auto:ruff:TRY300 passes its declared conformant control and rejects the witnessed ERR-009 defect: the try body ends with the return that only runs on success.",
           "residual": "Passing excludes only the configured patterns implemented by auto:ruff:TRY300; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`ruff check` (rules `TRY300`, `TRY301`)",
-          "must_reject": "discrimination:ERR-009",
+          "must_reject": "discrimination:ERR-009/auto:ruff:TRY300",
           "platforms": [
             "windows",
             "linux"
@@ -4261,10 +4261,10 @@
           "mechanism": "check:exception_shape",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:exception_shape emits a finding tagged ERR-010 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:exception_shape passes its declared conformant control and rejects the witnessed ERR-010 defect: only the first of several collected failures is raised.",
           "residual": "Passing excludes only the configured patterns implemented by check:exception_shape; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.exception_shape`",
-          "must_reject": "pending:ERR-010",
+          "must_reject": "discrimination:ERR-010/check:exception_shape",
           "platforms": [
             "windows",
             "linux"
@@ -4320,10 +4320,10 @@
           "mechanism": "check:assert_usage",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:assert_usage emits a finding tagged ERR-012 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:assert_usage passes its declared conformant control and rejects the witnessed ERR-012 defect: an assertion validates caller-controlled input.",
           "residual": "Passing excludes only the configured patterns implemented by check:assert_usage; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.assert_usage`",
-          "must_reject": "pending:ERR-012",
+          "must_reject": "discrimination:ERR-012/check:assert_usage",
           "platforms": [
             "windows",
             "linux"
@@ -4357,10 +4357,10 @@
           "mechanism": "check:boundary_parsing",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:boundary_parsing emits a finding tagged ERR-013 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:boundary_parsing passes its declared conformant control and rejects the witnessed ERR-013 defect: a probe with exists() before acting on the path.",
           "residual": "Passing excludes only the configured patterns implemented by check:boundary_parsing; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.boundary_parsing`",
-          "must_reject": "discrimination:ERR-013",
+          "must_reject": "discrimination:ERR-013/check:boundary_parsing",
           "platforms": [
             "windows",
             "linux"
@@ -4416,10 +4416,10 @@
           "mechanism": "fitness:test_no_unhandled_escape",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_no_unhandled_escape passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_no_unhandled_escape passes its declared conformant control and rejects the witnessed ERR-015 defect: the process boundary catches only ValueError.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_no_unhandled_escape; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_diagnostics.py::test_no_unhandled_escape`",
-          "must_reject": "pending:ERR-015",
+          "must_reject": "discrimination:ERR-015/fitness:test_no_unhandled_escape",
           "platforms": [
             "windows",
             "linux"
@@ -4453,10 +4453,10 @@
           "mechanism": "fitness:test_fault_containment",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_fault_containment passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_fault_containment passes its declared conformant control and rejects the witnessed ERR-016 defect: the fault layer asserts that it raised and nothing about where.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_fault_containment; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_faults.py::test_fault_containment`",
-          "must_reject": "discrimination:ERR-016",
+          "must_reject": "discrimination:ERR-016/fitness:test_fault_containment",
           "platforms": [
             "windows",
             "linux"
@@ -4512,10 +4512,10 @@
           "mechanism": "check:oracle_declared",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:oracle_declared emits a finding tagged FLOW-002 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:oracle_declared passes its declared conformant control and rejects the witnessed FLOW-002 defect: a test module names no oracle at all.",
           "residual": "Passing excludes only the configured patterns implemented by check:oracle_declared; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.oracle_declared`",
-          "must_reject": "discrimination:FLOW-002",
+          "must_reject": "discrimination:FLOW-002/check:oracle_declared",
           "platforms": [
             "windows",
             "linux"
@@ -4549,10 +4549,10 @@
           "mechanism": "fitness:test_decisions_recorded",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_decisions_recorded passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_decisions_recorded passes its declared conformant control and rejects the witnessed FLOW-003 defect: the primary decision ledger is absent.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_decisions_recorded; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_decisions.py::test_decisions_recorded`",
-          "must_reject": "pending:FLOW-003",
+          "must_reject": "discrimination:FLOW-003/fitness:test_decisions_recorded",
           "platforms": [
             "windows",
             "linux"
@@ -4586,10 +4586,10 @@
           "mechanism": "fitness:test_decision_records_are_appended",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_decision_records_are_appended passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_decision_records_are_appended passes its declared conformant control and rejects the witnessed FLOW-004 defect: two structural decisions reuse the same stable identifier.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_decision_records_are_appended; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_decisions.py::test_decision_records_are_appended`",
-          "must_reject": "pending:FLOW-004",
+          "must_reject": "discrimination:FLOW-004/fitness:test_decision_records_are_appended",
           "platforms": [
             "windows",
             "linux"
@@ -4623,10 +4623,10 @@
           "mechanism": "fitness:test_overruled_objections_are_kept",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_overruled_objections_are_kept passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_overruled_objections_are_kept passes its declared conformant control and rejects the witnessed FLOW-005 defect: the decision ledger retains outcomes but no objection.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_overruled_objections_are_kept; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_decisions.py::test_overruled_objections_are_kept`",
-          "must_reject": "pending:FLOW-005",
+          "must_reject": "discrimination:FLOW-005/fitness:test_overruled_objections_are_kept",
           "platforms": [
             "windows",
             "linux"
@@ -4663,7 +4663,7 @@
           "proposition": "Every binding generated rule names a check, at least one mechanism, and one structurally complete evidence strategy per mechanism.",
           "residual": "Structural declaration and mechanism resolution do not prove that each strategy decides the full normative claim or has just passed.",
           "must_pass": "command:`pytest enforce/fitness/test_meta.py::test_binding_rules_have_mechanisms`",
-          "must_reject": "pending:FLOW-006",
+          "must_reject": "discrimination:FLOW-006/fitness:test_binding_rules_have_mechanisms",
           "platforms": [
             "windows",
             "linux"
@@ -4700,7 +4700,7 @@
           "proposition": "Every repository-local AST checker has a companion proof-of-failure test and the validator's diagnostics appear in negative tests.",
           "residual": "This inherited proxy does not yet prove a must-reject case for every exact strategy, external tool, behavioral verifier, or platform.",
           "must_pass": "command:`pytest enforce/fitness/test_meta.py::test_checks_can_fail`",
-          "must_reject": "pending:FLOW-007",
+          "must_reject": "discrimination:FLOW-007/fitness:test_checks_can_fail",
           "platforms": [
             "windows",
             "linux"
@@ -4734,10 +4734,10 @@
           "mechanism": "check:deviation_recorded",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:deviation_recorded emits a finding tagged FLOW-008 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:deviation_recorded passes its declared conformant control and rejects the witnessed FLOW-008 defect: a suppression states no reason.",
           "residual": "Passing excludes only the configured patterns implemented by check:deviation_recorded; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.deviation_recorded`",
-          "must_reject": "discrimination:FLOW-008",
+          "must_reject": "discrimination:FLOW-008/check:deviation_recorded",
           "platforms": [
             "windows",
             "linux"
@@ -4771,10 +4771,10 @@
           "mechanism": "fitness:test_gate_suite_defined",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_gate_suite_defined passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_gate_suite_defined passes its declared conformant control and rejects the witnessed FLOW-009 defect: the canonical gate definition becomes empty.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_gate_suite_defined; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_meta.py::test_gate_suite_defined`",
-          "must_reject": "pending:FLOW-009",
+          "must_reject": "discrimination:FLOW-009/fitness:test_gate_suite_defined",
           "platforms": [
             "windows",
             "linux"
@@ -4832,10 +4832,10 @@
           "mechanism": "fitness:test_envelope_conforms",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_envelope_conforms passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_envelope_conforms passes its declared conformant control and rejects the witnessed FLOW-011 defect: a real diagnostic envelope fails its published schema.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_envelope_conforms; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_diagnostics.py::test_envelope_conforms`",
-          "must_reject": "pending:FLOW-011",
+          "must_reject": "discrimination:FLOW-011/fitness:test_envelope_conforms",
           "platforms": [
             "windows",
             "linux"
@@ -4872,7 +4872,7 @@
           "proposition": "The canonical gate report serializes every non-pass outcome as a deviation with its status, stable diagnostic, and standalone reason, including work prevented by a failed prerequisite.",
           "residual": "The report cannot prove that a human-authored change description reproduces its facts; the machine report remains the authoritative handoff evidence.",
           "must_pass": "command:`pytest tools/test_project_gate.py::test_report_records_every_non_pass_as_a_deviation`",
-          "must_reject": "discrimination:FLOW-012",
+          "must_reject": "discrimination:FLOW-012/fitness:test_report_records_every_non_pass_as_a_deviation",
           "platforms": [
             "windows",
             "linux"
@@ -4928,10 +4928,10 @@
           "mechanism": "check:session_recorded",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:session_recorded emits a finding tagged LEARN-001 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:session_recorded passes its declared conformant control and rejects the witnessed LEARN-001 defect: a completed session records no learning outcome.",
           "residual": "Passing excludes only the configured patterns implemented by check:session_recorded; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.session_recorded`",
-          "must_reject": "pending:LEARN-001",
+          "must_reject": "discrimination:LEARN-001/check:session_recorded",
           "platforms": [
             "windows",
             "linux"
@@ -4965,10 +4965,10 @@
           "mechanism": "auto:learn",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:learn reports no diagnostic corresponding to LEARN-002 under the repository configuration and declared scan roots.",
+          "proposition": "auto:learn passes its declared conformant control and rejects each of 2 independently exercised LEARN-002 defects: the record command refuses missing claim, action, and trigger fields; the record command refuses a learning with no retrieval trigger.",
           "residual": "Passing excludes only the configured patterns implemented by auto:learn; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python tools/learn.py record` refuses all three omissions",
-          "must_reject": "pending:LEARN-002",
+          "must_reject": "discrimination:LEARN-002/auto:learn",
           "platforms": [
             "windows",
             "linux"
@@ -5002,10 +5002,10 @@
           "mechanism": "auto:learn",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:learn reports no diagnostic corresponding to LEARN-003 under the repository configuration and declared scan roots.",
+          "proposition": "auto:learn passes its declared conformant control and rejects the witnessed LEARN-003 defect: the public record command refuses credential-shaped content.",
           "residual": "Passing excludes only the configured patterns implemented by auto:learn; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`pytest tools/test_learn.py::test_a_credential_is_refused`",
-          "must_reject": "pending:LEARN-003",
+          "must_reject": "discrimination:LEARN-003/auto:learn",
           "platforms": [
             "windows",
             "linux"
@@ -5016,10 +5016,10 @@
           "mechanism": "fitness:test_a_credential_is_refused",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_a_credential_is_refused passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_a_credential_is_refused passes its declared conformant control and rejects the witnessed LEARN-003 defect: the ledger append guard refuses a credential before writing.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_a_credential_is_refused; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest tools/test_learn.py::test_a_credential_is_refused`",
-          "must_reject": "pending:LEARN-003",
+          "must_reject": "discrimination:LEARN-003/fitness:test_a_credential_is_refused",
           "platforms": [
             "windows",
             "linux"
@@ -5053,10 +5053,10 @@
           "mechanism": "check:learning_scope",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:learning_scope emits a finding tagged LEARN-004 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:learning_scope passes its declared conformant control and rejects the witnessed LEARN-004 defect: a learning entry states no applicability scope.",
           "residual": "Passing excludes only the configured patterns implemented by check:learning_scope; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.learning_scope`",
-          "must_reject": "pending:LEARN-004",
+          "must_reject": "discrimination:LEARN-004/check:learning_scope",
           "platforms": [
             "windows",
             "linux"
@@ -5090,10 +5090,10 @@
           "mechanism": "check:ledger_append_only",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:ledger_append_only emits a finding tagged LEARN-005 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:ledger_append_only passes its declared conformant control and rejects the witnessed LEARN-005 defect: the append-only ledger contains a sequence gap.",
           "residual": "Passing excludes only the configured patterns implemented by check:ledger_append_only; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.ledger_append_only`",
-          "must_reject": "pending:LEARN-005",
+          "must_reject": "discrimination:LEARN-005/check:ledger_append_only",
           "platforms": [
             "windows",
             "linux"
@@ -5127,10 +5127,10 @@
           "mechanism": "fitness:test_the_database_is_reconstructible_from_the_ledger",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_the_database_is_reconstructible_from_the_ledger passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_the_database_is_reconstructible_from_the_ledger passes its declared conformant control and rejects the witnessed LEARN-006 defect: sync trusts an existing database instead of replaying the ledger.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_the_database_is_reconstructible_from_the_ledger; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest tools/test_learn.py::test_the_database_is_reconstructible_from_the_ledger`",
-          "must_reject": "pending:LEARN-006",
+          "must_reject": "discrimination:LEARN-006/fitness:test_the_database_is_reconstructible_from_the_ledger",
           "platforms": [
             "windows",
             "linux"
@@ -5164,10 +5164,10 @@
           "mechanism": "fitness:test_retrieval_is_reproducible",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_retrieval_is_reproducible passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_retrieval_is_reproducible passes its declared conformant control and rejects the witnessed LEARN-007 defect: retrieval reverses its answer on every other identical query.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_retrieval_is_reproducible; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest tools/test_learn.py::test_retrieval_is_reproducible`",
-          "must_reject": "pending:LEARN-007",
+          "must_reject": "discrimination:LEARN-007/fitness:test_retrieval_is_reproducible",
           "platforms": [
             "windows",
             "linux"
@@ -5201,10 +5201,10 @@
           "mechanism": "fitness:test_confidence_decays_with_time",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_confidence_decays_with_time passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_confidence_decays_with_time passes its declared conformant control and rejects the witnessed LEARN-008 defect: confidence decays by three quarters rather than one half per half-life.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_confidence_decays_with_time; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest tools/test_learn.py::test_confidence_decays_with_time`",
-          "must_reject": "pending:LEARN-008",
+          "must_reject": "discrimination:LEARN-008/fitness:test_confidence_decays_with_time",
           "platforms": [
             "windows",
             "linux"
@@ -5238,10 +5238,10 @@
           "mechanism": "check:promotion_due",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:promotion_due emits a finding tagged LEARN-009 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:promotion_due passes its declared conformant control and rejects the witnessed LEARN-009 defect: a verified high-confidence learning remains unpromoted.",
           "residual": "Passing excludes only the configured patterns implemented by check:promotion_due; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.promotion_due`",
-          "must_reject": "pending:LEARN-009",
+          "must_reject": "discrimination:LEARN-009/check:promotion_due",
           "platforms": [
             "windows",
             "linux"
@@ -5275,10 +5275,10 @@
           "mechanism": "check:learning_size",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:learning_size emits a finding tagged LEARN-010 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:learning_size passes its declared conformant control and rejects the witnessed LEARN-010 defect: the active learning set exceeds its declared bound.",
           "residual": "Passing excludes only the configured patterns implemented by check:learning_size; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.learning_size`",
-          "must_reject": "pending:LEARN-010",
+          "must_reject": "discrimination:LEARN-010/check:learning_size",
           "platforms": [
             "windows",
             "linux"
@@ -5312,10 +5312,10 @@
           "mechanism": "auto:learn",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:learn reports no diagnostic corresponding to LEARN-011 under the repository configuration and declared scan roots.",
+          "proposition": "auto:learn passes its declared conformant control and rejects the witnessed LEARN-011 defect: calibration attempts to change a parameter without a reason.",
           "residual": "Passing excludes only the configured patterns implemented by auto:learn; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python tools/learn.py calibrate --set` refuses without `--why`",
-          "must_reject": "pending:LEARN-011",
+          "must_reject": "discrimination:LEARN-011/auto:learn",
           "platforms": [
             "windows",
             "linux"
@@ -5379,7 +5379,7 @@
           "proposition": "The project parser requires every closed v4 capability key to carry a boolean, and the capability check rejects subprocess lifecycle ownership unless subprocess launch is also true.",
           "residual": "A coherent boolean manifest records intent and relationships; it does not establish that enabled obligations are satisfied or that every semantic capability was recognized by inference.",
           "must_pass": "fixture:reference explicit capability manifest",
-          "must_reject": "discrimination:OPS-001",
+          "must_reject": "discrimination:OPS-001/check:capabilities",
           "platforms": [
             "windows",
             "linux"
@@ -5416,7 +5416,7 @@
           "proposition": "The check reports a false capability when declared production source contains a configured import or call witness, a production generator filename, build metadata exposes an entry point, or architecture.json publishes a contract.",
           "residual": "The inference vocabulary is intentionally incomplete and syntactic; clean output never proves a capability false, and authors remain responsible for enabling unobservable intent.",
           "must_pass": "fixture:reference capability inference agrees with its manifest",
-          "must_reject": "discrimination:OPS-002",
+          "must_reject": "discrimination:OPS-002/check:capabilities",
           "platforms": [
             "windows",
             "linux"
@@ -5460,7 +5460,7 @@
           "proposition": "The checker requires the declared local operational model, confines its evidence paths, and joins every cited resource and recovery identity to architecture.json.",
           "residual": "An identity join and existing file do not prove that runtime ownership, cleanup, or recovery behavior matches the authored claim.",
           "must_pass": "fixture:reference operational ownership joins its architecture",
-          "must_reject": "discrimination:OPS-003",
+          "must_reject": "discrimination:OPS-003/check:operational_model",
           "platforms": [
             "windows",
             "linux"
@@ -5497,7 +5497,7 @@
           "proposition": "The checker requires exactly six lifecycle phases, local owners and terminal-state joins, and confined evidence for universal and capability-activated phases.",
           "residual": "The checker observes declarations and evidence-file presence; only executing the cited tests can establish the transition behavior or its completeness under real interruption.",
           "must_pass": "fixture:reference lifecycle model",
-          "must_reject": "discrimination:OPS-004",
+          "must_reject": "discrimination:OPS-004/check:operational_model",
           "platforms": [
             "windows",
             "linux"
@@ -5534,7 +5534,7 @@
           "proposition": "The checker requires safe and degraded states, stable entry events, state-joined terminal outcomes, correlation fields, confined test evidence, and at least one ordinary non-exception outcome.",
           "residual": "Structural event and test references do not prove telemetry is emitted once, reaches its consumer, preserves useful context, or covers every semantic terminal outcome.",
           "must_pass": "fixture:reference safe, degraded, and ordinary outcome model",
-          "must_reject": "discrimination:OPS-005",
+          "must_reject": "discrimination:OPS-005/check:operational_model",
           "platforms": [
             "windows",
             "linux"
@@ -5571,7 +5571,7 @@
           "proposition": "The checker requires all six budget classes and a positive compatible bound plus confined measurement evidence whenever the declared capability map activates a class.",
           "residual": "A syntactically valid bound and existing measurement path do not establish that the chosen threshold is safe, that the test measures the stated scope, or that production cannot bypass it.",
           "must_pass": "fixture:reference finite activated budgets",
-          "must_reject": "discrimination:OPS-006",
+          "must_reject": "discrimination:OPS-006/check:operational_model",
           "platforms": [
             "windows",
             "linux"
@@ -5608,7 +5608,7 @@
           "proposition": "The checker requires a confined build source and runtime identity test naming version and build_id, plus explicit Windows and Linux runtime/development outcomes with evidence or limitations.",
           "residual": "The model does not itself execute either platform, compare runtime identity to built metadata, or prove that cited evidence belongs to the artifact ultimately delivered.",
           "must_pass": "fixture:reference identity and platform matrix",
-          "must_reject": "discrimination:OPS-007",
+          "must_reject": "discrimination:OPS-007/check:operational_model",
           "platforms": [
             "windows",
             "linux"
@@ -5650,7 +5650,7 @@
           "proposition": "The checker joins exactly one record to every true capability, forbids records for false capabilities, and requires the exact generated obligation-id set with confined evidence paths.",
           "residual": "Closed identifiers prevent omission and drift but do not prove the referenced tests exercise their named conditions or that the generated obligation vocabulary is sufficient for the domain.",
           "must_pass": "fixture:reference generated capability obligation set",
-          "must_reject": "discrimination:OPS-008",
+          "must_reject": "discrimination:OPS-008/check:operational_model",
           "platforms": [
             "windows",
             "linux"
@@ -5692,7 +5692,7 @@
           "proposition": "The checker requires one exact trust-boundary record per architecture contract, including inbound trust, assumptions, validations, a local endpoint for the trust claim, and confined evidence.",
           "residual": "Complete records and existing evidence files do not prove an assumption is realistic, validation is sufficient, or the cited test executes the claimed hostile case.",
           "must_pass": "fixture:reference trust-boundary model",
-          "must_reject": "discrimination:SEC-001",
+          "must_reject": "discrimination:SEC-001/check:security_model",
           "platforms": [
             "windows",
             "linux"
@@ -5734,7 +5734,7 @@
           "proposition": "The checker validates each data class's classification, entry-boundary joins, local role and sink vocabulary, retention/redaction text, confined evidence, and coherence with the sensitive_data capability.",
           "residual": "The model cannot infer semantic sensitivity, prove every runtime copy follows the declared flow, or establish that a stated redaction and retention policy is effective.",
           "must_pass": "fixture:reference classified local data flow",
-          "must_reject": "discrimination:SEC-002",
+          "must_reject": "discrimination:SEC-002/check:security_model",
           "platforms": [
             "windows",
             "linux"
@@ -5776,7 +5776,7 @@
           "proposition": "The checker recomputes a closed scope over every repository-owned file except fixed environment and verifier caches, vendoring, host-mirror, build-output, runtime-projection, and self-reference exclusions; it requires exact SHA-256 digest/count agreement over path plus canonical content and a full base commit that is an ancestor when local Git metadata is available.",
           "residual": "A fresh complete content binding proves which canonical contents were in scope, not that the reviewer read them; fixed replaceable-cache names are intentionally outside review, UTF-8 CRLF and LF checkout projections deliberately share one identity, and copied fixtures without repository-owned Git metadata receive only commit-shape validation.",
           "must_pass": "fixture:reference content-bound adversarial review",
-          "must_reject": "discrimination:SEC-003",
+          "must_reject": "discrimination:SEC-003/check:adversarial_review",
           "platforms": [
             "windows",
             "linux"
@@ -5813,7 +5813,7 @@
           "proposition": "The checker requires all eight semantic question records in canonical order, a reviewer identity outside the author set, an independence basis, at least one objection, confined closure evidence and triggers, no open objection, an accepted verdict, and a residual.",
           "residual": "Identifiers and complete fields cannot authenticate who reviewed, establish personal independence, or judge whether challenges, resolutions, evidence, and residual are intellectually adequate.",
           "must_pass": "fixture:reference structurally closed adversarial acceptance",
-          "must_reject": "discrimination:SEC-004",
+          "must_reject": "discrimination:SEC-004/check:adversarial_review",
           "platforms": [
             "windows",
             "linux"
@@ -5861,10 +5861,10 @@
           "mechanism": "check:dispatch_recorded",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:dispatch_recorded emits a finding tagged TEAMS-001 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:dispatch_recorded passes its declared conformant control and rejects the witnessed TEAMS-001 defect: a dispatch record states no verifiable contract.",
           "residual": "Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.dispatch_recorded`",
-          "must_reject": "pending:TEAMS-001",
+          "must_reject": "discrimination:TEAMS-001/check:dispatch_recorded",
           "platforms": [
             "windows",
             "linux"
@@ -5898,10 +5898,10 @@
           "mechanism": "check:dispatch_recorded",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:dispatch_recorded emits a finding tagged TEAMS-002 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:dispatch_recorded passes its declared conformant control and rejects the witnessed TEAMS-002 defect: a dispatch purports to grant a capability the agent does not hold.",
           "residual": "Passing excludes only the configured patterns implemented by check:dispatch_recorded; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.dispatch_recorded`",
-          "must_reject": "discrimination:TEAMS-002",
+          "must_reject": "discrimination:TEAMS-002/check:dispatch_recorded",
           "platforms": [
             "windows",
             "linux"
@@ -5935,10 +5935,10 @@
           "mechanism": "fitness:test_completion_hook_enforces_the_gate",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_completion_hook_enforces_the_gate passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_completion_hook_enforces_the_gate passes its declared conformant control and rejects the witnessed TEAMS-003 defect: the installed completion hook no longer invokes the gate.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_completion_hook_enforces_the_gate; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_meta.py::test_completion_hook_enforces_the_gate`",
-          "must_reject": "pending:TEAMS-003",
+          "must_reject": "discrimination:TEAMS-003/fitness:test_completion_hook_enforces_the_gate",
           "platforms": [
             "windows",
             "linux"
@@ -6038,10 +6038,10 @@
           "mechanism": "fitness:test_unit_layer_is_pure",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_unit_layer_is_pure passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_unit_layer_is_pure passes its declared conformant control and rejects the witnessed TEST-001 defect: a unit test imports pathlib and touches a disk.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_unit_layer_is_pure; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_layers.py::test_unit_layer_is_pure`",
-          "must_reject": "discrimination:TEST-001",
+          "must_reject": "discrimination:TEST-001/fitness:test_unit_layer_is_pure",
           "platforms": [
             "windows",
             "linux"
@@ -6075,10 +6075,10 @@
           "mechanism": "fitness:test_layers_populated",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_layers_populated passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_layers_populated passes its declared conformant control and rejects the witnessed TEST-002 defect: the fault layer exists and holds no test.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_layers_populated; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_layers.py::test_layers_populated`",
-          "must_reject": "discrimination:TEST-002",
+          "must_reject": "discrimination:TEST-002/fitness:test_layers_populated",
           "platforms": [
             "windows",
             "linux"
@@ -6112,10 +6112,10 @@
           "mechanism": "auto:pytest-timeout",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:pytest-timeout reports no diagnostic corresponding to TEST-003 under the repository configuration and declared scan roots.",
+          "proposition": "auto:pytest-timeout passes its declared conformant control and rejects the witnessed TEST-003 defect: pytest-timeout terminates a test beyond its configured budget.",
           "residual": "Passing excludes only the configured patterns implemented by auto:pytest-timeout; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`pytest --timeout` as configured in `enforce/templates/pyproject.toml`",
-          "must_reject": "pending:TEST-003",
+          "must_reject": "discrimination:TEST-003/auto:pytest-timeout",
           "platforms": [
             "windows",
             "linux"
@@ -6149,10 +6149,10 @@
           "mechanism": "check:oracle_declared",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:oracle_declared emits a finding tagged TEST-004 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:oracle_declared passes its declared conformant control and rejects the witnessed TEST-004 defect: a test module declares no oracle.",
           "residual": "Passing excludes only the configured patterns implemented by check:oracle_declared; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.oracle_declared`",
-          "must_reject": "discrimination:TEST-004",
+          "must_reject": "discrimination:TEST-004/check:oracle_declared",
           "platforms": [
             "windows",
             "linux"
@@ -6230,10 +6230,10 @@
           "mechanism": "fitness:test_property_suites_are_generated",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_property_suites_are_generated passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_property_suites_are_generated passes its declared conformant control and rejects the witnessed TEST-007 defect: the property layer holds hand-picked examples, not generated input.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_property_suites_are_generated; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_layers.py::test_property_suites_are_generated`",
-          "must_reject": "discrimination:TEST-007",
+          "must_reject": "discrimination:TEST-007/fitness:test_property_suites_are_generated",
           "platforms": [
             "windows",
             "linux"
@@ -6267,10 +6267,10 @@
           "mechanism": "fitness:test_goldens_reviewed",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_goldens_reviewed passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_goldens_reviewed passes its declared conformant control and rejects the witnessed TEST-008 defect: a golden is compared with no deliberate regeneration path.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_goldens_reviewed; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_goldens.py::test_goldens_reviewed`",
-          "must_reject": "discrimination:TEST-008",
+          "must_reject": "discrimination:TEST-008/fitness:test_goldens_reviewed",
           "platforms": [
             "windows",
             "linux"
@@ -6304,10 +6304,10 @@
           "mechanism": "fitness:test_fault_schedules_are_data",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_fault_schedules_are_data passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_fault_schedules_are_data passes its declared conformant control and rejects the witnessed TEST-009 defect: a failure mode is encoded as a single-purpose class.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_fault_schedules_are_data; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_faults.py::test_fault_schedules_are_data`",
-          "must_reject": "discrimination:TEST-009",
+          "must_reject": "discrimination:TEST-009/fitness:test_fault_schedules_are_data",
           "platforms": [
             "windows",
             "linux"
@@ -6343,10 +6343,10 @@
           "mechanism": "fitness:test_fault_catalogue",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_fault_catalogue passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_fault_catalogue passes its declared conformant control and rejects the witnessed TEST-010 defect: a port is left with no fault test naming it.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_fault_catalogue; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_faults.py::test_fault_catalogue`",
-          "must_reject": "discrimination:TEST-010",
+          "must_reject": "discrimination:TEST-010/fitness:test_fault_catalogue",
           "platforms": [
             "windows",
             "linux"
@@ -6380,10 +6380,10 @@
           "mechanism": "fitness:test_fault_containment",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_fault_containment passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_fault_containment passes its declared conformant control and rejects the witnessed TEST-011 defect: fault tests assert only that an exception was raised.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_fault_containment; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_faults.py::test_fault_containment`",
-          "must_reject": "pending:TEST-011",
+          "must_reject": "discrimination:TEST-011/fitness:test_fault_containment",
           "platforms": [
             "windows",
             "linux"
@@ -6417,10 +6417,10 @@
           "mechanism": "fitness:test_interruption_recovers",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_interruption_recovers passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_interruption_recovers passes its declared conformant control and rejects the witnessed TEST-012 defect: the fault layer never drives an interrupted effect boundary.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_interruption_recovers; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_effects.py::test_interruption_recovers`",
-          "must_reject": "pending:TEST-012",
+          "must_reject": "discrimination:TEST-012/fitness:test_interruption_recovers",
           "platforms": [
             "windows",
             "linux"
@@ -6457,7 +6457,7 @@
           "proposition": "The isolated Cosmic Ray adapter reports pass only when a normal unmutated baseline passes, every declared domain path generates mutants, every worker completes normally, and every mutant is killed by the declared unit targets.",
           "residual": "Cosmic Ray's operator catalogue is finite and cannot represent every semantic defect; a zero-survivor run proves discrimination only for the generated mutant set.",
           "must_pass": "command:python .agent/tools/mutation_gate.py --root .",
-          "must_reject": "pending:TEST-013",
+          "must_reject": "discrimination:TEST-013/auto:cosmic-ray",
           "platforms": [
             "windows",
             "linux"
@@ -6493,10 +6493,10 @@
           "mechanism": "check:compound_gate",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:compound_gate emits a finding tagged TEST-014 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:compound_gate passes its declared conformant control and rejects the witnessed TEST-014 defect: a decision joins four operands in one condition.",
           "residual": "Passing excludes only the configured patterns implemented by check:compound_gate; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.compound_gate`",
-          "must_reject": "discrimination:TEST-014",
+          "must_reject": "discrimination:TEST-014/check:compound_gate",
           "platforms": [
             "windows",
             "linux"
@@ -6530,10 +6530,10 @@
           "mechanism": "fitness:test_checks_can_fail",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_checks_can_fail passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_checks_can_fail passes its declared conformant control and rejects the witnessed TEST-015 defect: custom check modules ship without companion rejection tests.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_checks_can_fail; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_meta.py::test_checks_can_fail`",
-          "must_reject": "pending:TEST-015",
+          "must_reject": "discrimination:TEST-015/fitness:test_checks_can_fail",
           "platforms": [
             "windows",
             "linux"
@@ -6567,10 +6567,10 @@
           "mechanism": "check:test_weakening",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:test_weakening emits a finding tagged TEST-016 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:test_weakening passes its declared conformant control and rejects the witnessed TEST-016 defect: a skipped test supplies no reason.",
           "residual": "Passing excludes only the configured patterns implemented by check:test_weakening; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.test_weakening`",
-          "must_reject": "pending:TEST-016",
+          "must_reject": "discrimination:TEST-016/check:test_weakening",
           "platforms": [
             "windows",
             "linux"
@@ -6604,10 +6604,10 @@
           "mechanism": "auto:pytest-randomly",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:pytest-randomly reports no diagnostic corresponding to TEST-017 under the repository configuration and declared scan roots.",
+          "proposition": "auto:pytest-randomly passes its declared conformant control and rejects the witnessed TEST-017 defect: pytest-randomly exposes a hidden producer-consumer order dependency.",
           "residual": "Passing excludes only the configured patterns implemented by auto:pytest-randomly; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`pytest` with the configured plugins",
-          "must_reject": "pending:TEST-017",
+          "must_reject": "discrimination:TEST-017/auto:pytest-randomly",
           "platforms": [
             "windows",
             "linux"
@@ -6618,10 +6618,10 @@
           "mechanism": "auto:pytest-socket",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:pytest-socket reports no diagnostic corresponding to TEST-017 under the repository configuration and declared scan roots.",
+          "proposition": "auto:pytest-socket passes its declared conformant control and rejects the witnessed TEST-017 defect: pytest-socket blocks creation of an ambient network socket.",
           "residual": "Passing excludes only the configured patterns implemented by auto:pytest-socket; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`pytest` with the configured plugins",
-          "must_reject": "pending:TEST-017",
+          "must_reject": "discrimination:TEST-017/auto:pytest-socket",
           "platforms": [
             "windows",
             "linux"
@@ -6655,10 +6655,10 @@
           "mechanism": "fitness:test_no_rerun_dismissal",
           "kind": "behavioral",
           "relation": "proxy",
-          "proposition": "fitness:test_no_rerun_dismissal passes against the repository artifacts and behavioral cases selected by that test.",
+          "proposition": "fitness:test_no_rerun_dismissal passes its declared conformant control and rejects the witnessed TEST-018 defect: pytest is configured to rerun failures until one passes.",
           "residual": "Passing covers only the cases and artifact shapes encoded by fitness:test_no_rerun_dismissal; it does not establish every behavior in the normative statement.",
           "must_pass": "command:`pytest enforce/fitness/test_determinism.py::test_no_rerun_dismissal`",
-          "must_reject": "pending:TEST-018",
+          "must_reject": "discrimination:TEST-018/fitness:test_no_rerun_dismissal",
           "platforms": [
             "windows",
             "linux"
@@ -6722,7 +6722,7 @@
           "proposition": "Every registered implementation has a unique parameter spelling present in one existing local suite, and every operation success, declared error, ordering, idempotency, concurrency, and timeout key has exactly one confined test node or permitted non-applicability rationale.",
           "residual": "Source spelling and path existence do not prove pytest collects or passes a node, that a parameter selects the claimed implementation, or that an assertion decides the cited term; the project gate executes collection and suites, while adversarial review owns oracle quality.",
           "must_pass": "fixture:reference contract-conformance registry",
-          "must_reject": "discrimination:TEST-020",
+          "must_reject": "discrimination:TEST-020/check:contract_conformance",
           "platforms": [
             "windows",
             "linux"
@@ -6758,10 +6758,10 @@
           "mechanism": "auto:mypy",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:mypy reports no diagnostic corresponding to TYPE-001 under the repository configuration and declared scan roots.",
+          "proposition": "auto:mypy passes its declared conformant control and rejects the witnessed TYPE-001 defect: a domain function carries no annotations at all.",
           "residual": "Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`mypy --strict src/` · `pyright src/` · `python tools/type_gate.py`",
-          "must_reject": "discrimination:TYPE-001",
+          "must_reject": "discrimination:TYPE-001/auto:mypy",
           "platforms": [
             "windows",
             "linux"
@@ -6772,10 +6772,10 @@
           "mechanism": "auto:pyright",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:pyright reports no diagnostic corresponding to TYPE-001 under the repository configuration and declared scan roots.",
+          "proposition": "auto:pyright passes its declared conformant control and rejects the witnessed TYPE-001 defect: pyright sees an unannotated domain function.",
           "residual": "Passing excludes only the configured patterns implemented by auto:pyright; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`mypy --strict src/` · `pyright src/` · `python tools/type_gate.py`",
-          "must_reject": "discrimination:TYPE-001",
+          "must_reject": "discrimination:TYPE-001/auto:pyright",
           "platforms": [
             "windows",
             "linux"
@@ -6809,10 +6809,10 @@
           "mechanism": "auto:mypy",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:mypy reports no diagnostic corresponding to TYPE-002 under the repository configuration and declared scan roots.",
+          "proposition": "auto:mypy passes its declared conformant control and rejects the witnessed TYPE-002 defect: mypy sees explicit Any in a domain signature.",
           "residual": "Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`mypy --strict --disallow-any-explicit src/domain` · `python -m checks.domain_purity`",
-          "must_reject": "discrimination:TYPE-002",
+          "must_reject": "discrimination:TYPE-002/auto:mypy",
           "platforms": [
             "windows",
             "linux"
@@ -6823,10 +6823,10 @@
           "mechanism": "check:domain_purity",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:domain_purity emits a finding tagged TYPE-002 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:domain_purity passes its declared conformant control and rejects the witnessed TYPE-002 defect: a domain signature takes Any.",
           "residual": "Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`mypy --strict --disallow-any-explicit src/domain` · `python -m checks.domain_purity`",
-          "must_reject": "discrimination:TYPE-002",
+          "must_reject": "discrimination:TYPE-002/check:domain_purity",
           "platforms": [
             "windows",
             "linux"
@@ -6860,10 +6860,10 @@
           "mechanism": "auto:mypy",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:mypy reports no diagnostic corresponding to TYPE-003 under the repository configuration and declared scan roots.",
+          "proposition": "auto:mypy passes its declared conformant control and rejects the witnessed TYPE-003 defect: mypy sees a blanket type ignore without an error code.",
           "residual": "Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`mypy --warn-redundant-casts --warn-unused-ignores` · `ruff check` (rule `PGH003`)",
-          "must_reject": "discrimination:TYPE-003",
+          "must_reject": "discrimination:TYPE-003/auto:mypy",
           "platforms": [
             "windows",
             "linux"
@@ -6874,10 +6874,10 @@
           "mechanism": "auto:ruff:PGH003",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:ruff:PGH003 reports no diagnostic corresponding to TYPE-003 under the repository configuration and declared scan roots.",
+          "proposition": "auto:ruff:PGH003 passes its declared conformant control and rejects the witnessed TYPE-003 defect: a blanket type-ignore with no code and no justification.",
           "residual": "Passing excludes only the configured patterns implemented by auto:ruff:PGH003; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`mypy --warn-redundant-casts --warn-unused-ignores` · `ruff check` (rule `PGH003`)",
-          "must_reject": "discrimination:TYPE-003",
+          "must_reject": "discrimination:TYPE-003/auto:ruff:PGH003",
           "platforms": [
             "windows",
             "linux"
@@ -6948,10 +6948,10 @@
           "mechanism": "check:boundary_parsing",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:boundary_parsing emits a finding tagged TYPE-005 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:boundary_parsing passes its declared conformant control and rejects the witnessed TYPE-005 defect: NewType is presented as runtime boundary validation.",
           "residual": "Passing excludes only the configured patterns implemented by check:boundary_parsing; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.boundary_parsing`",
-          "must_reject": "pending:TYPE-005",
+          "must_reject": "discrimination:TYPE-005/check:boundary_parsing",
           "platforms": [
             "windows",
             "linux"
@@ -6985,10 +6985,10 @@
           "mechanism": "check:domain_purity",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:domain_purity emits a finding tagged TYPE-006 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:domain_purity passes its declared conformant control and rejects the witnessed TYPE-006 defect: a domain Literal union substitutes for a semantic value type.",
           "residual": "Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.domain_purity`",
-          "must_reject": "pending:TYPE-006",
+          "must_reject": "discrimination:TYPE-006/check:domain_purity",
           "platforms": [
             "windows",
             "linux"
@@ -7022,10 +7022,10 @@
           "mechanism": "check:domain_purity",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:domain_purity emits a finding tagged TYPE-007 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:domain_purity passes its declared conformant control and rejects the witnessed TYPE-007 defect: a domain dataclass is neither frozen nor slotted.",
           "residual": "Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.domain_purity`",
-          "must_reject": "discrimination:TYPE-007",
+          "must_reject": "discrimination:TYPE-007/check:domain_purity",
           "platforms": [
             "windows",
             "linux"
@@ -7059,10 +7059,10 @@
           "mechanism": "check:domain_purity",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:domain_purity emits a finding tagged TYPE-008 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:domain_purity passes its declared conformant control and rejects the witnessed TYPE-008 defect: a domain function takes a mutable list as a parameter.",
           "residual": "Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.domain_purity`",
-          "must_reject": "discrimination:TYPE-008",
+          "must_reject": "discrimination:TYPE-008/check:domain_purity",
           "platforms": [
             "windows",
             "linux"
@@ -7118,10 +7118,10 @@
           "mechanism": "check:boundary_parsing",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "check:boundary_parsing emits a finding tagged TYPE-010 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
+          "proposition": "check:boundary_parsing passes its declared conformant control and rejects the witnessed TYPE-010 defect: isinstance against a protocol substitutes shape for parsing.",
           "residual": "Passing excludes only the configured patterns implemented by check:boundary_parsing; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`python -m checks.boundary_parsing`",
-          "must_reject": "pending:TYPE-010",
+          "must_reject": "discrimination:TYPE-010/check:boundary_parsing",
           "platforms": [
             "windows",
             "linux"
@@ -7199,10 +7199,10 @@
           "mechanism": "auto:mypy",
           "kind": "tool",
           "relation": "proxy",
-          "proposition": "auto:mypy reports no diagnostic corresponding to TYPE-013 under the repository configuration and declared scan roots.",
+          "proposition": "auto:mypy passes its declared conformant control and rejects the witnessed TYPE-013 defect: a str is returned where the signature promises an int.",
           "residual": "Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement.",
           "must_pass": "command:`mypy --strict-equality`",
-          "must_reject": "discrimination:TYPE-013",
+          "must_reject": "discrimination:TYPE-013/auto:mypy",
           "platforms": [
             "windows",
             "linux"
@@ -7291,7 +7291,7 @@
           "proposition": "The normative stable-ID set and evidence-record key set are equal.",
           "residual": "Set equality does not establish the quality of a rule or its evidence.",
           "must_pass": "command:`pytest enforce/fitness/test_evidence.py::test_evidence_registry_joins_rules`",
-          "must_reject": "discrimination:EVID-001",
+          "must_reject": "discrimination:EVID-001/fitness:test_evidence_registry_joins_rules",
           "platforms": ["windows", "linux"],
           "not_applicable": "never while the discipline contains normative rules"
         }
@@ -7318,7 +7318,7 @@
           "proposition": "Every heading mechanism has one structurally complete and kind-compatible strategy record.",
           "residual": "Structural completeness does not prove that the proposition is the best verifier for the normative rule.",
           "must_pass": "command:`pytest enforce/fitness/test_evidence.py::test_strategy_claims_are_explicit`",
-          "must_reject": "discrimination:EVID-002",
+          "must_reject": "discrimination:EVID-002/fitness:test_strategy_claims_are_explicit",
           "platforms": ["windows", "linux"],
           "not_applicable": "never for an active binding rule"
         }
@@ -7345,7 +7345,7 @@
           "proposition": "Generated rule records preserve each authored strategy's mechanism, relation, and residual exactly.",
           "residual": "Lossless projection does not establish that an authored residual is complete.",
           "must_pass": "command:`pytest enforce/fitness/test_evidence.py::test_proxy_claims_preserve_residuals`",
-          "must_reject": "discrimination:EVID-003",
+          "must_reject": "discrimination:EVID-003/fitness:test_proxy_claims_preserve_residuals",
           "platforms": ["windows", "linux"],
           "not_applicable": "never while generated rule views are shipped"
         }
@@ -7372,7 +7372,7 @@
           "proposition": "Every strategy labeled with discrimination credit belongs to an ID loaded from the repository's mutation matrix.",
           "residual": "The inherited rule-keyed matrix cannot yet attribute a rejection to one exact strategy when a rule names several.",
           "must_pass": "command:`pytest enforce/fitness/test_evidence.py::test_rejection_credit_is_witnessed`",
-          "must_reject": "discrimination:EVID-004",
+          "must_reject": "discrimination:EVID-004/fitness:test_rejection_credit_is_witnessed",
           "platforms": ["windows", "linux"],
           "not_applicable": "never for an automated strategy"
         }
@@ -7399,7 +7399,7 @@
           "proposition": "Generated rule records use only verifier-availability states and contain no execution-outcome field.",
           "residual": "Consumers can still misuse an availability state unless their own schema preserves the distinction.",
           "must_pass": "command:`pytest enforce/fitness/test_evidence.py::test_generated_rules_publish_no_gate_outcome`",
-          "must_reject": "discrimination:EVID-005",
+          "must_reject": "discrimination:EVID-005/fitness:test_generated_rules_publish_no_gate_outcome",
           "platforms": ["windows", "linux"],
           "not_applicable": "never while generated rule views are shipped"
         }
@@ -7426,7 +7426,7 @@
           "proposition": "Every rule record contains at least one structurally typed warrant with a non-empty source.",
           "residual": "Typed relation and confidence do not independently verify the cited source's argument.",
           "must_pass": "command:`pytest enforce/fitness/test_evidence.py::test_warrants_are_typed`",
-          "must_reject": "discrimination:EVID-006",
+          "must_reject": "discrimination:EVID-006/fitness:test_warrants_are_typed",
           "platforms": ["windows", "linux"],
           "not_applicable": "never for a normative rule"
         }
@@ -7453,7 +7453,7 @@
           "proposition": "Every cited observation resolves and every observation without a reproduction is labeled manual synthesis.",
           "residual": "Registry resolution does not reproduce an external adopter or prove generality beyond its stated scope.",
           "must_pass": "command:`pytest enforce/fitness/test_evidence.py::test_field_observations_resolve`",
-          "must_reject": "discrimination:EVID-007",
+          "must_reject": "discrimination:EVID-007/fitness:test_field_observations_resolve",
           "platforms": ["windows", "linux"],
           "not_applicable": "never when a rule cites field evidence"
         }
@@ -7480,7 +7480,7 @@
           "proposition": "Every record has migration guidance and every historical disposition agrees with strategy removal and successor metadata.",
           "residual": "A structurally consistent migration can still give inadequate human guidance.",
           "must_pass": "command:`pytest enforce/fitness/test_evidence.py::test_rule_migrations_are_total`",
-          "must_reject": "discrimination:EVID-008",
+          "must_reject": "discrimination:EVID-008/fitness:test_rule_migrations_are_total",
           "platforms": ["windows", "linux"],
           "not_applicable": "never while stable rule IDs are public API"
         }

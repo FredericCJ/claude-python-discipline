@@ -1810,7 +1810,7 @@
    "type": "module",
    "label": "Document Format Specification",
    "path": "discipline/meta/SCHEMA.md",
-   "tokens": 3961,
+   "tokens": 3933,
    "attrs": {
     "decay": "none",
     "kind": "meta"

@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "review_id": "v4_security_slice_adversarial_acceptance",
-  "reviewed_commit": "a5a649593ec0eac5732edc59fa499a1fa91134ac",
+  "reviewed_commit": "0c21f4ae222dc1459a4d914e35ec5635b23de491",
   "scope": {
     "algorithm": "sha256",
-    "digest": "sha256:789859af6d6099cfe035f66e2894cccbf942cc632740ea5c985b4dc3ad93e4f8",
+    "digest": "sha256:9ed843a0ef5588821d0b62b3e5078d89243083cb7f5379551e7cfec0f9dc2efb",
     "file_count": 285,
     "categories": [
       "project_declaration",
@@ -69,8 +69,8 @@
     {
       "id": "test_oracles",
       "challenge": "Can a mechanism be counted as enforcement without a mutation proving that its stated observable proposition is rejected?",
-      "conclusion": "The evidence registry separates direct, proxy, behavioral, tool, and review claims; review-only obligations do not enter the mutation census, and all 179 exact mechanical strategies now have witnessed rejection. The portable core-mutation adapter additionally refuses zero work, survivors, and non-verdict tool outcomes.",
-      "evidence": ["discipline/meta/evidence.json", "enforce/discrimination.py", "tools/discrimination_gate.py"]
+      "conclusion": "The evidence registry separates direct, proxy, behavioral, tool, and review claims; review-only obligations do not enter the mutation census, and all 179 mechanical strategies now bind exact rule/mechanism markers to witnessed rejection. Validation refuses rule-only or pending credit and generated proposition boilerplate. The portable core-mutation adapter additionally refuses zero work, survivors, and non-verdict tool outcomes.",
+      "evidence": ["discipline/meta/evidence.json", "tools/evidence_model.py", "enforce/discrimination.py", "tools/discrimination_gate.py"]
     }
   ],
   "objections": [

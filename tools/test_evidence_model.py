@@ -14,6 +14,7 @@ from evidence_model import (
     MigrationDisposition,
     ObservationKind,
     VerificationState,
+    discrimination_witnesses,
     load_evidence,
     load_observations,
     validate_evidence,
@@ -50,7 +51,7 @@ def valid_payload() -> dict[str, object]:
                         ),
                         "residual": "The checker cannot establish runtime input validity.",
                         "must_pass": "enforce/fixtures/reference",
-                        "must_reject": "discrimination:TYPE-001",
+                        "must_reject": "discrimination:TYPE-001/auto:mypy",
                         "platforms": ["windows", "linux"],
                         "not_applicable": "never",
                     }
@@ -238,7 +239,11 @@ def test_capabilities_use_configuration_key_grammar(tmp_path: Path) -> None:
 def test_heading_and_strategy_mechanisms_must_match(tmp_path: Path) -> None:
     """Evidence cannot describe a verifier the normative heading does not name."""
     registry = load_evidence(write_payload(tmp_path / "evidence.json", valid_payload()))
-    findings = validate_evidence(registry, [rule(mechanisms=("auto:pyright",))], {"TYPE-001"})
+    findings = validate_evidence(
+        registry,
+        [rule(mechanisms=("auto:pyright",))],
+        {("TYPE-001", "auto:mypy")},
+    )
     assert [finding.code for finding in findings] == ["E004"]
 
 
@@ -247,7 +252,7 @@ def test_automated_strategy_needs_a_must_reject_case(tmp_path: Path) -> None:
     payload = valid_payload()
     strategy(payload)["must_reject"] = None
     registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
-    findings = validate_evidence(registry, [rule()], {"TYPE-001"})
+    findings = validate_evidence(registry, [rule()], {("TYPE-001", "auto:mypy")})
     assert "E008" in {finding.code for finding in findings}
 
 
@@ -256,6 +261,53 @@ def test_declared_mutation_must_have_been_witnessed(tmp_path: Path) -> None:
     registry = load_evidence(write_payload(tmp_path / "evidence.json", valid_payload()))
     findings = validate_evidence(registry, [rule()], set())
     assert "E009" in {finding.code for finding in findings}
+
+
+def test_must_reject_names_the_exact_rule_and_mechanism(tmp_path: Path) -> None:
+    """A legacy rule-only label cannot identify which verifier rejected it."""
+    payload = valid_payload()
+    strategy(payload)["must_reject"] = "discrimination:TYPE-001"
+    registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
+
+    findings = validate_evidence(
+        registry,
+        [rule()],
+        {("TYPE-001", "auto:mypy")},
+    )
+
+    assert "E012" in {finding.code for finding in findings}
+
+
+def test_generated_placeholder_is_not_an_observable_proposition(tmp_path: Path) -> None:
+    """Evidence must state the finite condition, not merely name a checker."""
+    payload = valid_payload()
+    strategy(payload)["proposition"] = (
+        "auto:mypy reports no diagnostic corresponding to TYPE-001 under config."
+    )
+    registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
+
+    findings = validate_evidence(
+        registry,
+        [rule()],
+        {("TYPE-001", "auto:mypy")},
+    )
+
+    assert "E013" in {finding.code for finding in findings}
+
+
+def test_rule_only_matrix_cannot_supply_v4_rejection_credit(tmp_path: Path) -> None:
+    """The v3 coverage view cannot conceal an unwitnessed second mechanism."""
+    matrix = tmp_path / "enforce" / "discrimination.py"
+    matrix.parent.mkdir(parents=True)
+    matrix.write_text(
+        '"""Legacy matrix."""\n\n\n'
+        "def covered() -> frozenset[str]:\n"
+        '    """Return a rule-only claim.\n\n    @return ids\n    """\n'
+        '    return frozenset({"TYPE-001"})\n',
+        encoding="utf-8",
+    )
+
+    assert discrimination_witnesses(tmp_path) is None
 
 
 def test_one_tool_cannot_lend_rejection_credit_to_another(tmp_path: Path) -> None:
@@ -282,7 +334,7 @@ def test_tag_and_kind_cannot_disagree(tmp_path: Path) -> None:
     payload = valid_payload()
     strategy(payload)["kind"] = "static"
     registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
-    findings = validate_evidence(registry, [rule()], {"TYPE-001"})
+    findings = validate_evidence(registry, [rule()], {("TYPE-001", "auto:mypy")})
     assert "E010" in {finding.code for finding in findings}
 
 
