@@ -19,6 +19,7 @@ from checks import project
 from checks.doc_coverage import DocCoverageCheck
 from checks.doc_style import DocStyleCheck
 
+# Import fixture and checker protocols only during static analysis.
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -36,10 +37,16 @@ def write(tmp_path: Path, source: str, name: str = "mod.py") -> Path:
     @param name the file's name -- a `test_` prefix would exempt it from the style
         check, so every probe here keeps the default
     @return the written file, ready to hand to a check
+
+    @par Effects
+    Creates or replaces one isolated Python module beneath the synthetic source tree.
     """
+    # Resolve the governed domain-module path used by the focused documentation check.
     target = tmp_path / "src" / "mypkg" / "domain" / name
+    # Materialize the package tree before publishing normalized probe source.
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(dedent(source), encoding="utf-8")
+    # Return the persisted module as the documentation-check subject.
     return target
 
 
@@ -57,11 +64,16 @@ def rules_fired(check: Check, path: Path) -> set[str]:
 
     @param check any check; it is driven over this one file rather than a tree
     @param path the file to run it over
-    @return every rule id reported, empty when the file conforms
+    @return unordered reported rule-id string elements, empty when conformant
+
+    @par Effects
+    Rebinds the supplied check to an explicit Doxygen project declaration.
     """
+    # Fix the engine contract so these probes decide rules rather than defaults.
     check.declaration = project.Declaration(
         doc_engine="doxygen", doc_engine_declared=True,
     )
+    # Collapse finding elements to the unique governing rule identifiers reported.
     return {f.rule_id for f in check.run([path])}
 
 
@@ -73,21 +85,28 @@ def test_an_undeclared_documentation_engine_fires_once(tmp_path: Path) -> None:
 
     @param tmp_path pytest's per-test repository
     """
+    # Materialize otherwise documented source so only engine declaration is absent.
     path = write(tmp_path, '"""A documented module."""\n')
+    # Select coverage as the mechanism that owns the undeclared-engine diagnostic.
     check = DocCoverageCheck()
+    # Deliberately restore the incomplete direct-check fallback.
     check.declaration = project.DEFAULT
+    # Preserve the ordered finding records to verify exact diagnostic multiplicity.
     findings = check.run([path])
+    # Compare each finding element's diagnostic identity in emission order.
     assert [item.diagnostic_id for item in findings] == ["DOC_ENGINE_UNDECLARED"]
 
 
 def test_an_undocumented_module_fires(tmp_path: Path) -> None:
     """A file that opens with code rather than a summary is reported."""
+    # Materialize source that begins with an undocumented module-level value.
     path = write(tmp_path, "VALUE = 1\n")
     assert "DOC-001" in rules_fired(DocCoverageCheck(), path)
 
 
 def test_an_undocumented_function_fires(tmp_path: Path) -> None:
     """DOC-001 reaches inside a documented module: the summary does not cover its callables."""
+    # Materialize a documented module containing an undocumented callable.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -100,6 +119,7 @@ def test_an_undocumented_function_fires(tmp_path: Path) -> None:
 
 def test_an_undocumented_class_fires(tmp_path: Path) -> None:
     """A class is an element in its own right, reported by name and not by its module."""
+    # Materialize a documented module containing an undocumented class entity.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -112,6 +132,7 @@ def test_an_undocumented_class_fires(tmp_path: Path) -> None:
 
 def test_an_undocumented_module_constant_fires(tmp_path: Path) -> None:
     """DOC-002: Python has no docstring slot for a constant, so ## is required."""
+    # Materialize an undocumented named module constant beneath a module summary.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -122,6 +143,7 @@ def test_an_undocumented_module_constant_fires(tmp_path: Path) -> None:
 
 def test_a_documented_module_constant_is_accepted(tmp_path: Path) -> None:
     """A `##` block above the assignment satisfies DOC-002."""
+    # Materialize a constant with its required adjacent entity block.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -133,6 +155,7 @@ def test_a_documented_module_constant_is_accepted(tmp_path: Path) -> None:
 
 def test_a_multi_line_hash_block_is_accepted(tmp_path: Path) -> None:
     """A `##` block may continue with plain `#` lines; the search up does not stop at them."""
+    # Materialize a constant whose entity block spans one continuation line.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -145,6 +168,7 @@ def test_a_multi_line_hash_block_is_accepted(tmp_path: Path) -> None:
 
 def test_an_undocumented_class_attribute_fires(tmp_path: Path) -> None:
     """A dataclass field needs its own `##` block; the class docstring does not cover it."""
+    # Materialize a documented dataclass with an undocumented field entity.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -162,6 +186,7 @@ def test_an_undocumented_class_attribute_fires(tmp_path: Path) -> None:
 
 def test_a_documented_enum_member_is_accepted(tmp_path: Path) -> None:
     """Enum members are named values and are documented like any other."""
+    # Materialize an enum whose members each carry their own semantic block.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -181,6 +206,7 @@ def test_a_documented_enum_member_is_accepted(tmp_path: Path) -> None:
 
 def test_an_overload_stub_needs_no_docstring(tmp_path: Path) -> None:
     """An overload declares a signature; the implementation carries the contract."""
+    # Materialize an overload declaration whose implementation owns documentation.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -195,6 +221,7 @@ def test_an_overload_stub_needs_no_docstring(tmp_path: Path) -> None:
 
 def test_a_fully_documented_module_is_silent(tmp_path: Path) -> None:
     """The conforming case must stay quiet, or the rule gets suppressed."""
+    # Materialize a fully documented module, constant, and callable control.
     path = write(tmp_path, '''
         """! Outline manipulation.
 
@@ -218,6 +245,7 @@ def test_a_fully_documented_module_is_silent(tmp_path: Path) -> None:
 
 def test_an_undocumented_parameter_fires(tmp_path: Path) -> None:
     """DOC-007: a docstring that skips a parameter leaves the caller guessing."""
+    # Materialize a two-parameter contract documenting only its first parameter.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -235,6 +263,7 @@ def test_an_undocumented_parameter_fires(tmp_path: Path) -> None:
 
 def test_an_undocumented_result_fires(tmp_path: Path) -> None:
     """DOC-007 covers the return value, which is the half most often skipped."""
+    # Materialize a value-returning callable whose result semantics are absent.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -251,6 +280,7 @@ def test_an_undocumented_result_fires(tmp_path: Path) -> None:
 
 def test_a_none_returning_function_is_not_asked_for_a_result(tmp_path: Path) -> None:
     """Doxygen demands @return here and is wrong; reading the annotation is not."""
+    # Materialize a no-result callable with complete parameter documentation.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -265,8 +295,14 @@ def test_a_none_returning_function_is_not_asked_for_a_result(tmp_path: Path) -> 
 
 
 def test_a_tests_fixtures_are_not_demanded(tmp_path: Path) -> None:
-    """A fixture is documented where it is defined, not at each place it is used."""
+    """A fixture is documented where it is defined, not at each place it is used.
+
+    @par Effects
+    Creates one isolated test module for the fixture-parameter exemption probe.
+    """
+    # Select a test path whose function consumes an externally defined fixture.
     target = tmp_path / "tests" / "test_thing.py"
+    # Materialize the test tree before publishing the fixture-consumer source.
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(
         '"""! Tests."""\n\n\ndef test_x(tmp_path: Path) -> None:\n    """! It holds."""\n',
@@ -276,8 +312,14 @@ def test_a_tests_fixtures_are_not_demanded(tmp_path: Path) -> None:
 
 
 def test_a_helper_in_a_test_file_still_documents_its_parameters(tmp_path: Path) -> None:
-    """The exemption is for `test_` functions, not for every callable beside them."""
+    """The exemption is for `test_` functions, not for every callable beside them.
+
+    @par Effects
+    Creates one isolated test module containing an ordinary helper callable.
+    """
+    # Select a test path whose non-test helper must retain its full contract.
     target = tmp_path / "tests" / "test_thing.py"
+    # Materialize the test tree before publishing the helper source.
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(
         '"""! Tests."""\n\n\ndef build(name: str) -> str:\n    """! Make a probe."""\n'
@@ -292,6 +334,7 @@ def test_a_helper_in_a_test_file_still_documents_its_parameters(tmp_path: Path) 
 
 def test_a_hash_block_where_a_docstring_belongs_fires(tmp_path: Path) -> None:
     """DOC-004: a ## block is invisible to help() and every other Python tool."""
+    # Materialize a callable described only by a non-runtime entity block.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -305,6 +348,7 @@ def test_a_hash_block_where_a_docstring_belongs_fires(tmp_path: Path) -> None:
 
 def test_a_restated_type_in_a_param_fires(tmp_path: Path) -> None:
     """DOC-008: the signature carries the type; prose carries the meaning."""
+    # Materialize a parameter contract that redundantly repeats its string type.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -322,6 +366,7 @@ def test_a_restated_type_in_a_param_fires(tmp_path: Path) -> None:
 
 def test_a_restated_return_type_fires(tmp_path: Path) -> None:
     """DOC-008 applies to the return value as much as to parameters."""
+    # Materialize a result contract that redundantly repeats its string type.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -339,6 +384,7 @@ def test_a_restated_return_type_fires(tmp_path: Path) -> None:
 
 def test_documentation_that_restates_the_name_fires(tmp_path: Path) -> None:
     """DOC-009: a comment repeating the identifier answers nothing."""
+    # Materialize a callable summary that merely inflects its identifier.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -352,6 +398,7 @@ def test_documentation_that_restates_the_name_fires(tmp_path: Path) -> None:
 
 def test_a_summary_that_adds_meaning_is_accepted(tmp_path: Path) -> None:
     """The check is conservative: a false positive here pushes authors to pad."""
+    # Materialize a summary that records the parser's nontrivial rejection behavior.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -369,6 +416,7 @@ def test_a_summary_that_adds_meaning_is_accepted(tmp_path: Path) -> None:
 
 def test_a_code_span_ending_in_a_period_fires(tmp_path: Path) -> None:
     """DOC-010: Doxygen aborts the comment block, naming neither span nor remedy."""
+    # Materialize the exact trailing-period code span that Doxygen misparses.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -386,6 +434,7 @@ def test_a_code_span_ending_in_a_period_fires(tmp_path: Path) -> None:
 
 def test_an_ellipsis_span_is_accepted(tmp_path: Path) -> None:
     """`...` parses; the trigger is a final period with a non-period before it."""
+    # Materialize a syntactically valid ellipsis span as the accepting control.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -402,8 +451,14 @@ def test_an_ellipsis_span_is_accepted(tmp_path: Path) -> None:
 
 
 def test_tests_are_exempt_from_the_style_check(tmp_path: Path) -> None:
-    """The style check skips a test path outright; only the coverage check speaks there."""
+    """The style check skips a test path outright; only the coverage check speaks there.
+
+    @par Effects
+    Creates one isolated test module for the style-path exemption probe.
+    """
+    # Select a test module whose implementation is outside authored-source style scope.
     target = tmp_path / "tests" / "test_thing.py"
+    # Materialize the test tree before publishing deliberately minimal source.
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text('"""! Tests."""\n\n\ndef test_x() -> None:\n    pass\n',
                       encoding="utf-8")
@@ -415,6 +470,7 @@ def test_tests_are_exempt_from_the_style_check(tmp_path: Path) -> None:
 
 def test_a_hash_block_with_a_restated_type_fires(tmp_path: Path) -> None:
     """DOC-008 reaches a `##` block too: doc_coverage only proves one is present."""
+    # Materialize an entity block that redundantly states an integer type.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -426,6 +482,7 @@ def test_a_hash_block_with_a_restated_type_fires(tmp_path: Path) -> None:
 
 def test_a_hash_block_without_a_restated_type_is_accepted(tmp_path: Path) -> None:
     """A `##` block that never names a type in prose stays silent under DOC-008."""
+    # Materialize an entity block describing retry meaning without type restatement.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -437,6 +494,7 @@ def test_a_hash_block_without_a_restated_type_is_accepted(tmp_path: Path) -> Non
 
 def test_a_hash_block_restating_the_name_fires(tmp_path: Path) -> None:
     """DOC-009 on a `##` block: a dataclass field's comment that only repeats its name."""
+    # Materialize a field block that only splits and repeats `retry_count`.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -455,6 +513,7 @@ def test_a_hash_block_restating_the_name_fires(tmp_path: Path) -> None:
 
 def test_a_hash_block_that_adds_meaning_is_accepted(tmp_path: Path) -> None:
     """The same field, documented with what the count means, stays silent under DOC-009."""
+    # Materialize the same field with retry exhaustion semantics added.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -473,6 +532,7 @@ def test_a_hash_block_that_adds_meaning_is_accepted(tmp_path: Path) -> None:
 
 def test_a_hash_block_code_span_ending_in_a_period_fires(tmp_path: Path) -> None:
     """DOC-010 on a `##` block: the same span Doxygen cannot parse in a docstring."""
+    # Materialize a constant block containing the trailing-period span trap.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -484,6 +544,7 @@ def test_a_hash_block_code_span_ending_in_a_period_fires(tmp_path: Path) -> None
 
 def test_a_hash_block_ellipsis_span_is_accepted(tmp_path: Path) -> None:
     """`...` parses in a `##` block exactly as it does in a docstring."""
+    # Materialize a constant block containing a valid parenthesized ellipsis span.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -495,6 +556,7 @@ def test_a_hash_block_ellipsis_span_is_accepted(tmp_path: Path) -> None:
 
 def test_a_multi_line_hash_block_is_checked_for_content(tmp_path: Path) -> None:
     """Content rules reach across a `##` block's plain-`#` continuation lines."""
+    # Materialize the span trap in a multi-line entity block.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -513,6 +575,7 @@ def test_a_self_describing_hash_block_with_the_trap_inside_a_span_fires(
     A `##` block whose own example of the trailing-dot trap is itself written
     inside the span it is warning about.
     """
+    # Materialize a rule explanation that demonstrates its own violation verbatim.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -527,6 +590,7 @@ def test_a_self_describing_hash_block_written_safely_is_accepted(tmp_path: Path)
 
     This is the form doc_style.py's own `_TRAILING_DOT_SPAN` comment actually uses.
     """
+    # Materialize the same explanation with the dangerous example outside backticks.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -539,8 +603,14 @@ def test_a_self_describing_hash_block_written_safely_is_accepted(tmp_path: Path)
 
 
 def test_hash_block_content_is_governed_in_tests(tmp_path: Path) -> None:
-    """Test implementation entity blocks obey the same semantic-content rules."""
+    """Test implementation entity blocks obey the same semantic-content rules.
+
+    @par Effects
+    Creates one isolated test module containing a semantically defective entity block.
+    """
+    # Select a test path whose module-level entity remains authored documentation.
     target = tmp_path / "tests" / "test_thing.py"
+    # Materialize the test tree before publishing the defective entity block.
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(
         '"""! Tests."""\n\n## @param retries (int) how many.\nMAX_RETRIES = 3\n',
@@ -560,6 +630,7 @@ def test_an_upper_case_constant_restating_its_name_fires(tmp_path: Path) -> None
 
     @param tmp_path pytest's per-test temporary directory
     """
+    # Materialize an all-capitals constant whose block merely restates its words.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -574,6 +645,7 @@ def test_an_upper_case_constant_that_adds_meaning_is_accepted(tmp_path: Path) ->
 
     @param tmp_path pytest's per-test temporary directory
     """
+    # Materialize the same constant with transient-failure and exhaustion semantics.
     path = write(tmp_path, '''
         """! Module."""
 
@@ -593,9 +665,13 @@ def test_each_check_declares_its_rules(check: Check) -> None:
     @param check each documentation check in turn; the list is written out by
         hand, so a new check has to be added to it to be covered here
     """
+    # Require every documentation mechanism to publish a non-empty rule set.
     assert check.rules
+    # Require each declared rule-id element to remain in the documentation family.
     assert all(r.startswith("DOC-") for r in check.rules)
 
 
+# Execute this focused companion suite only at its standalone script boundary.
 if __name__ == "__main__":
+    # Propagate pytest's verdict as this process's exit status.
     raise SystemExit(pytest.main([__file__, "-q"]))
