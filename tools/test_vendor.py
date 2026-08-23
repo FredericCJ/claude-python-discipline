@@ -90,18 +90,29 @@ def test_the_manifest_names_every_upstream_file(target: Path) -> None:
     @param target an empty repository
     """
     _install(target)
-    recorded = set(json.loads(
-        (target / ".agent" / "MANIFEST.json").read_text(encoding="utf-8"))["files"])
+    recorded = set(
+        json.loads((target / ".agent" / "MANIFEST.json").read_text(encoding="utf-8"))["files"]
+    )
     installed = {
         p.relative_to(target / ".agent").as_posix()
         for root in vendor.UPSTREAM
         for p in (target / ".agent" / root).rglob("*")
-        if p.is_file() and p.suffix not in vendor.SKIP_SUFFIXES
+        if p.is_file()
+        and p.suffix not in vendor.SKIP_SUFFIXES
         and not vendor.SKIP_DIRS & set(p.parts)
     }
-    assert installed <= recorded, (
-        f"installed but unrecorded: {sorted(installed - recorded)[:5]}"
-    )
+    assert installed <= recorded, f"installed but unrecorded: {sorted(installed - recorded)[:5]}"
+
+
+def test_the_generated_manifest_is_byte_stable_across_hosts(target: Path) -> None:
+    """Windows and Linux installations emit the same LF-delimited manifest.
+
+    @param target an empty repository
+    """
+    _install(target)
+    manifest = (target / ".agent" / "MANIFEST.json").read_bytes()
+    assert manifest.endswith(b"\n")
+    assert b"\r\n" not in manifest
 
 
 def test_install_carries_one_shared_agent_skill_source(target: Path) -> None:
@@ -131,15 +142,16 @@ def test_the_manifest_excludes_build_products(target: Path) -> None:
     @param target an empty repository
     """
     _install(target)
-    recorded = json.loads(
-        (target / ".agent" / "MANIFEST.json").read_text(encoding="utf-8"))["files"]
-    assert not [name for name in recorded
-                if any(part in vendor.SKIP_DIRS for part in Path(name).parts)]
+    recorded = json.loads((target / ".agent" / "MANIFEST.json").read_text(encoding="utf-8"))[
+        "files"
+    ]
+    assert not [
+        name for name in recorded if any(part in vendor.SKIP_DIRS for part in Path(name).parts)
+    ]
     assert not [name for name in recorded if Path(name).suffix in vendor.SKIP_SUFFIXES]
 
 
-def test_the_version_stamp_is_stable_across_two_installs(target: Path,
-                                                         tmp_path: Path) -> None:
+def test_the_version_stamp_is_stable_across_two_installs(target: Path, tmp_path: Path) -> None:
     """The same corpus installed twice reports the same version.
 
     A stamp that moved on every install would make `check`'s staleness report
@@ -152,11 +164,13 @@ def test_the_version_stamp_is_stable_across_two_installs(target: Path,
     second = tmp_path / "other"
     second.mkdir()
     _install(second)
-    assert (vendor.build_manifest(SOURCE)["version"]
-            == json.loads((target / ".agent" / "MANIFEST.json")
-                          .read_text(encoding="utf-8"))["version"])
-    assert ((target / ".agent" / "MANIFEST.json").read_text(encoding="utf-8")
-            == (second / ".agent" / "MANIFEST.json").read_text(encoding="utf-8"))
+    assert (
+        vendor.build_manifest(SOURCE)["version"]
+        == json.loads((target / ".agent" / "MANIFEST.json").read_text(encoding="utf-8"))["version"]
+    )
+    assert (target / ".agent" / "MANIFEST.json").read_text(encoding="utf-8") == (
+        second / ".agent" / "MANIFEST.json"
+    ).read_text(encoding="utf-8")
 
 
 # ------------------------------------------------------ the two halves
@@ -236,8 +250,7 @@ def test_check_reports_an_edited_vendored_file_by_name(target: Path) -> None:
     """
     _install(target)
     edited = target / ".agent" / "tools" / "nav.py"
-    edited.write_text(edited.read_text(encoding="utf-8") + "\n# local tweak\n",
-                      encoding="utf-8")
+    edited.write_text(edited.read_text(encoding="utf-8") + "\n# local tweak\n", encoding="utf-8")
     problems = vendor.check(vendor.Plan(SOURCE, target))
     assert any("nav.py" in problem for problem in problems), problems
 
@@ -265,10 +278,11 @@ def test_check_on_a_tree_never_vendored_is_not_silence(target: Path) -> None:
 # ------------------------------------------------------------- the round trip
 
 
-@pytest.mark.parametrize(("label", "original"),
-                         [("lf", EXISTING_LF), ("crlf", EXISTING_CRLF)])
+@pytest.mark.parametrize(("label", "original"), [("lf", EXISTING_LF), ("crlf", EXISTING_CRLF)])
 def test_the_whole_round_trip_preserves_every_prior_byte(
-    target: Path, label: str, original: bytes,
+    target: Path,
+    label: str,
+    original: bytes,
 ) -> None:
     """Install, integrate, check and remove -- and nothing else moved.
 

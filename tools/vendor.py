@@ -66,10 +66,14 @@ SKIP_SUFFIXES: Final = (".pyc", ".db", ".db-wal", ".db-shm")
 ## writes its cache beside the configuration it resolved, so any of these can
 ## appear inside an upstream directory; hashing one would make the version stamp
 ## depend on what had been run in the checkout (DEP-008).
-SKIP_DIRS: Final = frozenset(
-    {"__pycache__", ".pytest_cache", ".ruff_cache", ".hypothesis", ".mypy_cache",
-     ".import_linter_cache"}
-)
+SKIP_DIRS: Final = frozenset({
+    "__pycache__",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".hypothesis",
+    ".mypy_cache",
+    ".import_linter_cache",
+})
 
 
 @dataclass(frozen=True, slots=True)
@@ -152,9 +156,7 @@ def build_manifest(source: Path) -> dict[str, object]:
     @return the release name, the content stamp, the generating tool, and every
             upstream file's source-relative POSIX path mapped to its digest
     """
-    files = {
-        path.relative_to(source).as_posix(): digest(path) for path in iter_upstream(source)
-    }
+    files = {path.relative_to(source).as_posix(): digest(path) for path in iter_upstream(source)}
     combined = hashlib.sha256(
         "".join(f"{k}:{v}" for k, v in sorted(files.items())).encode()
     ).hexdigest()[:12]
@@ -250,7 +252,9 @@ def install(plan: Plan, *, force: bool = False) -> tuple[int, list[str]]:
 
     manifest = build_manifest(plan.source)
     plan.manifest.write_text(
-        json.dumps(manifest, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
+        json.dumps(manifest, indent=1, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+        newline="\n",
     )
     return len(manifest["files"]), notes  # type: ignore[arg-type]
 
@@ -284,9 +288,11 @@ def check(plan: Plan) -> list[str]:
         elif digest(installed) != expected:
             problems.append(f"locally modified: {relative}")
 
-    for name in PROJECT_OWNED:
-        if not (plan.agent_dir / name).exists():
-            problems.append(f"project-owned {name}/ is missing; re-run install")
+    problems.extend(
+        f"project-owned {name}/ is missing; re-run install"
+        for name in PROJECT_OWNED
+        if not (plan.agent_dir / name).exists()
+    )
     return problems
 
 
@@ -309,8 +315,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     # deletes anything under learning/ or overrides/, with or without --force.
     # See install() for what actually happens. Correcting the string is a
     # behaviour change and belongs to whoever owns the intended semantics.
-    parser.add_argument("--force", action="store_true",
-                        help="also reset the project-owned half (destructive)")
+    parser.add_argument(
+        "--force", action="store_true", help="also reset the project-owned half (destructive)"
+    )
     args = parser.parse_args(argv)
 
     plan = Plan(args.source.resolve(), args.target.resolve())
