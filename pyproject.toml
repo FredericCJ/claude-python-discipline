@@ -41,7 +41,9 @@ destructive_effects = true
 bounded_latency = true
 sensitive_data = false
 
-[tool.agent-discipline.layers]
-# Empty on purpose. This repository is a documentation corpus with a tools/ and
-# enforce/ layout and no hexagonal source tree, so it has no layer names of its
-# own to map. The four canonical names are recognised without being listed.
+[tool.agent-discipline.roles]
+# The normative domain is the authored Markdown corpus, not a Python package.
+# Every governed Python file is maintenance machinery that parses, checks,
+# projects, packages, or invokes that corpus at the repository boundary; it is
+# therefore owned by the shell role rather than presented as domain policy.
+shell = ["tools", "enforce"]
