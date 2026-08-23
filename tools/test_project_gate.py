@@ -439,7 +439,7 @@ def test_doxygen_pass_requires_generated_source_pages(
         return project_gate.DocumentationExecution(process, plan.subjects)
 
     monkeypatch.setattr(project_gate, "_native_executable", lambda _name: "doxygen")
-    monkeypatch.setattr(project_gate, "_native_version", lambda _path: "1.10.0")
+    monkeypatch.setattr(project_gate, "_native_version", lambda _path: "1.17.0")
     monkeypatch.setattr(project_gate, "_execute_doxygen", execute)
 
     result = project_gate.run(
@@ -449,7 +449,7 @@ def test_doxygen_pass_requires_generated_source_pages(
 
     assert result.status is project_gate.Status.PASS
     assert result.subjects >= 20
-    assert result.tool == "doxygen 1.10.0"
+    assert result.tool == "doxygen 1.17.0"
 
 
 def test_doxygen_zero_output_is_not_green(
@@ -460,7 +460,7 @@ def test_doxygen_zero_output_is_not_green(
     root = _configured_tool_project(tmp_path)
     _write_doxyfile(root)
     monkeypatch.setattr(project_gate, "_native_executable", lambda _name: "doxygen")
-    monkeypatch.setattr(project_gate, "_native_version", lambda _path: "1.10.0")
+    monkeypatch.setattr(project_gate, "_native_version", lambda _path: "1.17.0")
     monkeypatch.setattr(
         project_gate,
         "_execute_doxygen",

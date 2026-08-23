@@ -1,10 +1,9 @@
 """Decide `law/DOC`'s generation and relationship rules by running Doxygen.
 
-Four rules -- `DOC-005`, `DOC-007`, `DOC-010`, `DOC-011` -- are tagged `external`
-on `auto:doxygen`. Doxygen was installed, pinned to 1.10.0, and version-verified
-in the previous phase, and the only invocation anywhere in the repository was
-`--version`. A tool that answers what version it is decides nothing about
-documentation.
+The structured documentation rules are tagged `external` on `auto:doxygen`.
+Doxygen's version probe establishes tool identity but decides nothing about the
+documented tree, so this gate runs the qualified 1.17 posture and inspects the
+generated source and relationship projection.
 
 `enforce/Doxyfile` has been ready the whole time: `INPUT = src`,
 `WARN_AS_ERROR = FAIL_ON_WARNINGS`. Nothing called it.
@@ -16,7 +15,7 @@ writes 235 files into `enforce/fixtures/reference/` would leave build products f
 
 **The vacuity guard, and an honest note about it.** Every other tool wired into
 this gate exits 0 when pointed at nothing, so each wrapper counts what it
-examined. Doxygen turned out NOT to share that defect -- 1.10.0 reports "No files
+examined. Doxygen turned out NOT to share that defect -- 1.17.0 reports "No files
 to be processed" and fails. The page count is kept anyway, because it guards the
 case doxygen does not: `INPUT` matching files that all get filtered out by
 `FILE_PATTERNS` or `EXCLUDE`, which produces a successful run over nothing. It is

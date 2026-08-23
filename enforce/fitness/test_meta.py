@@ -392,12 +392,12 @@ def doxygen_executable() -> str | None:
 def test_doxygen_version_matches_recorded() -> None:
     """Doxygen defects fixed between versions; ensure configuration does not drift.
 
-    Three defects in Doxygen's Python parser (at 1.10.0) motivated disabling
-    WARN_NO_PARAMDOC and WARN_IF_UNDOCUMENTED in enforce/Doxyfile. These
-    defects may be fixed in later versions, or new ones may appear. When
-    Doxygen is upgraded, the disabled warnings and verified: date in
-    discipline/fact/doxygen.md must be re-checked against the defects table
-    there, or they stay switched off for no remaining reason.
+    Doxygen 1.17.0 changed which Python-parser warnings are trustworthy:
+    WARN_IF_UNDOCUMENTED is enabled again, while WARN_NO_PARAMDOC remains off.
+    Relationship projection and offline output add further version-dependent
+    behavior. When Doxygen is upgraded, the warning, extraction, relationship,
+    determinism, and remote-resource probes plus the verified date in
+    discipline/fact/doxygen.md must move together.
 
     This test enforces that decision: it skips when Doxygen is not installed,
     and fails when installed and the version differs from the recorded one,
@@ -408,7 +408,7 @@ def test_doxygen_version_matches_recorded() -> None:
     dox_fact_text = dox_fact_path.read_text(encoding="utf-8")
 
     # Parse the version from the table row:
-    # | Doxygen | 1.10.0 | VERSION-DEPENDENT |
+    # | Doxygen | 1.17.0 | Python extraction ... | `VERSION-DEPENDENT` |
     recorded_version = None
     for line in dox_fact_text.splitlines():
         if "| Doxygen |" in line and "VERSION-DEPENDENT" in line:
@@ -446,7 +446,7 @@ def test_doxygen_version_matches_recorded() -> None:
     if result.returncode != 0:
         pytest.skip(f"{executable} did not report a version")
 
-    # Extract the version from the output (e.g., "1.10.0" or "1.10.0 (some extra text)")
+    # Extract the version from the output (e.g., "1.17.0" or "1.17.0 (extra text)")
     installed_version = result.stdout.strip().split()[0]
 
     # Compare versions
@@ -454,15 +454,10 @@ def test_doxygen_version_matches_recorded() -> None:
         f"Doxygen version mismatch: discipline/fact/doxygen.md records {recorded_version!r} "
         f"but {installed_version!r} is installed.\n\n"
         f"Before updating the version and verified: date in discipline/fact/doxygen.md:\n"
-        f"  1. Re-run the defect verification tests against the three defects in the\n"
-        f"     'Three defects that decide who owns which rule' section of\n"
-        f"     discipline/fact/doxygen.md.\n"
-        f"  2. Re-verify the two disabled warning settings in enforce/Doxyfile:\n"
-        f"     - WARN_IF_UNDOCUMENTED (line ~47)\n"
-        f"     - WARN_NO_PARAMDOC (line ~54)\n"
-        f"  3. If the defects are fixed in {installed_version}, enable the warnings and\n"
-        f"     remove the explanatory comments.\n"
-        f"  4. Update 'verified:' and the version in discipline/fact/doxygen.md.\n"
+        f"  1. Re-run tools/test_doxygen_gate.py on Windows and Linux.\n"
+        f"  2. Re-verify warning, extraction, relationship, determinism, and offline output.\n"
+        f"  3. Update enforce/Doxyfile only from those observations.\n"
+        f"  4. Update 'verified:' and both tool identities in discipline/fact/doxygen.md.\n"
     )
 
 

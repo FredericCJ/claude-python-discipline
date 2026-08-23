@@ -139,11 +139,18 @@ def test_a_documented_parameter_that_does_not_exist_is_caught(tree: Path) -> Non
     @param tree a writable copy of the reference
     """
     plan = tree / "src" / "refpkg" / "domain" / "plan.py"
+    original = plan.read_text(encoding="utf-8")
+    target = (
+        "    @param entries each file under consideration; input order is "
+        "deliberately irrelevant"
+    )
+    assert target in original
     plan.write_text(
-        plan.read_text(encoding="utf-8").replace(
-            "    @param entries the files under consideration, in any order",
-            "    @param entries the files under consideration, in any order\n"
-            "    @param ghost a parameter this function does not have", 1),
+        original.replace(
+            target,
+            target + "\n    @param ghost a parameter this function does not have",
+            1,
+        ),
         encoding="utf-8",
     )
     status, line = doxygen_gate.run(tree, doxygen_gate.MINIMUM_FILES)
@@ -155,7 +162,7 @@ def test_generating_nothing_is_not_generating_cleanly(tmp_path: Path) -> None:
     """DOC-011: an empty run is a failed run.
 
     Written expecting the failure every other tool here has -- exiting 0 over an
-    empty input -- and doxygen 1.10.0 turned out not to share it: it reports "No
+    empty input -- and Doxygen 1.17.0 does not share it: it reports "No
     files to be processed" and fails on its own. The assertion is on the VERDICT
     rather than the wording, so it holds either way, and the module docstring was
     corrected rather than the test bent to fit the claim.
