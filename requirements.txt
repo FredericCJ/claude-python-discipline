@@ -24,11 +24,6 @@ pytest-socket==0.8.0
 build==1.3.0
 cosmic-ray==8.7.0
 
-# Sphinx remains on the last stable line supporting the discipline's Python 3.11
-# floor. Projects declaring doc_engine="doxygen" instead need the native Doxygen
-# 1.10.0 executable; pip cannot install or verify that binary.
-Sphinx==8.2.3
-
 # NOT required, and deliberately not listed as such:
 #
 #   tools/learn.py       standard library only
