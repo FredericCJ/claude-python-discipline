@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "review_id": "v4_release_adversarial_acceptance",
-  "reviewed_commit": "eaf53f89bd2782966b15e69dc1a4970e2a522c89",
+  "reviewed_commit": "c64662878729e88c7c72098543da8753aeb6d590",
   "scope": {
     "algorithm": "sha256",
-    "digest": "sha256:061437762fa783e0cd043f6a0fc5105712980b5638769e25292696585774b939",
+    "digest": "sha256:fc42827525f753b503e08b086e22405020e6d86924cf6de6ce117534d5a225df",
     "file_count": 288,
     "categories": [
       "project_declaration",
@@ -238,6 +238,17 @@
       "evidence": "roadmap/from-3.2-to-4.0/evidence/adopter-certification.json",
       "owner": "canonical_model_maintainer",
       "review_trigger": "Review again whenever model schemas, uniqueness joins, type-checker configuration, or declared analysis targets change."
+    },
+    {
+      "id": "windows_discrimination_budget_false",
+      "category": "test_oracles",
+      "severity": "high",
+      "statement": "The meta-test gave every gate entry 180 seconds, but the complete 181-case rejection census requires about 339 seconds on the supported native Windows environment; the test therefore rejected a healthy gate and prevented release certification.",
+      "disposition": "resolved",
+      "resolution": "Measure the complete entry with no competing verifier, preserve every rejection case, and enforce a 420-second child ceiling inside a distinct 480-second pytest ceiling. The exact proof then passed in 338.60 seconds.",
+      "evidence": "enforce/fitness/test_meta.py::test_every_gate_entry_is_runnable[discrimination]",
+      "owner": "gate_entry_budget_maintainer",
+      "review_trigger": "Review again whenever the discrimination census, process-launch strategy, supported Windows environment, or gate-entry timeout policy changes."
     }
   ],
   "verdict": "accepted",
