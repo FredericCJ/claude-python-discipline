@@ -144,5 +144,597 @@
     "TYPE-013"
   ],
   "gap": 28,
-  "why": "Witness 27 additional fitness and repository-level rule rejections for the v4 evidence audit."
+  "strategy_count": 147,
+  "strategies": [
+    {
+      "rule": "ALLOC-001",
+      "mechanism": "check:no_model_names"
+    },
+    {
+      "rule": "ALLOC-002",
+      "mechanism": "check:dispatch_recorded"
+    },
+    {
+      "rule": "ALLOC-003",
+      "mechanism": "check:dispatch_recorded"
+    },
+    {
+      "rule": "ALLOC-004",
+      "mechanism": "check:dispatch_recorded"
+    },
+    {
+      "rule": "ALLOC-010",
+      "mechanism": "check:allocation_declared"
+    },
+    {
+      "rule": "API-001",
+      "mechanism": "fitness:test_contract_documented"
+    },
+    {
+      "rule": "API-002",
+      "mechanism": "fitness:test_contract_documented"
+    },
+    {
+      "rule": "API-003",
+      "mechanism": "check:single_wiring_point"
+    },
+    {
+      "rule": "API-005",
+      "mechanism": "fitness:test_structured_output"
+    },
+    {
+      "rule": "API-006",
+      "mechanism": "fitness:test_structured_output"
+    },
+    {
+      "rule": "API-007",
+      "mechanism": "fitness:test_exit_codes"
+    },
+    {
+      "rule": "API-009",
+      "mechanism": "fitness:test_agent_parity"
+    },
+    {
+      "rule": "API-010",
+      "mechanism": "fitness:test_schema_versioned"
+    },
+    {
+      "rule": "API-012",
+      "mechanism": "fitness:test_migrations"
+    },
+    {
+      "rule": "ARCH-001",
+      "mechanism": "auto:import-linter"
+    },
+    {
+      "rule": "ARCH-001",
+      "mechanism": "check:dependency_boundaries"
+    },
+    {
+      "rule": "ARCH-002",
+      "mechanism": "auto:import-linter"
+    },
+    {
+      "rule": "ARCH-002",
+      "mechanism": "check:domain_purity"
+    },
+    {
+      "rule": "ARCH-003",
+      "mechanism": "auto:import-linter"
+    },
+    {
+      "rule": "ARCH-003",
+      "mechanism": "check:dependency_boundaries"
+    },
+    {
+      "rule": "ARCH-005",
+      "mechanism": "check:explicit_effects"
+    },
+    {
+      "rule": "ARCH-011",
+      "mechanism": "check:single_wiring_point"
+    },
+    {
+      "rule": "ARCH-012",
+      "mechanism": "check:no_test_branches"
+    },
+    {
+      "rule": "ARCH-013",
+      "mechanism": "check:domain_purity"
+    },
+    {
+      "rule": "ARCH-015",
+      "mechanism": "check:no_magic_in_domain"
+    },
+    {
+      "rule": "ARCH-016",
+      "mechanism": "auto:ruff:C901"
+    },
+    {
+      "rule": "ARCH-018",
+      "mechanism": "check:source_roles"
+    },
+    {
+      "rule": "ARCH-019",
+      "mechanism": "check:dependency_boundaries"
+    },
+    {
+      "rule": "ARCH-020",
+      "mechanism": "check:dependency_boundaries"
+    },
+    {
+      "rule": "ARCH-021",
+      "mechanism": "check:architecture_model"
+    },
+    {
+      "rule": "ARCH-022",
+      "mechanism": "check:architecture_model"
+    },
+    {
+      "rule": "ARCH-023",
+      "mechanism": "check:architecture_model"
+    },
+    {
+      "rule": "ARCH-024",
+      "mechanism": "check:contract_conformance"
+    },
+    {
+      "rule": "ARCH-025",
+      "mechanism": "check:contract_conformance"
+    },
+    {
+      "rule": "DEP-001",
+      "mechanism": "auto:import-linter"
+    },
+    {
+      "rule": "DEP-002",
+      "mechanism": "fitness:test_dependency_position"
+    },
+    {
+      "rule": "DEP-007",
+      "mechanism": "check:generated_provenance"
+    },
+    {
+      "rule": "DEP-008",
+      "mechanism": "check:generated_provenance"
+    },
+    {
+      "rule": "DIAG-001",
+      "mechanism": "fitness:test_envelope_conforms"
+    },
+    {
+      "rule": "DIAG-002",
+      "mechanism": "check:exception_has_code"
+    },
+    {
+      "rule": "DIAG-003",
+      "mechanism": "check:exception_has_code"
+    },
+    {
+      "rule": "DIAG-005",
+      "mechanism": "check:raise_from"
+    },
+    {
+      "rule": "DIAG-007",
+      "mechanism": "check:raise_from"
+    },
+    {
+      "rule": "DIAG-008",
+      "mechanism": "auto:ruff:BLE001"
+    },
+    {
+      "rule": "DIAG-008",
+      "mechanism": "check:raise_from"
+    },
+    {
+      "rule": "DIAG-010",
+      "mechanism": "check:log_once"
+    },
+    {
+      "rule": "DIAG-011",
+      "mechanism": "check:library_logging"
+    },
+    {
+      "rule": "DIAG-012",
+      "mechanism": "auto:ruff:G004"
+    },
+    {
+      "rule": "DIAG-014",
+      "mechanism": "check:redaction"
+    },
+    {
+      "rule": "DIAG-015",
+      "mechanism": "auto:ruff:G004"
+    },
+    {
+      "rule": "DIAG-015",
+      "mechanism": "check:log_once"
+    },
+    {
+      "rule": "DOC-001",
+      "mechanism": "auto:ruff:D100"
+    },
+    {
+      "rule": "DOC-001",
+      "mechanism": "check:doc_coverage"
+    },
+    {
+      "rule": "DOC-002",
+      "mechanism": "check:doc_coverage"
+    },
+    {
+      "rule": "DOC-003",
+      "mechanism": "fitness:test_ordinary_gate_schedules_documentation_presence"
+    },
+    {
+      "rule": "DOC-004",
+      "mechanism": "check:doc_style"
+    },
+    {
+      "rule": "DOC-006",
+      "mechanism": "auto:ruff:D205"
+    },
+    {
+      "rule": "DOC-007",
+      "mechanism": "check:doc_coverage"
+    },
+    {
+      "rule": "DOC-008",
+      "mechanism": "check:doc_style"
+    },
+    {
+      "rule": "DOC-009",
+      "mechanism": "check:doc_style"
+    },
+    {
+      "rule": "DOC-014",
+      "mechanism": "check:doc_coverage"
+    },
+    {
+      "rule": "EFCT-001",
+      "mechanism": "auto:import-linter"
+    },
+    {
+      "rule": "EFCT-002",
+      "mechanism": "check:explicit_effects"
+    },
+    {
+      "rule": "EFCT-003",
+      "mechanism": "fitness:test_determinism"
+    },
+    {
+      "rule": "EFCT-005",
+      "mechanism": "check:plan_apply"
+    },
+    {
+      "rule": "EFCT-006",
+      "mechanism": "fitness:test_dry_run_matches_apply"
+    },
+    {
+      "rule": "EFCT-007",
+      "mechanism": "fitness:test_interruption_recovers"
+    },
+    {
+      "rule": "EFCT-008",
+      "mechanism": "check:atomicity_qualified"
+    },
+    {
+      "rule": "EFCT-009",
+      "mechanism": "fitness:test_what_is_not_guaranteed_is_stated"
+    },
+    {
+      "rule": "EFCT-010",
+      "mechanism": "check:plan_apply"
+    },
+    {
+      "rule": "EFCT-013",
+      "mechanism": "fitness:test_concurrency_documented"
+    },
+    {
+      "rule": "EFCT-014",
+      "mechanism": "fitness:test_concurrency_documented"
+    },
+    {
+      "rule": "EFCT-015",
+      "mechanism": "fitness:test_single_writer"
+    },
+    {
+      "rule": "ERR-001",
+      "mechanism": "check:error_channels"
+    },
+    {
+      "rule": "ERR-004",
+      "mechanism": "check:error_channels"
+    },
+    {
+      "rule": "ERR-006",
+      "mechanism": "check:exception_shape"
+    },
+    {
+      "rule": "ERR-008",
+      "mechanism": "auto:ruff:BLE001"
+    },
+    {
+      "rule": "ERR-009",
+      "mechanism": "auto:ruff:TRY300"
+    },
+    {
+      "rule": "ERR-010",
+      "mechanism": "check:exception_shape"
+    },
+    {
+      "rule": "ERR-012",
+      "mechanism": "check:assert_usage"
+    },
+    {
+      "rule": "ERR-013",
+      "mechanism": "check:boundary_parsing"
+    },
+    {
+      "rule": "ERR-015",
+      "mechanism": "fitness:test_no_unhandled_escape"
+    },
+    {
+      "rule": "ERR-016",
+      "mechanism": "fitness:test_fault_containment"
+    },
+    {
+      "rule": "EVID-001",
+      "mechanism": "fitness:test_evidence_registry_joins_rules"
+    },
+    {
+      "rule": "EVID-002",
+      "mechanism": "fitness:test_strategy_claims_are_explicit"
+    },
+    {
+      "rule": "EVID-003",
+      "mechanism": "fitness:test_proxy_claims_preserve_residuals"
+    },
+    {
+      "rule": "EVID-004",
+      "mechanism": "fitness:test_rejection_credit_is_witnessed"
+    },
+    {
+      "rule": "EVID-005",
+      "mechanism": "fitness:test_generated_rules_publish_no_gate_outcome"
+    },
+    {
+      "rule": "EVID-006",
+      "mechanism": "fitness:test_warrants_are_typed"
+    },
+    {
+      "rule": "EVID-007",
+      "mechanism": "fitness:test_field_observations_resolve"
+    },
+    {
+      "rule": "EVID-008",
+      "mechanism": "fitness:test_rule_migrations_are_total"
+    },
+    {
+      "rule": "FLOW-002",
+      "mechanism": "check:oracle_declared"
+    },
+    {
+      "rule": "FLOW-003",
+      "mechanism": "fitness:test_decisions_recorded"
+    },
+    {
+      "rule": "FLOW-004",
+      "mechanism": "fitness:test_decision_records_are_appended"
+    },
+    {
+      "rule": "FLOW-005",
+      "mechanism": "fitness:test_overruled_objections_are_kept"
+    },
+    {
+      "rule": "FLOW-006",
+      "mechanism": "fitness:test_binding_rules_have_mechanisms"
+    },
+    {
+      "rule": "FLOW-007",
+      "mechanism": "fitness:test_checks_can_fail"
+    },
+    {
+      "rule": "FLOW-008",
+      "mechanism": "check:deviation_recorded"
+    },
+    {
+      "rule": "FLOW-009",
+      "mechanism": "fitness:test_gate_suite_defined"
+    },
+    {
+      "rule": "FLOW-011",
+      "mechanism": "fitness:test_envelope_conforms"
+    },
+    {
+      "rule": "FLOW-012",
+      "mechanism": "fitness:test_report_records_every_non_pass_as_a_deviation"
+    },
+    {
+      "rule": "LEARN-001",
+      "mechanism": "check:session_recorded"
+    },
+    {
+      "rule": "LEARN-004",
+      "mechanism": "check:learning_scope"
+    },
+    {
+      "rule": "LEARN-005",
+      "mechanism": "check:ledger_append_only"
+    },
+    {
+      "rule": "LEARN-009",
+      "mechanism": "check:promotion_due"
+    },
+    {
+      "rule": "LEARN-010",
+      "mechanism": "check:learning_size"
+    },
+    {
+      "rule": "OPS-001",
+      "mechanism": "check:capabilities"
+    },
+    {
+      "rule": "OPS-002",
+      "mechanism": "check:capabilities"
+    },
+    {
+      "rule": "OPS-003",
+      "mechanism": "check:operational_model"
+    },
+    {
+      "rule": "OPS-004",
+      "mechanism": "check:operational_model"
+    },
+    {
+      "rule": "OPS-005",
+      "mechanism": "check:operational_model"
+    },
+    {
+      "rule": "OPS-006",
+      "mechanism": "check:operational_model"
+    },
+    {
+      "rule": "OPS-007",
+      "mechanism": "check:operational_model"
+    },
+    {
+      "rule": "OPS-008",
+      "mechanism": "check:operational_model"
+    },
+    {
+      "rule": "SEC-001",
+      "mechanism": "check:security_model"
+    },
+    {
+      "rule": "SEC-002",
+      "mechanism": "check:security_model"
+    },
+    {
+      "rule": "SEC-003",
+      "mechanism": "check:adversarial_review"
+    },
+    {
+      "rule": "SEC-004",
+      "mechanism": "check:adversarial_review"
+    },
+    {
+      "rule": "TEAMS-001",
+      "mechanism": "check:dispatch_recorded"
+    },
+    {
+      "rule": "TEAMS-002",
+      "mechanism": "check:dispatch_recorded"
+    },
+    {
+      "rule": "TEAMS-003",
+      "mechanism": "fitness:test_completion_hook_enforces_the_gate"
+    },
+    {
+      "rule": "TEST-001",
+      "mechanism": "fitness:test_unit_layer_is_pure"
+    },
+    {
+      "rule": "TEST-002",
+      "mechanism": "fitness:test_layers_populated"
+    },
+    {
+      "rule": "TEST-004",
+      "mechanism": "check:oracle_declared"
+    },
+    {
+      "rule": "TEST-007",
+      "mechanism": "fitness:test_property_suites_are_generated"
+    },
+    {
+      "rule": "TEST-008",
+      "mechanism": "fitness:test_goldens_reviewed"
+    },
+    {
+      "rule": "TEST-009",
+      "mechanism": "fitness:test_fault_schedules_are_data"
+    },
+    {
+      "rule": "TEST-010",
+      "mechanism": "fitness:test_fault_catalogue"
+    },
+    {
+      "rule": "TEST-011",
+      "mechanism": "fitness:test_fault_containment"
+    },
+    {
+      "rule": "TEST-012",
+      "mechanism": "fitness:test_interruption_recovers"
+    },
+    {
+      "rule": "TEST-014",
+      "mechanism": "check:compound_gate"
+    },
+    {
+      "rule": "TEST-015",
+      "mechanism": "fitness:test_checks_can_fail"
+    },
+    {
+      "rule": "TEST-016",
+      "mechanism": "check:test_weakening"
+    },
+    {
+      "rule": "TEST-018",
+      "mechanism": "fitness:test_no_rerun_dismissal"
+    },
+    {
+      "rule": "TEST-020",
+      "mechanism": "check:contract_conformance"
+    },
+    {
+      "rule": "TYPE-001",
+      "mechanism": "auto:mypy"
+    },
+    {
+      "rule": "TYPE-001",
+      "mechanism": "auto:pyright"
+    },
+    {
+      "rule": "TYPE-002",
+      "mechanism": "auto:mypy"
+    },
+    {
+      "rule": "TYPE-002",
+      "mechanism": "check:domain_purity"
+    },
+    {
+      "rule": "TYPE-003",
+      "mechanism": "auto:mypy"
+    },
+    {
+      "rule": "TYPE-003",
+      "mechanism": "auto:ruff:PGH003"
+    },
+    {
+      "rule": "TYPE-005",
+      "mechanism": "check:boundary_parsing"
+    },
+    {
+      "rule": "TYPE-006",
+      "mechanism": "check:domain_purity"
+    },
+    {
+      "rule": "TYPE-007",
+      "mechanism": "check:domain_purity"
+    },
+    {
+      "rule": "TYPE-008",
+      "mechanism": "check:domain_purity"
+    },
+    {
+      "rule": "TYPE-010",
+      "mechanism": "check:boundary_parsing"
+    },
+    {
+      "rule": "TYPE-013",
+      "mechanism": "auto:mypy"
+    }
+  ],
+  "strategy_gap": 32,
+  "why": "Ratchet exact rule-mechanism witnesses and add the nine missing observers for previously multi-mechanism rules."
 }

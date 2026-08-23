@@ -16,7 +16,7 @@ import sys
 from collections import Counter
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TYPE_CHECKING, Final, Never, TypeVar, cast
+from typing import TYPE_CHECKING, Final, Never, TypeAlias, TypeVar, cast
 
 from discipline_core import REPO_ROOT, Force, mechanism_is_implemented
 
@@ -26,6 +26,9 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from discipline_core import Rule
+
+## Either a legacy rule wildcard or an exact `(rule, mechanism)` witness.
+DiscriminationWitness: TypeAlias = str | tuple[str, str]
 
 ## The authored registry. It is deliberately not generated: evidence judgments
 ## must be reviewed rather than inferred from the existence of a checker.
@@ -38,6 +41,8 @@ OBSERVATIONS_PATH: Final = REPO_ROOT / "discipline" / "meta" / "observations.jso
 _CAPABILITY = re.compile(r"^[a-z][a-z0-9_]*$")
 ## Stable field-evidence identifiers are versioned independently from rule ids.
 _OBSERVATION_ID = re.compile(r"^V[0-9]+E-[0-9]{3}$")
+## Exact arity of a `(rule id, mechanism)` discrimination witness.
+_WITNESS_PARTS: Final = 2
 
 ## Type variable preserving the concrete string-enum class passed to `_enum`.
 _EnumT = TypeVar("_EnumT", bound=StrEnum)
@@ -548,14 +553,14 @@ def _migration(value: object, where: str) -> Migration:
 def validate_evidence(
     registry: EvidenceRegistry,
     rules: Sequence[Rule],
-    discriminated: AbstractSet[str],
+    discriminated: AbstractSet[DiscriminationWitness],
     observation_ids: AbstractSet[str] | None = None,
 ) -> list[EvidenceFinding]:
     """Check cross-record semantics the structural parser cannot know.
 
     @param registry parsed evidence layer
     @param rules normative rules to join by stable id
-    @param discriminated rule ids with a witnessed must-reject case
+    @param discriminated exact rule/mechanism pairs, or legacy rule-id wildcards
     @param observation_ids resolvable field-evidence ids, when the registry is available
     @return every mismatch in stable rule-id order
     """
@@ -578,14 +583,14 @@ def validate_evidence(
 def _validate_record(
     rule: Rule,
     evidence: RuleEvidence,
-    discriminated: AbstractSet[str],
+    discriminated: AbstractSet[DiscriminationWitness],
     observation_ids: AbstractSet[str] | None,
 ) -> list[EvidenceFinding]:
     """Validate one joined normative/evidence pair.
 
     @param rule normative source record
     @param evidence evidence record with the same id
-    @param discriminated rule ids witnessed rejecting a mutation
+    @param discriminated exact rule/mechanism pairs, or legacy rule-id wildcards
     @param observation_ids resolvable field-evidence ids, or None when unavailable
     @return semantic mismatches for this pair
     """
@@ -611,7 +616,9 @@ def _validate_record(
                     "E008", rule.rule_id, f"{strategy.mechanism} has no must-reject case"
                 )
             )
-        if strategy.is_automated and rule.rule_id not in discriminated:
+        if strategy.is_automated and not _strategy_witnessed(
+            rule.rule_id, strategy.mechanism, discriminated
+        ):
             findings.append(
                 EvidenceFinding(
                     "E009", rule.rule_id, f"{strategy.mechanism} is not witnessed rejecting"
@@ -627,6 +634,29 @@ def _validate_record(
                 )
             )
     return findings
+
+
+def _strategy_witnessed(
+    rule_id: str,
+    mechanism: str,
+    discriminated: AbstractSet[DiscriminationWitness],
+) -> bool:
+    """Whether this exact strategy has a rejection witness.
+
+    A bare rule id remains a supported input for synthetic tests and v3 matrices.
+    Native v4 matrices publish exact pairs so one mechanism cannot lend credit to
+    another mechanism attached to the same rule.
+
+    @param rule_id normative stable id
+    @param mechanism exact heading mechanism
+    @param discriminated exact pairs or legacy rule-id wildcards
+    @return whether rejection credit resolves
+    """
+    return (
+        rule_id in discriminated
+        or (rule_id, mechanism) in discriminated
+        or (rule_id, "") in discriminated
+    )
 
 
 def _retirement_findings(rule: Rule, evidence: RuleEvidence) -> list[EvidenceFinding]:
@@ -721,17 +751,16 @@ def verification_state(
     return state
 
 
-def discrimination_covered(root: Path = REPO_ROOT) -> frozenset[str] | None:
-    """Load the witnessed rule ids from one repository's own mutation matrix.
+def _discrimination_value(root: Path, getter_name: str) -> object | None:
+    """Load one value from a repository's own mutation matrix by path.
 
-    The module is imported by path rather than by name. A vendored or synthetic
-    corpus must never receive credit from whichever ``discrimination`` module
-    happens to be importable in the caller's environment. ``None`` means there
-    is no trustworthy matrix; an empty set means a matrix loaded and witnessed
-    no rules.
+    Importing by path prevents a vendored or synthetic corpus from receiving
+    credit from whichever ``discrimination`` module is already importable in the
+    caller's environment.
 
     @param root repository whose matrix supplies the evidence
-    @return witnessed stable ids, or None when the matrix is absent or malformed
+    @param getter_name zero-argument matrix function to invoke
+    @return the returned value, or None when the matrix cannot be trusted
     """
     source = root / "enforce" / "discrimination.py"
     if not source.is_file():
@@ -744,7 +773,7 @@ def discrimination_covered(root: Path = REPO_ROOT) -> frozenset[str] | None:
     sys.modules[spec.name] = discrimination
     try:
         spec.loader.exec_module(discrimination)
-        getter: object = getattr(discrimination, "covered", None)
+        getter: object = getattr(discrimination, getter_name, None)
         if not callable(getter):
             return None
         result: object = getter()
@@ -752,11 +781,49 @@ def discrimination_covered(root: Path = REPO_ROOT) -> frozenset[str] | None:
         return None
     finally:
         sys.modules.pop(spec.name, None)
+    return result
+
+
+def discrimination_covered(root: Path = REPO_ROOT) -> frozenset[str] | None:
+    """Load rule ids that have at least one declared mutation.
+
+    ``None`` means there is no trustworthy matrix; an empty set means a matrix
+    loaded and declared no rules.
+
+    @param root repository whose matrix supplies the evidence
+    @return witnessed stable ids, or None when the matrix is absent or malformed
+    """
+    result = _discrimination_value(root, "covered")
     if not isinstance(result, (set, frozenset)) or not all(
         isinstance(item, str) for item in result
     ):
         return None
     return frozenset(result)
+
+
+def discrimination_witnesses(
+    root: Path = REPO_ROOT,
+) -> frozenset[DiscriminationWitness] | None:
+    """Load exact strategy witnesses, falling back to legacy rule wildcards.
+
+    @param root repository whose matrix supplies the evidence
+    @return exact pairs or v3 rule-id wildcards, None for a malformed matrix
+    """
+    result = _discrimination_value(root, "covered_strategies")
+    if result is None:
+        return discrimination_covered(root)
+    if not isinstance(result, (set, frozenset)):
+        return None
+    witnesses: set[DiscriminationWitness] = set()
+    for item in result:
+        if not (
+            isinstance(item, tuple)
+            and len(item) == _WITNESS_PARTS
+            and all(isinstance(part, str) for part in item)
+        ):
+            return None
+        witnesses.add(item)
+    return frozenset(witnesses)
 
 
 def _expected_kind(mechanism: str) -> frozenset[MechanismKind]:

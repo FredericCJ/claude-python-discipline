@@ -6981,26 +6981,12 @@
       ],
       "strategies": [
         {
-          "mechanism": "auto:mypy",
-          "kind": "tool",
-          "relation": "proxy",
-          "proposition": "auto:mypy reports no diagnostic corresponding to TYPE-006 under the repository configuration and declared scan roots.",
-          "residual": "Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement.",
-          "must_pass": "command:`mypy --strict` · `python -m checks.domain_purity`",
-          "must_reject": "pending:TYPE-006",
-          "platforms": [
-            "windows",
-            "linux"
-          ],
-          "not_applicable": "never while this rule is active for the governed repository"
-        },
-        {
           "mechanism": "check:domain_purity",
           "kind": "static",
           "relation": "proxy",
           "proposition": "check:domain_purity emits a finding tagged TYPE-006 when its implemented syntax predicate matches inside the repository declaration's scan roots.",
           "residual": "Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement.",
-          "must_pass": "command:`mypy --strict` · `python -m checks.domain_purity`",
+          "must_pass": "command:`python -m checks.domain_purity`",
           "must_reject": "pending:TYPE-006",
           "platforms": [
             "windows",

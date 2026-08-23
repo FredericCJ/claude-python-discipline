@@ -60,6 +60,11 @@ class Mutation:
     ## of the rule it exercises. An entry that cannot answer this is a rubber
     ## stamp and should not be here.
     source: str
+    ## Exact automated strategy observed by this entry. It may be omitted only
+    ## when the rule has one automated strategy, in which case the evidence join
+    ## treats it as an unambiguous rule-local witness. Rules with several
+    ## mechanisms must name one here and carry a separate entry for each.
+    mechanism: str = ""
     ## Which tree to damage. See `BASES`.
     base: str = "reference"
     ## Paths to delete, relative to the tree root.
@@ -316,6 +321,7 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "perform I/O. Phase 5 narrowed this to exempt PurePosixPath, so "
             "the still-forbidden case is pinned here against that narrowing."
         ),
+        mechanism="check:domain_purity",
         replace=(
             (
                 "src/refpkg/domain/model.py",
@@ -426,6 +432,7 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "track exists to close, and a signature is what every caller is "
             "held to."
         ),
+        mechanism="check:domain_purity",
         replace=(
             (
                 "src/refpkg/domain/plan.py",
@@ -504,6 +511,7 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "The rule's clause -- nothing is swallowed. A bare pass in a "
             "handler is the form that destroys the diagnostic chain entirely."
         ),
+        mechanism="check:raise_from",
         replace=(
             (
                 "src/refpkg/app/prune.py",
@@ -545,6 +553,7 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "universal when DOC-002 and DOC-007 became conditional on a "
             "declared engine."
         ),
+        mechanism="check:doc_coverage",
         replace=(
             (
                 "src/refpkg/domain/model.py",
@@ -825,6 +834,7 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "standing between a tidy diagram and a cycle, and nobody had "
             "watched it break."
         ),
+        mechanism="auto:import-linter",
         tool="import-linter",
         diagnostic="ARCH-001 layers point inward",
         replace=(
@@ -843,6 +853,7 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "misbehaving component cannot contaminate a healthy one only if "
             "it cannot reach it."
         ),
+        mechanism="auto:import-linter",
         tool="import-linter",
         diagnostic="ARCH-003 adapters are independent",
         replace=(
@@ -1064,6 +1075,7 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "narrow, justified and counted; a bare type-ignore is none of the "
             "three and silences everything on the line forever."
         ),
+        mechanism="auto:ruff:PGH003",
         tool="ruff",
         diagnostic="PGH003",
         replace=(
@@ -1166,6 +1178,7 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "code against this exact rule, and nothing had ever confirmed "
             "the pairing by making it happen."
         ),
+        mechanism="auto:mypy",
         tool="mypy",
         diagnostic="no-untyped-def",
         replace=(
@@ -1770,6 +1783,7 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "The companion formats the exception into the log string and asserts "
             "DIAG-015, preserving the exact structured-logging predicate."
         ),
+        mechanism="check:log_once",
         proof="enforce/checks/test_safety_checks.py::test_interpolating_the_exception_fires",
     ),
     Mutation(
@@ -1842,6 +1856,7 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             "The companion places a primitive Literal union in the domain and "
             "asserts TYPE-006 from the domain-purity mechanism."
         ),
+        mechanism="check:domain_purity",
         proof="enforce/checks/test_checks.py::test_domain_literal_union_fires",
     ),
     Mutation(
@@ -2365,6 +2380,172 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
         write=(("pytest.ini", "[pytest]\naddopts = --reruns 3\n"),),
         node="enforce/fitness/test_determinism.py::test_no_rerun_dismissal",
     ),
+    # -------------------------------- exact witnesses for multi-mechanism rules
+    Mutation(
+        rule_id="ARCH-001",
+        summary="the local dependency checker sees domain importing shell",
+        source=(
+            "The repository-local checker and import-linter are distinct oracles; "
+            "this entry runs dependency_boundaries itself against the outward edge."
+        ),
+        mechanism="check:dependency_boundaries",
+        replace=((
+            "src/refpkg/domain/plan.py",
+            "from __future__ import annotations",
+            "from __future__ import annotations\n\nfrom refpkg.shell import envelope",
+        ),),
+    ),
+    Mutation(
+        rule_id="ARCH-002",
+        summary="import-linter sees pathlib enter the domain",
+        source=(
+            "The ARCH-002 forbidden-import contract names pathlib explicitly; this "
+            "observes that external graph mechanism independently of domain_purity."
+        ),
+        mechanism="auto:import-linter",
+        tool="import-linter",
+        diagnostic="ARCH-002 domain is pure",
+        replace=((
+            "src/refpkg/domain/model.py",
+            "from __future__ import annotations",
+            "from __future__ import annotations\n\nfrom pathlib import Path",
+        ),),
+    ),
+    Mutation(
+        rule_id="ARCH-003",
+        summary="the local dependency checker sees one adapter import another",
+        source=(
+            "The direct source-edge checker has a separate predicate from the "
+            "import-linter independence contract and must reject the same breach."
+        ),
+        mechanism="check:dependency_boundaries",
+        replace=((
+            "src/refpkg/adapters/clock/real.py",
+            "from __future__ import annotations",
+            (
+                "from __future__ import annotations\n\n"
+                "from refpkg.adapters.files import real as _files"
+            ),
+        ),),
+    ),
+    Mutation(
+        rule_id="DIAG-008",
+        summary="Ruff sees a broad Exception catch outside the process boundary",
+        source=(
+            "BLE001 is a distinct configured verifier from raise_from; the broad "
+            "catch is its exact observable predicate and must produce that code."
+        ),
+        mechanism="auto:ruff:BLE001",
+        tool="ruff",
+        diagnostic="BLE001",
+        replace=((
+            "src/refpkg/app/prune.py",
+            "from __future__ import annotations",
+            (
+                "from __future__ import annotations\n\n\n"
+                "def swallow() -> None:\n"
+                '    """Catch an unbounded family.\n\n    @return nothing\n    """\n'
+                "    try:\n        pass\n"
+                "    except Exception:\n        return"
+            ),
+        ),),
+    ),
+    Mutation(
+        rule_id="DIAG-015",
+        summary="Ruff sees an exception interpolated eagerly into a log string",
+        source=(
+            "G004 independently observes the eager-formatting half of DIAG-015; "
+            "the local log_once checker cannot lend its rejection credit here."
+        ),
+        mechanism="auto:ruff:G004",
+        tool="ruff",
+        diagnostic="G004",
+        replace=((
+            "src/refpkg/shell/cli.py",
+            "from __future__ import annotations",
+            (
+                "from __future__ import annotations\n\nimport logging\n\n\n"
+                "def report(error: Exception) -> None:\n"
+                '    """Log a failure.\n\n    @param error the failure\n    """\n'
+                '    logging.getLogger(__name__).error(f"failed: {error}")'
+            ),
+        ),),
+    ),
+    Mutation(
+        rule_id="DOC-001",
+        summary="Ruff sees a production module without a module docstring",
+        source=(
+            "D100 covers the module-level subset of DOC-001 independently from "
+            "doc_coverage, so a new undocumented module must emit the exact code."
+        ),
+        mechanism="auto:ruff:D100",
+        tool="ruff",
+        diagnostic="D100",
+        write=(("src/refpkg/domain/undocumented.py", "VALUE: int = 1\n"),),
+    ),
+    Mutation(
+        rule_id="TYPE-001",
+        summary="pyright sees an unannotated domain function",
+        source=(
+            "The second strict checker must reject independently; unknown parameter "
+            "typing is pyright's diagnostic for an unannotated public function."
+        ),
+        mechanism="auto:pyright",
+        tool="pyright",
+        diagnostic='Type annotation is missing for parameter "value"',
+        replace=((
+            "src/refpkg/domain/plan.py",
+            "from __future__ import annotations",
+            (
+                "from __future__ import annotations\n\n\n"
+                "def unchecked(value):\n"
+                '    """Return an unchecked value.\n\n'
+                '    @param value unknown input\n    @return unknown output\n    """\n'
+                "    return value"
+            ),
+        ),),
+    ),
+    Mutation(
+        rule_id="TYPE-002",
+        summary="mypy sees explicit Any in a domain signature",
+        source=(
+            "The reference mypy configuration enables disallow_any_explicit for "
+            "domain modules; this independently witnesses the checker-side ban."
+        ),
+        mechanism="auto:mypy",
+        tool="mypy",
+        diagnostic="[explicit-any]",
+        replace=((
+            "src/refpkg/domain/plan.py",
+            "from __future__ import annotations",
+            (
+                "from __future__ import annotations\n\nfrom typing import Any\n\n\n"
+                "def widen(value: Any) -> Any:\n"
+                '    """Erase both sides.\n\n'
+                '    @param value anything\n    @return anything\n    """\n'
+                "    return value"
+            ),
+        ),),
+    ),
+    Mutation(
+        rule_id="TYPE-003",
+        summary="mypy sees a blanket type ignore without an error code",
+        source=(
+            "Mypy's ignore-without-code verifier is independent from Ruff PGH003; "
+            "the same escape hatch must be rejected by both configured tools."
+        ),
+        mechanism="auto:mypy",
+        tool="mypy",
+        diagnostic="[ignore-without-code]",
+        replace=((
+            "src/refpkg/domain/plan.py",
+            "from __future__ import annotations",
+            (
+                "from __future__ import annotations\n\n"
+                '_ANYTHING: int = "not an int"  # type: ignore'
+            ),
+        ),),
+    ),
 )
 
 
@@ -2385,3 +2566,16 @@ def covered() -> frozenset[str]:
     @return the rule ids `D` counts
     """
     return frozenset(mutation.rule_id for mutation in MUTATIONS)
+
+
+def covered_strategies() -> frozenset[tuple[str, str]]:
+    """Which exact automated strategies have a declared rejection witness.
+
+    An empty mechanism is an unambiguous rule-local witness and is valid only
+    when the evidence registry gives that rule one automated strategy. The
+    evidence validator owns that join because this table deliberately does not
+    duplicate the normative registry.
+
+    @return rule and mechanism pairs declared by the matrix
+    """
+    return frozenset((mutation.rule_id, mutation.mechanism) for mutation in MUTATIONS)

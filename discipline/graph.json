@@ -1743,7 +1743,7 @@
    "type": "module",
    "label": "Typing and Contracts",
    "path": "discipline/law/TYPE.md",
-   "tokens": 2219,
+   "tokens": 2211,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -10128,12 +10128,6 @@
    "type": "enforced_by",
    "src": "TYPE-005",
    "dst": "mech:check:boundary_parsing",
-   "origin": "derived"
-  },
-  {
-   "type": "enforced_by",
-   "src": "TYPE-006",
-   "dst": "mech:auto:mypy",
    "origin": "derived"
   },
   {

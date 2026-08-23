@@ -46,6 +46,7 @@ from discipline_core import (
 from evidence_model import (
     EvidenceParseError,
     discrimination_covered,
+    discrimination_witnesses,
     load_evidence,
     load_observations,
     validate_evidence,
@@ -1311,8 +1312,8 @@ def check_evidence(
         )
 
     rules = [rule for document in documents for rule in document.rules]
-    covered = discrimination_covered(layout.root) or frozenset()
-    mismatches = validate_evidence(registry, rules, covered, observation_ids)
+    witnesses = discrimination_witnesses(layout.root) or frozenset()
+    mismatches = validate_evidence(registry, rules, witnesses, observation_ids)
     unwitnessed = [finding for finding in mismatches if finding.code == "E009"]
     for mismatch in (finding for finding in mismatches if finding.code != "E009"):
         code, severity, remediation = _EVIDENCE_CODES[mismatch.code]

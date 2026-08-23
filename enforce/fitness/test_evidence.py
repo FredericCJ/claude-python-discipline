@@ -19,7 +19,7 @@ from evidence_model import (
     MigrationDisposition,
     ObservationKind,
     VerificationState,
-    discrimination_covered,
+    discrimination_witnesses,
     load_evidence,
     load_observations,
     validate_evidence,
@@ -135,19 +135,23 @@ def test_proxy_claims_preserve_residuals() -> None:
 
 @decides("EVID-004")
 def test_rejection_credit_is_witnessed() -> None:
-    """EVID-004: only rule IDs in the executed matrix claim rejection credit."""
+    """EVID-004: only exact strategies in the matrix claim rejection credit."""
     root = subject_root()
-    covered = discrimination_covered(root)
-    assert covered is not None, "the discrimination matrix is absent or malformed"
+    witnessed = discrimination_witnesses(root)
+    assert witnessed is not None, "the discrimination matrix is absent or malformed"
     credited = {
-        rule_id
+        (rule_id, strategy.mechanism)
         for rule_id, record in evidence(root).rules.items()
-        if any(
-            (strategy.must_reject or "").startswith("discrimination:")
-            for strategy in record.strategies
-        )
+        for strategy in record.strategies
+        if (strategy.must_reject or "").startswith("discrimination:")
     }
-    assert credited <= covered, sorted(credited - covered)
+    missing = {
+        pair for pair in credited
+        if pair not in witnessed
+        and (pair[0], "") not in witnessed
+        and pair[0] not in witnessed
+    }
+    assert not missing, sorted(missing)
 
 
 @decides("EVID-005")

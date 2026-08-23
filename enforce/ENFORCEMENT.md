@@ -6,7 +6,7 @@ This ledger keeps unlike claims unlike. A rule can be normatively binding while 
 
 - **176** binding rules; **0** lack an available declared strategy.
 - **26** advisory rules and **0** open rules.
-- **191** exact strategy records: **31** direct and **160** proxy claims.
+- **190** exact strategy records: **31** direct and **159** proxy claims.
 - **138/166** rules with automated strategies have inherited rule-level rejection evidence; v4 still owes strategy-level attribution.
 - **21/212** rules carry named field observations.
 - **105/105** named mechanisms resolve locally or delegate explicitly; **0** local mechanisms are absent.
@@ -17,9 +17,9 @@ Measured against this tree, not copied from the rule heading. `discipline/rules.
 
 | State | Rules | Means |
 |---|---|---|
-| `local-verifier` | 131 | repository-local code observes every strategy |
+| `local-verifier` | 132 | repository-local code observes every strategy |
 | `external-verifier` | 24 | every strategy delegates to a configured tool |
-| `mixed-verifiers` | 11 | several verifier kinds contribute |
+| `mixed-verifiers` | 10 | several verifier kinds contribute |
 | `structured-review` | 10 | judgment is recorded in a checked review artifact |
 | `unbuilt` | 0 | at least one named local verifier is absent |
 | `undeclared` | 26 | the active rule has no strategy record |
@@ -243,7 +243,7 @@ An `external-verifier` state says the strategy delegates a proposition to a tool
 | `TYPE-003` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement.; Passing excludes only the conf… | Escape hatches are narrow, justified and counted |
 | `TYPE-004` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | none | Review can miss two concepts with similar names, and distinct wrappers do not prove their conversions or invariants are correct. | Distinct concepts are distinct types |
 | `TYPE-005` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:boundary_parsing; it does not establish the full semantic benefit of the normative statement. | A constrained type is a wrapper with a parsing constructor |
-| `TYPE-006` | BINDING | `mixed-verifiers` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish the full semantic benefit of the normative statement.; Passing excludes only the conf… | Closed sets are enumerations |
+| `TYPE-006` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement. | Closed sets are enumerations |
 | `TYPE-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement. | Domain values are frozen and slotted |
 | `TYPE-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | none | Passing excludes only the configured patterns implemented by check:domain_purity; it does not establish the full semantic benefit of the normative statement. | Signatures take read-only collection types |
 | `TYPE-009` | RETIRED | `retired` | n/a | n/a | n/a | none | n/a | Ports are structural protocols |
@@ -258,7 +258,7 @@ An `external-verifier` state says the strategy delegates a proposition to a tool
 
 | Kind | Rules |
 |---|---|
-| `auto` | 38 |
+| `auto` | 37 |
 | `check` | 84 |
 | `fitness` | 58 |
 | `review` | 11 |

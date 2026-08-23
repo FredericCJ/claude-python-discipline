@@ -17,6 +17,7 @@ here is the table's own integrity.
 
 from __future__ import annotations
 
+import json
 from collections import Counter
 from pathlib import Path
 from typing import Final
@@ -128,6 +129,29 @@ def test_every_entry_chooses_one_observation_mode() -> None:
             assert not mutation.write, f"{mutation.rule_id} proof also writes fixture paths"
             assert not mutation.replace, (
                 f"{mutation.rule_id} duplicates damage already owned by {mutation.proof}"
+            )
+
+
+def test_multimechanism_rules_name_the_observed_strategy() -> None:
+    """One verifier cannot lend rejection credit to another verifier."""
+    evidence = json.loads(
+        (discrimination_root() / "meta" / "evidence.json").read_text(encoding="utf-8")
+    )["rules"]
+    for mutation in discrimination.MUTATIONS:
+        strategies = [
+            strategy["mechanism"]
+            for strategy in evidence[mutation.rule_id]["strategies"]
+            if strategy["kind"] != "structured-review"
+        ]
+        if len(strategies) > 1:
+            assert mutation.mechanism, (
+                f"{mutation.rule_id} has {len(strategies)} automated strategies; "
+                "the mutation must name the one it observed"
+            )
+        if mutation.mechanism:
+            assert mutation.mechanism in strategies, (
+                f"{mutation.rule_id} attributes rejection to undeclared "
+                f"mechanism {mutation.mechanism!r}"
             )
 
 

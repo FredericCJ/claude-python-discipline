@@ -160,3 +160,12 @@ forbidden_modules = [
     "pytest",
 ]
 allow_indirect_imports = false
+
+# EFCT-012, API-004 -- storage representation is reachable through its owner,
+# never by the domain, application, or shell directly.
+[[tool.importlinter.contracts]]
+name = "EFCT-012 storage has one owner"
+type = "forbidden"
+source_modules = ["refpkg.domain", "refpkg.app", "refpkg.shell"]
+forbidden_modules = ["refpkg.adapters.files.raw"]
+allow_indirect_imports = false

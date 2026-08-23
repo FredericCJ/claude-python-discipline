@@ -13,7 +13,7 @@ because `narrow` closes the union against `Never` (`ERR-002`).
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, NoReturn, TypeAlias
+from typing import TYPE_CHECKING, Never, TypeAlias
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -118,7 +118,7 @@ def plan_prune(entries: Sequence[Entry], policy: Policy, now: Instant) -> Outcom
     return Plan(doomed=doomed, kept=tuple(spared) + surviving)
 
 
-def narrow(outcome: Outcome) -> NoReturn:
+def narrow(outcome: Never) -> Never:
     """Fail to compile if a new arm is added to `Outcome` and not handled.
 
     Called from the `else` of an exhaustive match. `mypy --strict` narrows the

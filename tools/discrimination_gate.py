@@ -39,6 +39,7 @@ import import_gate
 import lint_gate
 import type_gate
 from discipline_core import Force, has_mechanical_claim, iter_documents
+from evidence_model import EVIDENCE_PATH, load_evidence
 
 ## The repository root, one level up from `tools/`.
 REPO_ROOT: Final = Path(__file__).resolve().parent.parent
@@ -456,6 +457,64 @@ def undiscriminated(provoked: set[str]) -> list[str]:
     )
 
 
+def resolved_strategy_witnesses() -> frozenset[tuple[str, str]]:
+    """Resolve every matrix entry to one exact evidence strategy.
+
+    Single-strategy rules may omit ``Mutation.mechanism`` to keep the table
+    readable. Multi-strategy rules may not: a mypy observation cannot certify
+    pyright merely because both share a stable rule id.
+
+    @return exact rule/mechanism pairs represented by the matrix
+    @throws ValueError when an unqualified entry is ambiguous or undeclared
+    """
+    registry = load_evidence(EVIDENCE_PATH)
+    automated = {
+        rule_id: tuple(
+            strategy.mechanism for strategy in record.strategies
+            if strategy.is_automated
+        )
+        for rule_id, record in registry.rules.items()
+    }
+    resolved: set[tuple[str, str]] = set()
+    for rule_id, mechanism in discrimination.covered_strategies():
+        candidates = automated.get(rule_id, ())
+        if not candidates:
+            # Historical matrix entries remain readable after a rule is retired,
+            # but an inactive rule has no current strategy to ratchet.
+            continue
+        if mechanism:
+            if mechanism not in candidates:
+                message = f"{rule_id} attributes rejection to undeclared {mechanism}"
+                raise ValueError(message)
+            resolved.add((rule_id, mechanism))
+        elif len(candidates) == 1:
+            resolved.add((rule_id, candidates[0]))
+        else:
+            message = (
+                f"{rule_id} has {len(candidates)} automated strategies; "
+                "its mutation must name one"
+            )
+            raise ValueError(message)
+    return frozenset(resolved)
+
+
+def undiscriminated_strategies(
+    witnessed: set[tuple[str, str]] | frozenset[tuple[str, str]],
+) -> list[tuple[str, str]]:
+    """Exact automated strategies with no observed rejection.
+
+    @param witnessed resolved matrix pairs
+    @return missing pairs in stable rule/mechanism order
+    """
+    registry = load_evidence(EVIDENCE_PATH)
+    return sorted(
+        (rule_id, strategy.mechanism)
+        for rule_id, record in registry.rules.items()
+        for strategy in record.strategies
+        if strategy.is_automated and (rule_id, strategy.mechanism) not in witnessed
+    )
+
+
 def ratchets_held(provoked: set[str], gap: list[str],
                   baseline: dict[str, object]) -> str:
     """Whether either recorded number has slipped, and which way.
@@ -486,6 +545,25 @@ def ratchets_held(provoked: set[str], gap: list[str],
         return (f"{len(gap)} decided rule(s) are undiscriminated, above the "
                 f"recorded {ceiling}. A rule may not arrive carrying a mechanism "
                 f"and no mutation.")
+    strategy_floor = baseline.get("strategy_count")
+    strategy_ceiling = baseline.get("strategy_gap")
+    if strategy_floor is not None or strategy_ceiling is not None:
+        witnessed = resolved_strategy_witnesses()
+        if strategy_floor is not None and len(witnessed) < _baseline_integer(
+            baseline, "strategy_count", 0
+        ):
+            return (
+                f"exact strategy coverage fell from {strategy_floor} to "
+                f"{len(witnessed)}. A mechanism-level ratchet may only rise."
+            )
+        missing = undiscriminated_strategies(witnessed)
+        if strategy_ceiling is not None and len(missing) > _baseline_integer(
+            baseline, "strategy_gap", 0
+        ):
+            return (
+                f"{len(missing)} exact strategy claim(s) are undiscriminated, "
+                f"above the recorded {strategy_ceiling}."
+            )
     return ""
 
 
@@ -550,6 +628,8 @@ def main(argv: list[str] | None = None) -> int:
             print("refusing to move the floor while a declared mutation is broken",
                   file=sys.stderr)
             return EXIT_FAILED
+        strategies = resolved_strategy_witnesses()
+        strategy_gap = undiscriminated_strategies(strategies)
         BASELINE_PATH.write_text(
             json.dumps({
                 "generated_by": "tools/discrimination_gate.py --update-baseline",
@@ -560,11 +640,21 @@ def main(argv: list[str] | None = None) -> int:
                 "count": len(provoked),
                 "rules": sorted(provoked),
                 "gap": len(undiscriminated(provoked)),
+                "strategy_count": len(strategies),
+                "strategies": [
+                    {"rule": rule_id, "mechanism": mechanism}
+                    for rule_id, mechanism in sorted(strategies)
+                ],
+                "strategy_gap": len(strategy_gap),
                 "why": arguments.why,
             }, indent=2) + "\n",
             encoding="utf-8",
         )
-        print(f"discrimination: floor recorded at D={len(provoked)} -- {arguments.why}")
+        print(
+            f"discrimination: floor recorded at D={len(provoked)}, "
+            f"S={len(strategies)}, strategy gap={len(strategy_gap)} -- "
+            f"{arguments.why}"
+        )
         return EXIT_OK
 
     if status != EXIT_OK:
@@ -576,9 +666,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"discrimination: {slipped}", file=sys.stderr)
         return EXIT_FAILED
 
+    strategies = resolved_strategy_witnesses()
+    strategy_gap = undiscriminated_strategies(strategies)
     print(f"discrimination: D={len(provoked)}, floor {floor}, "
           f"{len(discrimination.MUTATIONS)} mutation(s) all provoking their rule; "
-          f"{len(gap)} decided rule(s) still undiscriminated")
+          f"S={len(strategies)}, {len(strategy_gap)} exact strategy claim(s) "
+          f"still undiscriminated; {len(gap)} rule id(s) still undiscriminated")
     return EXIT_OK
 
 

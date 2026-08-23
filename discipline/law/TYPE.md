@@ -2,7 +2,7 @@
 id: law/TYPE
 kind: law
 title: Typing and Contracts
-tokens: 2219
+tokens: 2211
 load_when:
   - "type hint"
   - "mypy"
@@ -78,11 +78,11 @@ validates and returns a result. `NewType` is prohibited for constrained values.
 - **Check** `python -m checks.boundary_parsing`
 - **See** [law/ERR]
 
-### TYPE-006 · Closed sets are enumerations  [BINDING] [auto:mypy] [check:domain_purity]
+### TYPE-006 · Closed sets are enumerations  [BINDING] [check:domain_purity]
 A value drawn from a fixed set MUST be an enumeration, not a string literal union.
 - **Why** An enumeration has one definition site that exhaustiveness checking follows;
   a literal union repeated at each use has as many definitions as usages.
-- **Check** `mypy --strict` · `python -m checks.domain_purity`
+- **Check** `python -m checks.domain_purity`
 
 ### TYPE-007 · Domain values are frozen and slotted  [BINDING] [check:domain_purity]
 Domain value types MUST be immutable dataclasses with slots.

@@ -16,7 +16,7 @@ decay: none
 
 **A proxy cannot decide its parent semantic rule.** Passing its proposition establishes only the stated syntax or behavior and leaves the printed residual. `rule-level witnessed` is deliberately weaker than v4's target: the inherited matrix proves that some strategy rejected a case for that rule, but cannot yet attribute the rejection to one exact strategy.
 
-0 of 176 binding rules lack an available declared strategy. 138 of 166 rules with automated strategies have inherited rule-level rejection evidence. 160 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
+0 of 176 binding rules lack an available declared strategy. 138 of 166 rules with automated strategies have inherited rule-level rejection evidence. 159 strategy claims are explicitly proxy claims. `enforce/ENFORCEMENT.md` expands the complete evidence ledger.
 
 ## Modules
 
@@ -43,7 +43,7 @@ decay: none
 | [law/OPS](law/OPS.md) | law | 1575 | 8 | capability manifest, operational behavior, subprocess lifecycle, network io, persistent state, generated artifact |
 | [law/SEC](law/SEC.md) | law | 1095 | 4 | security model, trust boundary, sensitive data, classification, redaction, least exposure |
 | [law/TEST](law/TEST.md) | law | 2987 | 20 | write a test, pytest, fixture, hypothesis, property test, mutation |
-| [law/TYPE](law/TYPE.md) | law | 2219 | 15 | type hint, mypy, pyright, Protocol, generic, dataclass |
+| [law/TYPE](law/TYPE.md) | law | 2211 | 15 | type hint, mypy, pyright, Protocol, generic, dataclass |
 | [ops/ALLOC](ops/ALLOC.md) | ops | 2163 | 10 | dispatch a subagent, which model, how much effort, delegate, escalate, sub-agent |
 | [ops/teams](ops/teams.md) | ops | 2592 | 6 | agent team, teammate, subagent definition, spawn an agent, task list, slash command |
 
@@ -309,7 +309,7 @@ decay: none
 | `TYPE-003` | BINDING | `external-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | Escape hatches are narrow, justified and counted |
 | `TYPE-004` | BINDING | `structured-review` | `direct` | n/a | `linux`, `windows` | Review can miss two concepts with similar names, and distinct wrappers do not prove their conve… | none | Distinct concepts are distinct types |
 | `TYPE-005` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:boundary_parsing; it does no… | none | A constrained type is a wrapper with a parsing constructor |
-| `TYPE-006` | BINDING | `mixed-verifiers` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by auto:mypy; it does not establish t… | none | Closed sets are enumerations |
+| `TYPE-006` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:domain_purity; it does not e… | none | Closed sets are enumerations |
 | `TYPE-007` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:domain_purity; it does not e… | none | Domain values are frozen and slotted |
 | `TYPE-008` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Passing excludes only the configured patterns implemented by check:domain_purity; it does not e… | none | Signatures take read-only collection types |
 | `TYPE-009` | RETIRED | `retired` | n/a | n/a | n/a | n/a | none | Ports are structural protocols |

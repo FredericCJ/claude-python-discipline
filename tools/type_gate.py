@@ -58,16 +58,20 @@ EXIT_OK: Final = 0
 EXIT_FAILED: Final = 1
 
 
-def run_mypy(root: Path) -> tuple[bool, int, str]:
+def run_mypy(root: Path, *, config: Path | None = None) -> tuple[bool, int, str]:
     """Run `mypy --strict` over the package.
 
     @param root the tree holding `src/`
+    @param config explicit project configuration, or None for root discovery
     @return whether it passed, how many files it analysed, and its output
     """
     environment = dict(os.environ, MYPYPATH=str(root / "src"))
+    arguments = [sys.executable, "-m", "mypy"]
+    if config is not None:
+        arguments.extend(("--config-file", str(config.resolve())))
+    arguments.extend(("--strict", "--explicit-package-bases", "-p", PACKAGE))
     finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
-        (sys.executable, "-m", "mypy", "--strict", "--explicit-package-bases",
-         "-p", PACKAGE),
+        arguments,
         cwd=root, env=environment, capture_output=True, text=True,
         encoding="utf-8", errors="replace", check=False, timeout=600,
     )

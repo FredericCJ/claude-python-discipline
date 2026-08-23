@@ -37,6 +37,7 @@ _WORKS = discrimination.Mutation(
     summary="a public function carries no docstring",
     source=("A known-good entry, used here to prove the runner reports success "
             "when the claim holds rather than only when it fails."),
+    mechanism="check:doc_coverage",
     replace=(("src/refpkg/domain/model.py",
               "from __future__ import annotations",
               ("from __future__ import annotations\n\n\n"
@@ -50,6 +51,7 @@ _HOLLOW = discrimination.Mutation(
     rule_id="ARCH-002",
     summary="a comment is added and nothing else",
     source="A deliberately false claim, so the runner is observed rejecting one.",
+    mechanism="check:domain_purity",
     replace=(("src/refpkg/domain/model.py",
               "from __future__ import annotations",
               "from __future__ import annotations\n\n# a comment"),),
@@ -61,6 +63,7 @@ _PROOF = discrimination.Mutation(
     summary="a companion constructs an undocumented function",
     source=("The proof mode delegates fixture construction to a test that asserts "
             "the exact DOC-001 diagnostic rather than duplicating it in the table."),
+    mechanism="check:doc_coverage",
     proof="enforce/checks/test_doc_checks.py::test_an_undocumented_module_fires",
 )
 
@@ -223,6 +226,7 @@ _AUTO_WORKS = discrimination.Mutation(
     rule_id="ERR-008",
     summary="an except clause catches Exception and names nothing",
     source="A known-good auto entry, to prove the runner credits a true claim.",
+    mechanism="auto:ruff:BLE001",
     tool="ruff",
     diagnostic="BLE001",
     replace=(("src/refpkg/app/prune.py",
@@ -237,6 +241,7 @@ _AUTO_HOLLOW = discrimination.Mutation(
     rule_id="ERR-008",
     summary="a comment is added and BLE001 is claimed anyway",
     source="A deliberately false auto claim, so the runner is watched rejecting one.",
+    mechanism="auto:ruff:BLE001",
     tool="ruff",
     diagnostic="BLE001",
     replace=(("src/refpkg/app/prune.py",
@@ -359,6 +364,26 @@ def test_a_baseline_with_no_ceiling_is_not_treated_as_zero(
     monkeypatch.setattr(discrimination_gate, "BASELINE_PATH", baseline)
     monkeypatch.setattr(discrimination, "MUTATIONS", (_WORKS,))
     assert discrimination_gate.main([]) == discrimination_gate.EXIT_OK
+
+
+def test_the_exact_strategy_floor_may_not_fall(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A mypy witness cannot preserve a floor that also recorded pyright.
+
+    @param monkeypatch isolates the strategy census from the committed matrix
+    """
+    monkeypatch.setattr(
+        discrimination_gate,
+        "resolved_strategy_witnesses",
+        lambda: frozenset({("TYPE-001", "auto:mypy")}),
+    )
+    message = discrimination_gate.ratchets_held(
+        {"TYPE-001"},
+        [],
+        {"count": 1, "strategy_count": 2},
+    )
+    assert "strategy coverage fell" in message
 
 
 def test_the_gap_counts_only_rules_a_mechanism_actually_decides() -> None:

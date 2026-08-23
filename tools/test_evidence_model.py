@@ -258,6 +258,25 @@ def test_declared_mutation_must_have_been_witnessed(tmp_path: Path) -> None:
     assert "E009" in {finding.code for finding in findings}
 
 
+def test_one_tool_cannot_lend_rejection_credit_to_another(tmp_path: Path) -> None:
+    """Exact strategy pairs prevent a shared rule id from masking a gap."""
+    payload = valid_payload()
+    pyright = deepcopy(strategy(payload))
+    pyright["mechanism"] = "auto:pyright"
+    strategies = record(payload)["strategies"]
+    assert isinstance(strategies, list)
+    strategies.append(pyright)
+    registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
+    findings = validate_evidence(
+        registry,
+        [rule(mechanisms=("auto:mypy", "auto:pyright"))],
+        {("TYPE-001", "auto:mypy")},
+    )
+    assert [finding.message for finding in findings if finding.code == "E009"] == [
+        "auto:pyright is not witnessed rejecting"
+    ]
+
+
 def test_tag_and_kind_cannot_disagree(tmp_path: Path) -> None:
     """An external-tool tag cannot be presented as a local static check."""
     payload = valid_payload()
