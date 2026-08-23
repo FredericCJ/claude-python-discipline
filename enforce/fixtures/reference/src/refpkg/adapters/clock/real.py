@@ -26,9 +26,14 @@ class SystemClock:
         @return the current instant
         @throws ClockUnavailable when the host clock reports a time before the
             epoch, which a misconfigured or unset real-time clock does
+        @par Effects
+        Reads the host wall clock once and publishes no state change.
         """
+        # Convert one host-clock reading to the domain's whole-second representation.
         seconds = int(time.time())
         if seconds < 0:
+            # Translate an unusable host epoch reading into the clock port's error family.
             message = f"host clock reports {seconds}, which is before the epoch"
             raise ClockUnavailable(message)
+        # Expose the validated reading as the domain's instant value.
         return Instant(seconds)

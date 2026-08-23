@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 from refpkg.adapters.faults import FaultSchedule
 from refpkg.ports.errors import StoreOperation, StoreUnavailable
 
+# Keep iterable and domain entry contracts type-only in the concrete adapter.
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
@@ -39,17 +40,22 @@ class FaultyFileStore:
         @param schedule which `delete` calls fail; healthy when omitted
         """
         ## Current entries keyed by their unique repository-relative path.
-        self._entries = {entry.path: entry for entry in entries}
+        self._entries = {  # Collapse duplicates into the path-identity boundary.
+            entry.path: entry for entry in entries
+        }
         ## Deterministic deletion indexes at which the fake raises.
-        self._schedule = schedule if schedule is not None else FaultSchedule.healthy()
+        self._schedule = (  # Resolve omission to the explicit healthy schedule.
+            schedule if schedule is not None else FaultSchedule.healthy()
+        )
         ## Number of deletion calls already attempted against this fake.
-        self._deletes = 0
+        self._deletes = 0  # Start the one-based fault index before any deletion.
 
     def entries(self) -> Sequence[Entry]:
         """Every entry held, in path order.
 
         @return the entries, empty when the store is empty
         """
+        # Project each indexed entry into deterministic ascending path order.
         return [self._entries[path] for path in sorted(self._entries)]
 
     def delete(self, path: str) -> None:
@@ -62,11 +68,19 @@ class FaultyFileStore:
         @param path the entry to remove
         @throws StoreUnavailable when the schedule names this call, or when no
             entry has that path
+        @par Effects
+        Increments the deletion-attempt counter and removes the entry only when
+        neither scheduled failure nor absence interrupts the call.
         """
+        # Advance the deterministic attempt index before any scheduled outcome.
         self._deletes += 1
         if self._schedule.fails(self._deletes):
+            # Surface the injected failure before altering the indexed contents.
             raise StoreUnavailable(StoreOperation.DELETE, self._schedule.detail)
+        # Preserve explicit absence failure instead of treating it as completed work.
         if path not in self._entries:
+            # Retain the missing path in the stable port error representation.
             message = f"no entry at {path}"
             raise StoreUnavailable(StoreOperation.DELETE, message)
+        # Remove the validated entry after every earlier failure point has passed.
         del self._entries[path]

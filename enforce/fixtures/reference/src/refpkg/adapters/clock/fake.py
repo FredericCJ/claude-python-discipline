@@ -26,13 +26,14 @@ class FakeClock:
         @param start what `now` returns until the clock is advanced
         """
         ## The last instant supplied to callers of `now`.
-        self._current = start
+        self._current = start  # Establish the first published instant.
 
     def now(self) -> Instant:
         """The instant this clock was last set to.
 
         @return the current instant; never raises, since nothing can fail here
         """
+        # Expose the last explicitly established instant without consulting a host clock.
         return self._current
 
     def advance(self, seconds: int) -> None:
@@ -41,8 +42,13 @@ class FakeClock:
         @param seconds how far forward to move; must not be negative, because a
             clock that can go backwards would satisfy no contract worth having
         @throws ValueError when asked to move backwards
+        @par Effects
+        Advances this clock's published instant exactly once after validation.
         """
+        # Guard the port's non-decreasing-time invariant before changing state.
         if seconds < 0:
+            # Preserve the invalid signed displacement in the boundary diagnostic.
             message = f"a clock does not run backwards; got {seconds}"
             raise ValueError(message)
+        # Advance the published instant by the validated whole-second displacement.
         self._current = Instant(self._current.epoch_seconds + seconds)

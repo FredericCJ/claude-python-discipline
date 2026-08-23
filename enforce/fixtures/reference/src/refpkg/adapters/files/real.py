@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING
 from refpkg.domain.model import Entry, Instant
 from refpkg.ports.errors import StoreOperation, StoreUnavailable
 
+# Keep filesystem and collection contract types out of runtime adapter imports.
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from pathlib import Path
@@ -35,7 +36,7 @@ class LocalFileStore:
             a call is made, so constructing one cannot fail
         """
         ## Directory that bounds every listed and deleted file.
-        self._root = root
+        self._root = root  # Preserve the one filesystem boundary for every call.
 
     def entries(self) -> Sequence[Entry]:
         """Every regular file directly under the root, by name, in path order.
@@ -45,8 +46,12 @@ class LocalFileStore:
 
         @return the entries, empty when the directory holds no regular file
         @throws StoreUnavailable when the directory cannot be listed
+        @par Effects
+        Reads the bound directory and file metadata without changing filesystem state.
         """
+        # Contain directory enumeration and metadata reads inside the store boundary.
         try:
+            # Select each direct regular file in deterministic path order for projection.
             found = sorted(p for p in self._root.iterdir() if p.is_file())
             return [
                 Entry(
@@ -57,6 +62,7 @@ class LocalFileStore:
                 for path in found
             ]
         except OSError as exc:
+            # Translate any platform listing failure while preserving its causal chain.
             message = f"cannot list {self._root}: {exc}"
             raise StoreUnavailable(StoreOperation.ENTRIES, message) from exc
 
@@ -66,13 +72,20 @@ class LocalFileStore:
         @param path the entry's name, as reported by `entries`
         @throws StoreUnavailable when the name escapes the root, when the file is
             absent, or when it cannot be removed
+        @par Effects
+        Removes exactly one file beneath the bound root after confinement validation.
         """
+        # Resolve the reported entry name against the adapter's fixed filesystem root.
         target = (self._root / path).resolve()
         if target.parent != self._root.resolve():
+            # Reject traversal before any filesystem mutation can occur.
             message = f"{path!r} resolves outside {self._root}"
             raise StoreUnavailable(StoreOperation.DELETE, message)
+        # Contain the single irreversible filesystem operation for translation.
         try:
+            # Remove only the confined target selected above.
             target.unlink()
         except OSError as exc:
+            # Translate platform removal failure without discarding its original cause.
             message = f"cannot remove {path}: {exc}"
             raise StoreUnavailable(StoreOperation.DELETE, message) from exc

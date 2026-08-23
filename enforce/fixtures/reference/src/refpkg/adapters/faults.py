@@ -26,8 +26,8 @@ class FaultSchedule:
     same object rather than a different object.
     """
 
-    ## Call indices that fail, counting the adapter's calls from one. A call not
-    ## named here succeeds. Held as a frozenset so equal schedules compare equal.
+    ## Each one-based call index that fails; membership is deliberately unordered.
+    ## A call not named here succeeds. Held as a frozenset so equal schedules compare equal.
     ## The factory is subscripted because a bare `frozenset` gives pyright a
     ## `frozenset[Unknown]` to infer from, and an element type nobody knows is
     ## the hole `TYPE-001` exists to close.
@@ -42,6 +42,7 @@ class FaultSchedule:
 
         @return the empty schedule
         """
+        # Construct the canonical empty, deliberately unordered failure set.
         return cls()
 
     @classmethod
@@ -52,6 +53,7 @@ class FaultSchedule:
         @param detail what each failing call reports
         @return the schedule
         """
+        # Collapse the named indices into unordered membership with one shared detail.
         return cls(failing_calls=frozenset(calls), detail=detail)
 
     def fails(self, call_index: int) -> bool:
@@ -60,4 +62,5 @@ class FaultSchedule:
         @param call_index the one-based index of the call about to be made
         @return True when this call must fail
         """
+        # Decide the deterministic outcome by membership rather than elapsed time.
         return call_index in self.failing_calls
