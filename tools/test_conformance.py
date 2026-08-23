@@ -91,7 +91,7 @@ def test_a_clean_tree_passes_without_a_baseline(
 def test_project_declaration_reaches_every_check(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The migration ratchet evaluates checks under the adopter's v4 declaration.
+    """The migration ratchet evaluates checks under the adopter's v5 declaration.
 
     @param tmp_path scratch repository
     @param monkeypatch substitutes one declaration-observing check
@@ -107,7 +107,8 @@ def test_project_declaration_reaches_every_check(
         'operational_model = "operational-model.json"\n'
         'security_model = "security-model.json"\n'
         'adversarial_review = "adversarial-review.json"\n'
-        'doc_engine = "none"\n\n'
+        'doc_engine = "doxygen"\n'
+        'documentation_model = "documentation-model.json"\n\n'
         "[tool.agent-discipline.capabilities]\n"
         "public_api = false\nfilesystem_io = false\npersistent_state = false\n"
         "generated_artifacts = false\nnetwork_io = false\n"
@@ -116,6 +117,23 @@ def test_project_declaration_reaches_every_check(
         "bounded_latency = false\nsensitive_data = false\n",
         encoding="utf-8",
         newline="\n",
+    )
+    (root / "documentation-model.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "engine": "doxygen",
+                "scopes": [
+                    {"path": "src", "kind": "production", "ownership": "governed"}
+                ],
+                "controlled_abbreviations": [],
+                "identifier_grammars": [],
+                "generated_names": {"markers": ["generated", "derived"], "mappings": {}},
+                "semantic_properties": [],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
     )
 
     class DeclarationProbe:

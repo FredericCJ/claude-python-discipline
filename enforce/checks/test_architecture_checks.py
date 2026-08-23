@@ -33,7 +33,8 @@ contract_conformance = "contract-conformance.json"
 operational_model = "operational-model.json"
 security_model = "security-model.json"
 adversarial_review = "adversarial-review.json"
-doc_engine = "none"
+doc_engine = "doxygen"
+documentation_model = "documentation-model.json"
 adapter_boundaries = [
     "src/pkg/adapters/clock",
     "src/pkg/adapters/files",
@@ -72,6 +73,26 @@ owner = "src/pkg/adapters/clock"
     package = tmp_path / "src/pkg/__init__.py"
     package.parent.mkdir(parents=True, exist_ok=True)
     package.write_text('"""Public package."""\n', encoding="utf-8")
+    (tmp_path / "documentation-model.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "engine": "doxygen",
+                "scopes": [
+                    {"path": "src", "kind": "production", "ownership": "governed"}
+                ],
+                "controlled_abbreviations": [],
+                "identifier_grammars": [],
+                "generated_names": {
+                    "markers": ["generated", "derived"],
+                    "mappings": {},
+                },
+                "semantic_properties": [],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     return project.parse(project_file), tmp_path / "src"
 
 
