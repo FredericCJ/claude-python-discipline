@@ -66,12 +66,14 @@ REPO_ROOT: Final = Path(__file__).resolve().parent.parent
 ## `enforce/` is not on the default path when this runs as a script, and an
 ## adopter runs it from `.agent/tools/`. The root `conftest.py` does the same
 ## insert for pytest; this is the script's half.
+# Prepend the local tools directory only when import resolution does not already contain it.
 if str(REPO_ROOT / "enforce") not in sys.path:
     sys.path.insert(0, str(REPO_ROOT / "enforce"))
 
 from checks import project  # ruff: ignore[module-import-not-at-top-of-file]
 from checks.__main__ import discover  # ruff: ignore[module-import-not-at-top-of-file]
 
+# Import annotation-only protocols without adding runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
@@ -130,13 +132,20 @@ def findings_for(paths: Sequence[Path]) -> list[Finding]:
     """Every finding the AST checks report over the given paths.
 
     @param paths files or directories to walk
+        Each paths element represents one repository path; traversal order is preserved.
     @return the findings, in check-name then walk order
     """
+    # Each collected element is one checker finding object; checker then source-walk order is
+    # preserved.
     collected: list[Finding] = []
+    # Resolve the adopter's project declaration once for every discovered checker.
     declaration = project.load(paths[0] if paths else Path.cwd())
+    # Execute discovered checks in their stable mechanism-name order.
     for check in discover():
+        # Bind the shared declaration before collecting this check's ordered findings.
         check.declaration = declaration
         collected.extend(check.run(list(paths)))
+    # Return the findings, in check-name then walk order to the caller.
     return collected
 
 
@@ -148,17 +157,26 @@ def pairs_of(findings: Sequence[Finding], root: Path) -> set[tuple[str, str]]:
     edit and make it unreviewable. The COUNT is what catches a new finding in a
     file that already had one.
 
-    @param findings what the checks reported
+    @param findings sequence whose each element is one finding object; checker
+        then source-walk order is preserved during reduction
     @param root the tree they were reported against, for relative paths
     @return one pair per distinct file and rule
     """
+    # Collect unique `(relative path, rule id)` tuple elements; set order is deliberately
+    # unordered.
     pairs: set[tuple[str, str]] = set()
+    # Reduce findings in checker order even though the resulting set intentionally discards it.
     for finding in findings:
+        # Protect the fallible operation so expected failures remain explicitly classified.
         try:
+            # Prefer a portable project-relative path for stable baselines.
             name = finding.path.relative_to(root).as_posix()
+        # Translate the expected failure into this mechanism's stable diagnostic path.
         except ValueError:
+            # Preserve an external finding as an absolute POSIX path when confinement fails.
             name = finding.path.as_posix()
         pairs.add((name, finding.rule_id))
+    # Return one pair per distinct file and rule to the caller.
     return pairs
 
 
@@ -173,12 +191,21 @@ def load_baseline(path: Path) -> tuple[int, set[tuple[str, str]]] | None:
     @param path the baseline file
     @return the count and pairs, or None when the file is absent or unreadable
     """
+    # An absent or non-file baseline means the adopter has not established a ratchet.
     if not path.is_file():
+        # Return the count and pairs, or None when the file is absent or unreadable to the
+        # caller.
         return None
+    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
+        # Decode baseline field-name keys to count, pair, and audit-note values.
         data = json.loads(path.read_text(encoding="utf-8"))
+    # Translate the expected failure into this mechanism's stable diagnostic path.
     except (OSError, json.JSONDecodeError):
+        # Return the count and pairs, or None when the file is absent or unreadable to the
+        # caller.
         return None
+    # Restore the recorded count and an unordered set of `(file, rule)` tuple elements.
     return int(data.get("count", 0)), {(f, c) for f, c in data.get("pairs", [])}
 
 
@@ -189,9 +216,17 @@ def write_baseline(path: Path, count: int, pairs: set[tuple[str, str]],
     @param path the baseline file, created with its parent if absent
     @param count how many findings were reported
     @param pairs the exact `(file, rule)` pairs behind that count
+        Each element is one `(relative file, rule id)` tuple; set order is
+        deliberately unordered and serialization sorts it.
     @param why what is being accepted and on what understanding
+
+    @par Effects
+    Creates the parent directory when absent, then replaces the baseline with a
+    deterministic sorted snapshot and its mandatory audit reason.
     """
+    # Establish the adopter-owned override directory before publishing the baseline.
     path.parent.mkdir(parents=True, exist_ok=True)
+    # Replace the complete baseline only after count, pairs, and audit reason are available.
     path.write_text(
         json.dumps({
             "generated_by": "python .agent/tools/conformance.py --update-baseline",
@@ -218,37 +253,52 @@ def judge(findings: Sequence[Finding], root: Path,
     the baseline is read at all, so no amount of ratcheting can switch off a rule
     the Prime Directive rests on.
 
-    @param findings what the checks reported
+    @param findings sequence whose each element is one finding object; checker
+        then source-walk order is preserved for protected diagnostics
     @param root the tree they were reported against
     @param baseline the recorded floor, or None when there is no ratchet yet
     @return one complaint per regression, empty when the tree holds
     """
+    # Each complaints element is one protected-rule diagnostic string; original finding order is
+    # preserved before any ratchet read.
     complaints = [
         f"{finding.path.name}:{finding.line}: {finding.rule_id} is protected and "
         f"cannot be baselined -- {finding.message}"
+        # Retain only findings whose rule can never enter an adopter baseline.
         for finding in findings if finding.rule_id in PROTECTED
     ]
+    # Return protected failures immediately so no baseline can mask them.
     if complaints:
+        # Return one complaint per regression, empty when the tree holds to the caller.
         return complaints
 
+    # Use the absence path when baseline has no available value.
     if baseline is None:
+        # Handle the non-empty or enabled findings state.
         if findings:
             complaints.append(
                 f"{len(findings)} finding(s) and no baseline recorded. Fix them, "
                 f'or accept them for now with --update-baseline --why "...".'
             )
+        # Return one complaint per regression, empty when the tree holds to the caller.
         return complaints
 
+    # Split the recorded ceiling into total-count and distinct-pair dimensions.
     recorded_count, recorded_pairs = baseline
+    # Compute unordered current pairs absent from the accepted baseline.
     fresh = pairs_of(findings, root) - recorded_pairs
+    # Report new file/rule identities before considering total-count growth.
     if fresh:
+        # Sort fresh path/rule tuples for a deterministic actionable diagnostic.
         listed = ", ".join(f"{name}: {rule}" for name, rule in sorted(fresh))
         complaints.append(f"{len(fresh)} new (file, rule) pair(s) -- {listed}")
+    # Catch additional instances hidden behind already recorded file/rule identities.
     elif len(findings) > recorded_count:
         complaints.append(
             f"finding total rose from {recorded_count} to {len(findings)} with no "
             f"new (file, rule) pair: an existing rule gained instances"
         )
+    # Return one complaint per regression, empty when the tree holds to the caller.
     return complaints
 
 
@@ -260,16 +310,23 @@ def render_report(findings: Sequence[Finding], root: Path,
     so the last section names the single rule-and-module pair holding the most
     findings. That is the one place where an afternoon's work moves the number.
 
-    @param findings what the checks reported
+    @param findings sequence whose each element is one finding object; checker
+        then source-walk order is preserved for detailed examples
     @param root the tree they were reported against
     @param baseline the recorded floor, or None when there is no ratchet yet
     @return the report, ready to print
     """
+    # Each lines element is one printable report string; overview, breakdown, then recommendation
+    # order is preserved.
     lines = [f"conformance: {len(findings)} finding(s) over {root}"]
 
+    # Use the available-value path only when baseline is present.
     if baseline is not None:
+        # Split the recorded baseline into count and unordered pair dimensions.
         recorded_count, recorded_pairs = baseline
+        # Reduce current findings to the same stable pair identity used by the baseline.
         current = pairs_of(findings, root)
+        # Append baseline, cleared, and new-pair summaries in that fixed order.
         lines += [
             f"  baseline   {recorded_count} finding(s), {len(recorded_pairs)} pair(s)",
             f"  cleared    {len(recorded_pairs - current)} pair(s)",
@@ -278,26 +335,37 @@ def render_report(findings: Sequence[Finding], root: Path,
     else:
         lines.append("  no baseline recorded -- every finding below is unaccepted")
 
+    # Each protected element is one protected finding object; original checker order is
+    # preserved for bounded examples.
     protected = [f for f in findings if f.rule_id in PROTECTED]
     lines.append(f"  protected  {len(protected)} violation(s), which no baseline covers")
+    # Append at most ten protected location/rule strings in finding order.
     lines += [f"    {f.path.name}:{f.line}: {f.rule_id}" for f in protected[:10]]
 
+    # Count findings by rule-id key; first-seen ordering feeds deterministic tie handling.
     by_rule = Counter(f.rule_id for f in findings)
     lines.append("\nby rule:")
+    # Append the twelve most frequent rule/count pairs in descending frequency order.
     lines += [f"  {rule:12s} {count:5d}" for rule, count in by_rule.most_common(12)]
 
+    # Count non-protected findings by `(rule id, parent path)` concentration key.
     concentrated = Counter(
+        # Preserve one concentration record per non-protected finding.
         (f.rule_id, f.path.parent.as_posix()) for f in findings
         if f.rule_id not in PROTECTED
     )
+    # Recommend a target only when at least one migratable finding exists.
     if concentrated:
+        # Select the most concentrated rule/module pair and its instance count.
         (rule, where), count = concentrated.most_common(1)[0]
+        # Append the recommendation and rationale as one ordered report section.
         lines += [
             "\ncheapest next target:",
             f"  {rule} in {where} -- {count} finding(s) of one kind in one place.",
             "  A rule cleared in one module is a rule that can be cleared in the",
             "  next; a thousand scattered findings are where adoption stops.",
         ]
+    # Return the report, ready to print to the caller.
     return "\n".join(lines)
 
 
@@ -315,8 +383,10 @@ def main(argv: list[str] | None = None) -> int:
     argument_list = list(sys.argv[1:] if argv is None else argv)
     command = "judge"
     if argument_list and argument_list[0] in {"judge", "report"}:
+        # Remove the recognized verb before argparse processes the remaining path grammar.
         command = argument_list.pop(0)
 
+    # Configure the command-line parser that defines this tool's invocation contract.
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("paths", nargs="*", type=Path)
     parser.add_argument("--root", type=Path, default=Path.cwd(),
@@ -324,49 +394,74 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--update-baseline", action="store_true",
                         help="accept the current findings as the floor")
     parser.add_argument("--why", help="required with --update-baseline")
+    # Capture the validated invocation arguments that govern this execution.
     arguments = parser.parse_args(argument_list)
 
+    # Refuse an unaudited baseline update before running any checks.
     if arguments.update_baseline and not arguments.why:
         print("--update-baseline requires --why", file=sys.stderr)
+        # Return the aggregate process status to the command-line boundary.
         return EXIT_REGRESSED
 
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = arguments.root.resolve()
+    # Use explicit path elements in argument order, or the conventional source root as one item.
     paths = arguments.paths or [root / "src"]
+    # Resolve the project-owned baseline below the selected adopter root.
     baseline_path = root / BASELINE_NAME
+    # Preserve finding-record elements in checker emission order for the final verdict.
     findings = findings_for(paths)
 
+    # Report mode explains the current state without enforcing or changing the ratchet.
     if command == "report":
         print(render_report(findings, root, load_baseline(baseline_path)))
+        # Return the aggregate process status to the command-line boundary.
         return EXIT_OK
 
+    # Baseline-update mode first proves that no protected finding would be accepted.
     if arguments.update_baseline:
+        # Each protected element is one protected finding object; checker order is preserved for
+        # refusal diagnostics.
         protected = [f for f in findings if f.rule_id in PROTECTED]
+        # Refuse the entire update when any non-baselinable rule is violated.
         if protected:
+            # Render each protected finding in original checker order.
             for finding in protected:
                 print(f"  {finding.render(root)}", file=sys.stderr)
             print(f"refusing to baseline {len(protected)} protected violation(s); "
                   f"these are the rules adopting the discipline is for",
                   file=sys.stderr)
+            # Return the aggregate process status to the command-line boundary.
             return EXIT_REGRESSED
         write_baseline(baseline_path, len(findings),
                        pairs_of(findings, root), arguments.why)
         print(f"conformance: baseline recorded at {len(findings)} finding(s) -- "
               f"{arguments.why}")
+        # Return the aggregate process status to the command-line boundary.
         return EXIT_OK
 
+    # Judge current findings against the optional adopter-owned baseline.
     complaints = judge(findings, root, load_baseline(baseline_path))
+    # Print regression complaints in protected/new-pair/count order.
     for complaint in complaints:
         print(f"  {complaint}", file=sys.stderr)
+    # Fail with the explicit ratchet-update remedy when any regression remains.
     if complaints:
         print('fix them, or move the baseline with --update-baseline --why "..."',
               file=sys.stderr)
+        # Return the aggregate process status to the command-line boundary.
         return EXIT_REGRESSED
 
+    # Reload the accepted count for the positive summary after judgement passes.
     recorded = load_baseline(baseline_path)
+    # Include the accepted ceiling only when an adopter baseline exists.
     accepted = f", {recorded[0]} accepted" if recorded else ""
     print(f"conformance: {len(findings)} finding(s){accepted}, none new")
+    # Return the aggregate process status to the command-line boundary.
     return EXIT_OK
 
 
+# Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
+    # Propagate the localized failure so callers cannot mistake it for success.
     raise SystemExit(main())

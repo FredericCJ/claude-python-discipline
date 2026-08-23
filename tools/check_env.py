@@ -72,6 +72,8 @@ _NATIVE_VERSION: Final = re.compile(
 ## passed over: a declared dependency nobody checks is the exact shape of defect
 ## this file exists to remove, and adding a pin the checker silently ignores
 ## would reintroduce it one entry at a time.
+## Each key is one conda package name and each value is its executable-name candidates in
+## preference order; package-key order is deliberately unused.
 NATIVE_VERIFIERS: Final[dict[str, tuple[str, ...]]] = {
     "doxygen": ("doxygen.exe", "doxygen"),
     "git": ("git.exe", "git"),
@@ -93,29 +95,55 @@ def read_pins(path: Path) -> tuple[str | None, dict[str, str], list[str], dict[s
         one complaint per requirement that was not pinned exactly, and the conda
         pins by package name
     """
+    # Start without an interpreter pin so its absence remains distinguishable.
     python: str | None = None
+    # Map pip distribution-name keys to exact version-string values; key order is deliberately
+    # unused because comparisons sort them.
     pins: dict[str, str] = {}
+    # Each loose element is one complaint string for a ranged requirement; declaration order is
+    # preserved.
     loose: list[str] = []
+    # Map native conda package-name keys to exact version-string values; key order is
+    # deliberately unused because comparisons sort them.
     conda: dict[str, str] = {}
+    # Parse environment declaration lines in source order without loading YAML dependencies.
     for raw in path.read_text(encoding="utf-8").splitlines():
+        # Strip explanatory comments before matching requirement grammar.
         line = raw.split("#", 1)[0]
+        # Ignore blank and comment-only declaration lines.
         if not line.strip():
+            # Advance after the current candidate has been conclusively excluded.
             continue
+        # Test the line against the exact conda interpreter grammar first.
         found_python = _PYTHON.match(line)
+        # Record the sole interpreter version when the grammar matched.
         if found_python is not None:
+            # Preserve the captured exact interpreter version string.
             python = found_python.group(1)
+            # Advance after the current candidate has been conclusively excluded.
             continue
+        # Test the remaining line against the exact pip requirement grammar.
         found = _PINNED.match(line)
+        # Register a matched distribution and exact version.
         if found is not None:
+            # Store the distribution/version pair after both captures are available.
             pins[found.group(1)] = found.group(2)
+            # Advance after the current candidate has been conclusively excluded.
             continue
+        # Detect range operators that violate the exact-lock contract.
         vague = _LOOSE.match(line)
+        # Preserve an actionable complaint for every ranged requirement.
         if vague is not None:
             loose.append(f"{vague.group(1)} is given a range, not an exact version")
+            # Advance after the current candidate has been conclusively excluded.
             continue
+        # Finally test the line against an exact native conda-package pin.
         native = _CONDA.match(line)
+        # Register a matched native package and exact version.
         if native is not None:
+            # Store the native package/version pair after both captures are available.
             conda[native.group(1)] = native.group(2)
+    # Return the interpreter version or None, the pip pins by distribution name, to the caller.
     return python, pins, loose, conda
 
 
@@ -125,9 +153,13 @@ def installed(name: str) -> str | None:
     @param name the distribution name as `environment.yml` spells it
     @return the installed version, or None when the distribution is absent
     """
+    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
+        # Return the installed version, or None when the distribution is absent to the caller.
         return version(name)
+    # Translate the expected failure into this mechanism's stable diagnostic path.
     except PackageNotFoundError:
+        # Return the installed version, or None when the distribution is absent to the caller.
         return None
 
 
@@ -145,7 +177,9 @@ def native_version(name: str) -> str | None:
     @return the normalized dotted version from its `--version` output, or None
         when the binary cannot be found or refuses to report
     """
+    # Locate the declared package's executable using conda-aware search precedence.
     located = locate_native(name)
+    # Return the normalized dotted version from its `--version` output, or None to the caller.
     return _ask_version(located) if located else None
 
 
@@ -166,13 +200,19 @@ def locate_native(name: str) -> str | None:
     @param name the conda package name
     @return the path to run, or None when it cannot be found at all
     """
+    # Anchor conda-relative executable candidates beside the running interpreter.
     root = Path(sys.executable).parent
+    # Probe declared executable spellings in package-specific preference order.
     for filename in NATIVE_VERIFIERS.get(name, (f"{name}.exe", name)):
+        # Probe Windows and POSIX conda binary directories before falling back to PATH.
         for candidate in (root / "Library" / "bin" / filename,
                           root / "Scripts" / filename, root / filename,
                           root / "bin" / filename):
+            # Return the first concrete executable candidate found in conda precedence order.
             if candidate.is_file():
+                # Return the path to run, or None when it cannot be found at all to the caller.
                 return str(candidate)
+    # Return the path to run, or None when it cannot be found at all to the caller.
     return shutil.which(name)
 
 
@@ -182,7 +222,9 @@ def parse_native_version(output: str) -> str | None:
     @param output stdout and stderr emitted by a successful version probe
     @return the normalized numeric version, or None when none is present
     """
+    # Locate the first dotted numeric token accepted by the native-version grammar.
     found = _NATIVE_VERSION.search(output)
+    # Return the normalized numeric version, or None when none is present to the caller.
     return found.group(1) if found is not None else None
 
 
@@ -192,12 +234,16 @@ def _ask_version(executable: str) -> str | None:
     @param executable the binary to run
     @return the version token, or None when the call fails
     """
+    # Ask the resolved executable for its version without invoking a shell.
     finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
         (executable, "--version"), capture_output=True, text=True,
         encoding="utf-8", errors="replace", check=False, timeout=60,
     )
+    # Enter the failure path only when the subprocess reports a nonzero status.
     if finished.returncode != 0:
+        # Return the version token, or None when the call fails to the caller.
         return None
+    # Return the version token, or None when the call fails to the caller.
     return parse_native_version(f"{finished.stdout}\n{finished.stderr}")
 
 
@@ -206,33 +252,51 @@ def drift(python: str | None, pins: dict[str, str],
     """Every way the running interpreter departs from the declaration.
 
     @param python the pinned interpreter version, or None when none is declared
-    @param pins the pinned package versions by distribution name
-    @param conda the pinned conda packages, checked by running each tool
+    @param pins distribution-name keys mapped to exact pip version-string values;
+        key order is deliberately unused because comparison sorts it
+    @param conda conda package-name keys mapped to exact version-string values;
+        key order is deliberately unused because comparison sorts it
     @return one line per departure, naming the package, the pin and what is there
     """
+    # Each problems element is one human mismatch diagnostic string; interpreter, pip, then
+    # conda order is preserved.
     problems: list[str] = []
+    # Join the running interpreter's major, minor, and patch components in that order.
     running = ".".join(str(part) for part in sys.version_info[:3])
+    # Report interpreter drift only when a pin exists and differs exactly.
     if python is not None and running != python:
         problems.append(f"python: pinned {python}, running {running}")
+    # Compare pip distributions in lexical name order for deterministic diagnostics.
     for name, pinned in sorted(pins.items()):
+        # Query the running interpreter's installed distribution metadata.
         found = installed(name)
+        # Use the absence path when found has no available value.
         if found is None:
             problems.append(f"{name}: pinned {pinned}, not installed")
+        # Report exact-version drift when the distribution exists at another version.
         elif found != pinned:
             problems.append(f"{name}: pinned {pinned}, installed {found}")
+    # Compare native conda tools in lexical package-name order.
     for name, pinned in sorted((conda or {}).items()):
+        # Refuse a declared native package for which no executable probe is defined.
         if name not in NATIVE_VERIFIERS:
             problems.append(
                 f"{name}: pinned {pinned} as a conda package, and this checker has "
                 f"no way to verify it. Add it to NATIVE_VERIFIERS or remove the "
                 f"pin -- a declared dependency nobody checks is not a lock."
             )
+            # Advance after the current candidate has been conclusively excluded.
             continue
+        # Execute the package-specific version probe after verifier coverage is established.
         found = native_version(name)
+        # Use the absence path when found has no available value.
         if found is None:
             problems.append(f"{name}: pinned {pinned}, not installed")
+        # Report exact-version drift when the native tool reports another version.
         elif found != pinned:
             problems.append(f"{name}: pinned {pinned}, installed {found}")
+    # Return one line per departure, naming the package, the pin and what is there to the
+    # caller.
     return problems
 
 
@@ -243,7 +307,9 @@ def main(argv: list[str] | None = None) -> int:
     @return 0 when the environment matches the declaration, 1 when it does not
         and 2 when the declaration itself cannot be trusted
     """
+    # Select the module summary, retaining a defensive fallback for stripped documentation.
     description = (__doc__ or "Verify the declared development environment.")
+    # Configure the command-line parser that defines this tool's invocation contract.
     parser = argparse.ArgumentParser(description=description.splitlines()[0])
     parser.add_argument("--quiet", action="store_true",
                         help="print nothing when the environment matches")
@@ -251,14 +317,19 @@ def main(argv: list[str] | None = None) -> int:
                         help="the environment declaration to check against")
     parser.add_argument("--print-requirements", action="store_true",
                         help="emit the pins as a pip requirements file and exit")
+    # Capture the validated invocation arguments that govern this execution.
     args = parser.parse_args(argv)
 
+    # Reject an absent declaration before attempting any version comparison.
     if not args.file.exists():
         print(f"no environment declaration at {args.file}", file=sys.stderr)
+        # Return the aggregate process status to the command-line boundary.
         return 2
 
+    # Parse interpreter, pip, lock-defect, and native-pin dimensions together.
     python, pins, loose, conda = read_pins(args.file)
 
+    # Requirements mode emits only exact pip pins and skips environment verification.
     if args.print_requirements:
         # So a CI job installs from the declaration instead of carrying its own
         # copy of it. The previous workflow repeated the list by hand and had
@@ -267,22 +338,32 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{name}=={pinned}")
         return 0
 
+    # Reject every ranged requirement before treating the declaration as a lock.
     if loose:
+        # Report lock complaints in declaration order.
         for complaint in loose:
             print(f"lock defect: {complaint}", file=sys.stderr)
+        # Return the aggregate process status to the command-line boundary.
         return 2
+    # Refuse a declaration with no exact pip pins because it cannot constrain the gate.
     if not pins:
         print(f"{args.file} pins nothing; there is no lock to check", file=sys.stderr)
+        # Return the aggregate process status to the command-line boundary.
         return 2
 
+    # Compare every declared dimension against the running environment.
     problems = drift(python, pins, conda)
+    # Report mismatch detail and fail when any environment dimension drifted.
     if problems:
         print(f"environment does not match {args.file.name}:", file=sys.stderr)
+        # Preserve interpreter, pip, then native diagnostic order.
         for problem in problems:
             print(f"  {problem}", file=sys.stderr)
         print("  fix with: conda env update -f environment.yml --prune", file=sys.stderr)
+        # Return the aggregate process status to the command-line boundary.
         return 1
 
+    # Emit the positive non-vacuity summary unless quiet mode suppressed clean output.
     if not args.quiet:
         # The conda pins are named rather than counted. They are verified by
         # running a binary rather than by reading metadata, which is the less
@@ -291,8 +372,11 @@ def main(argv: list[str] | None = None) -> int:
         native = f", {', '.join(sorted(conda))} verified by execution" if conda else ""
         print(f"environment matches {args.file.name}: "
               f"python {python}, {len(pins)} pinned package(s){native}")
+    # Return the aggregate process status to the command-line boundary.
     return 0
 
 
+# Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
+    # Propagate the localized failure so callers cannot mistake it for success.
     raise SystemExit(main())

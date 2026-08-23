@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING, Final
 import bench
 import defects
 
+# Import annotation-only protocols without adding runtime dependencies.
 if TYPE_CHECKING:
     import pytest
 
@@ -53,7 +54,9 @@ def test_every_defect_is_identified_and_sourced() -> None:
     origin is one somebody invented to be easy, which is how a benchmark stops
     resembling the work.
     """
+    # Collect unique seen element values; their order is deliberately unordered.
     seen: set[str] = set()
+    # Check every frozen defect record for a unique id and a traceable source citation.
     for defect in defects.DEFECTS:
         assert defect.defect_id not in seen, f"{defect.defect_id} appears twice"
         seen.add(defect.defect_id)
@@ -84,6 +87,7 @@ def test_a_defect_that_reaches_nothing_is_reported_as_a_miss() -> None:
     the navigator answered nothing at all. Driven with an output no trigger can
     possibly match.
     """
+    # Construct a synthetic defect whose output cannot route to its declared governing rule.
     nowhere = defects.Defect(
         defect_id="D-00",
         summary="an output nothing in the corpus indexes",
@@ -91,6 +95,7 @@ def test_a_defect_that_reaches_nothing_is_reported_as_a_miss() -> None:
         output="qzzx: unrecognisable output from a tool that does not exist",
         governs=("ARCH-002",),
     )
+    # Measure the unreachable fixture for explicit miss and zero-cost assertions.
     result = bench.measure(nowhere)
     assert result["found"] is False
     assert result["hops"] is None
@@ -105,6 +110,7 @@ def test_a_defect_that_names_its_rule_is_reached(monkeypatch: pytest.MonkeyPatch
     @param monkeypatch unused; present so the signature matches the suite's shape
     """
     del monkeypatch
+    # Measure a named-rule control to prove zero-hop recognition remains visible.
     result = bench.measure(defects.control()[0])
     assert result["found"] is True
     assert result["hops"] == bench.NAMED_OUTRIGHT
@@ -116,6 +122,7 @@ def test_the_summary_keeps_the_two_sets_apart() -> None:
     Four trivially-resolved outputs carrying eight hard ones is exactly how a
     benchmark reports progress it has not made.
     """
+    # Select the checker summary mapping that carries analyzed-file metrics.
     summary = bench.summarize([
         {"defect": "a", "names_a_rule": False, "found": False, "hops": None,
          "tokens": 0, "summary": ""},

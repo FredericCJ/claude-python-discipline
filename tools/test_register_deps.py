@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING
 
 import register_deps
 
+# Import annotation-only protocols without adding runtime dependencies.
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -33,12 +34,22 @@ def _tree(root: Path, files: dict[str, str]) -> Path:
 
     @param root the directory to build under
     @param files paths relative to the tree root, against their contents
+        Treat files as mapping elements whose keys identify fields and values carry their
+        content; key order is deliberately unused.
     @return the tree root, holding `src/`
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Materialize each relative module-name key and source-body value in mapping iteration order.
     for name, body in files.items():
+        # Resolve the repository-confined path used by this operation before filesystem access.
         target = root / name
+        # Publish the externally visible effect after all required inputs are ready.
         target.parent.mkdir(parents=True, exist_ok=True)
+        # Publish the externally visible effect after all required inputs are ready.
         target.write_text(body, encoding="utf-8")
+    # Return the tree root, holding `src/` to the caller.
     return root
 
 
@@ -63,12 +74,14 @@ def test_every_package_is_surveyed_not_just_one(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = _tree(tmp_path, {
         "src/one/__init__.py": "",
         "src/one/models.py": "import pydantic\n",
         "src/two/__init__.py": "",
         "src/two/store.py": "import yaml\n",
     })
+    # Preserve the optional pattern match that carries the reported analysis count.
     found = register_deps.survey(root)
     assert set(found) == {"pydantic", "yaml"}, (
         "a multi-package tree was not fully surveyed"
@@ -83,6 +96,7 @@ def test_a_dependency_with_two_importers_names_both(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = _tree(tmp_path, {
         "src/pkg/__init__.py": "",
         "src/pkg/a.py": "import httpx\n",
@@ -96,6 +110,7 @@ def test_the_standard_library_is_not_a_dependency(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = _tree(tmp_path, {
         "src/pkg/__init__.py": "",
         "src/pkg/a.py": "import json\nimport pathlib\nfrom pkg import b\n",
@@ -109,6 +124,7 @@ def test_an_unregistered_import_fails_the_check(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = _tree(tmp_path, {
         "src/pkg/__init__.py": "",
         "src/pkg/a.py": "import httpx\n",
@@ -123,6 +139,7 @@ def test_a_registered_import_passes_the_check(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = _tree(tmp_path, {
         "src/pkg/__init__.py": "",
         "src/pkg/a.py": "import httpx\n",

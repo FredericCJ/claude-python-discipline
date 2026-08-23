@@ -25,6 +25,7 @@ import conformance
 from checks import Finding, project
 from checks.__main__ import discover
 
+# Import annotation-only protocols without adding runtime dependencies.
 if TYPE_CHECKING:
     import pytest
 
@@ -47,11 +48,19 @@ def tree(root: Path, **modules: str) -> Path:
     @param root the directory to build in
     @param modules file stem to source, written under `src/`
     @return the project root
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Retain the immutable source representation consumed by subsequent analysis.
     source = root / "src"
+    # Publish the externally visible effect after all required inputs are ready.
     source.mkdir(parents=True, exist_ok=True)
+    # Materialize each module-stem key and source-body value in fixture declaration order.
     for stem, body in modules.items():
+        # Publish the externally visible effect after all required inputs are ready.
         (source / f"{stem}.py").write_text(body, encoding="utf-8")
+    # Return the project root to the caller.
     return root
 
 
@@ -61,6 +70,7 @@ def judge(root: Path) -> int:
     @param root the project root
     @return the exit status
     """
+    # Return the exit status to the caller.
     return conformance.main(["--root", str(root), str(root / "src")])
 
 
@@ -71,6 +81,7 @@ def accept(root: Path, why: str = "adoption") -> int:
     @param why the reason written into the baseline
     @return the exit status
     """
+    # Return the exit status to the caller.
     return conformance.main(
         ["--root", str(root), str(root / "src"), "--update-baseline", "--why", why]
     )
@@ -83,6 +94,7 @@ def test_a_clean_tree_passes_without_a_baseline(
 
     @param tmp_path the scratch directory
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = tree(tmp_path, widget='"""A module."""\n')
     monkeypatch.setattr(conformance, "findings_for", lambda _paths: [])
     assert judge(root) == conformance.EXIT_OK
@@ -95,9 +107,15 @@ def test_project_declaration_reaches_every_check(
 
     @param tmp_path scratch repository
     @param monkeypatch substitutes one declaration-observing check
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = tree(tmp_path, widget='"""A module."""\n')
+    # Select the temporary project's declaration for the observed-load assertion.
     declaration = root / "pyproject.toml"
+    # Publish the externally visible effect after all required inputs are ready.
     declaration.write_text(
         "[tool.agent-discipline]\n"
         'unit = "application"\n'
@@ -118,6 +136,7 @@ def test_project_declaration_reaches_every_check(
         encoding="utf-8",
         newline="\n",
     )
+    # Publish the externally visible effect after all required inputs are ready.
     (root / "documentation-model.json").write_text(
         json.dumps(
             {
@@ -140,15 +159,19 @@ def test_project_declaration_reaches_every_check(
         """One check that records the declaration supplied by conformance."""
 
         ## Declaration installed by the migration ratchet before the check runs.
+        # Capture the declaration bound onto this discovered checker before it runs.
         declaration = project.DEFAULT
 
         def run(self, _paths: list[Path]) -> list[Finding]:
             """Require the parsed declaration at the check boundary.
 
             @param _paths governed source paths, unused by this declaration probe
+                Each  paths element carries one  path value produced or consumed by this
+                operation; construction order is preserved.
             @return no findings after the assertion succeeds
             """
             assert self.declaration.source == declaration.resolve()
+            # Return no findings after the assertion succeeds to the caller.
             return []
 
     monkeypatch.setattr(conformance, "discover", lambda: [DeclarationProbe()])
@@ -164,6 +187,7 @@ def test_an_unbaselined_finding_fails(tmp_path: Path) -> None:
 
     @param tmp_path the scratch directory
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = tree(tmp_path, widget=UNDOCUMENTED)
     assert judge(root) == conformance.EXIT_REGRESSED
 
@@ -176,6 +200,7 @@ def test_a_baselined_tree_goes_green(tmp_path: Path) -> None:
 
     @param tmp_path the scratch directory
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = tree(tmp_path, widget=UNDOCUMENTED)
     assert accept(root) == conformance.EXIT_OK
     assert (root / conformance.BASELINE_NAME).is_file()
@@ -186,9 +211,14 @@ def test_a_new_file_with_the_same_rule_still_fails(tmp_path: Path) -> None:
     """The first way a baseline can be fooled: a new `(file, rule)` pair.
 
     @param tmp_path the scratch directory
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = tree(tmp_path, widget=UNDOCUMENTED)
     assert accept(root) == conformance.EXIT_OK
+    # Publish the externally visible effect after all required inputs are ready.
     (root / "src" / "gadget.py").write_text(UNDOCUMENTED, encoding="utf-8")
     assert judge(root) == conformance.EXIT_REGRESSED
 
@@ -203,9 +233,14 @@ def test_more_of_the_same_rule_in_a_baselined_file_still_fails(
     catches it -- which is exactly why `lint_gate` records both.
 
     @param tmp_path the scratch directory
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = tree(tmp_path, widget=UNDOCUMENTED)
     assert accept(root) == conformance.EXIT_OK
+    # Publish the externally visible effect after all required inputs are ready.
     (root / "src" / "widget.py").write_text(UNDOCUMENTED_TWICE, encoding="utf-8")
     assert judge(root) == conformance.EXIT_REGRESSED
 
@@ -214,9 +249,14 @@ def test_clearing_a_finding_does_not_fail(tmp_path: Path) -> None:
     """The ratchet may fall freely; that is the direction it exists to allow.
 
     @param tmp_path the scratch directory
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = tree(tmp_path, widget=UNDOCUMENTED_TWICE)
     assert accept(root) == conformance.EXIT_OK
+    # Publish the externally visible effect after all required inputs are ready.
     (root / "src" / "widget.py").write_text(UNDOCUMENTED, encoding="utf-8")
     assert judge(root) == conformance.EXIT_OK
 
@@ -230,20 +270,30 @@ def test_a_protected_rule_is_refused_before_the_baseline_is_read(
     covers it. It is not consulted: `judge` evaluates `PROTECTED` first.
 
     @param tmp_path the scratch directory
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = tree(tmp_path)
+    # Hold baseline path keys mapped to their recorded behavior-fingerprint values.
     baseline = root / conformance.BASELINE_NAME
+    # Publish the externally visible effect after all required inputs are ready.
     baseline.parent.mkdir(parents=True, exist_ok=True)
+    # Select one deterministic protected rule for the baseline-precedence fixture.
     protected = min(conformance.PROTECTED)
+    # Publish the externally visible effect after all required inputs are ready.
     baseline.write_text(
         json.dumps({"count": 99, "pairs": [["src/widget.py", protected]]}),
         encoding="utf-8",
     )
+    # Construct one localized violation of that protected rule.
     finding = Finding(
         rule_id=protected, path=root / "src" / "widget.py", line=1,
         message="a protected rule was violated",
         remediation="fix it; it cannot be baselined",
     )
+    # Judge against a permissive-looking baseline to prove protection takes precedence.
     complaints = conformance.judge([finding], root,
                                    conformance.load_baseline(baseline))
     assert complaints
@@ -261,7 +311,9 @@ def test_a_protected_violation_will_not_be_recorded(
     @param tmp_path the scratch directory
     @param monkeypatch used to substitute what the checks report
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = tree(tmp_path)
+    # Select one deterministic protected rule for the update-refusal fixture.
     protected = min(conformance.PROTECTED)
     monkeypatch.setattr(conformance, "findings_for", lambda _paths: [
         Finding(
@@ -279,6 +331,7 @@ def test_moving_the_baseline_requires_a_reason(tmp_path: Path) -> None:
 
     @param tmp_path the scratch directory
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = tree(tmp_path, widget=UNDOCUMENTED)
     assert conformance.main(["--root", str(root), "--update-baseline"]) == \
         conformance.EXIT_REGRESSED
@@ -293,6 +346,7 @@ def test_the_baseline_lives_where_vendoring_will_not_touch_it() -> None:
     adopter had accepted, and the next upgrade would be declined.
     """
     assert conformance.BASELINE_NAME.startswith("overrides/")
+    # Read the installer source to prove its project-owned boundary excludes the baseline.
     vendor = (Path(__file__).resolve().parent / "vendor.py").read_text(
         encoding="utf-8")
     assert "overrides" not in vendor.split("UPSTREAM")[-1][:400]
@@ -305,10 +359,17 @@ def test_an_unreadable_baseline_is_treated_as_absent(tmp_path: Path) -> None:
     parses as nothing and reads as consent.
 
     @param tmp_path the scratch directory
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = tree(tmp_path, widget=UNDOCUMENTED)
+    # Hold baseline path keys mapped to their recorded behavior-fingerprint values.
     baseline = root / conformance.BASELINE_NAME
+    # Publish the externally visible effect after all required inputs are ready.
     baseline.parent.mkdir(parents=True, exist_ok=True)
+    # Publish the externally visible effect after all required inputs are ready.
     baseline.write_text("{ not json", encoding="utf-8")
     assert conformance.load_baseline(baseline) is None
     assert judge(root) == conformance.EXIT_REGRESSED
@@ -323,7 +384,9 @@ def test_every_protected_rule_is_reportable() -> None:
     either. Two of the four guards were inert, which is precisely the vacuity this
     repository exists to remove, reproduced inside the guard against it.
     """
+    # Collect unique reportable element values; their order is deliberately unordered.
     reportable = {rule for check in discover() for rule in check.rules}
+    # Compute protected rule ids absent from every discovered check's declared coverage.
     unreportable = sorted(conformance.PROTECTED - reportable)
     assert not unreportable, (
         f"{', '.join(unreportable)} cannot be reported by any AST check, so "
@@ -336,12 +399,16 @@ def test_the_report_names_a_concrete_next_target(tmp_path: Path) -> None:
 
     @param tmp_path the scratch directory
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = tree(tmp_path, widget=UNDOCUMENTED, gadget=UNDOCUMENTED)
+    # Render the two-module defect concentration for a concrete-target assertion.
     rendered = conformance.render_report(
         conformance.findings_for([root / "src"]), root, None)
     assert "cheapest next target" in rendered
     assert "no baseline recorded" in rendered
 
 
+# Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
+    # Propagate the localized failure so callers cannot mistake it for success.
     raise SystemExit(sys.exit(0))

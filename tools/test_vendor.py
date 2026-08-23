@@ -61,9 +61,15 @@ def target(tmp_path: Path) -> Path:
 
     @param tmp_path the per-test directory
     @return the repository root
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Resolve the repository-confined path used by this operation before filesystem access.
     root = tmp_path / "adopter"
+    # Publish the externally visible effect after all required inputs are ready.
     root.mkdir()
+    # Return the repository root to the caller.
     return root
 
 
@@ -72,8 +78,10 @@ def _install(target: Path, **kwargs: bool) -> tuple[int, list[str]]:
 
     @param target the repository root
     @param kwargs forwarded to `install`, for `force`
+        True enables kwargs; false selects its disabled alternative.
     @return what `install` returned
     """
+    # Return what `install` returned to the caller.
     return vendor.install(vendor.Plan(SOURCE, target), **kwargs)
 
 
@@ -90,12 +98,17 @@ def test_the_manifest_names_every_upstream_file(target: Path) -> None:
     @param target an empty repository
     """
     _install(target)
+    # Reduce recorded manifest path keys to an unordered coverage set.
     recorded = set(
         json.loads((target / ".agent" / "MANIFEST.json").read_text(encoding="utf-8"))["files"]
     )
+    # Collect unique installed element values; their order is deliberately unordered.
     installed = {
         p.relative_to(target / ".agent").as_posix()
+        # Resolve the repository-confined path used by this operation before filesystem access.
         for root in vendor.UPSTREAM
+        # Select p as the current element from (target / ".agent" / root).rglob("*") while test
+        # the manifest names every upstream file preserves traversal order.
         for p in (target / ".agent" / root).rglob("*")
         if p.is_file()
         and p.suffix not in vendor.SKIP_SUFFIXES
@@ -110,6 +123,8 @@ def test_the_generated_manifest_is_byte_stable_across_hosts(target: Path) -> Non
     @param target an empty repository
     """
     _install(target)
+    # Hold the decoded mapping elements whose keys identify fields and values carry their
+    # content; key order is deliberately unused.
     manifest = (target / ".agent" / "MANIFEST.json").read_bytes()
     assert manifest.endswith(b"\n")
     assert b"\r\n" not in manifest
@@ -125,7 +140,9 @@ def test_install_carries_one_shared_agent_skill_source(target: Path) -> None:
     @param target an empty repository
     """
     _install(target)
+    # Retain the immutable source representation consumed by subsequent analysis.
     source = SOURCE / "skills" / "python-discipline" / "SKILL.md"
+    # Resolve the installed canonical skill entrypoint for byte comparison.
     installed = target / ".agent" / "skills" / "python-discipline" / "SKILL.md"
 
     assert installed.read_bytes() == source.read_bytes()
@@ -139,6 +156,8 @@ def test_install_carries_both_development_legs_and_their_shared_lock(target: Pat
     @param target an empty repository
     """
     _install(target)
+    # Each required element is one shipped development or lock artifact path; assertion order
+    # follows the tuple declaration.
     required = (
         "dev/Dockerfile",
         "dev/container-entrypoint.sh",
@@ -148,6 +167,7 @@ def test_install_carries_both_development_legs_and_their_shared_lock(target: Pat
         "environment.yml",
         ".dockerignore",
     )
+    # Compare each required vendored artifact byte-for-byte in declared path order.
     for relative in required:
         assert (target / ".agent" / relative).read_bytes() == (SOURCE / relative).read_bytes()
 
@@ -161,12 +181,15 @@ def test_the_manifest_excludes_build_products(target: Path) -> None:
     @param target an empty repository
     """
     _install(target)
+    # Decode the manifest's relative-path keys for cache/build-product exclusion assertions.
     recorded = json.loads((target / ".agent" / "MANIFEST.json").read_text(encoding="utf-8"))[
         "files"
     ]
     assert not [
+        # Normalize the current repository path to its portable baseline key spelling.
         name for name in recorded if any(part in vendor.SKIP_DIRS for part in Path(name).parts)
     ]
+    # Normalize the current repository path to its portable baseline key spelling.
     assert not [name for name in recorded if Path(name).suffix in vendor.SKIP_SUFFIXES]
 
 
@@ -178,9 +201,14 @@ def test_the_version_stamp_is_stable_across_two_installs(target: Path, tmp_path:
 
     @param target an empty repository
     @param tmp_path holds a second, independent target
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
     _install(target)
+    # Select a second independent target for deterministic stamp comparison.
     second = tmp_path / "other"
+    # Publish the externally visible effect after all required inputs are ready.
     second.mkdir()
     _install(second)
     assert (
@@ -202,9 +230,14 @@ def test_a_file_retired_upstream_does_not_survive_an_update(target: Path) -> Non
     running it, and it keeps deciding rules that no longer exist.
 
     @param target an empty repository
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
     _install(target)
+    # Resolve a synthetic retired upstream-owned file inside the vendored check tree.
     stale = target / ".agent" / "enforce" / "checks" / "retired_check.py"
+    # Publish the externally visible effect after all required inputs are ready.
     stale.write_text('"""A check upstream no longer has."""\n', encoding="utf-8")
     _install(target)
     assert not stale.exists(), (
@@ -220,13 +253,22 @@ def test_the_project_half_survives_an_update(target: Path) -> None:
     replaced either would destroy evidence and a declaration in one step.
 
     @param target an empty repository
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
     _install(target)
+    # Resolve a project-owned learning ledger used to prove update preservation.
     ledger = target / ".agent" / "learning" / "ledger.jsonl"
+    # Publish the externally visible effect after all required inputs are ready.
     ledger.parent.mkdir(parents=True, exist_ok=True)
+    # Publish the externally visible effect after all required inputs are ready.
     ledger.write_text('{"seq": 1, "kind": "learn"}\n', encoding="utf-8")
+    # Resolve a project-owned override used to prove update preservation.
     mapping = target / ".agent" / "overrides" / "allocation.toml"
+    # Publish the externally visible effect after all required inputs are ready.
     mapping.parent.mkdir(parents=True, exist_ok=True)
+    # Publish the externally visible effect after all required inputs are ready.
     mapping.write_text('[tiers]\nT0 = "ours"\n', encoding="utf-8")
 
     _install(target)
@@ -241,13 +283,22 @@ def test_force_restores_a_seed_without_overwriting_work(target: Path) -> None:
     every copy is guarded by the destination's absence.
 
     @param target an empty repository
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
     _install(target)
+    # Resolve the existing project ledger whose authored bytes force must preserve.
     ledger = target / ".agent" / "learning" / "ledger.jsonl"
+    # Publish the externally visible effect after all required inputs are ready.
     ledger.parent.mkdir(parents=True, exist_ok=True)
+    # Publish the externally visible effect after all required inputs are ready.
     ledger.write_text('{"seq": 99}\n', encoding="utf-8")
+    # Resolve then remove one canonical seed so force has a missing file to restore.
     schema = target / ".agent" / "learning" / "schema.sql"
+    # Select the existing-artifact path only when `schema.exists()` is satisfied.
     if schema.exists():
+        # Publish the externally visible effect after all required inputs are ready.
         schema.unlink()
 
     _install(target, force=True)
@@ -266,11 +317,19 @@ def test_check_reports_an_edited_vendored_file_by_name(target: Path) -> None:
     Naming it is the difference between a warning and a diagnosis.
 
     @param target an empty repository
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
     _install(target)
+    # Resolve one upstream-owned tool for an intentional in-place drift mutation.
     edited = target / ".agent" / "tools" / "nav.py"
+    # Publish the externally visible effect after all required inputs are ready.
     edited.write_text(edited.read_text(encoding="utf-8") + "\n# local tweak\n", encoding="utf-8")
+    # Collect drift diagnostics after mutating the installed upstream file.
     problems = vendor.check(vendor.Plan(SOURCE, target))
+    # Select problem as the current element from problems), problems while test check reports an
+    # edited vendored file by name preserves traversal order.
     assert any("nav.py" in problem for problem in problems), problems
 
 
@@ -317,14 +376,21 @@ def test_the_whole_round_trip_preserves_every_prior_byte(
     @param target an empty repository
     @param label which ending is under test, for the failure message
     @param original the configuration the project already had
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Resolve the adopter-owned Claude instruction file whose bytes must round-trip exactly.
     claude = target / "CLAUDE.md"
+    # Publish the externally visible effect after all required inputs are ready.
     claude.write_bytes(original)
 
+    # Install the discipline and retain its upstream-file count for a non-vacuity assertion.
     installed, _ = _install(target)
     assert installed > 0, "the install recorded no files"
     assert integrate.main(["--root", str(target)]) == 0
 
+    # Snapshot the instruction file after integration for idempotence comparison.
     after_install = claude.read_bytes()
     assert original in after_install, (
         f"[{label}] the prior configuration did not survive integration byte for byte"
@@ -334,6 +400,7 @@ def test_the_whole_round_trip_preserves_every_prior_byte(
     assert integrate.main(["--root", str(target), "--check"]) == 0
 
     assert integrate.main(["--root", str(target), "--remove"]) == 0
+    # Read final bytes after removal to prove exact restoration of pre-install content.
     restored = claude.read_bytes()
     assert integrate.BEGIN not in restored.decode("utf-8", "replace"), (
         f"[{label}] the managed block survived removal"

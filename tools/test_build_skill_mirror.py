@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+# Import annotation-only protocols without adding runtime dependencies.
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -24,11 +25,19 @@ def seed(root: Path) -> Path:
 
     @param root the throwaway repository root
     @return the canonical skill directory
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Retain the immutable source representation consumed by subsequent analysis.
     source = root / "skills" / "python-discipline"
+    # Publish the externally visible effect after all required inputs are ready.
     (source / "assets").mkdir(parents=True)
+    # Publish the externally visible effect after all required inputs are ready.
     (source / "SKILL.md").write_bytes(b"---\nname: python-discipline\n---\n")
+    # Publish the externally visible effect after all required inputs are ready.
     (source / "assets" / "routing.txt").write_bytes(b"one corpus\r\n")
+    # Return the canonical skill directory to the caller.
     return source
 
 
@@ -40,6 +49,7 @@ def mirrored(root: Path, host: str, relative: str) -> Path:
     @param relative a path below the skill directory
     @return the generated path
     """
+    # Return the generated path to the caller.
     return root / host / "skills" / "python-discipline" / relative
 
 
@@ -48,10 +58,12 @@ def test_one_source_is_mirrored_byte_for_byte_to_both_hosts(tmp_path: Path) -> N
 
     @param tmp_path the throwaway repository root
     """
+    # Retain the immutable source representation consumed by subsequent analysis.
     source = seed(tmp_path)
 
     assert build_skill_mirror.main(["--root", str(tmp_path)]) == 0
 
+    # Verify canonical bytes and nested assets independently in both host discovery roots.
     for host in (".claude", ".agents"):
         assert mirrored(tmp_path, host, "SKILL.md").read_bytes() == (
             source / "SKILL.md"
@@ -68,12 +80,17 @@ def test_check_names_the_host_copy_that_drifted(
 
     @param tmp_path the throwaway repository root
     @param capsys pytest's captured-console fixture
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
     seed(tmp_path)
     assert build_skill_mirror.main(["--root", str(tmp_path)]) == 0
+    # Publish the externally visible effect after all required inputs are ready.
     mirrored(tmp_path, ".agents", "SKILL.md").write_bytes(b"drift\n")
 
     assert build_skill_mirror.main(["--root", str(tmp_path), "--check"]) == 1
+    # Combine the checker's captured diagnostic streams without losing emission text.
     output = capsys.readouterr().out
     assert ".agents/skills/python-discipline/SKILL.md" in output
     assert ".claude/skills/python-discipline/SKILL.md" not in output
@@ -83,12 +100,18 @@ def test_retired_files_are_removed_from_both_host_mirrors(tmp_path: Path) -> Non
     """A file removed once cannot survive as guidance for either agent.
 
     @param tmp_path the throwaway repository root
+
+    @par Effects
+    Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Retain the immutable source representation consumed by subsequent analysis.
     source = seed(tmp_path)
     assert build_skill_mirror.main(["--root", str(tmp_path)]) == 0
+    # Publish the externally visible effect after all required inputs are ready.
     (source / "assets" / "routing.txt").unlink()
 
     assert build_skill_mirror.main(["--root", str(tmp_path)]) == 0
 
+    # Verify the retired asset disappeared independently from both host mirrors.
     for host in (".claude", ".agents"):
         assert not mirrored(tmp_path, host, "assets/routing.txt").exists()

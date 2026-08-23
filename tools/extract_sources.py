@@ -28,15 +28,19 @@ from typing import TYPE_CHECKING, Final
 
 import yaml
 
+# Import annotation-only protocols without adding runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
 ## Where the corpus is read from unless `--root` says otherwise, and -- always,
 ## `--root` notwithstanding -- the root the paths in the output are relative to.
 REPO_ROOT: Final = Path(__file__).resolve().parent.parent
+## ATX depth treated as the owning doctrine section when attributing nested claims.
 MAJOR_HEADING_LEVEL: Final = 2
 
 ## Source documents, in the order they take precedence (later supersedes earlier).
+## Each element is a `(two-letter provenance tag, repository-relative document path)` tuple;
+## precedence increases with tuple order.
 SOURCES: Final[tuple[tuple[str, str], ...]] = (
     ("SG", "sources/Software Engineering Style Guidelines.md"),
     ("SE", "sources/doctrine/SOFTWARE-ENGINEERING.md"),
@@ -155,9 +159,11 @@ class CandidateContext:
 
     ## Two-letter source tag and repository-relative document path.
     source: str
+    ## Repository path that owns this candidate record.
     path: str
     ## Nearest heading and its owning level-two heading.
     section: str
+    ## Nearest level-two heading, retained while more local level-three headings change.
     major_section: str
 
 
@@ -173,7 +179,10 @@ def _claim_id(source: str, line: int, text: str) -> str:
     @param text complete normalized source statement
     @return an identity readable by a reviewer and collision-resistant in the corpus
     """
+    # Hash the complete normalized statement so changed wording cannot inherit a disposition.
     digest = hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
+    # Return an identity readable by a reviewer and collision-resistant in the corpus to the
+    # caller.
     return f"{source}-L{line:04d}-{digest}"
 
 
@@ -193,7 +202,9 @@ def _candidate(
     @param force_hint mechanical force hint, never the final disposition
     @return the candidate and its derived stable identity
     """
+    # Normalize and bound display text before deriving both identity and stored content.
     normalized = _truncate(text)
+    # Return the candidate and its derived stable identity to the caller.
     return Candidate(
         _claim_id(context.source, line, normalized),
         context.source,
@@ -219,7 +230,9 @@ def _truncate(text: str, limit: int = 400) -> str:
     @param limit the longest result allowed, the ellipsis counted within it
     @return the flattened statement, never longer than the limit
     """
+    # Collapse every whitespace run to one space for stable readable census entries.
     flat = " ".join(text.split())
+    # Return the flattened statement, never longer than the limit to the caller.
     return flat if len(flat) <= limit else flat[: limit - 1] + "…"
 
 
@@ -236,26 +249,46 @@ def scan(tag: str, path: Path) -> tuple[list[Section], list[Candidate]]:
            path recorded on every result is taken relative to that
     @return its sections, each carrying its candidate count, and its candidates
     """
+    # Preserve decoded source-line strings in lexical document order.
     lines = path.read_text(encoding="utf-8").splitlines()
+    # Record the document using a repository-relative POSIX provenance path.
     rel = path.relative_to(REPO_ROOT).as_posix()
+    # Each sections element is one accepted-heading record; document order is preserved.
     sections: list[Section] = []
+    # Each candidates element is one strongest-signal claim record; source-line order is
+    # preserved.
     candidates: list[Candidate] = []
+    # Begin candidate attribution in the synthetic pre-heading section.
     current = "(preamble)"
+    # Begin major-section attribution in the same synthetic pre-heading section.
     current_major = "(preamble)"
+    # True enables inside fence; false selects its disabled alternative.
     inside_fence = False
+    # Count candidate records by nearest-heading text; counter key order is deliberately unused.
     counts: Counter[str] = Counter()
 
+    # Inspect every source line with its one-based provenance position in document order.
     for index, line in enumerate(lines, start=1):
+        # Toggle example exclusion at each fenced-block delimiter.
         if _FENCE.match(line):
+            # Flip whether subsequent lines belong to a fenced example.
             inside_fence = not inside_fence
+            # Advance after the current candidate has been conclusively excluded.
             continue
+        # Exclude every line inside a fenced example from headings and candidate nets.
         if inside_fence:
+            # Advance after the current candidate has been conclusively excluded.
             continue
 
+        # Match accepted ATX heading levels before applying any claim detector.
         heading = _HEADING.match(line)
+        # Use the available-value path only when heading is present.
         if heading is not None:
+            # Make this heading the nearest section for subsequent candidate lines.
             current = heading.group("text")
+            # Update major ownership only at the declared level-two boundary.
             if len(heading.group("hashes")) == MAJOR_HEADING_LEVEL:
+                # Carry this level-two title across nested headings until the next peer.
                 current_major = current
             sections.append(
                 Section(
@@ -266,15 +299,22 @@ def scan(tag: str, path: Path) -> tuple[list[Section], list[Candidate]]:
                     line=index,
                 )
             )
+            # Advance after the current candidate has been conclusively excluded.
             continue
 
+        # Freeze source and current heading ownership for all detectors on this line.
         context = CandidateContext(tag, rel, current, current_major)
+        # Select at most one candidate using strongest-signal precedence.
         candidate = _candidate_in(context, index, line)
+        # Record a detected claim and increment its owning section count together.
         if candidate is not None:
             candidates.append(candidate)
+            # Increment the current heading only after the candidate record is retained.
             counts[current] += 1
 
+    # Rebuild section records in document order with final candidate-count values attached.
     sections = [Section(**{**asdict(s), "candidates": counts.get(s.heading, 0)}) for s in sections]
+    # Return its sections, each carrying its candidate count, and its candidates to the caller.
     return sections, candidates
 
 
@@ -289,15 +329,25 @@ def _explicit_candidate(
     @param stripped whitespace-trimmed source line
     @return an explicitly tagged, numbered, or checklist claim when present
     """
+    # Search first for an explicit BINDING or ADVISORY force tag.
     tagged = _TAGGED.search(line)
+    # Use the available-value path only when tagged is present.
     if tagged is not None:
+        # Select the named or bare capture as the authoritative force hint.
         force = tagged.group("tag") or tagged.group("bare")
+        # Return an explicitly tagged, numbered, or checklist claim when present to the caller.
         return _candidate(context, line_no, "tagged", stripped, force)
+    # Treat a numbered bold-title rule as the next-highest confidence signal.
     if _NUMBERED_RULE.match(line) is not None:
+        # Return an explicitly tagged, numbered, or checklist claim when present to the caller.
         return _candidate(context, line_no, "numbered-rule", stripped, "unclassified")
+    # Match checklist syntax only after tagged and numbered forms are excluded.
     checkbox = _CHECKBOX.match(line)
+    # Use the available-value path only when checkbox is present.
     if checkbox is not None:
+        # Return an explicitly tagged, numbered, or checklist claim when present to the caller.
         return _candidate(context, line_no, "checklist", checkbox.group("text"), "unclassified")
+    # Return an explicitly tagged, numbered, or checklist claim when present to the caller.
     return None
 
 
@@ -312,13 +362,21 @@ def _commenting_candidate(
     @param stripped whitespace-trimmed source line
     @return one commenting-doctrine claim when present
     """
+    # Treat doctrine list items as binding enumerated claims.
     bullet = _BULLET.match(line)
+    # Use the available-value path only when bullet is present.
     if bullet is not None:
+        # Return one commenting-doctrine claim when present to the caller.
         return _candidate(context, line_no, "enumerated-claim", bullet.group("text"), "BINDING")
+    # Treat non-header allocation-table rows as binding decisions.
     if _TABLE_ROW.match(line) and stripped.lower() != _COMMENTING_TABLE_HEADER:
+        # Return one commenting-doctrine claim when present to the caller.
         return _candidate(context, line_no, "decision-table", stripped, "BINDING")
+    # Treat remaining lower-case modal prose as a binding claim.
     if _COMMENTING_MODAL.search(line):
+        # Return one commenting-doctrine claim when present to the caller.
         return _candidate(context, line_no, "normative-prose", stripped, "BINDING")
+    # Return one commenting-doctrine claim when present to the caller.
     return None
 
 
@@ -333,20 +391,35 @@ def _candidate_in(context: CandidateContext, line_no: int, line: str) -> Candida
     @param line original source line
     @return the one candidate selected for this line, or None
     """
+    # Normalize outer whitespace once for every claim detector and stored statement.
     stripped = line.strip()
+    # Exclude blank lines and Markdown table separators before signal precedence begins.
     if not stripped or (_TABLE_ROW.match(line) and stripped.startswith("|---")):
+        # Return the one candidate selected for this line, or None to the caller.
         return None
+    # Give tagged, numbered, and checklist syntax first claim on the line.
     explicit = _explicit_candidate(context, line_no, line, stripped)
+    # Use the available-value path only when explicit is present.
     if explicit is not None:
+        # Return the one candidate selected for this line, or None to the caller.
         return explicit
+    # Apply lower-case doctrine-specific inference only to the v5 commenting source.
     if context.source == "CD":
+        # Test enumerated, allocation-table, then normative-prose signals in order.
         commenting = _commenting_candidate(context, line_no, line, stripped)
+        # Use the available-value path only when commenting is present.
         if commenting is not None:
+            # Return the one candidate selected for this line, or None to the caller.
             return commenting
+    # Use uppercase RFC-2119 vocabulary as the general binding fallback.
     if _RFC2119.search(line):
+        # Return the one candidate selected for this line, or None to the caller.
         return _candidate(context, line_no, "rfc2119", stripped, "BINDING")
+    # Capture unquoted prohibitions only after every stronger signal is absent.
     if _NEVER.search(line) and not line.lstrip().startswith(">"):
+        # Return the one candidate selected for this line, or None to the caller.
         return _candidate(context, line_no, "prohibition", stripped, "unclassified")
+    # Return the one candidate selected for this line, or None to the caller.
     return None
 
 
@@ -361,6 +434,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     @param argv the arguments after the program name; `None` takes them from
            `sys.argv`
     @return 0 when every listed source was found, 1 when any was missing
+
+    @par Effects
+    In write mode, replaces the requested YAML census after scanning all present
+    sources; check mode performs no filesystem writes.
     """
     # The console encoding is not ours to choose, and a tool that dies on one is
     # worse than one that renders a character imperfectly.
@@ -376,52 +453,84 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
+    # Each all sections element is one heading record; source-precedence then document order is
+    # preserved.
     all_sections: list[Section] = []
+    # Each all candidates element is one claim record; source-precedence then source-line order
+    # is preserved.
     all_candidates: list[Candidate] = []
+    # Each missing element is one absent relative source-path string; declared source order is
+    # preserved.
     missing: list[str] = []
 
+    # Scan each `(tag, relative path)` source tuple in declared precedence order.
     for tag, relative in SOURCES:
+        # Resolve the current declared source path below the selected input root.
         path = args.root / relative
+        # Record a missing source without abandoning the partial census.
         if not path.exists():
             missing.append(relative)
+            # Advance after the current candidate has been conclusively excluded.
             continue
+        # Scan the present document into ordered section and candidate records.
         sections, candidates = scan(tag, path)
         all_sections.extend(sections)
         all_candidates.extend(candidates)
 
+    # Map YAML schema-field keys to provenance metadata and ordered record sequences; insertion
+    # order intentionally defines human-readable output order.
     payload = {
         "generated_by": "tools/extract_sources.py",
         "note": (
             "Mechanical first pass. Module assignment, mechanism choice and "
             "deduplication are judgment and are recorded in meta/PROVENANCE.md."
         ),
+        # Serialize section dataclasses in accumulated source/document order.
         "sections": [asdict(s) for s in all_sections],
+        # Serialize candidate dataclasses in accumulated source/line order.
         "candidates": [asdict(c) for c in all_candidates],
     }
+    # Render deterministic Unicode YAML while preserving schema insertion order.
     rendered = yaml.safe_dump(payload, sort_keys=False, allow_unicode=True, width=100)
+    # In check mode, detect either an absent census or byte-level extraction drift.
     drifted = args.check and (
         not args.out.exists() or args.out.read_text(encoding="utf-8") != rendered
     )
+    # Write mode replaces the census only after the complete rendering exists.
     if not args.check:
+        # Publish normalized UTF-8 YAML with platform-independent newlines.
         args.out.write_text(rendered, encoding="utf-8", newline="\n")
 
+    # Count candidate records by source-tag key for the summary; key order is later sorted.
     by_source = Counter(c.source for c in all_candidates)
+    # Count candidate records by extraction-kind key for the summary; key order is later sorted.
     by_kind = Counter(c.kind for c in all_candidates)
+    # Name whether this invocation compared or published the census.
     action = "checked" if args.check else "wrote"
+    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
+        # Prefer a portable path relative to the selected source root.
         display_path = args.out.relative_to(args.root).as_posix()
+    # Translate the expected failure into this mechanism's stable diagnostic path.
     except ValueError:
+        # Fall back to the absolute POSIX spelling for an external output path.
         display_path = args.out.as_posix()
     print(f"{action} {display_path}")
     print(f"  {len(all_sections)} sections, {len(all_candidates)} candidate statements")
+    # Render source-tag/count pairs in lexical tag order.
     print("  by source: " + ", ".join(f"{k}={v}" for k, v in sorted(by_source.items())))
+    # Render extraction-kind/count pairs in lexical kind order.
     print("  by kind:   " + ", ".join(f"{k}={v}" for k, v in sorted(by_kind.items())))
+    # Report missing relative source paths in declaration order.
     for name in missing:
         print(f"  MISSING: {name}", file=sys.stderr)
+    # Report committed-census drift independently of source absence.
     if drifted:
         print("  DRIFT: committed extraction differs from the source corpus", file=sys.stderr)
+    # Return the aggregate process status to the command-line boundary.
     return 1 if missing or drifted else 0
 
 
+# Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
     sys.exit(main())
