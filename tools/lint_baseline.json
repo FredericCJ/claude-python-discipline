@@ -1,60 +1,12 @@
 {
  "generated_by": "tools/lint_gate.py --update-baseline",
  "note": "Ratchet ceiling for gate step 1. lint_gate.py fails when a (file, code) pair appears that is not recorded here, or when the total rises. Move it with `python tools/lint_gate.py --update-baseline --why \"...\"`, never by hand -- the pairs must stay exactly what the tool itself measured. A code in lint_gate.PROTECTED is refused before this file is consulted.",
- "count": 91,
- "why": "Canonical LF writes remove one residual formatting finding; preserve the lower exact pair set.",
+ "count": 70,
+ "why": "The v5 entity and semantic-step documentation migration eliminated 13 Ruff debt pairs and lowered the exact total from 91 to 70; preserve that verified improvement.",
  "pairs": [
-  [
-   "enforce/checks/__init__.py",
-   "SIM105"
-  ],
-  [
-   "enforce/checks/assert_usage.py",
-   "FURB192"
-  ],
-  [
-   "enforce/checks/doc_style.py",
-   "PLR2004"
-  ],
-  [
-   "enforce/checks/no_test_branches.py",
-   "ARG002"
-  ],
-  [
-   "enforce/checks/no_test_branches.py",
-   "SIM102"
-  ],
-  [
-   "enforce/checks/test_checks.py",
-   "E501"
-  ],
-  [
-   "enforce/fitness/test_meta.py",
-   "D301"
-  ],
-  [
-   "enforce/fitness/test_meta.py",
-   "PLR6201"
-  ],
-  [
-   "enforce/fitness/test_meta.py",
-   "PT006"
-  ],
-  [
-   "enforce/fitness/test_meta.py",
-   "S404"
-  ],
   [
    "tools/build_graph.py",
    "E501"
-  ],
-  [
-   "tools/build_provenance.py",
-   "E501"
-  ],
-  [
-   "tools/build_provenance.py",
-   "ISC004"
   ],
   [
    "tools/docgate.py",
@@ -71,10 +23,6 @@
   [
    "tools/docgate.py",
    "S607"
-  ],
-  [
-   "tools/extract_sources.py",
-   "E501"
   ],
   [
    "tools/graph_model.py",
