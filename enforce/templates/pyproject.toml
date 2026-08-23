@@ -90,13 +90,11 @@ owner = "src/package/adapters/http"
 #
 # Files consumed by external mechanisms are named explicitly. The gate never
 # searches an ancestor or sibling for these and refuses any path that escapes
-# this repository. ``documentation_root`` is consulted only for Sphinx; keeping
-# it present makes a later engine change explicit rather than discovery-driven.
+# this repository.
 
 [tool.agent-discipline-gate]
 import_contracts = "importlinter.toml"
 doxyfile = "Doxyfile"
-documentation_root = "docs"
 artifact_imports = ["package"]
 
 # Optional installed command probes. Commands are argv arrays, never shell text.

@@ -110,7 +110,6 @@ REQUIRED_PYTHON_DISTRIBUTIONS: Final[frozenset[str]] = frozenset({
     "pytest-timeout",
     "pyyaml",
     "ruff",
-    "sphinx",
 })
 ## PEP 503 normalization for names in the deliberately simple exact-pin manifest.
 _DISTRIBUTION_PUNCTUATION: Final = re.compile(r"[-_.]+")

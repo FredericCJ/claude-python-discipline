@@ -187,7 +187,6 @@ def _configured_tool_project(tmp_path: Path) -> Path:
             "\n[tool.agent-discipline-gate]\n"
             "import_contracts = 'importlinter.toml'\n"
             "doxyfile = 'Doxyfile'\n"
-            "documentation_root = 'docs'\n"
             "artifact_imports = ['refpkg']\n",
         )
         stream.write(
@@ -354,26 +353,37 @@ def _write_doxyfile(root: Path, source: str = "src") -> None:
     )
 
 
-def test_explicit_none_documentation_is_validly_inapplicable(tmp_path: Path) -> None:
-    """Only an explicit none declaration can remove the generation step."""
+@pytest.mark.parametrize("engine", ["none", "sphinx"])
+def test_legacy_documentation_engine_is_a_migration_failure(
+    tmp_path: Path,
+    engine: str,
+) -> None:
+    """A v4 engine choice receives one actionable v5 declaration refusal.
+
+    @param tmp_path isolated configured reference
+    @param engine former engine selection
+    """
     root = _configured_tool_project(tmp_path)
     project_file = root / "pyproject.toml"
     project_file.write_text(
         project_file.read_text(encoding="utf-8").replace(
             'doc_engine = "doxygen"',
-            'doc_engine = "none"',
+            f'doc_engine = "{engine}"',
         ),
         encoding="utf-8",
     )
 
-    result = project_gate.run(
+    report = project_gate.run(
         root,
         steps=(project_gate.DocumentationAdapter(),),
-    ).outcomes[1]
+    )
+    result = report.outcomes[0]
 
-    assert result.status is project_gate.Status.NOT_APPLICABLE
-    assert result.green
-    assert not result.required
+    assert result.step_id == "declaration"
+    assert result.status is project_gate.Status.FAIL
+    assert result.diagnostic_id == "DISC-PROJECT-021"
+    assert "migrate entity comments" in result.summary
+    assert report.outcomes[1].status is project_gate.Status.NOT_RUN
 
 
 def test_missing_doxyfile_is_a_configuration_failure(tmp_path: Path) -> None:
@@ -458,76 +468,6 @@ def test_doxygen_zero_output_is_not_green(
             project_gate.CommandExecution(0, "", 1),
             0,
         ),
-    )
-
-    result = project_gate.run(
-        root,
-        steps=(project_gate.DocumentationAdapter(),),
-    ).outcomes[1]
-
-    assert result.status is project_gate.Status.FAIL
-    assert result.diagnostic_id == "GATE-DOCUMENTATION-004_NO_OUTPUT"
-
-
-def _write_sphinx_project(root: Path) -> None:
-    """Select Sphinx and author the smallest non-vacuous documentation tree.
-
-    @param root configured reference repository
-    """
-    project_file = root / "pyproject.toml"
-    project_file.write_text(
-        project_file.read_text(encoding="utf-8").replace(
-            'doc_engine = "doxygen"',
-            'doc_engine = "sphinx"',
-        ),
-        encoding="utf-8",
-    )
-    documentation = root / "docs"
-    documentation.mkdir(exist_ok=True)
-    (documentation / "conf.py").write_text(
-        '"""Configuration consumed by the Sphinx gate proof."""\n\nproject = "Reference"\n',
-        encoding="utf-8",
-    )
-    (documentation / "index.rst").write_text(
-        "Reference\n=========\n\nA generated project-gate page.\n",
-        encoding="utf-8",
-    )
-
-
-@pytest.mark.timeout(60)
-def test_real_sphinx_build_is_supported_and_non_empty(tmp_path: Path) -> None:
-    """The packaged Sphinx pin produces HTML through the real adapter.
-
-    @param tmp_path isolated configured reference
-    """
-    root = _configured_tool_project(tmp_path)
-    _write_sphinx_project(root)
-
-    result = project_gate.run(
-        root,
-        steps=(project_gate.DocumentationAdapter(),),
-    ).outcomes[1]
-
-    assert result.status is project_gate.Status.PASS
-    assert result.subjects == 1
-    assert result.tool == "Sphinx 8.2.3"
-
-
-def test_sphinx_zero_output_is_not_green(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """A zero exit without generated HTML remains a failed observation.
-
-    @param tmp_path isolated configured reference
-    @param monkeypatch substitutes only the process execution
-    """
-    root = _configured_tool_project(tmp_path)
-    _write_sphinx_project(root)
-    monkeypatch.setattr(
-        project_gate,
-        "_execute",
-        lambda _command, _root: project_gate.CommandExecution(0, "", 1),
     )
 
     result = project_gate.run(

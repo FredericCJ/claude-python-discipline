@@ -1,4 +1,4 @@
-"""Run the adopter-facing v4 gate against exactly one repository.
+"""Run the adopter-facing v5 gate against exactly one repository.
 
 The gate is deliberately a report-producing program rather than a sequence of
 shell snippets.  Every step has one of five closed outcomes, records the exact
@@ -57,6 +57,9 @@ from checks import (  # ruff: ignore[module-import-not-at-top-of-file]
     project,
 )
 from checks.__main__ import discover  # ruff: ignore[module-import-not-at-top-of-file]
+from checks.documentation_model import (  # ruff: ignore[module-import-not-at-top-of-file]
+    governed_paths,
+)
 
 ## Machine-readable report schema.  Increment for an incompatible JSON change.
 REPORT_SCHEMA: Final = 1
@@ -194,9 +197,9 @@ class GateContext:
     root: Path
     ## Ephemeral workspace for caches and later build/install isolation.
     scratch: Path
-    ## Required v4 unit kind, narrowed once at the declaration boundary.
+    ## Required v5 unit kind, narrowed once at the declaration boundary.
     unit: project.UnitKind
-    ## Parsed v4 declaration; no permissive ancestor fallback is possible here.
+    ## Parsed v5 declaration; no permissive ancestor fallback is possible here.
     declaration: project.Declaration
     ## Decoded root project file for configuration probes added by later adapters.
     pyproject: Mapping[str, object]
@@ -292,10 +295,10 @@ _RED_WITHOUT_DIAGNOSTIC: Final = "every red result requires a stable diagnostic"
 _INAPPLICABLE_REQUIRED: Final = "a not-applicable step cannot remain required"
 ## Corrupt measurements must not enter performance or subject-count baselines.
 _NEGATIVE_MEASUREMENT: Final = "gate counts and durations cannot be negative"
-## Stable declaration diagnostic used when a permissive object reaches this v4 boundary.
+## Stable declaration diagnostic used when a permissive object reaches this v5 boundary.
 _MISSING_UNIT_CODE: Final = "DISC-PROJECT-002"
 ## Remediation detail paired with ``_MISSING_UNIT_CODE``.
-_MISSING_UNIT_DETAIL: Final = "unit is required for the v4 project gate"
+_MISSING_UNIT_DETAIL: Final = "unit is required for the v5 project gate"
 
 
 def _digest(path: Path) -> str:
@@ -311,7 +314,7 @@ def _project_use(root: Path) -> ConfigurationUse:
     """Bind declaration loading to the project file at the exact root.
 
     @param root governed repository root
-    @return configuration record for the v4 declaration
+    @return configuration record for the v5 declaration
     """
     path = root / "pyproject.toml"
     return ConfigurationUse(
@@ -335,7 +338,7 @@ def _project_use(root: Path) -> ConfigurationUse:
 
 
 def _required_unit(declaration: project.Declaration, source: Path) -> project.UnitKind:
-    """Narrow the permissive direct-check declaration to the v4 gate contract.
+    """Narrow the permissive direct-check declaration to the v5 gate contract.
 
     @param declaration parsed repository declaration
     @param source exact project file
@@ -373,7 +376,7 @@ def _load_context(root: Path, scratch: Path) -> tuple[StepResult, GateContext | 
             status=Status.FAIL,
             required=True,
             diagnostic_id=str(diagnostic),
-            summary=f"exact-root v4 declaration refused: {problem}",
+            summary=f"exact-root v5 declaration refused: {problem}",
             duration_ms=duration,
         )
         return result, None
@@ -388,7 +391,7 @@ def _load_context(root: Path, scratch: Path) -> tuple[StepResult, GateContext | 
         summary=f"loaded {source} for one {declared_unit.value} repository",
         configuration=(use,),
         subjects=1,
-        tool="agent-discipline declaration schema v4",
+        tool="agent-discipline declaration schema v5",
         duration_ms=duration,
     )
     return result, GateContext(root, scratch, declared_unit, declaration, document, use)
@@ -419,12 +422,7 @@ def _run_discipline_checks(context: GateContext) -> StepResult:
     for check in checks:
         check.declaration = context.declaration
         findings.extend(check.run(paths))
-    source_files = sum(
-        1
-        for path in paths
-        for candidate in (path.rglob("*.py") if path.is_dir() else (path,))
-        if candidate.is_file()
-    )
+    source_files = len(governed_paths(context.declaration, paths))
     duration = round((time.perf_counter() - started) * 1000)
     if source_files == 0:
         return StepResult(
@@ -1419,147 +1417,14 @@ def _run_doxygen_documentation(
     )
 
 
-def _prepare_sphinx(context: GateContext) -> tuple[PreparedCommand, Path]:
-    """Bind Sphinx to one local source directory and configuration file.
-
-    @param context exact governed repository
-    @return prepared command and ephemeral output directory
-    """
-    gate = _gate_table(context)
-    field = "tool.agent-discipline-gate.documentation_root"
-    roots, _python_subjects = _local_targets(
-        context,
-        _string_list(gate.get("documentation_root"), field),
-        field,
-    )
-    if len(roots) != 1:
-        raise _probe_error(field, "Sphinx requires exactly one documentation root")
-    source = context.root / roots[0]
-    config = source / "conf.py"
-    if not config.is_file():
-        raise _probe_error(field, f"{roots[0]}/conf.py does not exist")
-    authored = sum(
-        1 for suffix in ("*.rst", "*.md") for path in source.rglob(suffix) if path.is_file()
-    )
-    if authored == 0:
-        raise _probe_error(field, "documentation root contains no .rst or .md source")
-    output = context.scratch / "sphinx"
-    gate_use = _project_configuration(
-        context,
-        ("tool.agent-discipline.doc_engine", field),
-    )
-    config_use = ConfigurationUse(
-        path=config.relative_to(context.root).as_posix(),
-        sha256=_digest(config),
-        fields=("Sphinx configuration module",),
-    )
-    command = PreparedCommand(
-        command=(
-            sys.executable,
-            "-m",
-            "sphinx",
-            "-W",
-            "--keep-going",
-            "-b",
-            "html",
-            roots[0],
-            str(output),
-        ),
-        configuration=(gate_use, config_use),
-        subjects=authored,
-        failure_diagnostic="GATE-DOCUMENTATION-003_BUILD",
-        subject_label="documentation sources",
-    )
-    return command, output
-
-
-def _run_sphinx_documentation(
-    context: GateContext,
-    rules: tuple[str, ...],
-) -> StepResult:
-    """Run the configured Sphinx gate and require generated HTML.
-
-    @param context exact governed repository
-    @param rules documentation generation rules
-    @return explicit Sphinx outcome
-    """
-    try:
-        command, output = _prepare_sphinx(context)
-    except ConfigurationProbeError as problem:
-        return _documentation_configuration_failure(context, rules, problem)
-    try:
-        version = _distribution_version("Sphinx")
-    except importlib.metadata.PackageNotFoundError:
-        return StepResult(
-            step_id="documentation",
-            rules=rules,
-            status=Status.UNSUPPORTED,
-            required=True,
-            diagnostic_id="GATE-DOCUMENTATION-002_TOOL",
-            summary="doc_engine is sphinx but the Sphinx distribution is unavailable",
-            command=command.command,
-            configuration=command.configuration,
-            subjects=command.subjects,
-        )
-    try:
-        execution = _execute(command, context.root)
-    except CommandExecutionError as problem:
-        return StepResult(
-            step_id="documentation",
-            rules=rules,
-            status=Status.FAIL,
-            required=True,
-            diagnostic_id="GATE-DOCUMENTATION-006_EXECUTION",
-            summary=f"Sphinx did not complete: {problem}",
-            command=command.command,
-            configuration=command.configuration,
-            subjects=command.subjects,
-            tool=f"Sphinx {version}",
-        )
-    pages = len(list(output.rglob("*.html")))
-    if execution.returncode != 0 or pages == 0:
-        diagnostic = (
-            command.failure_diagnostic
-            if execution.returncode != 0
-            else "GATE-DOCUMENTATION-004_NO_OUTPUT"
-        )
-        return StepResult(
-            step_id="documentation",
-            rules=rules,
-            status=Status.FAIL,
-            required=True,
-            diagnostic_id=diagnostic,
-            summary=f"Sphinx returned {execution.returncode} and generated {pages} HTML page(s)",
-            command=command.command,
-            configuration=command.configuration,
-            subjects=command.subjects,
-            tool=f"Sphinx {version}",
-            duration_ms=execution.duration_ms,
-            output=_tail(execution.output),
-        )
-    return StepResult(
-        step_id="documentation",
-        rules=rules,
-        status=Status.PASS,
-        required=True,
-        diagnostic_id=None,
-        summary=f"Sphinx generated {pages} HTML page(s) without warnings",
-        command=command.command,
-        configuration=command.configuration,
-        subjects=command.subjects,
-        tool=f"Sphinx {version}",
-        duration_ms=execution.duration_ms,
-    )
-
-
 @dataclass(frozen=True, slots=True)
 class DocumentationAdapter:
-    """Capability-aware adapter for none, Doxygen, and Sphinx projects."""
+    """Capability-aware adapter for the sole v5 Doxygen engine."""
 
     ## Stable report identity.
     step_id: str = "documentation"
-    ## Doxygen/Sphinx generation predicates named by binding rules.
-    rules: tuple[str, ...] = ("DOC-005", "DOC-010", "DOC-011")
+    ## Doxygen generation and non-vacuity predicates named by binding rules.
+    rules: tuple[str, ...] = ("DOC-005", "DOC-010", "DOC-011", "DOC-015", "DOC-029")
 
     def __call__(self, context: GateContext) -> StepResult:
         """Apply the declared engine without narrowing silently.
@@ -1567,16 +1432,6 @@ class DocumentationAdapter:
         @param context exact governed repository
         @return explicit build, inapplicability, or support outcome
         """
-        if context.declaration.doc_engine == "none":
-            return StepResult(
-                step_id=self.step_id,
-                rules=self.rules,
-                status=Status.NOT_APPLICABLE,
-                required=False,
-                diagnostic_id="GATE-DOCUMENTATION-000_NOT_APPLICABLE",
-                summary="doc_engine is explicitly none; generated documentation is not required",
-                configuration=(context.declaration_use,),
-            )
         if platform.system() not in {"Windows", "Linux"}:
             return StepResult(
                 step_id=self.step_id,
@@ -1586,9 +1441,7 @@ class DocumentationAdapter:
                 diagnostic_id="GATE-DOCUMENTATION-005_PLATFORM",
                 summary=f"documentation builds are not release-supported on {platform.system()}",
             )
-        if context.declaration.doc_engine == "doxygen":
-            return _run_doxygen_documentation(context, self.rules)
-        return _run_sphinx_documentation(context, self.rules)
+        return _run_doxygen_documentation(context, self.rules)
 
 
 class ArtifactError(ValueError):
