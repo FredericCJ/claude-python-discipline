@@ -16,11 +16,12 @@ from typing import TYPE_CHECKING, Final
 
 from . import Finding, ModuleCheck, is_test_path, main
 
+# Import annotation-only contracts without runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
 
-## Anything that can reach outside the process, or make a result irreproducible.
+## Unordered I/O-module set whose each root-name element can escape or add nondeterminism.
 IO_MODULES = frozenset({
     "os", "io", "pathlib", "socket", "subprocess", "shutil", "tempfile",
     "sqlite3", "http", "urllib", "requests", "httpx", "asyncio", "threading",
@@ -41,9 +42,10 @@ IO_MODULES = frozenset({
 ## `date.today()` reads a clock, which is `ARCH-005` and `EFCT-003`'s territory,
 ## while the annotation is inert.
 ##
-## The list is deliberately short and every entry is defensible from the
+## The set is deliberately short and every pair element is defensible from the
 ## standard library's own documentation. It is not a place to park an import
 ## somebody finds inconvenient.
+## Each unordered pair contains an I/O module root then one provably pure imported name.
 PURE_NAMES: frozenset[tuple[str, str]] = frozenset({
     ("pathlib", "PurePath"),
     ("pathlib", "PurePosixPath"),
@@ -56,7 +58,8 @@ PURE_NAMES: frozenset[tuple[str, str]] = frozenset({
     ("datetime", "UTC"),
 })
 
-## Mutable collection types a domain signature may not take for a parameter the
+## Unordered mutable-collection set whose each type-name element is forbidden in domain inputs.
+## These are types a domain signature may not take for a parameter the
 ## callee does not own (`TYPE-008`). A mutable collection in a signature is an
 ## undeclared output channel: the caller cannot tell from the type whether their
 ## list comes back changed, and the day it does the defect is attributed to
@@ -70,8 +73,7 @@ MUTABLE_COLLECTIONS: Final[frozenset[str]] = frozenset({
     "MutableSequence", "MutableMapping", "MutableSet",
 })
 
-## Types owned by a framework or a transport. A domain modelled in these is
-## coupled to them at every call site (ARCH-013).
+## Unordered foreign-type set whose each name element couples domain contracts to technology.
 FOREIGN_TYPES = frozenset({
     "Namespace", "Request", "Response", "Session", "Connection", "Cursor",
     "BaseModel", "Element", "ElementTree", "DataFrame", "Series", "ndarray",
@@ -91,7 +93,7 @@ class DomainPurityCheck(ModuleCheck):
 
     ## Invoked as `python -m checks.domain_purity`.
     name = "domain_purity"
-    ## The law/ARCH and law/TYPE rules this mechanism decides.
+    ## Rule-id elements in deterministic reporting order decided by this check.
     rules = ("ARCH-002", "ARCH-013", "TYPE-002", "TYPE-006", "TYPE-007",
              "TYPE-008")
 
@@ -101,10 +103,13 @@ class DomainPurityCheck(ModuleCheck):
         @param tree the module's syntax tree
         @param path the file it was parsed from
         @param layer the architectural layer; anything but `domain` is skipped
-        @return findings from the import, annotation and dataclass passes in turn
+        @return finding elements in import, base, annotation, then dataclass pass order
         """
+        # Only non-test domain code owns the combined purity and value-shape obligations.
         if layer != "domain" or is_test_path(path):
+            # Stop iteration outside the exact architectural subject.
             return
+        # Run each independent predicate family in stable diagnostic order.
         yield from self._imports(tree, path)
         yield from self._base_classes(tree, path)
         yield from self._annotations(tree, path)
@@ -122,13 +127,21 @@ class DomainPurityCheck(ModuleCheck):
         @return one ARCH-002 finding per offending name, so `import os, sys`
             yields two, both at the statement's line
         """
+        # Inspect each syntax-node element in deterministic AST walk order.
         for node in ast.walk(tree):
+            # Inspect each imported module/name/line tuple element in statement order.
             for module, name, lineno in _imported_modules(node):
+                # Normalize a dotted spelling to its top-level package root.
                 root = module.split(".", 1)[0]
+                # Imports outside the closed I/O-capable root set satisfy this predicate.
                 if root not in IO_MODULES:
+                    # Advance to the next imported element.
                     continue
+                # A named import explicitly proven pure does not expose the module's effects.
                 if name is not None and (root, name) in PURE_NAMES:
+                    # Advance without reporting the carefully bounded exemption.
                     continue
+                # Yield the effect-capable import finding at its exact statement line.
                 yield Finding(
                     "ARCH-002", path, lineno,
                     f"domain imports `{module}`, which can perform I/O",
@@ -155,12 +168,19 @@ class DomainPurityCheck(ModuleCheck):
         @param path the file it was parsed from
         @return one ARCH-013 finding per offending base, at the class statement
         """
+        # Inspect each syntax-node element in deterministic AST walk order.
         for node in ast.walk(tree):
+            # Only class definitions publish inheritance semantics.
             if not isinstance(node, ast.ClassDef):
+                # Advance without interpreting unrelated syntax nodes.
                 continue
+            # Inspect each base-expression element in authored declaration order.
             for base in node.bases:
+                # Resolve a qualified terminal attribute or bare base identifier.
                 named = getattr(base, "attr", getattr(base, "id", ""))
+                # Inheritance from any closed foreign type imports its construction semantics.
                 if named in FOREIGN_TYPES:
+                    # Yield the framework-inheritance finding at the class statement.
                     yield Finding(
                         "ARCH-013", path, node.lineno,
                         f"domain class `{node.name}` inherits `{named}`, "
@@ -180,28 +200,40 @@ class DomainPurityCheck(ModuleCheck):
         @param path the file it was parsed from
         @return TYPE-002, ARCH-013 and TYPE-006 findings, at the annotation's line
         """
+        # Inspect each syntax-node element in deterministic AST walk order.
         for node in ast.walk(tree):
+            # Only callable definitions publish parameter and return contracts.
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                # Advance without interpreting unrelated syntax nodes.
                 continue
             # Returns are excluded: handing back a fresh list is ordinary and
             # owns nothing of the caller's. The rule is about a parameter the
             # callee does not own, so only parameters are examined.
+            # Build an unordered set whose each element is one parameter-annotation node identity.
             parameters = set(_annotations_of(node, returns=False))
+            # Inspect each contract annotation element in parameter-then-return order.
             for annotation in _annotations_of(node):
+                # Inspect each identifier element in deterministic annotation walk order.
                 for name in _names_in(annotation):
+                    # Any disables all downstream type guarantees.
                     if name == "Any":
+                        # Yield the untyped-contract finding at the annotation line.
                         yield Finding(
                             "TYPE-002", path, annotation.lineno,
                             "`Any` in a domain signature",
                             "Name the real type; `Any` disables every downstream guarantee.",
                         )
+                    # Foreign transport/framework vocabulary couples every domain caller.
                     elif name in FOREIGN_TYPES:
+                        # Yield the borrowed-type finding at the annotation line.
                         yield Finding(
                             "ARCH-013", path, annotation.lineno,
                             f"framework or transport type `{name}` in a domain signature",
                             "Translate to a domain type at the boundary (ARCH-014).",
                         )
+                    # Mutable input collections expose undeclared caller-owned output channels.
                     elif name in MUTABLE_COLLECTIONS and annotation in parameters:
+                        # Yield the mutable-input finding at the parameter annotation line.
                         yield Finding(
                             "TYPE-008", path, annotation.lineno,
                             f"mutable `{name}` in a domain parameter",
@@ -209,7 +241,9 @@ class DomainPurityCheck(ModuleCheck):
                             "collection in a signature is an undeclared output "
                             "channel the caller cannot see.",
                         )
+                # Multi-member literal unions encode a closed set without one enum authority.
                 if _is_literal_union(annotation):
+                    # Yield the non-enumerated closed-set finding at the annotation line.
                     yield Finding(
                         "TYPE-006", path, annotation.lineno,
                         "closed set written as a union of literals",
@@ -226,15 +260,25 @@ class DomainPurityCheck(ModuleCheck):
         @param path the file it was parsed from
         @return one TYPE-007 finding per class, naming which keywords are missing
         """
+        # Inspect each syntax-node element in deterministic AST walk order.
         for node in ast.walk(tree):
+            # Only class definitions can carry dataclass decorators.
             if not isinstance(node, ast.ClassDef):
+                # Advance without interpreting unrelated syntax nodes.
                 continue
+            # Inspect each decorator-expression element in authored order.
             for decorator in node.decorator_list:
+                # Non-dataclass decorators do not establish the domain value-shape contract.
                 if not _is_dataclass(decorator):
+                    # Advance to the next decorator.
                     continue
+                # Map each literal decorator-keyword key to its value in authored order.
                 kwargs = _decorator_kwargs(decorator)
+                # Preserve required-key order while collecting each absent true declaration.
                 missing = [k for k in ("frozen", "slots") if kwargs.get(k) is not True]
+                # Either missing property permits mutation or dynamic attribute state.
                 if missing:
+                    # Yield one aggregate dataclass finding in required-key order.
                     yield Finding(
                         "TYPE-007", path, node.lineno,
                         f"domain dataclass `{node.name}` is not {' and '.join(missing)}",
@@ -257,13 +301,19 @@ def _imported_modules(node: ast.AST) -> Iterator[tuple[str, str | None, int]]:
     the statement took the module itself, where no such exemption can apply.
 
     @param node any node; only import statements produce anything
-    @return each import as (module, bound name or None, line)
+    @return module/name/line tuple elements in authored alias order
     """
+    # Direct imports expose complete modules rather than individually bounded names.
     if isinstance(node, ast.Import):
+        # Inspect each import-alias element in authored order.
         for alias in node.names:
+            # Yield the complete module spelling, no bound-name exemption, and source line.
             yield alias.name, None, node.lineno
+    # Absolute from-imports expose individually named objects that may be proven pure.
     elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
+        # Inspect each imported alias element in authored order.
         for alias in node.names:
+            # Yield the module spelling, imported name, and source line.
             yield node.module, alias.name, node.lineno
 
 
@@ -277,16 +327,23 @@ def _annotations_of(node: ast.FunctionDef | ast.AsyncFunctionDef, *,
     check's.
 
     @param node the function definition
-    @param returns whether to include the return annotation. `TYPE-008` is about
+    @param returns true to include the return annotation; false for parameters only.
+        `TYPE-008` is about
         a parameter the callee does not own, and handing back a fresh list owns
         nothing of the caller's, so that rule asks for parameters alone
-    @return the annotation expressions, parameters first and the return last
+    @return annotation-expression elements in parameter order with optional return last
     """
+    # Select the complete Python argument declaration.
     args = node.args
+    # Inspect positional-only, positional, keyword-only, vararg, and kwarg elements in order.
     for arg in (*args.posonlyargs, *args.args, *args.kwonlyargs, args.vararg, args.kwarg):
+        # Only present argument nodes carrying annotations belong to the published type view.
         if arg is not None and arg.annotation is not None:
+            # Yield the parameter annotation at its contract position.
             yield arg.annotation
+    # Append the return annotation only when requested and explicitly present.
     if returns and node.returns is not None:
+        # Yield the return contract after all parameter annotations.
         yield node.returns
 
 
@@ -298,12 +355,17 @@ def _names_in(annotation: ast.expr) -> Iterator[str]:
     recognized by its own name, however the module in front of it was aliased.
 
     @param annotation the annotation expression
-    @return the bare identifiers, in traversal order, duplicates included
+    @return identifier elements in deterministic AST traversal order, duplicates included
     """
+    # Inspect each nested syntax-node element in deterministic annotation walk order.
     for node in ast.walk(annotation):
+        # Bare names contribute their complete identifier.
         if isinstance(node, ast.Name):
+            # Yield the bare identifier at its traversal position.
             yield node.id
+        # Qualified names contribute their terminal attribute as the type identity.
         elif isinstance(node, ast.Attribute):
+            # Yield the terminal attribute at its traversal position.
             yield node.attr
 
 
@@ -315,19 +377,31 @@ def _is_literal_union(annotation: ast.expr) -> bool:
     a constant also passes, since the set is then not closed in the first place.
 
     @param annotation the annotation expression, searched to any depth
-    @return True when some nested `Literal` holds more than one constant
+    @return true when some nested ``Literal`` holds multiple constants; false otherwise
     """
+    # Inspect each nested syntax-node element in deterministic annotation walk order.
     for node in ast.walk(annotation):
+        # Only subscript expressions can apply Literal to member values.
         if not isinstance(node, ast.Subscript):
+            # Advance without interpreting unrelated syntax nodes.
             continue
+        # Select the subscripted base expression.
         base = node.value
+        # Resolve a bare or qualified terminal base identifier.
         name = base.id if isinstance(base, ast.Name) else getattr(base, "attr", "")
+        # Other generic types do not declare an inline literal case set.
         if name != "Literal":
+            # Advance to the next nested subscript.
             continue
+        # Select the literal's slice expression containing its member declarations.
         target = node.slice
+        # Normalize tuple and single member forms into authored member order.
         members = target.elts if isinstance(target, ast.Tuple) else [target]
+        # More than one constant member is the exact closed inline-set shape.
         if len(members) > 1 and all(isinstance(m, ast.Constant) for m in members):
+            # Accept immediately at the first matching nested Literal.
             return True
+    # No nested Literal declares multiple constant member elements.
     return False
 
 
@@ -338,10 +412,13 @@ def _is_dataclass(decorator: ast.expr) -> bool:
     decorator escapes. The check reports on what a reader of the file can see.
 
     @param decorator one entry of a class's decorator list
-    @return True when the trailing identifier is `dataclass`
+    @return true when the trailing identifier is ``dataclass``; false otherwise
     """
+    # Called decorators expose their identity through the called function expression.
     node = decorator.func if isinstance(decorator, ast.Call) else decorator
+    # Resolve a bare or qualified terminal decorator identifier.
     name = node.id if isinstance(node, ast.Name) else getattr(node, "attr", "")
+    # Match the exact conventional dataclass spelling.
     return name == "dataclass"
 
 
@@ -354,10 +431,14 @@ def _decorator_kwargs(decorator: ast.expr) -> dict[str, object]:
     true enough for Python and is not the declaration the rule asks for.
 
     @param decorator one entry of a class's decorator list
-    @return keyword name mapped to its constant value; empty when not a call
+    @return mapping from each keyword-name key to its literal value preserving authored order;
+        empty when the decorator is not a call
     """
+    # Bare decorators carry no explicit keyword configuration.
     if not isinstance(decorator, ast.Call):
+        # Return an insertion-ordered empty mapping.
         return {}
+    # Map each explicit literal keyword-name key to its raw constant value in authored order.
     return {
         kw.arg: kw.value.value
         for kw in decorator.keywords
@@ -365,5 +446,7 @@ def _decorator_kwargs(decorator: ast.expr) -> dict[str, object]:
     }
 
 
+# Permit direct module execution through the common checker command-line adapter.
 if __name__ == "__main__":
+    # Translate the checker result into the process exit status.
     raise SystemExit(main(DomainPurityCheck()))

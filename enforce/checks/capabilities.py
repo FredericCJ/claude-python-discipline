@@ -21,10 +21,12 @@ from .architecture_model import ArchitectureError
 from .architecture_model import parse as parse_architecture
 from .project import Capability
 
+# Import annotation-only collection contracts without runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
 
-## Imported module roots whose production use is a capability observation.
+## Mapping from each imported-root key to capability-value elements in implication order;
+## mapping insertion order is deterministic but direct lookup owns classification.
 IMPORT_CAPABILITIES: Final[Mapping[str, tuple[Capability, ...]]] = {
     "pathlib": (Capability.FILESYSTEM_IO,),
     "shutil": (Capability.FILESYSTEM_IO,),
@@ -49,11 +51,11 @@ IMPORT_CAPABILITIES: Final[Mapping[str, tuple[Capability, ...]]] = {
     "concurrent": (Capability.CONCURRENCY,),
     "asyncio": (Capability.CONCURRENCY,),
 }
-## Terminal call names that visibly request an irreversible state change.
+## Unordered destructive-call set whose each terminal-name element implies irreversible change.
 DESTRUCTIVE_CALLS: Final = frozenset({
     "delete", "remove", "removedirs", "rmdir", "rmtree", "unlink",
 })
-## Calls that visibly introduce a finite wait or execution bound.
+## Unordered bounded-call set whose each terminal-name element implies finite waiting.
 BOUNDED_CALLS: Final = frozenset({"wait_for", "wait_for_completion"})
 ## Environment-key vocabulary narrow enough to infer intentional secret handling.
 SENSITIVE_NAME: Final = re.compile(
@@ -80,13 +82,19 @@ def _import_roots(tree: ast.Module) -> Iterable[tuple[str, int]]:
     """Yield imported root names and their lines.
 
     @param tree parsed production module
-    @return root module and one-indexed line pairs
+    @return root-module/one-indexed-line pair elements in deterministic AST and alias order
     """
+    # Inspect each syntax-node element in deterministic AST walk order.
     for node in ast.walk(tree):
+        # Direct imports may carry several aliases in authored order.
         if isinstance(node, ast.Import):
+            # Inspect each import-alias element in authored statement order.
             for alias in node.names:
+                # Yield the root package and statement line at this alias position.
                 yield alias.name.split(".", 1)[0], node.lineno
+        # From-imports supply one non-empty module spelling.
         elif isinstance(node, ast.ImportFrom) and node.module:
+            # Yield its root package and statement line at this walk position.
             yield node.module.split(".", 1)[0], node.lineno
 
 
@@ -96,10 +104,15 @@ def _call_name(node: ast.Call) -> str:
     @param node call syntax
     @return terminal identifier or an empty string
     """
+    # Bare calls expose their complete lexical identifier.
     if isinstance(node.func, ast.Name):
+        # Return the bare function name.
         return node.func.id
+    # Qualified calls expose their terminal method or function attribute.
     if isinstance(node.func, ast.Attribute):
+        # Return the final attribute spelling.
         return node.func.attr
+    # Other callable expression forms have no reliable terminal identifier.
     return ""
 
 
@@ -109,12 +122,19 @@ def _sensitive_environment_key(node: ast.Call) -> str | None:
     @param node call syntax
     @return matched constant key, or None
     """
+    # Resolve the terminal called name for closed-vocabulary classification.
     name = _call_name(node)
+    # Only explicit environment lookup calls with at least one argument can carry a key.
     if name not in {"getenv", "get"} or not node.args:
+        # Reject unrelated call shapes from this narrow predicate.
         return None
+    # Select the first positional argument as the environment key candidate.
     value = node.args[0]
+    # Only a literal string key provides reliable sensitive-name evidence.
     if not isinstance(value, ast.Constant) or not isinstance(value.value, str):
+        # Reject dynamic key expressions without guessing their runtime content.
         return None
+    # Return the literal key only when it matches the intentional secret vocabulary.
     return value.value if SENSITIVE_NAME.search(value.value) is not None else None
 
 
@@ -123,58 +143,85 @@ def _call_observations(node: ast.Call, path: Path) -> tuple[Observation, ...]:
 
     @param node production call syntax
     @param path source path containing the call
-    @return zero or more independent observations
+    @return independent observation elements in destructive, bound, then sensitive order
     """
+    # Accumulate observation elements in fixed predicate order.
     found: list[Observation] = []
+    # Resolve the call's terminal spelling once for destructive and bounded lookup.
     call = _call_name(node)
+    # A recognized destructive terminal name implies the additive capability.
     if call in DESTRUCTIVE_CALLS:
+        # Append the irreversible-state-change witness at the call location.
         found.append(Observation(
             Capability.DESTRUCTIVE_EFFECTS,
             path,
             node.lineno,
             f"destructive call spelling {call!r}",
         ))
+    # Record whether any keyword element explicitly names a finite timeout.
     has_timeout = any(keyword.arg == "timeout" for keyword in node.keywords)
+    # A recognized bounded call or timeout keyword implies bounded latency intent.
     if call in BOUNDED_CALLS or has_timeout:
+        # Append the bounded-execution witness at the call location.
         found.append(Observation(
             Capability.BOUNDED_LATENCY,
             path,
             node.lineno,
             "finite timeout call or keyword",
         ))
+    # Resolve an explicit secret-bearing environment key, if present.
     secret = _sensitive_environment_key(node)
+    # A matching literal key implies intentional sensitive-data handling.
     if secret is not None:
+        # Append the sensitive-data witness at the call location.
         found.append(Observation(
             Capability.SENSITIVE_DATA,
             path,
             node.lineno,
             f"secret-bearing environment key {secret!r}",
         ))
+    # Freeze the independently applicable observations in predicate order.
     return tuple(found)
 
 
 def _source_observations(source_roots: Sequence[Path]) -> list[Observation]:
     """Collect narrow capability witnesses from production Python.
 
-    @param source_roots complete declared production roots
-    @return stable source-order observations
+    @param source_roots complete production-root elements in declaration order
+    @return observation elements in stable source then AST order
+
+    @par Effects
+    Reads and parses each non-test Python file beneath the declared source roots.
     """
+    # Accumulate observation elements in stable source traversal order.
     observations: list[Observation] = []
+    # Inspect each Python source-path element in stable root and descendant order.
     for path in iter_python_files(source_roots):
+        # Test fixtures do not imply production capabilities.
         if is_test_path(path):
+            # Advance to the next production candidate.
             continue
+        # Parse one strict UTF-8 production source snapshot.
         try:
+            # Build the syntax tree while retaining the path in parser diagnostics.
             tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        # Another check reports unreadable or invalid source; inference never converts
+        # absence to false.
         except (OSError, UnicodeError, SyntaxError):
+            # Advance without emitting a capability observation from unavailable syntax.
             continue
+        # Conventional generator-module spelling is a narrow generated-artifact witness.
         if path.stem.startswith(("build_", "generate_")):
+            # Append the module-level observation before its imports and calls.
             observations.append(Observation(
                 Capability.GENERATED_ARTIFACTS,
                 path,
                 1,
                 f"production generator module {path.name!r}",
             ))
+        # Inspect each imported-root/line pair in deterministic AST and alias order.
         for root, line in _import_roots(tree):
+            # Extend with capability elements implied by this root in declared tuple order.
             observations.extend(
                 Observation(
                     capability,
@@ -184,9 +231,13 @@ def _source_observations(source_roots: Sequence[Path]) -> list[Observation]:
                 )
                 for capability in IMPORT_CAPABILITIES.get(root, ())
             )
+        # Inspect each syntax-node element in deterministic AST walk order for calls.
         for node in ast.walk(tree):
+            # Calls may independently imply destructive, bounded, or sensitive behavior.
             if isinstance(node, ast.Call):
+                # Extend with call observations in fixed predicate order.
                 observations.extend(_call_observations(node, path))
+    # Return every observation in stable source and syntax order.
     return observations
 
 
@@ -194,24 +245,39 @@ def _project_observations(root: Path) -> list[Observation]:
     """Infer a public interface from standard build metadata.
 
     @param root governed repository root
-    @return public-api observation when scripts or entry points are declared
+    @return zero or one public-api observation element when scripts or entry points exist
+
+    @par Effects
+    Reads and parses the repository's ``pyproject.toml`` once.
     """
+    # Resolve the standard build-metadata path under the governed root.
     path = root / "pyproject.toml"
+    # Decode one immutable TOML project snapshot.
     try:
+        # Parse strict UTF-8 text into an untrusted table mapping.
         document = tomllib.loads(path.read_text(encoding="utf-8"))
+    # Absence or malformed build metadata provides no positive capability witness.
     except (OSError, UnicodeError, tomllib.TOMLDecodeError):
+        # Return the ordered empty observation sequence without inferring false.
         return []
+    # Select the decoded project table, defaulting absence to an empty mapping value.
     project = document.get("project", {})
+    # A non-table project value cannot carry recognized build-surface fields.
     if not isinstance(project, dict):
+        # Return the ordered empty observation sequence.
         return []
+    # Select the optional entry-point table without coercing its shape.
     entry_points = project.get("entry-points")
+    # Scripts or any non-empty entry-point mapping imply a published executable interface.
     if project.get("scripts") or (isinstance(entry_points, dict) and entry_points):
+        # Return the sole project-level public-interface observation.
         return [Observation(
             Capability.PUBLIC_API,
             path,
             1,
             "build metadata declares scripts or entry points",
         )]
+    # Build metadata exposes no recognized public entry surface.
     return []
 
 
@@ -219,33 +285,49 @@ def infer(check: Check) -> tuple[Observation, ...]:
     """Infer every observable capability for one configured check.
 
     @param check check carrying the local project declaration
-    @return de-duplicated observations in deterministic order
+    @return de-duplicated observation elements in canonical capability order
     """
+    # Select the declaration-bound repository root.
     root = check.declaration.root
+    # Legacy declarations without a root cannot authorize ambient inference.
     if root is None:
+        # Return the ordered empty observation sequence.
         return ()
+    # Collect observation elements in a sequence preserving project-before-source order.
     found = [
         *_project_observations(root),
         *_source_observations(check.declaration.source_paths()),
     ]
+    # Resolve the optional canonical architecture model path.
     architecture_path = check.declaration.architecture_path()
+    # A declared architecture may add a published-contract public API witness.
     if architecture_path is not None:
+        # Parse the architecture without duplicating its own schema diagnostics here.
         try:
+            # Build the typed architecture snapshot used only for positive inference.
             architecture = parse_architecture(architecture_path)
+        # Invalid architecture supplies no trustworthy positive witness to this check.
         except ArchitectureError:
+            # Preserve the absence-of-inference direction rather than reporting false.
             architecture = None
+        # Any published contract implies a public API capability.
         if architecture is not None and any(
             contract.direction == "published" for contract in architecture.contracts
         ):
+            # Append the architecture-level witness after build and source observations.
             found.append(Observation(
                 Capability.PUBLIC_API,
                 architecture_path,
                 1,
                 "canonical architecture declares a published contract",
             ))
+    # Map each capability key to its first observation value in discovery order.
     unique: dict[Capability, Observation] = {}
+    # Inspect each discovered observation element in source precedence order.
     for observation in found:
+        # Preserve the first witness so diagnostics remain stable as later evidence is added.
         unique.setdefault(observation.capability, observation)
+    # Return observation values in canonical Capability enum order.
     return tuple(unique[capability] for capability in Capability if capability in unique)
 
 
@@ -254,22 +336,27 @@ class CapabilitiesCheck(Check):
 
     ## Mechanism token for capability manifest rules.
     name = "capabilities"
-    ## Manifest coherence and under-declaration are separate obligations.
+    ## Rule-id elements in deterministic reporting order for coherence and declaration coverage.
     rules = ("OPS-001", "OPS-002")
 
     def run(self, paths: Sequence[Path]) -> list[Finding]:
         """Compare explicit facts with local source, build, and contract witnesses.
 
-        @param paths ignored; source scope comes only from the declaration
-        @return one relationship finding plus each under-declared observed fact
+        @param paths path elements in caller order, deliberately ignored for declared scope
+        @return finding elements in relationship then canonical capability order
         """
+        # Mark the protocol parameter consumed while retaining the common checker signature.
         _ = paths
+        # Select the declaration path for manifest findings, or the conventional fallback.
         source = self.declaration.source or Path("pyproject.toml")
+        # Accumulate finding elements in manifest-relation then capability order.
         findings: list[Finding] = []
+        # Lifecycle ownership logically requires the capability to launch the subprocess.
         if (
             self.declaration.has(Capability.OWNS_SUBPROCESS_LIFECYCLE)
             and not self.declaration.has(Capability.LAUNCHES_SUBPROCESSES)
         ):
+            # Append the incoherent-manifest finding before source observations.
             findings.append(Finding(
                 rule_id="OPS-001",
                 path=source,
@@ -283,9 +370,13 @@ class CapabilitiesCheck(Check):
                 ),
                 diagnostic_id="CAP001_MANIFEST_RELATION",
             ))
+        # Inspect each de-duplicated observation element in canonical capability order.
         for observation in infer(self):
+            # An explicitly true capability satisfies this one-way inference witness.
             if self.declaration.has(observation.capability):
+                # Advance without claiming that absence of other evidence proves anything false.
                 continue
+            # Append the under-declaration finding at the exact local witness location.
             findings.append(Finding(
                 rule_id="OPS-002",
                 path=observation.path,
@@ -300,10 +391,13 @@ class CapabilitiesCheck(Check):
                 ),
                 diagnostic_id="CAP002_UNDERDECLARED",
             ))
+        # Return every finding in relationship then canonical capability order.
         return findings
 
 
+# Permit direct module execution through the common checker command-line adapter.
 if __name__ == "__main__":
     from . import main
 
+    # Translate the checker result into the process exit status.
     raise SystemExit(main(CapabilitiesCheck()))
