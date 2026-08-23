@@ -18,6 +18,7 @@ guarantees that nothing escapes the net.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import re
 import sys
 from collections import Counter
@@ -28,11 +29,12 @@ from typing import TYPE_CHECKING, Final
 import yaml
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator, Sequence
+    from collections.abc import Sequence
 
 ## Where the corpus is read from unless `--root` says otherwise, and -- always,
 ## `--root` notwithstanding -- the root the paths in the output are relative to.
 REPO_ROOT: Final = Path(__file__).resolve().parent.parent
+MAJOR_HEADING_LEVEL: Final = 2
 
 ## Source documents, in the order they take precedence (later supersedes earlier).
 SOURCES: Final[tuple[tuple[str, str], ...]] = (
@@ -47,6 +49,7 @@ SOURCES: Final[tuple[tuple[str, str], ...]] = (
     ("TT", "sources/manifests/python_testing_tooling_manifest.md"),
     ("SP", "sources/manifests/software_spec_discipline_manifest.md"),
     ("AT", "sources/manifests/claude_code_agent_teams_manifest.md"),
+    ("CD", "roadmap/from-4.1-to-5.0/inputs/python-commenting-and-documentation-discipline.md"),
 )
 
 ## An ATX heading down to the third level. Deeper ones are treated as prose, so a
@@ -67,11 +70,27 @@ _NEVER = re.compile(r"\b(never|Never|NEVER)\b")
 ## spans deliberately -- a span ending in a period breaks the Doxygen build.
 ## The letters stop at G and the numbers at two digits, so a corpus that grows an
 ## `H1` series silently stops being caught here.
-_NUMBERED_RULE = re.compile(r"^\s*(?:(?P<letter>[A-G]\d)\.|(?P<num>\d{1,2})\.)\s+\*\*(?P<title>[^*]+)\*\*")
+_NUMBERED_RULE = re.compile(
+    r"^\s*(?:(?P<letter>[A-G]\d)\.|(?P<num>\d{1,2})\.)\s+\*\*(?P<title>[^*]+)\*\*"
+)
 ## A checklist entry. Whether the box is ticked says nothing about its force.
 _CHECKBOX = re.compile(r"^\s*[-*]\s+\[[ x]\]\s+(?P<text>.+)$")
 ## Any table row, used only to recognise and discard the `|---|` separators.
 _TABLE_ROW = re.compile(r"^\s*\|.+\|\s*$")
+## An ordinary list item. The commenting doctrine uses lists to complete a
+## normative lead-in, so each item is a claim even when it carries no modal of
+## its own. Fenced examples have already been removed by `scan`.
+_BULLET = re.compile(r"^\s*[-*]\s+(?P<text>.+)$")
+## The supplied doctrine uses lower-case force words rather than RFC-2119 case.
+## Keep this net source-specific so re-running the historical extraction does
+## not silently reinterpret all eleven already-disposed corpora.
+_COMMENTING_MODAL = re.compile(
+    r"\b(?:shall|must|should|may|required|requires?|prohibited|forbidden|"
+    r"never|always|do not|cannot)\b",
+    re.IGNORECASE,
+)
+## The only non-claim row in the doctrine's compact allocation table.
+_COMMENTING_TABLE_HEADER = "| information | preferred owner |"
 
 
 @dataclass(frozen=True, slots=True)
@@ -100,12 +119,19 @@ class Section:
 class Candidate:
     """One statement that may become a rule."""
 
+    ## Stable identity derived from the source tag, source line and complete
+    ## normalized statement. A changed source line therefore cannot inherit an
+    ## earlier disposition silently.
+    claim_id: str
     ## Two-letter tag of the document it came from, as listed in `SOURCES`.
     source: str
     ## The document, repository-relative and POSIX-separated.
     path: str
     ## Heading it sits under, or `(preamble)` when it precedes the first one.
     section: str
+    ## Nearest level-two heading. This keeps the owning numbered doctrine
+    ## section available when a level-three example heading is more local.
+    major_section: str
     ## Where the statement sits, 1-based, so the author can go back and read it
     ## in context before deciding anything.
     line: int
@@ -121,6 +147,64 @@ class Candidate:
     ## BINDING even when its keyword was MAY, and a numbered rule or checklist
     ## item stays unclassified even when its text says MUST.
     force_hint: str
+
+
+@dataclass(frozen=True, slots=True)
+class CandidateContext:
+    """Source location shared by every candidate constructor on one line."""
+
+    ## Two-letter source tag and repository-relative document path.
+    source: str
+    path: str
+    ## Nearest heading and its owning level-two heading.
+    section: str
+    major_section: str
+
+
+def _claim_id(source: str, line: int, text: str) -> str:
+    """Build the stable identity used by the claim-disposition ledger.
+
+    The line is deliberately part of the identity. Reordering the immutable
+    source is a source change and must invalidate its previous review, even when
+    the sentence itself is unchanged.
+
+    @param source two-letter source tag
+    @param line 1-based source line
+    @param text complete normalized source statement
+    @return an identity readable by a reviewer and collision-resistant in the corpus
+    """
+    digest = hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
+    return f"{source}-L{line:04d}-{digest}"
+
+
+def _candidate(
+    context: CandidateContext,
+    line: int,
+    kind: str,
+    text: str,
+    force_hint: str,
+) -> Candidate:
+    """Construct one candidate without letting its identity and text diverge.
+
+    @param context source document and heading ownership
+    @param line 1-based source line
+    @param kind extraction signal that selected the line
+    @param text normalized statement preserved in the census
+    @param force_hint mechanical force hint, never the final disposition
+    @return the candidate and its derived stable identity
+    """
+    normalized = _truncate(text)
+    return Candidate(
+        _claim_id(context.source, line, normalized),
+        context.source,
+        context.path,
+        context.section,
+        context.major_section,
+        line,
+        kind,
+        normalized,
+        force_hint,
+    )
 
 
 def _truncate(text: str, limit: int = 400) -> str:
@@ -157,6 +241,7 @@ def scan(tag: str, path: Path) -> tuple[list[Section], list[Candidate]]:
     sections: list[Section] = []
     candidates: list[Candidate] = []
     current = "(preamble)"
+    current_major = "(preamble)"
     inside_fence = False
     counts: Counter[str] = Counter()
 
@@ -170,6 +255,8 @@ def scan(tag: str, path: Path) -> tuple[list[Section], list[Candidate]]:
         heading = _HEADING.match(line)
         if heading is not None:
             current = heading.group("text")
+            if len(heading.group("hashes")) == MAJOR_HEADING_LEVEL:
+                current_major = current
             sections.append(
                 Section(
                     source=tag,
@@ -181,7 +268,9 @@ def scan(tag: str, path: Path) -> tuple[list[Section], list[Candidate]]:
             )
             continue
 
-        for candidate in _candidates_in(tag, rel, current, index, line):
+        context = CandidateContext(tag, rel, current, current_major)
+        candidate = _candidate_in(context, index, line)
+        if candidate is not None:
             candidates.append(candidate)
             counts[current] += 1
 
@@ -189,57 +278,76 @@ def scan(tag: str, path: Path) -> tuple[list[Section], list[Candidate]]:
     return sections, candidates
 
 
-def _candidates_in(
-    tag: str, rel: str, section: str, line_no: int, line: str
-) -> Iterator[Candidate]:
-    """What a single line contributes to the census, which is at most one entry.
+def _explicit_candidate(
+    context: CandidateContext, line_no: int, line: str, stripped: str
+) -> Candidate | None:
+    """Extract high-confidence claim syntax shared by every source document.
 
-    The nets are tried from the most explicit signal to the weakest inference --
-    force tag, numbered rule, checklist item, RFC-2119 keyword, bare prohibition
-    -- and the first match ends the line, so no statement is counted twice under
-    two kinds. Blank lines and table separators contribute nothing, and a
-    prohibition inside a blockquote is ignored on the grounds that a quotation is
-    citing a rule rather than stating one.
-
-    @param tag the two-letter code of the document
-    @param rel the document, repository-relative
-    @param section the heading the line sits under
-    @param line_no the line's 1-based position
-    @param line the line as it appears, indentation included
-    @return the one candidate the line produces, or nothing
+    @param context source and heading ownership
+    @param line_no 1-based source line
+    @param line original source line
+    @param stripped whitespace-trimmed source line
+    @return an explicitly tagged, numbered, or checklist claim when present
     """
-    stripped = line.strip()
-    if not stripped or (_TABLE_ROW.match(line) and stripped.startswith("|---")):
-        return
-
     tagged = _TAGGED.search(line)
     if tagged is not None:
         force = tagged.group("tag") or tagged.group("bare")
-        yield Candidate(tag, rel, section, line_no, "tagged", _truncate(stripped), force)
-        return
-
-    numbered = _NUMBERED_RULE.match(line)
-    if numbered is not None:
-        yield Candidate(
-            tag, rel, section, line_no, "numbered-rule", _truncate(stripped), "unclassified"
-        )
-        return
-
+        return _candidate(context, line_no, "tagged", stripped, force)
+    if _NUMBERED_RULE.match(line) is not None:
+        return _candidate(context, line_no, "numbered-rule", stripped, "unclassified")
     checkbox = _CHECKBOX.match(line)
     if checkbox is not None:
-        yield Candidate(
-            tag, rel, section, line_no, "checklist", _truncate(checkbox.group("text")), "unclassified"
-        )
-        return
+        return _candidate(context, line_no, "checklist", checkbox.group("text"), "unclassified")
+    return None
 
+
+def _commenting_candidate(
+    context: CandidateContext, line_no: int, line: str, stripped: str
+) -> Candidate | None:
+    """Extract the lower-case normative forms used by the v5 doctrine.
+
+    @param context source and heading ownership
+    @param line_no 1-based source line
+    @param line original source line
+    @param stripped whitespace-trimmed source line
+    @return one commenting-doctrine claim when present
+    """
+    bullet = _BULLET.match(line)
+    if bullet is not None:
+        return _candidate(context, line_no, "enumerated-claim", bullet.group("text"), "BINDING")
+    if _TABLE_ROW.match(line) and stripped.lower() != _COMMENTING_TABLE_HEADER:
+        return _candidate(context, line_no, "decision-table", stripped, "BINDING")
+    if _COMMENTING_MODAL.search(line):
+        return _candidate(context, line_no, "normative-prose", stripped, "BINDING")
+    return None
+
+
+def _candidate_in(context: CandidateContext, line_no: int, line: str) -> Candidate | None:
+    """Return the single strongest claim signal contributed by one source line.
+
+    The nets run from explicit force to source-specific inference. Fenced blocks
+    were removed by `scan`; table separators and quoted prohibitions do not count.
+
+    @param context source and heading ownership
+    @param line_no 1-based source line
+    @param line original source line
+    @return the one candidate selected for this line, or None
+    """
+    stripped = line.strip()
+    if not stripped or (_TABLE_ROW.match(line) and stripped.startswith("|---")):
+        return None
+    explicit = _explicit_candidate(context, line_no, line, stripped)
+    if explicit is not None:
+        return explicit
+    if context.source == "CD":
+        commenting = _commenting_candidate(context, line_no, line, stripped)
+        if commenting is not None:
+            return commenting
     if _RFC2119.search(line):
-        yield Candidate(tag, rel, section, line_no, "rfc2119", _truncate(stripped), "BINDING")
-        return
-
+        return _candidate(context, line_no, "rfc2119", stripped, "BINDING")
     if _NEVER.search(line) and not line.lstrip().startswith(">"):
-        yield Candidate(
-            tag, rel, section, line_no, "prohibition", _truncate(stripped), "unclassified"
-        )
+        return _candidate(context, line_no, "prohibition", stripped, "unclassified")
+    return None
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -261,6 +369,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Inventory the source corpus.")
     parser.add_argument("--out", type=Path, default=REPO_ROOT / "tools" / "extraction.yaml")
     parser.add_argument("--root", type=Path, default=REPO_ROOT)
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="compare the committed census with a fresh extraction without writing it",
+    )
     args = parser.parse_args(argv)
 
     all_sections: list[Section] = []
@@ -285,21 +398,29 @@ def main(argv: Sequence[str] | None = None) -> int:
         "sections": [asdict(s) for s in all_sections],
         "candidates": [asdict(c) for c in all_candidates],
     }
-    args.out.write_text(
-        yaml.safe_dump(payload, sort_keys=False, allow_unicode=True, width=100),
-        encoding="utf-8",
-        newline="\n",
+    rendered = yaml.safe_dump(payload, sort_keys=False, allow_unicode=True, width=100)
+    drifted = args.check and (
+        not args.out.exists() or args.out.read_text(encoding="utf-8") != rendered
     )
+    if not args.check:
+        args.out.write_text(rendered, encoding="utf-8", newline="\n")
 
     by_source = Counter(c.source for c in all_candidates)
     by_kind = Counter(c.kind for c in all_candidates)
-    print(f"wrote {args.out.relative_to(args.root).as_posix()}")
+    action = "checked" if args.check else "wrote"
+    try:
+        display_path = args.out.relative_to(args.root).as_posix()
+    except ValueError:
+        display_path = args.out.as_posix()
+    print(f"{action} {display_path}")
     print(f"  {len(all_sections)} sections, {len(all_candidates)} candidate statements")
     print("  by source: " + ", ".join(f"{k}={v}" for k, v in sorted(by_source.items())))
     print("  by kind:   " + ", ".join(f"{k}={v}" for k, v in sorted(by_kind.items())))
     for name in missing:
         print(f"  MISSING: {name}", file=sys.stderr)
-    return 1 if missing else 0
+    if drifted:
+        print("  DRIFT: committed extraction differs from the source corpus", file=sys.stderr)
+    return 1 if missing or drifted else 0
 
 
 if __name__ == "__main__":

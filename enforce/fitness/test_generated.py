@@ -35,16 +35,29 @@ REPO_ROOT: Final = Path(__file__).resolve().parent.parent.parent
 ## nothing and exits non-zero when what is on disk differs from what it would
 ## produce, which is `DEP-010` made runnable.
 GENERATORS: Final[tuple[tuple[str, tuple[str, ...]], ...]] = (
+    ("source_extraction", ("tools/extraction.yaml",)),
+    (
+        "provenance",
+        (
+            "discipline/meta/PROVENANCE.md",
+            "roadmap/from-4.1-to-5.0/evidence/commenting-claim-dispositions.json",
+        ),
+    ),
     ("index", ("discipline/INDEX.md", "discipline/rules.json", "enforce/ENFORCEMENT.md")),
     ("graph", ("discipline/graph.json",)),
-    ("skill_mirror", (
-        ".claude/skills/python-discipline/SKILL.md",
-        ".agents/skills/python-discipline/SKILL.md",
-    )),
+    (
+        "skill_mirror",
+        (
+            ".claude/skills/python-discipline/SKILL.md",
+            ".agents/skills/python-discipline/SKILL.md",
+        ),
+    ),
 )
 
 ## How the three builders are invoked.
 COMMANDS: Final[dict[str, tuple[str, ...]]] = {
+    "source_extraction": (sys.executable, "tools/extract_sources.py"),
+    "provenance": (sys.executable, "tools/build_provenance.py"),
     "index": (sys.executable, "tools/build_index.py"),
     "graph": (sys.executable, "tools/build_graph.py"),
     "skill_mirror": (sys.executable, "tools/build_skill_mirror.py"),
@@ -58,8 +71,14 @@ def run(command: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
     @return the finished process
     """
     return subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv from GENERATORS, no shell
-        command, cwd=REPO_ROOT, capture_output=True, text=True,
-        encoding="utf-8", errors="replace", check=False, timeout=300,
+        command,
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+        timeout=300,
     )
 
 
@@ -83,8 +102,7 @@ def test_regeneration_stable(name: str) -> None:
     )
 
 
-@pytest.mark.parametrize(("name", "artefacts"), GENERATORS,
-                         ids=[n for n, _ in GENERATORS])
+@pytest.mark.parametrize(("name", "artefacts"), GENERATORS, ids=[n for n, _ in GENERATORS])
 def test_generated_output_is_committed(name: str, artefacts: tuple[str, ...]) -> None:
     """DEP-011: the artefact is in the tree, not produced on demand.
 

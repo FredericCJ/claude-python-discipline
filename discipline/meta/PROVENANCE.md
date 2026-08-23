@@ -2,7 +2,7 @@
 id: meta/PROVENANCE
 kind: meta
 title: Source Provenance
-tokens: 1187
+tokens: 1351
 load_when: ["where did this come from", "was anything lost", "source document"]
 decay: none
 ---
@@ -11,15 +11,25 @@ decay: none
 
 # Source Provenance
 
-Every heading in the 11 source documents (324 sections) and where it went. Nothing leaves the corpus silently: a section with no recorded disposition is reported as `UNREVIEWED` here and by the build, rather than quietly omitted.
+Every heading in the 12 source documents (400 sections) and where it went. Nothing leaves the corpus silently: a section with no recorded disposition is reported as `UNREVIEWED` here and by the build, rather than quietly omitted.
 
-**Resolution.** The mapping is at document granularity, with the named section-level exceptions below. It establishes that no source *document* was dropped and that each one's material has a home; it does not by itself prove that every individual claim survived. Section-by-section verification is the remaining work, and this file is where it will be recorded.
+**Resolution.** The eleven historical inputs retain the section-level census used for their original migration. The v5 commenting input is held to claim-level provenance: every mechanically enumerated normative claim has exactly one reviewed disposition in the generated machine-readable ledger. A source change, missing policy, duplicate policy, duplicate identity, or stale generated view fails the build.
 
 | Disposition | Sections |
 |---|---|
 | dropped | 6 |
-| migrated | 262 |
+| migrated | 338 |
 | superseded | 56 |
+
+## v5 claim-level disposition
+
+The frozen `CD` input contains **365** enumerated normative claims. Zero are unreviewed and zero are multiply claimed. The complete records, including source line, text, target modules, reason, and pinned source hash, are committed in `roadmap/from-4.1-to-5.0/evidence/commenting-claim-dispositions.json`.
+
+| Disposition | Claims |
+|---|---|
+| retained | 106 |
+| split | 114 |
+| strengthened | 145 |
 
 ## By source document
 
@@ -28,6 +38,7 @@ Every heading in the 11 source documents (324 sections) and where it went. Nothi
 | `AR` manifests/architecture_manifest_default.md | 32 | `frame/architecture` |
 | `AT` manifests/claude_code_agent_teams_manifest.md | 18 | `ops/teams` |
 | `CA` doctrine/CHEAPEST-ABLE.md | 19 | `ops/ALLOC` |
+| `CD` roadmap input/python-commenting-and-documentation-discipline.md | 76 | `law/DOC`, `law/DOC-NARRATION`, `law/DOC-NAMING` |
 | `ET` manifests/error_tracing_contract_manifest.md | 26 | `law/ERR`, `law/DIAG`, `fact/py-errors` |
 | `LO` manifests/logging_observability_manifest.md | 21 | `law/DIAG`, `fact/py-logging` |
 | `SE` doctrine/SOFTWARE-ENGINEERING.md | 61 | `law/ARCH`, `law/TYPE`, `law/ERR`, `law/EFCT`, `law/API`, `law/DEP`, `law/FLOW` |

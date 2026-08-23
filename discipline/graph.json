@@ -1799,7 +1799,7 @@
    "type": "module",
    "label": "Source Provenance",
    "path": "discipline/meta/PROVENANCE.md",
-   "tokens": 1187,
+   "tokens": 1351,
    "attrs": {
     "decay": "none",
     "kind": "meta"
@@ -4205,6 +4205,14 @@
    "label": "doctrine/CHEAPEST-ABLE.md",
    "attrs": {
     "tag": "CA"
+   }
+  },
+  {
+   "id": "source:CD",
+   "type": "source",
+   "label": "roadmap input/python-commenting-and-documentation-discipline.md",
+   "attrs": {
+    "tag": "CD"
    }
   },
   {
