@@ -31,6 +31,7 @@ from typing import TYPE_CHECKING
 
 from . import Finding, TextCheck, main
 
+# Import annotation-only contracts without runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
@@ -45,7 +46,7 @@ MAX_SIGNAL = 3
 ## The capability tier a named escalation category forces (`ALLOC-003`).
 TOP_TIER = 2
 
-## The seven signals `ops/ALLOC` scores, each 0 to 3.
+## Signal-name elements in canonical scoring order, each ranging from zero through three.
 SIGNALS: tuple[str, ...] = ("A", "B", "C", "D", "E", "F", "G")
 
 ## One signal and its score, as a record writes them: `A=2`.
@@ -69,8 +70,8 @@ _EFFORT = re.compile(r"\bE([0-2])\b")
 ## The total out of 21, which a reader checks the arithmetic against.
 _TOTAL = re.compile(r"\b(?P<total>\d{1,2})\s*/\s*21\b")
 
-## Categories `ALLOC-003` escalates regardless of score, matched on the words a
-## record would actually use.
+## Mapping from each trigger-phrase key to its escalation-rationale value; insertion order is
+## deterministic match precedence when several categories appear.
 ESCALATING = {
     "published contract": "changing a published contract",
     "supply chain": "anything touching the supply chain",
@@ -100,8 +101,9 @@ class DispatchRecordedCheck(TextCheck):
     ## were named here and never emitted, so they counted as `mechanized` while
     ## being decided by nothing -- and this module's own docstring said so in
     ## prose. `V080` rises as a result, which is the true number.
+    ## Rule-id elements in deterministic reporting order actually decided here.
     rules = ("ALLOC-002", "ALLOC-003", "ALLOC-004", "TEAMS-001", "TEAMS-002")
-    ## Dispatch records are markdown.
+    ## File-suffix elements in deterministic matching order for Markdown dispatch records.
     suffixes = (".md",)
 
     def visit_text(self, text: str, path: Path) -> Iterator[Finding]:
@@ -109,14 +111,20 @@ class DispatchRecordedCheck(TextCheck):
 
         @param text the file's contents
         @param path the file it was read from
-        @return one finding per missing or contradicted element
+        @return finding elements in score, allocation, total, contract, and restriction order
         """
+        # Only Markdown beneath the conventional agents directory is a dispatch record.
         if DISPATCH_DIR not in path.parts:
+            # Stop iteration without treating unrelated prose as an incomplete dispatch.
             return
 
+        # Map each scored signal-name key to its integer value in first-match order.
         scores = {m.group("signal"): int(m.group("value")) for m in _SCORE.finditer(text)}
+        # Preserve canonical signal order while collecting each missing score element.
         missing = [s for s in SIGNALS if s not in scores]
+        # Incomplete scoring makes the mechanical allocation unauditable.
         if missing:
+            # Yield one aggregate missing-score finding in canonical signal order.
             yield Finding(
                 "ALLOC-002", path, 1,
                 f"dispatch record scores {len(scores)} of 7 signals; missing "
@@ -127,17 +135,24 @@ class DispatchRecordedCheck(TextCheck):
                 "failure, which is the only moment its quality can be assessed.",
             )
 
+        # Locate at least one complete capability/effort allocation spelling.
         allocation = _ALLOCATION.search(text)
+        # Absence prevents escalation arithmetic from having a declared base allocation.
         if allocation is None:
+            # Yield the missing-allocation finding at the record head.
             yield Finding(
                 "ALLOC-002", path, 1,
                 "dispatch record states no allocation",
                 "State the resulting tier and effort as `T<n>/E<n>`.",
             )
+        # A declared allocation can be checked against arithmetic and category floors.
         else:
+            # Yield any escalation findings after structural score/allocation defects.
             yield from self._escalations(text, path, scores)
 
+        # A scored dispatch must state its independently checkable total out of 21.
         if _TOTAL.search(text) is None and scores:
+            # Yield the missing-total finding at the record head.
             yield Finding(
                 "ALLOC-002", path, 1,
                 "dispatch record states no total out of 21",
@@ -145,7 +160,9 @@ class DispatchRecordedCheck(TextCheck):
                 "the band the allocation claims.",
             )
 
+        # Every dispatch must name a deliverable contract rather than only intention.
         if not _CONTRACT.search(text):
+            # Yield the missing-contract finding at the record head.
             yield Finding(
                 "TEAMS-001", path, 1,
                 "dispatch states no contract",
@@ -153,7 +170,9 @@ class DispatchRecordedCheck(TextCheck):
                 "An intention cannot be verified; a contract can.",
             )
 
+        # Every dispatch must carry standing restrictions into the delegated context.
         if not _RESTRICTIONS.search(text):
+            # Yield the missing-restrictions finding at the record head.
             yield Finding(
                 "TEAMS-002", path, 1,
                 "dispatch states no standing restrictions",
@@ -171,14 +190,20 @@ class DispatchRecordedCheck(TextCheck):
 
         @param text the file's contents, searched for escalating categories
         @param path the file it was read from
-        @param scores the seven signals, as recorded
-        @return findings for each escalation the record does not honour
+        @param scores mapping from each signal-name key to its score value; insertion order
+            follows first textual match and is deliberately irrelevant to arithmetic
+        @return finding elements in effort-floor then category-precedence order
         """
+        # Select the highest capability tier mentioned anywhere in the record.
         tier = max((int(m) for m in _TIER.findall(text)), default=0)
+        # Select the highest effort tier mentioned anywhere in the record.
         effort = max((int(m) for m in _EFFORT.findall(text)), default=0)
 
+        # Any maximum signal score requires the top deliberative effort floor.
         if scores and max(scores.values()) == 3 and effort < 2:  # ruff: ignore[magic-value-comparison] - E2 is the ceiling
+            # Sort each signal-name element scored at the maximum for deterministic wording.
             at_three = sorted(s for s, v in scores.items() if v == MAX_SIGNAL)
+            # Yield the under-effort finding before category-based tier findings.
             yield Finding(
                 "ALLOC-004", path, 1,
                 f"signal {', '.join(at_three)} scores 3 but the effort is E{effort}",
@@ -186,17 +211,24 @@ class DispatchRecordedCheck(TextCheck):
                 "maximum is enough to make the work deliberative, whatever the total.",
             )
 
+        # Normalize the complete record once for case-insensitive category matching.
         lowered = text.lower()
+        # Inspect each trigger-phrase/rationale pair in declared precedence order.
         for phrase, category in ESCALATING.items():
+            # Any named escalation category requires the highest capability tier.
             if phrase in lowered and tier < 2:  # ruff: ignore[magic-value-comparison] - T2 is the top tier
+                # Yield one category escalation finding using its rationale value.
                 yield Finding(
                     "ALLOC-003", path, 1,
                     f"the dispatch names {phrase!r} but allocates T{tier}",
                     f"{category.capitalize()} forces T2 regardless of score. A "
                     f"named category beats the mechanical permit (ALLOC-005).",
                 )
+                # Stop after the first declared trigger so one under-tier dispatch reports once.
                 break
 
 
+# Permit direct module execution through the common checker command-line adapter.
 if __name__ == "__main__":
+    # Translate the checker result into the process exit status.
     raise SystemExit(main(DispatchRecordedCheck()))

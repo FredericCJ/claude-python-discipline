@@ -15,12 +15,12 @@ from typing import TYPE_CHECKING
 
 from . import Finding, ModuleCheck, is_test_path, main
 
+# Import annotation-only contracts without runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
 
-## Catching one of these and doing nothing is the failure mode no diagnostic
-## machinery can recover from: nothing is emitted to analyse.
+## Unordered broad-exception set whose each element can swallow otherwise recoverable evidence.
 _BROAD = frozenset({"Exception", "BaseException"})
 
 
@@ -33,7 +33,7 @@ class RaiseFromCheck(ModuleCheck):
 
     ## Invoked as `python -m checks.raise_from`.
     name = "raise_from"
-    ## The law/DIAG rules this mechanism decides.
+    ## Rule-id elements in deterministic reporting order decided by this check.
     rules = ("DIAG-005", "DIAG-006", "DIAG-007", "DIAG-008")
 
     def visit_module(self, tree: ast.Module, path: Path, _layer: str) -> Iterator[Finding]:
@@ -45,12 +45,20 @@ class RaiseFromCheck(ModuleCheck):
         @param tree the module's syntax tree
         @param path the file it was parsed from, and re-read from here
         @param _layer the architectural layer, unused -- the chain matters in all
-        @return findings for handlers that break or silently drop the chain
+        @return finding elements in handler then failure-predicate order
+
+        @par Effects
+        Reads the source file at ``path`` once because adjacent comments are absent from ASTs.
         """
+        # Tests may intentionally construct broken exception-chain counterexamples.
         if is_test_path(path):
+            # Stop iteration for the explicit test-code exemption.
             return
+        # Read source-line elements in order so ``from None`` rationale remains inspectable.
         source = path.read_text(encoding="utf-8").splitlines()
+        # Inspect each exception-handler element in deterministic AST walk order.
         for handler in _handlers(tree):
+            # Yield all evidence-loss findings in predicate order for this handler.
             yield from self._check_handler(handler, path, source)
 
     def _check_handler(
@@ -67,50 +75,68 @@ class RaiseFromCheck(ModuleCheck):
 
         @param handler the `except` clause
         @param path the file it was parsed from
-        @param source that file's lines, for the comment DIAG-007 demands
-        @return findings for a bare `except`, a body that is only `pass`, a raise
+        @param source source-line elements in file order for the comment DIAG-007 demands
+        @return finding elements for a bare `except`, a body that is only `pass`, a raise
             with no cause, an unexplained `from None`, and a broad catch whose
             single act is to re-wrap
         """
+        # Collect caught exception-name elements in authored tuple order.
         caught = _caught_names(handler)
 
+        # A bare handler also catches process-control exceptions and hides intent.
         if handler.type is None:
+            # Yield the bare-handler finding at the clause line.
             yield Finding(
                 "DIAG-008", path, handler.lineno,
                 "bare `except` catches control-flow exceptions too",
                 "Name the exception types actually handled.",
             )
 
+        # A single pass statement proves the caught failure is discarded silently.
         if _is_only_pass(handler.body):
+            # Yield the silent-swallow finding with caught names in declaration order.
             yield Finding(
                 "DIAG-008", path, handler.lineno,
                 f"catching {', '.join(caught) or 'everything'} and doing nothing",
                 "Handle it, convert it, or use an explicit narrow suppression with a comment.",
             )
 
+        # Inspect each nested syntax-node element in deterministic handler walk order.
         for node in ast.walk(handler):
+            # Only raise statements can preserve or sever exception causality.
             if not isinstance(node, ast.Raise):
+                # Advance without interpreting unrelated syntax nodes.
                 continue
             # A bare `raise` re-raises and preserves the original traceback. It is
             # correct, and is deliberately not flagged -- see meta/CONFLICTS C4.
+            # A bare raise preserves the active exception object and traceback.
             if node.exc is None:
+                # Advance because this propagation is the desired chain behavior.
                 continue
+            # ``from None`` explicitly suppresses the cause and therefore owes rationale.
             if _raises_from_none(node):
+                # Absence of any nearby comment leaves the evidence destruction unexplained.
                 if not _has_adjacent_comment(source, node.lineno):
+                    # Yield the unexplained-suppression finding at the raise statement.
                     yield Finding(
                         "DIAG-007", path, node.lineno,
                         "`raise ... from None` discards the cause with no stated reason",
                         "Add a comment saying why the underlying cause is not useful here.",
                     )
+                # Advance because explicit suppression is not also missing ``from`` syntax.
                 continue
+            # Any other raised expression inside a handler must name an explicit cause.
             if node.cause is None:
+                # Yield the implicit-context finding at the raise statement.
                 yield Finding(
                     "DIAG-005", path, node.lineno,
                     "raising inside a handler without `from`",
                     "Use `raise X from err` so __cause__ records the origin explicitly.",
                 )
 
+        # Broad catch plus sole re-wrap adds context while burying useful exception type.
         if _rewraps_only_to_add_context(handler):
+            # Yield the note-preferred finding at the handler boundary.
             yield Finding(
                 "DIAG-006", path, handler.lineno,
                 "re-wrapping an exception only to add context",
@@ -122,10 +148,13 @@ def _handlers(tree: ast.Module) -> Iterator[ast.ExceptHandler]:
     """Every `except` clause anywhere in a module, however deeply nested.
 
     @param tree the module's syntax tree
-    @return the handlers, in traversal order
+    @return handler elements in deterministic AST traversal order
     """
+    # Inspect each syntax-node element in deterministic AST walk order.
     for node in ast.walk(tree):
+        # Yield every exception-handler element at its walk position.
         if isinstance(node, ast.ExceptHandler):
+            # Expose the handler to caller-owned predicate ordering.
             yield node
 
 
@@ -139,11 +168,15 @@ def _caught_names(handler: ast.ExceptHandler) -> list[str]:
     named its type.
 
     @param handler the `except` clause
-    @return the caught identifiers, empty for a bare `except`
+    @return caught-identifier elements in authored tuple order, empty for a bare ``except``
     """
+    # A bare handler has no declared type identity to return.
     if handler.type is None:
+        # Return the ordered empty name sequence.
         return []
+    # Normalize a tuple of types or single type into authored expression order.
     nodes = handler.type.elts if isinstance(handler.type, ast.Tuple) else [handler.type]
+    # Return only bare-name elements, preserving normalized expression order.
     return [n.id for n in nodes if isinstance(n, ast.Name)]
 
 
@@ -154,9 +187,10 @@ def _is_only_pass(body: list[ast.stmt]) -> bool:
     useless -- `...`, a bare `return`, a `continue` -- is not caught here, so a
     clean run is not a proof that nothing is discarded.
 
-    @param body the handler's statements
-    @return True for exactly one statement, and that statement a `pass`
+    @param body handler-statement elements in source order
+    @return true for exactly one statement when it is ``pass``; false otherwise
     """
+    # Match the sole syntactic shape this deliberately narrow swallow predicate owns.
     return len(body) == 1 and isinstance(body[0], ast.Pass)
 
 
@@ -164,8 +198,9 @@ def _raises_from_none(node: ast.Raise) -> bool:
     """Whether a raise deliberately severs the chain behind it.
 
     @param node the raise statement
-    @return True when its cause is written as the literal `None`
+    @return true when its cause is written as literal ``None``; false otherwise
     """
+    # Match an explicit constant None cause without treating absent cause as suppression.
     return isinstance(node.cause, ast.Constant) and node.cause.value is None
 
 
@@ -176,15 +211,19 @@ def _has_adjacent_comment(source: list[str], lineno: int) -> bool:
     cause is worthless; no mechanism can grade the answer, so it settles for
     proving the question was put.
 
-    @param source the file's lines
+    @param source source-line elements in file order
     @param lineno the 1-indexed line the raise starts on
-    @return True when any of those three lines contains a `#` anywhere, a
-        trailing comment and a `#` inside a string literal alike
+    @return true when any candidate line contains ``#`` anywhere; false otherwise
     """
+    # Inspect two preceding offsets then the raise-line offset in chronological order.
     for offset in (-2, -1, 0):
+        # Translate the one-based raise line and relative offset into a zero-based index.
         index = lineno - 1 + offset
+        # A bounded line containing a comment marker satisfies the shallow rationale predicate.
         if 0 <= index < len(source) and "#" in source[index]:
+            # Accept immediately at the first adjacent marker.
             return True
+    # No candidate line contains a comment marker.
     return False
 
 
@@ -195,16 +234,24 @@ def _rewraps_only_to_add_context(handler: ast.ExceptHandler) -> bool:
     without adding a decision, which is what DIAG-006 prefers a note for.
 
     @param handler the `except` clause
-    @return True when a broad catch's only statement is a `raise` with an
-        operand; the operand is not inspected, so `raise err` counts too
+    @return true when a broad catch's only statement is a ``raise`` with an operand;
+        false otherwise
     """
+    # A narrow caught type cannot be the broad-context-only rewrap shape.
     if not any(name in _BROAD for name in _caught_names(handler)):
+        # Reject this handler from the predicate.
         return False
+    # More than one statement proves the handler makes an additional decision.
     if len(handler.body) != 1:
+        # Reject this handler from the sole-rewrap predicate.
         return False
+    # Select the only handler-body statement.
     stmt = handler.body[0]
+    # Match an explicit raised operand; a bare re-raise correctly preserves type and traceback.
     return isinstance(stmt, ast.Raise) and stmt.exc is not None
 
 
+# Permit direct module execution through the common checker command-line adapter.
 if __name__ == "__main__":
+    # Translate the checker result into the process exit status.
     raise SystemExit(main(RaiseFromCheck()))
