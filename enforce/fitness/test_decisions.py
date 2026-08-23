@@ -30,8 +30,8 @@ from decides import decides
 ## The repository root, three levels up from this file.
 REPO_ROOT: Final = Path(__file__).resolve().parent.parent.parent
 
-## The two ledgers. `OPEN.md` carries decisions taken and still open; `CONFLICTS`
-## carries every contradiction between the sources and how it was resolved.
+## Decision-ledger path elements in stable test and diagnostic order. `OPEN.md`
+## carries decisions; `CONFLICTS.md` carries resolved source contradictions.
 LEDGERS: Final[tuple[Path, ...]] = (
     REPO_ROOT / "discipline" / "meta" / "OPEN.md",
     REPO_ROOT / "discipline" / "meta" / "CONFLICTS.md",
@@ -70,9 +70,11 @@ def decisions_in(path: Path) -> list[tuple[str, str]]:
     """Every decision a ledger records.
 
     @param path the ledger to read
-    @return each decision's id and title, in file order
+    @return decision-id and title pair elements in authored file order
     """
+    # Read the complete ledger before matching decision headings in file order.
     text = path.read_text(encoding="utf-8")
+    # Return identifier-title pair elements in regular-expression match order.
     return [(m.group("id"), m.group("title")) for m in _DECISION.finditer(text)]
 
 
@@ -83,14 +85,20 @@ def test_decisions_recorded(ledger: Path) -> None:
 
     @param ledger the decision ledger under test
     """
+    # Establish the parametrized ledger subject before inventorying decision pairs.
     assert ledger.is_file(), f"{ledger.name} does not exist"
     decisions = decisions_in(ledger)
+    # Reject a vacuous ledger with no structurally recorded decision.
     assert decisions, f"{ledger.name} records no decision"
 
+    # Read the full source once before extracting each declared decision section.
     text = ledger.read_text(encoding="utf-8")
+    # Inspect identifier-title pairs in authored ledger order.
     for identifier, title in decisions:
+        # Isolate the current section and its body after the heading line.
         section = _section(text, identifier)
         body = section.split(chr(10), 1)[1].strip() if chr(10) in section else ""
+        # Reject an outcome whose body is too short to retain meaningful reasoning.
         assert len(body) >= MIN_REASONING, (
             f"{identifier} ({title}) carries {len(body)} characters of body. A "
             f"decision recorded as an outcome and nothing else is re-litigated "
@@ -106,9 +114,11 @@ def test_overruled_objections_are_kept() -> None:
     overturned; `OPEN-008` refines `OPEN-007` and says which half it leaves
     standing. Both are the shape the rule asks for.
     """
+    # Read the open-decision ledger and retain reversal-id elements in authored order.
     text = (REPO_ROOT / "discipline" / "meta" / "OPEN.md").read_text(encoding="utf-8")
     reversals = [i for i, _ in decisions_in(REPO_ROOT / "discipline" / "meta" / "OPEN.md")
                  if _OBJECTION.search(_section(text, i))]
+    # Require at least one decision to preserve the objection it answers.
     assert reversals, (
         "no decision record keeps an objection. A ledger holding only outcomes "
         "reads as though every call was obvious, and the next reader re-derives "
@@ -124,8 +134,11 @@ def test_decision_records_are_appended() -> None:
     a renumbering would have closed. Git history would be the stronger oracle,
     and is used below where it is available.
     """
+    # Check each ledger in the stable declared diagnostic order.
     for ledger in LEDGERS:
+        # Preserve decision-id string elements in authored file order.
         identifiers = [i for i, _ in decisions_in(ledger)]
+        # Reject duplicate identities that indicate an earlier record was rewritten.
         assert len(identifiers) == len(set(identifiers)), (
             f"{ledger.name} records an id twice; a decision was rewritten rather "
             f"than superseded"
@@ -137,7 +150,10 @@ def test_a_ledger_is_never_rewritten_wholesale() -> None:
 
     Skipped where git is unavailable, because the alternative -- asserting from
     the file alone -- would be asserting nothing.
+    @par Effects
+    Starts one bounded read-only Git history process and captures its output.
     """
+    # Query additive history for the canonical open-decision ledger without a shell.
     finished = subprocess.run(
         # git is resolved from PATH deliberately: the point is to ask whatever git
         # this developer uses, and an absolute path would pin one installation.
@@ -146,8 +162,11 @@ def test_a_ledger_is_never_rewritten_wholesale() -> None:
         cwd=REPO_ROOT, capture_output=True, text=True,
         encoding="utf-8", errors="replace", check=False, timeout=120,
     )
+    # Mark historical verification unsupported when Git cannot inspect this tree.
     if finished.returncode != 0:
+        # Preserve the distinction between unavailable history and an empty history.
         pytest.skip("git history is not available in this tree")
+    # Require at least one durable history record for the decision ledger.
     assert finished.stdout.strip(), "the decision ledger has no recorded history"
 
 
@@ -157,7 +176,9 @@ def test_an_unreasoned_decision_would_be_caught() -> None:
     A proxy loosened until the local corpus passes is not a check, so the
     bare-outcome case is pinned here against the threshold that remains.
     """
+    # Hold a representative bare outcome containing no retained argument.
     bare = "We will use the other one."
+    # Require the negative subject to remain below the declared reasoning proxy.
     assert len(bare) < MIN_REASONING
 
 
@@ -168,8 +189,13 @@ def _section(text: str, identifier: str) -> str:
     @param identifier the decision id to extract
     @return the section's text, or the empty string when the id is absent
     """
+    # Locate the requested heading offset in the complete ledger text.
     start = text.find(f"### {identifier}")
+    # Return no section when the public decision identifier is absent.
     if start < 0:
+        # Preserve absence as an empty string for the caller's bounded predicate.
         return ""
+    # Locate the following decision heading to bound the requested section.
     following = text.find("\n### ", start + 1)
+    # Return through end-of-file for the final record, otherwise stop at the next heading.
     return text[start:] if following < 0 else text[start:following]
