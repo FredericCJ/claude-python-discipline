@@ -27,8 +27,9 @@ class MemoryFileStore:
         @param entries the entries it starts with; duplicates by path collapse,
             since a store cannot hold one path twice
         """
-        # Collapse each seed entry into a unique path index; input order is not retained.
-        self._entries = {entry.path: entry for entry in entries}  ##< Current entries by path.
+        ## Current entry values keyed by path; insertion order follows the seed iterable.
+        # Collapse each seed entry into a unique path index; duplicate paths keep the last value.
+        self._entries = {entry.path: entry for entry in entries}
 
     def entries(self) -> Sequence[Entry]:
         """Every entry held, in path order.
