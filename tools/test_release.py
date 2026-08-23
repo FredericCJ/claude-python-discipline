@@ -1,21 +1,300 @@
 """Proof-of-failure tests for the release build's gates.
 
 Each gate exists to stop one thing reaching an adopter, so each is tested on
-material that should stop it, not only on material that should pass. The
-archive is built once by hand at release time; these cover the decisions it
-makes, which is where a silent mistake would live.
+material that should stop it, not only on material that should pass. The suite
+also builds and operates the delivered archive itself, because helper-level
+coverage cannot prove that the package actually contains a working installer.
 
     pytest tools/test_release.py
 """
 
 from __future__ import annotations
 
+import json
+import shutil
+import subprocess  # ruff: ignore[suspicious-subprocess-import] -- packaged CLI boundary
+import sys
+import zipfile
 from typing import TYPE_CHECKING
+
+import pytest
 
 import release
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+
+def _extract_archive(archive_path: Path, root: Path) -> None:
+    """Extract a produced archive only after proving every name is confined.
+
+    @param archive_path deterministic package to unpack
+    @param root fresh repository or upgrade-source directory
+    """
+    root.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(archive_path) as archive:
+        infos = archive.infolist()
+        escaping = release.unsafe_members([info.filename for info in infos])
+        assert escaping == []
+        for info in infos:
+            destination = root.joinpath(*info.filename.split("/"))
+            if info.is_dir():
+                destination.mkdir(parents=True, exist_ok=True)
+                continue
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(archive.read(info))
+
+
+def _run_script(root: Path, script: Path, *arguments: str) -> subprocess.CompletedProcess[str]:
+    """Invoke a packaged tool without importing from the source checkout.
+
+    @param root working repository for the invocation
+    @param script extracted package entry point
+    @param arguments public CLI arguments
+    @return captured process result
+    """
+    return subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] -- fixed interpreter and extracted script
+        (sys.executable, str(script), *arguments),
+        cwd=root,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+        timeout=60,
+    )
+
+
+def _integrate(root: Path, *arguments: str) -> subprocess.CompletedProcess[str]:
+    """Run the extracted combined-host integrator.
+
+    @param root repository carrying the extracted package
+    @param arguments integration mode such as check or remove
+    @return captured process result
+    """
+    return _run_script(
+        root,
+        root / ".agent" / "tools" / "integrate.py",
+        "--root",
+        str(root),
+        *arguments,
+    )
+
+
+def _assert_ok(completed: subprocess.CompletedProcess[str]) -> None:
+    """Make a failed packaged invocation retain both diagnostic channels.
+
+    @param completed captured packaged process
+    """
+    assert completed.returncode == 0, completed.stdout + completed.stderr
+
+
+def _native_skill(root: Path, host: str) -> Path:
+    """Locate one host's installed native skill.
+
+    @param root repository carrying the integration
+    @param host `.claude` or `.agents`
+    @return host-native skill entry point
+    """
+    return root / host / "skills" / "python-discipline" / "SKILL.md"
+
+
+@pytest.fixture(scope="session")
+def built_archives(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path]:
+    """Build the same source twice through the real release pipeline.
+
+    @param tmp_path_factory session-scoped temporary-directory provider
+    @return two independently staged archives
+    """
+    root = tmp_path_factory.mktemp("release-archives")
+    first = root / "first.zip"
+    second = root / "second.zip"
+    first_count, _ = release.build(release.REPO_ROOT, first, root / "stage-first")
+    second_count, _ = release.build(release.REPO_ROOT, second, root / "stage-second")
+    assert first_count == second_count > 0
+    return first, second
+
+
+def _copy_release_source(destination: Path) -> None:
+    """Copy only inputs a release build consumes into a mutable source tree.
+
+    @param destination fresh source root for an upgrade archive
+    """
+    destination.mkdir(parents=True)
+    ignored = shutil.ignore_patterns(
+        *release.vendor.SKIP_DIRS,
+        "build",
+        "dist",
+        ".git",
+    )
+    for name in release.vendor.UPSTREAM:
+        shutil.copytree(release.REPO_ROOT / name, destination / name, ignore=ignored)
+    for name in release.vendor.UPSTREAM_FILES:
+        shutil.copy2(release.REPO_ROOT / name, destination / name)
+    learning = destination / "learning"
+    learning.mkdir()
+    for name in release.vendor.LEARNING_SEED:
+        shutil.copy2(release.REPO_ROOT / "learning" / name, learning / name)
+    packaging = destination / "packaging"
+    packaging.mkdir()
+    shutil.copy2(
+        release.REPO_ROOT / "packaging" / "INSTALL-DISCIPLINE.md",
+        packaging / "INSTALL-DISCIPLINE.md",
+    )
+    notes = f"RELEASE-NOTES-{release.vendor.RELEASE}.md"
+    shutil.copy2(release.REPO_ROOT / notes, destination / notes)
+
+
+# ----------------------------------------------------------- archive lifecycle
+
+
+@pytest.mark.timeout(180)
+def test_two_clean_archive_builds_are_byte_identical(
+    built_archives: tuple[Path, Path],
+) -> None:
+    """Independent staging cannot move bytes, members, times, or permissions.
+
+    @param built_archives independently staged packages
+    """
+    first, second = built_archives
+    assert first.read_bytes() == second.read_bytes()
+    with zipfile.ZipFile(first) as archive:
+        infos = archive.infolist()
+        names = [info.filename for info in infos]
+        assert release.unsafe_members(names) == []
+        assert set(release.REQUIRED_MEMBERS) <= set(names)
+        assert all(info.date_time == release.ZIP_EPOCH for info in infos)
+        manifest = json.loads(archive.read(".agent/MANIFEST.json"))
+        canonical = archive.read(".agent/skills/python-discipline/SKILL.md")
+    assert manifest["release"] == release.vendor.RELEASE
+    assert "skills/python-discipline/SKILL.md" in manifest["files"]
+    assert canonical.startswith(b"---\nname: python-discipline\n")
+
+
+@pytest.mark.timeout(180)
+def test_archive_installs_checks_and_removes_both_host_entries(
+    tmp_path: Path,
+    built_archives: tuple[Path, Path],
+) -> None:
+    """The delivered package owns one skill and restores host-owned material.
+
+    @param tmp_path fresh adopter repository
+    @param built_archives independently staged packages
+    """
+    root = tmp_path / "adopter"
+    root.mkdir()
+    original = {
+        "CLAUDE.md": b"# Project Claude\r\n",
+        "AGENTS.md": b"# Project Codex\n",
+        ".gitignore": b"project-output/\n",
+    }
+    for name, content in original.items():
+        path = root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(content)
+    settings = {
+        "project": {"owner": "adopter"},
+        "permissions": {"allow": ["Bash(project-check:*)"]},
+    }
+    settings_path = root / ".claude" / "settings.json"
+    settings_path.parent.mkdir(parents=True)
+    settings_path.write_text(json.dumps(settings, indent=2), encoding="utf-8")
+    _extract_archive(built_archives[0], root)
+
+    vendored_check = _run_script(
+        root,
+        root / ".agent" / "tools" / "vendor.py",
+        "check",
+        str(root),
+        "--source",
+        str(root / ".agent"),
+    )
+    _assert_ok(vendored_check)
+    _assert_ok(_integrate(root))
+    _assert_ok(_integrate(root, "--check"))
+
+    canonical = root / ".agent" / "skills" / "python-discipline" / "SKILL.md"
+    for host in (".claude", ".agents"):
+        assert _native_skill(root, host).read_bytes() == canonical.read_bytes()
+
+    _assert_ok(_integrate(root, "--remove"))
+    for name, content in original.items():
+        assert (root / name).read_bytes() == content
+    assert json.loads(settings_path.read_text(encoding="utf-8")) == settings
+    assert not _native_skill(root, ".claude").exists()
+    assert not _native_skill(root, ".agents").exists()
+
+
+@pytest.mark.timeout(180)
+def test_archive_refuses_a_codex_collision_without_blocking_claude(
+    tmp_path: Path,
+    built_archives: tuple[Path, Path],
+) -> None:
+    """An unowned Codex skill survives while the independent Claude path lands.
+
+    @param tmp_path fresh adopter repository
+    @param built_archives independently staged packages
+    """
+    root = tmp_path / "collision"
+    _extract_archive(built_archives[0], root)
+    codex = _native_skill(root, ".agents")
+    codex.parent.mkdir(parents=True)
+    codex.write_bytes(b"project-owned Codex skill\r\n")
+
+    completed = _integrate(root)
+
+    assert completed.returncode == 1
+    assert codex.read_bytes() == b"project-owned Codex skill\r\n"
+    assert _native_skill(root, ".claude").read_bytes() == (
+        root / ".agent" / "skills" / "python-discipline" / "SKILL.md"
+    ).read_bytes()
+
+
+@pytest.mark.timeout(180)
+def test_archive_upgrade_preserves_project_state_and_updates_both_hosts(
+    tmp_path: Path,
+    built_archives: tuple[Path, Path],
+) -> None:
+    """The packaged vendor path upgrades owned bytes without overlay extraction.
+
+    @param tmp_path fresh adopter and mutable release source
+    @param built_archives independently staged packages
+    """
+    root = tmp_path / "upgrade-adopter"
+    _extract_archive(built_archives[0], root)
+    _assert_ok(_integrate(root))
+    learning = root / ".agent" / "learning" / "config.toml"
+    project_learning = learning.read_bytes() + b"\n# project-owned\n"
+    learning.write_bytes(project_learning)
+
+    source = tmp_path / "upgrade-source"
+    _copy_release_source(source)
+    source_skill = source / "skills" / "python-discipline" / "SKILL.md"
+    marker = b"\nArchive upgrade marker.\n"
+    source_skill.write_bytes(source_skill.read_bytes() + marker)
+    upgraded_archive = tmp_path / "upgraded.zip"
+    release.build(source, upgraded_archive, tmp_path / "upgrade-stage")
+    upgrade_package = tmp_path / "upgrade-package"
+    _extract_archive(upgraded_archive, upgrade_package)
+
+    installed = _run_script(
+        upgrade_package,
+        upgrade_package / ".agent" / "tools" / "vendor.py",
+        "install",
+        str(root),
+        "--source",
+        str(upgrade_package / ".agent"),
+    )
+    _assert_ok(installed)
+    assert learning.read_bytes() == project_learning
+    assert _integrate(root, "--check").returncode == 1
+
+    _assert_ok(_integrate(root))
+    _assert_ok(_integrate(root, "--check"))
+    canonical = root / ".agent" / "skills" / "python-discipline" / "SKILL.md"
+    assert canonical.read_bytes().endswith(marker)
+    for host in (".claude", ".agents"):
+        assert _native_skill(root, host).read_bytes() == canonical.read_bytes()
 
 
 # ------------------------------------------------------------------- leak scan

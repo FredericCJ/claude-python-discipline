@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "review_id": "v4_security_slice_adversarial_acceptance",
-  "reviewed_commit": "0c21f4ae222dc1459a4d914e35ec5635b23de491",
+  "reviewed_commit": "7fb63c2080eed73ae2b3960e52d65bde7371bc8e",
   "scope": {
     "algorithm": "sha256",
-    "digest": "sha256:9ed843a0ef5588821d0b62b3e5078d89243083cb7f5379551e7cfec0f9dc2efb",
+    "digest": "sha256:59b4efdc99bb04a3744b88cf9dbbbf9d13c2abd2d85992b7bc880c96b8e930a7",
     "file_count": 285,
     "categories": [
       "project_declaration",
@@ -63,8 +63,8 @@
     {
       "id": "supply_chain",
       "challenge": "Can generated doctrine views, mirrored host skills, vendored manifests, or a delivered archive drift from the authored source while the gate stays green?",
-      "conclusion": "Generated drift and byte-identical host mirrors are checked and tested, vendoring preserves a manifest, and the project gate now verifies built and freshly installed artifacts. Full reproducible combined-package certification remains release-gate debt.",
-      "evidence": ["tools/build_skill_mirror.py", "tools/test_build_skill_mirror.py", "tools/test_vendor.py", "roadmap/from-3.2-to-4.0/README.md"]
+      "conclusion": "Generated drift and byte-identical host mirrors are checked, vendoring preserves a manifest, and the project gate verifies built and freshly installed artifacts. Two independently staged archives must be byte-identical, and the extracted package now proves combined-host install, collision, upgrade, check, and conservative removal through its public CLIs. Adopter and independent-Linux certification remain release-gate debt.",
+      "evidence": ["tools/build_skill_mirror.py", "tools/test_build_skill_mirror.py", "tools/test_release.py", "roadmap/from-3.2-to-4.0/README.md"]
     },
     {
       "id": "test_oracles",
@@ -188,7 +188,7 @@
       "id": "release_gate_debt",
       "category": "test_oracles",
       "severity": "high",
-      "statement": "The repository now records zero unbuilt mechanisms and zero exact rejection gap, but combined Claude/Codex package lifecycle tests, five adopter migrations, and independent Linux release evidence are not yet complete, so this snapshot cannot support a v4.0 release verdict.",
+      "statement": "The repository now records zero unbuilt mechanisms, zero exact rejection gap, and archive-level Claude/Codex lifecycle coverage, but five adopter migrations and independent Linux release evidence are not yet complete, so this snapshot cannot support a v4.0 release verdict.",
       "disposition": "accepted_risk",
       "resolution": "Acceptance is limited to the completed enforcement workstream as a base for packaging and migration; the remaining roadmap gates stay mandatory before release.",
       "evidence": "roadmap/from-3.2-to-4.0/README.md",
