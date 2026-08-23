@@ -43,16 +43,33 @@ if (-not (Test-Path -LiteralPath $checker -PathType Leaf)) {
 function Invoke-CondaChecked {
     param([Parameter(Mandatory = $true)][string[]] $Arguments)
 
-    & $script:condaCommand @Arguments
-    if ($LASTEXITCODE -ne 0) {
-        throw "Conda failed with exit code $LASTEXITCODE while running: $($Arguments -join ' ')"
+    # Windows PowerShell 5.1 promotes a native program's stderr to ErrorRecord.
+    # Let Conda finish, then decide from its process status rather than from the
+    # stream on which it chose to print progress or diagnostics.
+    $savedPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = "Continue"
+        & $script:condaCommand @Arguments
+        $condaExit = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $savedPreference
+    }
+    if ($condaExit -ne 0) {
+        throw "Conda failed with exit code $condaExit while running: $($Arguments -join ' ')"
     }
 }
 
 function Test-DeclaredEnvironment {
-    & $script:condaCommand run --no-capture-output --name $EnvironmentName `
-        python $checker --file $environmentFile --quiet *> $null
-    return $LASTEXITCODE -eq 0
+    $savedPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = "Continue"
+        & $script:condaCommand run --no-capture-output --name $EnvironmentName `
+            python $checker --file $environmentFile --quiet *> $null
+        $condaExit = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $savedPreference
+    }
+    return $condaExit -eq 0
 }
 
 if ($Refresh -or -not (Test-DeclaredEnvironment)) {

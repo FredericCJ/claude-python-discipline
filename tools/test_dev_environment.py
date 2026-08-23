@@ -99,5 +99,8 @@ def test_the_windows_leg_delegates_environment_ownership_only_to_conda() -> None
     assert '"env", "update", "--name"' in launcher
     assert "tools\\check_env.py" in launcher
     assert "--prune" in launcher
+    assert launcher.count("$savedPreference = $ErrorActionPreference") == 2
+    assert launcher.count('$ErrorActionPreference = "Continue"') == 2
+    assert launcher.count("$condaExit = $LASTEXITCODE") == 2
     assert "pip install" not in launcher.lower()
     assert "docker" not in launcher.lower()
