@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "release": "v5.0.0",
+  "observed_on": "2026-08-24",
+  "purpose": "Bounded field qualification of the public v4-to-v5 application-repository upgrade path.",
+  "adopter": {
+    "name": "python-doctrine-test",
+    "repository_form": "application",
+    "source_commit": "b6cf08c3da6343e1f65f5bf97e5b4c89f339e648",
+    "starting_release": "v4.0.0",
+    "starting_tree": "clean"
+  },
+  "isolation": {
+    "method": "detached disposable Git worktree at the adopter source commit",
+    "reason": "Exercise real tracked adopter bytes without modifying its primary checkout.",
+    "cleanup": "The worktree and all candidate-only changes were removed after observation.",
+    "source_checkout_after_cleanup": "clean at the original source commit"
+  },
+  "package_install": {
+    "command": "python <discipline>/tools/vendor.py install <adopter-worktree> --source <discipline>",
+    "release": "v5.0.0",
+    "manifest_content_hash": "7cee032988ac",
+    "upstream_files": 265,
+    "vendor_check": "pass"
+  },
+  "host_integration": {
+    "preview": "reported five bounded changes",
+    "applied_changes": [
+      "replace the managed CLAUDE.md block",
+      "replace the managed AGENTS.md block",
+      "update the unchanged Claude Code native skill",
+      "update the unchanged Codex native skill",
+      "refresh the integration record"
+    ],
+    "post_apply_check": "pass",
+    "preservation": "Everything outside managed blocks and unchanged integration-owned skill files remained project-owned."
+  },
+  "migration": {
+    "preview_command": "python .agent/tools/migrate_v5.py --root .",
+    "apply_command": "python .agent/tools/migrate_v5.py --root . --apply",
+    "declaration_change": "Added documentation_model = documentation-model.json.",
+    "created_artifacts": [
+      "documentation-model.json"
+    ],
+    "preserved_artifacts": [
+      "Doxyfile"
+    ],
+    "diagnostics": [
+      "MIGRATE-V5-003_AUTHORING_REQUIRED",
+      "MIGRATE-V5-005_DOXYFILE_REVIEW"
+    ],
+    "second_preview": "already v5; no changes"
+  },
+  "project_gate": {
+    "command": "python .agent/tools/project_gate.py --root .",
+    "verdict": "fail",
+    "expected_reason": "The structural migrator deliberately does not invent v5 semantic documentation or refresh content-bound review.",
+    "steps": [
+      {
+        "name": "declaration",
+        "verdict": "pass",
+        "observation": "Loaded one application repository."
+      },
+      {
+        "name": "discipline-checks",
+        "verdict": "fail",
+        "observation": "240 findings over 29 Python files, including the deliberately stale review and newly required local-binding and narration obligations."
+      },
+      {
+        "name": "ruff",
+        "verdict": "pass",
+        "observation": "29 Python files clean."
+      },
+      {
+        "name": "mypy",
+        "verdict": "pass",
+        "observation": "20 source files clean."
+      },
+      {
+        "name": "pyright",
+        "verdict": "pass",
+        "observation": "20 files analysed with zero errors."
+      },
+      {
+        "name": "import-contracts",
+        "verdict": "pass",
+        "observation": "Four contracts kept and none broken."
+      },
+      {
+        "name": "documentation",
+        "verdict": "pass",
+        "observation": "The preserved project Doxyfile generated 20 source pages without warnings."
+      },
+      {
+        "name": "pytest",
+        "verdict": "pass",
+        "observation": "98 tests passed."
+      },
+      {
+        "name": "mutation",
+        "verdict": "pass",
+        "observation": "All 137 mutants across one domain path were killed."
+      },
+      {
+        "name": "artifact-build",
+        "verdict": "pass",
+        "observation": "The wheel and sdist for sumtwo 1.0.0 were built and inspected."
+      },
+      {
+        "name": "clean-install",
+        "verdict": "pass",
+        "observation": "The wheel installed into a clean environment; one import and four entry-point probes passed."
+      }
+    ]
+  },
+  "conclusion": "The v5 package upgrades and integrates a real v4 application without guessing project prose or weakening unrelated evidence. It then fails closed on exactly the project-authored documentation and content-review work the migration says remains. This is field evidence for migration behavior, not v5 certification of the adopter application.",
+  "scope_limit": "No adopter source was edited for compliance, no adopter commit was created, and no repository other than python-doctrine-test was opened or executed for this field qualification."
+}
