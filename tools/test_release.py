@@ -706,6 +706,32 @@ def test_dropping_an_unusable_identifier_is_reported_not_silent() -> None:
     assert "too common" in dropped[0][2]
 
 
+def test_the_container_home_is_public_package_configuration() -> None:
+    """The shipped disposable HOME must not be rejected as its builder's identity."""
+    # Derive leak patterns from the exact environment identity exposed inside the image.
+    patterns = release.environment_literals(
+        "builder", "BUILD-BOX", release.PACKAGE_RUNTIME_HOME,
+    )
+    # Keep account and host signals while excluding only the fixed package-owned home.
+    assert [label for label, _ in patterns] == ["build username", "build hostname"]
+    # Make the reduced scan visible in the same structured diagnostic channel as common values.
+    dropped = release.unusable_identifiers(
+        "builder", "BUILD-BOX", release.PACKAGE_RUNTIME_HOME,
+    )
+    assert [(label, value) for label, value, _ in dropped] == [
+        ("build home directory", release.PACKAGE_RUNTIME_HOME),
+    ]
+    assert "package-owned" in dropped[0][2]
+    # Preserve sensitivity to nearby temporary paths that the package did not author.
+    nearby_home = release.PACKAGE_RUNTIME_HOME.replace("python-discipline", "private-builder")
+    assert [
+        label
+        for label, _ in release.environment_literals(
+            None, None, nearby_home,
+        )
+    ] == ["build home directory"]
+
+
 def test_an_absent_identifier_is_not_reported_as_dropped() -> None:
     """A machine that sets no USER is unremarkable; saying so is noise."""
     assert release.unusable_identifiers(None, "BUILD-BOX", "   ") == ()

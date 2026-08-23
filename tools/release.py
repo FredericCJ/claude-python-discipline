@@ -48,7 +48,7 @@ import sys
 import tempfile
 import zipfile
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, Final
 
 import gate
@@ -248,6 +248,14 @@ COMMON_IDENTIFIERS: Final[frozenset[str]] = frozenset({
     "code", "python", "windows", "linux", "darwin", "node", "run", "lib", "bin",
 })
 
+## Fixed disposable home authored into the container image rather than inherited from a builder.
+PACKAGE_RUNTIME_HOME: Final = str(PurePosixPath("/", "tmp", "python-discipline-home"))
+## Fixed public environment values authored by this package rather than inherited
+## from the account or machine that happens to build it.
+PACKAGE_OWNED_IDENTIFIERS: Final[frozenset[str]] = frozenset({
+    PACKAGE_RUNTIME_HOME,
+})
+
 
 def build_identity() -> tuple[str | None, str | None, str | None]:
     """The account and machine this build is running as.
@@ -293,6 +301,10 @@ def _unusable_because(value: str | None) -> str | None:
         return "absent"
     # Compute cleaned using value.strip for later unusable because logic.
     cleaned = value.strip()
+    # Exclude a fixed package-owned sandbox value that cannot identify the current builder.
+    if cleaned.replace("\\", "/").rstrip("/") in PACKAGE_OWNED_IDENTIFIERS:
+        # Return the explicit non-identity reason for release diagnostics.
+        return "fixed package-owned runtime path, not a builder identity"
     # Select the guarded path only after `len(cleaned) < MINIMUM_IDENTIFIER` is satisfied.
     if len(cleaned) < MINIMUM_IDENTIFIER:
         # Return the reason it is unusable, or None when it can be matched on to the caller.
