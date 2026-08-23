@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 
 from . import Finding, TextCheck, ledger, main
 
+# Import annotation-only contracts without runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
@@ -27,8 +28,8 @@ DEFAULT_MAX_ACTIVE = 200
 ## The configured ceiling, as `config.toml` writes it.
 _MAX_ACTIVE = re.compile(r"^max_active\s*=\s*(?P<value>\d+)", re.MULTILINE)
 
-## Statuses that have left the active set. They stay in the log for audit, not
-## for advice, so they do not count against the ceiling.
+## Unordered retired-status set whose each element keeps an entry for audit but excludes it
+## from active advice and the configured ceiling.
 RETIRED = frozenset({"refuted", "superseded", "promoted"})
 
 
@@ -37,9 +38,9 @@ class LearningSizeCheck(TextCheck):
 
     ## Invoked as `python -m checks.learning_size`.
     name = "learning_size"
-    ## The law/LEARN rule this check decides.
+    ## Rule-id elements in deterministic reporting order decided by this check.
     rules = ("LEARN-010",)
-    ## The ledger is JSONL.
+    ## File-suffix elements in deterministic matching order for JSONL ledgers.
     suffixes = (".jsonl",)
 
     def visit_text(self, text: str, path: Path) -> Iterator[Finding]:
@@ -47,17 +48,25 @@ class LearningSizeCheck(TextCheck):
 
         @param text the ledger's contents
         @param path the file it was read from
-        @return one finding when the ceiling is passed
+        @return zero or one finding element when the ceiling is passed
         """
+        # Ignore JSONL files that do not declare the learning-ledger schema.
         if not ledger.is_ledger(path):
+            # Stop iteration without presenting unrelated JSONL as conforming ledger data.
             return
 
+        # Decode event elements in append order; parsing diagnostics are owned by ``ledger``.
         events, _ = ledger.read(text)
+        # Fold the append log into a mapping from each learning-id key to current-state value.
         folded = ledger.learnings(events)
+        # Preserve mapping order while selecting each entry not carrying a retired status.
         active = [i for i, entry in folded.items()
                   if entry.get("status", "candidate") not in RETIRED]
+        # Resolve the local configured ceiling or its stable fallback.
         ceiling = _ceiling(path)
+        # Report only when active learning cardinality exceeds the selected bound.
         if len(active) > ceiling:
+            # Yield the aggregate size finding at the ledger root.
             yield Finding(
                 "LEARN-010", path, 1,
                 f"{len(active)} active learnings against a ceiling of {ceiling}",
@@ -72,13 +81,23 @@ def _ceiling(path: Path) -> int:
 
     @param path the ledger, whose directory is searched for `config.toml`
     @return the maximum active-set size
+
+    @par Effects
+    Reads the adjacent ``config.toml`` when it exists.
     """
+    # Derive the one configuration path adjacent to the selected ledger.
     config = path.parent / "config.toml"
+    # Absence selects the stable default without treating configuration as required.
     if not config.is_file():
+        # Return the package fallback ceiling.
         return DEFAULT_MAX_ACTIVE
+    # Search the decoded configuration snapshot for the authored numeric ceiling.
     found = _MAX_ACTIVE.search(config.read_text(encoding="utf-8"))
+    # Return the configured integer when present, otherwise the stable fallback.
     return int(found.group("value")) if found else DEFAULT_MAX_ACTIVE
 
 
+# Permit direct module execution through the common checker command-line adapter.
 if __name__ == "__main__":
+    # Translate the checker result into the process exit status.
     raise SystemExit(main(LearningSizeCheck()))

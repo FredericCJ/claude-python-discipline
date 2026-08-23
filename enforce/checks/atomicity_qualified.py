@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING
 
 from . import Finding, ModuleCheck, main
 
+# Import annotation-only contracts without runtime dependencies.
 if TYPE_CHECKING:
     import ast
     from collections.abc import Iterator
@@ -51,7 +52,7 @@ class AtomicityQualifiedCheck(ModuleCheck):
 
     ## Invoked as `python -m checks.atomicity_qualified`.
     name = "atomicity_qualified"
-    ## The law/EFCT rule this check decides.
+    ## Rule-id elements in deterministic reporting order decided by this check.
     rules = ("EFCT-008",)
 
     def visit_module(self, _tree: ast.Module, path: Path, _layer: str) -> Iterator[Finding]:
@@ -63,17 +64,28 @@ class AtomicityQualifiedCheck(ModuleCheck):
         @param _tree the module's syntax tree, unused: comments are not in it
         @param path the file it was parsed from
         @param _layer the architectural layer, unused -- the rule binds everywhere
-        @return one finding per bare claim
+        @return finding elements in source-line order, one per bare claim
+
+        @par Effects
+        Reads the source file at ``path`` once so comments absent from the AST remain visible.
         """
+        # Read and split one strict UTF-8 source snapshot while retaining line order.
         lines = path.read_text(encoding="utf-8").splitlines()
+        # Examine each source-line element in increasing one-based order.
         for number, line in enumerate(lines, start=1):
+            # Lines without an atomicity word cannot contain the prohibited bare claim.
             if _ATOMIC.search(line) is None:
+                # Advance without building an unnecessary qualification window.
                 continue
+            # Join the matching line and one neighboring line each side in source order.
             context = "\n".join(
                 lines[max(0, number - 1 - _WINDOW): number + _WINDOW]
             )
+            # Any accepted nearby qualification gives the claim actionable scope.
             if _QUALIFIED.search(context):
+                # Advance because this occurrence states what it is atomic against.
                 continue
+            # Yield the bare-claim finding at the exact matching source line.
             yield Finding(
                 "EFCT-008", path, number,
                 "an atomicity claim with nothing to be atomic with respect to",
@@ -83,5 +95,7 @@ class AtomicityQualifiedCheck(ModuleCheck):
             )
 
 
+# Permit direct module execution through the common checker command-line adapter.
 if __name__ == "__main__":
+    # Translate the checker result into the process exit status.
     raise SystemExit(main(AtomicityQualifiedCheck()))

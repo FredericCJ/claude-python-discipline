@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING
 
 from . import Finding, TextCheck, main
 
+# Import annotation-only contracts without runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
@@ -51,9 +52,9 @@ class NoModelNamesCheck(TextCheck):
 
     ## Invoked as `python -m checks.no_model_names`.
     name = "no_model_names"
-    ## The ops/ALLOC rule this check decides.
+    ## Rule-id elements in deterministic reporting order decided by this check.
     rules = ("ALLOC-001",)
-    ## Project documents and dispatch records are markdown.
+    ## File-suffix elements in deterministic matching order for governed Markdown prose.
     suffixes = (".md",)
 
     def visit_text(self, text: str, path: Path) -> Iterator[Finding]:
@@ -61,17 +62,26 @@ class NoModelNamesCheck(TextCheck):
 
         @param text the file's contents
         @param path the file it was read from
-        @return one finding per offending line
+        @return finding elements in source-line order, one per offending line
         """
+        # Exempt the one document whose declared subject is the tier-to-model binding.
         if _MAPPING_DECLARATION.search(text):
+            # Stop iteration because every model spelling belongs to that mapping subject.
             return
 
+        # Examine each source-line element in increasing one-based order.
         for number, line in enumerate(text.splitlines(), start=1):
+            # Configuration assignments are the authorized tier-to-model binding surface.
             if _CONFIG_KEY.match(line):
+                # Advance without treating required procurement data as architectural prose.
                 continue
+            # Search the remaining prose line for one concrete model-family spelling.
             found = _MODEL.search(line)
+            # A line without a model reference satisfies this narrow allocation rule.
             if found is None:
+                # Advance to the next source line.
                 continue
+            # Yield the concrete leaked model spelling at its exact source line.
             yield Finding(
                 "ALLOC-001", path, number,
                 f"names the model {found.group(0)!r} where a tier belongs",
@@ -81,5 +91,7 @@ class NoModelNamesCheck(TextCheck):
             )
 
 
+# Permit direct module execution through the common checker command-line adapter.
 if __name__ == "__main__":
+    # Translate the checker result into the process exit status.
     raise SystemExit(main(NoModelNamesCheck()))
