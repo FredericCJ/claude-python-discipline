@@ -99,7 +99,7 @@ Read only what the task needs.
 | writing tests, fixtures, properties, fault injection, mutation | `discipline/law/TEST.md` + `discipline/fact/py-testing.md` |
 | public surface, CLI, structured output, versioning, migrations | `discipline/law/API.md` |
 | adding a dependency, lockfiles, generated files | `discipline/law/DEP.md` |
-| comments, docstrings, local bindings, naming, Doxygen, documentation model | `discipline/law/DOC.md` + `discipline/law/DOC-COMMENTS.md` + `discipline/law/DOC-NAMING.md` + `discipline/frame/documentation.md` |
+| comments, docstrings, local bindings, naming, Doxygen, documentation model | `discipline/law/DOC.md` + `discipline/law/DOC-NARRATION.md` + `discipline/law/DOC-NAMING.md` + `discipline/frame/documentation.md` |
 | what to do first, definition of done, decision records | `discipline/law/FLOW.md` |
 | choosing a paradigm, refactoring, legacy code, tradeoffs | `discipline/frame/architecture.md` |
 | writing a spec, requirements, traceability, reusability | `discipline/frame/spec.md` |
