@@ -9,7 +9,7 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 | Status | Count |
 |---|---|
 | active | 6 |
-| candidate | 106 |
+| candidate | 108 |
 | superseded | 1 |
 
 ## active
@@ -972,6 +972,24 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `error:MIGRATE-V5-003_AUTHORING_REQUIRED`, `glob:tools/migrate_v5.py`, `glob:tools/project_gate.py`
 - **About** DOC-028
 - **Verify** `python -m pytest -q tools/test_migrate_v5.py tools/test_project_gate.py`
+
+### L-0114 · A Docker Desktop bind mount of a Windows-backed WSL checkout can project non-shebang Python files as executable and make metadata-bound discrimination exceed its timeout even though the same bytes pass on native filesystems.
+
+- **Do** Run only the read-only default gate from an owned Docker-volume byte projection, normalize Python executable intent from shebangs, retain real-checkout mounts for edit commands, and verify cleanup ownership before removal.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-23
+- **Triggers** `error:EXE002`, `error:Timeout`, `glob:dev/docker.sh`
+- **About** DEP-006
+- **Verify** `python -m pytest -q tools/test_dev_environment.py`
+
+### L-0115 · A release leak scanner can falsely classify a fixed package-authored container HOME as builder identity when the Dockerfile necessarily ships the same public sandbox path.
+
+- **Do** Exclude only the exact package-owned runtime value, report the dropped signal, and retain tests proving nearby temporary homes and all host-derived identities still scan.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-23
+- **Triggers** `error:build home directory`, `glob:tools/release.py`
+- **About** DEP-008
+- **Verify** `python -m pytest -q tools/test_release.py`
 
 ## superseded
 
