@@ -22,7 +22,7 @@ from .comment_association import (
     comment_blocks,
     semantic_associations,
 )
-from .doc_narration import EFFECT_METHODS
+from .doc_narration import _effect_call
 from .doc_style import _hash_block_text
 from .documentation_model import (
     DocumentationModelError,
@@ -468,12 +468,8 @@ def _has_detectable_effect(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool
     }
     # Inspect each owned descendant in execution-tree order without entering nested definitions.
     for child in _owned_nodes(node):
-        # Calls through a terminal method in the bounded effect vocabulary are detectable effects.
-        if (
-            isinstance(child, ast.Call)
-            and isinstance(child.func, ast.Attribute)
-            and child.func.attr in EFFECT_METHODS
-        ):
+        # Calls in the shared bounded effect vocabulary are detectable external sequence points.
+        if isinstance(child, ast.Call) and _effect_call(child):
             # True records an externally visible method sequence point.
             return True
         # Assignments can mutate receiver or caller-owned parameter state.

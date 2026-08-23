@@ -401,6 +401,56 @@ def test_detectable_effect_without_contract_fails_doc_027(tmp_path: Path) -> Non
     assert any(item.rule_id == "DOC-027" for item in findings)
 
 
+def test_immutable_string_replace_is_not_a_detectable_effect(tmp_path: Path) -> None:
+    """An ambiguous method spelling cannot turn a pure text rewrite into an effect.
+
+    @param tmp_path fixture repository
+    """
+    module, declaration = _fixture(
+        tmp_path,
+        '''
+        """! Fixture module."""
+        def rewrite(text: str) -> str:
+            """Substitute one token in detached text.
+            @param text immutable source text
+            @return detached text containing the substitution
+            """
+            # Produce detached text without changing the caller's immutable source.
+            return text.replace("old", "new")
+        ''',
+    )
+
+    findings = _run(DocSemanticsCheck(), module, declaration)
+
+    assert not any(item.rule_id == "DOC-027" for item in findings)
+
+
+def test_qualified_os_replace_remains_a_detectable_effect(tmp_path: Path) -> None:
+    """Exact operating-system replacement remains in the bounded effect vocabulary.
+
+    @param tmp_path fixture repository
+    """
+    module, declaration = _fixture(
+        tmp_path,
+        '''
+        """! Fixture module."""
+        import os
+
+        def publish(source: str, destination: str) -> None:
+            """Publish staged bytes at their destination.
+            @param source staged filesystem path
+            @param destination final filesystem path
+            """
+            # Replace the destination namespace entry with respect to concurrent readers.
+            os.replace(source, destination)
+        ''',
+    )
+
+    findings = _run(DocSemanticsCheck(), module, declaration)
+
+    assert any(item.rule_id == "DOC-027" for item in findings)
+
+
 def test_container_member_deletion_is_a_detectable_effect(tmp_path: Path) -> None:
     """Deleting caller-visible indexed state requires an effect contract.
 

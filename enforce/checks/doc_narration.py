@@ -31,7 +31,6 @@ EFFECT_METHODS: Final = frozenset({
     "mkdir",
     "remove",
     "rename",
-    "replace",
     "rmdir",
     "send",
     "unlink",
@@ -39,6 +38,10 @@ EFFECT_METHODS: Final = frozenset({
     "write_bytes",
     "write_text",
 })
+## Unordered dotted-call set whose each element is an unambiguous external effect despite an
+## otherwise ambiguous terminal method name. Bare `replace` is excluded because immutable strings
+## and filesystem paths share that spelling; companion writes or semantic review own Path.replace.
+EFFECT_FUNCTIONS: Final = frozenset({"os.replace"})
 ## Unordered word set whose each element merely translates common syntax into English.
 SYNTACTIC_WORDS: Final = frozenset({
     "add",
@@ -256,8 +259,30 @@ def _effect_call(node: ast.Call) -> bool:
     @param node call expression
     @return true for one of the mechanically governed effect names
     """
-    # True means the terminal method belongs to the effect set; false includes plain functions.
-    return isinstance(node.func, ast.Attribute) and node.func.attr in EFFECT_METHODS
+    # Resolve a dotted callee name for explicitly qualified effect functions.
+    qualified = _callee_name(node.func)
+    # True means the terminal method or exact dotted function is effectful; false is ambiguous/pure.
+    return (
+        isinstance(node.func, ast.Attribute) and node.func.attr in EFFECT_METHODS
+    ) or qualified in EFFECT_FUNCTIONS
+
+
+def _callee_name(node: ast.expr) -> str:
+    """Resolve a simple dotted callee name without inferring runtime types.
+
+    @param node callee expression
+    @return dotted identifier, or empty text for calls and other dynamic expressions
+    """
+    # A simple name is already the complete dotted representation.
+    if isinstance(node, ast.Name):
+        # Expose the identifier spelling directly.
+        return node.id
+    # An attribute extends its recursively resolved owner name.
+    if isinstance(node, ast.Attribute):
+        # Join owner and attribute while removing a leading dot from an unknown owner.
+        return f"{_callee_name(node.value)}.{node.attr}".lstrip(".")
+    # Dynamic callee expressions have no stable qualified name for this bounded proxy.
+    return ""
 
 
 def _syntactic_only(node: ast.AST, prose: str) -> bool:
