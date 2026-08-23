@@ -20,6 +20,7 @@ import json
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+# Import the path contract only for static annotations.
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -27,9 +28,8 @@ if TYPE_CHECKING:
 ## a file as one when a check is pointed straight at it.
 LEDGER_NAME = "ledger.jsonl"
 
-## Event kinds the ledger records. A check reading an unknown kind says so rather
-## than ignoring it: an unrecognised event means the writer moved on and the
-## reader did not.
+## Unordered event-kind set whose each element is understood by ledger readers; an unknown
+## kind means the writer advanced without its deciding checks.
 KNOWN_KINDS = frozenset({"session", "learn", "used", "refute", "supersede",
                          "promote", "calibrate"})
 
@@ -45,7 +45,8 @@ class Event:
     kind: str
     ## The session that appended it.
     session: str
-    ## The event's body, whose shape depends on the kind.
+    ## Mapping from each payload field-name key to its decoded value; field meaning depends on
+    ## event kind and insertion order preserves the authored JSON object.
     payload: dict[str, Any]
     ## The line this event was read from, 1-based, for reporting a location.
     line: int
@@ -55,8 +56,9 @@ def is_ledger(path: Path) -> bool:
     """Whether a path names the learning ledger.
 
     @param path the file being considered
-    @return True when it is a `ledger.jsonl`
+    @return true when it is a ``ledger.jsonl``; false otherwise
     """
+    # Match the stable basename independently of the repository's absolute location.
     return path.name == LEDGER_NAME
 
 
@@ -67,21 +69,35 @@ def read(text: str) -> tuple[list[Event], list[tuple[int, str]]]:
     as a finding at its own line number instead of dying on the whole file.
 
     @param text the ledger's contents
-    @return the events in file order, and one (line, reason) per unparsable line
+    @return event elements in file order and malformed-line/reason pair elements in file order
     """
+    # Accumulate parsed event-record elements in source order.
     events: list[Event] = []
+    # Accumulate malformed line-number/reason pair elements in source order.
     broken: list[tuple[int, str]] = []
+    # Examine each source-line element in increasing one-based order.
     for number, raw in enumerate(text.splitlines(), start=1):
+        # Blank lines carry no event and do not alter sequence identity.
         if not raw.strip():
+            # Advance without producing an event or malformed-line record.
             continue
+        # Decode one line independently so later valid events remain inspectable.
         try:
+            # Parse the line into an untrusted JSON value.
             record = json.loads(raw)
+        # Preserve JSON parse failure as data for checker-owned reporting.
         except ValueError as exc:
+            # Append the exact line and parser explanation in source order.
             broken.append((number, str(exc)))
+            # Advance because a malformed value cannot be interpreted as an event.
             continue
+        # Each append-log event must be represented by a JSON object.
         if not isinstance(record, dict):
+            # Append a stable shape explanation at the exact line.
             broken.append((number, "not an object"))
+            # Advance because a scalar or array cannot supply event fields.
             continue
+        # Append the normalized event value while preserving source order and line identity.
         events.append(Event(
             seq=int(record.get("seq", 0)),
             kind=str(record.get("kind", "")),
@@ -89,6 +105,7 @@ def read(text: str) -> tuple[list[Event], list[tuple[int, str]]]:
             payload=record.get("payload") or {},
             line=number,
         ))
+    # Return both ordered sequences so callers can report syntax and semantic defects.
     return events, broken
 
 
@@ -98,19 +115,30 @@ def learnings(events: list[Event]) -> dict[str, dict[str, Any]]:
     A later event about a learning replaces the earlier state, which is what
     makes a correction an append rather than an edit.
 
-    @param events the ledger's events, in file order
-    @return each learning id against its most recent recorded payload
+    @param events ledger event elements in file order
+    @return mapping from each learning-id key to its most recent payload-field/value mapping;
+        insertion order follows first learning declaration
     """
+    # Map each learning-id key to its folded payload mapping value in first-seen order.
     folded: dict[str, dict[str, Any]] = {}
+    # Apply each event-record element in append order.
     for event in events:
+        # Normalize the referenced payload identity for stable key membership.
         identifier = str(event.payload.get("id", ""))
+        # Events without a learning identity do not participate in per-learning folding.
         if not identifier.startswith("L-"):
+            # Advance without inventing identity for session or calibration events.
             continue
+        # A learn event establishes or, defectively, replaces the complete initial payload.
         if event.kind == "learn":
+            # Copy each payload key/value pair while preserving authored mapping order.
             folded[identifier] = dict(event.payload)
+        # Later recognized events update only an identity already established by learning.
         elif identifier in folded:
+            # Merge payload fields and derived status while retaining first-id insertion order.
             folded[identifier] = {**folded[identifier], **event.payload,
                                   "status": _status_for(event.kind)}
+    # Return the complete current-state mapping after ordered event application.
     return folded
 
 
@@ -120,6 +148,8 @@ def _status_for(kind: str) -> str:
     @param kind the event kind
     @return the resulting status, or `candidate` for a kind that does not change it
     """
+    # Map each terminal event-kind key to its resulting status value; mapping order is
+    # deliberately irrelevant to direct key lookup.
     return {
         "refute": "refuted",
         "supersede": "superseded",

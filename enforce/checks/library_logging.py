@@ -19,15 +19,16 @@ from typing import TYPE_CHECKING
 
 from . import Finding, ModuleCheck, is_test_path, main
 
+# Import annotation-only contracts without runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
 
-## Calls on the logging module that configure rather than emit.
+## Unordered logging-call set whose each element configures process logging rather than emits.
 CONFIGURING = frozenset({"basicConfig", "dictConfig", "fileConfig", "captureWarnings",
                          "disable", "setLoggerClass", "shutdown"})
 
-## Methods on a logger object that change where or whether output goes.
+## Unordered logger-method set whose each element changes where or whether output goes.
 MUTATING = frozenset({"addHandler", "setLevel", "removeHandler", "addFilter"})
 
 ## The handler a library is allowed to attach to its own logger: it decides
@@ -43,7 +44,7 @@ class LibraryLoggingCheck(ModuleCheck):
 
     ## Invoked as `python -m checks.library_logging`.
     name = "library_logging"
-    ## The law/DIAG rule this check decides.
+    ## Rule-id elements in deterministic reporting order decided by this check.
     rules = ("DIAG-011",)
 
     def visit_module(self, tree: ast.Module, path: Path, layer: str) -> Iterator[Finding]:
@@ -52,17 +53,25 @@ class LibraryLoggingCheck(ModuleCheck):
         @param tree the module's syntax tree
         @param path the file it was parsed from
         @param layer the architectural layer; the shell is exempt
-        @return one finding per configuring call
+        @return finding elements in AST walk order, one per configuring call
         """
+        # The shell owns process logging, while test configuration is fixture-local.
         if layer == EXEMPT_LAYER or is_test_path(path):
+            # Stop iteration for the two explicitly exempt ownership contexts.
             return
 
+        # Inspect each syntax-node element in deterministic AST walk order.
         for node in ast.walk(tree):
+            # Only method-style calls can match the configuration shapes owned here.
             if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
+                # Advance without interpreting unrelated syntax nodes.
                 continue
+            # Select the terminal called attribute for closed-vocabulary classification.
             attribute = node.func.attr
 
+            # Module-level configuration calls are forbidden outside the shell.
             if attribute in CONFIGURING and _names_logging(node.func.value):
+                # Yield the process-configuration finding at the call site.
                 yield Finding(
                     "DIAG-011", path, node.lineno,
                     f"library code calls logging.{attribute}()",
@@ -70,7 +79,9 @@ class LibraryLoggingCheck(ModuleCheck):
                     "that does it changes how an unrelated part of the "
                     "application behaves, from an import.",
                 )
+            # Logger mutation is forbidden except the deliberately inert NullHandler case.
             elif attribute in MUTATING and not _is_null_handler(node):
+                # Yield the logger-mutation finding at the call site.
                 yield Finding(
                     "DIAG-011", path, node.lineno,
                     f"library code calls {attribute}() on a logger",
@@ -83,8 +94,9 @@ def _names_logging(expr: ast.expr) -> bool:
     """Whether an expression is the logging module itself.
 
     @param expr the receiver of an attribute access
-    @return True when it is the name `logging`
+    @return true when it is the name ``logging``; false otherwise
     """
+    # Match only the direct module name, not arbitrary objects ending in a similar attribute.
     return isinstance(expr, ast.Name) and expr.id == "logging"
 
 
@@ -92,16 +104,25 @@ def _is_null_handler(node: ast.Call) -> bool:
     """Whether a handler call is the permitted `NullHandler` attachment.
 
     @param node the call expression
-    @return True when its single argument constructs a NullHandler
+    @return true when any argument constructs a ``NullHandler``; false otherwise
     """
+    # Inspect each positional-argument element in call order.
     for argument in node.args:
+        # Only a nested constructor call can instantiate a handler.
         if isinstance(argument, ast.Call):
+            # Select the nested constructor expression.
             func = argument.func
+            # Resolve either a qualified terminal attribute or a bare constructor identifier.
             name = func.attr if isinstance(func, ast.Attribute) else getattr(func, "id", "")
+            # The sole permitted handler has the exact stable constructor name.
             if name == PERMITTED_HANDLER:
+                # Accept immediately because one inert handler makes this attachment permitted.
                 return True
+    # No positional argument constructs the permitted handler.
     return False
 
 
+# Permit direct module execution through the common checker command-line adapter.
 if __name__ == "__main__":
+    # Translate the checker result into the process exit status.
     raise SystemExit(main(LibraryLoggingCheck()))

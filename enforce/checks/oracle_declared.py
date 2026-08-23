@@ -22,13 +22,12 @@ from typing import TYPE_CHECKING
 
 from . import Finding, ModuleCheck, is_test_path, main
 
+# Import annotation-only contracts without runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
 
-## The oracles `law/TEST` admits, strongest first. A module naming none of them
-## has not answered the question; a module naming one has, whether or not it
-## chose well.
+## Oracle-name elements ordered by decreasing evidentiary strength admitted by ``law/TEST``.
 ORACLES: tuple[str, ...] = ("contract", "property", "differential", "golden", "example")
 
 ## Matches an oracle word only where the module is claiming one, not merely using
@@ -49,7 +48,7 @@ class OracleDeclaredCheck(ModuleCheck):
 
     ## Invoked as `python -m checks.oracle_declared`.
     name = "oracle_declared"
-    ## The law/TEST and law/FLOW rules this check decides.
+    ## Rule-id elements in deterministic reporting order decided by this check.
     rules = ("FLOW-002", "TEST-004")
 
     def visit_module(self, tree: ast.Module, path: Path, _layer: str) -> Iterator[Finding]:
@@ -62,13 +61,18 @@ class OracleDeclaredCheck(ModuleCheck):
         @param path the file it was parsed from
         @param _layer the architectural layer, unused -- a test is a test wherever
             it sits
-        @return one finding when the module holds tests and names no oracle
+        @return zero or one finding element for the earliest oracle-declaration defect
         """
+        # Only modules that both look like tests and define tests own an oracle declaration.
         if not is_test_path(path) or not _holds_tests(tree):
+            # Stop iteration for production and helper-only modules.
             return
 
+        # Extract the module contract text that owns the oracle declaration.
         docstring = ast.get_docstring(tree)
+        # Absence prevents even a malformed oracle claim from being inspected.
         if docstring is None:
+            # Yield the missing-docstring finding before stopping this single-defect check.
             yield Finding(
                 "TEST-004", path, 1,
                 "test module has no docstring, so it declares no oracle",
@@ -76,20 +80,28 @@ class OracleDeclaredCheck(ModuleCheck):
                 f"{', '.join(ORACLES)}. A suite with an unstated oracle is "
                 "usually asserting whatever the code already did.",
             )
+            # Stop after the earliest actionable module-level defect.
             return
 
+        # Search the module contract for one syntactically explicit oracle claim.
         found = DECLARATION.search(docstring)
+        # A docstring without the declaration leaves assertion authority unstated.
         if found is None:
+            # Yield the missing-declaration finding before stopping this single-defect check.
             yield Finding(
                 "TEST-004", path, 1,
                 "test module declares no oracle",
                 f"State it: `Oracle: <one of {', '.join(ORACLES)}>`. It is the "
                 "difference between testing the contract and testing the code.",
             )
+            # Stop after the earliest actionable module-level defect.
             return
 
+        # Normalize the claimed oracle prose for closed-vocabulary membership.
         claim = found.group("claim").lower()
+        # The declared prose must name at least one admitted oracle category.
         if not any(oracle in claim for oracle in ORACLES):
+            # Yield the unknown-oracle finding without judging which admitted choice is best.
             yield Finding(
                 "FLOW-002", path, 1,
                 f"the declared oracle names none of the five: {found.group('claim')!r}",
@@ -102,8 +114,9 @@ def _holds_tests(tree: ast.Module) -> bool:
     """Whether a module defines at least one test function.
 
     @param tree the module's syntax tree
-    @return True when any top-level or nested function is named `test_*`
+    @return true when any walked function element is named ``test_*``; false otherwise
     """
+    # Reduce deterministic AST walk elements to the test-function presence predicate.
     return any(
         isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
         and _TEST_FUNCTION.match(node.name)
@@ -111,5 +124,7 @@ def _holds_tests(tree: ast.Module) -> bool:
     )
 
 
+# Permit direct module execution through the common checker command-line adapter.
 if __name__ == "__main__":
+    # Translate the checker result into the process exit status.
     raise SystemExit(main(OracleDeclaredCheck()))

@@ -20,20 +20,20 @@ from typing import TYPE_CHECKING
 
 from . import Finding, ModuleCheck, is_test_path, main
 
+# Import annotation-only contracts without runtime dependencies.
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
 
-## Builtins that decide at run time what a reader cannot decide at read time.
-## `getattr` and `setattr` are included only when the attribute name is computed:
-## `getattr(x, "name", None)` is a readable default, not metaprogramming.
+## Unordered dynamic-builtin set whose each element hides a decision until runtime;
+## computed attribute access is handled separately.
 DYNAMIC = frozenset({"eval", "exec", "compile", "globals", "locals", "vars",
                      "__import__"})
 
-## Attribute access resolved at run time; reported only with a computed name.
+## Unordered access-builtin set whose each element is reported only with a computed name.
 COMPUTED_ACCESS = frozenset({"getattr", "setattr", "delattr", "hasattr"})
 
-## Hooks that make a class's behaviour undiscoverable from its body.
+## Unordered magic-method set whose each element makes class behavior undiscoverable locally.
 MAGIC_METHODS = frozenset({"__getattr__", "__getattribute__", "__setattr__",
                            "__new__", "__init_subclass__", "__set_name__"})
 
@@ -46,7 +46,7 @@ class NoMagicInDomainCheck(ModuleCheck):
 
     ## Invoked as `python -m checks.no_magic_in_domain`.
     name = "no_magic_in_domain"
-    ## The law/ARCH rule this check decides.
+    ## Rule-id elements in deterministic reporting order decided by this check.
     rules = ("ARCH-015",)
 
     def visit_module(self, tree: ast.Module, path: Path, layer: str) -> Iterator[Finding]:
@@ -55,15 +55,22 @@ class NoMagicInDomainCheck(ModuleCheck):
         @param tree the module's syntax tree
         @param path the file it was parsed from
         @param layer the architectural layer; only the domain is governed
-        @return one finding per construct
+        @return finding elements in AST walk order, one per hidden-runtime construct
         """
+        # Only non-test domain code owns the strong readability exclusion.
         if layer != GOVERNED or is_test_path(path):
+            # Stop iteration outside the rule's exact architectural subject.
             return
 
+        # Inspect each syntax-node element in deterministic AST walk order.
         for node in ast.walk(tree):
+            # Delegate calls to the closed dynamic-builtin classifier.
             if isinstance(node, ast.Call):
+                # Yield each call-level finding at this AST position.
                 yield from self._call(node, path)
+            # Delegate classes to metaclass and magic-hook inspection.
             elif isinstance(node, ast.ClassDef):
+                # Yield each class-level finding at this AST position.
                 yield from self._class(node, path)
 
     def _call(self, node: ast.Call, path: Path) -> Iterator[Finding]:
@@ -71,19 +78,26 @@ class NoMagicInDomainCheck(ModuleCheck):
 
         @param node the call expression
         @param path the file it came from
-        @return one finding per offending call
+        @return zero or one finding element for the offending call
         """
+        # Select a bare called identifier, leaving qualified calls unmatched.
         name = getattr(node.func, "id", "")
+        # Closed dynamic builtins always hide what implementation runs.
         if name in DYNAMIC:
+            # Yield the direct dynamic-call finding at its source line.
             yield Finding(
                 "ARCH-015", path, node.lineno,
                 f"the domain calls `{name}()`",
                 "What runs must be answerable by reading. A mechanism needing a "
                 "debugger to trace defeats every diagnostic downstream of it.",
             )
+        # Computed-access builtins are permitted only when their attribute name is literal.
         elif name in COMPUTED_ACCESS and len(node.args) >= 2:  # ruff: ignore[magic-value-comparison] - object and name
+            # Select the second positional argument that carries attribute identity.
             attribute = node.args[1]
+            # Any non-string-literal attribute makes runtime access impossible to enumerate.
             if not (isinstance(attribute, ast.Constant) and isinstance(attribute.value, str)):
+                # Yield the computed-attribute finding at its call site.
                 yield Finding(
                     "ARCH-015", path, node.lineno,
                     f"the domain calls `{name}()` with a computed attribute name",
@@ -96,19 +110,25 @@ class NoMagicInDomainCheck(ModuleCheck):
 
         @param node the class definition
         @param path the file it came from
-        @return one finding per offending construct
+        @return finding elements in keyword then class-body order, one per offending construct
         """
+        # Inspect each class-keyword element in authored order for metaclass selection.
         for keyword in node.keywords:
+            # An explicit metaclass moves class construction behavior outside the body.
             if keyword.arg == "metaclass":
+                # Yield the metaclass finding at the class definition.
                 yield Finding(
                     "ARCH-015", path, node.lineno,
                     f"domain class {node.name} declares a metaclass",
                     "A metaclass changes what a class *is* somewhere else in the "
                     "tree. Build the type plainly, where its behaviour is visible.",
                 )
+        # Inspect each class-body statement element in source order for intercepting hooks.
         for statement in node.body:
+            # Report only function definitions whose name belongs to the closed hook set.
             if (isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef))
                     and statement.name in MAGIC_METHODS):
+                # Yield the hidden-access finding at the exact method definition.
                 yield Finding(
                     "ARCH-015", path, statement.lineno,
                     f"domain class {node.name} defines `{statement.name}`",
@@ -117,5 +137,7 @@ class NoMagicInDomainCheck(ModuleCheck):
                 )
 
 
+# Permit direct module execution through the common checker command-line adapter.
 if __name__ == "__main__":
+    # Translate the checker result into the process exit status.
     raise SystemExit(main(NoMagicInDomainCheck()))
