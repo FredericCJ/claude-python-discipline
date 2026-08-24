@@ -535,28 +535,26 @@ def disposition_for(source: str, heading: str) -> tuple[str, str] | None:
     @param heading the heading to rule on
     @return the disposition and its reason, or None when no entry matches
     """
-    # Compute best using None for later disposition for logic.
+    # Retain the most specific disposition/reason pair and its selector length.
     best: tuple[str, str] | None = None
-    # Compute best len using -1 for later disposition for logic.
     best_len = -1
     # Preserve the optional baseline note while re-recording selected entries.
     # Process each candidate element in deterministic source order.
     for src, needle, disposition, note in DISPOSITIONS:
-        # Select the guarded path only after `src != source` is satisfied.
+        # Restrict candidate policy to the current source document.
         if src != source:
-            # Advance after the current candidate has been conclusively excluded.
+            # Policies for another source corpus cannot classify this heading.
             continue
-        # Select the guarded path only after `needle and needle.lower() not in heading.lower()`
-        # Details: is satisfied.
+        # Require section-specific selectors to match the current heading text.
         if needle and needle.lower() not in heading.lower():
-            # Advance after the current candidate has been conclusively excluded.
+            # A non-empty selector must occur in the heading before it can compete.
             continue
-        # Select the guarded path only after `len(needle) > best_len` is satisfied.
+        # Prefer the longest selector so narrow section policy overrides document defaults.
         if len(needle) > best_len:
             # Replace the winning `(disposition, reason)` tuple and its matched-length scalar
             # together; tuple element order is fixed and longer heading matches take precedence.
             best, best_len = (disposition, note), len(needle)
-    # Return the disposition and its reason, or None when no entry matches to the caller.
+    # Expose the longest matching policy, or explicit absence when no policy applies.
     return best
 
 
@@ -577,13 +575,9 @@ def build_rows(sections: Sequence[dict[str, object]]) -> list[Row]:
     """
     # Each rows element represents one decoded record; lexical order is preserved.
     rows: list[Row] = []
-    # Select section as the current element from sections while build rows preserves traversal
-    # Details: order.
-    # Process each candidate element in deterministic source order.
     for section in sections:
         # Retain the immutable source representation consumed by subsequent analysis.
         source = str(section["source"])
-        # Compute heading using str for later build rows logic.
         heading = str(section["heading"])
         # Preserve the optional pattern match that carries the reported analysis count.
         found = disposition_for(source, heading)
@@ -597,10 +591,8 @@ def build_rows(sections: Sequence[dict[str, object]]) -> list[Row]:
             disposition, note = found
         # Preserve governed Python-path elements in deterministic traversal order.
         targets = DEFAULT_TARGETS.get(source, ()) if disposition == "migrated" else ()
-        # Select the guarded path only after `disposition == 'migrated' and (not targets)` is
-        # Details: satisfied.
         if disposition == "migrated" and not targets:
-            # Compute disposition using "UNREVIEWED" for later build rows logic.
+            # A migrated section without any rule target has not actually been integrated.
             disposition = "UNREVIEWED"
         rows.append(Row(source, heading, int(section["line"]), disposition, targets, note))
     # Return one row per section, in census order to the caller.
@@ -614,25 +606,23 @@ def verify_commenting_source(path: Path = COMMENTING_SOURCE) -> str:
     @return the verified lowercase SHA-256 digest
     @throws ValueError when the source is absent or has changed
     """
-    # Select the regular-file path only when `not path.is_file()` is satisfied.
+    # Require the frozen source artifact before computing any provenance identity.
     if not path.is_file():
-        # Derive msg from f"commenting doctrine input is missing: {path}" for the next verify
-        # Details: commenting source decision.
+        # Name the missing immutable input in the generation refusal.
         msg = f"commenting doctrine input is missing: {path}"
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Refuse because no claim census can be bound to absent source bytes.
         raise ProvenanceError(msg)
-    # Compute digest using hashlib.sha256 for later verify commenting source logic.
+    # Hash exact source bytes for comparison with the reviewed immutable baseline.
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
-    # Select the guarded path only after `digest != COMMENTING_SHA256` is satisfied.
     if digest != COMMENTING_SHA256:
-        # Compute msg using ( for later verify commenting source logic.
+        # Bind generation to reviewed bytes rather than silently accepting input drift.
         msg = (
             "commenting doctrine input changed: "
             f"expected {COMMENTING_SHA256}, observed {digest}; restore the frozen input"
         )
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Refuse with both expected and observed digests for deterministic repair.
         raise ProvenanceError(msg)
-    # Return the verified lowercase SHA-256 digest to the caller.
+    # Expose the verified digest for inclusion in derived provenance metadata.
     return digest
 
 
@@ -643,16 +633,15 @@ def _major_section(heading: str) -> int:
     @return the major section number
     @throws ValueError when the claim is outside the numbered doctrine
     """
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Parse the major numeric owner from the nearest extracted section heading.
     found = _SECTION_NUMBER.match(heading)
-    # Use the absence path when found has no available value.
+    # A claim outside numbered doctrine has no disposition-policy owner.
     if found is None:
-        # Derive msg from f"commenting claim has no numbered owner section: {heading!r for the
-        # Details: next  major section decision.
+        # Name the orphan heading in the provenance refusal.
         msg = f"commenting claim has no numbered owner section: {heading!r}"
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Reject rather than assigning the claim to a guessed section.
         raise ProvenanceError(msg)
-    # Return the major section number to the caller.
+    # Convert the captured owner number to the policy-key representation.
     return int(found.group("major"))
 
 
@@ -679,40 +668,28 @@ def build_claim_rows(
     rows: list[ClaimRow] = []
     # Collect unique seen element values; their order is deliberately unordered.
     seen: set[str] = set()
-    # Treat the current candidate as the candidate element consumed by the enclosing
-    # Details: transformation.
-    # Process each candidate element in deterministic source order.
     for candidate in candidates:
-        # Select the guarded path only after `str(candidate.get('source', '')) != 'CD'` is
-        # Details: satisfied.
+        # Admit only claims extracted from the frozen commenting-doctrine source.
         if str(candidate.get("source", "")) != "CD":
-            # Advance after the current candidate has been conclusively excluded.
+            # Only commenting-doctrine policies may classify commenting-doctrine claims.
             continue
-        # Compute section using str for later build claim rows logic.
+        # Normalize local and major section identities before policy matching.
         section = str(candidate["section"])
-        # Compute major section using str for later build claim rows logic.
         major_section = str(candidate["major_section"])
         # Each matching element is one policy for this major section; authored policy order is
         # preserved so duplicate coverage remains diagnosable.
         matching = [
             policy for policy in policies if policy.section == _major_section(major_section)
         ]
-        # Compute claim id using str for later build claim rows logic.
         claim_id = str(candidate["claim_id"])
-        # Select the guarded path only after `len(matching) != 1` is satisfied.
         if len(matching) != 1:
-            # Derive state from "unreviewed" if not matching else "multiply claimed" for the
-            # Details: next build claim rows decision.
+            # Distinguish absent policy from conflicting policies for actionable diagnostics.
             state = "unreviewed" if not matching else "multiply claimed"
-            # Derive msg from f"{claim_id} is {state}: matched {len(matching)} policies" for the
-            # Details: next build claim rows decision.
             msg = f"{claim_id} is {state}: matched {len(matching)} policies"
             # Propagate the localized failure so callers cannot mistake it for success.
             raise ProvenanceError(msg)
-        # Select the guarded path only after `claim_id in seen` is satisfied.
         if claim_id in seen:
-            # Compute msg using f"duplicate extracted claim identity: {claim_id}" for later
-            # Details: build claim rows logic.
+            # Content-derived identity repetition proves duplicated extracted evidence.
             msg = f"duplicate extracted claim identity: {claim_id}"
             # Propagate the localized failure so callers cannot mistake it for success.
             raise ProvenanceError(msg)
@@ -722,39 +699,28 @@ def build_claim_rows(
         line = int(candidate["line"])
         # Retain the immutable source representation consumed by subsequent analysis.
         text = str(candidate["text"])
-        # Derive expected id from f"CD-L{line:04d}-{hashlib.sha256(text.encode('utf-8')).hexdi
-        # Details: for the next build claim rows decision.
         expected_id = f"CD-L{line:04d}-{hashlib.sha256(text.encode('utf-8')).hexdigest()[:12]}"
-        # Select the guarded path only after `claim_id != expected_id` is satisfied.
         if claim_id != expected_id:
-            # Derive msg from f"altered claim identity {claim_id}: source line and text de for
-            # Details: the next build claim rows decision.
+            # Recompute identity from source facts to expose edited extraction records.
             msg = f"altered claim identity {claim_id}: source line and text derive {expected_id}"
             # Propagate the localized failure so callers cannot mistake it for success.
             raise ProvenanceError(msg)
 
-        # Compute policy using matching[0] for later build claim rows logic.
+        # Use the sole matched policy only after cardinality and identity checks succeed.
         policy = matching[0]
-        # Select the guarded path only after `policy.disposition not in CLAIM_DISPOSITIONS` is
-        # Details: satisfied.
         if policy.disposition not in CLAIM_DISPOSITIONS:
-            # Derive msg from f"{claim_id} has unknown disposition {policy.disposition!r}" for
-            # Details: the next build claim rows decision.
+            # Reject integration states outside the closed disposition vocabulary.
             msg = f"{claim_id} has unknown disposition {policy.disposition!r}"
             # Propagate the localized failure so callers cannot mistake it for success.
             raise ProvenanceError(msg)
         # Refuse baseline re-recording unless the caller supplies a nonblank audit reason.
         if not policy.reason.strip():
-            # Derive msg from f"{claim_id} has no disposition reason" for the next build claim
-            # Details: rows decision.
+            # Every claim decision must carry an inspectable engineering rationale.
             msg = f"{claim_id} has no disposition reason"
             # Propagate the localized failure so callers cannot mistake it for success.
             raise ProvenanceError(msg)
-        # Select the guarded path only after `policy.disposition != 'rejected-with-reason' and
-        # Details: (not policy.targets)` is satisfied.
         if policy.disposition != "rejected-with-reason" and not policy.targets:
-            # Compute msg using f"{claim_id} has no target for {policy.disposition}" for later
-            # Details: build claim rows logic.
+            # Retained or transformed claims must identify their integrated doctrine targets.
             msg = f"{claim_id} has no target for {policy.disposition}"
             # Propagate the localized failure so callers cannot mistake it for success.
             raise ProvenanceError(msg)
@@ -783,11 +749,9 @@ def render_claim_ledger(rows: Sequence[ClaimRow], source_digest: str) -> str:
     @param source_digest verified digest of the frozen source
     @return deterministic, newline-terminated JSON
     """
-    # Select counts, row as the current element from rows) while render claim ledger preserves
-    # Details: traversal order.
+    # Count each disposition category before serializing source-ordered claims.
     counts = Counter(row.disposition for row in rows)
-    # Treat payload as mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Map payload keys to schema metadata, aggregate counts, and claim records in schema order.
     payload = {
         "schema_version": 1,
         "generated_by": "tools/build_provenance.py",
@@ -822,20 +786,19 @@ def _with_current_token_count(text: str) -> str:
     @param text rendered Markdown containing one `tokens:` field
     @return the same text with the stable measured value
     """
-    # Compute updated using text for later with current token count logic.
+    # Carry the latest self-measured text through a bounded fixed-point calculation.
     updated = text
     # Process each candidate element in deterministic source order.
     for _ in range(4):
-        # Treat the current candidate as the candidate element consumed by the enclosing
-        # Details: transformation.
+        # Derive one revised token declaration from the complete current document.
         candidate = _TOKENS_LINE.sub(f"tokens: {count_tokens(updated)}", updated, count=1)
-        # Select the guarded path only after `candidate == updated` is satisfied.
+        # Stop when replacement leaves the self-measured document byte-identical.
         if candidate == updated:
             # Stop the scan once the decisive match has been established.
             break
-        # Compute updated using candidate for later with current token count logic.
+        # Feed the revised token declaration into the next convergence attempt.
         updated = candidate
-    # Return the same text with the stable measured value to the caller.
+    # Expose the document with its stable measured token value.
     return updated
 
 
@@ -855,13 +818,11 @@ def render(rows: Sequence[Row], claims: Sequence[ClaimRow] = ()) -> str:
         preserved within source precedence.
     @return the file's complete text, newline-terminated
     """
-    # Select counts, r as the current element from rows) while render preserves traversal order.
+    # Count dispositions globally and group each row by source in encounter order.
     counts = Counter(r.disposition for r in rows)
-    # Compute by source using defaultdict for later render logic.
     by_source: defaultdict[str, list[Row]] = defaultdict(list)
-    # Select row as the current element from rows while render preserves traversal order.
-    # Process each candidate element in deterministic source order.
     for row in rows:
+        # Append the row to its source-specific ordered rendering group.
         by_source[row.source].append(row)
 
     # Each lines element represents one decoded record; lexical order is preserved.
@@ -907,10 +868,9 @@ def render(rows: Sequence[Row], claims: Sequence[ClaimRow] = ()) -> str:
         lines.append(f"| {disposition} | {count} |")
     lines.append("")
 
-    # Handle the non-empty or enabled claims state.
+    # Render claim-level resolution only when the caller supplied reviewed claims.
     if claims:
-        # Select claim counts, row as the current element from claims) while render preserves
-        # Details: traversal order.
+        # Summarize claim dispositions independently from section-level coverage.
         claim_counts = Counter(row.disposition for row in claims)
         # Preserve lines element values in deterministic source order.
         lines += [
@@ -940,8 +900,6 @@ def render(rows: Sequence[Row], claims: Sequence[ClaimRow] = ()) -> str:
     for source in sorted(by_source):
         # Preserve governed Python-path elements in deterministic traversal order.
         targets = DEFAULT_TARGETS.get(source, ())
-        # Select t, where as the current element from targets) or "*superseded*" while render
-        # Details: preserves traversal order.
         where = ", ".join(f"`{t}`" for t in targets) or "*superseded*"
         lines.append(
             f"| `{source}` {SOURCE_NAMES.get(source, '')} | {len(by_source[source])} | {where} |"
@@ -959,26 +917,21 @@ def render(rows: Sequence[Row], claims: Sequence[ClaimRow] = ()) -> str:
     ]
     # Collect unique seen element values; their order is deliberately unordered.
     seen: set[tuple[str, str]] = set()
-    # Select row as the current element from rows while render preserves traversal order.
-    # Process each candidate element in deterministic source order.
     for row in rows:
-        # Select the empty-or-disabled path when row.note or (row.source, row.note) in seen has
-        # Details: no usable value.
+        # Keep only the first non-empty note for each source/rationale identity.
         if not row.note or (row.source, row.note) in seen:
-            # Advance after the current candidate has been conclusively excluded.
+            # Skip absent notes and duplicate source/note pairs already rendered.
             continue
-        # Use the absence path when disposition for(row.source, row.heading) has no available
-        # Details: value.
+        # Confirm this row still resolves through an active disposition declaration.
         if disposition_for(row.source, row.heading) is None:
-            # Advance after the current candidate has been conclusively excluded.
+            # Only notes attached to an active disposition policy belong here.
             continue
         # Preserve the observed item count used by the non-vacuity verdict.
         needle_specific = any(
             n and n.lower() in row.heading.lower() for s, n, _, _ in DISPOSITIONS if s == row.source
         )
-        # Select the empty-or-disabled path when needle specific has no usable value.
         if not needle_specific:
-            # Advance after the current candidate has been conclusively excluded.
+            # Document-wide defaults are not named section exceptions.
             continue
         seen.add((row.source, row.note))
         lines.append(
@@ -1025,7 +978,7 @@ def render(rows: Sequence[Row], claims: Sequence[ClaimRow] = ()) -> str:
             "layout; the worked artifacts worth keeping belong in `discipline/examples/`."
         ),
     ]
-    # Return the file's complete text, newline-terminated to the caller.
+    # Apply the stable self-token measurement to the complete newline-terminated ledger.
     return _with_current_token_count("\n".join(lines).rstrip() + "\n")
 
 
@@ -1035,7 +988,7 @@ def _escape(text: str) -> str:
     @param text arbitrary heading text
     @return the same text with any pipe backslash-escaped
     """
-    # Return the same text with any pipe backslash-escaped to the caller.
+    # Escape table delimiters without changing any other heading characters.
     return re.sub(r"\|", r"\\|", text)
 
 
@@ -1048,24 +1001,20 @@ def _build_outputs(
     @return section rows, claim rows, Markdown view, and JSON ledger
     @throws ProvenanceError when the reviewed claim count no longer matches
     """
-    # Compute source digest using verify commenting source for later build outputs logic.
+    # Verify immutable source bytes before loading the generated claim extraction.
     source_digest = verify_commenting_source()
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
     payload = yaml.safe_load(extraction.read_text(encoding="utf-8"))
     # Preserve rows element values in deterministic source order.
     rows = build_rows(payload.get("sections", []))
-    # Compute claims using build claim rows for later build outputs logic.
     claims = build_claim_rows(payload.get("candidates", []))
-    # Select the guarded path only after `len(claims) != COMMENTING_CLAIM_COUNT` is satisfied.
     if len(claims) != COMMENTING_CLAIM_COUNT:
-        # Compute msg using ( for later build outputs logic.
+        # Refuse extraction when its census differs from the reviewed source baseline.
         msg = (
             "commenting doctrine claim census changed: "
             f"expected {COMMENTING_CLAIM_COUNT}, observed {len(claims)}; "
             "review the extractor and every added or removed claim"
         )
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Require explicit review of every added or removed claim before regeneration.
         raise ProvenanceError(msg)
     # Return section rows, claim rows, Markdown view, and JSON ledger to the caller.
     return rows, claims, render(rows, claims), render_claim_ledger(claims, source_digest)
@@ -1106,10 +1055,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         # Return the aggregate process status to the command-line boundary.
         return 1
 
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Build every derived provenance artifact as one validation boundary.
     try:
-        # Preserve claim ledger, claims, provenance, rows element values in deterministic source
-        # Details: order.
+        # Retain section rows, claim rows, and both rendered outputs for check/write modes.
         rows, claims, provenance, claim_ledger = _build_outputs(args.extraction)
     # Preserve the caught failure that explains why the external result is unusable.
     # Translate the expected failure into this mechanism's stable diagnostic path.
@@ -1121,7 +1069,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     # Each outputs element is one `(destination path, rendered content)` tuple; provenance then
     # claim-ledger publication order is preserved.
     outputs = ((args.out, provenance), (args.claim_out, claim_ledger))
-    # Select the guarded path only after `args.check` is satisfied.
     if args.check:
         # Each drifted element is one output path whose bytes differ or are absent; output tuple
         # order is preserved.
@@ -1132,9 +1079,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         ]
         # Handle the non-empty or enabled drifted state.
         if drifted:
-            # Resolve the repository-confined path used by this operation before filesystem
-            # Details: access.
-            # Process each candidate element in deterministic source order.
+            # Print each stale artifact path in deterministic output order.
             for path in drifted:
                 print(f"DRIFT: {path}", file=sys.stderr)
             # Return the aggregate process status to the command-line boundary.
@@ -1148,17 +1093,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             # Publish the externally visible effect after all required inputs are ready.
             path.write_text(content, encoding="utf-8", newline="\n")
 
-    # Select counts, r as the current element from rows) while main preserves traversal order.
+    # Summarize final section dispositions and select the mode-specific publication verb.
     counts = Counter(r.disposition for r in rows)
-    # Compute action using "checked" if args.check else "wrote" for later main logic.
     action = "checked" if args.check else "wrote"
     print(f"{action} {args.out.relative_to(REPO_ROOT).as_posix()}: {len(rows)} sections")
     # Preserve the observed item count used by the non-vacuity verdict.
     # Process each candidate element in deterministic source order.
     for disposition, count in sorted(counts.items()):
         print(f"  {disposition}: {count}")
-    # Select claim counts, row as the current element from claims) while main preserves
-    # Details: traversal order.
     claim_counts = Counter(row.disposition for row in claims)
     print(
         f"{action} {args.claim_out.relative_to(REPO_ROOT).as_posix()}: "

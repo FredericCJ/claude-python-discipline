@@ -98,12 +98,11 @@ def build(root: Path) -> tuple[Graph, list[str]]:
     @param root the repository root
     @return the graph, and one warning per thing that could not be derived
     """
-    # Compute graph using Graph for later build logic.
+    # Start one graph and ordered warning stream before replaying every authored evidence source.
     graph = Graph()
     # Each warnings element is one non-fatal graph-construction diagnostic; discovery order is
     # preserved.
     warnings: list[str] = []
-    # Compute documents using  load for later build logic.
     documents = _load(root, warnings)
 
     _add_layers(graph)
@@ -135,9 +134,9 @@ def _load(root: Path, warnings: list[str]) -> list[Document]:
     # Resolve the repository-confined path used by this operation before filesystem access.
     # Process each candidate element in deterministic source order.
     for path in sorted((root / "discipline").rglob("*.md")):
-        # Select the guarded path only after `path.name == 'INDEX.md'` is satisfied.
+        # Exclude the generated index before parsing authored corpus modules.
         if path.name == "INDEX.md":
-            # Advance after the current candidate has been conclusively excluded.
+            # Generated navigation is output of this model and cannot become authored input.
             continue
         # Protect the fallible operation so expected failures remain explicitly classified.
         try:
@@ -158,9 +157,7 @@ def _add_layers(graph: Graph) -> None:
 
     @param graph the graph under construction
     """
-    # Select layer as the current element from LAYERS while  add layers preserves traversal
-    # Details: order.
-    # Process each candidate element in deterministic source order.
+    # Materialize each architectural layer in declaration order as a navigable graph node.
     for layer in LAYERS:
         graph.add_node(
             Node(id=f"layer:{layer}", type=NodeType.LAYER, label=layer)
@@ -183,17 +180,14 @@ def _add_modules_and_rules(graph: Graph, documents: Sequence[Document], root: Pa
         preserved.
     @param root the repository root, for the paths recorded on nodes
     """
-    # Select doc as the current element from documents while  add modules and rules preserves
-    # Details: traversal order.
-    # Process each candidate element in deterministic source order.
+    # Add every identified document, its rules, and relationships in corpus order.
     for doc in documents:
-        # Select the empty-or-disabled path when doc.doc id has no usable value.
+        # Require a stable module identity before emitting any node or edge.
         if not doc.doc_id:
-            # Advance after the current candidate has been conclusively excluded.
+            # Unidentified parse remnants cannot participate in stable graph relationships.
             continue
-        # Compute front using doc.front_matter for later add modules and rules logic.
+        # Retain front matter once for node attributes and module-edge projection.
         front = doc.front_matter
-        # Bind k to the current value used by the next  add modules and rules decision.
         graph.add_node(
             Node(
                 id=doc.doc_id,
@@ -211,9 +205,7 @@ def _add_modules_and_rules(graph: Graph, documents: Sequence[Document], root: Pa
             )
         )
         _module_edges(graph, doc)
-        # Select rule as the current element from doc.rules while  add modules and rules
-        # Details: preserves traversal order.
-        # Process each candidate element in deterministic source order.
+        # Materialize each rule below its owning module with enforcement metadata.
         for rule in doc.rules:
             graph.add_node(
                 Node(
@@ -239,7 +231,7 @@ def _module_edges(graph: Graph, doc: Document) -> None:
     @param graph the graph under construction
     @param doc the module whose front-matter is being read
     """
-    # Compute front using doc.front_matter for later module edges logic.
+    # Interpret relationship-bearing front matter once for all emitted module edges.
     front = doc.front_matter
     # Resolve the repository-confined path used by this operation before filesystem access.
     # Process each candidate element in deterministic source order.
@@ -249,21 +241,14 @@ def _module_edges(graph: Graph, doc: Document) -> None:
     # Process each candidate element in deterministic source order.
     for target in _as_list(front.get("grounds_on")):
         graph.add_edge(Edge(EdgeType.GROUNDS_ON, doc.doc_id, target))
-    # Select keyword as the current element from _as_list(front.get("load_when")) while  module
-    # Details: edges preserves traversal order.
-    # Process each candidate element in deterministic source order.
     for keyword in _as_list(front.get("load_when")):
-        # Derive trigger from f"trigger:kw:{keyword.lower()}" for the next  module edges
-        # Details: decision.
+        # Give each keyword trigger a stable normalized identity shared across modules.
         trigger = f"trigger:kw:{keyword.lower()}"
         graph.add_node(Node(id=trigger, type=NodeType.TRIGGER, label=keyword,
                             attrs=(("kind", "keyword"),)))
         graph.add_edge(Edge(EdgeType.TRIGGERED_BY, doc.doc_id, trigger))
-    # Select glob as the current element from _as_list(front.get("applies_to")) while  module
-    # Details: edges preserves traversal order.
-    # Process each candidate element in deterministic source order.
     for glob in _as_list(front.get("applies_to")):
-        # Compute trigger using f"trigger:glob:{glob}" for later module edges logic.
+        # Preserve the authored glob in a stable trigger identity and display label.
         trigger = f"trigger:glob:{glob}"
         graph.add_node(Node(id=trigger, type=NodeType.TRIGGER, label=glob,
                             attrs=(("kind", "glob"),)))
@@ -285,14 +270,10 @@ def _rule_edges(graph: Graph, doc: Document, rule: object) -> None:
         attributes read off it -- `rule_id`, `mechanisms`, `see`,
         `superseded_by` -- are the real contract
     """
-    # Derive rule id from rule.rule_id  # type: ignore[attr-defined] for the next  rule edges
-    # Details: decision.
+    # Retain the owning rule identity while projecting each mechanism tag.
     rule_id = rule.rule_id  # type: ignore[attr-defined]
-    # Select mechanism as the current element from rule.mechanisms while  rule edges preserves
-    # Details: traversal order.
-    # Process each candidate element in deterministic source order.
     for mechanism in rule.mechanisms:  # type: ignore[attr-defined]
-        # Compute node id using f"mech:{mechanism}" for later rule edges logic.
+        # Namespace mechanism identities so raw tags cannot collide with rules or modules.
         node_id = f"mech:{mechanism}"
         graph.add_node(
             Node(id=node_id, type=NodeType.MECHANISM, label=mechanism,
@@ -303,7 +284,6 @@ def _rule_edges(graph: Graph, doc: Document, rule: object) -> None:
     # Process each candidate element in deterministic source order.
     for target in rule.see:  # type: ignore[attr-defined]
         graph.add_edge(Edge(EdgeType.CITES, rule_id, target.split("#", 1)[0]))
-    # Select the guarded path only after `rule.superseded_by` is satisfied.
     if rule.superseded_by:  # type: ignore[attr-defined]
         graph.add_edge(Edge(EdgeType.SUPERSEDES, rule.superseded_by, rule_id))  # type: ignore[attr-defined]
     # A rule inherits its module's factual grounding: the fact is what the rule
@@ -324,28 +304,22 @@ def _add_terms(graph: Graph, documents: Sequence[Document]) -> None:
         Each element is one canonical `Document`; lexical document-path order is
         preserved.
     """
-    # Select doc as the current element from documents while  add terms preserves traversal
-    # Details: order.
-    # Process each candidate element in deterministic source order.
+    # Locate the glossary module and project each defined term into navigation state.
     for doc in documents:
-        # Select the guarded path only after `doc.doc_id != 'meta/GLOSSARY'` is satisfied.
+        # Select only the single module that owns term definitions.
         if doc.doc_id != "meta/GLOSSARY":
-            # Advance after the current candidate has been conclusively excluded.
+            # Term headings in ordinary modules are prose, not glossary definitions.
             continue
         # Preserve the optional pattern match that carries the reported analysis count.
         # Process each candidate element in deterministic source order.
         for match in _TERM.finditer(doc.body):
-            # Compute term using match.group for later add terms logic.
+            # Preserve displayed term text while normalizing only its graph identity.
             term = match.group("term").strip()
-            # Select the guarded path only after `term.startswith(('CONF-', 'OPEN-'))` is
-            # Details: satisfied.
             if term.startswith(("CONF-", "OPEN-")):
-                # Advance after the current candidate has been conclusively excluded.
+                # Conflict and open-item headings belong to other node families.
                 continue
-            # Compute node id using f"term:{term.lower()}" for later add terms logic.
+            # Build the term namespace and retain whether bare usage is prohibited.
             node_id = f"term:{term.lower()}"
-            # Derive banned from "[BARE-BANNED]" in match.group(0) for the next  add terms
-            # Details: decision.
             banned = "[BARE-BANNED]" in match.group(0)
             graph.add_node(
                 Node(id=node_id, type=NodeType.TERM, label=term,
@@ -375,21 +349,17 @@ def _add_decisions(graph: Graph, root: Path) -> None:
             continue
         # Retain the immutable source representation consumed by subsequent analysis.
         text = path.read_text(encoding="utf-8")
-        # Treat found as mapping elements whose keys identify fields and values carry their
-        # Details: content; key order is deliberately unused.
+        # Map each decision identity to its heading label in source occurrence order.
         found: dict[str, str] = {}
         # Preserve the optional pattern match that carries the reported analysis count.
         # Process each candidate element in deterministic source order.
         for match in _DECISION_HEADING.finditer(text):
-            # Update  add decisions state only after the required source facts are available.
+            # Retain the parsed decision label under its stable authored identity.
             found[match.group("id")] = match.group("label").strip()
         # Preserve the optional pattern match that carries the reported analysis count.
         # Process each candidate element in deterministic source order.
         for match in _DECISION_ROW.finditer(text):
             found.setdefault(match.group("id"), match.group("label").strip())
-        # Select decision id, label as the current element from sorted(found.items()) while  add
-        # Details: decisions preserves traversal order.
-        # Process each candidate element in deterministic source order.
         for decision_id, label in sorted(found.items()):
             graph.add_node(
                 Node(id=decision_id, type=NodeType.DECISION, label=label,
@@ -422,7 +392,7 @@ def _add_sources(graph: Graph, root: Path) -> None:
     # Preserve the optional pattern match that carries the reported analysis count.
     # Process each candidate element in deterministic source order.
     for match in _SOURCE_ROW.finditer(text):
-        # Compute tag using match.group for later add sources logic.
+        # Preserve the exact source tag that rules cite through grounding relations.
         tag = match.group("tag")
         graph.add_node(
             Node(id=f"source:{tag}", type=NodeType.SOURCE,
@@ -442,7 +412,7 @@ def _add_mechanisms(graph: Graph, root: Path) -> None:
     @param graph the graph under construction
     @param root the repository root
     """
-    # Compute enforce using root / "enforce" for later add mechanisms logic.
+    # Anchor executable mechanism discovery beneath the selected enforcement tree.
     enforce = root / "enforce"
     _add_check_modules(graph, enforce, root)
     _add_contract_triggers(graph, enforce / "importlinter.toml")
@@ -457,17 +427,13 @@ def _add_check_modules(graph: Graph, enforce: Path, root: Path) -> None:
     @param enforce the `enforce/` directory
     @param root the repository root, for the path recorded on each node
     """
-    # Select check as the current element from sorted((enforce / "checks").glob("*.py")) while
-    # Details: add check modules preserves traversal order.
-    # Process each candidate element in deterministic source order.
+    # Discover concrete check modules in lexical filename order.
     for check in sorted((enforce / "checks").glob("*.py")):
-        # Select the guarded path only after `check.stem.startswith(('__', 'test_')) or not
-        # Details: _defines_a_check(check)` is satisfied.
+        # Admit only production modules that declare an executable checker class.
         if check.stem.startswith(("__", "test_")) or not _defines_a_check(check):
-            # Advance after the current candidate has been conclusively excluded.
+            # Package plumbing, tests, and files without a checker class are not mechanisms.
             continue
-        # Derive node id from f"mech:check:{check.stem}" for the next  add check modules
-        # Details: decision.
+        # Namespace the module as the mechanism tag used by rule declarations.
         node_id = f"mech:check:{check.stem}"
         graph.add_node(Node(id=node_id, type=NodeType.MECHANISM, label=f"check:{check.stem}",
                             path=_rel(check, root),
@@ -497,9 +463,6 @@ def _defines_a_check(path: Path) -> bool:
     except (OSError, SyntaxError):
         # Return true when it defines a class deriving from `Check` to the caller.
         return False
-    # Treat the current b, node as the candidate element consumed by the enclosing
-    # Details: transformation.
-    # Return true when it defines a class deriving from `Check` to the caller.
     return any(
         isinstance(node, ast.ClassDef)
         and any(isinstance(b, ast.Name) and b.id in _CHECK_BASES for b in node.bases)
@@ -530,7 +493,7 @@ def _add_contract_triggers(graph: Graph, config: Path) -> None:
                             attrs=(("kind", "error"), ("tool", "import-linter"),
                                    ("contract", name))))
         for rule_id in _RULE_IDS_IN(name):
-            # Select the guarded path only after `rule_id in graph.nodes` is satisfied.
+            # Relate only rule identities present in this graph build to the triggering test.
             if rule_id in graph.nodes:
                 graph.add_edge(Edge(EdgeType.TRIGGERED_BY, rule_id, trigger))
 
@@ -556,29 +519,22 @@ def _add_signal_triggers(graph: Graph, config: Path) -> None:
     if not config.exists():
         # Return the completed  add signal triggers result to its caller.
         return
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
     document = tomllib.loads(config.read_text(encoding="utf-8"))
     # Treat the current entry as the candidate element consumed by the enclosing transformation.
     # Process each candidate element in deterministic source order.
     for entry in document.get("signal", []):
-        # Compute signature using str for later add signal triggers logic.
+        # Normalize each diagnostic signature before constructing its trigger identity.
         signature = str(entry.get("match", "")).strip()
-        # Select the empty-or-disabled path when signature has no usable value.
         if not signature:
-            # Advance after the current candidate has been conclusively excluded.
+            # Empty signal rows cannot identify a runtime diagnostic trigger.
             continue
-        # Derive trigger from f"trigger:err:{signature}" for the next  add signal triggers
-        # Details: decision.
+        # Namespace the external error signature while retaining its display spelling.
         trigger = f"trigger:err:{signature}"
         graph.add_node(Node(id=trigger, type=NodeType.TRIGGER, label=signature,
                             attrs=(("kind", "error"),
                                    ("tool", str(entry.get("tool", "unknown"))))))
-        # Select rule id as the current element from entry.get("rules", []) while  add signal
-        # Details: triggers preserves traversal order.
-        # Process each candidate element in deterministic source order.
         for rule_id in entry.get("rules", []):
-            # Select the guarded path only after `rule_id in graph.nodes` is satisfied.
+            # Ignore stale references here; declared-edge validation owns dangling identities.
             if rule_id in graph.nodes:
                 graph.add_edge(Edge(EdgeType.TRIGGERED_BY, rule_id, trigger))
 
@@ -600,29 +556,24 @@ def _add_ruff_triggers(graph: Graph, pyproject: Path) -> None:
     # Preserve the current decoded diagnostic line before location normalization.
     # Process each candidate element in deterministic source order.
     for line in pyproject.read_text(encoding="utf-8").splitlines():
-        # Select the guarded path only after `'#' not in line` is satisfied.
+        # Ignore unannotated TOML because it carries no discipline relationship metadata.
         if "#" not in line:
-            # Advance after the current candidate has been conclusively excluded.
+            # Only annotated configuration lines can carry rule/diagnostic associations.
             continue
-        # Compute comment using line.split for later add ruff triggers logic.
+        # Isolate the human annotation from TOML syntax before extracting identities.
         comment = line.split("#", 1)[1]
         # Collect unique codes element values; their order is deliberately unordered.
         codes = {m.group("code") for m in _RUFF_CODE.finditer(comment)}
-        # Compute rules using set for later add ruff triggers logic.
         rules = set(_RULE_IDS_IN(comment))
         # Subtracting the ids is defensive only: a rule id carries a hyphen and a
         # ruff code cannot, so as the two patterns stand nothing matches both.
         for code in codes - rules:
-            # Derive trigger from f"trigger:err:{code}" for the next  add ruff triggers
-            # Details: decision.
+            # Materialize each diagnostic code not itself a rule as an external trigger.
             trigger = f"trigger:err:{code}"
             graph.add_node(Node(id=trigger, type=NodeType.TRIGGER, label=code,
                                 attrs=(("kind", "error"), ("tool", "ruff"))))
-            # Select rule id as the current element from rules while  add ruff triggers
-            # Details: preserves traversal order.
-            # Process each candidate element in deterministic source order.
             for rule_id in rules:
-                # Select the guarded path only after `rule_id in graph.nodes` is satisfied.
+                # Join the diagnostic only to rule identities present in the graph.
                 if rule_id in graph.nodes:
                     graph.add_edge(Edge(EdgeType.TRIGGERED_BY, rule_id, trigger))
 
@@ -664,7 +615,6 @@ def _add_declared(graph: Graph, root: Path, warnings: list[str]) -> None:
         warnings.append("no discipline/meta/edges.yaml; declared layer is empty")
         # Return the completed  add declared result to its caller.
         return
-    # Compute spec using yaml.safe load for later add declared logic.
     spec = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     _add_declared_layers(graph, spec)
     _add_declared_decisions(graph, spec)
@@ -683,13 +633,9 @@ def _add_declared_layers(graph: Graph, spec: dict[str, object]) -> None:
         Treat spec as mapping elements whose keys identify fields and values carry their
         content; key order is deliberately unused.
     """
-    # Select layer, rules as the current element from (spec.get("applies_to") or {}).items()
-    # Details: while  add declared layers preserves traversal order.
-    # Process each candidate element in deterministic source order.
+    # Project declared layer applicability in authored mapping and rule-list order.
     for layer, rules in (spec.get("applies_to") or {}).items():
-        # Select rule id as the current element from rules while  add declared layers preserves
-        # Details: traversal order.
-        # Process each candidate element in deterministic source order.
+        # Attach each named rule to the current architecture layer.
         for rule_id in rules:
             graph.add_edge(
                 Edge(EdgeType.APPLIES_TO, rule_id, f"layer:{layer}", Origin.DECLARED)
@@ -707,18 +653,12 @@ def _add_declared_decisions(graph: Graph, spec: dict[str, object]) -> None:
         Treat spec as mapping elements whose keys identify fields and values carry their
         content; key order is deliberately unused.
     """
-    # Select edge, section as the current element from (("resolved_by", EdgeType.RESOLVED_BY),
-    # Details: while  add declared decisions preserves traversal order.
-    # Process each candidate element in deterministic source order.
+    # Map each decision section to its exact graph relation in declaration order.
     for section, edge in (("resolved_by", EdgeType.RESOLVED_BY),
                           ("blocked_by", EdgeType.BLOCKED_BY)):
-        # Select decisions, rule id as the current element from (spec.get(section) or
-        # Details: {}).items() while  add declared decisions preserves traversal order.
-        # Process each candidate element in deterministic source order.
+        # Preserve rule-to-decision declarations within this relation family.
         for rule_id, decisions in (spec.get(section) or {}).items():
-            # Select decision as the current element from decisions while  add declared
-            # Details: decisions preserves traversal order.
-            # Process each candidate element in deterministic source order.
+            # Emit each declared decision relation in authored list order.
             for decision in decisions:
                 graph.add_edge(Edge(edge, rule_id, decision, Origin.DECLARED))
 
@@ -744,9 +684,7 @@ def _add_declared_orderings(graph: Graph, spec: dict[str, object]) -> None:
         graph.add_edge(Edge(EdgeType.TENSIONS_WITH, left, right, Origin.DECLARED, note=note))
         graph.add_edge(Edge(EdgeType.TENSIONS_WITH, right, left, Origin.DECLARED, note=note))
 
-    # Select after, before as the current element from spec.get("precedes") or [] while  add
-    # Details: declared orderings preserves traversal order.
-    # Process each candidate element in deterministic source order.
+    # Preserve each authored ordering pair as a declared precedence edge.
     for before, after in spec.get("precedes") or []:
         graph.add_edge(Edge(EdgeType.PRECEDES, before, after, Origin.DECLARED))
 
@@ -759,21 +697,16 @@ def _add_declared_artifacts(graph: Graph, spec: dict[str, object]) -> None:
         Treat spec as mapping elements whose keys identify fields and values carry their
         content; key order is deliberately unused.
     """
-    # Treat the current artifact path, entry as the candidate element consumed by the enclosing
-    # Details: transformation.
-    # Process each candidate element in deterministic source order.
+    # Materialize each external artifact and its applicability in mapping order.
     for artifact_path, entry in (spec.get("artifacts") or {}).items():
-        # Derive node id from f"artifact:{artifact_path}" for the next  add declared artifacts
-        # Details: decision.
+        # Namespace the portable path to prevent collision with other node families.
         node_id = f"artifact:{artifact_path}"
         graph.add_node(
             Node(id=node_id, type=NodeType.ARTIFACT, label=entry.get("label", artifact_path),
                  path=artifact_path)
         )
-        # Select rule id as the current element from entry.get("rules", []) while  add declared
-        # Details: artifacts preserves traversal order.
-        # Process each candidate element in deterministic source order.
         for rule_id in entry.get("rules", []):
+            # Join every declared owner rule to the artifact it governs.
             graph.add_edge(Edge(EdgeType.APPLIES_TO, rule_id, node_id, Origin.DECLARED))
 
 
@@ -788,16 +721,14 @@ def _as_list(value: object) -> list[str]:
     @param value the raw YAML value
     @return its entries, stringified; empty when the field is missing
     """
-    # Select the guarded path only after `isinstance(value, list)` is satisfied.
+    # Normalize list-valued YAML fields without changing authored element order.
     if isinstance(value, list):
-        # Select v as the current element from value] while  as list preserves traversal order.
-        # Return its entries, stringified; empty when the field is missing to the caller.
+        # Stringify each element for the graph's uniform identity representation.
         return [str(v) for v in value]
-    # Select the guarded path only after `isinstance(value, str)` is satisfied.
     if isinstance(value, str):
-        # Return its entries, stringified; empty when the field is missing to the caller.
+        # Promote a scalar declaration to the same one-element ordered representation.
         return [value]
-    # Return its entries, stringified; empty when the field is missing to the caller.
+    # Missing or unsupported shapes contribute no graph relationship values.
     return []
 
 
@@ -814,10 +745,9 @@ def render(graph: Graph) -> str:
     @param graph the assembled graph
     @return the JSON document, banner first and newline-terminated
     """
-    # Treat payload as mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Map each payload key to generator or graph content in banner-first insertion order.
     payload = {"generated_by": GENERATED_BANNER, **graph.to_dict()}
-    # Return the JSON document, banner first and newline-terminated to the caller.
+    # Terminate formatted JSON consistently so check mode compares portable bytes.
     return json.dumps(payload, indent=1, ensure_ascii=False) + "\n"
 
 
@@ -832,15 +762,15 @@ def load_graph(root: Path = REPO_ROOT) -> Graph:
     @param root the repository root
     @return the graph, from disk when it is present there
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Resolve the sole generated graph location beneath the selected corpus root.
     path = root / "discipline" / "graph.json"
-    # Select the existing-artifact path only when `not path.exists()` is satisfied.
+    # Rebuild from authored sources only when no generated graph can be loaded.
     if not path.exists():
-        # Compute graph using build for later load graph logic.
+        # Retain the in-memory graph while discarding non-fatal construction warnings here.
         graph, _ = build(root)
-        # Return the graph, from disk when it is present there to the caller.
+        # Expose the freshly constructed graph as the navigation fallback.
         return graph
-    # Return the graph, from disk when it is present there to the caller.
+    # Rehydrate the committed graph when its generated artifact exists.
     return Graph.from_dict(json.loads(path.read_text(encoding="utf-8")))
 
 
@@ -869,8 +799,6 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # Unpack graph, warnings from build for the next main decision.
     graph, warnings = build(root)
-    # Select warning as the current element from warnings while main preserves traversal order.
-    # Process each candidate element in deterministic source order.
     for warning in warnings:
         print(f"warning: {warning}", file=sys.stderr)
 
@@ -878,42 +806,30 @@ def main(argv: Sequence[str] | None = None) -> int:
     target = root / "discipline" / "graph.json"
     # Retain the immutable source representation consumed by subsequent analysis.
     text = render(graph)
-    # Derive stale from not target.exists() or target.read_text(encoding="utf-8") != for the
-    # Details: next main decision.
     stale = not target.exists() or target.read_text(encoding="utf-8") != text
 
-    # Select the guarded path only after `args.check` is satisfied.
+    # In check mode, report byte drift without mutating the generated artifact.
     if args.check:
         print("stale: discipline/graph.json" if stale else "up to date.")
-        # Return the aggregate process status to the command-line boundary.
+        # Let exact staleness decide the check-mode process status.
         return 1 if stale else 0
 
-    # Publish the externally visible effect after all required inputs are ready.
+    # Replace the generated graph only after construction and rendering complete.
     target.write_text(text, encoding="utf-8", newline="\n")
-    # Treat counts as mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Count each node type in insertion order for the terminal build summary.
     counts: dict[str, int] = {}
-    # Treat the current node as the candidate element consumed by the enclosing transformation.
-    # Process each candidate element in deterministic source order.
     for node in graph.nodes.values():
-        # Update main state only after the required source facts are available.
+        # Increment the bucket for this node's stable type identity.
         counts[str(node.type)] = counts.get(str(node.type), 0) + 1
-    # Treat edge counts as mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Count each edge type in graph order for the same summary.
     edge_counts: dict[str, int] = {}
-    # Select edge as the current element from graph.edges while main preserves traversal order.
-    # Process each candidate element in deterministic source order.
     for edge in graph.edges:
-        # Update main state only after the required source facts are available.
+        # Increment the bucket for this edge's stable relationship identity.
         edge_counts[str(edge.type)] = edge_counts.get(str(edge.type), 0) + 1
     print(f"wrote discipline/graph.json: {len(graph.nodes)} nodes, {len(graph.edges)} edges")
-    # Select k, v as the current element from sorted(counts.items()))) while main preserves
-    # Details: traversal order.
     print("  nodes: " + ", ".join(f"{k}={v}" for k, v in sorted(counts.items())))
-    # Select k, v as the current element from sorted(edge_counts.items()))) while main preserves
-    # Details: traversal order.
     print("  edges: " + ", ".join(f"{k}={v}" for k, v in sorted(edge_counts.items())))
-    # Return the aggregate process status to the command-line boundary.
+    # Successful write mode always reports zero after publishing counts.
     return 0
 
 
