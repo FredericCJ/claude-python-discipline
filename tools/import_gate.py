@@ -107,7 +107,7 @@ def check(
     configuration = root / config
     # Refuse an absent contract declaration before import-linter can report vacuous success.
     if not configuration.is_file():
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Missing policy is a configuration defect, never a clean architecture verdict.
         raise FileNotFoundError(configuration)
 
     # Preserve declared import-root path elements in caller order, defaulting to `src`.
@@ -118,7 +118,7 @@ def check(
     resolved_sources = tuple((exact_root / source).resolve() for source in sources)
     # Refuse the complete set when any resolved source path escapes the repository boundary.
     if any(not source.is_relative_to(exact_root) for source in resolved_sources):
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Report the authored roots together so the unsafe declaration can be repaired in place.
         raise SourceRootError(exact_root, sources)
     # Map each evicted module-name key to its live module-object value; key order is unused.
     evicted: dict[str, ModuleType] = {}
@@ -316,5 +316,5 @@ def main(argv: list[str] | None = None) -> int:
 
 # Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
-    # Propagate the localized failure so callers cannot mistake it for success.
+    # Translate import-contract failure into the status consumed by automation.
     raise SystemExit(main())

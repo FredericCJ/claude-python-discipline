@@ -85,15 +85,15 @@ def plan_for(output: str, route: str = "context") -> dict[str, object]:
     )
     # Enter the failure path only when the subprocess reports a nonzero status.
     if finished.returncode != 0 or not finished.stdout.strip():
-        # Return the navigator's JSON payload, empty when it could not answer to the caller.
+        # Failed or silent probes contribute no benchmark observation.
         return {}
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
-        # Return the navigator's JSON payload, empty when it could not answer to the caller.
+        # Successful probe output is a structured timing and routing observation.
         return json.loads(finished.stdout)
     # Translate the expected failure into this mechanism's stable diagnostic path.
     except json.JSONDecodeError:
-        # Return the navigator's JSON payload, empty when it could not answer to the caller.
+        # Malformed child output is unusable evidence, equivalent to an absent observation.
         return {}
 
 
@@ -125,7 +125,6 @@ def measure(defect: defects.Defect) -> dict[str, object]:
         rule for rule in (answer.get("rules", []) if answer else [])
         if isinstance(rule, dict) and rule.get("id") in defect.governs
     ]
-    # Return the defect's id, whether a governing rule was reached, the hop to the caller.
     return {
         "defect": defect.defect_id,
         "summary": defect.summary,
@@ -183,7 +182,6 @@ def summarize(results: Sequence[dict[str, object]]) -> dict[str, object]:
                 # Use no median when the route diagnosed nothing in this set.
                 if any(r.get("diagnosed") for r in group) else None),
         }
-    # Return hit rate, median cost and median hops, for each set to the caller.
     return summary
 
 
@@ -195,7 +193,6 @@ def run() -> dict[str, object]:
     # Each results element is one metric mapping for a frozen defect; benchmark roster order is
     # preserved.
     results = [measure(defect) for defect in defects.DEFECTS]
-    # Return the per-defect results and their summary to the caller.
     return {"results": results, "summary": summarize(results)}
 
 
@@ -235,7 +232,6 @@ def render(report: dict[str, object]) -> str:
             f"diagnose reached {part['diagnosed']}/{part['defects']} at "
             f"median {part['median_diagnose_tokens']} tok"
         )
-    # Return the printable text to the caller.
     return "\n".join(lines)
 
 
@@ -264,7 +260,6 @@ def compare(report: dict[str, object], baseline: dict[str, object]) -> list[str]
                           "diagnosed", "median_diagnose_tokens")
             if was.get(field) != now.get(field)
         )
-    # Return one line per figure that moved, empty when nothing did to the caller.
     return moved
 
 
@@ -326,5 +321,5 @@ def main(argv: list[str] | None = None) -> int:
 
 # Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
-    # Propagate the localized failure so callers cannot mistake it for success.
+    # Preserve benchmark validation failure as the caller-visible process status.
     raise SystemExit(main())

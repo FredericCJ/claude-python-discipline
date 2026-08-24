@@ -166,8 +166,7 @@ class Node:
         @param key the attribute name
         @return the stored value, or None when this node carries no such attribute
         """
-        # Normalize the current repository path to its portable baseline key spelling.
-        # Process each candidate element in deterministic source order.
+        # Each pair is one unique metadata key and its string value in authored order.
         for name, value in self.attrs:
             # Compare exact attribute keys while preserving authored tuple order.
             if name == key:
@@ -211,7 +210,7 @@ class Edge:
         @return `src--type-->dst`, equal for two edges exactly when they assert
             the same relation
         """
-        # Return `src--type-->dst`, equal for two edges exactly when they assert to the caller.
+        # Origin is deliberately excluded so duplicate assertions share one relation identity.
         return f"{self.src}--{self.type}-->{self.dst}"
 
 
@@ -279,7 +278,6 @@ class Graph:
         self.edges.append(edge)
         self._out[edge.src].append(edge)
         self._in[edge.dst].append(edge)
-        # Return true when it was stored, False when it was already present to the caller.
         return True
 
     def merge(self, other: Graph) -> None:
@@ -342,7 +340,6 @@ class Graph:
         # Each found element is one adjacent destination node id; outgoing edge order is
         # preserved before optional reverse neighbors are appended.
         found = [e.dst for e in self.out_edges(node_id, types)]
-        # Handle the non-empty or enabled undirected state.
         if undirected:
             # Preserve the optional pattern match that carries the reported analysis count.
             found += [e.src for e in self.in_edges(node_id, types)]
@@ -350,7 +347,6 @@ class Graph:
         seen: dict[str, None] = {}
         for item in found:
             seen.setdefault(item, None)
-        # Return the ids alone; parallel relations between the same pair collapse to the caller.
         return list(seen)
 
     def of_type(self, node_type: NodeType) -> list[Node]:
@@ -361,8 +357,7 @@ class Graph:
         @return the matching nodes; every call rescans the whole node table, so
             hoist it out of a loop rather than calling it per candidate
         """
-        # Preserve the observed item count used by the non-vacuity verdict.
-        # Return the matching nodes; every call rescans the whole node table, so to the caller.
+        # Each result is a node of the exact enum type; identifier order stabilizes callers.
         return sorted(
             (n for n in self.nodes.values() if n.type is node_type), key=lambda n: n.id
         )
@@ -410,7 +405,6 @@ class Graph:
                 # Stop the scan once the decisive match has been established.
                 break
             frontier = sorted(set(following))
-        # Return every reached id mapped to its hop count, the seeds at zero to the caller.
         return distance
 
     def shortest_path(
@@ -462,7 +456,6 @@ class Graph:
                         return _unwind(previous, src, dst)
                     following.append(edge.dst)
             frontier = following
-        # Return the edges in travel order, or None when no path exists -- which to the caller.
         return None
 
     def unreachable_from(
@@ -567,8 +560,7 @@ class Graph:
         @param node_type the kind to inspect
         @return the isolated ids, sorted
         """
-        # Preserve the observed item count used by the non-vacuity verdict.
-        # Return the isolated ids, sorted to the caller.
+        # Each result is a typed node id with neither incoming nor outgoing adjacency.
         return sorted(
             n.id
             for n in self.of_type(node_type)
@@ -586,8 +578,7 @@ class Graph:
         @return the graph as `nodes` and `edges` lists of plain values, losing
             nothing `from_dict` needs to rebuild it
         """
-        # Preserve the observed item count used by the non-vacuity verdict.
-        # Return the graph as `nodes` and `edges` lists of plain values, losing to the caller.
+        # Project nodes and edges into independently sorted plain-value lists for stable JSON.
         return {
             "nodes": [
                 {
@@ -661,7 +652,6 @@ class Graph:
                     note=raw.get("note"),
                 )
             )
-        # Return a graph holding what the payload described to the caller.
         return graph
 
     def __len__(self) -> int:
@@ -669,7 +659,7 @@ class Graph:
 
         @return the node count, so a graph carrying edges and no node is falsy
         """
-        # Return the node count, so a graph carrying edges and no node is falsy to the caller.
+        # Truth and cardinality intentionally describe vertices, not relationship volume.
         return len(self.nodes)
 
 
@@ -711,7 +701,6 @@ def iter_edge_types(names: Sequence[str]) -> Iterator[EdgeType]:
     @return one edge type per name, yielded lazily
     @throws ValueError on iteration, as soon as a word names no edge type
     """
-    # Normalize the current repository path to its portable baseline key spelling.
-    # Process each candidate element in deterministic source order.
+    # Each name is validated lazily so callers observe the first invalid edge vocabulary item.
     for name in names:
         yield EdgeType(name)

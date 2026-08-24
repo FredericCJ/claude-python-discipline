@@ -95,9 +95,8 @@ class Artifact:
         """
         # Select the existing-artifact path only when `not self.path.exists()` is satisfied.
         if not self.path.exists():
-            # Return true when writing would change the tree to the caller.
+            # A missing generated artifact is always stale regardless of intended text.
             return True
-        # Return true when writing would change the tree to the caller.
         return self.path.read_text(encoding="utf-8") != self.text
 
     def write(self) -> None:
@@ -109,9 +108,8 @@ class Artifact:
         @par Effects
         Creates, replaces, or removes repository artifacts in implementation order.
         """
-        # Publish the externally visible effect after all required inputs are ready.
+        # Publish the complete derived artifact only after its destination exists.
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        # Publish the externally visible effect after all required inputs are ready.
         self.path.write_text(self.text, encoding="utf-8", newline="\n")
 
 
@@ -181,7 +179,6 @@ def load(root: Path) -> list[Document]:
         # Translate the expected failure into this mechanism's stable diagnostic path.
         except ParseError as exc:
             print(f"skipping unparsable {path}: {exc.reason}", file=sys.stderr)
-    # Return the documents that parsed, in path order to the caller.
     return documents
 
 
@@ -213,11 +210,11 @@ def refresh_tokens(documents: Sequence[Document], *, write: bool) -> list[Path]:
         declared = doc.front_matter.get("tokens")
         # Rewriting changes length, so converge rather than assume one pass.
         if isinstance(declared, int) and abs(declared - measured) <= _TOKEN_DRIFT:
-            # Advance after the current candidate has been conclusively excluded.
+            # Values inside the accepted drift band do not justify rewriting authored modules.
             continue
         stale.append(doc.path)
         if not write:
-            # Advance after the current candidate has been conclusively excluded.
+            # Check mode inventories drift without mutating the corpus.
             continue
         updated = text
         for _ in range(4):
@@ -272,7 +269,6 @@ def _external_tool_section() -> list[str]:
         for tool, where in EXTERNAL_TOOLS.items()
         if not where.startswith(("NOT RUN", "PROJECT GATE")) and where not in entries
     ]
-    # Handle the non-empty or enabled unknown state.
     if unknown:
         # Refuse stale external-tool declarations before rendering incomplete enforcement links.
         message = f"EXTERNAL_TOOLS names gate entries that do not exist: {'; '.join(unknown)}"
@@ -301,7 +297,6 @@ def _external_tool_section() -> list[str]:
         )
         lines.append(f"| `{tool}` | {cell} |")
     lines.append("")
-    # Return the rendered lines to the caller.
     return lines
 
 
@@ -329,7 +324,7 @@ def registry_for(root: Path) -> EvidenceRegistry:
     @param root repository whose generated views are being built
     @return structurally validated evidence records
     """
-    # Return structurally validated evidence records to the caller.
+    # The authored registry is the sole evidence source for every generated view.
     return load_evidence(root / "discipline" / "meta" / "evidence.json")
 
 
@@ -339,7 +334,7 @@ def observations_for(root: Path) -> ObservationRegistry:
     @param root repository whose generated views are being built
     @return structurally validated observation records
     """
-    # Return structurally validated observation records to the caller.
+    # Resolve observation links against the repository-owned field evidence registry.
     return load_observations(root / "discipline" / "meta" / "observations.json")
 
 
@@ -423,16 +418,15 @@ def _discrimination(rule: Rule, evidence: RuleEvidence, covered: frozenset[str] 
     # is preserved.
     automated = [strategy for strategy in evidence.strategies if strategy.is_automated]
     if not automated:
-        # Return precise label for the available discrimination evidence to the caller.
+        # Discrimination does not apply when the rule declares no automated strategy.
         return "n/a"
     # Use the absence path when covered has no available value.
     if covered is None:
-        # Return precise label for the available discrimination evidence to the caller.
+        # Missing matrix data leaves witness state unknown rather than silently pending.
         return "`unknown`"
     if rule.rule_id in covered:
-        # Return precise label for the available discrimination evidence to the caller.
+        # A rule-level matrix witness proves at least one declared strategy discriminates.
         return "`rule-level witnessed`"
-    # Return precise label for the available discrimination evidence to the caller.
     return "`pending`"
 
 
@@ -447,14 +441,13 @@ def _residual(evidence: RuleEvidence, *, limit: int = 96) -> str:
     # is preserved.
     residuals = [strategy.residual.replace("|", "\\|") for strategy in evidence.strategies]
     if not residuals:
-        # Return escaped residual text suitable for a Markdown table cell to the caller.
+        # Rules without strategies have no mechanism residual to summarize.
         return "n/a"
     # Retain the immutable source representation consumed by subsequent analysis.
     text = "; ".join(residuals)
     if len(text) <= limit:
-        # Return escaped residual text suitable for a Markdown table cell to the caller.
+        # Preserve complete residual prose whenever it fits the scanning-table budget.
         return text
-    # Return escaped residual text suitable for a Markdown table cell to the caller.
     return f"{text[: limit - 1].rstrip()}…"
 
 
@@ -464,8 +457,7 @@ def _observations(evidence: RuleEvidence) -> str:
     @param evidence authored observation links
     @return observation identifiers or an explicit absence
     """
-    # Treat the current item as the candidate element consumed by the enclosing transformation.
-    # Return observation identifiers or an explicit absence to the caller.
+    # Each rendered element is one observation id in authored evidence order.
     return ", ".join(f"`{item}`" for item in evidence.observations) or "none"
 
 
@@ -574,7 +566,6 @@ def build_index(documents: Sequence[Document], root: Path) -> Artifact:
         (d for d in documents if d.kind in {Kind.LAW, Kind.FACT, Kind.FRAME, Kind.OPS}),
         key=lambda d: (str(d.kind), d.doc_id),
     )
-    # Handle the non-empty or enabled catalogue state.
     if catalogue:
         # Preserve lines element values in deterministic source order.
         lines += [
@@ -593,7 +584,7 @@ def build_index(documents: Sequence[Document], root: Path) -> Artifact:
             )
         lines.append("")
 
-    # Handle the non-empty or enabled rules state.
+    # Omit the rule catalogue only for a genuinely rule-empty corpus.
     if rules:
         # Preserve lines element values in deterministic source order.
         lines += ["## Rules", ""]
@@ -617,7 +608,7 @@ def build_index(documents: Sequence[Document], root: Path) -> Artifact:
                 )
             lines.append("")
 
-    # Return the intended path and contents; nothing is written to the caller.
+    # Bind normalized index text to its canonical generated destination.
     return Artifact(root / "discipline" / "INDEX.md", "\n".join(lines).rstrip() + "\n")
 
 
@@ -631,7 +622,7 @@ def _link(doc: Document, root: Path) -> str:
     @throws ValueError when the module lies outside `discipline/`, which would
         mean it was never part of the corpus this index describes
     """
-    # Return the path relative to `discipline/`, the directory INDEX.md is to the caller.
+    # Links are relative to the generated index so the corpus remains relocatable.
     return doc.path.relative_to(root / "discipline").as_posix()
 
 
@@ -698,7 +689,6 @@ def build_rules_json(documents: Sequence[Document], root: Path) -> Artifact:
             for rule in rules
         ],
     }
-    # Return the intended path and contents; nothing is written to the caller.
     return Artifact(
         root / "discipline" / "rules.json",
         json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
@@ -983,7 +973,7 @@ def build_enforcement(documents: Sequence[Document], root: Path) -> Artifact:
             lines.append(f"| `{mechanism}` | {owners} |")
         lines.append("")
 
-    # Handle the non-empty or enabled rules state.
+    # Render per-rule evidence only when the corpus contains rule owners.
     if rules:
         # Preserve lines element values in deterministic source order.
         lines += [
@@ -1045,7 +1035,7 @@ def build_enforcement(documents: Sequence[Document], root: Path) -> Artifact:
         lines += [f"| `{r.rule_id}` | {r.title} |" for r in census.open_rules]
         lines.append("")
 
-    # Return the intended path and contents; nothing is written to the caller.
+    # Bind normalized enforcement text to the sole generated matrix destination.
     return Artifact(root / "enforce" / "ENFORCEMENT.md", "\n".join(lines).rstrip() + "\n")
 
 

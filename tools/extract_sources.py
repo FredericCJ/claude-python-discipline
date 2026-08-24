@@ -181,8 +181,6 @@ def _claim_id(source: str, line: int, text: str) -> str:
     """
     # Hash the complete normalized statement so changed wording cannot inherit a disposition.
     digest = hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
-    # Return an identity readable by a reviewer and collision-resistant in the corpus to the
-    # caller.
     return f"{source}-L{line:04d}-{digest}"
 
 
@@ -204,7 +202,6 @@ def _candidate(
     """
     # Normalize and bound display text before deriving both identity and stored content.
     normalized = _truncate(text)
-    # Return the candidate and its derived stable identity to the caller.
     return Candidate(
         _claim_id(context.source, line, normalized),
         context.source,
@@ -232,7 +229,6 @@ def _truncate(text: str, limit: int = 400) -> str:
     """
     # Collapse every whitespace run to one space for stable readable census entries.
     flat = " ".join(text.split())
-    # Return the flattened statement, never longer than the limit to the caller.
     return flat if len(flat) <= limit else flat[: limit - 1] + "…"
 
 
@@ -273,11 +269,10 @@ def scan(tag: str, path: Path) -> tuple[list[Section], list[Candidate]]:
         if _FENCE.match(line):
             # Flip whether subsequent lines belong to a fenced example.
             inside_fence = not inside_fence
-            # Advance after the current candidate has been conclusively excluded.
             continue
         # Exclude every line inside a fenced example from headings and candidate nets.
         if inside_fence:
-            # Advance after the current candidate has been conclusively excluded.
+            # Example code may contain modal words but contributes no doctrine claim.
             continue
 
         # Match accepted ATX heading levels before applying any claim detector.
@@ -299,7 +294,6 @@ def scan(tag: str, path: Path) -> tuple[list[Section], list[Candidate]]:
                     line=index,
                 )
             )
-            # Advance after the current candidate has been conclusively excluded.
             continue
 
         # Freeze source and current heading ownership for all detectors on this line.
@@ -314,7 +308,6 @@ def scan(tag: str, path: Path) -> tuple[list[Section], list[Candidate]]:
 
     # Rebuild section records in document order with final candidate-count values attached.
     sections = [Section(**{**asdict(s), "candidates": counts.get(s.heading, 0)}) for s in sections]
-    # Return its sections, each carrying its candidate count, and its candidates to the caller.
     return sections, candidates
 
 
@@ -335,19 +328,17 @@ def _explicit_candidate(
     if tagged is not None:
         # Select the named or bare capture as the authoritative force hint.
         force = tagged.group("tag") or tagged.group("bare")
-        # Return an explicitly tagged, numbered, or checklist claim when present to the caller.
         return _candidate(context, line_no, "tagged", stripped, force)
     # Treat a numbered bold-title rule as the next-highest confidence signal.
     if _NUMBERED_RULE.match(line) is not None:
-        # Return an explicitly tagged, numbered, or checklist claim when present to the caller.
+        # Numbered rules are retained pending disposition even without an explicit force tag.
         return _candidate(context, line_no, "numbered-rule", stripped, "unclassified")
     # Match checklist syntax only after tagged and numbered forms are excluded.
     checkbox = _CHECKBOX.match(line)
     # Admit checklist syntax only after the stronger tagged and numbered forms are excluded.
     if checkbox is not None:
-        # Return an explicitly tagged, numbered, or checklist claim when present to the caller.
+        # Store only the checklist text, excluding its presentation marker.
         return _candidate(context, line_no, "checklist", checkbox.group("text"), "unclassified")
-    # Return an explicitly tagged, numbered, or checklist claim when present to the caller.
     return None
 
 
@@ -366,17 +357,16 @@ def _commenting_candidate(
     bullet = _BULLET.match(line)
     # Treat each commenting-doctrine bullet as one enumerated normative claim.
     if bullet is not None:
-        # Return one commenting-doctrine claim when present to the caller.
+        # The source defines these enumeration items as binding coverage obligations.
         return _candidate(context, line_no, "enumerated-claim", bullet.group("text"), "BINDING")
     # Treat non-header allocation-table rows as binding decisions.
     if _TABLE_ROW.match(line) and stripped.lower() != _COMMENTING_TABLE_HEADER:
-        # Return one commenting-doctrine claim when present to the caller.
+        # Allocation rows bind an information kind to its required documentation owner.
         return _candidate(context, line_no, "decision-table", stripped, "BINDING")
     # Treat remaining lower-case modal prose as a binding claim.
     if _COMMENTING_MODAL.search(line):
-        # Return one commenting-doctrine claim when present to the caller.
+        # Lower-case modals are normative in this source even without RFC capitalization.
         return _candidate(context, line_no, "normative-prose", stripped, "BINDING")
-    # Return one commenting-doctrine claim when present to the caller.
     return None
 
 
@@ -395,13 +385,13 @@ def _candidate_in(context: CandidateContext, line_no: int, line: str) -> Candida
     stripped = line.strip()
     # Exclude blank lines and Markdown table separators before signal precedence begins.
     if not stripped or (_TABLE_ROW.match(line) and stripped.startswith("|---")):
-        # Return the one candidate selected for this line, or None to the caller.
+        # Layout-only records contain no proposition to disposition.
         return None
     # Give tagged, numbered, and checklist syntax first claim on the line.
     explicit = _explicit_candidate(context, line_no, line, stripped)
     # Give tagged, numbered, and checklist claims precedence over source-specific heuristics.
     if explicit is not None:
-        # Return the one candidate selected for this line, or None to the caller.
+        # Explicit syntax is authoritative and must not be classified again by weaker rules.
         return explicit
     # Apply lower-case doctrine-specific inference only to the v5 commenting source.
     if context.source == "CD":
@@ -409,17 +399,16 @@ def _candidate_in(context: CandidateContext, line_no: int, line: str) -> Candida
         commenting = _commenting_candidate(context, line_no, line, stripped)
         # Accept the commenting-doctrine-specific claim after the shared explicit forms decline it.
         if commenting is not None:
-            # Return the one candidate selected for this line, or None to the caller.
+            # Preserve the source-specific claim kind and binding force selected above.
             return commenting
     # Use uppercase RFC-2119 vocabulary as the general binding fallback.
     if _RFC2119.search(line):
-        # Return the one candidate selected for this line, or None to the caller.
+        # General modal prose becomes a binding claim only after explicit forms are absent.
         return _candidate(context, line_no, "rfc2119", stripped, "BINDING")
     # Capture unquoted prohibitions only after every stronger signal is absent.
     if _NEVER.search(line) and not line.lstrip().startswith(">"):
-        # Return the one candidate selected for this line, or None to the caller.
+        # Keep prohibitions for review without guessing whether their force is normative.
         return _candidate(context, line_no, "prohibition", stripped, "unclassified")
-    # Return the one candidate selected for this line, or None to the caller.
     return None
 
 
@@ -470,7 +459,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         # Record a missing source without abandoning the partial census.
         if not path.exists():
             missing.append(relative)
-            # Advance after the current candidate has been conclusively excluded.
+            # Continue the census so one absent input does not conceal other source status.
             continue
         # Scan the present document into ordered section and candidate records.
         sections, candidates = scan(tag, path)

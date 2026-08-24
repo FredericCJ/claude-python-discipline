@@ -77,11 +77,11 @@ def _rel(path: Path, root: Path) -> str:
     """
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
-        # Return a POSIX path, so the graph reads the same on either platform to the caller.
+        # Repository-owned paths use portable relative identities in generated graph data.
         return path.relative_to(root).as_posix()
     # Translate the expected failure into this mechanism's stable diagnostic path.
     except ValueError:
-        # Return a POSIX path, so the graph reads the same on either platform to the caller.
+        # External paths retain a POSIX absolute spelling rather than a false relative owner.
         return path.as_posix()
 
 # ------------------------------------------------------------------ derivation
@@ -112,7 +112,7 @@ def build(root: Path) -> tuple[Graph, list[str]]:
     _add_sources(graph, root)
     _add_mechanisms(graph, root)
     _add_declared(graph, root, warnings)
-    # Return the graph, and one warning per thing that could not be derived to the caller.
+    # Keep recoverable parse warnings beside the graph they qualify.
     return graph, warnings
 
 
@@ -145,7 +145,6 @@ def _load(root: Path, warnings: list[str]) -> list[Document]:
         # Translate the expected failure into this mechanism's stable diagnostic path.
         except ParseError as exc:
             warnings.append(f"unparsable {path.name}: {exc.reason}")
-    # Return the documents that parsed, in path order to the caller.
     return documents
 
 
@@ -338,14 +337,13 @@ def _add_decisions(graph: Graph, root: Path) -> None:
     @param graph the graph under construction
     @param root the repository root
     """
-    # Normalize the current repository path to its portable baseline key spelling.
-    # Process each candidate element in deterministic source order.
+    # Each name selects one optional decision ledger with distinct graph node identities.
     for name in ("CONFLICTS", "OPEN"):
         # Resolve the repository-confined path used by this operation before filesystem access.
         path = root / "discipline" / "meta" / f"{name}.md"
         # Select the existing-artifact path only when `not path.exists()` is satisfied.
         if not path.exists():
-            # Advance after the current candidate has been conclusively excluded.
+            # Optional absent ledgers add neither decisions nor warnings.
             continue
         # Retain the immutable source representation consumed by subsequent analysis.
         text = path.read_text(encoding="utf-8")
@@ -461,7 +459,7 @@ def _defines_a_check(path: Path) -> bool:
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     # Translate the expected failure into this mechanism's stable diagnostic path.
     except (OSError, SyntaxError):
-        # Return true when it defines a class deriving from `Check` to the caller.
+        # Unparseable Python cannot establish the structural Check fingerprint.
         return False
     return any(
         isinstance(node, ast.ClassDef)
@@ -483,7 +481,7 @@ def _add_contract_triggers(graph: Graph, config: Path) -> None:
     # Preserve the optional pattern match that carries the reported analysis count.
     # Process each candidate element in deterministic source order.
     for match in _CONTRACT_NAME.finditer(config.read_text(encoding="utf-8")):
-        # Normalize the current repository path to its portable baseline key spelling.
+        # The captured name is the authored contract heading used to derive its trigger label.
         name = match.group("name")
         # The contract is named "ARCH-003 adapters are independent"; a failure
         # reports only the descriptive half, so that is what must match.
@@ -520,8 +518,6 @@ def _add_signal_triggers(graph: Graph, config: Path) -> None:
         # Return the completed  add signal triggers result to its caller.
         return
     document = tomllib.loads(config.read_text(encoding="utf-8"))
-    # Treat the current entry as the candidate element consumed by the enclosing transformation.
-    # Process each candidate element in deterministic source order.
     for entry in document.get("signal", []):
         # Normalize each diagnostic signature before constructing its trigger identity.
         signature = str(entry.get("match", "")).strip()
@@ -553,8 +549,6 @@ def _add_ruff_triggers(graph: Graph, pyproject: Path) -> None:
     if not pyproject.exists():
         # Return the completed  add ruff triggers result to its caller.
         return
-    # Preserve the current decoded diagnostic line before location normalization.
-    # Process each candidate element in deterministic source order.
     for line in pyproject.read_text(encoding="utf-8").splitlines():
         # Ignore unannotated TOML because it carries no discipline relationship metadata.
         if "#" not in line:
@@ -588,7 +582,7 @@ def _RULE_IDS_IN(text: str) -> list[str]:  # ruff: ignore[invalid-function-name]
     @param text a contract title, a configuration comment, any prose
     @return the ids found, duplicates kept
     """
-    # Return the ids found, duplicates kept to the caller.
+    # Preserve occurrence order and duplicates because callers interpret local citation context.
     return _RULE_ID_RE.findall(text)
 
 
@@ -674,8 +668,7 @@ def _add_declared_orderings(graph: Graph, spec: dict[str, object]) -> None:
         Treat spec as mapping elements whose keys identify fields and values carry their
         content; key order is deliberately unused.
     """
-    # Treat the current entry as the candidate element consumed by the enclosing transformation.
-    # Process each candidate element in deterministic source order.
+    # Each entry declares one reviewed symmetric tension absent from derivable prose edges.
     for entry in spec.get("tensions_with") or []:
         # Unpack left, right from entry["pair"] for the next  add declared orderings decision.
         left, right = entry["pair"]
