@@ -1040,7 +1040,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     # Select the existing-artifact path only when `not args.extraction.exists()` is satisfied.
     if not args.extraction.exists():
         print(f"missing {args.extraction}; run tools/extract_sources.py first", file=sys.stderr)
-        # Return the aggregate process status to the command-line boundary.
+        # Stop before provenance construction because its authoritative extraction input is absent.
         return 1
 
     # Build every derived provenance artifact as one validation boundary.
@@ -1048,10 +1048,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         # Retain section rows, claim rows, and both rendered outputs for check/write modes.
         rows, claims, provenance, claim_ledger = _build_outputs(args.extraction)
     # Preserve the caught failure that explains why the external result is unusable.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except (KeyError, TypeError, ValueError, yaml.YAMLError) as exc:
         print(f"provenance build failed: {exc}", file=sys.stderr)
-        # Return the aggregate process status to the command-line boundary.
+        # Convert malformed source or ledger structure to the public build-failure status.
         return 1
 
     # Each outputs element is one `(destination path, rendered content)` tuple; provenance then
@@ -1069,10 +1068,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             # Print each stale artifact path in deterministic output order.
             for path in drifted:
                 print(f"DRIFT: {path}", file=sys.stderr)
-            # Return the aggregate process status to the command-line boundary.
             return 1
     else:
-        # Resolve the repository-confined path used by this operation before filesystem access.
         # Process each candidate element in deterministic source order.
         for path, content in outputs:
             # Publish validated projections only after every output has been derived successfully.
@@ -1096,7 +1093,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     # Process each candidate element in deterministic source order.
     for disposition, count in sorted(claim_counts.items()):
         print(f"  {disposition}: {count}")
-    # Return the aggregate process status to the command-line boundary.
     return 0
 
 

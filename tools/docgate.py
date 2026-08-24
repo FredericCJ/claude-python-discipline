@@ -488,11 +488,10 @@ def _relative(path: Path, root: Path) -> str:
     @param root the repository root
     @return the relative POSIX path, or the absolute one if it lies outside
     """
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Prefer repository-relative baseline keys while retaining external targets transparently.
     try:
         # Repository-owned files use portable lookup keys shared with Git baselines.
         return path.resolve().relative_to(root).as_posix()
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except ValueError:
         # Preserve an external path honestly instead of fabricating repository ownership.
         return path.as_posix()
@@ -523,12 +522,10 @@ def check_behaviour(paths: Sequence[Path], root: Path) -> Iterator[Failure]:
         if entry is None:
             # Advance after classifying the file as new since baseline creation.
             continue
-        # Protect the fallible operation so expected failures remain explicitly classified.
         try:
             # Preserve the documentation-stripped behavior fingerprint used for comparison.
             current = fingerprint(path)
         # Preserve the caught failure that explains why the external result is unusable.
-        # Translate the expected failure into this mechanism's stable diagnostic path.
         except SyntaxError as exc:
             yield Failure("behaviour", name, f"does not parse: {exc.msg} at line {exc.lineno}")
             # Continue so one malformed file does not conceal drift elsewhere.
@@ -635,7 +632,6 @@ def _split_location(line: str, root: Path) -> tuple[str, str]:
     try:
         # Convert an in-repository location to a portable relative display path.
         shown = where.resolve().relative_to(root).as_posix()
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except (ValueError, OSError):
         # Fall back to the basename when resolution or confinement cannot be established.
         shown = where.name
@@ -686,7 +682,6 @@ def _run_baseline(args: argparse.Namespace, parser: argparse.ArgumentParser, roo
             # Re-record the validated target set and retain its non-vacuity count.
             count = rerecord_baseline(root, paths, args.reason)
         # Preserve the caught failure that explains why the external result is unusable.
-        # Translate the expected failure into this mechanism's stable diagnostic path.
         except ValueError as exc:
             parser.error(str(exc))
         print(f"re-recorded {count} fingerprint(s) in "
@@ -734,7 +729,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # Baseline modes terminate before any documentation checks are scheduled.
     if args.baseline:
-        # Return the aggregate process status to the command-line boundary.
+        # Delegate baseline inspection or update and preserve its public status contract.
         return _run_baseline(args, parser, root)
 
     # Select all governed roots or explicit CLI paths while preserving argument order.
@@ -747,7 +742,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         # Count expanded source files so a successful result is visibly non-vacuous.
         count = len(list(iter_python(targets)))
         print(f"documentation gate: {count} file(s) clean")
-        # Return the aggregate process status to the command-line boundary.
         return 0
 
     # Map each gate-name key to its failure-count value; insertion order is deliberately
@@ -766,7 +760,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     # Print gate counts in lexical order so equivalent failures produce identical output.
     print("\n" + ", ".join(f"{gate_name}={n}" for gate_name, n in sorted(by_gate.items())))
     print(f"documentation gate: {len(failures)} failure(s)")
-    # Return the aggregate process status to the command-line boundary.
     return 1
 
 

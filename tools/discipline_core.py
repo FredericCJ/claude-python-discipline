@@ -152,11 +152,9 @@ def rules_claimed_by(check: str, root: Path = REPO_ROOT) -> frozenset[str] | Non
     """
     # Resolve the named check only beneath this repository's shipped check directory.
     path = root / "enforce" / "checks" / f"{check}.py"
-    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
         # Parse the Python source into the syntax tree used for structural fingerprinting.
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except (OSError, SyntaxError):
         # Treat unreadable or unparsable check source as an unresolved declaration.
         return None

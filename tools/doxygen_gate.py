@@ -108,7 +108,6 @@ def generated(
     """
     # Create the isolated Doxygen output root whose lifetime is confined by this context.
     output = Path(tempfile.mkdtemp(prefix="doxygen-gate-"))
-    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
         # Later Doxygen assignments win, so the gate can redirect products and a
         # qualification probe can enable an additional machine-readable view.
@@ -164,7 +163,7 @@ def run(root: Path, minimum: int) -> tuple[int, str]:
 
     # Generate into an isolated directory that is removed on every return path.
     with generated(executable, root) as result:
-        # Preserve the external command representation and its observed completion outcome.
+        # Retain the Doxygen process outcome independently from projection non-vacuity counts.
         finished = result.finished
         # Preserve the generated source-page count used to reject a vacuous build.
         pages = result.source_pages
@@ -230,7 +229,6 @@ def main(argv: list[str] | None = None) -> int:
     # Capture the gate status and its single user-facing diagnostic line together.
     status, line = run(arguments.root, arguments.minimum)
     print(line, file=sys.stderr if status else sys.stdout)
-    # Return the aggregate process status to the command-line boundary.
     return status
 
 

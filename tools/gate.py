@@ -88,10 +88,9 @@ def run(*, stop_early: bool = False) -> int:
     """
     # Each failed element names one unsuccessful gate step; execution order is preserved.
     failed: list[str] = []
-    # Preserve the external command representation and its observed completion outcome.
     # Process each candidate element in deterministic source order.
     for name, command in GATE:
-        # Preserve the external command representation and its observed completion outcome.
+        # Execute this declared gate step and retain both diagnostics for the aggregate report.
         finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
             command, cwd=REPO_ROOT, capture_output=True, text=True,
             encoding="utf-8", errors="replace", check=False, timeout=1800,

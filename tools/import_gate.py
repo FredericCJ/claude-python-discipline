@@ -130,7 +130,6 @@ def check(
     for source in reversed(resolved_sources):
         sys.path.insert(0, str(source))
     os.chdir(root)
-    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
         # A private name, deliberately. import-linter exposes no public way to
         # register the built-in contract types, and `create_report` does not do
@@ -272,7 +271,7 @@ def main(argv: list[str] | None = None) -> int:
     # Capture the validated invocation arguments that govern this execution.
     arguments = parser.parse_args(argv)
 
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Preserve whether the caller explicitly selected an adopter root before default resolution.
     root = arguments.root
     # Use the absence path when root has no available value.
     if root is None:
@@ -283,12 +282,11 @@ def main(argv: list[str] | None = None) -> int:
                   "your code. Pass --root pointing at the tree holding your "
                   "src/ and an importlinter.toml naming your packages.",
                   file=sys.stderr)
-            # Return the aggregate process status to the command-line boundary.
+            # Fail closed instead of accidentally analyzing the package's shipped reference tree.
             return EXIT_BROKEN
-        # Resolve the repository-confined path used by this operation before filesystem access.
         root = DEFAULT_ROOT
 
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Localize configuration and source-root failures into stable import-gate diagnostics.
     try:
         # Evaluate contracts once and retain the status/message pair for terminal publication.
         status, line = check(
@@ -298,19 +296,17 @@ def main(argv: list[str] | None = None) -> int:
             arguments.source_roots,
         )
     # Preserve the missing configuration path carried by the filesystem refusal.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except FileNotFoundError as absent:
         print(f"import contracts: no configuration at {absent}", file=sys.stderr)
-        # Return the aggregate process status to the command-line boundary.
+        # A missing contract declaration cannot yield a meaningful architecture verdict.
         return EXIT_BROKEN
     # Preserve the confinement refusal that names every escaping source root.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except SourceRootError as problem:
         print(f"import contracts: invalid target: {problem}", file=sys.stderr)
-        # Return the aggregate process status to the command-line boundary.
+        # Refuse roots that escape the selected repository boundary.
         return EXIT_BROKEN
     print(line, file=sys.stderr if status else sys.stdout)
-    # Return the aggregate process status to the command-line boundary.
+    # Preserve the contract check's success or broken-architecture verdict at the CLI boundary.
     return status
 
 

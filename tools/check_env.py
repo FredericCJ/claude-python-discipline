@@ -153,11 +153,10 @@ def installed(name: str) -> str | None:
     @param name the distribution name as `environment.yml` spells it
     @return the installed version, or None when the distribution is absent
     """
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Query installed metadata while treating an absent distribution as a normal negative result.
     try:
         # Metadata is authoritative for import-only Python distributions.
         return version(name)
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except PackageNotFoundError:
         # An absent distribution is the expected negative probe result, not a tool failure.
         return None
@@ -321,7 +320,7 @@ def main(argv: list[str] | None = None) -> int:
     # Reject an absent declaration before attempting any version comparison.
     if not args.file.exists():
         print(f"no environment declaration at {args.file}", file=sys.stderr)
-        # Return the aggregate process status to the command-line boundary.
+        # Refuse drift analysis without the lock declaration that defines expected versions.
         return 2
 
     # Parse interpreter, pip, lock-defect, and native-pin dimensions together.
@@ -341,12 +340,11 @@ def main(argv: list[str] | None = None) -> int:
         # Report lock complaints in declaration order.
         for complaint in loose:
             print(f"lock defect: {complaint}", file=sys.stderr)
-        # Return the aggregate process status to the command-line boundary.
         return 2
     # Refuse a declaration with no exact pip pins because it cannot constrain the gate.
     if not pins:
         print(f"{args.file} pins nothing; there is no lock to check", file=sys.stderr)
-        # Return the aggregate process status to the command-line boundary.
+        # Refuse a vacuous lock verdict when no exact Python distributions constrain the environment.
         return 2
 
     # Compare every declared dimension against the running environment.
@@ -358,7 +356,6 @@ def main(argv: list[str] | None = None) -> int:
         for problem in problems:
             print(f"  {problem}", file=sys.stderr)
         print("  fix with: conda env update -f environment.yml --prune", file=sys.stderr)
-        # Return the aggregate process status to the command-line boundary.
         return 1
 
     # Emit the positive non-vacuity summary unless quiet mode suppressed clean output.
@@ -370,7 +367,6 @@ def main(argv: list[str] | None = None) -> int:
         native = f", {', '.join(sorted(conda))} verified by execution" if conda else ""
         print(f"environment matches {args.file.name}: "
               f"python {python}, {len(pins)} pinned package(s){native}")
-    # Return the aggregate process status to the command-line boundary.
     return 0
 
 

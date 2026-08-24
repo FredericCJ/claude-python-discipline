@@ -52,7 +52,6 @@ def collect(store: learn.Store, min_evidence: int) -> list[dict[str, object]]:
         return []
     # Synchronize the derived store before selecting promotion candidates from it.
     connection = learn.sync(store)
-    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
         # Preserve rows element values in deterministic source order.
         rows = connection.execute(
@@ -246,7 +245,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--min-evidence", type=int, default=DEFAULT_MIN_EVIDENCE)
     args = parser.parse_args(argv)
 
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Canonicalize the selected project before choosing source or vendored learning storage.
     target = args.target.resolve()
     # A vendored install keeps its learning database under .agent/; a source
     # checkout keeps it at the root.
@@ -259,7 +258,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         # Write proposals separately from the report so harvesting never edits doctrine directly.
         args.patch.write_text(render_patch(found), encoding="utf-8", newline="\n")
         print(f"proposed rule text written to {args.patch}")
-    # Return the aggregate process status to the command-line boundary.
     return 0
 
 

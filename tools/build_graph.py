@@ -75,11 +75,10 @@ def _rel(path: Path, root: Path) -> str:
     @param root the root to express it against
     @return a POSIX path, so the graph reads the same on either platform
     """
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Attempt repository-relative normalization while retaining an honest external fallback.
     try:
         # Repository-owned paths use portable relative identities in generated graph data.
         return path.relative_to(root).as_posix()
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except ValueError:
         # External paths retain a POSIX absolute spelling rather than a false relative owner.
         return path.as_posix()
@@ -131,18 +130,15 @@ def _load(root: Path, warnings: list[str]) -> list[Document]:
     # Each documents element is one successfully parsed canonical document; lexical path order
     # is preserved.
     documents: list[Document] = []
-    # Resolve the repository-confined path used by this operation before filesystem access.
     # Process each candidate element in deterministic source order.
     for path in sorted((root / "discipline").rglob("*.md")):
         # Exclude the generated index before parsing authored corpus modules.
         if path.name == "INDEX.md":
             # Generated navigation is output of this model and cannot become authored input.
             continue
-        # Protect the fallible operation so expected failures remain explicitly classified.
         try:
             documents.append(parse_document(path))
         # Preserve the caught failure that explains why the external result is unusable.
-        # Translate the expected failure into this mechanism's stable diagnostic path.
         except ParseError as exc:
             warnings.append(f"unparsable {path.name}: {exc.reason}")
     return documents
@@ -232,11 +228,9 @@ def _module_edges(graph: Graph, doc: Document) -> None:
     """
     # Interpret relationship-bearing front matter once for all emitted module edges.
     front = doc.front_matter
-    # Resolve the repository-confined path used by this operation before filesystem access.
     # Process each candidate element in deterministic source order.
     for target in _as_list(front.get("requires")):
         graph.add_edge(Edge(EdgeType.REQUIRES, doc.doc_id, target))
-    # Resolve the repository-confined path used by this operation before filesystem access.
     # Process each candidate element in deterministic source order.
     for target in _as_list(front.get("grounds_on")):
         graph.add_edge(Edge(EdgeType.GROUNDS_ON, doc.doc_id, target))
@@ -279,7 +273,6 @@ def _rule_edges(graph: Graph, doc: Document, rule: object) -> None:
                  attrs=(("family", mechanism.split(":", 1)[0]),))
         )
         graph.add_edge(Edge(EdgeType.ENFORCED_BY, rule_id, node_id))
-    # Resolve the repository-confined path used by this operation before filesystem access.
     # Process each candidate element in deterministic source order.
     for target in rule.see:  # type: ignore[attr-defined]
         graph.add_edge(Edge(EdgeType.CITES, rule_id, target.split("#", 1)[0]))
@@ -339,7 +332,7 @@ def _add_decisions(graph: Graph, root: Path) -> None:
     """
     # Each name selects one optional decision ledger with distinct graph node identities.
     for name in ("CONFLICTS", "OPEN"):
-        # Resolve the repository-confined path used by this operation before filesystem access.
+        # Resolve this ledger name to its authored meta-document beneath the selected corpus.
         path = root / "discipline" / "meta" / f"{name}.md"
         # Select the existing-artifact path only when `not path.exists()` is satisfied.
         if not path.exists():
@@ -379,7 +372,7 @@ def _add_sources(graph: Graph, root: Path) -> None:
     @param graph the graph under construction
     @param root the repository root
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Locate the generated provenance view whose rows connect sources to doctrine targets.
     path = root / "discipline" / "meta" / "PROVENANCE.md"
     # Select the existing-artifact path only when `not path.exists()` is satisfied.
     if not path.exists():
@@ -453,15 +446,16 @@ def _defines_a_check(path: Path) -> bool:
     @param path the module to inspect
     @return True when it defines a class deriving from `Check`
     """
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Treat candidate source as data so unreadable or invalid modules simply fail classification.
     try:
         # Parse the Python source into the syntax tree used for structural fingerprinting.
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except (OSError, SyntaxError):
         # Unparseable Python cannot establish the structural Check fingerprint.
         return False
+    # Accept a module only when some parsed class directly names a supported check base.
     return any(
+        # Each AST node is a candidate class; each base is one direct inheritance declaration.
         isinstance(node, ast.ClassDef)
         and any(isinstance(b, ast.Name) and b.id in _CHECK_BASES for b in node.bases)
         for node in ast.walk(tree)
@@ -602,7 +596,7 @@ def _add_declared(graph: Graph, root: Path, warnings: list[str]) -> None:
         Each element is one non-fatal diagnostic string appended in discovery
         order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Locate the optional authored edge supplement beneath the selected corpus.
     path = root / "discipline" / "meta" / "edges.yaml"
     # Select the existing-artifact path only when `not path.exists()` is satisfied.
     if not path.exists():
@@ -795,7 +789,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     for warning in warnings:
         print(f"warning: {warning}", file=sys.stderr)
 
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the canonical generated graph artifact compared or replaced by this command.
     target = root / "discipline" / "graph.json"
     # Retain the immutable source representation consumed by subsequent analysis.
     text = render(graph)

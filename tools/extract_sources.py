@@ -496,11 +496,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     by_kind = Counter(c.kind for c in all_candidates)
     # Name whether this invocation compared or published the census.
     action = "checked" if args.check else "wrote"
-    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
         # Prefer a portable path relative to the selected source root.
         display_path = args.out.relative_to(args.root).as_posix()
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except ValueError:
         # Fall back to the absolute POSIX spelling for an external output path.
         display_path = args.out.as_posix()
@@ -516,7 +514,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     # Report committed-census drift independently of source absence.
     if drifted:
         print("  DRIFT: committed extraction differs from the source corpus", file=sys.stderr)
-    # Return the aggregate process status to the command-line boundary.
     return 1 if missing or drifted else 0
 
 

@@ -153,7 +153,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--root", type=Path, default=REPO_ROOT, help="repository root")
     # Capture the validated invocation arguments that govern this execution.
     args = parser.parse_args(argv)
-    # Resolve the repository-confined path used by this operation before filesystem access.
     root = args.root.resolve()
 
     # Resolve the single authored skill directory from its declared path segments.
@@ -191,7 +190,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         # Render the non-empty drift count or the stable clean-state phrase.
         verdict = f"{total} stale file(s)." if total else "up to date."
         print(f"{_CHECK_BANNER}: {verdict}")
-        # Return the aggregate process status to the command-line boundary.
         return 1 if total else 0
 
     # Publish every canonical artifact in deterministic host/source order.
@@ -206,7 +204,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         f"wrote {len(artifacts)} mirrored file(s) across {len(dest_dirs)} agent roots; "
         f"{len(stale)} were stale, {len(orphans)} orphan(s) removed."
     )
-    # Return the aggregate process status to the command-line boundary.
     return 0
 
 

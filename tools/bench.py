@@ -87,11 +87,9 @@ def plan_for(output: str, route: str = "context") -> dict[str, object]:
     if finished.returncode != 0 or not finished.stdout.strip():
         # Failed or silent probes contribute no benchmark observation.
         return {}
-    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
         # Successful probe output is a structured timing and routing observation.
         return json.loads(finished.stdout)
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except json.JSONDecodeError:
         # Malformed child output is unusable evidence, equivalent to an absent observation.
         return {}
@@ -300,7 +298,7 @@ def main(argv: list[str] | None = None) -> int:
         # Reject comparison when the requested baseline is not a regular file.
         if not arguments.compare.is_file():
             print(f"no recorded run at {arguments.compare}", file=sys.stderr)
-            # Return the aggregate process status to the command-line boundary.
+            # Refuse comparison because no trustworthy recorded metrics can be loaded.
             return 1
         # Compare current metrics against the decoded recorded report.
         moved = compare(report, json.loads(
@@ -315,7 +313,6 @@ def main(argv: list[str] | None = None) -> int:
         BASELINE_PATH.write_text(json.dumps(report, indent=2) + "\n",
                                  encoding="utf-8", newline="\n")
         print(f"\nrecorded to {BASELINE_PATH.name}")
-    # Return the aggregate process status to the command-line boundary.
     return 0
 
 

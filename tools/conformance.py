@@ -166,11 +166,10 @@ def pairs_of(findings: Sequence[Finding], root: Path) -> set[tuple[str, str]]:
     pairs: set[tuple[str, str]] = set()
     # Reduce findings in checker order even though the resulting set intentionally discards it.
     for finding in findings:
-        # Protect the fallible operation so expected failures remain explicitly classified.
+        # Prefer repository-relative identities but preserve external paths without fabrication.
         try:
             # Prefer a portable project-relative path for stable baselines.
             name = finding.path.relative_to(root).as_posix()
-        # Translate the expected failure into this mechanism's stable diagnostic path.
         except ValueError:
             # Preserve an external finding as an absolute POSIX path when confinement fails.
             name = finding.path.as_posix()
@@ -193,11 +192,9 @@ def load_baseline(path: Path) -> tuple[int, set[tuple[str, str]]] | None:
     if not path.is_file():
         # Absence is distinct from an established zero-finding baseline.
         return None
-    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
         # Decode baseline field-name keys to count, pair, and audit-note values.
         data = json.loads(path.read_text(encoding="utf-8"))
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except (OSError, json.JSONDecodeError):
         # Unreadable debt cannot be trusted as an acceptance boundary.
         return None
@@ -394,10 +391,10 @@ def main(argv: list[str] | None = None) -> int:
     # Refuse an unaudited baseline update before running any checks.
     if arguments.update_baseline and not arguments.why:
         print("--update-baseline requires --why", file=sys.stderr)
-        # Return the aggregate process status to the command-line boundary.
+        # Reject untraceable ceiling movement before running or rewriting any conformance data.
         return EXIT_REGRESSED
 
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Canonicalize the adopter root once before deriving governed paths and baseline ownership.
     root = arguments.root.resolve()
     # Use explicit path elements in argument order, or the conventional source root as one item.
     paths = arguments.paths or [root / "src"]
@@ -409,7 +406,7 @@ def main(argv: list[str] | None = None) -> int:
     # Report mode explains the current state without enforcing or changing the ratchet.
     if command == "report":
         print(render_report(findings, root, load_baseline(baseline_path)))
-        # Return the aggregate process status to the command-line boundary.
+        # Reporting is observational and succeeds regardless of the current debt comparison.
         return EXIT_OK
 
     # Baseline-update mode first proves that no protected finding would be accepted.
@@ -425,13 +422,11 @@ def main(argv: list[str] | None = None) -> int:
             print(f"refusing to baseline {len(protected)} protected violation(s); "
                   f"these are the rules adopting the discipline is for",
                   file=sys.stderr)
-            # Return the aggregate process status to the command-line boundary.
             return EXIT_REGRESSED
         write_baseline(baseline_path, len(findings),
                        pairs_of(findings, root), arguments.why)
         print(f"conformance: baseline recorded at {len(findings)} finding(s) -- "
               f"{arguments.why}")
-        # Return the aggregate process status to the command-line boundary.
         return EXIT_OK
 
     # Judge current findings against the optional adopter-owned baseline.
@@ -443,7 +438,7 @@ def main(argv: list[str] | None = None) -> int:
     if complaints:
         print('fix them, or move the baseline with --update-baseline --why "..."',
               file=sys.stderr)
-        # Return the aggregate process status to the command-line boundary.
+        # Fail when current findings exceed or escape the accepted conformance debt.
         return EXIT_REGRESSED
 
     # Reload the accepted count for the positive summary after judgement passes.
@@ -451,7 +446,6 @@ def main(argv: list[str] | None = None) -> int:
     # Include the accepted ceiling only when an adopter baseline exists.
     accepted = f", {recorded[0]} accepted" if recorded else ""
     print(f"conformance: {len(findings)} finding(s){accepted}, none new")
-    # Return the aggregate process status to the command-line boundary.
     return EXIT_OK
 
 

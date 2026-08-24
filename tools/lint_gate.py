@@ -88,7 +88,7 @@ def run_ruff(root: Path, config: Path | None = None) -> tuple[list[dict[str, obj
     if config is not None:
         # Extend the shared argv prefix before selecting either output representation.
         common += ["--config", str(config)]
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Run Ruff once and translate adapter failures without manufacturing an empty clean report.
     try:
         # Capture Ruff's machine-readable verdict for exact pair comparison.
         structured = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv, no shell
@@ -103,7 +103,6 @@ def run_ruff(root: Path, config: Path | None = None) -> tuple[list[dict[str, obj
             cwd=root, check=False,
         )
     # Preserve the caught failure that explains why the external result is unusable.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except OSError as exc:
         # Localize process-launch failure before translating it to the gate exception.
         message = f"could not run ruff: {exc}"
@@ -147,11 +146,9 @@ def pairs_of(findings: Sequence[dict[str, object]], root: Path) -> set[tuple[str
             continue
         # Interpret the reported filename as a path for portable normalization.
         path = Path(raw)
-        # Protect the fallible operation so expected failures remain explicitly classified.
         try:
             # Prefer a repository-relative POSIX spelling for stable cross-platform baselines.
             name = path.relative_to(root).as_posix()
-        # Translate the expected failure into this mechanism's stable diagnostic path.
         except ValueError:
             # Retain an external path in POSIX form when it cannot be made repository-relative.
             name = path.as_posix()
@@ -280,15 +277,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     # Capture the validated invocation arguments that govern this execution.
     args = parser.parse_args(argv)
 
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Convert a Ruff adapter failure to infrastructure status before baseline comparison.
     try:
         # Preserve finding-record elements in checker emission order for the final verdict.
         findings, human = run_ruff(args.root)
     # Preserve the caught failure that explains why the external result is unusable.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except RuntimeError as exc:
         print(str(exc), file=sys.stderr)
-        # Return the aggregate process status to the command-line boundary.
+        # Surface an unusable Ruff invocation as gate infrastructure failure.
         return 2
 
     # Reduce volatile Ruff diagnostics to stable repository-relative path/code pairs.
@@ -302,7 +298,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         if not args.why:
             print("--update-baseline needs --why; an untraced ceiling is drift",
                   file=sys.stderr)
-            # Return the aggregate process status to the command-line boundary.
+            # Refuse a baseline change that carries no audit rationale.
             return 2
         # Identify protected diagnostics that policy forbids recording as accepted debt.
         blocked = sorted(code for _, code in pairs if code in PROTECTED)
@@ -310,11 +306,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         if blocked:
             print("refusing to baseline a protected code: " + ", ".join(blocked),
                   file=sys.stderr)
-            # Return the aggregate process status to the command-line boundary.
+            # Prevent policy-protected diagnostics from becoming accepted lint debt.
             return 2
         write_baseline(count, pairs, args.why, args.root / "tools" / "lint_baseline.json")
         print(f"recorded {count} finding(s) across {len(pairs)} (file, code) pair(s)")
-        # Return the aggregate process status to the command-line boundary.
         return 0
 
     # Load both baseline dimensions: total count and distinct stable path/code identities.
@@ -332,7 +327,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(f"  {entry}", file=sys.stderr)
         print('  fix them, or move the ceiling with --update-baseline --why "..."',
               file=sys.stderr)
-        # Return the aggregate process status to the command-line boundary.
         return 1
 
     # Report debt reductions as actionable opportunities to lower the recorded ceiling.
@@ -340,7 +334,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"  {notice} -- lock it in with --update-baseline")
     print(f"lint gate: {count} finding(s), none above the recorded ceiling of "
           f"{recorded_count}")
-    # Return the aggregate process status to the command-line boundary.
     return 0
 
 

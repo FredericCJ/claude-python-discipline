@@ -165,18 +165,15 @@ def load(root: Path) -> list[Document]:
     # Each documents element is one successfully parsed canonical document; lexical path order
     # is preserved.
     documents: list[Document] = []
-    # Resolve the repository-confined path used by this operation before filesystem access.
     # Process each candidate element in deterministic source order.
     for path in sorted((root / "discipline").rglob("*.md")):
         # Exclude the generated index before parsing authored modules.
         if path.name == "INDEX.md":
             # Generated navigation is output and cannot become authored corpus input.
             continue
-        # Protect the fallible operation so expected failures remain explicitly classified.
         try:
             documents.append(parse_document(path))
         # Preserve the caught failure that explains why the external result is unusable.
-        # Translate the expected failure into this mechanism's stable diagnostic path.
         except ParseError as exc:
             print(f"skipping unparsable {path}: {exc.reason}", file=sys.stderr)
     return documents
@@ -1084,7 +1081,6 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # Compare every generated artifact in check mode without writing any repository state.
     if args.check:
-        # Resolve the repository-confined path used by this operation before filesystem access.
         # Process each candidate element in deterministic source order.
         for path in stale_tokens:
             print(f"stale tokens: {path.relative_to(root).as_posix()}")
@@ -1092,7 +1088,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(f"stale artifact: {artifact.path.relative_to(root).as_posix()}")
         total = len(stale_tokens) + len(stale)
         print(f"{total} stale file(s)." if total else "up to date.")
-        # Return the aggregate process status to the command-line boundary.
         return 1 if total else 0
 
     # Write each fully rendered artifact only after all builders complete successfully.
@@ -1105,7 +1100,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         f"wrote {len(artifacts)} artifact(s); {len(documents)} modules, {rules} rules, "
         f"{len(stale_tokens)} token count(s) refreshed."
     )
-    # Return the aggregate process status to the command-line boundary.
     return 0
 
 

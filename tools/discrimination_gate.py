@@ -246,7 +246,6 @@ def fails_against(node: str, root: Path, *, repository: bool = False) -> bool:
     else:
         # Redirect reference-oriented fitness nodes to the damaged fixture tree.
         environment["DISCIPLINE_REFERENCE"] = str(root)
-    # Preserve the external command representation and its observed completion outcome.
     finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
         (sys.executable, "-m", "pytest", "-q", "-p", "no:randomly", "-x", node),
         cwd=working_directory, env=environment,
@@ -270,7 +269,6 @@ def proof_passes(node: str) -> bool:
     # Inherit the qualified toolchain while clearing any outer fixture redirection.
     environment = dict(os.environ)
     environment.pop("DISCIPLINE_REFERENCE", None)
-    # Preserve the external command representation and its observed completion outcome.
     finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
         (sys.executable, "-m", "pytest", "-q", "-p", "no:randomly", "-x", node),
         cwd=REPO_ROOT,
@@ -805,7 +803,7 @@ def main(argv: list[str] | None = None) -> int:
     # of it to reach a conclusion available immediately.
     if arguments.update_baseline and not arguments.why:
         print("--update-baseline requires --why", file=sys.stderr)
-        # Return the aggregate process status to the command-line boundary.
+        # Refuse an unreasoned evidence-floor change before executing the mutation matrix.
         return EXIT_FAILED
 
     # Execute the complete proof matrix before comparing its observations to the baseline.
@@ -824,7 +822,7 @@ def main(argv: list[str] | None = None) -> int:
         if status != EXIT_OK:
             print("refusing to move the floor while a declared mutation is broken",
                   file=sys.stderr)
-            # Return the aggregate process status to the command-line boundary.
+            # Preserve the existing floor when any claimed discrimination proof is already broken.
             return EXIT_FAILED
         # Resolve exact mechanism witnesses for the strategy-level floor.
         strategies = resolved_strategy_witnesses()
@@ -860,13 +858,12 @@ def main(argv: list[str] | None = None) -> int:
             f"S={len(strategies)}, strategy gap={len(strategy_gap)} -- "
             f"{arguments.why}"
         )
-        # Return the aggregate process status to the command-line boundary.
         return EXIT_OK
 
     # In ordinary gate mode, matrix failures take precedence over baseline comparisons.
     if status != EXIT_OK:
         print(f"discrimination: {len(complaints)} broken claim(s)", file=sys.stderr)
-        # Return the aggregate process status to the command-line boundary.
+        # Matrix breakage takes precedence over ratchet comparison because its evidence is incomplete.
         return EXIT_FAILED
     # Compute newly mechanized rule ids that have no witnessed mutation.
     gap = undiscriminated(provoked)
@@ -875,7 +872,7 @@ def main(argv: list[str] | None = None) -> int:
     # Fail on any floor decrease or ceiling increase.
     if slipped:
         print(f"discrimination: {slipped}", file=sys.stderr)
-        # Return the aggregate process status to the command-line boundary.
+        # Fail when witnessed coverage falls or the undiscriminated strategy gap grows.
         return EXIT_FAILED
 
     # Resolve exact strategy evidence for the successful summary.
@@ -886,7 +883,6 @@ def main(argv: list[str] | None = None) -> int:
           f"{len(discrimination.MUTATIONS)} mutation(s) all provoking their rule; "
           f"S={len(strategies)}, {len(strategy_gap)} exact strategy claim(s) "
           f"still undiscriminated; {len(gap)} rule id(s) still undiscriminated")
-    # Return the aggregate process status to the command-line boundary.
     return EXIT_OK
 
 
