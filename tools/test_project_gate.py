@@ -27,8 +27,7 @@ from fixtures import reference_root
 
 def test_only_pass_and_valid_not_applicable_are_green() -> None:
     """Unsupported and not-run required work cannot be reported as success."""
-    # Compute passed using project gate.StepResult for later test only pass and valid not
-    # Details: applicable are green logic.
+    # Construct the sole executed-success outcome admitted by the aggregate verdict.
     passed = project_gate.StepResult(
         step_id="probe",
         rules=(),
@@ -37,8 +36,7 @@ def test_only_pass_and_valid_not_applicable_are_green() -> None:
         diagnostic_id=None,
         summary="ran",
     )
-    # Compute inapplicable using project gate.StepResult for later test only pass and valid not
-    # Details: applicable are green logic.
+    # Construct a justified optional outcome whose capability makes execution irrelevant.
     inapplicable = project_gate.StepResult(
         step_id="conditional",
         rules=(),
@@ -47,8 +45,7 @@ def test_only_pass_and_valid_not_applicable_are_green() -> None:
         diagnostic_id="GATE-NOT-APPLICABLE",
         summary="capability is false",
     )
-    # Compute unsupported using project gate.StepResult for later test only pass and valid not
-    # Details: applicable are green logic.
+    # Construct required work whose implementation is unavailable on the active platform.
     unsupported = project_gate.StepResult(
         step_id="platform",
         rules=(),
@@ -57,8 +54,7 @@ def test_only_pass_and_valid_not_applicable_are_green() -> None:
         diagnostic_id="GATE-UNSUPPORTED",
         summary="required tool has no Windows implementation",
     )
-    # Compute not run using project gate.StepResult for later test only pass and valid not
-    # Details: applicable are green logic.
+    # Construct required work prevented by an earlier declaration failure.
     not_run = project_gate.StepResult(
         step_id="blocked",
         rules=(),
@@ -76,7 +72,7 @@ def test_only_pass_and_valid_not_applicable_are_green() -> None:
 
 def test_ambiguous_result_records_are_refused() -> None:
     """A non-pass result without a reason code cannot enter a report."""
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require construction-time refusal before an unclassifiable red result reaches a report.
     with pytest.raises(ValueError, match="stable diagnostic"):
         project_gate.StepResult(
             step_id="ambiguous",
@@ -92,20 +88,19 @@ def test_missing_local_declaration_never_falls_back_to_parent(tmp_path: Path) ->
     """An exact child root cannot borrow its parent's valid declaration.
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes a valid parent declaration and an empty child repository.
     """
-    # Publish the externally visible effect after all required inputs are ready.
+    # Place a tempting valid declaration above the exact root under test.
     (tmp_path / "pyproject.toml").write_text(
         "[tool.agent-discipline]\nunit='application'\n",
         encoding="utf-8",
     )
-    # Compute child using tmp_path / "child" for later test missing local declaration never
-    # Details: falls back to parent logic.
+    # Address the declaration-free child that must not inherit parent configuration.
     child = tmp_path / "child"
-    # Publish the externally visible effect after all required inputs are ready.
+    # Materialize the exact governed root without a local project file.
     child.mkdir()
 
-    # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
+    # Run from the child to expose any accidental ancestor discovery.
     report = project_gate.run(child)
 
     assert not report.green
@@ -117,7 +112,7 @@ def test_missing_local_declaration_never_falls_back_to_parent(tmp_path: Path) ->
 
 def test_reference_loads_one_declaration_for_every_check() -> None:
     """The conformant reference passes the in-process aggregate check."""
-    # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
+    # Limit execution to the in-process checks while retaining normal declaration loading.
     report = project_gate.run(
         reference_root(),
         steps=(project_gate.DisciplineChecksAdapter(),),
@@ -125,8 +120,7 @@ def test_reference_loads_one_declaration_for_every_check() -> None:
 
     assert report.green
     assert report.unit == "application"
-    # Capture result as the completed test reference loads one declaration for every check
-    # Details: outcome for subsequent validation or publication.
+    # Compare each outcome's status in declaration-then-adapter report order.
     assert [result.status for result in report.outcomes] == [
         project_gate.Status.PASS,
         project_gate.Status.PASS,
@@ -138,10 +132,10 @@ def test_reference_loads_one_declaration_for_every_check() -> None:
 @decides("DOC-003")
 def test_ordinary_gate_schedules_documentation_presence() -> None:
     """Documentation presence is part of the default gate, not a doc-only job."""
-    # Each scheduled element carries one scheduled value produced or consumed by this operation;
-    # Details: construction order is preserved.
+    # Each scheduled element is a custom-check adapter; default gate order is preserved.
     scheduled = [
         step
+        # Each default step is classified by its concrete adapter type.
         for step in project_gate.DEFAULT_STEPS
         if isinstance(step, project_gate.DisciplineChecksAdapter)
     ]
@@ -152,7 +146,7 @@ def test_ordinary_gate_schedules_documentation_presence() -> None:
     assert "DOC-003" in scheduled[0].rules
     assert "doc_coverage" in discovered
 
-    # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
+    # Execute only the discovered custom-check adapter against the conformant reference.
     report = project_gate.run(reference_root(), steps=tuple(scheduled))
     assert report.green
     assert report.outcomes[1].step_id == "discipline-checks"
@@ -162,25 +156,20 @@ def test_ordinary_gate_schedules_documentation_presence() -> None:
 @decides("FLOW-012")
 def test_report_records_every_non_pass_as_a_deviation(tmp_path: Path) -> None:
     """Failure and prevented work retain distinct reasons in serialized output."""
-    # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
+    # Run against an empty root so declaration failure prevents every configured adapter.
     report = project_gate.run(tmp_path)
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
     document = report.as_dict()
 
     assert document["verdict"] == "fail"
-    # Compute deviations using cast for later test report records every non pass as a deviation
-    # Details: logic.
+    # Narrow serialized deviations to their ordered JSON record sequence.
     deviations = cast("list[dict[str, object]]", document["deviations"])
     assert len(deviations) == len(report.outcomes)
     assert deviations[0]["status"] == "fail"
-    # Treat the current item as the candidate element consumed by the enclosing transformation.
+    # Require every post-declaration deviation to retain the prevented-work status.
     assert all(item["status"] == "not-run" for item in deviations[1:])
-    # Compute encoded using json.dumps for later test report records every non pass as a
-    # Details: deviation logic.
+    # Encode the complete report to verify stable diagnostics survive JSON publication.
     encoded = json.dumps(document)
-    # Compute diagnostic using report.outcomes[0].diagnostic_id for later test report records
-    # Details: every non pass as a deviation logic.
+    # Select the declaration diagnostic whose presence anchors the serialized failure.
     diagnostic = report.outcomes[0].diagnostic_id
     assert diagnostic is not None
     assert diagnostic in encoded
@@ -194,16 +183,15 @@ def _configured_tool_project(tmp_path: Path) -> Path:
     @return configured repository root
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Copies the reference and appends complete external-tool and packaging configuration.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Isolate a writable copy of the conformant reference for configuration mutations.
     root = tmp_path / "project"
+    # Copy the complete known-good source and doctrine fixture before adding gate tables.
     shutil.copytree(reference_root(), root)
-    # Compute stream using "utf-8", newline="\n") as stream: for later configured tool project
-    # Details: logic.
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Append all project and external-tool declarations without rewriting reference content.
     with (root / "pyproject.toml").open("a", encoding="utf-8", newline="\n") as stream:
-        # Publish the externally visible effect after all required inputs are ready.
+        # Add identity, build, lint, type, test, documentation, and install-probe posture.
         stream.write(
             "\n[project]\n"
             "name = 'refpkg'\n"
@@ -232,7 +220,7 @@ def _configured_tool_project(tmp_path: Path) -> Path:
             "doxyfile = 'Doxyfile'\n"
             "artifact_imports = ['refpkg']\n",
         )
-        # Publish the externally visible effect after all required inputs are ready.
+        # Add the mutation-specific execution budget and zero-survivor policy.
         stream.write(
             "\n[tool.agent-discipline-gate.mutation]\n"
             "test_targets = ['tests']\n"
@@ -240,11 +228,11 @@ def _configured_tool_project(tmp_path: Path) -> Path:
             "command_timeout = 120\n"
             "maximum_survival = 0.0\n"
         )
-    # Compute tests using root / "tests" for later configured tool project logic.
+    # Address a local test root that makes pytest and mutation target probes non-vacuous.
     tests = root / "tests"
-    # Publish the externally visible effect after all required inputs are ready.
+    # Create the target directory if the reference copy does not already contain it.
     tests.mkdir(exist_ok=True)
-    # Publish the externally visible effect after all required inputs are ready.
+    # Add one deterministic passing test so configured pytest has executed behavior.
     (tests / "test_smoke.py").write_text(
         '"""A non-vacuous gate fixture."""\n\n'
         "def test_smoke() -> None:\n"
@@ -252,7 +240,7 @@ def _configured_tool_project(tmp_path: Path) -> Path:
         "    assert True\n",
         encoding="utf-8",
     )
-    # Return configured repository root to the caller.
+    # Return the fully configured single-repository fixture.
     return root
 
 
@@ -301,10 +289,9 @@ def test_external_adapters_bind_config_and_non_empty_targets(
     @param output successful tool-specific report
     @param target expected explicit argv target
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build a complete configured repository for the parameterized adapter.
     root = _configured_tool_project(tmp_path)
-    # Each commands element carries one command value produced or consumed by this operation;
-    # Details: construction order is preserved.
+    # Each commands element is one prepared invocation in execution order.
     commands: list[project_gate.PreparedCommand] = []
 
     def execute(
@@ -317,39 +304,36 @@ def test_external_adapters_bind_config_and_non_empty_targets(
         @param _root governed working directory
         @return successful process observation
         """
+        # Retain the configuration-probed argv so the test can inspect target confinement.
         commands.append(command)
-        # Return successful process observation to the caller.
+        # Return the adapter-specific successful output supplied by the parameter row.
         return project_gate.CommandExecution(0, output, 1)
 
     monkeypatch.setattr(project_gate, "_execute", execute)
     monkeypatch.setattr(project_gate, "_distribution_version", lambda _name: "test")
 
-    # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
+    # Run only the parameterized adapter after normal declaration loading.
     report = project_gate.run(root, steps=(adapter,))
-    # Capture result as the completed test external adapters bind config and non empty targets
-    # Details: outcome for subsequent validation or publication.
     result = report.outcomes[1]
 
     assert result.status is project_gate.Status.PASS
     assert result.subjects > 0
     assert result.tool == f"{adapter.distribution} test"
     assert result.configuration[0].path == "pyproject.toml"
-    # Select argument as the current element from commands[0].command) while test external
-    # Details: adapters bind config and non empty targets preserves traversal order.
+    # Require at least one argv element to bind the tool to this exact repository.
     assert any(str(root) in argument for argument in commands[0].command)
     assert target in commands[0].command
 
 
 def test_missing_tool_configuration_is_a_failed_probe(tmp_path: Path) -> None:
     """A missing Ruff table cannot become an unsupported or narrower scan."""
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Copy the reference without the external Ruff table whose absence is under test.
     root = tmp_path / "project"
+    # Preserve every other conformant fixture input.
     shutil.copytree(reference_root(), root)
 
-    # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
+    # Run only Ruff so its configuration refusal is not obscured by later steps.
     report = project_gate.run(root, steps=(project_gate.RUFF_STEP,))
-    # Capture result as the completed test missing tool configuration is a failed probe outcome
-    # Details: for subsequent validation or publication.
     result = report.outcomes[1]
 
     assert result.status is project_gate.Status.FAIL
@@ -362,7 +346,7 @@ def test_pyright_zero_file_report_is_not_green(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Pyright must corroborate that its configured target produced subjects."""
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Configure a normal pyright repository before substituting only its structured output.
     root = _configured_tool_project(tmp_path)
     monkeypatch.setattr(
         project_gate,
@@ -375,8 +359,7 @@ def test_pyright_zero_file_report_is_not_green(
     )
     monkeypatch.setattr(project_gate, "_distribution_version", lambda _name: "test")
 
-    # Capture result as the completed test pyright zero file report is not green outcome for
-    # Details: subsequent validation or publication.
+    # Capture pyright's adapter result for the zero-subject report.
     result = project_gate.run(root, steps=(project_gate.PYRIGHT_STEP,)).outcomes[1]
 
     assert result.status is project_gate.Status.FAIL
@@ -388,7 +371,7 @@ def test_pytest_all_skipped_report_is_not_green(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A configured suite that executes no passing oracle remains a failure."""
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Configure a normal pytest repository before substituting an all-skipped summary.
     root = _configured_tool_project(tmp_path)
     monkeypatch.setattr(
         project_gate,
@@ -397,8 +380,7 @@ def test_pytest_all_skipped_report_is_not_green(
     )
     monkeypatch.setattr(project_gate, "_distribution_version", lambda _name: "test")
 
-    # Capture result as the completed test pytest all skipped report is not green outcome for
-    # Details: subsequent validation or publication.
+    # Capture pytest's adapter result for a clean process with no passing execution.
     result = project_gate.run(root, steps=(project_gate.PYTEST_STEP,)).outcomes[1]
 
     assert result.status is project_gate.Status.FAIL
@@ -412,9 +394,9 @@ def _write_doxyfile(root: Path, source: str = "src") -> None:
     @param source INPUT value
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes the minimal warning-fatal HTML Doxyfile beneath ``root``.
     """
-    # Publish the externally visible effect after all required inputs are ready.
+    # Materialize exactly the four Doxygen assignments consumed by the adapter probe.
     (root / "Doxyfile").write_text(
         f"INPUT = {source}\n"
         "FILE_PATTERNS = *.py\n"
@@ -435,13 +417,13 @@ def test_legacy_documentation_engine_is_a_migration_failure(
     @param engine former engine selection
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Rewrites the fixture's documentation engine selection to a legacy value.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Start from a complete v5 project whose sole defect will be the legacy engine value.
     root = _configured_tool_project(tmp_path)
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Address the exact declaration file carrying the engine field.
     project_file = root / "pyproject.toml"
-    # Publish the externally visible effect after all required inputs are ready.
+    # Replace only the supported engine token while preserving all other gate configuration.
     project_file.write_text(
         project_file.read_text(encoding="utf-8").replace(
             'doc_engine = "doxygen"',
@@ -450,13 +432,11 @@ def test_legacy_documentation_engine_is_a_migration_failure(
         encoding="utf-8",
     )
 
-    # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
+    # Run declaration plus documentation scheduling to verify migration refusal happens first.
     report = project_gate.run(
         root,
         steps=(project_gate.DocumentationAdapter(),),
     )
-    # Capture result as the completed test legacy documentation engine is a migration failure
-    # Details: outcome for subsequent validation or publication.
     result = report.outcomes[0]
 
     assert result.step_id == "declaration"
@@ -468,11 +448,10 @@ def test_legacy_documentation_engine_is_a_migration_failure(
 
 def test_missing_doxyfile_is_a_configuration_failure(tmp_path: Path) -> None:
     """A declared Doxygen engine cannot pass without its local configuration."""
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Configure documentation selection while deliberately omitting its declared Doxyfile.
     root = _configured_tool_project(tmp_path)
 
-    # Capture result as the completed test missing doxyfile is a configuration failure outcome
-    # Details: for subsequent validation or publication.
+    # Capture the documentation adapter's field-bound configuration failure.
     result = project_gate.run(
         root,
         steps=(project_gate.DocumentationAdapter(),),
@@ -485,12 +464,11 @@ def test_missing_doxyfile_is_a_configuration_failure(tmp_path: Path) -> None:
 
 def test_doxygen_input_cannot_escape_to_a_parent(tmp_path: Path) -> None:
     """Documentation generation cannot borrow an external repository tree."""
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Configure a project whose Doxyfile will point beyond the governed root.
     root = _configured_tool_project(tmp_path)
     _write_doxyfile(root, "../peer")
 
-    # Capture result as the completed test doxygen input cannot escape to a parent outcome for
-    # Details: subsequent validation or publication.
+    # Capture the confinement refusal before any native executable probe.
     result = project_gate.run(
         root,
         steps=(project_gate.DocumentationAdapter(),),
@@ -506,7 +484,7 @@ def test_doxygen_pass_requires_generated_source_pages(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A clean process counts only after output corroborates every Python input."""
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Configure the complete local documentation subject and posture.
     root = _configured_tool_project(tmp_path)
     _write_doxyfile(root)
 
@@ -522,17 +500,16 @@ def test_doxygen_pass_requires_generated_source_pages(
         @param _context governed repository
         @return successful corroborated generation
         """
-        # Preserve the external command representation and its observed completion outcome.
+        # Represent a clean Doxygen process independently of its generated-page witness.
         process = project_gate.CommandExecution(0, "", 1)
-        # Return successful corroborated generation to the caller.
+        # Corroborate every configured Python subject with one synthetic source page.
         return project_gate.DocumentationExecution(process, plan.subjects)
 
     monkeypatch.setattr(project_gate, "_native_executable", lambda _name: "doxygen")
     monkeypatch.setattr(project_gate, "_native_version", lambda _path: "1.17.0")
     monkeypatch.setattr(project_gate, "_execute_doxygen", execute)
 
-    # Capture result as the completed test doxygen pass requires generated source pages outcome
-    # Details: for subsequent validation or publication.
+    # Capture the corroborated documentation adapter result.
     result = project_gate.run(
         root,
         steps=(project_gate.DocumentationAdapter(),),
@@ -548,7 +525,7 @@ def test_doxygen_zero_output_is_not_green(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Doxygen returning zero after filtering every file is a vacuous failure."""
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Configure the same valid documentation inputs used by the positive case.
     root = _configured_tool_project(tmp_path)
     _write_doxyfile(root)
     monkeypatch.setattr(project_gate, "_native_executable", lambda _name: "doxygen")
@@ -562,8 +539,7 @@ def test_doxygen_zero_output_is_not_green(
         ),
     )
 
-    # Capture result as the completed test doxygen zero output is not green outcome for
-    # Details: subsequent validation or publication.
+    # Capture the output-inspection verdict for a clean but vacuous process.
     result = project_gate.run(
         root,
         steps=(project_gate.DocumentationAdapter(),),
@@ -581,29 +557,26 @@ def _write_artifacts(output: Path, name: str = "refpkg", version: str = "1.0.0")
     @param version core-metadata version
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes one minimal wheel and one minimal sdist beneath ``output``.
     """
-    # Publish the externally visible effect after all required inputs are ready.
+    # Create the isolated build-output directory before opening either archive.
     output.mkdir(parents=True, exist_ok=True)
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Encode the shared core metadata bytes both artifact readers will inspect.
     metadata = f"Metadata-Version: 2.4\nName: {name}\nVersion: {version}\n\n".encode()
-    # Compute wheel using output / f"{name}-{version}-py3-none-any.whl" for later write
-    # Details: artifacts logic.
+    # Address the sole wheel filename expected by artifact inventory.
     wheel = output / f"{name}-{version}-py3-none-any.whl"
-    # Compute archive using "w") as archive: for later write artifacts logic.
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Keep the wheel archive open only while writing its one metadata member.
     with zipfile.ZipFile(wheel, mode="w") as archive:
         archive.writestr(f"{name}-{version}.dist-info/METADATA", metadata)
-    # Compute sdist using output / f"{name}-{version}.tar.gz" for later write artifacts logic.
+    # Address the sole source-distribution filename expected by artifact inventory.
     sdist = output / f"{name}-{version}.tar.gz"
-    # Compute archive using "w:gz") as archive: for later write artifacts logic.
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Keep the source archive open only while writing its one root PKG-INFO member.
     with tarfile.open(sdist, mode="w:gz") as archive:
-        # Compute member using tarfile.TarInfo for later write artifacts logic.
+        # Describe the in-memory metadata member before setting its exact byte size.
         member = tarfile.TarInfo(f"{name}-{version}/PKG-INFO")
-        # Update  write artifacts state only after the required source facts are available.
+        # Match tar metadata length to the shared encoded core-metadata body.
         member.size = len(metadata)
+        # Add the fully described member from its in-memory byte stream.
         archive.addfile(member, io.BytesIO(metadata))
 
 
@@ -614,16 +587,12 @@ def test_artifact_build_uses_only_an_isolated_repository_copy(
     """Build input excludes the agent bundle and produces content-bound archives.
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Adds excluded agent content to the configured repository fixture.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Configure a normal build subject before adding ambient agent-only content.
     root = _configured_tool_project(tmp_path)
-    # Compute agent using root / ".agent" for later test artifact build uses only an isolated
-    # Details: repository copy logic.
     agent = root / ".agent"
-    # Publish the externally visible effect after all required inputs are ready.
     agent.mkdir()
-    # Publish the externally visible effect after all required inputs are ready.
     (agent / "ambient.txt").write_text("must not build", encoding="utf-8")
 
     def execute(
@@ -642,25 +611,21 @@ def test_artifact_build_uses_only_an_isolated_repository_copy(
         # Combine the checker's captured diagnostic streams without losing emission text.
         output = Path(command.command[command.command.index("--outdir") + 1])
         _write_artifacts(output)
-        # Return successful build observation to the caller.
         return project_gate.CommandExecution(0, "built", 2)
 
     monkeypatch.setattr(project_gate, "_execute", execute)
     monkeypatch.setattr(project_gate, "_distribution_version", lambda _name: "1.3.0")
 
-    # Capture result as the completed test artifact build uses only an isolated repository copy
-    # Details: outcome for subsequent validation or publication.
+    # Capture the isolated build and artifact-inspection result.
     result = project_gate.run(
         root,
         steps=(project_gate.ArtifactBuildAdapter(),),
     ).outcomes[1]
 
     assert result.status is project_gate.Status.PASS
-    # Compute wheel evidence using dict for later test artifact build uses only an isolated
-    # Details: repository copy logic.
+    # Select the content-bound wheel evidence published by the successful adapter.
     wheel_evidence = dict(result.evidence)["wheel"]
-    # Unpack digest, separator using wheel evidence.partition for later test artifact build uses
-    # Details: only an isolated repository copy logic.
+    # Split its filename and digest marker to validate a complete SHA-256 identity.
     _, separator, digest = wheel_evidence.partition(" sha256:")
     assert separator == " sha256:"
     assert len(digest) == 64
@@ -672,7 +637,7 @@ def test_artifact_metadata_mismatch_is_rejected(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A filename cannot conceal a wheel and sdist for another distribution."""
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Configure a normal project whose synthetic artifacts will publish another identity.
     root = _configured_tool_project(tmp_path)
 
     def execute(
@@ -688,14 +653,12 @@ def test_artifact_metadata_mismatch_is_rejected(
         # Combine the checker's captured diagnostic streams without losing emission text.
         output = Path(command.command[command.command.index("--outdir") + 1])
         _write_artifacts(output, name="other")
-        # Return successful process observation to the caller.
         return project_gate.CommandExecution(0, "built", 2)
 
     monkeypatch.setattr(project_gate, "_execute", execute)
     monkeypatch.setattr(project_gate, "_distribution_version", lambda _name: "1.3.0")
 
-    # Capture result as the completed test artifact metadata mismatch is rejected outcome for
-    # Details: subsequent validation or publication.
+    # Capture the post-build metadata comparison verdict.
     result = project_gate.run(
         root,
         steps=(project_gate.ArtifactBuildAdapter(),),
@@ -709,13 +672,13 @@ def test_unpinned_build_backend_is_rejected(tmp_path: Path) -> None:
     """An isolated build cannot be reproducible when its backend version floats.
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Rewrites the fixture's exact build requirement to a floating range.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Start from complete reproducible build configuration.
     root = _configured_tool_project(tmp_path)
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Address the exact project file carrying build isolation requirements.
     project_file = root / "pyproject.toml"
-    # Publish the externally visible effect after all required inputs are ready.
+    # Weaken only the backend pin while preserving the remaining build posture.
     project_file.write_text(
         project_file.read_text(encoding="utf-8").replace(
             "setuptools==84.0.0",
@@ -724,8 +687,7 @@ def test_unpinned_build_backend_is_rejected(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    # Capture result as the completed test unpinned build backend is rejected outcome for
-    # Details: subsequent validation or publication.
+    # Capture configuration refusal before any build frontend execution.
     result = project_gate.run(
         root,
         steps=(project_gate.ArtifactBuildAdapter(),),
@@ -741,10 +703,9 @@ def test_clean_install_runs_without_a_source_tree_on_pythonpath(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The wheel is installed fresh and imports run under Python isolated mode."""
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Configure the complete build and clean-install sequence.
     root = _configured_tool_project(tmp_path)
-    # Each commands element carries one command value produced or consumed by this operation;
-    # Details: construction order is preserved.
+    # Each commands element is one build, install, or probe argv in execution order.
     commands: list[tuple[str, ...]] = []
 
     def execute(
@@ -757,13 +718,14 @@ def test_clean_install_runs_without_a_source_tree_on_pythonpath(
         @param _root source-free working directory
         @return successful process observation
         """
+        # Retain each prepared build or install argv for later isolation assertions.
         commands.append(command.command)
-        # Select the guarded path only after `'build' in command.command` is satisfied.
+        # Synthetic build execution alone materializes the artifact pair.
         if "build" in command.command:
             # Combine the checker's captured diagnostic streams without losing emission text.
             output = Path(command.command[command.command.index("--outdir") + 1])
             _write_artifacts(output)
-        # Return successful process observation to the caller.
+        # Accept both build and pip commands after their observable fixture effects.
         return project_gate.CommandExecution(0, "ok", 2)
 
     def create(environment: Path) -> Path:
@@ -773,16 +735,15 @@ def test_clean_install_runs_without_a_source_tree_on_pythonpath(
         @return synthetic Windows interpreter
 
         @par Effects
-        Creates, replaces, or removes repository artifacts in implementation order.
+        Creates an empty synthetic interpreter file beneath ``environment``.
         """
-        # Compute interpreter using environment / "Scripts" / "python.exe" for later create
-        # Details: logic.
+        # Address the Windows venv layout used by this cross-platform mocked fixture.
         interpreter = environment / "Scripts" / "python.exe"
-        # Publish the externally visible effect after all required inputs are ready.
+        # Create the scripts directory before materializing its interpreter placeholder.
         interpreter.parent.mkdir(parents=True)
-        # Publish the externally visible effect after all required inputs are ready.
+        # Make interpreter existence observable without invoking a real binary.
         interpreter.write_bytes(b"")
-        # Return synthetic Windows interpreter to the caller.
+        # Return the verified path expected by later probe substitution.
         return interpreter
 
     def execute_timeout(
@@ -799,8 +760,9 @@ def test_clean_install_runs_without_a_source_tree_on_pythonpath(
         @param _timeout finite probe budget
         @return successful process observation
         """
+        # Retain the isolated interpreter argv for source-path and flag assertions.
         commands.append(command)
-        # Return successful process observation to the caller.
+        # Accept the synthetic metadata/import probe.
         return project_gate.CommandExecution(0, "", 1)
 
     monkeypatch.setattr(project_gate, "_execute", execute)
@@ -808,7 +770,7 @@ def test_clean_install_runs_without_a_source_tree_on_pythonpath(
     monkeypatch.setattr(project_gate, "_distribution_version", lambda _name: "1.3.0")
     monkeypatch.setattr(project_gate, "_execute_with_timeout", execute_timeout)
 
-    # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
+    # Execute build followed by clean installation in their real scheduling order.
     report = project_gate.run(
         root,
         steps=(project_gate.ArtifactBuildAdapter(), project_gate.CleanInstallAdapter()),
@@ -816,9 +778,9 @@ def test_clean_install_runs_without_a_source_tree_on_pythonpath(
 
     assert report.outcomes[1].status is project_gate.Status.PASS
     assert report.outcomes[2].status is project_gate.Status.PASS
-    # Preserve the external command representation and its observed completion outcome.
+    # Require at least one post-install command to use Python isolated mode.
     assert any("-I" in command for command in commands)
-    # Preserve the external command representation and its observed completion outcome.
+    # Require every argv element to avoid ambient PYTHONPATH injection.
     assert all("PYTHONPATH" not in argument for command in commands for argument in command)
 
 
@@ -832,13 +794,13 @@ def test_installed_probe_checks_exact_input_and_output(
     @param monkeypatch replaces artifact processes while preserving their bindings
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Adds an exact installed-command probe to the configured project fixture.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Start from complete build and clean-install configuration.
     root = _configured_tool_project(tmp_path)
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Address the project file whose gate table receives the behavior probe.
     project_file = root / "pyproject.toml"
-    # Publish the externally visible effect after all required inputs are ready.
+    # Insert one stdin/stdout/stderr contract immediately after the import probe declaration.
     project_file.write_text(
         project_file.read_text(encoding="utf-8").replace(
             "artifact_imports = ['refpkg']\n",
@@ -849,8 +811,7 @@ def test_installed_probe_checks_exact_input_and_output(
         ),
         encoding="utf-8",
     )
-    # Each observed input element carries one observed input value produced or consumed by this
-    # Details: operation; construction order is preserved.
+    # Each observed_input element is the exact stdin supplied to a probe in execution order.
     observed_input: list[str | None] = []
 
     def execute(
@@ -863,12 +824,12 @@ def test_installed_probe_checks_exact_input_and_output(
         @param _root source-free working directory
         @return successful process observation
         """
-        # Select the guarded path only after `'build' in command.command` is satisfied.
+        # Synthetic build execution alone materializes the artifact pair.
         if "build" in command.command:
             # Combine the checker's captured diagnostic streams without losing emission text.
             output = Path(command.command[command.command.index("--outdir") + 1])
             _write_artifacts(output)
-        # Return successful process observation to the caller.
+        # Accept both build and pip commands after any required fixture effect.
         return project_gate.CommandExecution(0, "ok", 1)
 
     def create(environment: Path) -> Path:
@@ -878,19 +839,19 @@ def test_installed_probe_checks_exact_input_and_output(
         @return synthetic interpreter
 
         @par Effects
-        Creates, replaces, or removes repository artifacts in implementation order.
+        Creates synthetic interpreter and entry-point files beneath ``environment``.
         """
-        # Compute scripts using environment / "Scripts" for later create logic.
+        # Address the scripts directory used for both interpreter and entry-point resolution.
         scripts = environment / "Scripts"
-        # Publish the externally visible effect after all required inputs are ready.
+        # Materialize the venv-local executable directory.
         scripts.mkdir(parents=True)
-        # Compute interpreter using scripts / "python.exe" for later create logic.
+        # Address the synthetic interpreter selected by clean-install probes.
         interpreter = scripts / "python.exe"
-        # Publish the externally visible effect after all required inputs are ready.
+        # Make interpreter existence observable without launching a real binary.
         interpreter.write_bytes(b"")
-        # Publish the externally visible effect after all required inputs are ready.
+        # Materialize the installed console entry point named by project configuration.
         (scripts / "refcmd.exe").write_bytes(b"")
-        # Return synthetic interpreter to the caller.
+        # Return the interpreter path used to anchor all probe executable resolution.
         return interpreter
 
     def execute_timeout(
@@ -909,12 +870,13 @@ def test_installed_probe_checks_exact_input_and_output(
         @param stdin configured public input
         @return captured stream-specific observation
         """
-        # Select the guarded path only after `'-I' in command` is satisfied.
+        # The isolated metadata/import probe remains successful and silent.
         if "-I" in command:
-            # Return captured stream-specific observation to the caller.
+            # Return exact separated empty streams for the import success case.
             return project_gate.CommandExecution(0, "", 1, "", "")
+        # Retain the exact configured stdin passed to the installed command.
         observed_input.append(stdin)
-        # Return captured stream-specific observation to the caller.
+        # Deliberately violate only stdout while keeping status and stderr conformant.
         return project_gate.CommandExecution(0, "sum: 5\n", 1, "sum: 5\n", "")
 
     monkeypatch.setattr(project_gate, "_execute", execute)
@@ -922,7 +884,7 @@ def test_installed_probe_checks_exact_input_and_output(
     monkeypatch.setattr(project_gate, "_distribution_version", lambda _name: "1.3.0")
     monkeypatch.setattr(project_gate, "_execute_with_timeout", execute_timeout)
 
-    # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
+    # Execute the real build/install scheduling with only process boundaries substituted.
     report = project_gate.run(
         root,
         steps=(project_gate.ArtifactBuildAdapter(), project_gate.CleanInstallAdapter()),

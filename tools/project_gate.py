@@ -105,7 +105,7 @@ class ConfigurationUse:
 
         @return a JSON-compatible record
         """
-        # Return a JSON-compatible record to the caller.
+        # Preserve schema field order while converting the immutable field tuple to JSON shape.
         return {"path": self.path, "sha256": self.sha256, "fields": list(self.fields)}
 
 
@@ -176,7 +176,7 @@ class StepResult:
             raise ResultInvariantError(_INAPPLICABLE_REQUIRED)
         # Counts and durations are measured quantities and therefore cannot be negative.
         if self.subjects < 0 or self.duration_ms < 0:
-            # Propagate the localized failure so callers cannot mistake it for success.
+            # Reject corrupt measurement evidence before it reaches reports or baselines.
             raise ResultInvariantError(_NEGATIVE_MEASUREMENT)
 
     @property
@@ -185,7 +185,7 @@ class StepResult:
 
         @return True only for pass and valid not-applicable outcomes
         """
-        # Return true only for pass and valid not-applicable outcomes to the caller.
+        # Only successful execution or justified irrelevance may keep the aggregate green.
         return self.status in {Status.PASS, Status.NOT_APPLICABLE}
 
     def as_dict(self) -> dict[str, object]:
@@ -336,7 +336,7 @@ def _digest(path: Path) -> str:
     @param path local configuration file
     @return lowercase hexadecimal digest
     """
-    # Return lowercase hexadecimal digest to the caller.
+    # Bind later reports to the complete configuration bytes consumed by the step.
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
@@ -346,9 +346,9 @@ def _project_use(root: Path) -> ConfigurationUse:
     @param root governed repository root
     @return configuration record for the v5 declaration
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Address only the exact-root declaration; ancestor discovery is forbidden.
     path = root / "pyproject.toml"
-    # Return configuration record for the v5 declaration to the caller.
+    # Publish the declaration digest beside every field the aggregate gate may consume.
     return ConfigurationUse(
         path="pyproject.toml",
         sha256=_digest(path),
@@ -377,11 +377,11 @@ def _required_unit(declaration: project.Declaration, source: Path) -> project.Un
     @return required unit kind
     @throws DeclarationError when a fallback declaration has no unit
     """
-    # Use the absence path when declaration.unit has no available value.
+    # A v5 aggregate gate must know whether one application or one component is governed.
     if declaration.unit is None:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Translate permissive direct-check fallback into the strict gate declaration diagnostic.
         raise project.DeclarationError(_MISSING_UNIT_CODE, source, _MISSING_UNIT_DETAIL)
-    # Return required unit kind to the caller.
+    # Return the explicit authored unit kind without inferring repository topology.
     return declaration.unit
 
 
@@ -420,7 +420,6 @@ def _load_context(root: Path, scratch: Path) -> tuple[StepResult, GateContext | 
             summary=f"exact-root v5 declaration refused: {problem}",
             duration_ms=duration,
         )
-        # Return declaration outcome and context, or no context after refusal to the caller.
         return result, None
 
     # Measure accepted loading before constructing the shared immutable context.
@@ -438,7 +437,6 @@ def _load_context(root: Path, scratch: Path) -> tuple[StepResult, GateContext | 
         tool="agent-discipline declaration schema v5",
         duration_ms=duration,
     )
-    # Return declaration outcome and context, or no context after refusal to the caller.
     return result, GateContext(root, scratch, declared_unit, declaration, document, use)
 
 
@@ -454,7 +452,6 @@ def _bounded_output(findings: Sequence[Finding]) -> str:
     rendered = [finding.render() for finding in findings[:50]]
     if len(findings) > len(rendered):
         rendered.append(f"... {len(findings) - len(rendered)} additional finding(s)")
-    # Return at most the first fifty rendered findings to the caller.
     return "\n".join(rendered)
 
 
@@ -469,7 +466,6 @@ def _run_discipline_checks(context: GateContext) -> StepResult:
     # Preserve paths element values in deterministic source order.
     paths = list(context.declaration.source_paths())
     checks = discover()
-    # Each findings element is one emitted diagnostic mapping; checker order is preserved.
     findings: list[Finding] = []
     for check in checks:
         # Inject the validated declaration before running each check over governed paths.
@@ -478,7 +474,7 @@ def _run_discipline_checks(context: GateContext) -> StepResult:
     source_files = len(governed_paths(context.declaration, paths))
     duration = round((time.perf_counter() - started) * 1000)
     if source_files == 0:
-        # Return pass over a non-empty subject or the emitted findings to the caller.
+        # Refuse an otherwise clean checker run that examined no governed Python file.
         return StepResult(
             step_id="discipline-checks",
             rules=("DOC-003", "FLOW-007"),
@@ -491,9 +487,8 @@ def _run_discipline_checks(context: GateContext) -> StepResult:
             tool=f"{len(checks)} shipped checks",
             duration_ms=duration,
         )
-    # Handle the non-empty or enabled findings state.
     if findings:
-        # Return pass over a non-empty subject or the emitted findings to the caller.
+        # Publish the bounded complete-check failure after a non-empty subject was established.
         return StepResult(
             step_id="discipline-checks",
             rules=("DOC-003", "FLOW-007"),
@@ -507,7 +502,6 @@ def _run_discipline_checks(context: GateContext) -> StepResult:
             duration_ms=duration,
             output=_bounded_output(findings),
         )
-    # Return pass over a non-empty subject or the emitted findings to the caller.
     return StepResult(
         step_id="discipline-checks",
         rules=("DOC-003", "FLOW-007"),
@@ -538,7 +532,7 @@ class DisciplineChecksAdapter:
         @param context exact governed repository inputs
         @return aggregate custom-check result
         """
-        # Return aggregate custom-check result to the caller.
+        # Delegate to the shared check family while preserving this adapter's canonical metadata.
         return _run_discipline_checks(context)
 
 
@@ -637,7 +631,7 @@ def _probe_error(field: str, detail: str) -> ConfigurationProbeError:
     @param detail actionable refusal reason
     @return typed refusal
     """
-    # Return typed refusal to the caller.
+    # Keep field identity and repair detail structured for adapter translation.
     return ConfigurationProbeError(field, detail)
 
 
@@ -649,7 +643,7 @@ def _raise_probe(field: str, detail: str) -> Never:
     @return never; always raises
     @throws ConfigurationProbeError unconditionally
     """
-    # Propagate the localized failure so callers cannot mistake it for success.
+    # Route unconditional refusals through the same typed probe constructor.
     raise _probe_error(field, detail)
 
 
@@ -675,16 +669,16 @@ def _table(document: Mapping[str, object], path: tuple[str, ...]) -> Mapping[str
         if not isinstance(current, Mapping) or segment not in current:
             # Render the traversed prefix so nested absence is localized exactly.
             field = ".".join(traversed)
-            # Propagate the localized failure so callers cannot mistake it for success.
+            # Stop at the first missing prefix so the diagnostic names the narrowest cause.
             raise _probe_error(field, "required table is absent")
         # Preserve the documentation-stripped behavior fingerprint used for comparison.
         current = current[segment]
     if not isinstance(current, Mapping):
         # Name the complete path whose terminal value is not a table.
         field = ".".join(path)
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Refuse scalar terminal values before exposing mapping access to callers.
         raise _probe_error(field, "expected a table")
-    # Return nested table to the caller.
+    # Narrow the fully traversed terminal value after mapping validation.
     return cast("Mapping[str, object]", current)
 
 
@@ -700,11 +694,13 @@ def _string_list(value: object, field: str) -> tuple[str, ...]:
     values: object = [value] if isinstance(value, str) else value
     if not isinstance(values, list) or not values:
         # Refuse absent, empty, or non-list declaration shapes uniformly.
+        # Reject absence, emptiness, and scalar non-text using one stable field diagnostic.
         raise _probe_error(field, "expected a non-empty string array")
     if not all(isinstance(item, str) and item.strip() for item in values):
         # Every element must be a nonblank string before tuple normalization.
+        # Refuse the complete array when any target cannot identify a repository path.
         raise _probe_error(field, "every target must be a non-empty string")
-    # Return non-empty strings to the caller.
+    # Freeze the validated targets in declaration order for explicit argv construction.
     return tuple(cast("list[str]", values))
 
 
@@ -727,27 +723,27 @@ def _local_targets(
     normalized: list[str] = []
     # Collect unique files element values; their order is deliberately unordered.
     files: set[Path] = set()
-    # Treat the current value as the candidate element consumed by the enclosing transformation.
-    # Advance local targets through the current input element in declared order.
     for value in values:
         # Retain the immutable source representation consumed by subsequent analysis.
         raw = Path(value)
         candidate = (context.root / raw).resolve()
+        # Absolute and parent-relative targets could make the gate inspect another repository.
         if raw.is_absolute() or not candidate.is_relative_to(context.root):
-            # Propagate the localized failure so callers cannot mistake it for success.
+            # Refuse before testing existence outside the governed root.
             raise _probe_error(field, f"target {value!r} escapes the governed repository")
         # Select the existing-artifact path only when `not candidate.exists()` is satisfied.
         if not candidate.exists():
-            # Propagate the localized failure so callers cannot mistake it for success.
+            # Reject stale configuration instead of silently narrowing the scan.
             raise _probe_error(field, f"target {value!r} does not exist")
         normalized.append(candidate.relative_to(context.root).as_posix())
         candidates = candidate.rglob("*.py") if candidate.is_dir() else (candidate,)
         # Resolve the repository-confined path used by this operation before filesystem access.
         files.update(path.resolve() for path in candidates if path.is_file())
+    # A syntactically valid target set must still provide a non-vacuous Python subject.
     if not files:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Refuse success over empty directories and non-Python files.
         raise _probe_error(field, "configured targets contain no Python files")
-    # Return normalized command targets and distinct Python file count to the caller.
+    # Deduplicate overlapping argv paths while reporting the distinct Python file count.
     return tuple(dict.fromkeys(normalized)), len(files)
 
 
@@ -762,7 +758,7 @@ def _project_configuration(
         Each element names one consumed TOML field, in probe order.
     @return content-bound configuration record
     """
-    # Return content-bound configuration record to the caller.
+    # Reuse the exact project digest while limiting evidence to fields this probe read.
     return ConfigurationUse(
         path=context.declaration_use.path,
         sha256=context.declaration_use.sha256,
@@ -788,24 +784,25 @@ def _relative_configuration_file(
     """
     # Require a nonblank portable relative filename at the configuration boundary.
     if not isinstance(value, str) or not value.strip():
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Reject absence and blank paths before filesystem resolution.
         raise _probe_error(field, "expected a non-empty repository-relative file")
     # Retain the immutable source representation consumed by subsequent analysis.
     raw = Path(value)
     candidate = (context.root / raw).resolve()
+    # Absolute and parent-relative configuration files could borrow sibling policy.
     if raw.is_absolute() or not candidate.is_relative_to(context.root):
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Refuse before reading bytes outside the governed repository.
         raise _probe_error(field, f"file {value!r} escapes the governed repository")
     # Select the regular-file path only when `not candidate.is_file()` is satisfied.
     if not candidate.is_file():
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Reject stale or directory-valued declarations at the configuration boundary.
         raise _probe_error(field, f"file {value!r} does not exist")
     use = ConfigurationUse(
         path=candidate.relative_to(context.root).as_posix(),
         sha256=_digest(candidate),
         fields=tuple(consumed_fields),
     )
-    # Return absolute file and content-bound use record to the caller.
+    # Return both the safe absolute path and its content-bound evidence record.
     return candidate, use
 
 
@@ -815,7 +812,7 @@ def _gate_table(context: GateContext) -> Mapping[str, object]:
     @param context decoded exact-root project file
     @return ``tool.agent-discipline-gate`` table
     """
-    # Return ``tool.agent-discipline-gate`` table to the caller.
+    # Require the dedicated gate table rather than deriving execution policy from defaults.
     return _table(context.pyproject, ("tool", "agent-discipline-gate"))
 
 
@@ -837,7 +834,7 @@ def _require_value(
     """
     # Compare the declared scalar with the exact discipline-required value.
     if table.get(key) != expected:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Report both required and observed values at the full dotted field.
         raise _probe_error(field, f"expected {expected!r}, found {table.get(key)!r}")
 
 
@@ -856,7 +853,7 @@ def _prepare_ruff(context: GateContext) -> PreparedCommand:
         "tool.ruff.src",
     )
     use = _project_configuration(context, ("tool.ruff", "tool.ruff.src"))
-    # Return explicit Ruff command to the caller.
+    # Construct explicit Ruff argv only after configuration and non-vacuity probes succeed.
     return PreparedCommand(
         command=(
             sys.executable,
@@ -880,9 +877,9 @@ def _declared_source_targets(context: GateContext) -> tuple[str, ...]:
     @param context exact governed repository
     @return non-empty POSIX paths
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
-    # Return non-empty POSIX paths to the caller.
+    # Preserve declared root order while converting safe absolute paths to portable argv values.
     return tuple(
+        # Each path contributes one repository-relative POSIX source target.
         path.resolve().relative_to(context.root).as_posix()
         for path in context.declaration.source_paths()
     )
@@ -914,7 +911,6 @@ def _prepare_mypy(context: GateContext) -> PreparedCommand:
         context,
         ("tool.mypy", "tool.mypy.strict", "tool.mypy.files"),
     )
-    # Return explicit mypy command to the caller.
     return PreparedCommand(
         command=(
             sys.executable,
@@ -953,7 +949,6 @@ def _prepare_pyright(context: GateContext) -> PreparedCommand:
         context,
         ("tool.pyright", "tool.pyright.typeCheckingMode", "tool.pyright.include"),
     )
-    # Return explicit pyright command requesting machine-readable output to the caller.
     return PreparedCommand(
         command=(
             sys.executable,
@@ -1012,7 +1007,6 @@ def _prepare_pytest(context: GateContext) -> PreparedCommand:
             "tool.pytest.ini_options.addopts",
         ),
     )
-    # Return explicit pytest command to the caller.
     return PreparedCommand(
         command=(
             sys.executable,
@@ -1109,7 +1103,6 @@ def _prepare_mutation(context: GateContext) -> PreparedCommand:
             "tool.agent-discipline-gate.mutation.maximum_survival",
         ),
     )
-    # Return explicit portable mutation-gate command to the caller.
     return PreparedCommand(
         command=(
             sys.executable,
@@ -1133,7 +1126,7 @@ def _positive_count(value: object) -> bool:
     @param value decoded JSON value
     @return true only for a positive subject count
     """
-    # Return true only for a positive subject count to the caller.
+    # Exclude JSON booleans while requiring actual work to be represented by a positive count.
     return isinstance(value, int) and not isinstance(value, bool) and value > 0
 
 
@@ -1157,8 +1150,9 @@ def _mutation_evaluation(
     except json.JSONDecodeError:
         # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
         report = None
+    # An unparsable child report cannot substantiate mutation success.
     if not isinstance(report, Mapping):
-        # Return pass or exact mutation failure to the caller.
+        # Report the missing structural evidence independently of process status.
         return Evaluation(
             "MUTATION-006_REPORT",
             "mutation gate emitted no parseable JSON report",
@@ -1172,20 +1166,20 @@ def _mutation_evaluation(
     if execution.returncode != 0 or status != "pass":
         # Prefer a mutation-specific diagnostic emitted by the child, falling back to gate policy.
         code = diagnostic if isinstance(diagnostic, str) else command.failure_diagnostic
-        # Return pass or exact mutation failure to the caller.
         return Evaluation(
             code,
             str(report.get("summary", "mutation gate failed without a summary")),
             str(report.get("output", _tail(execution.output))),
         )
+    # A zero-mutant or zero-domain success is vacuous even when the child exits cleanly.
     if not _positive_count(mutants) or not _positive_count(domains):
-        # Return pass or exact mutation failure to the caller.
+        # Refuse the report before it can satisfy the zero-survivor policy.
         return Evaluation(
             "MUTATION-007_NO_MUTANTS",
             "mutation gate reported success without positive mutant and domain counts",
             _tail(execution.output),
         )
-    # Return pass or exact mutation failure to the caller.
+    # Publish success only after structured status and both non-vacuity counts hold.
     return Evaluation(
         None,
         f"Cosmic Ray killed all {mutants} mutant(s) across {domains} domain path(s)",
@@ -1218,9 +1212,9 @@ def _import_root_present(
         )
         for source in source_roots
     ):
-        # Return the completed  import root present result to its caller.
+        # Stop after the first declared source root proves the import package exists locally.
         return
-    # Propagate the localized failure so callers cannot mistake it for success.
+    # Refuse contract configuration that names a package outside all governed source roots.
     raise _probe_error(
         field,
         f"root package {package!r} is absent from declared source roots {source_roots}",
@@ -1241,15 +1235,16 @@ def _prepare_import_contracts(context: GateContext) -> PreparedCommand:
         "tool.agent-discipline-gate.import_contracts",
         ("tool.importlinter.root_packages", "tool.importlinter.contracts"),
     )
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Translate configured-file read and TOML failures to the exact bound config path.
     try:
         # Decode the configured contract document before constructing its explicit command.
         document = cast(
             "Mapping[str, object]",
             tomllib.loads(config.read_text(encoding="utf-8")),
         )
+    # Preserve the native parser failure as the cause of the configuration refusal.
     except (OSError, tomllib.TOMLDecodeError) as problem:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Report the content-bound configuration path that could not be decoded.
         raise _probe_error(config_use.path, f"cannot parse TOML: {problem}") from problem
     table = _table(document, ("tool", "importlinter"))
     packages = _string_list(
@@ -1258,14 +1253,16 @@ def _prepare_import_contracts(context: GateContext) -> PreparedCommand:
     )
     contracts_field = "tool.importlinter.contracts"
     contracts = table.get("contracts")
+    # At least one explicit contract is required to avoid a vacuous import-linter pass.
     if not isinstance(contracts, list) or not contracts:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Reject absent, scalar, and empty contract declarations uniformly.
         raise _probe_error(
             contracts_field,
             "expected one or more contract tables",
         )
+    # Every array entry must be a complete contract table rather than a scalar placeholder.
     if not all(isinstance(contract, Mapping) for contract in contracts):
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Refuse the whole contract set when any member cannot be inspected structurally.
         raise _probe_error(contracts_field, "every contract must be a table")
     source_roots = _declared_source_targets(context)
     for package in packages:
@@ -1281,7 +1278,7 @@ def _prepare_import_contracts(context: GateContext) -> PreparedCommand:
     )
     # Retain the immutable source representation consumed by subsequent analysis.
     source_arguments = tuple(item for source in source_roots for item in ("--source-root", source))
-    # Return explicit portable wrapper command to the caller.
+    # Construct the wrapper argv with every governed source root and minimum contract count explicit.
     return PreparedCommand(
         command=(
             sys.executable,
@@ -1321,20 +1318,23 @@ def _doxygen_values(text: str, key: str, field: str) -> tuple[str, ...]:
     matches = [
         match.group(2) for match in _DOXYGEN_ASSIGNMENT.finditer(text) if match.group(1) == key
     ]
+    # Duplicate or absent assignments make the effective Doxygen posture ambiguous.
     if len(matches) != 1:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Require one authoritative single-line value for each consumed key.
         raise _probe_error(field, f"expected exactly one {key} assignment")
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
         # Parse the sole Doxyfile assignment with shell quoting and inline comments honored.
         values = tuple(shlex.split(matches[0], comments=True, posix=True))
+    # Preserve malformed quoting detail from the shell-like assignment parser.
     except ValueError as problem:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Translate tokenization failure to the exact Doxyfile field.
         raise _probe_error(field, f"cannot parse {key}: {problem}") from problem
+    # Empty tokenization means the assignment exists but declares no usable value.
     if not values:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Refuse empty assignments instead of applying Doxygen defaults.
         raise _probe_error(field, f"{key} has no value")
-    # Return shell-like tokens after the equals sign to the caller.
+    # Preserve authored token order for target and posture validation.
     return values
 
 
@@ -1361,26 +1361,30 @@ def _prepare_doxygen(context: GateContext) -> DoxygenPlan:
         input_field,
     )
     declared = _declared_source_targets(context)
+    # Documentation input coverage must equal, not merely overlap, governed source roots.
     if set(inputs) != set(declared):
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Refuse omitted or extra roots so generated pages describe exactly the governed source.
         raise _probe_error(
             input_field,
             f"expected declared source roots {declared}, found {inputs}",
         )
     patterns_field = "Doxyfile.FILE_PATTERNS"
     patterns = _doxygen_values(text, "FILE_PATTERNS", patterns_field)
+    # Python sources must be eligible for generation under the configured file patterns.
     if "*.py" not in patterns:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Reject configurations that could scan roots yet silently ignore every Python file.
         raise _probe_error(patterns_field, "*.py is required")
     warning_field = "Doxyfile.WARN_AS_ERROR"
     warnings = _doxygen_values(text, "WARN_AS_ERROR", warning_field)
+    # Warning posture must fail the process rather than merely log documentation defects.
     if warnings != ("FAIL_ON_WARNINGS",):
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Refuse weaker or ambiguous warning modes.
         raise _probe_error(warning_field, "expected FAIL_ON_WARNINGS")
     html_field = "Doxyfile.GENERATE_HTML"
     html = _doxygen_values(text, "GENERATE_HTML", html_field)
+    # HTML output is required because source-page counts provide the non-vacuity witness.
     if html != ("YES",):
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Refuse configurations that cannot produce the inspected artifact family.
         raise _probe_error(html_field, "expected YES")
     gate_use = _project_configuration(
         context,
@@ -1390,7 +1394,7 @@ def _prepare_doxygen(context: GateContext) -> DoxygenPlan:
             "tool.agent-discipline-gate.doxyfile",
         ),
     )
-    # Return configuration-probed build plan to the caller.
+    # Publish the probed Doxyfile, both configuration bindings, and expected source-page count.
     return DoxygenPlan(doxyfile, (gate_use, doxyfile_use), subjects)
 
 
@@ -1400,7 +1404,7 @@ def _native_executable(name: str) -> str | None:
     @param name executable basename
     @return absolute or launchable path, or None
     """
-    # Return absolute or launchable path, or None to the caller.
+    # Delegate platform path resolution without inventing repository-local fallbacks.
     return shutil.which(name)
 
 
@@ -1423,14 +1427,15 @@ def _native_version(executable: str) -> str:
             check=False,
             timeout=30,
         )
+    # Preserve launch and timeout detail from the native version probe.
     except (OSError, subprocess.TimeoutExpired) as problem:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Translate host-process failure to the adapter's execution boundary.
         raise CommandExecutionError(str(problem)) from problem
     # Enter the failure path only when the subprocess reports a nonzero status.
     if finished.returncode != 0:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Treat an unversionable executable as unusable even though path lookup succeeded.
         raise CommandExecutionError(_tail(finished.stdout + finished.stderr))
-    # Return first non-empty version line to the caller.
+    # Retain the final non-empty tool version line for report identity.
     return _last_line(finished.stdout + finished.stderr)
 
 
@@ -1468,8 +1473,9 @@ def _execute_doxygen(
             check=False,
             timeout=600,
         )
+    # Preserve launch and timeout detail from the native documentation process.
     except (OSError, subprocess.TimeoutExpired) as problem:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Translate host-process failure to the documentation adapter boundary.
         raise CommandExecutionError(str(problem)) from problem
     duration = round((time.perf_counter() - started) * 1000)
     # Preserve the external command representation and its observed completion outcome.
@@ -1478,7 +1484,7 @@ def _execute_doxygen(
         finished.stdout + finished.stderr,
         duration,
     )
-    # Return process observation and generated page count to the caller.
+    # Count generated source pages beneath the isolated output tree as the non-vacuity witness.
     return DocumentationExecution(process, len(list(output.rglob("*_source.html"))))
 
 
@@ -1497,7 +1503,7 @@ def _documentation_configuration_failure(
     """
     # Bind a configuration refusal to the exact project field and file digest that caused it.
     use = _project_configuration(context, (problem.field,))
-    # Return red result to the caller.
+    # Publish a field-bound red result without attempting Doxygen execution.
     return StepResult(
         step_id="documentation",
         rules=rules,
@@ -1524,14 +1530,15 @@ def _run_doxygen_documentation(
     try:
         # Prepare the complete Doxygen plan before probing host availability or version.
         plan = _prepare_doxygen(context)
+    # Configuration refusal precedes host-tool probing and carries exact field evidence.
     except ConfigurationProbeError as problem:
-        # Return explicit Doxygen outcome to the caller.
+        # Translate the typed refusal to the documentation step's stable diagnostic.
         return _documentation_configuration_failure(context, rules, problem)
     # Resolve the qualified native Doxygen executable required by this gate.
     executable = _native_executable("doxygen")
     # Use the absence path when executable has no available value.
     if executable is None:
-        # Return explicit Doxygen outcome to the caller.
+        # Distinguish unavailable supported tooling from malformed repository configuration.
         return StepResult(
             step_id="documentation",
             rules=rules,
@@ -1550,8 +1557,9 @@ def _run_doxygen_documentation(
         version = _native_version(executable)
         # Preserve the external command representation and its observed completion outcome.
         execution = _execute_doxygen(executable, plan, context)
+    # Version or generation launch failures share one bounded execution diagnostic.
     except CommandExecutionError as problem:
-        # Return explicit Doxygen outcome to the caller.
+        # Preserve the last known tool identity and probed configuration in the red result.
         return StepResult(
             step_id="documentation",
             rules=rules,
@@ -1568,7 +1576,7 @@ def _run_doxygen_documentation(
     process = execution.process
     # Enter the failure path only when the subprocess reports a nonzero status.
     if process.returncode != 0:
-        # Return explicit Doxygen outcome to the caller.
+        # Convert Doxygen warnings and nonzero generation status to a build failure.
         return StepResult(
             step_id="documentation",
             rules=rules,
@@ -1583,8 +1591,9 @@ def _run_doxygen_documentation(
             duration_ms=process.duration_ms,
             output=_tail(process.output),
         )
+    # Require at least one generated source page for every configured Python subject.
     if execution.pages < plan.subjects:
-        # Return explicit Doxygen outcome to the caller.
+        # Reject clean process status when output inspection proves incomplete generation.
         return StepResult(
             step_id="documentation",
             rules=rules,
@@ -1602,7 +1611,7 @@ def _run_doxygen_documentation(
             duration_ms=process.duration_ms,
             output=_tail(process.output),
         )
-    # Return explicit Doxygen outcome to the caller.
+    # Publish success only after configuration, version, process, and output probes all hold.
     return StepResult(
         step_id="documentation",
         rules=rules,
@@ -1636,7 +1645,7 @@ class DocumentationAdapter:
         """
         # Limit native documentation execution to the two qualified development legs.
         if platform.system() not in {"Windows", "Linux"}:
-            # Return explicit build, inapplicability, or support outcome to the caller.
+            # Report unsupported host explicitly; required documentation is never skipped green.
             return StepResult(
                 step_id=self.step_id,
                 rules=self.rules,
@@ -1645,7 +1654,7 @@ class DocumentationAdapter:
                 diagnostic_id="GATE-DOCUMENTATION-005_PLATFORM",
                 summary=f"documentation builds are not release-supported on {platform.system()}",
             )
-        # Return explicit build, inapplicability, or support outcome to the caller.
+        # Delegate supported hosts to the complete Doxygen-specific proof sequence.
         return _run_doxygen_documentation(context, self.rules)
 
 
@@ -1659,7 +1668,7 @@ def _artifact_error(detail: str) -> ArtifactError:
     @param detail actionable artifact inconsistency
     @return typed refusal
     """
-    # Return typed refusal to the caller.
+    # Preserve artifact inconsistencies under one adapter-specific exception type.
     return ArtifactError(detail)
 
 
@@ -1757,15 +1766,12 @@ def _copy_isolated(root: Path, destination: Path) -> int:
     @return copied regular-file count
     @throws ArtifactError when a symlink could preserve ambient filesystem reach
     """
-    # Preserve directory, files, names element values in deterministic source order.
-    # Advance copy isolated through the current input element in declared order.
+    # Walk each directory with mutable child names and regular-file names in filesystem order.
     for directory, names, files in os.walk(root):
         # Prune package-excluded directories before traversal can copy their descendants.
         names[:] = [name for name in names if name not in _ISOLATION_EXCLUDES]
         # Preserve the documentation-stripped behavior fingerprint used for comparison.
         current = Path(directory)
-        # Normalize the current repository path to its portable baseline key spelling.
-        # Advance copy isolated through the current input element in declared order.
         for name in (*names, *files):
             # Reject every symbolic link before copying an isolation tree with ambiguous targets.
             path = current / name
@@ -1773,16 +1779,17 @@ def _copy_isolated(root: Path, destination: Path) -> int:
                 # Name the repository-relative link and required materialization repair.
                 relative = path.relative_to(root).as_posix()
                 detail = f"build isolation refuses symlink {relative!r}; materialize or package it"
-                # Propagate the localized failure so callers cannot mistake it for success.
                 raise _artifact_error(detail)
     shutil.copytree(
         root,
         destination,
         ignore=shutil.ignore_patterns(*_ISOLATION_EXCLUDES),
     )
-    # Resolve the repository-confined path used by this operation before filesystem access.
-    # Return copied regular-file count to the caller.
-    return sum(1 for path in destination.rglob("*") if path.is_file())
+    # Count every copied regular file so artifact evidence records a non-empty isolated subject.
+    return sum(
+        # Each path contributes one subject only when the copied entry is a regular file.
+        1 for path in destination.rglob("*") if path.is_file()
+    )
 
 
 def _project_identity(context: GateContext) -> tuple[str, str]:
@@ -1794,18 +1801,19 @@ def _project_identity(context: GateContext) -> tuple[str, str]:
     """
     # Read declared distribution name and version from the exact-root project table.
     table = _table(context.pyproject, ("project",))
-    # Normalize the current repository path to its portable baseline key spelling.
     name = table.get("name")
     version = table.get("version")
     name_field = "project.name"
     version_field = "project.version"
+    # Distribution name must be statically available for artifact identity comparison.
     if not isinstance(name, str) or not name.strip():
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Reject dynamic, missing, and blank identity values at the project field.
         raise _probe_error(name_field, "expected a non-empty distribution name")
+    # Distribution version must likewise be static and non-empty.
     if not isinstance(version, str) or not version.strip():
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Reject dynamic or blank versions before invoking the build backend.
         raise _probe_error(version_field, "expected a static non-empty version")
-    # Return name and version to the caller.
+    # Return normalized authored identity components without canonicalizing punctuation yet.
     return name.strip(), version.strip()
 
 
@@ -1832,9 +1840,9 @@ def _validate_build_system(context: GateContext) -> None:
         for requirement in requirements
         if _EXACT_BUILD_REQUIREMENT.fullmatch(requirement) is None
     ]
-    # Handle the non-empty or enabled unpinned state.
+    # Any inexact build requirement permits isolated backend resolution to drift.
     if unpinned:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Report every offending requirement in declaration order for direct repair.
         raise _probe_error(
             requirements_field,
             f"every build requirement must use one exact == version; found {unpinned}",
@@ -1847,7 +1855,7 @@ def _prepare_build(context: GateContext) -> tuple[BuildPlan, PreparedCommand]:
     @param context exact governed repository
     @return build plan and explicit PEP 517 command
     """
-    # Normalize the current repository path to its portable baseline key spelling.
+    # Read the static distribution name and version that both artifacts must publish.
     name, version = _project_identity(context)
     _validate_build_system(context)
     # Retain the immutable source representation consumed by subsequent analysis.
@@ -1860,7 +1868,6 @@ def _prepare_build(context: GateContext) -> tuple[BuildPlan, PreparedCommand]:
     except ArtifactError as problem:
         # Bind isolation refusal to the repository build-input field.
         build_inputs_field = "repository.build_inputs"
-        # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(build_inputs_field, str(problem)) from problem
     use = _project_configuration(
         context,
@@ -1890,7 +1897,7 @@ def _prepare_build(context: GateContext) -> tuple[BuildPlan, PreparedCommand]:
         failure_diagnostic="GATE-BUILD-003_FAILURE",
         subject_label="isolated repository files",
     )
-    # Return build plan and explicit PEP 517 command to the caller.
+    # Return the isolated build plan beside the only command permitted to populate its output.
     return plan, command
 
 
@@ -1900,7 +1907,7 @@ def _canonical_distribution(name: str) -> str:
     @param name PEP 503-like distribution name
     @return lowercase name with one hyphen per punctuation run
     """
-    # Return lowercase name with one hyphen per punctuation run to the caller.
+    # Apply the shared comparison normalization used across wheel, sdist, and project names.
     return re.sub(r"[-_.]+", "-", name).lower()
 
 
@@ -1914,15 +1921,13 @@ def _metadata_identity(content: bytes, source: str) -> tuple[str, str]:
     """
     # Parse package metadata bytes under the email-message grammar used by wheel and sdist specs.
     message = BytesParser(policy=email_policy).parsebytes(content)
-    # Normalize the current repository path to its portable baseline key spelling.
     name = message.get("Name")
     version = message.get("Version")
     if not name or not version:
         # Name the artifact member whose core distribution identity is incomplete.
         detail = f"{source} has no complete Name/Version metadata"
-        # Propagate the localized failure so callers cannot mistake it for success.
         raise _artifact_error(detail)
-    # Return distribution name and version to the caller.
+    # Return raw metadata identity for caller-side canonical name comparison.
     return str(name), str(version)
 
 
@@ -1942,14 +1947,12 @@ def _wheel_identity(path: Path) -> tuple[str, str]:
             if len(members) != 1:
                 # Multiple or absent metadata members make artifact identity ambiguous.
                 detail = f"{path.name} contains {len(members)} METADATA files"
-                # Propagate the localized failure so callers cannot mistake it for success.
                 raise _artifact_error(detail)
-            # Return distribution name and version to the caller.
+            # Parse the sole wheel metadata member without importing artifact code.
             return _metadata_identity(archive.read(members[0]), f"{path.name}:{members[0]}")
     except (OSError, zipfile.BadZipFile, KeyError) as problem:
         # Translate archive and member-read failures to one artifact diagnostic.
         detail = f"cannot read wheel {path.name}: {problem}"
-        # Propagate the localized failure so callers cannot mistake it for success.
         raise _artifact_error(detail) from problem
 
 
@@ -1971,16 +1974,14 @@ def _read_sdist_identity(path: Path) -> tuple[str, str]:
         if len(members) != 1:
             # Multiple or absent root metadata members make source identity ambiguous.
             detail = f"{path.name} contains {len(members)} root PKG-INFO files"
-            # Propagate the localized failure so callers cannot mistake it for success.
             raise _artifact_error(detail)
         stream = archive.extractfile(members[0])
         # Use the absence path when stream has no available value.
         if stream is None:
             # A declared metadata member without readable bytes cannot prove identity.
             detail = f"cannot read {path.name}:{members[0].name}"
-            # Propagate the localized failure so callers cannot mistake it for success.
             raise _artifact_error(detail)
-        # Return distribution name and version to the caller.
+        # Parse the sole root metadata member without extracting archive contents.
         return _metadata_identity(stream.read(), f"{path.name}:{members[0].name}")
 
 
@@ -1993,12 +1994,11 @@ def _sdist_identity(path: Path) -> tuple[str, str]:
     """
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
-        # Return distribution name and version to the caller.
+        # Delegate membership and metadata validation to the already-openable archive helper.
         return _read_sdist_identity(path)
     except (OSError, tarfile.TarError) as problem:
         # Translate tar decoding failure to the stable artifact diagnostic family.
         detail = f"cannot read sdist {path.name}: {problem}"
-        # Propagate the localized failure so callers cannot mistake it for success.
         raise _artifact_error(detail) from problem
 
 
@@ -2015,7 +2015,6 @@ def _validate_artifacts(plan: BuildPlan) -> BuiltArtifacts:
     if len(wheels) != 1 or len(sdists) != 1:
         # Require one artifact of each published format before comparing identities.
         detail = f"expected one wheel and one sdist, found {len(wheels)} and {len(sdists)}"
-        # Propagate the localized failure so callers cannot mistake it for success.
         raise _artifact_error(detail)
     # Read both artifact identities independently before comparing them with project metadata.
     wheel_identity = _wheel_identity(wheels[0])
@@ -2031,9 +2030,8 @@ def _validate_artifacts(plan: BuildPlan) -> BuiltArtifacts:
     if observed != (expected, expected):
         # Report all expected and observed identities together so cross-format drift is visible.
         detail = f"expected artifact identity {expected}, found {observed}"
-        # Propagate the localized failure so callers cannot mistake it for success.
         raise _artifact_error(detail)
-    # Return validated artifact paths and identity to the caller.
+    # Publish validated paths and their shared canonical identity for downstream install proof.
     return BuiltArtifacts(wheels[0], sdists[0], expected[0], expected[1])
 
 
@@ -2057,8 +2055,9 @@ class ArtifactBuildAdapter:
         try:
             # Preserve the external command representation and its observed completion outcome.
             plan, command = _prepare_build(context)
+        # Translate project or isolation configuration refusal before starting the backend.
         except ConfigurationProbeError as problem:
-            # Return explicit build outcome to the caller.
+            # Bind the red result to the exact project field consumed by the failed probe.
             return StepResult(
                 step_id=self.step_id,
                 rules=self.rules,
@@ -2073,8 +2072,9 @@ class ArtifactBuildAdapter:
             # Resolve the installed build frontend version before executing artifact creation.
             version = _distribution_version("build")
         # Translate the expected failure into this mechanism's stable diagnostic path.
+        # Missing build frontend is explicit unsupported tooling on a supported platform.
         except importlib.metadata.PackageNotFoundError:
-            # Return explicit build outcome to the caller.
+            # Preserve the prepared build command and subject evidence without executing it.
             return StepResult(
                 step_id=self.step_id,
                 rules=self.rules,
@@ -2090,8 +2090,9 @@ class ArtifactBuildAdapter:
         try:
             # Preserve the external command representation and its observed completion outcome.
             execution = _execute(command, context.root)
+        # Translate backend launch or timeout failure separately from a nonzero build result.
         except CommandExecutionError as problem:
-            # Return explicit build outcome to the caller.
+            # Publish bounded execution refusal with the observed build tool identity.
             return StepResult(
                 step_id=self.step_id,
                 rules=self.rules,
@@ -2106,7 +2107,7 @@ class ArtifactBuildAdapter:
             )
         # Enter the failure path only when the subprocess reports a nonzero status.
         if execution.returncode != 0:
-            # Return explicit build outcome to the caller.
+            # Preserve backend output because packaging findings are actionable repository defects.
             return StepResult(
                 step_id=self.step_id,
                 rules=self.rules,
@@ -2125,8 +2126,9 @@ class ArtifactBuildAdapter:
         try:
             # Validate both produced artifact formats before publishing build success.
             artifacts = _validate_artifacts(plan)
+        # Artifact shape and identity failures remain distinct from backend execution failure.
         except ArtifactError as problem:
-            # Return explicit build outcome to the caller.
+            # Report invalid delivered bytes even though the build command exited successfully.
             return StepResult(
                 step_id=self.step_id,
                 rules=self.rules,
@@ -2140,7 +2142,7 @@ class ArtifactBuildAdapter:
                 tool=f"build {version}",
                 duration_ms=execution.duration_ms,
             )
-        # Return explicit build outcome to the caller.
+        # Publish success only after both formats exist and share the declared metadata identity.
         return StepResult(
             step_id=self.step_id,
             rules=self.rules,
@@ -2172,9 +2174,9 @@ def _optional_probe_text(value: object, field: str) -> str | None:
     """
     # Accept absence or text only for optional probe fields; other shapes are ambiguous.
     if value is not None and not isinstance(value, str):
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Refuse coercion because probes compare exact stream bytes represented as text.
         raise _probe_error(field, "must be text or absent")
-    # Return exact text or absence to the caller.
+    # Preserve exact text, including whitespace, for stdout and stderr equality checks.
     return value
 
 
@@ -2188,7 +2190,7 @@ def _artifact_probe(raw: object, field: str) -> ArtifactProbe:
     """
     # Require each probe declaration to be a mapping before reading its command contract.
     if not isinstance(raw, Mapping):
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Reject scalar probe entries before any defaulting or field access.
         raise _probe_error(field, "expected a table")
     # Collect unique allowed element values; their order is deliberately unordered.
     allowed = {
@@ -2201,31 +2203,32 @@ def _artifact_probe(raw: object, field: str) -> ArtifactProbe:
         "expected_stderr",
     }
     unknown = set(raw) - allowed
-    # Handle the non-empty or enabled unknown state.
+    # Surplus fields could represent misspelled expectations silently ignored by the runner.
     if unknown:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Report all unknown names in stable lexical order.
         raise _probe_error(field, f"unknown fields {sorted(unknown)}")
-    # Normalize the current repository path to its portable baseline key spelling.
     name = raw.get("name")
     expected = raw.get("expected_exit", 0)
     timeout = raw.get("timeout_seconds", 10)
+    # Probe names are stable report identities and therefore require visible text.
     if not isinstance(name, str) or not name.strip():
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Refuse anonymous probes before command validation.
         raise _probe_error(field, "name must be non-empty text")
+    # Expected process status must be an integer, with JSON booleans explicitly excluded.
     if not isinstance(expected, int) or isinstance(expected, bool):
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Refuse coercion so status comparison remains exact.
         raise _probe_error(field, "expected_exit must be an integer")
     if not (
         isinstance(timeout, int)
         and not isinstance(timeout, bool)
         and 1 <= timeout <= _MAX_PROBE_TIMEOUT
     ):
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Reject unbounded, zero, Boolean, and excessive per-probe time budgets.
         raise _probe_error(
             field,
             f"timeout_seconds must be between 1 and {_MAX_PROBE_TIMEOUT}",
         )
-    # Return validated probe to the caller.
+    # Assemble the immutable exact-output contract only after every safety field validates.
     return ArtifactProbe(
         name=name.strip(),
         command=_string_list(raw.get("command"), f"{field}.command"),
@@ -2259,23 +2262,25 @@ def _parse_artifact_probes(
     imports = _string_list(gate.get("artifact_imports"), import_field)
     # Each invalid element is one syntactically invalid import name in declaration order.
     invalid = [name for name in imports if _IMPORT_NAME.fullmatch(name) is None]
-    # Handle the non-empty or enabled invalid state.
+    # Import syntax must be safe to pass as data to the isolated interpreter script.
     if invalid:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Report every malformed name in authored order.
         raise _probe_error(import_field, f"invalid import names {invalid}")
     probes_field = "tool.agent-discipline-gate.artifact_probes"
     raw_probes = gate.get("artifact_probes", [])
+    # Command probes are an ordered array; scalar shorthand would obscure argv boundaries.
     if not isinstance(raw_probes, list):
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Reject non-array shapes before indexed diagnostic paths are constructed.
         raise _probe_error(probes_field, "expected an array")
     # Retain the immutable source representation consumed by subsequent analysis.
     probes = tuple(
         _artifact_probe(raw, f"{probes_field}[{index}]") for index, raw in enumerate(raw_probes)
     )
+    # Repeated names would make report evidence and repairs ambiguous.
     if len({probe.name for probe in probes}) != len(probes):
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Require one stable identity per declared command probe.
         raise _probe_error(probes_field, "probe names repeat")
-    # Return import names and executable probes to the caller.
+    # Return imports and probes in project declaration order.
     return imports, probes
 
 
@@ -2287,7 +2292,7 @@ def _fresh_python(environment: Path) -> Path:
     """
     # Resolve the platform-specific interpreter location inside a fresh virtual environment.
     windows = environment / "Scripts" / "python.exe"
-    # Return interpreter path to the caller.
+    # Prefer the Windows layout when present, otherwise select the POSIX venv layout.
     return windows if windows.is_file() else environment / "bin" / "python"
 
 
@@ -2301,17 +2306,17 @@ def _create_venv(environment: Path) -> Path:
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
         venv.EnvBuilder(with_pip=True, clear=True).create(environment)
+    # Preserve filesystem-level environment creation failure as execution detail.
     except OSError as problem:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Translate host failure to the clean-install adapter boundary.
         raise CommandExecutionError(str(problem)) from problem
     interpreter = _fresh_python(environment)
     # Select the regular-file path only when `not interpreter.is_file()` is satisfied.
     if not interpreter.is_file():
         # Name the expected interpreter path when environment creation produced no usable runtime.
         detail = f"virtual environment has no interpreter at {interpreter}"
-        # Propagate the localized failure so callers cannot mistake it for success.
         raise CommandExecutionError(detail)
-    # Return fresh interpreter path to the caller.
+    # Return only a verified regular-file interpreter path.
     return interpreter
 
 
@@ -2331,11 +2336,13 @@ def _probe_argv(probe: ArtifactProbe, interpreter: Path) -> tuple[str, ...]:
         str(interpreter) if argument == "{python}" else argument for argument in probe.command
     ]
     first = Path(resolved[0])
+    # The explicit interpreter placeholder already resolves entirely within the fresh venv.
     if resolved[0] == str(interpreter):
-        # Return executable argv to the caller.
+        # Preserve declared arguments after safe placeholder substitution.
         return tuple(resolved)
+    # All other executables must be a basename resolved from the venv's scripts directory.
     if first.is_absolute() or len(first.parts) != 1:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Refuse absolute, relative-directory, and traversal command paths.
         raise _probe_error(probe.name, "probe executable must be {python} or a venv entry point")
     # Each candidates element is an entry-point path, ordered as declared spelling then Windows
     # executable spelling.
@@ -2344,9 +2351,9 @@ def _probe_argv(probe: ArtifactProbe, interpreter: Path) -> tuple[str, ...]:
     executable = next((path for path in candidates if path.is_file()), None)
     # Use the absence path when executable has no available value.
     if executable is None:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Fail closed when the installed wheel did not publish the declared entry point.
         raise _probe_error(probe.name, f"installed entry point {first} does not exist")
-    # Return executable argv to the caller.
+    # Replace the declared basename with the verified venv-local executable path.
     return (str(executable), *resolved[1:])
 
 
@@ -2383,10 +2390,11 @@ def _execute_with_timeout(
             check=False,
             timeout=timeout,
         )
+    # Preserve launch and timeout detail from the installed behavior probe.
     except (OSError, subprocess.TimeoutExpired) as problem:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Translate host process failure without fabricating an exit status.
         raise CommandExecutionError(str(problem)) from problem
-    # Return process observation to the caller.
+    # Return exact separated streams as well as their combined diagnostic view.
     return CommandExecution(
         finished.returncode,
         finished.stdout + finished.stderr,
@@ -2431,8 +2439,9 @@ def _prepare_install(
     """
     # Inventory isolated build wheels before selecting the sole clean-install candidate.
     wheels = sorted((context.scratch / "artifacts").glob("*.whl"))
+    # Clean installation depends on exactly one wheel validated by the prior build step.
     if len(wheels) != 1:
-        # Return install plan or explicit preflight failure to the caller.
+        # Preserve step scheduling while explaining why installation could not run.
         return StepResult(
             step_id=step_id,
             rules=rules,
@@ -2445,10 +2454,10 @@ def _prepare_install(
     try:
         # Parse declared import and command probes before allocating a fresh environment.
         imports, probes = _parse_artifact_probes(context)
-        # Normalize the current repository path to its portable baseline key spelling.
         name, version = _project_identity(context)
+    # Translate unsafe or incomplete probe declarations before environment allocation.
     except ConfigurationProbeError as problem:
-        # Return install plan or explicit preflight failure to the caller.
+        # Bind the red preflight result to the exact project field that failed.
         return StepResult(
             step_id=step_id,
             rules=rules,
@@ -2462,8 +2471,9 @@ def _prepare_install(
     try:
         # Create an empty virtual environment used only for wheel installation and probes.
         interpreter = _create_venv(context.scratch / "installed")
+    # Fresh-environment construction failures are infrastructure execution defects.
     except CommandExecutionError as problem:
-        # Return install plan or explicit preflight failure to the caller.
+        # Publish the explicit environment failure before pip is invoked.
         return StepResult(
             step_id=step_id,
             rules=rules,
@@ -2495,7 +2505,7 @@ def _prepare_install(
         "GATE-INSTALL-003_INSTALL",
         "wheel",
     )
-    # Return install plan or explicit preflight failure to the caller.
+    # Publish all clean-install inputs after wheel, configuration, and environment preflight.
     return InstallPlan(name, version, imports, probes, interpreter, install)
 
 
@@ -2518,8 +2528,9 @@ def _install_wheel(
     try:
         # Execute wheel installation inside the isolated interpreter environment.
         installed = _execute(plan.install, context.scratch)
+    # Translate pip launch and timeout failure separately from a nonzero pip result.
     except CommandExecutionError as problem:
-        # Return process observation or explicit failure to the caller.
+        # Preserve prepared command evidence in the explicit execution refusal.
         return StepResult(
             step_id=step_id,
             rules=rules,
@@ -2532,7 +2543,7 @@ def _install_wheel(
         )
     # Enter the failure path only when the subprocess reports a nonzero status.
     if installed.returncode != 0:
-        # Return process observation or explicit failure to the caller.
+        # Retain bounded pip output because dependency or wheel defects are actionable.
         return StepResult(
             step_id=step_id,
             rules=rules,
@@ -2545,7 +2556,7 @@ def _install_wheel(
             duration_ms=installed.duration_ms,
             output=_tail(installed.output),
         )
-    # Return process observation or explicit failure to the caller.
+    # Pass the successful installation observation to import and behavior probes.
     return installed
 
 
@@ -2580,8 +2591,9 @@ def _verify_installed_imports(
             context.scratch,
             60,
         )
+    # Translate isolated interpreter launch or timeout into the import diagnostic family.
     except CommandExecutionError as problem:
-        # Return accumulated duration or explicit failure to the caller.
+        # Preserve install command evidence while reporting the failed post-install probe.
         return StepResult(
             step_id=step_id,
             rules=rules,
@@ -2595,7 +2607,7 @@ def _verify_installed_imports(
     duration = installed.duration_ms + imported.duration_ms
     # Enter the failure path only when the subprocess reports a nonzero status.
     if imported.returncode != 0:
-        # Return accumulated duration or explicit failure to the caller.
+        # Metadata mismatch and import failure both invalidate the installed artifact contract.
         return StepResult(
             step_id=step_id,
             rules=rules,
@@ -2608,7 +2620,7 @@ def _verify_installed_imports(
             duration_ms=duration,
             output=_tail(imported.output),
         )
-    # Return accumulated duration or explicit failure to the caller.
+    # Return cumulative install-plus-import duration for the remaining behavior probes.
     return duration
 
 
@@ -2643,8 +2655,9 @@ def _verify_installed_commands(
                 probe.timeout_seconds,
                 probe.stdin,
             )
+        # Resolve and execution failures share the installed-command probe diagnostic.
         except (ConfigurationProbeError, CommandExecutionError) as problem:
-            # Return total duration or first explicit probe failure to the caller.
+            # Stop at the first declared probe that cannot be executed safely.
             return StepResult(
                 step_id=step_id,
                 rules=rules,
@@ -2659,7 +2672,7 @@ def _verify_installed_commands(
         total += observed.duration_ms
         # Enter the failure path only when the subprocess reports a nonzero status.
         if observed.returncode != probe.expected_exit:
-            # Return total duration or first explicit probe failure to the caller.
+            # Report the exact status mismatch before comparing output streams.
             return StepResult(
                 step_id=step_id,
                 rules=rules,
@@ -2682,9 +2695,9 @@ def _verify_installed_commands(
             mismatches.append("stdout")
         if probe.expected_stderr is not None and observed.stderr != probe.expected_stderr:
             mismatches.append("stderr")
-        # Handle the non-empty or enabled mismatches state.
+        # Exact expected streams, when declared, must match independently.
         if mismatches:
-            # Return total duration or first explicit probe failure to the caller.
+            # Report all mismatched stream names for the current probe.
             return StepResult(
                 step_id=step_id,
                 rules=rules,
@@ -2697,7 +2710,7 @@ def _verify_installed_commands(
                 duration_ms=total,
                 output=_tail(observed.output),
             )
-    # Return total duration or first explicit probe failure to the caller.
+    # Return the accumulated duration after every declared command contract holds.
     return total
 
 
@@ -2719,13 +2732,15 @@ class CleanInstallAdapter:
         """
         # Prepare clean-install inputs; a StepResult here is an already localized preflight refusal.
         prepared = _prepare_install(context, self.step_id, self.rules)
+        # Forward a localized preflight result without executing later install stages.
         if isinstance(prepared, StepResult):
-            # Return explicit installation/probe outcome to the caller.
+            # Preserve the exact wheel or configuration refusal produced by preflight.
             return prepared
         # Install the sole wheel before any import or command probe is allowed to run.
         installed = _install_wheel(context, prepared, self.step_id, self.rules)
+        # Stop when pip launch or installation failed.
         if isinstance(installed, StepResult):
-            # Return explicit installation/probe outcome to the caller.
+            # Preserve the exact installation failure without attempting imports.
             return installed
         # Verify declared imports and distribution metadata in the isolated interpreter.
         imported = _verify_installed_imports(
@@ -2735,8 +2750,9 @@ class CleanInstallAdapter:
             self.step_id,
             self.rules,
         )
+        # Stop when installed metadata or imports failed under isolated mode.
         if isinstance(imported, StepResult):
-            # Return explicit installation/probe outcome to the caller.
+            # Preserve the exact import failure without attempting command probes.
             return imported
         # Verify every declared installed command only after imports have succeeded.
         probed = _verify_installed_commands(
@@ -2746,9 +2762,11 @@ class CleanInstallAdapter:
             self.step_id,
             self.rules,
         )
+        # Stop when any declared installed command violated its exact contract.
         if isinstance(probed, StepResult):
-            # Return explicit installation/probe outcome to the caller.
+            # Preserve the first command-contract failure as the clean-install verdict.
             return probed
+        # Publish delivered-artifact success only after installation, imports, and commands pass.
         return StepResult(
             step_id=self.step_id,
             rules=self.rules,
@@ -2795,11 +2813,12 @@ def _execute(command: PreparedCommand, root: Path) -> CommandExecution:
             check=False,
             timeout=1800,
         )
+    # Preserve launch and timeout detail from the prepared gate command.
     except (OSError, subprocess.TimeoutExpired) as problem:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Translate host-process failure without inventing a tool verdict.
         raise CommandExecutionError(str(problem)) from problem
     duration = round((time.perf_counter() - started) * 1000)
-    # Return process observation to the caller.
+    # Publish process status, combined output, and bounded duration as one observation.
     return CommandExecution(
         returncode=finished.returncode,
         output=finished.stdout + finished.stderr,
@@ -2814,7 +2833,7 @@ def _tail(output: str, maximum: int = 4000) -> str:
     @param maximum maximum retained characters
     @return stripped tail
     """
-    # Return stripped tail to the caller.
+    # Retain the actionable end of output while preventing unbounded JSON reports.
     return output[-maximum:].strip()
 
 
@@ -2826,7 +2845,7 @@ def _last_line(output: str) -> str:
     """
     # Each lines element represents one decoded record; lexical order is preserved.
     lines = [line.strip() for line in output.splitlines() if line.strip()]
-    # Return line or a visible no-output marker to the caller.
+    # Prefer the final visible tool status, with an explicit marker for silent success.
     return lines[-1] if lines else "completed with no textual output"
 
 
@@ -2837,7 +2856,7 @@ def _distribution_version(name: str) -> str:
     @return installed version
     @throws PackageNotFoundError when the tool is unavailable
     """
-    # Return installed version to the caller.
+    # Resolve the distribution actually installed in the qualified execution environment.
     return importlib.metadata.version(name)
 
 
@@ -2853,13 +2872,13 @@ def _ordinary_evaluation(
     """
     # Enter the failure path only when the subprocess reports a nonzero status.
     if execution.returncode != 0:
-        # Return pass or tool-finding evaluation to the caller.
+        # Convert nonzero status to the tool-specific diagnostic prepared before launch.
         return Evaluation(
             command.failure_diagnostic,
             f"tool rejected {command.subjects} {command.subject_label}",
             _tail(execution.output),
         )
-    # Return pass or tool-finding evaluation to the caller.
+    # Preserve subject count and final tool status in the successful evaluation summary.
     return Evaluation(
         None,
         f"clean over {command.subjects} {command.subject_label}: {_last_line(execution.output)}",
@@ -2886,8 +2905,9 @@ def _pyright_evaluation(
     except json.JSONDecodeError:
         # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
         report = None
+    # Process success without parseable structured output cannot establish non-vacuity.
     if not isinstance(report, Mapping):
-        # Return pass, findings, or vacuity failure to the caller.
+        # Refuse the observation independently of pyright's exit status.
         return Evaluation(
             "GATE-PYRIGHT-004_REPORT",
             "pyright emitted no parseable JSON report",
@@ -2895,8 +2915,9 @@ def _pyright_evaluation(
         )
     # Select the checker summary mapping that carries analyzed-file metrics.
     summary = report.get("summary")
+    # The summary object carries the only authoritative analysed-file and error counts.
     if not isinstance(summary, Mapping):
-        # Return pass, findings, or vacuity failure to the caller.
+        # Refuse reports that omit the metrics required by this gate.
         return Evaluation(
             "GATE-PYRIGHT-004_REPORT",
             "pyright report has no summary",
@@ -2907,20 +2928,21 @@ def _pyright_evaluation(
     errors = summary.get("errorCount")
     # Enter the failure path only when the subprocess reports a nonzero status.
     if execution.returncode != 0 or errors != 0:
-        # Return pass, findings, or vacuity failure to the caller.
+        # Preserve both error and analysed-file counts in the failing summary.
         return Evaluation(
             command.failure_diagnostic,
             f"pyright reported {errors!r} error(s) after analysing {analysed!r} file(s)",
             _tail(execution.output),
         )
+    # A clean report over no analysed files is a vacuous type-check success.
     if not isinstance(analysed, int) or analysed <= 0:
-        # Return pass, findings, or vacuity failure to the caller.
+        # Reject missing, malformed, and zero file counts.
         return Evaluation(
             "GATE-PYRIGHT-005_NO_SUBJECT",
             "pyright reported success after analysing no files",
             _tail(execution.output),
         )
-    # Return pass, findings, or vacuity failure to the caller.
+    # Publish success only after structured zero errors and a positive file count agree.
     return Evaluation(None, f"pyright analysed {analysed} file(s) with zero errors")
 
 
@@ -2940,7 +2962,7 @@ def _pytest_evaluation(
     """
     # Enter the failure path only when the subprocess reports a nonzero status.
     if execution.returncode != 0:
-        # Return pass, test failure, or vacuity failure to the caller.
+        # Preserve configured test-file count and bounded pytest output on failure.
         return Evaluation(
             command.failure_diagnostic,
             f"pytest failed while evaluating {command.subjects} configured test file(s)",
@@ -2948,14 +2970,15 @@ def _pytest_evaluation(
         )
     matches = _PYTEST_PASSED.findall(execution.output)
     passed = int(matches[-1]) if matches else 0
+    # Zero reported passes includes empty collection and all-skipped runs.
     if passed == 0:
-        # Return pass, test failure, or vacuity failure to the caller.
+        # Refuse a clean process status that executed no passing test behavior.
         return Evaluation(
             "GATE-PYTEST-004_NO_EXECUTION",
             "pytest exited zero without reporting any passed test",
             _tail(execution.output),
         )
-    # Return pass, test failure, or vacuity failure to the caller.
+    # Publish the independently parsed positive execution count.
     return Evaluation(None, f"pytest executed {passed} passing test(s)")
 
 
@@ -2992,7 +3015,7 @@ class ConfiguredToolAdapter:
         """
         # Bind a tool configuration refusal to the exact project field and digest.
         use = _project_configuration(context, (problem.field,))
-        # Return red result to the caller.
+        # Bind configuration refusal to the adapter's stable identity and supported platforms.
         return StepResult(
             step_id=self.step_id,
             rules=self.rules,
@@ -3012,7 +3035,7 @@ class ConfiguredToolAdapter:
         """
         # Report explicit inapplicability before probing a distribution on an unsupported host.
         if platform.system() not in self.supported_platforms:
-            # Return explicit tool outcome to the caller.
+            # Required tools are reported unsupported, never silently skipped green.
             return StepResult(
                 step_id=self.step_id,
                 rules=self.rules,
@@ -3026,16 +3049,18 @@ class ConfiguredToolAdapter:
         try:
             # Preserve the external command representation and its observed completion outcome.
             command = self.prepare(context)
+        # Convert field-specific configuration refusal through the shared adapter renderer.
         except ConfigurationProbeError as problem:
-            # Return explicit tool outcome to the caller.
+            # Return before distribution lookup or command execution can obscure the root cause.
             return self._configuration_failure(context, problem)
         # Protect the fallible operation so expected failures remain explicitly classified.
         try:
             # Resolve the exact verifier distribution version before command preparation.
             version = _distribution_version(self.distribution)
         # Translate the expected failure into this mechanism's stable diagnostic path.
+        # Missing verifier distribution is explicit unsupported tooling.
         except importlib.metadata.PackageNotFoundError:
-            # Return explicit tool outcome to the caller.
+            # Preserve prepared command and non-vacuity evidence without executing it.
             return StepResult(
                 step_id=self.step_id,
                 rules=self.rules,
@@ -3052,8 +3077,9 @@ class ConfiguredToolAdapter:
         try:
             # Preserve the external command representation and its observed completion outcome.
             execution = _execute(command, context.root)
+        # Translate launch and timeout failure separately from a tool-reported verdict.
         except CommandExecutionError as problem:
-            # Return explicit tool outcome to the caller.
+            # Publish the observed distribution identity with the execution refusal.
             return StepResult(
                 step_id=self.step_id,
                 rules=self.rules,
@@ -3067,8 +3093,9 @@ class ConfiguredToolAdapter:
                 tool=f"{self.distribution} {version}",
                 supported_platforms=self.supported_platforms,
             )
+        # Interpret tool-specific output only after process execution completed normally.
         evaluation = self.evaluate(execution, command)
-        # Return explicit tool outcome to the caller.
+        # Convert the evaluation into the common exhaustive result schema.
         return StepResult(
             step_id=self.step_id,
             rules=self.rules,
@@ -3207,7 +3234,7 @@ def _not_run(adapter: StepAdapter, prerequisite: StepResult) -> StepResult:
     @param prerequisite earlier red result
     @return explicit not-run result
     """
-    # Return explicit not-run result to the caller.
+    # Preserve adapter identity and rules while naming the exact red prerequisite.
     return StepResult(
         step_id=adapter.step_id,
         rules=adapter.rules,
@@ -3248,7 +3275,7 @@ def run(root: Path, *, steps: Sequence[StepAdapter] = DEFAULT_STEPS) -> GateRepo
             outcomes.extend(adapter(context) for adapter in steps)
             # Publish the validated unit kind beside the complete outcome sequence.
             unit = context.unit.value
-    # Return complete report to the caller.
+    # Publish the complete ordered report after the shared scratch tree has been reclaimed.
     return GateReport(
         root=exact_root,
         unit=unit,
@@ -3290,7 +3317,7 @@ def main(argv: list[str] | None = None) -> int:
     @return zero only when the complete report is green
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Runs the aggregate gate, prints its report, and optionally writes JSON evidence.
     """
     # Configure the command-line parser that defines this tool's invocation contract.
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -3298,11 +3325,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", type=Path, help="write the complete report as JSON")
     # Capture the validated invocation arguments that govern this execution.
     arguments = parser.parse_args(argv)
-    # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
+    # Execute the complete gate against the explicit or installation-derived root.
     report = run(arguments.root)
     _print_report(report)
+    # Persist machine-readable evidence only when the operator requested a destination.
     if arguments.json is not None:
-        # Publish the externally visible effect after all required inputs are ready.
+        # Write deterministic UTF-8 JSON after the human report has been emitted.
         arguments.json.write_text(
             json.dumps(report.as_dict(), indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8",
@@ -3314,5 +3342,5 @@ def main(argv: list[str] | None = None) -> int:
 
 # Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
-    # Propagate the localized failure so callers cannot mistake it for success.
+    # Translate the aggregate gate verdict to the sole process exit boundary.
     raise SystemExit(main())
