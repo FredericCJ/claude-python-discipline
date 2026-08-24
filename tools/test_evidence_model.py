@@ -281,7 +281,7 @@ def test_heading_and_strategy_mechanisms_must_match(tmp_path: Path) -> None:
     """Evidence cannot describe a verifier the normative heading does not name."""
     # Parse evidence naming mypy so a pyright-only heading creates the intended mismatch.
     registry = load_evidence(write_payload(tmp_path / "evidence.json", valid_payload()))
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Validate a registry whose heading and strategy name different mechanisms.
     findings = validate_evidence(
         registry,
         [rule(mechanisms=("auto:pyright",))],
@@ -298,7 +298,7 @@ def test_automated_strategy_needs_a_must_reject_case(tmp_path: Path) -> None:
     strategy(payload)["must_reject"] = None
     # Parse the damaged evidence so semantic rather than structural validation owns the verdict.
     registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Validate an automated strategy that declares no must-reject companion.
     findings = validate_evidence(registry, [rule()], {("TYPE-001", "auto:mypy")})
     assert "E008" in {finding.code for finding in findings}
 
@@ -307,7 +307,7 @@ def test_declared_mutation_must_have_been_witnessed(tmp_path: Path) -> None:
     """A must-reject label without an executed matrix entry receives no credit."""
     # Parse complete evidence whose declared marker will be compared with an empty witness set.
     registry = load_evidence(write_payload(tmp_path / "evidence.json", valid_payload()))
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Validate a declared mutation absent from the witnessed rule/mechanism set.
     findings = validate_evidence(registry, [rule()], set())
     assert "E009" in {finding.code for finding in findings}
 
@@ -321,7 +321,7 @@ def test_must_reject_names_the_exact_rule_and_mechanism(tmp_path: Path) -> None:
     # Parse the structurally valid legacy marker for semantic validation.
     registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
 
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Validate must-reject evidence attributed to the wrong rule and mechanism.
     findings = validate_evidence(
         registry,
         [rule()],
@@ -343,7 +343,7 @@ def test_generated_placeholder_is_not_an_observable_proposition(tmp_path: Path) 
     # Parse the structurally valid placeholder for semantic validation.
     registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
 
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Validate a placeholder proposition that cannot decide an observable claim.
     findings = validate_evidence(
         registry,
         [rule()],
@@ -391,7 +391,7 @@ def test_one_tool_cannot_lend_rejection_credit_to_another(tmp_path: Path) -> Non
     strategies.append(pyright)
     # Parse the two-strategy evidence for exact-pair semantic validation.
     registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Validate rejection evidence attributed to a neighboring tool mechanism.
     findings = validate_evidence(
         registry,
         [rule(mechanisms=("auto:mypy", "auto:pyright"))],
@@ -410,7 +410,7 @@ def test_tag_and_kind_cannot_disagree(tmp_path: Path) -> None:
     strategy(payload)["kind"] = "static"
     # Parse the structurally valid mismatch for semantic validation.
     registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Validate a strategy whose mechanism tag conflicts with its evidence kind.
     findings = validate_evidence(registry, [rule()], {("TYPE-001", "auto:mypy")})
     assert "E010" in {finding.code for finding in findings}
 
@@ -466,7 +466,7 @@ def test_replacement_disposition_requires_a_successor(tmp_path: Path) -> None:
     migration["disposition"] = MigrationDisposition.SUPERSEDED
     # Parse the structurally valid but historically inconsistent evidence.
     registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Validate a retired rule whose replacement disposition names no successor.
     findings = validate_evidence(registry, [rule(mechanisms=(), force=Force.RETIRED)], set())
     assert [finding.code for finding in findings] == ["E007"]
 

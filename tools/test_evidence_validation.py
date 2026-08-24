@@ -85,7 +85,7 @@ def evidence_findings(root: Path) -> list[Finding]:
 
 def test_v100_requires_the_registry(tmp_path: Path) -> None:
     """A v4 corpus cannot omit the evidence layer."""
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Collect evidence findings when the required registry is entirely absent.
     findings = list(check_evidence([], Layout(tmp_path), required=True))
     assert [finding.code for finding in findings] == ["V100"]
 
@@ -102,7 +102,7 @@ def test_v100_reports_structural_corruption(tmp_path: Path) -> None:
     path.parent.mkdir(parents=True)
     # Persist an unterminated JSON object as the sole structural defect.
     path.write_text("{", encoding="utf-8")
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Collect evidence findings after replacing the registry with invalid JSON.
     findings = list(check_evidence([], Layout(tmp_path), required=True))
     assert [finding.code for finding in findings] == ["V100"]
     assert findings[0].severity is Severity.ERROR
@@ -115,7 +115,7 @@ def test_v104_rejects_a_strategy_not_named_by_the_heading(tmp_path: Path) -> Non
     strategy(payload)["mechanism"] = "auto:pyright"
     write_evidence(tmp_path, payload)
     write_matrix(tmp_path, ("TYPE-001", "auto:mypy"))
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Collect evidence findings for a strategy missing from its rule heading.
     findings = evidence_findings(tmp_path)
     assert "V104" in {finding.code for finding in findings}
 
@@ -124,7 +124,7 @@ def test_v107_counts_an_unwitnessed_strategy_without_calling_it_green(tmp_path: 
     """A declared must-reject label earns no credit before the matrix runs it."""
     write_evidence(tmp_path, valid_payload())
     write_matrix(tmp_path)
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Collect evidence findings for a declared strategy lacking a witnessed mutation.
     findings = evidence_findings(tmp_path)
     assert [finding.code for finding in findings] == ["V107"]
     assert findings[0].severity is Severity.WARN

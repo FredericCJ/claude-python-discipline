@@ -161,7 +161,7 @@ def test_v096_reports_an_unreadable_ledger(tmp_path: Path) -> None:
     with store.ledger.open("a", encoding="utf-8") as handle:
         # This invalid second record must be localized to its ledger line.
         handle.write("{ not json\n")
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Collect mechanism findings after corrupting the learning ledger.
     findings = run_on(tmp_path)
     assert "V096" in codes(findings)
     assert any("ledger.jsonl:2" in f.message for f in findings)  # type: ignore[attr-defined]
@@ -378,7 +378,7 @@ def test_v098_reports_a_decided_rule_nobody_has_watched(tmp_path: Path) -> None:
     module(tmp_path, body=FITNESS_RULE)
     write_fitness(tmp_path, declaration='@decides("TYPE-001")')
     write_matrix(tmp_path)
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Collect observation findings for a decided rule with no adopter witness.
     findings = run_on(tmp_path)
     assert "V080" not in codes(findings)
     assert "V098" in codes(findings)
@@ -400,7 +400,7 @@ def test_v098_is_silent_when_the_rule_is_not_decided_at_all(tmp_path: Path) -> N
     module(tmp_path, body=FITNESS_RULE)
     write_fitness(tmp_path)
     write_matrix(tmp_path)
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Collect observation findings for an undecided rule that needs no witness.
     findings = run_on(tmp_path)
     assert "V080" in codes(findings)
     assert "V098" not in codes(findings)

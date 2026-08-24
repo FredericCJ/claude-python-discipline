@@ -26,21 +26,21 @@ if TYPE_CHECKING:
 
 def test_a_new_pair_fails() -> None:
     """The thing the gate is for: a finding that was not there before."""
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Judge one previously unseen path/code pair against an empty debt ceiling.
     errors, _ = lint_gate.judge({("a.py", "E501")}, 1, set(), 0)
     assert errors == ["new finding -- a.py: E501"]
 
 
 def test_a_recorded_pair_passes() -> None:
     """Existing debt must not fail the gate, or nobody keeps the gate on."""
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Judge one current path/code pair already admitted by the exact baseline.
     errors, _ = lint_gate.judge({("a.py", "E501")}, 1, {("a.py", "E501")}, 1)
     assert errors == []
 
 
 def test_more_instances_of_a_recorded_code_fail() -> None:
     """Pairs alone would let a file accumulate the same finding indefinitely."""
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Judge repeated instances whose total exceeds the recorded debt count.
     errors, _ = lint_gate.judge({("a.py", "E501")}, 3, {("a.py", "E501")}, 1)
     assert len(errors) == 1
     assert "rose from 1 to 3" in errors[0]
@@ -48,7 +48,7 @@ def test_more_instances_of_a_recorded_code_fail() -> None:
 
 def test_shrinking_is_a_notice_and_not_a_failure() -> None:
     """Progress must never fail the build; it invites the ceiling down."""
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Judge a clean current report against a nonempty baseline to surface improvement.
     errors, notices = lint_gate.judge(set(), 0, {("a.py", "E501")}, 1)
     assert errors == []
     assert notices
@@ -63,14 +63,14 @@ def test_a_protected_code_fails_even_when_it_is_in_the_baseline() -> None:
     C901 is the mechanism behind ARCH-016. A baseline entry for it would leave
     the rule reading as enforced while nothing decided it.
     """
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Judge a protected complexity code even though legacy baseline data contains it.
     errors, _ = lint_gate.judge({("a.py", "C901")}, 1, {("a.py", "C901")}, 1)
     assert errors == ["protected code, never baselined -- a.py: C901"]
 
 
 def test_a_protected_code_is_reported_once_not_twice() -> None:
     """A protected code is not also reported as a new finding; one defect, one line."""
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Judge one protected code absent from baseline and require one diagnostic only.
     errors, _ = lint_gate.judge({("a.py", "C901")}, 1, set(), 0)
     assert len(errors) == 1
 

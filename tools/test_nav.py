@@ -332,7 +332,7 @@ def test_the_most_relevant_module_is_planned_first(graph: Graph) -> None:
 
 def test_context_is_reproducible(graph: Graph) -> None:
     """The same situation gives back the same plan, so a retrieval can be reviewed."""
-    # Capture the validated invocation arguments that govern this execution.
+    # Reuse one fully specified context request to prove retrieval-plan determinism.
     args = _ns(file="src/pkg/domain/outline.py", error="G004", task="add a port")
     assert nav.cmd_context(graph, args) == nav.cmd_context(graph, args)
 

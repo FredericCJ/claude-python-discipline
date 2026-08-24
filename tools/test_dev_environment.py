@@ -33,7 +33,7 @@ def test_every_remote_docker_build_input_is_immutable() -> None:
     """Neither the frontend nor base image may move behind a readable tag."""
     # Dockerfile text is the release surface whose remote identities must be digest-pinned.
     dockerfile = _text("dev/Dockerfile")
-    # Preserve lines element values in deterministic source order.
+    # Split Dockerfile directives in authored order before validating pinned base images.
     lines = dockerfile.splitlines()
     assert re.fullmatch(
         r"# syntax=docker/dockerfile:1@sha256:[0-9a-f]{64}",

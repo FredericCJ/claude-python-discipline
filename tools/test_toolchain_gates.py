@@ -373,7 +373,7 @@ def test_pytest_randomly_exposes_an_order_dependency(tmp_path: Path) -> None:
         )
         # Combine the checker's captured diagnostic streams without losing emission text.
         output = finished.stdout + finished.stderr
-        # Enter the failure path only when the subprocess reports a nonzero status.
+        # Accept only a failing seed whose output identifies the intended order dependency.
         if finished.returncode != 0 and "order dependency exposed" in output:
             # True means this seed exposed the dependency; false means no tried seed has exposed it.
             exposed = True

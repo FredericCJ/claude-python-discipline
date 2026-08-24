@@ -373,7 +373,7 @@ def test_v024_overlong_title_warns(tmp_path: Path) -> None:
         - **Check** `mypy --strict src/`
         """,
     )
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Collect diagnostics after introducing the overlong authored title.
     findings = run_on(tmp_path)
     assert "V024" in codes(findings)
     assert all(f.severity is Severity.WARN for f in findings if f.code == "V024")  # type: ignore[attr-defined]
@@ -887,7 +887,7 @@ def test_v081_fires_when_the_unbuilt_count_rises(tmp_path: Path) -> None:
     documents, _ = load_documents(layout)
     # Hold baseline path keys mapped to their recorded behavior-fingerprint values.
     baseline = V080Baseline(count=0, pairs=frozenset(), why=None)
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Collect V080-ratchet findings after increasing unresolved strategy debt.
     findings = list(check_v080_ratchet(documents, layout, baseline=baseline))
     assert [f.code for f in findings] == ["V081"]
     assert findings[0].severity is Severity.ERROR
@@ -934,7 +934,7 @@ def test_v082_warns_without_failing_when_the_unbuilt_count_falls(tmp_path: Path)
         pairs=frozenset({("X-001", "check:a"), ("X-002", "check:b"), ("X-003", "check:c")}),
         why="prior state",
     )
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Collect V080-ratchet findings after decreasing debt without rerecording the ceiling.
     findings = list(check_v080_ratchet(documents, layout, baseline=baseline))
     assert [f.code for f in findings] == ["V082"]
     assert findings[0].severity is Severity.WARN

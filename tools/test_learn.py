@@ -162,7 +162,7 @@ def test_the_ledger_is_append_only_and_line_oriented(store: learn.Store) -> None
     """
     record(store)
     record(store)
-    # Preserve lines element values in deterministic source order.
+    # Read append-only ledger records in sequence order to verify contiguous event numbering.
     lines = store.ledger.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 2
     assert [json.loads(line)["seq"] for line in lines] == [1, 2]

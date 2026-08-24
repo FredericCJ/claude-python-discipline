@@ -573,7 +573,7 @@ def test_ordinary_corpus_prose_is_clean() -> None:
 
 def test_a_credential_assignment_is_reviewable_not_blocking() -> None:
     """The rules about redaction have to show what redaction is for."""
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Collect blocking-scan findings for a credential-shaped assignment in source code.
     findings = list(release.scan_text(
         "a.py", 'password = "hunter2000"\n',
         (*release.BLOCKING_PATTERNS, *release.REVIEW_PATTERNS)))
