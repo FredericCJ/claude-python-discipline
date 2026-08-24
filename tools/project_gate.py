@@ -158,28 +158,23 @@ class StepResult:
 
         @throws ValueError when status, diagnostic, applicability, or subject data conflict
         """
-        # Select the empty-or-disabled path when self.step id or not self.summary.strip() has no
-        # Details: usable value.
+        # Require every result to carry the stable step identity and human verdict it publishes.
         if not self.step_id or not self.summary.strip():
-            # Propagate the localized failure so callers cannot mistake it for success.
+            # Reject an unreportable result at construction time.
             raise ResultInvariantError(_EMPTY_RESULT)
-        # Use the available-value path only when self.status is Status.PASS and self.diagnostic
-        # Details: id is present.
+        # A passing result must not carry failure-only diagnostic identity.
         if self.status is Status.PASS and self.diagnostic_id is not None:
-            # Propagate the localized failure so callers cannot mistake it for success.
+            # Prevent success and failure evidence from contradicting each other.
             raise ResultInvariantError(_SUCCESS_WITH_DIAGNOSTIC)
-        # Use the absence path when self.status is not Status.PASS and self.diagnostic id has no
-        # Details: available value.
+        # Every non-passing result needs an actionable stable diagnostic code.
         if self.status is not Status.PASS and self.diagnostic_id is None:
-            # Propagate the localized failure so callers cannot mistake it for success.
+            # Refuse red or inapplicable state that reports cannot classify.
             raise ResultInvariantError(_RED_WITHOUT_DIAGNOSTIC)
-        # Select the guarded path only after `self.status is Status.NOT_APPLICABLE and
-        # Details: self.required` is satisfied.
+        # A required step can pass or fail, but can never be declared inapplicable.
         if self.status is Status.NOT_APPLICABLE and self.required:
-            # Propagate the localized failure so callers cannot mistake it for success.
+            # Protect the gate from silently skipping a required obligation.
             raise ResultInvariantError(_INAPPLICABLE_REQUIRED)
-        # Select the guarded path only after `self.subjects < 0 or self.duration_ms < 0` is
-        # Details: satisfied.
+        # Counts and durations are measured quantities and therefore cannot be negative.
         if self.subjects < 0 or self.duration_ms < 0:
             # Propagate the localized failure so callers cannot mistake it for success.
             raise ResultInvariantError(_NEGATIVE_MEASUREMENT)
@@ -198,9 +193,7 @@ class StepResult:
 
         @return a JSON-compatible record
         """
-        # Treat the current item as the candidate element consumed by the enclosing
-        # Details: transformation.
-        # Return a JSON-compatible record to the caller.
+        # Map each report field to JSON-compatible evidence in stable schema order.
         return {
             "id": self.step_id,
             "rules": list(self.rules),
@@ -209,6 +202,7 @@ class StepResult:
             "diagnostic_id": self.diagnostic_id,
             "summary": self.summary,
             "command": list(self.command),
+            # Preserve each configuration-use element in consumption order.
             "configuration": [item.as_dict() for item in self.configuration],
             "subjects": self.subjects,
             "tool": self.tool,
@@ -289,9 +283,7 @@ class GateReport:
 
         @return False for an empty or non-green outcome set
         """
-        # Capture result as the completed green outcome for subsequent validation or
-        # Details: publication.
-        # Return false for an empty or non-green outcome set to the caller.
+        # Require at least one outcome and no red result for a green aggregate verdict.
         return bool(self.outcomes) and all(result.green for result in self.outcomes)
 
     def as_dict(self) -> dict[str, object]:
@@ -310,9 +302,6 @@ class GateReport:
             for result in self.outcomes
             if result.status is not Status.PASS
         ]
-        # Capture result as the completed as dict outcome for subsequent validation or
-        # Details: publication.
-        # Return a JSON-compatible record to the caller.
         return {
             "schema_version": REPORT_SCHEMA,
             "root": str(self.root),
@@ -403,33 +392,25 @@ def _load_context(root: Path, scratch: Path) -> tuple[StepResult, GateContext | 
     @param scratch ephemeral gate workspace
     @return declaration outcome and context, or no context after refusal
     """
-    # Compute started using time.perf counter for later load context logic.
+    # Start declaration timing before any filesystem or parser boundary is crossed.
     started = time.perf_counter()
     # Retain the immutable source representation consumed by subsequent analysis.
     source = root / "pyproject.toml"
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
-        # Compute declaration using describe for later load context logic.
+        # Load the strict declaration, unit kind, configuration, and use evidence together.
         declaration = describe(root, source)
-        # Compute declared unit using  required unit for later load context logic.
         declared_unit = _required_unit(declaration, source)
-        # Hold the decoded mapping elements whose keys identify fields and values carry their
-        # Details: content; key order is deliberately unused.
         document = cast(
             "Mapping[str, object]",
             tomllib.loads(source.read_text(encoding="utf-8")),
         )
-        # Compute use using  project use for later load context logic.
         use = _project_use(root)
-    # Bind problem to the current value used by the next load context decision.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except (OSError, project.DeclarationError, ValueError) as problem:
-        # Compute duration using round for later load context logic.
+        # Measure refusal time and retain the most specific declaration diagnostic available.
         duration = round((time.perf_counter() - started) * 1000)
-        # Compute diagnostic using getattr for later load context logic.
         diagnostic = getattr(problem, "diagnostic_id", "GATE001_DECLARATION")
-        # Capture result as the completed load context outcome for subsequent validation or
-        # Details: publication.
+        # Publish one red declaration result while withholding an unusable context.
         result = StepResult(
             step_id="declaration",
             rules=("DOC-014", "FLOW-006"),
@@ -442,10 +423,9 @@ def _load_context(root: Path, scratch: Path) -> tuple[StepResult, GateContext | 
         # Return declaration outcome and context, or no context after refusal to the caller.
         return result, None
 
-    # Compute duration using round for later load context logic.
+    # Measure accepted loading before constructing the shared immutable context.
     duration = round((time.perf_counter() - started) * 1000)
-    # Capture result as the completed load context outcome for subsequent validation or
-    # Details: publication.
+    # Publish declaration success with the exact configuration evidence consumed.
     result = StepResult(
         step_id="declaration",
         rules=("DOC-014", "FLOW-006"),
@@ -472,7 +452,6 @@ def _bounded_output(findings: Sequence[Finding]) -> str:
     # Each rendered element is one finding diagnostic; check traversal order is preserved and
     # capped at fifty entries before a truncation marker is appended.
     rendered = [finding.render() for finding in findings[:50]]
-    # Select the guarded path only after `len(findings) > len(rendered)` is satisfied.
     if len(findings) > len(rendered):
         rendered.append(f"... {len(findings) - len(rendered)} additional finding(s)")
     # Return at most the first fifty rendered findings to the caller.
@@ -485,27 +464,19 @@ def _run_discipline_checks(context: GateContext) -> StepResult:
     @param context exact repository declaration and bounded source roots
     @return pass over a non-empty subject or the emitted findings
     """
-    # Compute started using time.perf counter for later run discipline checks logic.
+    # Time the complete discipline-check family as one canonical gate step.
     started = time.perf_counter()
     # Preserve paths element values in deterministic source order.
     paths = list(context.declaration.source_paths())
-    # Compute checks using discover for later run discipline checks logic.
     checks = discover()
     # Each findings element is one emitted diagnostic mapping; checker order is preserved.
     findings: list[Finding] = []
-    # Select check as the current element from checks while run discipline checks preserves
-    # Details: traversal order.
-    # Advance run discipline checks through the current input element in declared order.
     for check in checks:
-        # Update  run discipline checks state only after the required source facts are
-        # Details: available.
+        # Inject the validated declaration before running each check over governed paths.
         check.declaration = context.declaration
         findings.extend(check.run(paths))
-    # Compute source files using len for later run discipline checks logic.
     source_files = len(governed_paths(context.declaration, paths))
-    # Compute duration using round for later run discipline checks logic.
     duration = round((time.perf_counter() - started) * 1000)
-    # Select the guarded path only after `source_files == 0` is satisfied.
     if source_files == 0:
         # Return pass over a non-empty subject or the emitted findings to the caller.
         return StepResult(
@@ -581,9 +552,8 @@ class ConfigurationProbeError(ValueError):
         @param detail actionable refusal reason
         """
         super().__init__(f"{field}: {detail}")
-        # Update   init   state only after the required source facts are available.
+        # Retain the exact field and refusal detail for adapter translation.
         self.field = field
-        # Update   init   state only after the required source facts are available.
         self.detail = detail
 
 
@@ -699,22 +669,18 @@ def _table(document: Mapping[str, object], path: tuple[str, ...]) -> Mapping[str
     # Each traversed element is one visited segment in outermost-to-innermost order, allowing a
     # refusal to name the exact dotted prefix that failed.
     traversed: list[str] = []
-    # Select segment as the current element from path while table preserves traversal order.
-    # Advance table through the current input element in declared order.
     for segment in path:
         traversed.append(segment)
-        # Select the empty-or-disabled path when isinstance(current, Mapping) or segment not in
-        # Details: current has no usable value.
+        # Require the current object to expose the next declared table segment.
         if not isinstance(current, Mapping) or segment not in current:
-            # Compute field using ".".join(traversed) for later table logic.
+            # Render the traversed prefix so nested absence is localized exactly.
             field = ".".join(traversed)
             # Propagate the localized failure so callers cannot mistake it for success.
             raise _probe_error(field, "required table is absent")
         # Preserve the documentation-stripped behavior fingerprint used for comparison.
         current = current[segment]
-    # Select the empty-or-disabled path when isinstance(current, Mapping) has no usable value.
     if not isinstance(current, Mapping):
-        # Compute field using ".".join(path) for later table logic.
+        # Name the complete path whose terminal value is not a table.
         field = ".".join(path)
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(field, "expected a table")
@@ -730,19 +696,13 @@ def _string_list(value: object, field: str) -> tuple[str, ...]:
     @return non-empty strings
     @throws ConfigurationProbeError on an empty or non-string member
     """
-    # Compute values using [value] if isinstance(value, str) else value for later string list
-    # Details: logic.
+    # Promote a scalar string to one ordered element while preserving a list value.
     values: object = [value] if isinstance(value, str) else value
-    # Select the empty-or-disabled path when isinstance(values, list) or not values has no
-    # Details: usable value.
     if not isinstance(values, list) or not values:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Refuse absent, empty, or non-list declaration shapes uniformly.
         raise _probe_error(field, "expected a non-empty string array")
-    # Treat the current item as the candidate element consumed by the enclosing transformation.
-    # Select the empty-or-disabled path when all((isinstance(item, str) and item.strip() for
-    # Details: item in values)) has no usable value.
     if not all(isinstance(item, str) and item.strip() for item in values):
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Every element must be a nonblank string before tuple normalization.
         raise _probe_error(field, "every target must be a non-empty string")
     # Return non-empty strings to the caller.
     return tuple(cast("list[str]", values))
@@ -772,11 +732,7 @@ def _local_targets(
     for value in values:
         # Retain the immutable source representation consumed by subsequent analysis.
         raw = Path(value)
-        # Treat the current candidate as the candidate element consumed by the enclosing
-        # Details: transformation.
         candidate = (context.root / raw).resolve()
-        # Select the guarded path only after `raw.is_absolute() or not
-        # Details: candidate.is_relative_to(context.root)` is satisfied.
         if raw.is_absolute() or not candidate.is_relative_to(context.root):
             # Propagate the localized failure so callers cannot mistake it for success.
             raise _probe_error(field, f"target {value!r} escapes the governed repository")
@@ -785,11 +741,9 @@ def _local_targets(
             # Propagate the localized failure so callers cannot mistake it for success.
             raise _probe_error(field, f"target {value!r} does not exist")
         normalized.append(candidate.relative_to(context.root).as_posix())
-        # Compute candidates using candidate.rglob for later local targets logic.
         candidates = candidate.rglob("*.py") if candidate.is_dir() else (candidate,)
         # Resolve the repository-confined path used by this operation before filesystem access.
         files.update(path.resolve() for path in candidates if path.is_file())
-    # Select the empty-or-disabled path when files has no usable value.
     if not files:
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(field, "configured targets contain no Python files")
@@ -832,18 +786,13 @@ def _relative_configuration_file(
     @return absolute file and content-bound use record
     @throws ConfigurationProbeError when the value escapes or is absent
     """
-    # Select the empty-or-disabled path when isinstance(value, str) or not value.strip() has no
-    # Details: usable value.
+    # Require a nonblank portable relative filename at the configuration boundary.
     if not isinstance(value, str) or not value.strip():
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(field, "expected a non-empty repository-relative file")
     # Retain the immutable source representation consumed by subsequent analysis.
     raw = Path(value)
-    # Treat the current candidate as the candidate element consumed by the enclosing
-    # Details: transformation.
     candidate = (context.root / raw).resolve()
-    # Select the guarded path only after `raw.is_absolute() or not
-    # Details: candidate.is_relative_to(context.root)` is satisfied.
     if raw.is_absolute() or not candidate.is_relative_to(context.root):
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(field, f"file {value!r} escapes the governed repository")
@@ -851,7 +800,6 @@ def _relative_configuration_file(
     if not candidate.is_file():
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(field, f"file {value!r} does not exist")
-    # Compute use using ConfigurationUse for later relative configuration file logic.
     use = ConfigurationUse(
         path=candidate.relative_to(context.root).as_posix(),
         sha256=_digest(candidate),
@@ -887,7 +835,7 @@ def _require_value(
     @param field full dotted field name
     @throws ConfigurationProbeError when the value differs
     """
-    # Select the guarded path only after `table.get(key) != expected` is satisfied.
+    # Compare the declared scalar with the exact discipline-required value.
     if table.get(key) != expected:
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(field, f"expected {expected!r}, found {table.get(key)!r}")
@@ -899,7 +847,7 @@ def _prepare_ruff(context: GateContext) -> PreparedCommand:
     @param context exact governed repository
     @return explicit Ruff command
     """
-    # Compute table using  table for later prepare ruff logic.
+    # Read Ruff's project table before validating explicit governed targets.
     table = _table(context.pyproject, ("tool", "ruff"))
     # Preserve governed Python-path elements in deterministic traversal order.
     targets, subjects = _local_targets(
@@ -907,7 +855,6 @@ def _prepare_ruff(context: GateContext) -> PreparedCommand:
         _string_list(table.get("src"), "tool.ruff.src"),
         "tool.ruff.src",
     )
-    # Compute use using  project configuration for later prepare ruff logic.
     use = _project_configuration(context, ("tool.ruff", "tool.ruff.src"))
     # Return explicit Ruff command to the caller.
     return PreparedCommand(
@@ -947,7 +894,7 @@ def _prepare_mypy(context: GateContext) -> PreparedCommand:
     @param context exact governed repository
     @return explicit mypy command
     """
-    # Compute table using  table for later prepare mypy logic.
+    # Read mypy's project table before validating strictness and source targets.
     table = _table(context.pyproject, ("tool", "mypy"))
     _require_value(
         table=table,
@@ -955,7 +902,7 @@ def _prepare_mypy(context: GateContext) -> PreparedCommand:
         expected=True,
         field="tool.mypy.strict",
     )
-    # Compute raw targets using ( for later prepare mypy logic.
+    # Prefer explicit mypy files, otherwise derive targets from governed sources.
     raw_targets = (
         _string_list(table["files"], "tool.mypy.files")
         if "files" in table
@@ -963,7 +910,6 @@ def _prepare_mypy(context: GateContext) -> PreparedCommand:
     )
     # Preserve governed Python-path elements in deterministic traversal order.
     targets, subjects = _local_targets(context, raw_targets, "tool.mypy.files")
-    # Compute use using  project configuration for later prepare mypy logic.
     use = _project_configuration(
         context,
         ("tool.mypy", "tool.mypy.strict", "tool.mypy.files"),
@@ -994,7 +940,7 @@ def _prepare_pyright(context: GateContext) -> PreparedCommand:
     @param context exact governed repository
     @return explicit pyright command requesting machine-readable output
     """
-    # Compute table using  table for later prepare pyright logic.
+    # Read Pyright's project table before validating strictness and include targets.
     table = _table(context.pyproject, ("tool", "pyright"))
     _require_value(table, "typeCheckingMode", "strict", "tool.pyright.typeCheckingMode")
     # Preserve governed Python-path elements in deterministic traversal order.
@@ -1003,7 +949,6 @@ def _prepare_pyright(context: GateContext) -> PreparedCommand:
         _string_list(table.get("include"), "tool.pyright.include"),
         "tool.pyright.include",
     )
-    # Compute use using  project configuration for later prepare pyright logic.
     use = _project_configuration(
         context,
         ("tool.pyright", "tool.pyright.typeCheckingMode", "tool.pyright.include"),
@@ -1032,7 +977,7 @@ def _prepare_pytest(context: GateContext) -> PreparedCommand:
     @param context exact governed repository
     @return explicit pytest command
     """
-    # Compute table using  table for later prepare pytest logic.
+    # Read pytest options before validating bounded, isolated test execution.
     table = _table(context.pyproject, ("tool", "pytest", "ini_options"))
     # Preserve governed Python-path elements in deterministic traversal order.
     targets, subjects = _local_targets(
@@ -1040,30 +985,23 @@ def _prepare_pytest(context: GateContext) -> PreparedCommand:
         _string_list(table.get("testpaths"), "tool.pytest.ini_options.testpaths"),
         "tool.pytest.ini_options.testpaths",
     )
-    # Compute timeout using table.get for later prepare pytest logic.
     timeout = table.get("timeout")
-    # Select the empty-or-disabled path when isinstance(timeout, (int, float)) or
-    # Details: isinstance(timeout, bool) or timeout <= 0 has no usable value.
     if not isinstance(timeout, (int, float)) or isinstance(timeout, bool) or timeout <= 0:
         _raise_probe(
             "tool.pytest.ini_options.timeout",
             "expected a positive per-test timeout",
         )
-    # Select the guarded path only after `table.get('timeout_method') != 'thread'` is satisfied.
     if table.get("timeout_method") != "thread":
         _raise_probe(
             "tool.pytest.ini_options.timeout_method",
             "expected 'thread', the common Windows/Linux timeout method",
         )
-    # Compute addopts using  string list for later prepare pytest logic.
     addopts = _string_list(table.get("addopts"), "tool.pytest.ini_options.addopts")
-    # Select the guarded path only after `'--disable-socket' not in addopts` is satisfied.
     if "--disable-socket" not in addopts:
         _raise_probe(
             "tool.pytest.ini_options.addopts",
             "expected --disable-socket so ordinary pytest invocations fail closed",
         )
-    # Compute use using  project configuration for later prepare pytest logic.
     use = _project_configuration(
         context,
         (
@@ -1105,9 +1043,8 @@ def _prepare_mutation(context: GateContext) -> PreparedCommand:
     @param context exact governed repository
     @return explicit portable mutation-gate command
     """
-    # Compute roles using  table for later prepare mutation logic.
+    # Resolve declared domain roles and mutation policy from validated project data.
     roles = _table(context.pyproject, ("tool", "agent-discipline", "roles"))
-    # Unpack domain files, domains using  local targets for later prepare mutation logic.
     domains, domain_files = _local_targets(
         context,
         _string_list(
@@ -1116,7 +1053,7 @@ def _prepare_mutation(context: GateContext) -> PreparedCommand:
         ),
         "tool.agent-discipline.roles.domain",
     )
-    # Compute mutation using  table for later prepare mutation logic.
+    # Read mutation thresholds only after governed domain targets resolve.
     mutation = _table(
         context.pyproject,
         ("tool", "agent-discipline-gate", "mutation"),
@@ -1130,10 +1067,7 @@ def _prepare_mutation(context: GateContext) -> PreparedCommand:
         ),
         "tool.agent-discipline-gate.mutation.test_targets",
     )
-    # Compute mutant timeout using mutation.get for later prepare mutation logic.
     mutant_timeout = mutation.get("mutant_timeout")
-    # Select the empty-or-disabled path when isinstance(mutant timeout, (int, float)) or
-    # Details: isinstance(mutant timeout, bool) or mutant timeout <= 0 has no usable value.
     if (
         not isinstance(mutant_timeout, (int, float))
         or isinstance(mutant_timeout, bool)
@@ -1143,10 +1077,7 @@ def _prepare_mutation(context: GateContext) -> PreparedCommand:
             "tool.agent-discipline-gate.mutation.mutant_timeout",
             "expected a positive per-mutant test timeout",
         )
-    # Compute command timeout using mutation.get for later prepare mutation logic.
     command_timeout = mutation.get("command_timeout")
-    # Select the empty-or-disabled path when isinstance(command timeout, int) or
-    # Details: isinstance(command timeout, bool) or command timeout <= 0 has no usable value.
     if (
         not isinstance(command_timeout, int)
         or isinstance(command_timeout, bool)
@@ -1156,11 +1087,7 @@ def _prepare_mutation(context: GateContext) -> PreparedCommand:
             "tool.agent-discipline-gate.mutation.command_timeout",
             "expected a positive integer command timeout",
         )
-    # Compute maximum survival using mutation.get for later prepare mutation logic.
     maximum_survival = mutation.get("maximum_survival")
-    # Select the empty-or-disabled path when isinstance(maximum survival, (int, float)) or
-    # Details: isinstance(maximum survival, bool) or maximum survival < 0 or
-    # Details: (maximum survival > 0) has no usable value.
     if (
         not isinstance(maximum_survival, (int, float))
         or isinstance(maximum_survival, bool)
@@ -1171,7 +1098,6 @@ def _prepare_mutation(context: GateContext) -> PreparedCommand:
             "tool.agent-discipline-gate.mutation.maximum_survival",
             "expected 0.0; known survivors cannot be a percentage allowance",
         )
-    # Compute use using  project configuration for later prepare mutation logic.
     use = _project_configuration(
         context,
         (
@@ -1231,7 +1157,6 @@ def _mutation_evaluation(
     except json.JSONDecodeError:
         # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
         report = None
-    # Select the empty-or-disabled path when isinstance(report, Mapping) has no usable value.
     if not isinstance(report, Mapping):
         # Return pass or exact mutation failure to the caller.
         return Evaluation(
@@ -1239,19 +1164,13 @@ def _mutation_evaluation(
             "mutation gate emitted no parseable JSON report",
             _tail(execution.output),
         )
-    # Compute diagnostic using report.get for later mutation evaluation logic.
     diagnostic = report.get("diagnostic_id")
-    # Capture status as the completed mutation evaluation outcome for subsequent validation or
-    # Details: publication.
     status = report.get("status")
-    # Compute mutants using report.get for later mutation evaluation logic.
     mutants = report.get("mutants")
-    # Compute domains using report.get for later mutation evaluation logic.
     domains = report.get("domains")
     # Enter the failure path only when the subprocess reports a nonzero status.
     if execution.returncode != 0 or status != "pass":
-        # Capture code as the completed mutation evaluation outcome for subsequent validation or
-        # Details: publication.
+        # Prefer a mutation-specific diagnostic emitted by the child, falling back to gate policy.
         code = diagnostic if isinstance(diagnostic, str) else command.failure_diagnostic
         # Return pass or exact mutation failure to the caller.
         return Evaluation(
@@ -1259,8 +1178,6 @@ def _mutation_evaluation(
             str(report.get("summary", "mutation gate failed without a summary")),
             str(report.get("output", _tail(execution.output))),
         )
-    # Select the empty-or-disabled path when  positive count(mutants) or not  positive
-    # Details: count(domains) has no usable value.
     if not _positive_count(mutants) or not _positive_count(domains):
         # Return pass or exact mutation failure to the caller.
         return Evaluation(
@@ -1290,7 +1207,7 @@ def _import_root_present(
     @param field configuration field carrying the package
     @throws ConfigurationProbeError when no local package matches
     """
-    # Compute relative using Path for later import root present logic.
+    # Convert the import name to its relative package path for source-root probing.
     relative = Path(*package.split("."))
     # Retain the immutable source representation consumed by subsequent analysis.
     # Refuse the target when its declared source directory is absent.
@@ -1316,10 +1233,8 @@ def _prepare_import_contracts(context: GateContext) -> PreparedCommand:
     @param context exact governed repository
     @return explicit portable wrapper command
     """
-    # Compute gate using  gate table for later prepare import contracts logic.
+    # Resolve import-contract configuration and bind it to exact project bytes.
     gate = _gate_table(context)
-    # Unpack config, config use using  relative configuration file for later prepare import
-    # Details: contracts logic.
     config, config_use = _relative_configuration_file(
         context,
         gate.get("import_contracts"),
@@ -1328,50 +1243,31 @@ def _prepare_import_contracts(context: GateContext) -> PreparedCommand:
     )
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
-        # Hold the decoded mapping elements whose keys identify fields and values carry their
-        # Details: content; key order is deliberately unused.
+        # Decode the configured contract document before constructing its explicit command.
         document = cast(
             "Mapping[str, object]",
             tomllib.loads(config.read_text(encoding="utf-8")),
         )
-    # Bind problem to the current value used by the next prepare import contracts decision.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except (OSError, tomllib.TOMLDecodeError) as problem:
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(config_use.path, f"cannot parse TOML: {problem}") from problem
-    # Compute table using  table for later prepare import contracts logic.
     table = _table(document, ("tool", "importlinter"))
-    # Compute packages using  string list for later prepare import contracts logic.
     packages = _string_list(
         table.get("root_packages"),
         "tool.importlinter.root_packages",
     )
-    # Compute contracts field using "tool.importlinter.contracts" for later prepare import
-    # Details: contracts logic.
     contracts_field = "tool.importlinter.contracts"
-    # Compute contracts using table.get for later prepare import contracts logic.
     contracts = table.get("contracts")
-    # Select the empty-or-disabled path when isinstance(contracts, list) or not contracts has no
-    # Details: usable value.
     if not isinstance(contracts, list) or not contracts:
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(
             contracts_field,
             "expected one or more contract tables",
         )
-    # Select contract as the current element from contracts) while prepare import contracts
-    # Details: preserves traversal order.
-    # Select the empty-or-disabled path when all((isinstance(contract, Mapping) for contract in
-    # Details: contracts)) has no usable value.
     if not all(isinstance(contract, Mapping) for contract in contracts):
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(contracts_field, "every contract must be a table")
-    # Compute source roots using  declared source targets for later prepare import contracts
-    # Details: logic.
     source_roots = _declared_source_targets(context)
-    # Select package as the current element from packages while prepare import contracts
-    # Details: preserves traversal order.
-    # Advance prepare import contracts through the current input element in declared order.
     for package in packages:
         _import_root_present(
             context,
@@ -1379,7 +1275,6 @@ def _prepare_import_contracts(context: GateContext) -> PreparedCommand:
             source_roots,
             "tool.importlinter.root_packages",
         )
-    # Compute gate use using  project configuration for later prepare import contracts logic.
     gate_use = _project_configuration(
         context,
         ("tool.agent-discipline-gate.import_contracts", "tool.agent-discipline.source_roots"),
@@ -1426,20 +1321,16 @@ def _doxygen_values(text: str, key: str, field: str) -> tuple[str, ...]:
     matches = [
         match.group(2) for match in _DOXYGEN_ASSIGNMENT.finditer(text) if match.group(1) == key
     ]
-    # Select the guarded path only after `len(matches) != 1` is satisfied.
     if len(matches) != 1:
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(field, f"expected exactly one {key} assignment")
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
-        # Compute values using tuple for later doxygen values logic.
+        # Parse the sole Doxyfile assignment with shell quoting and inline comments honored.
         values = tuple(shlex.split(matches[0], comments=True, posix=True))
-    # Bind problem to the current value used by the next doxygen values decision.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except ValueError as problem:
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(field, f"cannot parse {key}: {problem}") from problem
-    # Select the empty-or-disabled path when values has no usable value.
     if not values:
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(field, f"{key} has no value")
@@ -1453,10 +1344,8 @@ def _prepare_doxygen(context: GateContext) -> DoxygenPlan:
     @param context exact governed repository
     @return configuration-probed build plan
     """
-    # Compute gate using  gate table for later prepare doxygen logic.
+    # Resolve the local Doxyfile and bind every consumed documentation field.
     gate = _gate_table(context)
-    # Unpack doxyfile, doxyfile use using  relative configuration file for later prepare doxygen
-    # Details: logic.
     doxyfile, doxyfile_use = _relative_configuration_file(
         context,
         gate.get("doxyfile"),
@@ -1465,48 +1354,34 @@ def _prepare_doxygen(context: GateContext) -> DoxygenPlan:
     )
     # Retain the immutable source representation consumed by subsequent analysis.
     text = doxyfile.read_text(encoding="utf-8")
-    # Compute input field using "Doxyfile.INPUT" for later prepare doxygen logic.
     input_field = "Doxyfile.INPUT"
-    # Unpack inputs, subjects using  local targets for later prepare doxygen logic.
     inputs, subjects = _local_targets(
         context,
         _doxygen_values(text, "INPUT", input_field),
         input_field,
     )
-    # Compute declared using  declared source targets for later prepare doxygen logic.
     declared = _declared_source_targets(context)
-    # Select the guarded path only after `set(inputs) != set(declared)` is satisfied.
     if set(inputs) != set(declared):
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(
             input_field,
             f"expected declared source roots {declared}, found {inputs}",
         )
-    # Compute patterns field using "Doxyfile.FILE_PATTERNS" for later prepare doxygen logic.
     patterns_field = "Doxyfile.FILE_PATTERNS"
-    # Compute patterns using  doxygen values for later prepare doxygen logic.
     patterns = _doxygen_values(text, "FILE_PATTERNS", patterns_field)
-    # Select the guarded path only after `'*.py' not in patterns` is satisfied.
     if "*.py" not in patterns:
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(patterns_field, "*.py is required")
-    # Compute warning field using "Doxyfile.WARN_AS_ERROR" for later prepare doxygen logic.
     warning_field = "Doxyfile.WARN_AS_ERROR"
-    # Compute warnings using  doxygen values for later prepare doxygen logic.
     warnings = _doxygen_values(text, "WARN_AS_ERROR", warning_field)
-    # Select the guarded path only after `warnings != ('FAIL_ON_WARNINGS',)` is satisfied.
     if warnings != ("FAIL_ON_WARNINGS",):
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(warning_field, "expected FAIL_ON_WARNINGS")
-    # Compute html field using "Doxyfile.GENERATE_HTML" for later prepare doxygen logic.
     html_field = "Doxyfile.GENERATE_HTML"
-    # Compute html using  doxygen values for later prepare doxygen logic.
     html = _doxygen_values(text, "GENERATE_HTML", html_field)
-    # Select the guarded path only after `html != ('YES',)` is satisfied.
     if html != ("YES",):
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(html_field, "expected YES")
-    # Compute gate use using  project configuration for later prepare doxygen logic.
     gate_use = _project_configuration(
         context,
         (
@@ -1548,8 +1423,6 @@ def _native_version(executable: str) -> str:
             check=False,
             timeout=30,
         )
-    # Bind problem to the current value used by the next native version decision.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except (OSError, subprocess.TimeoutExpired) as problem:
         # Propagate the localized failure so callers cannot mistake it for success.
         raise CommandExecutionError(str(problem)) from problem
@@ -1576,12 +1449,10 @@ def _execute_doxygen(
     """
     # Combine the checker's captured diagnostic streams without losing emission text.
     output = context.scratch / "doxygen"
-    # Compute configuration using ( for later execute doxygen logic.
     configuration = (
         plan.configuration_file.read_text(encoding="utf-8")
         + f"\nOUTPUT_DIRECTORY = {output.as_posix()}\n"
     )
-    # Compute started using time.perf counter for later execute doxygen logic.
     started = time.perf_counter()
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
@@ -1597,12 +1468,9 @@ def _execute_doxygen(
             check=False,
             timeout=600,
         )
-    # Bind problem to the current value used by the next execute doxygen decision.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except (OSError, subprocess.TimeoutExpired) as problem:
         # Propagate the localized failure so callers cannot mistake it for success.
         raise CommandExecutionError(str(problem)) from problem
-    # Compute duration using round for later execute doxygen logic.
     duration = round((time.perf_counter() - started) * 1000)
     # Preserve the external command representation and its observed completion outcome.
     process = CommandExecution(
@@ -1627,8 +1495,7 @@ def _documentation_configuration_failure(
     @param problem field-specific refusal
     @return red result
     """
-    # Compute use using  project configuration for later documentation configuration failure
-    # Details: logic.
+    # Bind a configuration refusal to the exact project field and file digest that caused it.
     use = _project_configuration(context, (problem.field,))
     # Return red result to the caller.
     return StepResult(
@@ -1655,10 +1522,8 @@ def _run_doxygen_documentation(
     """
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
-        # Compute plan using  prepare doxygen for later run doxygen documentation logic.
+        # Prepare the complete Doxygen plan before probing host availability or version.
         plan = _prepare_doxygen(context)
-    # Bind problem to the current value used by the next run doxygen documentation decision.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except ConfigurationProbeError as problem:
         # Return explicit Doxygen outcome to the caller.
         return _documentation_configuration_failure(context, rules, problem)
@@ -1678,16 +1543,13 @@ def _run_doxygen_documentation(
             subjects=plan.subjects,
             supported_platforms=("Windows", "Linux"),
         )
-    # Compute version using "unknown" for later run doxygen documentation logic.
     version = "unknown"
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
-        # Compute version using  native version for later run doxygen documentation logic.
+        # Observe the native executable version before launching documentation generation.
         version = _native_version(executable)
         # Preserve the external command representation and its observed completion outcome.
         execution = _execute_doxygen(executable, plan, context)
-    # Bind problem to the current value used by the next run doxygen documentation decision.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except CommandExecutionError as problem:
         # Return explicit Doxygen outcome to the caller.
         return StepResult(
@@ -1721,7 +1583,6 @@ def _run_doxygen_documentation(
             duration_ms=process.duration_ms,
             output=_tail(process.output),
         )
-    # Select the guarded path only after `execution.pages < plan.subjects` is satisfied.
     if execution.pages < plan.subjects:
         # Return explicit Doxygen outcome to the caller.
         return StepResult(
@@ -1773,8 +1634,7 @@ class DocumentationAdapter:
         @param context exact governed repository
         @return explicit build, inapplicability, or support outcome
         """
-        # Select the guarded path only after `platform.system() not in {'Windows', 'Linux'}` is
-        # Details: satisfied.
+        # Limit native documentation execution to the two qualified development legs.
         if platform.system() not in {"Windows", "Linux"}:
             # Return explicit build, inapplicability, or support outcome to the caller.
             return StepResult(
@@ -1900,23 +1760,18 @@ def _copy_isolated(root: Path, destination: Path) -> int:
     # Preserve directory, files, names element values in deterministic source order.
     # Advance copy isolated through the current input element in declared order.
     for directory, names, files in os.walk(root):
-        # Normalize the current repository path to its portable baseline key spelling.
-        # Update  copy isolated state only after the required source facts are available.
+        # Prune package-excluded directories before traversal can copy their descendants.
         names[:] = [name for name in names if name not in _ISOLATION_EXCLUDES]
         # Preserve the documentation-stripped behavior fingerprint used for comparison.
         current = Path(directory)
         # Normalize the current repository path to its portable baseline key spelling.
         # Advance copy isolated through the current input element in declared order.
         for name in (*names, *files):
-            # Resolve the repository-confined path used by this operation before filesystem
-            # Details: access.
+            # Reject every symbolic link before copying an isolation tree with ambiguous targets.
             path = current / name
-            # Select the guarded path only after `path.is_symlink()` is satisfied.
             if path.is_symlink():
-                # Compute relative using path.relative to for later copy isolated logic.
+                # Name the repository-relative link and required materialization repair.
                 relative = path.relative_to(root).as_posix()
-                # Compute detail using f"build isolation refuses symlink {relative!r};
-                # Details: materialize  for later copy isolated logic.
                 detail = f"build isolation refuses symlink {relative!r}; materialize or package it"
                 # Propagate the localized failure so callers cannot mistake it for success.
                 raise _artifact_error(detail)
@@ -1937,23 +1792,16 @@ def _project_identity(context: GateContext) -> tuple[str, str]:
     @return name and version
     @throws ConfigurationProbeError when either is absent
     """
-    # Compute table using  table for later project identity logic.
+    # Read declared distribution name and version from the exact-root project table.
     table = _table(context.pyproject, ("project",))
     # Normalize the current repository path to its portable baseline key spelling.
     name = table.get("name")
-    # Compute version using table.get for later project identity logic.
     version = table.get("version")
-    # Compute name field using "project.name" for later project identity logic.
     name_field = "project.name"
-    # Compute version field using "project.version" for later project identity logic.
     version_field = "project.version"
-    # Select the empty-or-disabled path when isinstance(name, str) or not name.strip() has no
-    # Details: usable value.
     if not isinstance(name, str) or not name.strip():
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(name_field, "expected a non-empty distribution name")
-    # Select the empty-or-disabled path when isinstance(version, str) or not version.strip() has
-    # Details: no usable value.
     if not isinstance(version, str) or not version.strip():
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(version_field, "expected a static non-empty version")
@@ -1967,22 +1815,16 @@ def _validate_build_system(context: GateContext) -> None:
     @param context decoded exact-root project
     @throws ConfigurationProbeError when backend selection can drift
     """
-    # Compute table using  table for later validate build system logic.
+    # Validate build backend and exact requirements before invoking an isolated build.
     table = _table(context.pyproject, ("build-system",))
-    # Compute backend using table.get for later validate build system logic.
+    # Retain the backend value and its full field identity for localized refusal.
     backend = table.get("build-backend")
-    # Compute backend field using "build-system.build-backend" for later validate build system
-    # Details: logic.
     backend_field = "build-system.build-backend"
-    # Select the empty-or-disabled path when isinstance(backend, str) or not backend.strip() has
-    # Details: no usable value.
     if not isinstance(backend, str) or not backend.strip():
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # A missing backend makes artifact provenance and build behavior undefined.
         raise _probe_error(backend_field, "expected a backend module")
-    # Compute requirements field using "build-system.requires" for later validate build system
-    # Details: logic.
+    # Parse build requirements under their full field identity for exact-pin checks.
     requirements_field = "build-system.requires"
-    # Compute requirements using  string list for later validate build system logic.
     requirements = _string_list(table.get("requires"), requirements_field)
     # Each unpinned element is one inexact build requirement, retaining requirement order.
     unpinned = [
@@ -2010,21 +1852,16 @@ def _prepare_build(context: GateContext) -> tuple[BuildPlan, PreparedCommand]:
     _validate_build_system(context)
     # Retain the immutable source representation consumed by subsequent analysis.
     source = context.scratch / "isolated-source"
-    # Compute artifacts using context.scratch / "artifacts" for later prepare build logic.
     artifacts = context.scratch / "artifacts"
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
-        # Compute subjects using  copy isolated for later prepare build logic.
+        # Copy only materialized repository content into the isolated build source tree.
         subjects = _copy_isolated(context.root, source)
-    # Bind problem to the current value used by the next prepare build decision.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except ArtifactError as problem:
-        # Compute build inputs field using "repository.build_inputs" for later prepare build
-        # Details: logic.
+        # Bind isolation refusal to the repository build-input field.
         build_inputs_field = "repository.build_inputs"
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(build_inputs_field, str(problem)) from problem
-    # Compute use using  project configuration for later prepare build logic.
     use = _project_configuration(
         context,
         (
@@ -2035,7 +1872,6 @@ def _prepare_build(context: GateContext) -> tuple[BuildPlan, PreparedCommand]:
             "build-system.build-backend",
         ),
     )
-    # Compute plan using BuildPlan for later prepare build logic.
     plan = BuildPlan(source, artifacts, name, version, subjects, (use,))
     # Preserve the external command representation and its observed completion outcome.
     command = PreparedCommand(
@@ -2076,16 +1912,13 @@ def _metadata_identity(content: bytes, source: str) -> tuple[str, str]:
     @return distribution name and version
     @throws ArtifactError when required fields are absent
     """
-    # Compute message using BytesParser for later metadata identity logic.
+    # Parse package metadata bytes under the email-message grammar used by wheel and sdist specs.
     message = BytesParser(policy=email_policy).parsebytes(content)
     # Normalize the current repository path to its portable baseline key spelling.
     name = message.get("Name")
-    # Compute version using message.get for later metadata identity logic.
     version = message.get("Version")
-    # Select the empty-or-disabled path when name or not version has no usable value.
     if not name or not version:
-        # Compute detail using f"{source} has no complete Name/Version metadata" for later
-        # Details: metadata identity logic.
+        # Name the artifact member whose core distribution identity is incomplete.
         detail = f"{source} has no complete Name/Version metadata"
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _artifact_error(detail)
@@ -2102,25 +1935,19 @@ def _wheel_identity(path: Path) -> tuple[str, str]:
     """
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
-        # Bind archive to the current value used by the next wheel identity decision.
-        # Confine the acquired resource to this operation and release it on every exit.
+        # Inspect the wheel archive and require exactly one distribution metadata member.
         with zipfile.ZipFile(path) as archive:
             # Each members element is one wheel metadata path, retained in archive order.
             members = [name for name in archive.namelist() if name.endswith(".dist-info/METADATA")]
-            # Select the guarded path only after `len(members) != 1` is satisfied.
             if len(members) != 1:
-                # Compute detail using f"{path.name} contains {len(members)} METADATA files" for
-                # Details: later wheel identity logic.
+                # Multiple or absent metadata members make artifact identity ambiguous.
                 detail = f"{path.name} contains {len(members)} METADATA files"
                 # Propagate the localized failure so callers cannot mistake it for success.
                 raise _artifact_error(detail)
             # Return distribution name and version to the caller.
             return _metadata_identity(archive.read(members[0]), f"{path.name}:{members[0]}")
-    # Bind problem to the current value used by the next wheel identity decision.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except (OSError, zipfile.BadZipFile, KeyError) as problem:
-        # Compute detail using f"cannot read wheel {path.name}: {problem}" for later wheel
-        # Details: identity logic.
+        # Translate archive and member-read failures to one artifact diagnostic.
         detail = f"cannot read wheel {path.name}: {problem}"
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _artifact_error(detail) from problem
@@ -2133,8 +1960,7 @@ def _read_sdist_identity(path: Path) -> tuple[str, str]:
     @return distribution name and version
     @throws ArtifactError when membership or metadata is malformed
     """
-    # Compute archive using "r:gz") as archive: for later read sdist identity logic.
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Inspect the source archive and require exactly one root package metadata member.
     with tarfile.open(path, mode="r:gz") as archive:
         # Each members element is one root-level package metadata member in archive order.
         members = [
@@ -2142,19 +1968,15 @@ def _read_sdist_identity(path: Path) -> tuple[str, str]:
             for member in archive.getmembers()
             if member.isfile() and member.name.count("/") == 1 and member.name.endswith("/PKG-INFO")
         ]
-        # Select the guarded path only after `len(members) != 1` is satisfied.
         if len(members) != 1:
-            # Compute detail using f"{path.name} contains {len(members)} root PKG-INFO files"
-            # Details: for later read sdist identity logic.
+            # Multiple or absent root metadata members make source identity ambiguous.
             detail = f"{path.name} contains {len(members)} root PKG-INFO files"
             # Propagate the localized failure so callers cannot mistake it for success.
             raise _artifact_error(detail)
-        # Compute stream using archive.extractfile for later read sdist identity logic.
         stream = archive.extractfile(members[0])
         # Use the absence path when stream has no available value.
         if stream is None:
-            # Compute detail using f"cannot read {path.name}:{members[0].name}" for later read
-            # Details: sdist identity logic.
+            # A declared metadata member without readable bytes cannot prove identity.
             detail = f"cannot read {path.name}:{members[0].name}"
             # Propagate the localized failure so callers cannot mistake it for success.
             raise _artifact_error(detail)
@@ -2173,11 +1995,8 @@ def _sdist_identity(path: Path) -> tuple[str, str]:
     try:
         # Return distribution name and version to the caller.
         return _read_sdist_identity(path)
-    # Bind problem to the current value used by the next sdist identity decision.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except (OSError, tarfile.TarError) as problem:
-        # Compute detail using f"cannot read sdist {path.name}: {problem}" for later sdist
-        # Details: identity logic.
+        # Translate tar decoding failure to the stable artifact diagnostic family.
         detail = f"cannot read sdist {path.name}: {problem}"
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _artifact_error(detail) from problem
@@ -2190,20 +2009,16 @@ def _validate_artifacts(plan: BuildPlan) -> BuiltArtifacts:
     @return validated artifact paths and identity
     @throws ArtifactError when count or metadata differs
     """
-    # Compute wheels using sorted for later validate artifacts logic.
+    # Inventory wheel and source artifacts separately in lexical filename order.
     wheels = sorted(plan.artifacts.glob("*.whl"))
-    # Compute sdists using sorted for later validate artifacts logic.
     sdists = sorted(plan.artifacts.glob("*.tar.gz"))
-    # Select the guarded path only after `len(wheels) != 1 or len(sdists) != 1` is satisfied.
     if len(wheels) != 1 or len(sdists) != 1:
-        # Compute detail using f"expected one wheel and one sdist, found {len(wheels)} and  for
-        # Details: later validate artifacts logic.
+        # Require one artifact of each published format before comparing identities.
         detail = f"expected one wheel and one sdist, found {len(wheels)} and {len(sdists)}"
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _artifact_error(detail)
-    # Compute wheel identity using  wheel identity for later validate artifacts logic.
+    # Read both artifact identities independently before comparing them with project metadata.
     wheel_identity = _wheel_identity(wheels[0])
-    # Compute sdist identity using  sdist identity for later validate artifacts logic.
     sdist_identity = _sdist_identity(sdists[0])
     # Each expected element is respectively the canonical distribution name then exact version;
     # tuple order defines the artifact identity comparison.
@@ -2213,10 +2028,8 @@ def _validate_artifacts(plan: BuildPlan) -> BuiltArtifacts:
         (_canonical_distribution(wheel_identity[0]), wheel_identity[1]),
         (_canonical_distribution(sdist_identity[0]), sdist_identity[1]),
     )
-    # Select the guarded path only after `observed != (expected, expected)` is satisfied.
     if observed != (expected, expected):
-        # Compute detail using f"expected artifact identity {expected}, found {observed}" for
-        # Details: later validate artifacts logic.
+        # Report all expected and observed identities together so cross-format drift is visible.
         detail = f"expected artifact identity {expected}, found {observed}"
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _artifact_error(detail)
@@ -2244,8 +2057,6 @@ class ArtifactBuildAdapter:
         try:
             # Preserve the external command representation and its observed completion outcome.
             plan, command = _prepare_build(context)
-        # Bind problem to the current value used by the next call decision.
-        # Translate the expected failure into this mechanism's stable diagnostic path.
         except ConfigurationProbeError as problem:
             # Return explicit build outcome to the caller.
             return StepResult(
@@ -2259,7 +2070,7 @@ class ArtifactBuildAdapter:
             )
         # Protect the fallible operation so expected failures remain explicitly classified.
         try:
-            # Compute version using  distribution version for later call logic.
+            # Resolve the installed build frontend version before executing artifact creation.
             version = _distribution_version("build")
         # Translate the expected failure into this mechanism's stable diagnostic path.
         except importlib.metadata.PackageNotFoundError:
@@ -2279,8 +2090,6 @@ class ArtifactBuildAdapter:
         try:
             # Preserve the external command representation and its observed completion outcome.
             execution = _execute(command, context.root)
-        # Bind problem to the current value used by the next call decision.
-        # Translate the expected failure into this mechanism's stable diagnostic path.
         except CommandExecutionError as problem:
             # Return explicit build outcome to the caller.
             return StepResult(
@@ -2314,10 +2123,8 @@ class ArtifactBuildAdapter:
             )
         # Protect the fallible operation so expected failures remain explicitly classified.
         try:
-            # Compute artifacts using  validate artifacts for later call logic.
+            # Validate both produced artifact formats before publishing build success.
             artifacts = _validate_artifacts(plan)
-        # Bind problem to the current value used by the next call decision.
-        # Translate the expected failure into this mechanism's stable diagnostic path.
         except ArtifactError as problem:
             # Return explicit build outcome to the caller.
             return StepResult(
@@ -2363,8 +2170,7 @@ def _optional_probe_text(value: object, field: str) -> str | None:
     @return exact text or absence
     @throws ConfigurationProbeError when a non-text value is present
     """
-    # Select the guarded path only after `value is not None and (not isinstance(value, str))` is
-    # Details: satisfied.
+    # Accept absence or text only for optional probe fields; other shapes are ambiguous.
     if value is not None and not isinstance(value, str):
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(field, "must be text or absent")
@@ -2380,7 +2186,7 @@ def _artifact_probe(raw: object, field: str) -> ArtifactProbe:
     @return validated probe
     @throws ConfigurationProbeError when the declaration is unsafe or ambiguous
     """
-    # Select the empty-or-disabled path when isinstance(raw, Mapping) has no usable value.
+    # Require each probe declaration to be a mapping before reading its command contract.
     if not isinstance(raw, Mapping):
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(field, "expected a table")
@@ -2394,7 +2200,6 @@ def _artifact_probe(raw: object, field: str) -> ArtifactProbe:
         "expected_stdout",
         "expected_stderr",
     }
-    # Compute unknown using set for later artifact probe logic.
     unknown = set(raw) - allowed
     # Handle the non-empty or enabled unknown state.
     if unknown:
@@ -2402,23 +2207,14 @@ def _artifact_probe(raw: object, field: str) -> ArtifactProbe:
         raise _probe_error(field, f"unknown fields {sorted(unknown)}")
     # Normalize the current repository path to its portable baseline key spelling.
     name = raw.get("name")
-    # Compute expected using raw.get for later artifact probe logic.
     expected = raw.get("expected_exit", 0)
-    # Compute timeout using raw.get for later artifact probe logic.
     timeout = raw.get("timeout_seconds", 10)
-    # Select the empty-or-disabled path when isinstance(name, str) or not name.strip() has no
-    # Details: usable value.
     if not isinstance(name, str) or not name.strip():
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(field, "name must be non-empty text")
-    # Select the empty-or-disabled path when isinstance(expected, int) or isinstance(expected,
-    # Details: bool) has no usable value.
     if not isinstance(expected, int) or isinstance(expected, bool):
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(field, "expected_exit must be an integer")
-    # Select the empty-or-disabled path when (isinstance(timeout, int) and (not
-    # Details: isinstance(timeout, bool)) and
-    # Details: (1 <= timeout <=  MAX PROBE TIMEOUT)) has no usable value.
     if not (
         isinstance(timeout, int)
         and not isinstance(timeout, bool)
@@ -2456,12 +2252,10 @@ def _parse_artifact_probes(
     @return import names and executable probes
     @throws ConfigurationProbeError when a probe is unsafe or ambiguous
     """
-    # Compute gate using  gate table for later parse artifact probes logic.
+    # Resolve declared import and command probes from the exact-root gate table.
     gate = _gate_table(context)
-    # Compute import field using "tool.agent-discipline-gate.artifact_imports" for later parse
-    # Details: artifact probes logic.
+    # Retain the import field identity beside its normalized ordered values.
     import_field = "tool.agent-discipline-gate.artifact_imports"
-    # Compute imports using  string list for later parse artifact probes logic.
     imports = _string_list(gate.get("artifact_imports"), import_field)
     # Each invalid element is one syntactically invalid import name in declaration order.
     invalid = [name for name in imports if _IMPORT_NAME.fullmatch(name) is None]
@@ -2469,12 +2263,8 @@ def _parse_artifact_probes(
     if invalid:
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(import_field, f"invalid import names {invalid}")
-    # Compute probes field using "tool.agent-discipline-gate.artifact_probes" for later parse
-    # Details: artifact probes logic.
     probes_field = "tool.agent-discipline-gate.artifact_probes"
-    # Compute raw probes using gate.get for later parse artifact probes logic.
     raw_probes = gate.get("artifact_probes", [])
-    # Select the empty-or-disabled path when isinstance(raw probes, list) has no usable value.
     if not isinstance(raw_probes, list):
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(probes_field, "expected an array")
@@ -2482,10 +2272,6 @@ def _parse_artifact_probes(
     probes = tuple(
         _artifact_probe(raw, f"{probes_field}[{index}]") for index, raw in enumerate(raw_probes)
     )
-    # Select probe as the current element from probes}) != len(probes) while parse artifact
-    # Details: probes preserves traversal order.
-    # Select the guarded path only after `len({probe.name for probe in probes}) != len(probes)`
-    # Details: is satisfied.
     if len({probe.name for probe in probes}) != len(probes):
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(probes_field, "probe names repeat")
@@ -2499,7 +2285,7 @@ def _fresh_python(environment: Path) -> Path:
     @param environment virtual-environment root
     @return interpreter path
     """
-    # Compute windows using environment / "Scripts" / "python.exe" for later fresh python logic.
+    # Resolve the platform-specific interpreter location inside a fresh virtual environment.
     windows = environment / "Scripts" / "python.exe"
     # Return interpreter path to the caller.
     return windows if windows.is_file() else environment / "bin" / "python"
@@ -2515,17 +2301,13 @@ def _create_venv(environment: Path) -> Path:
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
         venv.EnvBuilder(with_pip=True, clear=True).create(environment)
-    # Bind problem to the current value used by the next create venv decision.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except OSError as problem:
         # Propagate the localized failure so callers cannot mistake it for success.
         raise CommandExecutionError(str(problem)) from problem
-    # Compute interpreter using  fresh python for later create venv logic.
     interpreter = _fresh_python(environment)
     # Select the regular-file path only when `not interpreter.is_file()` is satisfied.
     if not interpreter.is_file():
-        # Compute detail using f"virtual environment has no interpreter at {interpreter}" for
-        # Details: later create venv logic.
+        # Name the expected interpreter path when environment creation produced no usable runtime.
         detail = f"virtual environment has no interpreter at {interpreter}"
         # Propagate the localized failure so callers cannot mistake it for success.
         raise CommandExecutionError(detail)
@@ -2541,21 +2323,17 @@ def _probe_argv(probe: ArtifactProbe, interpreter: Path) -> tuple[str, ...]:
     @return executable argv
     @throws ConfigurationProbeError when the entry point is absent
     """
-    # Compute scripts using interpreter.parent for later probe argv logic.
+    # Anchor installed command resolution beside the fresh environment's interpreter.
     scripts = interpreter.parent
     # Each resolved element is one command argument after interpreter substitution; declared
     # argument order is preserved.
     resolved = [
         str(interpreter) if argument == "{python}" else argument for argument in probe.command
     ]
-    # Compute first using Path for later probe argv logic.
     first = Path(resolved[0])
-    # Select the guarded path only after `resolved[0] == str(interpreter)` is satisfied.
     if resolved[0] == str(interpreter):
         # Return executable argv to the caller.
         return tuple(resolved)
-    # Select the guarded path only after `first.is_absolute() or len(first.parts) != 1` is
-    # Details: satisfied.
     if first.is_absolute() or len(first.parts) != 1:
         # Propagate the localized failure so callers cannot mistake it for success.
         raise _probe_error(probe.name, "probe executable must be {python} or a venv entry point")
@@ -2588,9 +2366,8 @@ def _execute_with_timeout(
     @return process observation
     @throws CommandExecutionError when launch or timeout fails
     """
-    # Compute prepared using PreparedCommand for later execute with timeout logic.
+    # Wrap the explicit probe command in the shared execution contract and start bounded timing.
     prepared = PreparedCommand(command, (), 1, "", "probe")
-    # Compute started using time.perf counter for later execute with timeout logic.
     started = time.perf_counter()
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
@@ -2606,8 +2383,6 @@ def _execute_with_timeout(
             check=False,
             timeout=timeout,
         )
-    # Bind problem to the current value used by the next execute with timeout decision.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except (OSError, subprocess.TimeoutExpired) as problem:
         # Propagate the localized failure so callers cannot mistake it for success.
         raise CommandExecutionError(str(problem)) from problem
@@ -2654,9 +2429,8 @@ def _prepare_install(
         Each element is one delivered-artifact rule id in adapter declaration order.
     @return install plan or explicit preflight failure
     """
-    # Compute wheels using sorted for later prepare install logic.
+    # Inventory isolated build wheels before selecting the sole clean-install candidate.
     wheels = sorted((context.scratch / "artifacts").glob("*.whl"))
-    # Select the guarded path only after `len(wheels) != 1` is satisfied.
     if len(wheels) != 1:
         # Return install plan or explicit preflight failure to the caller.
         return StepResult(
@@ -2669,12 +2443,10 @@ def _prepare_install(
         )
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
-        # Unpack imports, probes using  parse artifact probes for later prepare install logic.
+        # Parse declared import and command probes before allocating a fresh environment.
         imports, probes = _parse_artifact_probes(context)
         # Normalize the current repository path to its portable baseline key spelling.
         name, version = _project_identity(context)
-    # Bind problem to the current value used by the next prepare install decision.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except ConfigurationProbeError as problem:
         # Return install plan or explicit preflight failure to the caller.
         return StepResult(
@@ -2688,10 +2460,8 @@ def _prepare_install(
         )
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
-        # Compute interpreter using  create venv for later prepare install logic.
+        # Create an empty virtual environment used only for wheel installation and probes.
         interpreter = _create_venv(context.scratch / "installed")
-    # Bind problem to the current value used by the next prepare install decision.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except CommandExecutionError as problem:
         # Return install plan or explicit preflight failure to the caller.
         return StepResult(
@@ -2702,7 +2472,6 @@ def _prepare_install(
             diagnostic_id="GATE-INSTALL-002_ENVIRONMENT",
             summary=f"cannot create clean environment: {problem}",
         )
-    # Compute use using  project configuration for later prepare install logic.
     use = _project_configuration(
         context,
         (
@@ -2711,7 +2480,6 @@ def _prepare_install(
             "tool.agent-discipline-gate.artifact_probes",
         ),
     )
-    # Compute install using PreparedCommand for later prepare install logic.
     install = PreparedCommand(
         (
             str(interpreter),
@@ -2748,10 +2516,8 @@ def _install_wheel(
     """
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
-        # Compute installed using  execute for later install wheel logic.
+        # Execute wheel installation inside the isolated interpreter environment.
         installed = _execute(plan.install, context.scratch)
-    # Bind problem to the current value used by the next install wheel decision.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except CommandExecutionError as problem:
         # Return process observation or explicit failure to the caller.
         return StepResult(
@@ -2800,7 +2566,7 @@ def _verify_installed_imports(
         Each element is one delivered-artifact rule id in adapter declaration order.
     @return accumulated duration or explicit failure
     """
-    # Compute script using ( for later verify installed imports logic.
+    # Build one isolated interpreter script that imports every declared package and its metadata.
     script = (
         "import importlib, importlib.metadata as metadata; "
         f"assert metadata.version({plan.name!r}) == {plan.version!r}; "
@@ -2808,14 +2574,12 @@ def _verify_installed_imports(
     )
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
-        # Compute imported using  execute with timeout for later verify installed imports logic.
+        # Execute the import proof with network-disabled inherited gate conditions and timeout.
         imported = _execute_with_timeout(
             (str(plan.interpreter), "-I", "-c", script),
             context.scratch,
             60,
         )
-    # Bind problem to the current value used by the next verify installed imports decision.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except CommandExecutionError as problem:
         # Return accumulated duration or explicit failure to the caller.
         return StepResult(
@@ -2828,8 +2592,6 @@ def _verify_installed_imports(
             command=plan.install.command,
             configuration=plan.install.configuration,
         )
-    # Compute duration using installed.duration_ms + imported.duration_ms for later verify
-    # Details: installed imports logic.
     duration = installed.duration_ms + imported.duration_ms
     # Enter the failure path only when the subprocess reports a nonzero status.
     if imported.returncode != 0:
@@ -2867,26 +2629,20 @@ def _verify_installed_commands(
         Each element is one delivered-artifact rule id in adapter declaration order.
     @return total duration or first explicit probe failure
     """
-    # Compute total using duration for later verify installed commands logic.
+    # Accumulate probe duration onto earlier install/import time for one step measurement.
     total = duration
-    # Select probe as the current element from plan.probes while verify installed commands
-    # Details: preserves traversal order.
-    # Advance verify installed commands through the current input element in declared order.
     for probe in plan.probes:
-        # Protect the fallible operation so expected failures remain explicitly classified.
+        # Resolve and execute each declared command probe in declaration order.
         try:
-            # Compute argv using  probe argv for later verify installed commands logic.
+            # Substitute the fresh interpreter into the probe's explicit argument vector.
             argv = _probe_argv(probe, plan.interpreter)
-            # Compute observed using  execute with timeout for later verify installed commands
-            # Details: logic.
+            # Observe one bounded command execution before matching its declared output contract.
             observed = _execute_with_timeout(
                 argv,
                 context.scratch,
                 probe.timeout_seconds,
                 probe.stdin,
             )
-        # Bind problem to the current value used by the next verify installed commands decision.
-        # Translate the expected failure into this mechanism's stable diagnostic path.
         except (ConfigurationProbeError, CommandExecutionError) as problem:
             # Return total duration or first explicit probe failure to the caller.
             return StepResult(
@@ -2900,7 +2656,6 @@ def _verify_installed_commands(
                 configuration=plan.install.configuration,
                 duration_ms=total,
             )
-        # Compute total using observed.duration_ms for later verify installed commands logic.
         total += observed.duration_ms
         # Enter the failure path only when the subprocess reports a nonzero status.
         if observed.returncode != probe.expected_exit:
@@ -2923,12 +2678,8 @@ def _verify_installed_commands(
         # Each mismatches element is one observed-versus-expected difference, ordered by exit
         # status, stdout, then stderr.
         mismatches = []
-        # Select the guarded path only after `probe.expected_stdout is not None and
-        # Details: observed.stdout != probe.expected_stdout` is satisfied.
         if probe.expected_stdout is not None and observed.stdout != probe.expected_stdout:
             mismatches.append("stdout")
-        # Select the guarded path only after `probe.expected_stderr is not None and
-        # Details: observed.stderr != probe.expected_stderr` is satisfied.
         if probe.expected_stderr is not None and observed.stderr != probe.expected_stderr:
             mismatches.append("stderr")
         # Handle the non-empty or enabled mismatches state.
@@ -2966,19 +2717,17 @@ class CleanInstallAdapter:
         @param context exact governed repository and shared scratch space
         @return explicit installation/probe outcome
         """
-        # Compute prepared using  prepare install for later call logic.
+        # Prepare clean-install inputs; a StepResult here is an already localized preflight refusal.
         prepared = _prepare_install(context, self.step_id, self.rules)
-        # Select the guarded path only after `isinstance(prepared, StepResult)` is satisfied.
         if isinstance(prepared, StepResult):
             # Return explicit installation/probe outcome to the caller.
             return prepared
-        # Compute installed using  install wheel for later call logic.
+        # Install the sole wheel before any import or command probe is allowed to run.
         installed = _install_wheel(context, prepared, self.step_id, self.rules)
-        # Select the guarded path only after `isinstance(installed, StepResult)` is satisfied.
         if isinstance(installed, StepResult):
             # Return explicit installation/probe outcome to the caller.
             return installed
-        # Compute imported using  verify installed imports for later call logic.
+        # Verify declared imports and distribution metadata in the isolated interpreter.
         imported = _verify_installed_imports(
             context,
             prepared,
@@ -2986,11 +2735,10 @@ class CleanInstallAdapter:
             self.step_id,
             self.rules,
         )
-        # Select the guarded path only after `isinstance(imported, StepResult)` is satisfied.
         if isinstance(imported, StepResult):
             # Return explicit installation/probe outcome to the caller.
             return imported
-        # Compute probed using  verify installed commands for later call logic.
+        # Verify every declared installed command only after imports have succeeded.
         probed = _verify_installed_commands(
             context,
             prepared,
@@ -2998,13 +2746,9 @@ class CleanInstallAdapter:
             self.step_id,
             self.rules,
         )
-        # Select the guarded path only after `isinstance(probed, StepResult)` is satisfied.
         if isinstance(probed, StepResult):
             # Return explicit installation/probe outcome to the caller.
             return probed
-        # Treat the current index, value, probe as the candidate element consumed by the
-        # Details: enclosing transformation.
-        # Return explicit installation/probe outcome to the caller.
         return StepResult(
             step_id=self.step_id,
             rules=self.rules,
@@ -3036,7 +2780,7 @@ def _execute(command: PreparedCommand, root: Path) -> CommandExecution:
     @return process observation
     @throws CommandExecutionError when the process cannot start or times out
     """
-    # Compute started using time.perf counter for later execute logic.
+    # Start timing immediately before the prepared external command boundary.
     started = time.perf_counter()
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
@@ -3051,12 +2795,9 @@ def _execute(command: PreparedCommand, root: Path) -> CommandExecution:
             check=False,
             timeout=1800,
         )
-    # Bind problem to the current value used by the next execute decision.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except (OSError, subprocess.TimeoutExpired) as problem:
         # Propagate the localized failure so callers cannot mistake it for success.
         raise CommandExecutionError(str(problem)) from problem
-    # Compute duration using round for later execute logic.
     duration = round((time.perf_counter() - started) * 1000)
     # Return process observation to the caller.
     return CommandExecution(
@@ -3145,7 +2886,6 @@ def _pyright_evaluation(
     except json.JSONDecodeError:
         # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
         report = None
-    # Select the empty-or-disabled path when isinstance(report, Mapping) has no usable value.
     if not isinstance(report, Mapping):
         # Return pass, findings, or vacuity failure to the caller.
         return Evaluation(
@@ -3155,7 +2895,6 @@ def _pyright_evaluation(
         )
     # Select the checker summary mapping that carries analyzed-file metrics.
     summary = report.get("summary")
-    # Select the empty-or-disabled path when isinstance(summary, Mapping) has no usable value.
     if not isinstance(summary, Mapping):
         # Return pass, findings, or vacuity failure to the caller.
         return Evaluation(
@@ -3163,7 +2902,6 @@ def _pyright_evaluation(
             "pyright report has no summary",
             _tail(execution.output),
         )
-    # Compute analysed using summary.get for later pyright evaluation logic.
     analysed = summary.get("filesAnalyzed")
     # Preserve finding-record elements in checker emission order for the final verdict.
     errors = summary.get("errorCount")
@@ -3175,8 +2913,6 @@ def _pyright_evaluation(
             f"pyright reported {errors!r} error(s) after analysing {analysed!r} file(s)",
             _tail(execution.output),
         )
-    # Select the empty-or-disabled path when isinstance(analysed, int) or analysed <= 0 has no
-    # Details: usable value.
     if not isinstance(analysed, int) or analysed <= 0:
         # Return pass, findings, or vacuity failure to the caller.
         return Evaluation(
@@ -3210,11 +2946,8 @@ def _pytest_evaluation(
             f"pytest failed while evaluating {command.subjects} configured test file(s)",
             _tail(execution.output),
         )
-    # Compute matches using  PYTEST PASSED.findall for later pytest evaluation logic.
     matches = _PYTEST_PASSED.findall(execution.output)
-    # Compute passed using int for later pytest evaluation logic.
     passed = int(matches[-1]) if matches else 0
-    # Select the guarded path only after `passed == 0` is satisfied.
     if passed == 0:
         # Return pass, test failure, or vacuity failure to the caller.
         return Evaluation(
@@ -3257,7 +2990,7 @@ class ConfiguredToolAdapter:
         @param problem field-specific refusal
         @return red result
         """
-        # Compute use using  project configuration for later configuration failure logic.
+        # Bind a tool configuration refusal to the exact project field and digest.
         use = _project_configuration(context, (problem.field,))
         # Return red result to the caller.
         return StepResult(
@@ -3277,8 +3010,7 @@ class ConfiguredToolAdapter:
         @param context exact governed repository
         @return explicit tool outcome
         """
-        # Select the guarded path only after `platform.system() not in self.supported_platforms`
-        # Details: is satisfied.
+        # Report explicit inapplicability before probing a distribution on an unsupported host.
         if platform.system() not in self.supported_platforms:
             # Return explicit tool outcome to the caller.
             return StepResult(
@@ -3294,14 +3026,12 @@ class ConfiguredToolAdapter:
         try:
             # Preserve the external command representation and its observed completion outcome.
             command = self.prepare(context)
-        # Bind problem to the current value used by the next call decision.
-        # Translate the expected failure into this mechanism's stable diagnostic path.
         except ConfigurationProbeError as problem:
             # Return explicit tool outcome to the caller.
             return self._configuration_failure(context, problem)
         # Protect the fallible operation so expected failures remain explicitly classified.
         try:
-            # Compute version using  distribution version for later call logic.
+            # Resolve the exact verifier distribution version before command preparation.
             version = _distribution_version(self.distribution)
         # Translate the expected failure into this mechanism's stable diagnostic path.
         except importlib.metadata.PackageNotFoundError:
@@ -3322,8 +3052,6 @@ class ConfiguredToolAdapter:
         try:
             # Preserve the external command representation and its observed completion outcome.
             execution = _execute(command, context.root)
-        # Bind problem to the current value used by the next call decision.
-        # Translate the expected failure into this mechanism's stable diagnostic path.
         except CommandExecutionError as problem:
             # Return explicit tool outcome to the caller.
             return StepResult(
@@ -3339,7 +3067,6 @@ class ConfiguredToolAdapter:
                 tool=f"{self.distribution} {version}",
                 supported_platforms=self.supported_platforms,
             )
-        # Compute evaluation using self.evaluate for later call logic.
         evaluation = self.evaluate(execution, command)
         # Return explicit tool outcome to the caller.
         return StepResult(
@@ -3502,28 +3229,24 @@ def run(root: Path, *, steps: Sequence[StepAdapter] = DEFAULT_STEPS) -> GateRepo
         Adapters execute in sequence and produce one outcome each unless declaration fails.
     @return complete report
     """
-    # Compute exact root using root.resolve for later run logic.
+    # Resolve the governed root once before allocating one isolated scratch tree for all steps.
     exact_root = root.resolve()
-    # Compute temporary using "agent-project-gate-") as temporary: for later run logic.
-    # Confine the acquired resource to this operation and release it on every exit.
     with tempfile.TemporaryDirectory(prefix="agent-project-gate-") as temporary:
-        # Unpack context, declaration result using  load context for later run logic.
+        # Load declaration state first because every later adapter depends on the same context.
         declaration_result, context = _load_context(exact_root, Path(temporary))
         # Each outcomes element is one step result, beginning with declaration validation and
         # followed by adapter outcomes in scheduled order.
         outcomes = [declaration_result]
         # Use the absence path when context has no available value.
         if context is None:
-            # Select adapter as the current element from steps) while run preserves traversal
-            # Details: order.
+            # Mark every configured adapter not-run when declaration preflight withheld context.
             outcomes.extend(_not_run(adapter, declaration_result) for adapter in steps)
-            # Compute unit using None for later run logic.
+            # No validated declaration means no truthful application/component unit identity.
             unit = None
         else:
-            # Select adapter as the current element from steps) while run preserves traversal
-            # Details: order.
+            # Execute each adapter in declared gate order against the immutable shared context.
             outcomes.extend(adapter(context) for adapter in steps)
-            # Compute unit using context.unit.value for later run logic.
+            # Publish the validated unit kind beside the complete outcome sequence.
             unit = context.unit.value
     # Return complete report to the caller.
     return GateReport(
@@ -3540,8 +3263,7 @@ def _default_root() -> Path:
 
     @return the vendored bundle's parent, or the caller's working directory upstream
     """
-    # Return the vendored bundle's parent, or the caller's working directory upstream to the
-    # Details: caller.
+    # Select adopter root beside a vendored `.agent`, otherwise use this checkout's working root.
     return BUNDLE_ROOT.parent if BUNDLE_ROOT.name == ".agent" else Path.cwd()
 
 
@@ -3550,16 +3272,13 @@ def _print_report(report: GateReport) -> None:
 
     @param report complete gate report
     """
-    # Capture result as the completed print report outcome for subsequent validation or
-    # Details: publication.
-    # Advance print report through the current input element in declared order.
+    # Render each step result in canonical gate order.
     for result in report.outcomes:
-        # Compute diagnostic using f" {result.diagnostic_id}" if result.diagnostic_id else ""
-        # Details: for later print report logic.
+        # Render an optional stable diagnostic beside each step's status and summary.
         diagnostic = f" {result.diagnostic_id}" if result.diagnostic_id else ""
         print(f"{result.status.value:14s} {result.step_id:24s}{diagnostic} {result.summary}")
-        # Select the guarded path only after `result.output` is satisfied.
         if result.output:
+            # Emit bounded actionable child output only for results that retained it.
             print(result.output)
     print(f"\nproject gate: {'PASS' if report.green else 'FAIL'}")
 
@@ -3582,7 +3301,6 @@ def main(argv: list[str] | None = None) -> int:
     # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
     report = run(arguments.root)
     _print_report(report)
-    # Use the available-value path only when arguments.json is present.
     if arguments.json is not None:
         # Publish the externally visible effect after all required inputs are ready.
         arguments.json.write_text(
