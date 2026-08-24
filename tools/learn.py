@@ -161,7 +161,7 @@ class Store:
 
         @return the `learning` directory under the root
         """
-        # Return the `learning` directory under the root to the caller.
+        # Anchor every persistent learning artifact under one repository-local directory.
         return self.root / "learning"
 
     @property
@@ -170,7 +170,7 @@ class Store:
 
         @return the path to `ledger.jsonl`, which need not exist yet
         """
-        # Return the path to `ledger.jsonl`, which need not exist yet to the caller.
+        # Name the authoritative append-only record without creating it during path discovery.
         return self.dir / "ledger.jsonl"
 
     @property
@@ -179,7 +179,7 @@ class Store:
 
         @return the path to `learning.db`, which git ignores
         """
-        # Return the path to `learning.db`, which git ignores to the caller.
+        # Keep the disposable SQLite projection beside, but distinct from, its ledger source.
         return self.dir / "learning.db"
 
     @property
@@ -198,10 +198,8 @@ class Store:
 
         @return the store's own `config.toml`, or this repository's when it has none
         """
-        # Compute local using self.dir / "config.toml" for later config path logic.
+        # Prefer policy bundled with the store so migrated repositories remain self-contained.
         local = self.dir / "config.toml"
-        # Return the store's own `config.toml`, or this repository's when it has none to the
-        # Details: caller.
         return local if local.exists() else REPO_ROOT / "learning" / "config.toml"
 
     @property
@@ -210,7 +208,7 @@ class Store:
 
         @return the path to `INDEX.md`
         """
-        # Return the path to `INDEX.md` to the caller.
+        # Place the human-readable learning index in the shared learning directory.
         return self.dir / "INDEX.md"
 
     @property
@@ -219,7 +217,7 @@ class Store:
 
         @return the path to `calibration.md`
         """
-        # Return the path to `calibration.md` to the caller.
+        # Place reproducible calibration metrics beside the index they characterize.
         return self.dir / "calibration.md"
 
     def config(self) -> dict[str, Any]:
@@ -227,8 +225,7 @@ class Store:
 
         @return the `write`, `retrieval`, `confidence`, `decay` and `promotion` sections
         """
-        # Return the `write`, `retrieval`, `confidence`, `decay` and `promotion` sections to the
-        # Details: caller.
+        # Parse on demand so a calibration edit takes effect without rebuilding the store.
         return tomllib.loads(self.config_path.read_text(encoding="utf-8"))
 
 
@@ -237,7 +234,7 @@ def now_iso() -> str:
 
     @return the current UTC time, truncated to whole seconds, in ISO form
     """
-    # Return the current UTC time, truncated to whole seconds, in ISO form to the caller.
+    # Remove subsecond noise so event timestamps remain stable and diff-readable across hosts.
     return dt.datetime.now(tz=dt.UTC).replace(microsecond=0).isoformat()
 
 
@@ -255,33 +252,29 @@ def read_ledger(store: Store) -> list[dict[str, Any]]:
     @return the parsed events, empty when nothing has been recorded yet
     @throws LearnError when a line is not valid JSON, naming the file and line
     """
-    # Select the existing-artifact path only when `not store.ledger.exists()` is satisfied.
+    # A missing ledger is the canonical empty history, not an initialization error.
     if not store.ledger.exists():
-        # Return the parsed events, empty when nothing has been recorded yet to the caller.
+        # Represent an uninitialized store as the same empty event sequence as an empty file.
         return []
     # Each events element is one decoded ledger event in append sequence order.
     events: list[dict[str, Any]] = []
-    # Preserve the current decoded diagnostic line before location normalization.
-    # Advance read ledger through the current input element in declared order.
+    # Decode physical records in append order so diagnostics retain their ledger line.
     for number, line in enumerate(store.ledger.read_text(encoding="utf-8").splitlines(), 1):
-        # Compute stripped using line.strip for later read ledger logic.
+        # Ignore whitespace-only records without changing the location of later failures.
         stripped = line.strip()
-        # Select the empty-or-disabled path when stripped has no usable value.
         if not stripped:
-            # Advance after the current candidate has been conclusively excluded.
+            # Skip formatting-only lines while retaining their physical position in diagnostics.
             continue
-        # Protect the fallible operation so expected failures remain explicitly classified.
+        # Stop at the first malformed record; a partial fold would misrepresent the ledger.
         try:
             events.append(json.loads(stripped))
-        # Preserve the caught failure that explains why the external result is unusable.
-        # Translate the expected failure into this mechanism's stable diagnostic path.
+        # Preserve both the JSON parser detail and the physical ledger location for repair.
         except json.JSONDecodeError as exc:
-            # Compute message using f"{store.ledger}:{number}: not valid JSON: {exc}" for later
-            # Details: read ledger logic.
+            # Attach the parser failure to the ledger artifact and record number the user can fix.
             message = f"{store.ledger}:{number}: not valid JSON: {exc}"
-            # Propagate the localized failure so callers cannot mistake it for success.
+            # Refuse to return a history whose suffix has not been understood.
             raise LearnError(message) from exc
-    # Return the parsed events, empty when nothing has been recorded yet to the caller.
+    # Expose the complete validated history only after every physical record decoded.
     return events
 
 
@@ -307,10 +300,10 @@ def append_event(store: Store, kind: str, session: str, payload: dict[str, Any],
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
+    # Reject credentials before assigning an id or touching the append-only record.
     guard_secrets(payload)
-    # Compute events using read ledger for later append event logic.
+    # Derive the next monotonic identity from the authoritative ledger, not the cache.
     events = read_ledger(store)
-    # Compute seq using len for later append event logic.
     seq = len(events) + 1
     # Each event key is an envelope or payload field and each value is its serialized content;
     # insertion order defines stable ledger JSON.
@@ -323,14 +316,13 @@ def append_event(store: Store, kind: str, session: str, payload: dict[str, Any],
         "actor": actor,
         "payload": payload,
     }
-    # Publish the externally visible effect after all required inputs are ready.
+    # Materialize the parent only after the event has passed validation and serialization setup.
     store.dir.mkdir(parents=True, exist_ok=True)
-    # Compute handle using "utf-8", newline="\n") as handle: for later append event logic.
-    # Confine the acquired resource to this operation and release it on every exit.
+    # One sorted JSON line is the atomic append unit and keeps conflict repair tractable.
     with store.ledger.open("a", encoding="utf-8", newline="\n") as handle:
-        # Publish the externally visible effect after all required inputs are ready.
+        # Complete the append with one write so concurrent events cannot interleave fragments.
         handle.write(json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n")
-    # Return the event exactly as written, including its assigned seq and id to the caller.
+    # Return the exact envelope persisted so callers can report its assigned identity.
     return event
 
 
@@ -347,23 +339,18 @@ def guard_secrets(payload: dict[str, Any]) -> None:
         deliberately unused.
     @throws LearnError when any secret pattern matches the serialised payload
     """
-    # Compute blob using json.dumps for later guard secrets logic.
+    # Search one JSON representation so nested keys and values receive the same guard.
     blob = json.dumps(payload, ensure_ascii=False)
-    # Select description, pattern as the current element from SECRET_PATTERNS while guard
-    # Details: secrets preserves traversal order.
-    # Advance guard secrets through the current input element in declared order.
     for pattern, description in SECRET_PATTERNS:
-        # Preserve the optional pattern match that carries the reported analysis count.
+        # Retain the match object because its prefix makes the offending field discoverable.
         found = re.search(pattern, blob)
-        # Use the available-value path only when found is present.
         if found is not None:
-            # Compute message using ( for later guard secrets logic.
+            # Limit the excerpt while naming the credential family and the safe remediation.
             message = (
                 f"refusing to record: the entry contains {description} "
                 f"({found.group(0)[:24]}...). Redact it and record the shape of the "
                 f"problem, not the value."
             )
-            # Propagate the localized failure so callers cannot mistake it for success.
             raise LearnError(message)
 
 
@@ -379,19 +366,17 @@ def connect(store: Store) -> sqlite3.Connection:
     @param store where the database and its schema live
     @return an open connection whose rows come back as `sqlite3.Row`
     """
-    # Compute connection using sqlite3.connect for later connect logic.
+    # Configure every connection as the same row-addressable, schema-initialized projection.
     connection = sqlite3.connect(store.db)
-    # Update connect state only after the required source facts are available.
     connection.row_factory = sqlite3.Row
     connection.executescript(store.schema.read_text(encoding="utf-8"))
-    # Select the empty-or-disabled path when connection.execute('SELECT 1 FROM schema
-    # Details: version').fetchone() has no usable value.
+    # Seed schema provenance once; subsequent folds advance the same version row.
     if not connection.execute("SELECT 1 FROM schema_version").fetchone():
         connection.execute(
             "INSERT INTO schema_version(version, applied_ledger_seq) VALUES (?, 0)",
             (SCHEMA_VERSION,),
         )
-    # Return an open connection whose rows come back as `sqlite3.Row` to the caller.
+    # Leave transaction ownership and final closure with the calling operation.
     return connection
 
 
@@ -408,21 +393,15 @@ def sync(store: Store) -> sqlite3.Connection:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Publish the externally visible effect after all required inputs are ready.
+    # Ensure the disposable projection has a parent before SQLite opens it.
     store.dir.mkdir(parents=True, exist_ok=True)
-    # Compute connection using connect for later sync logic.
     connection = connect(store)
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Rebuild all tables in one transaction so readers never observe a partial fold.
     with connection:
-        # Select table as the current element from ("usage", "link", "trigger", "learning",
-        # Details: "session", "event") while sync preserves traversal order.
-        # Advance sync through the current input element in declared order.
+        # Clear derived state before replaying the authoritative event sequence from zero.
         for table in ("usage", "link", "trigger", "learning", "session", "event"):
             connection.execute(f"DELETE FROM {table}")  # ruff: ignore[hardcoded-sql-expression] - fixed table names
-        # Compute events using read ledger for later sync logic.
         events = read_ledger(store)
-        # Select event as the current element from events while sync preserves traversal order.
-        # Advance sync through the current input element in declared order.
         for event in events:
             connection.execute(
                 "INSERT INTO event(seq, id, session, ts, kind, actor, payload) "
@@ -436,7 +415,7 @@ def sync(store: Store) -> sqlite3.Connection:
             "UPDATE schema_version SET version = ?, applied_ledger_seq = ?",
             (SCHEMA_VERSION, len(events)),
         )
-    # Return the open connection, which the caller closes to the caller.
+    # Hand back the fully rebuilt projection while keeping connection lifetime explicit.
     return connection
 
 
@@ -456,23 +435,23 @@ def _apply(connection: sqlite3.Connection, event: dict[str, Any],
         Each key is a configuration section and each value is its tunable mapping; mapping key
         order is deliberately unused.
     """
-    # The three assigned elements are ordered event kind, payload mapping, then ledger sequence.
+    # Each element represents, in order, the dispatch verb, its body mapping, and ledger position.
     kind, payload, seq = event["kind"], event["payload"], event["seq"]
 
-    # Select the guarded path only after `kind == 'session'` is satisfied.
+    # Session events establish the attribution row required by later learning and usage events.
     if kind == "session":
+        # Upsert permits deterministic replay of the same append-only history.
         connection.execute(
             "INSERT OR REPLACE INTO session(id, started_ts, task, discipline_version) "
             "VALUES (?, ?, ?, ?)",
             (event["session"], event["ts"], payload.get("task"),
              payload.get("discipline_version")),
         )
-        # Return the completed  apply result to its caller.
         return
 
-    # Select the guarded path only after `kind == 'learn'` is satisfied.
+    # Learning events replace the projected claim and reconstruct all of its dependent edges.
     if kind == "learn":
-        # Compute base using  base confidence for later apply logic.
+        # Evidence provenance determines the initial confidence before feedback is accumulated.
         base = _base_confidence(payload.get("evidence", "observed"), config)
         connection.execute(
             "INSERT OR REPLACE INTO learning(id, kind, scope, claim, action, evidence, "
@@ -485,18 +464,14 @@ def _apply(connection: sqlite3.Connection, event: dict[str, Any],
              event["ts"]),
         )
         connection.execute("DELETE FROM trigger WHERE learning_id = ?", (payload["id"],))
-        # Select trigger as the current element from payload.get("triggers", []) while apply
-        # Details: preserves traversal order.
-        # Advance apply through the current input element in declared order.
+        # Replace trigger rows as a set so replay cannot retain edges from an older payload.
         for trigger in payload.get("triggers", []):
             connection.execute(
                 "INSERT OR IGNORE INTO trigger(learning_id, type, pattern) VALUES (?,?,?)",
                 (payload["id"], trigger["type"], trigger["pattern"]),
             )
         connection.execute("DELETE FROM link WHERE learning_id = ?", (payload["id"],))
-        # Select link as the current element from payload.get("links", []) while apply preserves
-        # Details: traversal order.
-        # Advance apply through the current input element in declared order.
+        # Rebuild graph links under the same replacement semantics as triggers.
         for link in payload.get("links", []):
             connection.execute(
                 "INSERT OR IGNORE INTO link(learning_id, relation, node) VALUES (?,?,?)",
@@ -506,30 +481,27 @@ def _apply(connection: sqlite3.Connection, event: dict[str, Any],
             "UPDATE session SET recorded = recorded + 1 WHERE id = ?", (event["session"],)
         )
         _restatus(connection, payload["id"], config)
-        # Return the completed  apply result to its caller.
         return
 
     # Preserve the immutable revision identity used as provenance for this comparison.
     ref = payload.get("ref")
-    # Select the guarded path only after `ref is None or not _exists(connection, ref)` is
-    # Details: satisfied.
+    # Ignore forward or unknown feedback while preserving it in the authoritative ledger.
     if ref is None or not _exists(connection, ref):
-        # Return the completed  apply result to its caller.
+        # Leave projections unchanged because feedback has no previously folded subject.
         return
 
-    # Select the guarded path only after `kind == 'use'` is satisfied.
+    # Usage contributes auditable evidence and bounded confidence movement to its subject.
     if kind == "use":
-        # Capture outcome as the completed apply outcome for subsequent validation or
-        # Details: publication.
+        # Missing outcome means the normal positive-feedback path.
         outcome = payload.get("outcome", "helped")
         connection.execute(
             "INSERT INTO usage(seq, learning_id, session, ts, outcome, note) VALUES (?,?,?,?,?,?)",
             (seq, ref, event["session"], event["ts"], outcome, payload.get("note")),
         )
-        # Compute column using {"helped": "helped", "noise": "noise", "contradicted": "nois for
-        # Details: later apply logic.
+        # Contradiction and noise both count against retrieval confidence, while staying distinct
+        # in the immutable usage record above.
         column = {"helped": "helped", "noise": "noise", "contradicted": "noise"}[outcome]
-        # Compute delta using config["confidence"][ for later apply logic.
+        # Select the signed configured adjustment without allowing an event-controlled SQL name.
         delta = config["confidence"][
             "helped_delta" if outcome == "helped" else "noise_delta"
         ]
@@ -542,20 +514,20 @@ def _apply(connection: sqlite3.Connection, event: dict[str, Any],
              ref, event["ts"], ref),
         )
         _restatus(connection, ref, config)
-    # Select the guarded path only after `kind == 'refute'` is satisfied.
+    # Refutation retires an entry immediately and records the falsifying reason.
     elif kind == "refute":
         connection.execute(
             "UPDATE learning SET status = 'refuted', note = ?, last_seen_ts = ? WHERE id = ?",
             (payload.get("why"), event["ts"], ref),
         )
-    # Select the guarded path only after `kind == 'supersede'` is satisfied.
+    # Supersession retires the old claim while retaining the replacement identity.
     elif kind == "supersede":
         connection.execute(
             "UPDATE learning SET status = 'superseded', superseded_by = ?, last_seen_ts = ? "
             "WHERE id = ?",
             (payload.get("by"), event["ts"], ref),
         )
-    # Select the guarded path only after `kind == 'promote'` is satisfied.
+    # Promotion records the permanent mechanism that now makes retrieval unnecessary.
     elif kind == "promote":
         connection.execute(
             "UPDATE learning SET status = 'promoted', promoted_to = ?, note = ?, "
@@ -571,7 +543,7 @@ def _exists(connection: sqlite3.Connection, learning_id: str) -> bool:
     @param learning_id the id an event refers to
     @return True when the learning has been folded already
     """
-    # Return true when the learning has been folded already to the caller.
+    # Query projected identity only; ledger order has already been resolved by the fold.
     return connection.execute(
         "SELECT 1 FROM learning WHERE id = ?", (learning_id,)
     ).fetchone() is not None
@@ -586,7 +558,7 @@ def _base_confidence(evidence: str, config: dict[str, Any]) -> float:
         order is deliberately unused.
     @return the configured starting confidence
     """
-    # Return the configured starting confidence to the caller.
+    # Map evidence provenance to its policy-owned initial confidence without a fallback tier.
     return float(config["confidence"][f"base_{evidence}"])
 
 
@@ -604,24 +576,21 @@ def _restatus(connection: sqlite3.Connection, learning_id: str,
         Each key is a configuration section and each value is its tunable mapping; mapping key
         order is deliberately unused.
     """
-    # Compute row using connection.execute for later restatus logic.
+    # Read only the evidence and lifecycle fields that decide candidate activation.
     row = connection.execute(
         "SELECT helped, noise, sessions, verification, status FROM learning WHERE id = ?",
         (learning_id,),
     ).fetchone()
-    # Select the guarded path only after `row is None or row['status'] in RETIRED` is satisfied.
+    # Unknown and retired entries cannot be activated by subsequent feedback.
     if row is None or row["status"] in RETIRED:
-        # Return the completed  restatus result to its caller.
+        # Preserve absence or terminal lifecycle state instead of reopening the entry.
         return
-    # Compute promotion using config["promotion"] for later restatus logic.
+    # Verified claims need less repeated use; unverified claims require the full evidence floor.
     promotion = config["promotion"]
-    # Compute evidence using row["helped"] for later restatus logic.
     evidence = row["helped"]
-    # Compute needed using (promotion["min_evidence_verified"] if row["verification"] for later
-    # Details: restatus logic.
     needed = (promotion["min_evidence_verified"] if row["verification"]
               else promotion["min_evidence"])
-    # Compute active using evidence >= needed and ( for later restatus logic.
+    # Require either independent sessions or a reproducible verification command.
     active = evidence >= needed and (
         row["sessions"] >= promotion["min_sessions"] or bool(row["verification"])
     )
@@ -674,12 +643,11 @@ class Candidate:
 
         @return the block shown for one entry, with no trailing newline
         """
-        # Compute flag using " STALE" if self.stale else "" for later render logic.
+        # Render optional annotations separately so the fixed core layout remains readable.
         flag = " STALE" if self.stale else ""
-        # Compute verify using f"\n      verify: {self.verification}" if self.verification  for
-        # Details: later render logic.
         verify = f"\n      verify: {self.verification}" if self.verification else ""
-        # Return the block shown for one entry, with no trailing newline to the caller.
+        # Keep this representation aligned with the token-budget input used by retrieval.
+        # Keep outcome, command, and diagnostic together as one terminal-review block.
         return (
             f"  {self.id} [{self.status} {self.effective:.2f}{flag}] {self.kind}\n"
             f"      {self.claim}\n"
@@ -706,21 +674,18 @@ def effective_confidence(stored: float, last_seen: str, kind: str,
     @param today the date the age is measured to
     @return the decayed value, or `stored` unchanged when the timestamp will not parse
     """
-    # Compute half life using float for later effective confidence logic.
+    # Default unknown kinds conservatively to a long half-life for forward-compatible ledgers.
     half_life = float(config["decay"].get(kind, 365))
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # An invalid historical timestamp cannot safely participate in age arithmetic.
     try:
-        # Compute seen using dt.datetime.fromisoformat for later effective confidence logic.
+        # Reduce the observation timestamp to the date used by half-life arithmetic.
         seen = dt.datetime.fromisoformat(last_seen).date()
-    # Translate the expected failure into this mechanism's stable diagnostic path.
+    # Preserve stored confidence when legacy data has no parseable observation date.
     except ValueError:
-        # Return the decayed value, or `stored` unchanged when the timestamp will not parse to
-        # Details: the caller.
+        # Keep the folded value because no defensible age can be computed.
         return stored
-    # Compute days using max for later effective confidence logic.
+    # Clamp future timestamps to zero age before applying exponential half-life decay.
     days = max((today - seen).days, 0)
-    # Return the decayed value, or `stored` unchanged when the timestamp will not parse to the
-    # Details: caller.
     return round(stored * (0.5 ** (days / half_life)), 4)
 
 
@@ -744,54 +709,44 @@ def retrieve(store: Store, connection: sqlite3.Connection, *, file: str | None =
     @param today the date decay is measured to; the system date when omitted
     @return the entries that survived filtering and the budget, most confident first
     """
-    # Compute config using store.config for later retrieve logic.
+    # Snapshot retrieval policy once so one query cannot mix settings from concurrent edits.
     config = store.config()
-    # Compute settings using config["retrieval"] for later retrieve logic.
     settings = config["retrieval"]
-    # Compute day using today or dt.date.today() for later retrieve logic.
     day = today or dt.date.today()
     # Each matches key is a learning id and each value is its unordered trigger-reason set;
     # mapping insertion order follows the trigger query but final candidates are explicitly sorted.
     matches: dict[str, set[str]] = {}
 
-    # Select row as the current element from connection.execute("SELECT learning_id, type,
-    # Details: pattern FROM trigger") while retrieve preserves traversal order.
-    # Advance retrieve through the current input element in declared order.
+    # Accumulate every matching reason per learning before loading full candidate records.
     for row in connection.execute("SELECT learning_id, type, pattern FROM trigger"):
-        # Compute why using  trigger matches for later retrieve logic.
+        # Keep the human-reviewable explanation returned by the same matcher that admitted it.
         why = _trigger_matches(row["type"], row["pattern"], file, error, task, rules)
-        # Use the available-value path only when why is present.
         if why is not None:
             matches.setdefault(row["learning_id"], set()).add(why)
 
     # Each candidates element is one retrievable learning in initial query order before the
     # explicit confidence ranking.
     candidates: list[Candidate] = []
-    # Select learning id, reasons as the current element from matches.items() while retrieve
-    # Details: preserves traversal order.
-    # Advance retrieve through the current input element in declared order.
+    # Materialize only matched projections, then apply lifecycle, confidence, and budget filters.
     for learning_id, reasons in matches.items():
-        # Compute row using connection.execute for later retrieve logic.
+        # Resolve the current folded state independently of trigger-table contents.
         row = connection.execute(
             "SELECT * FROM learning WHERE id = ?", (learning_id,)
         ).fetchone()
-        # Use the absence path when row has no available value.
+        # A dangling trigger is ignored rather than fabricating a partial candidate.
         if row is None:
-            # Advance after the current candidate has been conclusively excluded.
+            # Drop the orphaned match from this retrieval result only.
             continue
-        # Select the guarded path only after `row['status'] in RETIRED and (not
-        # Details: settings['include_retired'])` is satisfied.
+        # Retired knowledge stays hidden unless diagnostics explicitly request it.
         if row["status"] in RETIRED and not settings["include_retired"]:
-            # Advance after the current candidate has been conclusively excluded.
+            # Omit terminal entries from ordinary guidance while retaining them in the ledger.
             continue
-        # Compute effective using effective confidence for later retrieve logic.
+        # Apply time decay before the configured relevance floor.
         effective = effective_confidence(
             row["confidence"], row["last_seen_ts"], row["kind"], config, day
         )
-        # Select the guarded path only after `effective < settings['min_confidence']` is
-        # Details: satisfied.
         if effective < settings["min_confidence"]:
-            # Advance after the current candidate has been conclusively excluded.
+            # Exclude knowledge whose age-adjusted support fell below retrieval policy.
             continue
         # Each links element is one related node id in SQL lexical order.
         links = [
@@ -809,9 +764,8 @@ def retrieve(store: Store, connection: sqlite3.Connection, *, file: str | None =
             )
         )
 
+    # Rank deterministically, then enforce both entry-count and rendered-token limits.
     candidates.sort(key=lambda c: (-c.effective, c.id))
-    # Return the entries that survived filtering and the budget, most confident first to the
-    # Details: caller.
     return _fit_budget(candidates, settings)
 
 
@@ -831,24 +785,17 @@ def _fit_budget(candidates: Sequence[Candidate], settings: dict[str, Any]) -> li
     """
     # Each kept element is one leading ranked candidate retained in input order.
     kept: list[Candidate] = []
-    # Compute spent using 0 for later fit budget logic.
+    # Track rendered cost of the accepted prefix; later candidates cannot displace earlier ones.
     spent = 0
-    # Treat the current candidate as the candidate element consumed by the enclosing
-    # Details: transformation.
-    # Advance fit budget through the current input element in declared order.
     for candidate in candidates[: settings["max_learnings"]]:
-        # Compute cost using count tokens for later fit budget logic.
+        # Budget the same terminal representation the caller will actually receive.
         cost = count_tokens(candidate.render())
-        # Select the guarded path only after `kept and spent + cost > settings['budget_tokens']`
-        # Details: is satisfied.
+        # Always admit the strongest candidate, then stop before the first overflow.
         if kept and spent + cost > settings["budget_tokens"]:
-            # Stop the scan once the decisive match has been established.
+            # Preserve the ranked prefix rather than skipping ahead to weaker, smaller entries.
             break
-        # Compute spent using cost for later fit budget logic.
         spent += cost
         kept.append(candidate)
-    # Return the leading run that fits both limits, except that the first is kept regardless to
-    # Details: the caller.
     return kept
 
 
@@ -868,41 +815,35 @@ def _trigger_matches(trigger_type: str, pattern: str, file: str | None, error: s
         Each element is one selected rule id; order is deliberately unused for matching.
     @return a phrase naming why it fired, or None when it did not
     """
-    # Select the guarded path only after `trigger_type == 'glob' and file and
-    # Details: fnmatch.fnmatch(Path(file).as_posix(), pattern)` is satisfied.
+    # Path triggers compare portable repository-style separators through fnmatch.
     if trigger_type == "glob" and file and fnmatch.fnmatch(Path(file).as_posix(), pattern):
-        # Return a phrase naming why it fired, or None when it did not to the caller.
+        # Explain the admitted learning with the glob that matched its active path.
         return f"path ~ {pattern}"
-    # Select the guarded path only after `trigger_type == 'error' and error and
-    # Details: _signature_in(pattern, error)` is satisfied.
+    # Error signatures normalize separators only through the dedicated conservative matcher.
     if trigger_type == "error" and error and _signature_in(pattern, error):
-        # Return a phrase naming why it fired, or None when it did not to the caller.
+        # Report the exact recorded signature responsible for the error match.
         return f"error ~ {pattern}"
-    # Select the guarded path only after `trigger_type == 'rule'` is satisfied.
+    # Rule triggers can match explicit ids or ids embedded in the active task and failure text.
     if trigger_type == "rule":
-        # Compute haystack using " ".join([*rules, error or "", task or ""]) for later trigger
-        # Details: matches logic.
+        # Combine explicit and contextual rule references into one membership surface.
         haystack = " ".join([*rules, error or "", task or ""])
-        # Select the guarded path only after `pattern in haystack` is satisfied.
+        # Require the recorded rule spelling to occur without fuzzy normalization.
         if pattern in haystack:
-            # Return a phrase naming why it fired, or None when it did not to the caller.
+            # Identify the rule trigger rather than the incidental context carrying it.
             return f"rule {pattern}"
-    # Select the guarded path only after `trigger_type == 'command' and task and
-    # Details: (pattern.lower() in task.lower())` is satisfied.
+    # Command triggers remain case-insensitive substrings of the caller's task description.
     if trigger_type == "command" and task and pattern.lower() in task.lower():
-        # Return a phrase naming why it fired, or None when it did not to the caller.
+        # Preserve the recorded command phrase in the reviewable match explanation.
         return f"command ~ {pattern}"
-    # Select the guarded path only after `trigger_type == 'term'` is satisfied.
+    # Term triggers search both task and failure text without conflating absent inputs with text.
     if trigger_type == "term":
-        # Retain the immutable source representation consumed by subsequent analysis.
-        # Advance trigger matches through the current input element in declared order.
+        # Inspect task then error so the trigger remains independent of which context carried it.
         for text in (task, error):
-            # Select the guarded path only after `text and pattern.lower() in text.lower()` is
-            # Details: satisfied.
+            # Match present context case-insensitively while leaving the configured term intact.
             if text and pattern.lower() in text.lower():
-                # Return a phrase naming why it fired, or None when it did not to the caller.
+                # Name the term that surfaced the learning for later retrieval review.
                 return f"term {pattern}"
-    # Return a phrase naming why it fired, or None when it did not to the caller.
+    # None distinguishes a non-match from every reviewable positive explanation above.
     return None
 
 
@@ -912,7 +853,7 @@ def _words(text: str) -> set[str]:
     @param text any text
     @return its lowercase alphanumeric tokens, deduplicated
     """
-    # Return its lowercase alphanumeric tokens, deduplicated to the caller.
+    # Normalize separators before deduplicating lowercase signature tokens.
     return set(re.findall(r"[a-z0-9_]+", text.lower().replace("-", " ").replace("_", " ")))
 
 
@@ -928,15 +869,13 @@ def _signature_in(pattern: str, text: str) -> bool:
     @return True on a substring hit, or when every word of a multi-word signature
         appears somewhere in the text, in any order and not necessarily adjacent
     """
-    # Select the guarded path only after `pattern.lower() in text.lower()` is satisfied.
+    # Prefer the precise substring path before considering separator-insensitive token sets.
     if pattern.lower() in text.lower():
-        # Return true on a substring hit, or when every word of a multi-word signature to the
-        # Details: caller.
+        # A literal normalized occurrence is the strongest supported signature match.
         return True
-    # Compute signature using  words for later signature in logic.
+    # Multi-token signatures may reorder, but a lone common token must not match loosely.
     signature = _words(pattern)
-    # Return true on a substring hit, or when every word of a multi-word signature to the
-    # Details: caller.
+    # Require every signature token and at least two tokens before accepting the loose path.
     return len(signature) > 1 and signature <= _words(text)
 
 
@@ -952,11 +891,9 @@ def next_learning_id(connection: sqlite3.Connection) -> str:
     @param connection an index already folded from the ledger
     @return the next identifier, in `L-nnnn` form
     """
-    # Compute row using connection.execute for later next learning id logic.
+    # Derive identity from folded state so rebuilding the database reproduces allocation exactly.
     row = connection.execute("SELECT MAX(id) AS top FROM learning").fetchone()
-    # Compute top using int for later next learning id logic.
     top = int(row["top"].split("-")[1]) if row and row["top"] else 0
-    # Return the next identifier, in `L-nnnn` form to the caller.
     return f"L-{top + 1:04d}"
 
 
@@ -970,19 +907,17 @@ def parse_trigger(raw: str) -> dict[str, str]:
     @return the type and the pattern, the pattern stripped of surrounding space
     @throws LearnError when the colon is missing or the type is not a known one
     """
-    # Unpack pattern, separator, trigger type using raw.partition for later parse trigger logic.
+    # Split once so Windows paths and other colon-bearing trigger patterns remain intact.
     trigger_type, separator, pattern = raw.partition(":")
-    # Select the empty-or-disabled path when separator or trigger type not in TRIGGER TYPES has
-    # Details: no usable value.
+    # Reject both malformed syntax and trigger kinds retrieval cannot evaluate.
     if not separator or trigger_type not in TRIGGER_TYPES:
-        # Compute message using ( for later parse trigger logic.
+        # Quote the original argument so whitespace and missing separators remain visible.
         message = (
             f"trigger must be one of {', '.join(TRIGGER_TYPES)} followed by ':' "
             f"and a pattern; got {raw!r}"
         )
-        # Propagate the localized failure so callers cannot mistake it for success.
         raise LearnError(message)
-    # Return the type and the pattern, the pattern stripped of surrounding space to the caller.
+    # Normalize only boundary whitespace; pattern semantics otherwise remain caller-controlled.
     return {"type": trigger_type, "pattern": pattern.strip()}
 
 
@@ -997,13 +932,12 @@ def session_id(explicit: str | None) -> str:
     @param explicit an id supplied on the command line, if any
     @return the identifier to stamp on the events that follow
     """
-    # Handle the non-empty or enabled explicit state.
+    # Preserve caller-supplied attribution so several commands can share one session.
     if explicit:
-        # Return the identifier to stamp on the events that follow to the caller.
+        # Use the stable explicit identity rather than silently opening another session.
         return explicit
-    # Compute stamp using dt.datetime.now for later session id logic.
+    # Combine a readable UTC date with random entropy for an independent session.
     stamp = dt.datetime.now(tz=dt.UTC).strftime("%Y%m%d")
-    # Return the identifier to stamp on the events that follow to the caller.
     return f"S-{stamp}-{uuid.uuid4().hex[:6]}"
 
 
@@ -1034,8 +968,7 @@ class VerifyResult:
 
         @return two lines: the verdict with the command, and the detail beneath it
         """
-        # Return two lines: the verdict with the command, and the detail beneath it to the
-        # Details: caller.
+        # Keep verdict, original command, and diagnostic together as one reviewable block.
         return (
             f"  {self.learning_id}  {self.outcome.upper():<12} {self.command}\n"
             f"      {self.detail}"
@@ -1054,17 +987,14 @@ def verification_argv(command: str) -> list[str]:
     @return the argument vector, empty when the command is blank
     @throws LearnError when the quoting is unbalanced, so no vector can be derived
     """
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Parse shell-compatible quoting but return argv so no shell interprets metacharacters.
     try:
-        # Return the argument vector, empty when the command is blank to the caller.
+        # Produce a literal argument vector using the documented POSIX quoting form.
         return shlex.split(command, posix=True)
-    # Preserve the caught failure that explains why the external result is unusable.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
+    # Turn malformed quoting into a stable learning-store refusal instead of a parser traceback.
     except ValueError as exc:
-        # Compute message using f"the verification command cannot be parsed: {exc}" for later
-        # Details: verification argv logic.
+        # Retain shlex's reason because it identifies the unbalanced construct.
         message = f"the verification command cannot be parsed: {exc}"
-        # Propagate the localized failure so callers cannot mistake it for success.
         raise LearnError(message) from exc
 
 
@@ -1091,37 +1021,30 @@ def verification_refusal(argv: Sequence[str], root: Path) -> str | None:
     @param root the tree the command would run in
     @return one sentence naming what was refused, or None when the command is admitted
     """
-    # Select the empty-or-disabled path when argv has no usable value.
+    # An empty vector has neither an auditable entry point nor a check to execute.
     if not argv:
-        # Return one sentence naming what was refused, or None when the command is admitted to
-        # Details: the caller.
+        # Refuse before indexing the absent executable element.
         return "the command is empty"
-    # Select the guarded path only after `Path(argv[0]).name != argv[0]` is satisfied.
+    # Require PATH lookup by bare name; a ledger must not select an arbitrary binary path.
     if Path(argv[0]).name != argv[0]:
-        # Return one sentence naming what was refused, or None when the command is admitted to
-        # Details: the caller.
+        # Quote the rejected spelling so qualification and separators remain visible.
         return f"the executable is path-qualified ({argv[0]!r}); only a bare name is run"
-    # Normalize the current repository path to its portable baseline key spelling.
+    # Compare executable identity case-insensitively and independently of Windows' suffix.
     name = argv[0].lower().removesuffix(".exe")
-    # Select the guarded path only after `name not in VERIFY_EXECUTABLES` is satisfied.
+    # Bound the entry point to tools whose behavior the discipline explicitly qualified.
     if name not in VERIFY_EXECUTABLES:
-        # Return one sentence naming what was refused, or None when the command is admitted to
-        # Details: the caller.
+        # Report the closed allowlist so remediation requires a deliberate policy edit.
         return f"{argv[0]!r} is not one of: {', '.join(VERIFY_EXECUTABLES)}"
-    # Compute escape using  argument outside root for later verification refusal logic.
+    # Reject path-bearing arguments that could make an admitted tool execute foreign code.
     escape = _argument_outside_root(argv[1:], root)
-    # Use the available-value path only when escape is present.
     if escape is not None:
-        # Return one sentence naming what was refused, or None when the command is admitted to
-        # Details: the caller.
+        # Propagate the first concrete escaping argument as the refusal reason.
         return escape
-    # Select the guarded path only after `name not in PYTHON_EXECUTABLES` is satisfied.
+    # Non-interpreter tools are fully decided by the executable and argument checks above.
     if name not in PYTHON_EXECUTABLES:
-        # Return one sentence naming what was refused, or None when the command is admitted to
-        # Details: the caller.
+        # None is the explicit admitted result consumed by the verification pipeline.
         return None
-    # Return one sentence naming what was refused, or None when the command is admitted to the
-    # Details: caller.
+    # Python requires a second allowlist over its module or repository-script source.
     return _interpreter_refusal(list(argv[1:]), root)
 
 
@@ -1139,35 +1062,27 @@ def _interpreter_refusal(rest: Sequence[str], root: Path) -> str | None:
     @param root the tree the command would run in
     @return one sentence naming what was refused, or None when the tail is admitted
     """
-    # Select the empty-or-disabled path when rest has no usable value.
+    # Bare interpreters can consume arbitrary stdin and cannot establish a fixed check.
     if not rest:
-        # Return one sentence naming what was refused, or None when the tail is admitted to the
-        # Details: caller.
+        # Explain why an allowlisted executable remains unsafe without a program.
         return "a bare interpreter takes its program from stdin, which is not a check"
-    # Select the guarded path only after `rest[0] == '-m'` is satisfied.
+    # Module execution is safe only for qualified verification front ends.
     if rest[0] == "-m":
-        # Compute module using rest[1] if len(rest) > 1 else "" for later interpreter refusal
-        # Details: logic.
+        # Missing module names deliberately normalize to an unallowlisted empty root.
         module = rest[1] if len(rest) > 1 else ""
-        # Select the guarded path only after `module.split('.')[0] not in VERIFY_MODULES` is
-        # Details: satisfied.
         if module.split(".")[0] not in VERIFY_MODULES:
-            # Return one sentence naming what was refused, or None when the tail is admitted to
-            # Details: the caller.
+            # Name the admitted module roots rather than accepting arbitrary installed code.
             return f"module {module!r} is not one of: {', '.join(VERIFY_MODULES)}"
-        # Return one sentence naming what was refused, or None when the tail is admitted to the
-        # Details: caller.
+        # The module and all path-like arguments have passed both allowlists.
         return None
-    # Select the empty-or-disabled path when rest[0].endswith('.py') has no usable value.
+    # Reject interpreter switches and stdin markers; only an in-tree Python file may remain.
     if not rest[0].endswith(".py"):
-        # Return one sentence naming what was refused, or None when the tail is admitted to the
-        # Details: caller.
+        # Distinguish a program-bearing flag from a missing repository script.
         return (
             f"{rest[0]!r} is neither -m nor a script in this repository; an "
             f"interpreter flag such as -c carries its own program"
         )
-    # Return one sentence naming what was refused, or None when the tail is admitted to the
-    # Details: caller.
+    # Resolve the script against the verification root before admitting repository code.
     return _outside_root(rest[0], root)
 
 
@@ -1189,40 +1104,31 @@ def _argument_outside_root(rest: Sequence[str], root: Path) -> str | None:
     @param root the tree the command would run in
     @return one sentence naming the first argument that escapes, or None when none does
     """
-    # Select argument as the current element from rest while argument outside root preserves
-    # Details: traversal order.
-    # Advance argument outside root through the current input element in declared order.
+    # Inspect arguments in invocation order and report the first repository-boundary escape.
     for argument in rest:
-        # Treat the current candidate as the candidate element consumed by the enclosing
-        # Details: transformation.
+        # Begin with the complete argument so an ordinary path is checked unchanged.
         candidate = argument
-        # Select the guarded path only after `candidate.startswith('-') and '=' in candidate` is
-        # Details: satisfied.
+        # For GNU-style assignments, only the value can carry a filesystem path.
         if candidate.startswith("-") and "=" in candidate:
-            # Treat the current candidate as the candidate element consumed by the enclosing
-            # Details: transformation.
+            # Strip the option name while retaining the value subject to path confinement.
             candidate = candidate.partition("=")[2]
-        # Select the empty-or-disabled path when candidate has no usable value.
+        # Empty option values cannot identify an external artifact.
         if not candidate:
-            # Advance after the current candidate has been conclusively excluded.
+            # Continue because this argument contributes no path subject to confinement.
             continue
-        # Compute looks like path using "/" in candidate or "\\" in candidate or candidate ==
-        # Details: ".." for later argument outside root logic.
+        # Avoid treating module names, test ids, and plain option values as filesystem paths.
         looks_like_path = "/" in candidate or "\\" in candidate or candidate == ".."
-        # Select the empty-or-disabled path when looks like path has no usable value.
         if not looks_like_path:
-            # Advance after the current candidate has been conclusively excluded.
+            # Continue after the argument has been classified as non-path text.
             continue
-        # Use the available-value path only when  outside root(candidate, root) is present.
+        # Resolve only path-shaped values and refuse any one leaving the verification root.
         if _outside_root(candidate, root) is not None:
-            # Return one sentence naming the first argument that escapes, or None when none does
-            # Details: to the caller.
+            # Report the original option spelling because that is what the ledger author repairs.
             return (
                 f"the argument {argument!r} points outside the repository; an "
                 f"admitted program will run what it is handed"
             )
-    # Return one sentence naming the first argument that escapes, or None when none does to the
-    # Details: caller.
+    # Every path-shaped argument remained confined, so the vector passes this policy layer.
     return None
 
 
@@ -1237,28 +1143,22 @@ def _outside_root(script: str, root: Path) -> str | None:
     @param root the tree the command would run in
     @return one sentence when the path escapes the tree, or None when it stays inside
     """
-    # Treat the current candidate as the candidate element consumed by the enclosing
-    # Details: transformation.
+    # Interpret relative scripts from the repository root used as the subprocess directory.
     candidate = Path(script)
-    # Resolve the repository-confined path used by this operation before filesystem access.
     target = candidate if candidate.is_absolute() else root / candidate
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Resolve parent traversals and links before comparing the actual filesystem location.
     try:
-        # Compute resolved using target.resolve for later outside root logic.
+        # Canonicalize the candidate so symlinks and parent segments cannot disguise escape.
         resolved = target.resolve()
-    # Translate the expected failure into this mechanism's stable diagnostic path.
+    # Resolution failure is a refusal because confinement cannot be established.
     except OSError:
-        # Return one sentence when the path escapes the tree, or None when it stays inside to
-        # Details: the caller.
+        # Name the original ledger path whose target could not be determined.
         return f"the script path {script!r} cannot be resolved"
-    # Select the empty-or-disabled path when resolved.is relative to(root.resolve()) has no
-    # Details: usable value.
+    # Compare canonical locations so lexical tricks cannot bypass the repository boundary.
     if not resolved.is_relative_to(root.resolve()):
-        # Return one sentence when the path escapes the tree, or None when it stays inside to
-        # Details: the caller.
+        # Return a concise boundary diagnosis suitable for terminal and JSON reports.
         return f"the script {script!r} lies outside the repository"
-    # Return one sentence when the path escapes the tree, or None when it stays inside to the
-    # Details: caller.
+    # Existence is irrelevant; an absent in-tree check should run and fail visibly.
     return None
 
 
@@ -1278,40 +1178,32 @@ def verification_vector(argv: Sequence[str], root: Path) -> tuple[list[str], str
     @return the vector to start, and a refusal when the executable cannot be trusted
     @throws LearnError when the vector is empty, which the allowlist rejects first
     """
-    # Select the empty-or-disabled path when argv has no usable value.
+    # Defensive validation keeps this helper safe without the preceding refusal gate.
     if not argv:
-        # Compute message using "an empty command has no executable" for later verification
-        # Details: vector logic.
+        # Construct the stable domain failure rather than leaking an IndexError.
         message = "an empty command has no executable"
-        # Propagate the localized failure so callers cannot mistake it for success.
         raise LearnError(message)
-    # Normalize the current repository path to its portable baseline key spelling.
+    # Normalize the admitted executable for portable identity matching.
     name = argv[0].lower().removesuffix(".exe")
-    # Select the guarded path only after `name in PYTHON_EXECUTABLES` is satisfied.
+    # Pin Python checks to the interpreter running this learning tool.
     if name in PYTHON_EXECUTABLES:
-        # Return the vector to start, and a refusal when the executable cannot be trusted to the
-        # Details: caller.
+        # Preserve the vetted tail while replacing only executable provenance.
         return [sys.executable, *argv[1:]], None
-    # Select the guarded path only after `name in VERIFY_AS_MODULE` is satisfied.
+    # Prefer module invocation where a Python executable has a stable package identity.
     if name in VERIFY_AS_MODULE:
-        # Return the vector to start, and a refusal when the executable cannot be trusted to the
-        # Details: caller.
+        # Avoid PATH shims by starting the qualified package through this interpreter.
         return [sys.executable, "-m", VERIFY_AS_MODULE[name], *argv[1:]], None
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Resolve native tools on PATH so the exact launched artifact can be inspected.
     found = shutil.which(argv[0])
-    # Use the absence path when found has no available value.
+    # Let subprocess report ordinary unavailability; it is a result, not a policy refusal.
     if found is None:
-        # Return the vector to start, and a refusal when the executable cannot be trusted to the
-        # Details: caller.
+        # Preserve the original vector because no executable location exists to pin.
         return list(argv), None
-    # Select the guarded path only after `Path(found).resolve().is_relative_to(root.resolve())`
-    # Details: is satisfied.
+    # Refuse a same-repository executable shadowing a trusted native tool name.
     if Path(found).resolve().is_relative_to(root.resolve()):
-        # Return the vector to start, and a refusal when the executable cannot be trusted to the
-        # Details: caller.
+        # Return the vector only as diagnostic context; the caller will not run it.
         return list(argv), f"{argv[0]!r} resolves to {found}, inside the tree being verified"
-    # Return the vector to start, and a refusal when the executable cannot be trusted to the
-    # Details: caller.
+    # Pin the external executable after proving it is outside the untrusted repository.
     return [found, *argv[1:]], None
 
 
@@ -1331,33 +1223,28 @@ def run_verification(argv: Sequence[str], root: Path,
     @param timeout seconds before the command is killed
     @return the outcome word, the exit status when there was one, and one line of detail
     """
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Start the pre-vetted vector without a shell and capture a portable diagnostic transcript.
     try:
-        # Preserve the external command representation and its observed completion outcome.
+        # Retain the completed process record for status and diagnostic-tail classification.
         finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - allowlisted argv, list form, never a shell
             list(argv), cwd=root, capture_output=True, text=True,
             encoding="utf-8", errors="replace", timeout=timeout, check=False,
         )
-    # Translate the expected failure into this mechanism's stable diagnostic path.
+    # Timeout means the check produced no verdict and must not count against the learning.
     except subprocess.TimeoutExpired:
-        # Return the outcome word, the exit status when there was one, and one line of detail to
-        # Details: the caller.
+        # Report the enforced limit so slowness remains distinct from assertion failure.
         return "timeout", None, f"killed after {timeout:g}s without finishing"
-    # Preserve the caught failure that explains why the external result is unusable.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
+    # Startup failure is an environment observation, not evidence refuting the claim.
     except OSError as exc:
-        # Return the outcome word, the exit status when there was one, and one line of detail to
-        # Details: the caller.
+        # Preserve the operating-system reason in the unavailable verdict.
         return "unavailable", None, f"could not be started: {exc.strerror or exc}"
-    # Enter the failure path only when the subprocess reports a nonzero status.
+    # Exit zero is the sole positive verification result.
     if finished.returncode == 0:
-        # Return the outcome word, the exit status when there was one, and one line of detail to
-        # Details: the caller.
+        # Emit a stable detail independent of tool-specific success chatter.
         return "passed", 0, "exit 0"
-    # Compute tail using  last line for later run verification logic.
+    # Prefer the final stderr line, then stdout, so assertion diagnostics dominate banners.
     tail = _last_line(finished.stderr) or _last_line(finished.stdout) or "no output"
-    # Return the outcome word, the exit status when there was one, and one line of detail to the
-    # Details: caller.
+    # A nonzero completion is machine evidence against the recorded learning.
     return "failed", finished.returncode, f"exit {finished.returncode}: {tail}"
 
 
@@ -1376,15 +1263,12 @@ def _last_line(text: str) -> str:
     lines = [_ANSI.sub("", line).strip() for line in text.splitlines()]
     # Each kept element is one nonblank normalized output line in stream order.
     kept = [line for line in lines if line]
-    # Select the empty-or-disabled path when kept has no usable value.
+    # Empty or whitespace-only output contributes no useful diagnostic suffix.
     if not kept:
-        # Return the final non-blank line, truncated to fit a terminal and marked when to the
-        # Details: caller.
+        # Return an empty marker so the caller can fall back across captured streams.
         return ""
-    # Compute last using kept[-1] for later last line logic.
+    # Quote only the final meaningful line and cap it to a terminal-friendly width.
     last = kept[-1]
-    # Return the final non-blank line, truncated to fit a terminal and marked when to the
-    # Details: caller.
     return last if len(last) <= _TAIL_WIDTH else last[:_TAIL_WIDTH] + "..."
 
 
@@ -1411,7 +1295,7 @@ def verify(store: Store, connection: sqlite3.Connection, *, execute: bool = Fals
     @param timeout seconds each command is given before it is killed
     @return one result per live entry carrying a verification command, ordered by id
     """
-    # Preserve rows element values in deterministic source order.
+    # Select live verification commands by learning id for reproducible result ordering.
     rows = connection.execute(
         "SELECT id, verification FROM learning "  # ruff: ignore[hardcoded-sql-expression] - placeholders, not values
         "WHERE verification IS NOT NULL AND verification != '' "
@@ -1421,49 +1305,43 @@ def verify(store: Store, connection: sqlite3.Connection, *, execute: bool = Fals
 
     # Each results element is one verification observation in learning-id query order.
     results: list[VerifyResult] = []
-    # Select row as the current element from rows while verify preserves traversal order.
-    # Advance verify through the current input element in declared order.
+    # Evaluate live commands in id order so reports and appended refutations are stable.
     for row in rows:
-        # Preserve the external command representation and its observed completion outcome.
+        # Retain ledger spelling for reporting even when argv normalization later changes it.
         command = row["verification"]
-        # Protect the fallible operation so expected failures remain explicitly classified.
+        # Malformed quoting is a refusal local to this learning, not a batch failure.
         try:
-            # Compute argv using verification argv for later verify logic.
+            # Parse the stored command into the vector consumed by both policy layers.
             argv = verification_argv(command)
-        # Preserve the caught failure that explains why the external result is unusable.
-        # Translate the expected failure into this mechanism's stable diagnostic path.
+        # Preserve the parser reason and continue with other learnings.
         except LearnError as exc:
             results.append(VerifyResult(row["id"], command, "refused", str(exc)))
-            # Advance after the current candidate has been conclusively excluded.
+            # Do not pass an unparseable command into either allowlist or execution.
             continue
-        # Compute refusal using verification refusal for later verify logic.
+        # Apply executable, argument, and interpreter policy before resolution.
         refusal = verification_refusal(argv, store.root)
-        # Use the available-value path only when refusal is present.
         if refusal is not None:
             results.append(VerifyResult(row["id"], command, "refused", refusal))
-            # Advance after the current candidate has been conclusively excluded.
+            # Keep the refusal as an observation without executing any vector element.
             continue
-        # Unpack unsafe, vector using verification vector for later verify logic.
+        # Pin qualified executables and detect repository-local name shadowing.
         vector, unsafe = verification_vector(argv, store.root)
-        # Use the available-value path only when unsafe is present.
         if unsafe is not None:
             results.append(VerifyResult(row["id"], command, "refused", unsafe))
-            # Advance after the current candidate has been conclusively excluded.
+            # Skip unsafe resolution while allowing later learning checks to proceed.
             continue
-        # Select the empty-or-disabled path when execute has no usable value.
+        # Dry runs expose the vetted vector without granting execution authority.
         if not execute:
             results.append(
                 VerifyResult(row["id"], command, "skipped",
                              f"would run: {shlex.join(vector)}")
             )
-            # Advance after the current candidate has been conclusively excluded.
+            # Continue after recording the skipped observation for this learning.
             continue
-        # Capture code, detail, outcome as the completed verify outcome for subsequent
-        # Details: validation or publication.
+        # Execute only after parsing, confinement, and provenance checks passed.
         outcome, code, detail = run_verification(vector, store.root, timeout)
         results.append(VerifyResult(row["id"], command, outcome, detail, code))
-    # Return one result per live entry carrying a verification command, ordered by id to the
-    # Details: caller.
+    # Return the complete ordered observations, including refusals and non-verdicts.
     return results
 
 
@@ -1494,29 +1372,25 @@ def refute_failures(store: Store, results: Sequence[VerifyResult],
     # Each written element is one failed verification whose refutation event was appended, in
     # input result order.
     written: list[VerifyResult] = []
-    # Capture result as the completed refute failures outcome for subsequent validation or
-    # Details: publication.
-    # Advance refute failures through the current input element in declared order.
+    # Consider each verification observation once and preserve its stable report order.
     for result in results:
-        # Select the guarded path only after `result.outcome != 'failed'` is satisfied.
+        # Only an executed nonzero result is evidence against a learning's claim.
         if result.outcome != "failed":
-            # Advance after the current candidate has been conclusively excluded.
+            # Leave refusals, timeouts, unavailability, skips, and passes non-destructive.
             continue
-        # Compute why using (f"verification failed: `{result.command}` exited {result.co for
-        # Details: later refute failures logic.
+        # Bind the refutation to both the recorded command and its observed terminal detail.
         why = (f"verification failed: `{result.command}` exited {result.code}. "
                f"{result.detail}")
-        # Protect the fallible operation so expected failures remain explicitly classified.
+        # One secret-shaped diagnostic must not prevent independent failures being recorded.
         try:
             append_event(store, "refute", session, {"ref": result.learning_id, "why": why})
-        # Preserve the caught failure that explains why the external result is unusable.
-        # Translate the expected failure into this mechanism's stable diagnostic path.
+        # Report per-entry refusal and continue without claiming that refutation was persisted.
         except LearnError as exc:
             print(f"  {result.learning_id}  NOT REFUTED  {exc}", file=sys.stderr)
-            # Advance after the current candidate has been conclusively excluded.
+            # Leave this failure unretired and continue recording independent contradictions.
             continue
         written.append(result)
-    # Return the results a refutation was appended for to the caller.
+    # Expose only successfully appended refutations for the command summary.
     return written
 
 
@@ -1541,9 +1415,10 @@ def render_index(connection: sqlite3.Connection, config: dict[str, Any]) -> str:
         order is deliberately unused.
     @return the full text of `INDEX.md`, ending in a single newline
     """
-    # Preserve rows element values in deterministic source order.
+    # Read folded entries by id so the generated page remains byte-reproducible.
     rows = list(connection.execute("SELECT * FROM learning ORDER BY id"))
-    # Each lines element represents one decoded record; lexical order is preserved.
+    # Each lines element is one generated Markdown line in display order, beginning with the
+    # immutable banner and explanatory preamble before state-dependent sections.
     lines = [
         GENERATED,
         "",
@@ -1557,50 +1432,42 @@ def render_index(connection: sqlite3.Connection, config: dict[str, Any]) -> str:
         "offered more quietly than this table suggests.",
         "",
     ]
-    # Select the empty-or-disabled path when rows has no usable value.
+    # Render an explicit bootstrap state instead of an empty status table.
     if not rows:
-        # Preserve lines element values in deterministic source order.
+        # Keep the guidance inside the generated artifact where its first reader needs it.
         lines += [
             "*Empty.* Nothing has been recorded yet. The first task to use the database "
             "is also its first calibration datum: see `calibration.md`.",
             "",
         ]
-        # Return the full text of `INDEX.md`, ending in a single newline to the caller.
+        # The literal list already carries its final blank line and deterministic terminator.
         return "\n".join(lines)
 
     # Each by-status key is a learning status and each value lists id-ordered rows; first-seen
     # status order is preserved in the rendered view.
     by_status: dict[str, list[sqlite3.Row]] = {}
-    # Select row as the current element from rows while render index preserves traversal order.
-    # Advance render index through the current input element in declared order.
+    # Partition rows once while retaining id order inside every lifecycle group.
     for row in rows:
         by_status.setdefault(row["status"], []).append(row)
 
-    # Preserve lines element values in deterministic source order.
+    # Summarize lifecycle populations before expanding their individual entries.
     lines += ["| Status | Count |", "|---|---|"]
-    # Preserve items, lines, status element values in deterministic source order.
     lines += [f"| {status} | {len(items)} |" for status, items in sorted(by_status.items())]
     lines.append("")
 
-    # Capture status as the completed render index outcome for subsequent validation or
-    # Details: publication.
-    # Advance render index through the current input element in declared order.
+    # Publish sections in policy order rather than database or mapping insertion order.
     for status in ("active", "candidate", "promoted", "superseded", "refuted"):
-        # Preserve items element values in deterministic source order.
+        # A missing population produces no empty heading in the readable view.
         items = by_status.get(status)
-        # Select the empty-or-disabled path when items has no usable value.
         if not items:
-            # Advance after the current candidate has been conclusively excluded.
+            # Continue to the next lifecycle category without adding visual noise.
             continue
-        # Preserve lines element values in deterministic source order.
+        # Start the present category, then append id-ordered learning blocks.
         lines += [f"## {status}", ""]
-        # Select row as the current element from items while render index preserves traversal
-        # Details: order.
-        # Advance render index through the current input element in declared order.
         for row in items:
-            # Preserve lines element values in deterministic source order.
+            # Delegate optional-field layout while preserving category-local id order.
             lines += _render_learning_entry(connection, row)
-    # Return the full text of `INDEX.md`, ending in a single newline to the caller.
+    # Normalize the accumulated document to exactly one trailing newline.
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -1649,10 +1516,10 @@ def _render_learning_entry(connection: sqlite3.Connection, row: sqlite3.Row) -> 
         (row["superseded_by"], f"- **Superseded by** {row['superseded_by']}"),
         (row["note"], f"- **Note** {row['note']}"),
     )
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Append only optional facts that are present, preserving the declared display order.
     lines += [text for present, text in optional if present]
     lines.append("")
-    # Return the block's lines, ending in one blank to the caller.
+    # Retain one blank separator so callers can concatenate blocks without special cases.
     return lines
 
 
@@ -1676,37 +1543,26 @@ def render_calibration(connection: sqlite3.Connection, config: dict[str, Any],
     @param as_of the date staleness and decay are measured to
     @return the full text of `calibration.md`, ending in a single newline
     """
-    # Compute learnings using list for later render calibration logic.
+    # Snapshot all folded populations before computing mutually comparable calibration totals.
     learnings = list(connection.execute("SELECT * FROM learning"))
-    # Compute usages using list for later render calibration logic.
     usages = list(connection.execute("SELECT * FROM usage"))
-    # Compute sessions using list for later render calibration logic.
     sessions = list(connection.execute("SELECT * FROM session"))
-    # Select helped, u as the current element from usages if u["outcome"] == "helped") while
-    # Details: render calibration preserves traversal order.
+    # Classify feedback outcomes independently so the report exposes useful and noisy retrieval.
     helped = sum(1 for u in usages if u["outcome"] == "helped")
-    # Select the captured Doxygen diagnostics that explain the failed build.
     noise = sum(1 for u in usages if u["outcome"] == "noise")
-    # Select contradicted, u as the current element from usages if u["outcome"] ==
-    # Details: "contradicted") while render calibration preserves traversal order.
     contradicted = sum(1 for u in usages if u["outcome"] == "contradicted")
-    # Compute offered using len for later render calibration logic.
     offered = len(usages)
-    # Compute precision using f"{helped / offered:.0%}" if offered else "n/a" for later render
-    # Details: calibration logic.
     precision = f"{helped / offered:.0%}" if offered else "n/a"
 
     # Each kinds key is a learning kind and each value is its count; first-seen row order is
     # preserved in the calibration table.
     kinds: dict[str, int] = {}
-    # Select row as the current element from learnings while render calibration preserves
-    # Details: traversal order.
-    # Advance render calibration through the current input element in declared order.
+    # Count taxonomy use without assuming every configured kind has yet been observed.
     for row in learnings:
-        # Update render calibration state only after the required source facts are available.
+        # Increment the current row's kind while retaining first-observation mapping order.
         kinds[row["kind"]] = kinds.get(row["kind"], 0) + 1
 
-    # Unpack stale, row using sum for later render calibration logic.
+    # Treat an entry as stale after time decay removes more than half its folded confidence.
     stale = sum(
         1 for row in learnings
         if effective_confidence(row["confidence"], row["last_seen_ts"], row["kind"],
@@ -1740,17 +1596,16 @@ def render_calibration(connection: sqlite3.Connection, config: dict[str, Any],
         "",
     ]
 
-    # Handle the non-empty or enabled kinds state.
+    # Omit the taxonomy table until at least one real entry supplies a kind.
     if kinds:
-        # Preserve lines element values in deterministic source order.
+        # Sort kind labels so database row order cannot perturb generated bytes.
         lines += ["## Kinds", "", "| Kind | Count |", "|---|---|"]
-        # Preserve k, lines, v element values in deterministic source order.
         lines += [f"| {k} | {v} |" for k, v in sorted(kinds.items())]
         lines.append("")
 
-    # Select the empty-or-disabled path when learnings has no usable value.
+    # Bootstrap guidance replaces meaningless precision claims for an empty database.
     if not learnings:
-        # Preserve lines element values in deterministic source order.
+        # Explain the first measurements that can calibrate policy before outcome history exists.
         lines += [
             "## First-run protocol",
             "",
@@ -1768,30 +1623,26 @@ def render_calibration(connection: sqlite3.Connection, config: dict[str, Any],
             "",
         ]
 
-    # Preserve lines element values in deterministic source order.
+    # Finish with the exact policy values responsible for the metrics above.
     lines += [
         "## Parameters in force",
         "",
         "| Setting | Value |",
         "|---|---|",
     ]
-    # Select section as the current element from ("retrieval", "promotion") while render
-    # Details: calibration preserves traversal order.
-    # Advance render calibration through the current input element in declared order.
+    # Preserve section order while sorting individual keys for deterministic review.
     for section in ("retrieval", "promotion"):
-        # Treat the current key, value as the candidate element consumed by the enclosing
-        # Details: transformation.
-        # Advance render calibration through the current input element in declared order.
+        # Render each setting pair in lexical key order inside its policy section.
         for key, value in sorted(config[section].items()):
             lines.append(f"| `{section}.{key}` | {value} |")
-    # Preserve lines element values in deterministic source order.
+    # Append the operator-facing calibration command after the policy value table.
     lines += [
         "",
         "Change one with `python tools/learn.py calibrate --set retrieval.max_learnings=8 "
         '--why "..."`, which edits `config.toml` and appends a `calibrate` event. A '
         "parameter changed without that event is indistinguishable from drift.",
     ]
-    # Return the full text of `calibration.md`, ending in a single newline to the caller.
+    # Normalize the accumulated calibration document to exactly one trailing newline.
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -1808,13 +1659,12 @@ def write_views(store: Store, connection: sqlite3.Connection, as_of: dt.date) ->
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Compute config using store.config for later write views logic.
+    # Render both views from one policy snapshot and one already-folded connection.
     config = store.config()
-    # Publish the externally visible effect after all required inputs are ready.
+    # Replace the index first, then the calibration report measured from the same state.
     store.index.write_text(
         render_index(connection, config), encoding="utf-8", newline="\n"
     )
-    # Publish the externally visible effect after all required inputs are ready.
     store.calibration.write_text(
         render_calibration(connection, config, as_of), encoding="utf-8", newline="\n"
     )
@@ -1840,33 +1690,30 @@ def graph_overlay(store: Store) -> Iterator[tuple[str, str, str, str, float]]:
     @par Effects
     May mutate caller-visible or process-local state in implementation order.
     """
-    # Select the existing-artifact path only when `not store.db.exists()` is satisfied.
+    # A repository with no derived database simply contributes no navigation overlay.
     if not store.db.exists():
-        # Return one tuple per link of every candidate or active entry, ordered by id then to
-        # Details: the caller.
+        # Stop the generator before SQLite can create an empty artifact as a read side effect.
         return
-    # Compute connection using sqlite3.connect for later graph overlay logic.
+    # Open the optional projection directly; schema creation belongs only to explicit sync.
     connection = sqlite3.connect(store.db)
-    # Update graph overlay state only after the required source facts are available.
     connection.row_factory = sqlite3.Row
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Treat stale or incompatible optional projections as absent enrichment.
     try:
-        # Preserve rows element values in deterministic source order.
+        # Select only live linked knowledge in stable learning and target order.
         rows = connection.execute(
             "SELECT l.id, l.claim, l.confidence, k.relation, k.node "
             "FROM learning l JOIN link k ON k.learning_id = l.id "
             "WHERE l.status IN ('candidate','active') ORDER BY l.id, k.node"
         ).fetchall()
-    # Translate the expected failure into this mechanism's stable diagnostic path.
+    # Navigation remains usable when an old or damaged derived database cannot answer.
     except sqlite3.DatabaseError:
-        # Return one tuple per link of every candidate or active entry, ordered by id then to
-        # Details: the caller.
+        # End the generator without converting an optional overlay problem into command failure.
         return
+    # Close the transient read connection on success and every database-error exit.
     finally:
-        # Publish the externally visible effect after all required inputs are ready.
+        # Release SQLite resources without altering the optional projection artifact.
         connection.close()
-    # Select row as the current element from rows while graph overlay preserves traversal order.
-    # Advance graph overlay through the current input element in declared order.
+    # Translate database rows into the graph overlay protocol without reordering them.
     for row in rows:
         yield row["id"], row["claim"], row["relation"], row["node"], row["confidence"]
 
@@ -1890,42 +1737,32 @@ def cmd_record(store: Store, args: argparse.Namespace) -> int:
     @par Effects
     Writes the completed diagnostic or result representation to standard output.
     """
-    # Compute config using store.config for later cmd record logic.
+    # Snapshot write policy before validating any user-controlled event fields.
     config = store.config()
-    # Select the guarded path only after `args.kind not in config['write']['kinds_enabled']` is
-    # Details: satisfied.
+    # Reject disabled taxonomy kinds with a pointer to the controlling configuration.
     if args.kind not in config["write"]["kinds_enabled"]:
-        # Compute message using f"kind {args.kind!r} is not enabled; see learning/config.tom for
-        # Details: later cmd record logic.
+        # Preserve the rejected kind spelling in the actionable diagnostic.
         message = f"kind {args.kind!r} is not enabled; see learning/config.toml"
-        # Propagate the localized failure so callers cannot mistake it for success.
         raise LearnError(message)
-    # Select the guarded path only after `config['write']['require_action'] and (not
-    # Details: args.action)` is satisfied.
+    # Enforce actionable learnings when policy requires more than a descriptive claim.
     if config["write"]["require_action"] and not args.action:
-        # Compute message using "a learning must say what to do differently, not only what i for
-        # Details: later cmd record logic.
+        # Explain the missing decision field rather than reporting generic argument absence.
         message = "a learning must say what to do differently, not only what is true"
-        # Propagate the localized failure so callers cannot mistake it for success.
         raise LearnError(message)
     # Each triggers element is one parsed trigger in command-line order.
     triggers = [parse_trigger(t) for t in args.trigger or []]
-    # Select the guarded path only after `config['write']['require_trigger'] and (not triggers)`
-    # Details: is satisfied.
+    # Refuse permanently unreachable knowledge under the configured retrieval policy.
     if config["write"]["require_trigger"] and not triggers:
-        # Compute message using ( for later cmd record logic.
+        # Enumerate accepted trigger families in the remediation itself.
         message = (
             "a learning with no trigger can never be retrieved. Add at least one "
             "--trigger glob:... / error:... / rule:... / command:... / term:..."
         )
-        # Propagate the localized failure so callers cannot mistake it for success.
         raise LearnError(message)
 
-    # Compute connection using sync for later cmd record logic.
+    # Fold current state before deriving the next collision-free learning identity.
     connection = sync(store)
-    # Compute learning id using next learning id for later cmd record logic.
     learning_id = next_learning_id(connection)
-    # Publish the externally visible effect after all required inputs are ready.
     connection.close()
 
     # Each payload key is a learn-event field and each value is caller-supplied content;
@@ -1940,18 +1777,17 @@ def cmd_record(store: Store, args: argparse.Namespace) -> int:
         "triggers": triggers,
         "links": [{"relation": "learned_about", "node": n} for n in args.link or []],
     }
-    # Select the guarded path only after `args.verify` is satisfied.
+    # Include verification only when supplied so absence remains distinct from empty command text.
     if args.verify:
-        # Update cmd record state only after the required source facts are available.
+        # Add the exact recorded command to the immutable learning-event body.
         payload["verification"] = args.verify
+    # Append the validated learning, rebuild its projection, and publish readable views.
     append_event(store, "learn", session_id(args.session), payload)
-    # Compute connection using sync for later cmd record logic.
     connection = sync(store)
     write_views(store, connection, dt.date.today())
-    # Publish the externally visible effect after all required inputs are ready.
     connection.close()
     print(f"recorded {learning_id}")
-    # Return 0 once the entry is written and the views regenerated to the caller.
+    # Report success only after ledger and both generated views agree.
     return 0
 
 
@@ -1968,38 +1804,34 @@ def cmd_retrieve(store: Store, args: argparse.Namespace) -> int:
     @par Effects
     Writes the completed diagnostic or result representation to standard output.
     """
-    # Compute connection using sync for later cmd retrieve logic.
+    # Fold before retrieval so every answer reflects the complete authoritative ledger.
     connection = sync(store)
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Query all supplied context dimensions through the shared trigger and budget policy.
     found = retrieve(
         store, connection, file=args.file, error=args.error, task=args.task,
         rules=args.rule or [],
     )
-    # Publish the externally visible effect after all required inputs are ready.
     connection.close()
-    # Select the guarded path only after `args.json` is satisfied.
+    # Machine callers receive the same candidates as structured dataclass fields.
     if args.json:
         # asdict, not __dict__: these are slotted dataclasses and have no instance
         # dictionary at all, so reading one raises rather than returning the fields.
         print(json.dumps([asdict(c) for c in found], indent=1, ensure_ascii=False))
+        # Empty or populated JSON is a successful retrieval observation.
         return 0
-    # Select the empty-or-disabled path when found has no usable value.
+    # Human output distinguishes a valid empty match set from command failure.
     if not found:
         print("LEARNED  nothing recorded matches this situation")
-        # Return 0, including when nothing matched; an empty answer is a valid one to the
-        # Details: caller.
+        # No match is a complete answer and therefore retains success status.
         return 0
+    # Render ranked candidates, then disclose their aggregate context cost and feedback path.
     print(f"LEARNED ({len(found)})")
-    # Treat the current candidate as the candidate element consumed by the enclosing
-    # Details: transformation.
-    # Advance cmd retrieve through the current input element in declared order.
+    # Preserve retrieval rank in the terminal representation.
     for candidate in found:
         print(candidate.render())
-    # Select c as the current element from found)} tok") while cmd retrieve preserves traversal
-    # Details: order.
     print(f"\n  cost {sum(count_tokens(c.render()) for c in found)} tok")
     print("  report what came of these:  learn.py used <id> --outcome helped|noise")
-    # Return 0, including when nothing matched; an empty answer is a valid one to the caller.
+    # Report success after the complete ranked response and usage instructions are visible.
     return 0
 
 
@@ -2017,40 +1849,37 @@ def cmd_outcome(store: Store, args: argparse.Namespace) -> int:
     @par Effects
     Writes the completed diagnostic or result representation to standard output.
     """
-    # Compute kind using {"used": "use", "refute": "refute", "supersede": "supersede" for later
-    # Details: cmd outcome logic.
+    # Translate CLI spelling to the stable ledger verbs consumed by the fold.
     kind = {"used": "use", "refute": "refute", "supersede": "supersede",
             "promote": "promote"}[args.command]
     # Each payload key is an outcome-event field and each value is caller-supplied content;
     # insertion order defines stable ledger JSON.
     payload: dict[str, Any] = {"ref": args.id}
-    # Select the guarded path only after `args.command == 'used'` is satisfied.
+    # Encode each subcommand's distinct fields into the shared feedback envelope.
     if args.command == "used":
-        # Update cmd outcome state only after the required source facts are available.
+        # Usage preserves both categorical outcome and optional operator context.
         payload["outcome"] = args.outcome
-        # Update cmd outcome state only after the required source facts are available.
         payload["note"] = args.note
-    # Select the guarded path only after `args.command == 'refute'` is satisfied.
+    # Refutation carries the current falsifying reason rather than replacement identity.
     elif args.command == "refute":
-        # Update cmd outcome state only after the required source facts are available.
+        # Record why the subject is wrong so retirement remains auditable.
         payload["why"] = args.why
-    # Select the guarded path only after `args.command == 'supersede'` is satisfied.
+    # Supersession links the retired learning to the newly authoritative entry.
     elif args.command == "supersede":
-        # Update cmd outcome state only after the required source facts are available.
+        # Preserve the replacement learning id as the lifecycle link target.
         payload["by"] = args.by
+    # Promotion names the permanent mechanism and optional migration note.
     else:
-        # Update cmd outcome state only after the required source facts are available.
+        # Record the absorbing mechanism and any contextual handoff note.
         payload["mechanism"] = args.mechanism
-        # Update cmd outcome state only after the required source facts are available.
         payload["note"] = args.note
+    # Persist feedback, refold all projections, and republish both readable views.
     append_event(store, kind, session_id(args.session), payload)
-    # Compute connection using sync for later cmd outcome logic.
     connection = sync(store)
     write_views(store, connection, dt.date.today())
-    # Publish the externally visible effect after all required inputs are ready.
     connection.close()
     print(f"{kind} recorded for {args.id}")
-    # Return 0 once the event is written and the views regenerated to the caller.
+    # Announce success only after the feedback and its derived artifacts agree.
     return 0
 
 
@@ -2077,50 +1906,37 @@ def cmd_verify(store: Store, args: argparse.Namespace) -> int:
     @par Effects
     Writes the completed diagnostic or result representation to standard output.
     """
-    # Select the guarded path only after `args.refute_failures and (not args.execute)` is
-    # Details: satisfied.
+    # Never convert a dry-run prediction into an irreversible refutation event.
     if args.refute_failures and not args.execute:
-        # Compute message using "--refute-failures needs --execute; nothing has been run to  for
-        # Details: later cmd verify logic.
+        # State the missing authority explicitly rather than silently ignoring the flag.
         message = "--refute-failures needs --execute; nothing has been run to refute"
-        # Propagate the localized failure so callers cannot mistake it for success.
         raise LearnError(message)
 
-    # Compute connection using sync for later cmd verify logic.
+    # Fold once, run or simulate every live check, and capture the total population for context.
     connection = sync(store)
-    # Compute results using verify for later cmd verify logic.
     results = verify(store, connection, execute=args.execute, timeout=args.timeout)
-    # Compute total using connection.execute for later cmd verify logic.
     total = connection.execute("SELECT COUNT(*) n FROM learning").fetchone()["n"]
-    # Publish the externally visible effect after all required inputs are ready.
     connection.close()
 
-    # Capture result as the completed cmd verify outcome for subsequent validation or
-    # Details: publication.
-    # Advance cmd verify through the current input element in declared order.
+    # Duplicate security refusals on stderr so machine-readable stdout cannot conceal them.
     for result in results:
-        # Select the guarded path only after `result.outcome == 'refused'` is satisfied.
+        # Only policy refusals need the out-of-band warning; other outcomes appear normally.
         if result.outcome == "refused":
             print(f"REFUSED {result.learning_id}: {result.command}\n  {result.detail}",
                   file=sys.stderr)
 
-    # Select the guarded path only after `args.json` is satisfied.
+    # JSON mode preserves structured results while keeping the epistemic caveat on stderr.
     if args.json:
-        # Select r as the current element from results], indent=1, ensure_ascii=False)) while
-        # Details: cmd verify preserves traversal order.
+        # Serialize slotted result fields explicitly; instances have no usable ``__dict__``.
         print(json.dumps([asdict(r) for r in results], indent=1, ensure_ascii=False))
         print(VERIFY_CAVEAT, file=sys.stderr)
-        # Return 0; a failing verification is the measurement, not an error in taking it to the
-        # Details: caller.
+        # Verification outcomes are measurements, so failed checks do not fail this command.
         return 0
 
-    # Compute mode using "ran" if args.execute else "dry run: nothing was started" for later cmd
-    # Details: verify logic.
+    # Human output identifies whether commands ran before rendering every result block.
     mode = "ran" if args.execute else "dry run: nothing was started"
     print(f"VERIFY ({len(results)} live command(s) across {total} learning(s); {mode})")
-    # Capture result as the completed cmd verify outcome for subsequent validation or
-    # Details: publication.
-    # Advance cmd verify through the current input element in declared order.
+    # Preserve learning-id order from the verification query.
     for result in results:
         print(result.render())
 
@@ -2128,24 +1944,20 @@ def cmd_verify(store: Store, args: argparse.Namespace) -> int:
     # ``VERIFY_OUTCOMES``.
     tally = {outcome: sum(1 for r in results if r.outcome == outcome)
              for outcome in VERIFY_OUTCOMES}
-    # Normalize the current repository path to its portable baseline key spelling.
+    # Print only populated outcome categories followed by the limit of what a pass proves.
     print("\n  " + ", ".join(f"{n} {name}" for name, n in tally.items() if n))
     print(f"  {VERIFY_CAVEAT}")
 
-    # Select the guarded path only after `args.refute_failures` is satisfied.
+    # Opt-in refutation records only executed failures, then regenerates folded views.
     if args.refute_failures:
-        # Compute written using refute failures for later cmd verify logic.
+        # Persist eligible failures and capture exactly which writes succeeded.
         written = refute_failures(store, results, session_id(args.session))
-        # Compute connection using sync for later cmd verify logic.
         connection = sync(store)
         write_views(store, connection, dt.date.today())
-        # Publish the externally visible effect after all required inputs are ready.
         connection.close()
-        # Bind r to the current value used by the next cmd verify decision.
         print(f"  refuted {len(written)} learning(s): "
               f"{', '.join(r.learning_id for r in written) or 'none'}")
-    # Return 0; a failing verification is the measurement, not an error in taking it to the
-    # Details: caller.
+    # Every observed verdict, including failure, was reported successfully.
     return 0
 
 
@@ -2159,17 +1971,15 @@ def cmd_session(store: Store, args: argparse.Namespace) -> int:
     @par Effects
     Writes the completed diagnostic or result representation to standard output.
     """
-    # Compute identifier using session id for later cmd session logic.
+    # Resolve attribution once and persist it before rebuilding session-aware projections.
     identifier = session_id(args.session)
     append_event(store, "session", identifier,
                  {"task": args.task, "discipline_version": args.discipline_version})
-    # Compute connection using sync for later cmd session logic.
     connection = sync(store)
     write_views(store, connection, dt.date.today())
-    # Publish the externally visible effect after all required inputs are ready.
     connection.close()
     print(identifier)
-    # Return 0; the id goes to stdout for later commands to pass back to the caller.
+    # The printed identity is now durable and safe for later commands to reuse.
     return 0
 
 
@@ -2186,18 +1996,17 @@ def cmd_sync(store: Store, args: argparse.Namespace) -> int:
     @par Effects
     Writes the completed diagnostic or result representation to standard output.
     """
-    # Compute connection using sync for later cmd sync logic.
+    # Rebuild all derived state and render views at the caller's reproducible date when supplied.
     connection = sync(store)
     write_views(store, connection, args.as_of or dt.date.today())
-    # Compute counts using connection.execute for later cmd sync logic.
+    # Read projection counts before closing so the report exposes ignored or folded event drift.
     counts = connection.execute(
         "SELECT (SELECT COUNT(*) FROM event) e, (SELECT COUNT(*) FROM learning) l, "
         "(SELECT COUNT(*) FROM usage) u"
     ).fetchone()
-    # Publish the externally visible effect after all required inputs are ready.
     connection.close()
     print(f"synced {counts['e']} event(s) -> {counts['l']} learning(s), {counts['u']} outcome(s)")
-    # Return 0 once the projections match the ledger to the caller.
+    # Success means the projection, views, and printed reconciliation were all produced.
     return 0
 
 
@@ -2211,25 +2020,21 @@ def cmd_status(store: Store, args: argparse.Namespace) -> int:
     @par Effects
     Writes the completed diagnostic or result representation to standard output.
     """
-    # Compute connection using sync for later cmd status logic.
+    # Fold current state, then collect lifecycle and total-event summaries from one snapshot.
     connection = sync(store)
-    # Preserve rows element values in deterministic source order.
     rows = list(connection.execute(
         "SELECT status, COUNT(*) n FROM learning GROUP BY status ORDER BY status"
     ))
-    # Compute events using connection.execute for later cmd status logic.
     events = connection.execute("SELECT COUNT(*) n FROM event").fetchone()["n"]
-    # Publish the externally visible effect after all required inputs are ready.
     connection.close()
     print(f"{events} event(s) in {store.ledger.name}")
-    # Select row as the current element from rows while cmd status preserves traversal order.
-    # Advance cmd status through the current input element in declared order.
+    # Preserve lexical status order from SQL so repeated reports are stable.
     for row in rows:
         print(f"  {row['status']:<12} {row['n']}")
-    # Select the empty-or-disabled path when rows has no usable value.
+    # Make an empty learning population explicit instead of printing only the event header.
     if not rows:
         print("  (no learnings yet)")
-    # Return 0, whether or not anything has been recorded to the caller.
+    # Empty and populated stores are both valid status observations.
     return 0
 
 
@@ -2248,30 +2053,27 @@ def cmd_calibrate(store: Store, args: argparse.Namespace) -> int:
     @par Effects
     Writes the completed diagnostic or result representation to standard output.
     """
-    # Compute as of using args.as_of or dt.date.today() for later cmd calibrate logic.
+    # Freeze the report date once so edits, fold, and rendered metrics share one temporal basis.
     as_of = args.as_of or dt.date.today()
-    # Select the guarded path only after `args.set` is satisfied.
+    # A requested mutation requires its rationale before any configuration bytes change.
     if args.set:
-        # Select the empty-or-disabled path when args.why has no usable value.
+        # Refuse untraceable tuning before applying even the first requested assignment.
         if not args.why:
-            # Compute message using "a parameter change needs --why; an untraced change is drift
-            # Details: for later cmd calibrate logic.
+            # Explain the provenance requirement that makes an otherwise valid setting invalid.
             message = "a parameter change needs --why; an untraced change is drift"
-            # Propagate the localized failure so callers cannot mistake it for success.
             raise LearnError(message)
-        # Compute changed using  apply settings for later cmd calibrate logic.
+        # Apply requested dials first, then append their old/new values and rationale as evidence.
         changed = _apply_settings(store, args.set)
         append_event(store, "calibrate", session_id(args.session),
                      {"changed": changed, "why": args.why})
-    # Compute connection using sync for later cmd calibrate logic.
+    # Fold the optional calibration event and regenerate the report from effective settings.
     connection = sync(store)
     write_views(store, connection, as_of)
-    # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
+    # Read the just-generated artifact so stdout is byte-aligned with the checked-in view.
     report = store.calibration.read_text(encoding="utf-8")
-    # Publish the externally visible effect after all required inputs are ready.
     connection.close()
     print(report)
-    # Return 0 once the report has been printed to the caller.
+    # Success follows both durable regeneration and publication of the resulting metrics.
     return 0
 
 
@@ -2292,47 +2094,38 @@ def _apply_settings(store: Store, assignments: Sequence[str]) -> dict[str, list[
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Keep the original TOML text so comments and formatting survive targeted value changes.
     text = store.config_path.read_text(encoding="utf-8")
     # Each changed key is a dotted setting and each value is ordered old then new text; mapping
     # insertion order follows assignment order.
     changed: dict[str, list[str]] = {}
-    # Select assignment as the current element from assignments while apply settings preserves
-    # Details: traversal order.
-    # Advance apply settings through the current input element in declared order.
+    # Apply assignments in caller order so later duplicate keys intentionally see prior edits.
     for assignment in assignments:
-        # Treat the current dotted, separator, value as the candidate element consumed by the
-        # Details: enclosing transformation.
+        # Split only the first equals sign because TOML values may contain their own equals.
         dotted, separator, value = assignment.partition("=")
-        # Select the empty-or-disabled path when separator has no usable value.
+        # Reject malformed input before trying to infer a section or key.
         if not separator:
-            # Compute message using f"expected section.key=value, got {assignment!r}" for later
-            # Details: apply settings logic.
+            # Quote the complete argument so whitespace and punctuation remain diagnosable.
             message = f"expected section.key=value, got {assignment!r}"
-            # Propagate the localized failure so callers cannot mistake it for success.
             raise LearnError(message)
-        # Treat the current key, section as the candidate element consumed by the enclosing
-        # Details: transformation.
+        # Separate the final key from its section path for the textual replacement lookup.
         section, _, key = dotted.strip().rpartition(".")
-        # Compute pattern using re.compile for later apply settings logic.
+        # Match the key's assigned value while retaining its original prefix and indentation.
         pattern = re.compile(rf"^({re.escape(key)}\s*=\s*)(.+)$", re.MULTILINE)
-        # Preserve the optional pattern match that carries the reported analysis count.
+        # Locate the current value in the progressively updated in-memory TOML text.
         found = pattern.search(text)
-        # Use the absence path when found has no available value.
+        # An unknown dotted name is a policy error; no partial file is written yet.
         if found is None:
-            # Compute message using f"no setting named {dotted!r} in {store.config_path.name}"
-            # Details: for later apply settings logic.
+            # Name both the requested setting and the concrete configuration artifact.
             message = f"no setting named {dotted!r} in {store.config_path.name}"
-            # Propagate the localized failure so callers cannot mistake it for success.
             raise LearnError(message)
-        # Update  apply settings state only after the required source facts are available.
+        # Retain old and new lexical values for the calibration event's audit trail.
         changed[dotted.strip()] = [found.group(2).strip(), value.strip()]
-        # Retain the immutable source representation consumed by subsequent analysis.
+        # Replace one matching assignment while preserving every comment and unrelated byte.
         text = pattern.sub(lambda m: m.group(1) + value.strip(), text, count=1)
-    # Publish the externally visible effect after all required inputs are ready.
+    # Commit the complete validated edit once, avoiding partial writes on earlier failures.
     store.config_path.write_text(text, encoding="utf-8", newline="\n")
-    # Return each dotted key mapped to its old and new value, for the event to carry to the
-    # Details: caller.
+    # Return the mutation record used to append configuration provenance.
     return changed
 
 
@@ -2354,14 +2147,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     @return a parser that rejects an invocation naming no subcommand
     """
-    # Configure the command-line parser that defines this tool's invocation contract.
+    # Define global store and attribution controls before requiring one explicit operation.
     parser = argparse.ArgumentParser(description="Record and retrieve session learnings.")
     parser.add_argument("--root", type=Path, default=REPO_ROOT)
     parser.add_argument("--session", help="session id; one is generated if omitted")
-    # Compute sub using parser.add subparsers for later build parser logic.
     sub = parser.add_subparsers(dest="command", required=True)
 
-    # Compute rec using sub.add parser for later build parser logic.
+    # Recording captures a typed claim, action, retrieval triggers, and optional verification.
     rec = sub.add_parser("record", help="record one learning")
     rec.add_argument("--kind", required=True, choices=LEARNING_KINDS)
     rec.add_argument("--claim", required=True, help="one sentence: what is true")
@@ -2373,7 +2165,7 @@ def build_parser() -> argparse.ArgumentParser:
     rec.add_argument("--evidence", default="observed",
                      choices=("observed", "inferred", "told"))
 
-    # Compute ret using sub.add parser for later build parser logic.
+    # Retrieval accepts orthogonal context signals and an optional structured-output mode.
     ret = sub.add_parser("retrieve", help="what is known about this situation")
     ret.add_argument("--file")
     ret.add_argument("--error")
@@ -2381,30 +2173,30 @@ def build_parser() -> argparse.ArgumentParser:
     ret.add_argument("--rule", action="append")
     ret.add_argument("--json", action="store_true")
 
-    # Compute used using sub.add parser for later build parser logic.
+    # Usage feedback classifies practical value without changing the original learning record.
     used = sub.add_parser("used", help="report what came of a retrieved learning")
     used.add_argument("id")
     used.add_argument("--outcome", required=True,
                       choices=("helped", "noise", "contradicted"))
     used.add_argument("--note")
 
-    # Preserve the immutable revision identity used as provenance for this comparison.
+    # Refutation requires a current falsifying reason for the irreversible lifecycle transition.
     ref = sub.add_parser("refute", help="record that a learning is wrong")
     ref.add_argument("id")
     ref.add_argument("--why", required=True)
 
-    # Compute sup using sub.add parser for later build parser logic.
+    # Supersession links a retired subject to the learning that replaces it.
     sup = sub.add_parser("supersede", help="replace one learning with another")
     sup.add_argument("id")
     sup.add_argument("--by", required=True)
 
-    # Compute pro using sub.add parser for later build parser logic.
+    # Promotion names the durable enforcement or documentation mechanism absorbing a learning.
     pro = sub.add_parser("promote", help="retire a learning into a mechanism")
     pro.add_argument("id")
     pro.add_argument("--mechanism", required=True)
     pro.add_argument("--note")
 
-    # Compute ver using sub.add parser for later build parser logic.
+    # Verification separates execution and refutation into two independently explicit opt-ins.
     ver = sub.add_parser("verify", help="replay the recorded verification commands")
     ver.add_argument("--execute", action="store_true",
                      help="actually run them; without this nothing is started")
@@ -2413,23 +2205,24 @@ def build_parser() -> argparse.ArgumentParser:
     ver.add_argument("--timeout", type=float, default=VERIFY_TIMEOUT, metavar="SECONDS")
     ver.add_argument("--json", action="store_true")
 
-    # Compute ses using sub.add parser for later build parser logic.
+    # Session creation records task and discipline attribution before later learning events.
     ses = sub.add_parser("session", help="open a session")
     ses.add_argument("--task")
     ses.add_argument("--discipline-version")
 
-    # Compute syn using sub.add parser for later build parser logic.
+    # Sync permits a reproducible report date while rebuilding every derived artifact.
     syn = sub.add_parser("sync", help="rebuild the index and the views from the ledger")
     syn.add_argument("--as-of", type=dt.date.fromisoformat)
 
+    # Status is the read-only one-screen reconciliation of folded lifecycle populations.
     sub.add_parser("status", help="a one-screen summary")
 
-    # Compute cal using sub.add parser for later build parser logic.
+    # Calibration can report current metrics or mutate named dials with mandatory provenance.
     cal = sub.add_parser("calibrate", help="the metrics, and the dials")
     cal.add_argument("--as-of", type=dt.date.fromisoformat)
     cal.add_argument("--set", action="append", metavar="SECTION.KEY=VALUE")
     cal.add_argument("--why")
-    # Return a parser that rejects an invocation naming no subcommand to the caller.
+    # Expose the complete parser only after every command contract has been attached.
     return parser
 
 
@@ -2456,22 +2249,20 @@ def main(argv: Sequence[str] | None = None) -> int:
     @param argv the command line, defaulting to the process arguments
     @return 0 on success, 1 when the tool refused with its reason on stderr
     """
-    # Select the guarded path only after `hasattr(sys.stdout, 'reconfigure')` is satisfied.
+    # Prefer UTF-8 replacement output where the host stream supports runtime reconfiguration.
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     # Capture the validated invocation arguments that govern this execution.
     args = build_parser().parse_args(argv)
-    # Compute store using Store for later main logic.
     store = Store(args.root.resolve())
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Translate expected domain refusals at the CLI boundary while preserving defects as traces.
     try:
-        # Return the aggregate process status to the command-line boundary.
+        # Dispatch exactly the required subcommand through the closed handler table.
         return COMMANDS[args.command](store, args)
-    # Preserve the caught failure that explains why the external result is unusable.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
+    # Expected refusal text is actionable without exposing an internal traceback.
     except LearnError as exc:
         print(f"error: {exc}", file=sys.stderr)
-        # Return the aggregate process status to the command-line boundary.
+        # Reserve status one for domain refusal; unexpected exceptions remain uncaught defects.
         return 1
 
 
