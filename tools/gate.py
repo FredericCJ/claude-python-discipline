@@ -96,7 +96,7 @@ def run(*, stop_early: bool = False) -> int:
             command, cwd=REPO_ROOT, capture_output=True, text=True,
             encoding="utf-8", errors="replace", check=False, timeout=1800,
         )
-        # Each lines element represents one decoded record; lexical order is preserved.
+        # Each element is one nonblank child diagnostic record in original stream order.
         lines = [x for x in (finished.stdout + finished.stderr).splitlines() if x.strip()]
         # Preserve the completed operation outcome for validation and publication.
         verdict = "ok  " if finished.returncode == 0 else "FAIL"
@@ -106,8 +106,7 @@ def run(*, stop_early: bool = False) -> int:
             failed.append(name)
             # Emit captured diagnostic detail only when nonblank output is available.
             if lines:
-                # Treat the current x as the candidate element consumed by the enclosing
-                # transformation.
+                # Bound verbose failures to their most recent ordered diagnostic records.
                 print("\n".join(f"       {x[:110]}" for x in lines[-12:]))
             # Stop after this failure only when the caller selected early termination.
             if stop_early:
@@ -129,5 +128,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--stop-early", action="store_true",
                         help="stop at the first failing step")
-    # Propagate the localized failure so callers cannot mistake it for success.
+    # Translate the aggregate verdict into the status observed by automation.
     raise SystemExit(run(stop_early=parser.parse_args().stop_early))

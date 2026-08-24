@@ -31,13 +31,9 @@ def seed(root: Path) -> Path:
     """
     # Retain the immutable source representation consumed by subsequent analysis.
     source = root / "skills" / "python-discipline"
-    # Publish the externally visible effect after all required inputs are ready.
     (source / "assets").mkdir(parents=True)
-    # Publish the externally visible effect after all required inputs are ready.
     (source / "SKILL.md").write_bytes(b"---\nname: python-discipline\n---\n")
-    # Publish the externally visible effect after all required inputs are ready.
     (source / "assets" / "routing.txt").write_bytes(b"one corpus\r\n")
-    # Return the canonical skill directory to the caller.
     return source
 
 
@@ -49,7 +45,7 @@ def mirrored(root: Path, host: str, relative: str) -> Path:
     @param relative a path below the skill directory
     @return the generated path
     """
-    # Return the generated path to the caller.
+    # Keep host-specific discovery roots outside the canonical skill tree.
     return root / host / "skills" / "python-discipline" / relative
 
 
@@ -86,7 +82,7 @@ def test_check_names_the_host_copy_that_drifted(
     """
     seed(tmp_path)
     assert build_skill_mirror.main(["--root", str(tmp_path)]) == 0
-    # Publish the externally visible effect after all required inputs are ready.
+    # Corrupt only Codex's projection so the diagnostic must identify that host.
     mirrored(tmp_path, ".agents", "SKILL.md").write_bytes(b"drift\n")
 
     assert build_skill_mirror.main(["--root", str(tmp_path), "--check"]) == 1
@@ -107,7 +103,6 @@ def test_retired_files_are_removed_from_both_host_mirrors(tmp_path: Path) -> Non
     # Retain the immutable source representation consumed by subsequent analysis.
     source = seed(tmp_path)
     assert build_skill_mirror.main(["--root", str(tmp_path)]) == 0
-    # Publish the externally visible effect after all required inputs are ready.
     (source / "assets" / "routing.txt").unlink()
 
     assert build_skill_mirror.main(["--root", str(tmp_path)]) == 0

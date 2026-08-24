@@ -67,9 +67,7 @@ def target(tmp_path: Path) -> Path:
     """
     # Resolve the repository-confined path used by this operation before filesystem access.
     root = tmp_path / "adopter"
-    # Publish the externally visible effect after all required inputs are ready.
     root.mkdir()
-    # Return the repository root to the caller.
     return root
 
 
@@ -81,7 +79,7 @@ def _install(target: Path, **kwargs: bool) -> tuple[int, list[str]]:
         True enables kwargs; false selects its disabled alternative.
     @return what `install` returned
     """
-    # Return what `install` returned to the caller.
+    # Exercise the public plan boundary used by adopters, not private copy helpers.
     return vendor.install(vendor.Plan(SOURCE, target), **kwargs)
 
 
@@ -107,8 +105,6 @@ def test_the_manifest_names_every_upstream_file(target: Path) -> None:
         p.relative_to(target / ".agent").as_posix()
         # Resolve the repository-confined path used by this operation before filesystem access.
         for root in vendor.UPSTREAM
-        # Select p as the current element from (target / ".agent" / root).rglob("*") while test
-        # the manifest names every upstream file preserves traversal order.
         for p in (target / ".agent" / root).rglob("*")
         if p.is_file()
         and p.suffix not in vendor.SKIP_SUFFIXES
@@ -186,10 +182,8 @@ def test_the_manifest_excludes_build_products(target: Path) -> None:
         "files"
     ]
     assert not [
-        # Normalize the current repository path to its portable baseline key spelling.
         name for name in recorded if any(part in vendor.SKIP_DIRS for part in Path(name).parts)
     ]
-    # Normalize the current repository path to its portable baseline key spelling.
     assert not [name for name in recorded if Path(name).suffix in vendor.SKIP_SUFFIXES]
 
 
@@ -208,7 +202,6 @@ def test_the_version_stamp_is_stable_across_two_installs(target: Path, tmp_path:
     _install(target)
     # Select a second independent target for deterministic stamp comparison.
     second = tmp_path / "other"
-    # Publish the externally visible effect after all required inputs are ready.
     second.mkdir()
     _install(second)
     assert (
@@ -237,7 +230,6 @@ def test_a_file_retired_upstream_does_not_survive_an_update(target: Path) -> Non
     _install(target)
     # Resolve a synthetic retired upstream-owned file inside the vendored check tree.
     stale = target / ".agent" / "enforce" / "checks" / "retired_check.py"
-    # Publish the externally visible effect after all required inputs are ready.
     stale.write_text('"""A check upstream no longer has."""\n', encoding="utf-8")
     _install(target)
     assert not stale.exists(), (
@@ -260,15 +252,11 @@ def test_the_project_half_survives_an_update(target: Path) -> None:
     _install(target)
     # Resolve a project-owned learning ledger used to prove update preservation.
     ledger = target / ".agent" / "learning" / "ledger.jsonl"
-    # Publish the externally visible effect after all required inputs are ready.
     ledger.parent.mkdir(parents=True, exist_ok=True)
-    # Publish the externally visible effect after all required inputs are ready.
     ledger.write_text('{"seq": 1, "kind": "learn"}\n', encoding="utf-8")
     # Resolve a project-owned override used to prove update preservation.
     mapping = target / ".agent" / "overrides" / "allocation.toml"
-    # Publish the externally visible effect after all required inputs are ready.
     mapping.parent.mkdir(parents=True, exist_ok=True)
-    # Publish the externally visible effect after all required inputs are ready.
     mapping.write_text('[tiers]\nT0 = "ours"\n', encoding="utf-8")
 
     _install(target)
@@ -290,15 +278,13 @@ def test_force_restores_a_seed_without_overwriting_work(target: Path) -> None:
     _install(target)
     # Resolve the existing project ledger whose authored bytes force must preserve.
     ledger = target / ".agent" / "learning" / "ledger.jsonl"
-    # Publish the externally visible effect after all required inputs are ready.
     ledger.parent.mkdir(parents=True, exist_ok=True)
-    # Publish the externally visible effect after all required inputs are ready.
     ledger.write_text('{"seq": 99}\n', encoding="utf-8")
     # Resolve then remove one canonical seed so force has a missing file to restore.
     schema = target / ".agent" / "learning" / "schema.sql"
     # Select the existing-artifact path only when `schema.exists()` is satisfied.
     if schema.exists():
-        # Publish the externally visible effect after all required inputs are ready.
+        # Force must restore missing package material without replacing project state.
         schema.unlink()
 
     _install(target, force=True)
@@ -324,12 +310,9 @@ def test_check_reports_an_edited_vendored_file_by_name(target: Path) -> None:
     _install(target)
     # Resolve one upstream-owned tool for an intentional in-place drift mutation.
     edited = target / ".agent" / "tools" / "nav.py"
-    # Publish the externally visible effect after all required inputs are ready.
     edited.write_text(edited.read_text(encoding="utf-8") + "\n# local tweak\n", encoding="utf-8")
     # Collect drift diagnostics after mutating the installed upstream file.
     problems = vendor.check(vendor.Plan(SOURCE, target))
-    # Select problem as the current element from problems), problems while test check reports an
-    # edited vendored file by name preserves traversal order.
     assert any("nav.py" in problem for problem in problems), problems
 
 
@@ -382,7 +365,6 @@ def test_the_whole_round_trip_preserves_every_prior_byte(
     """
     # Resolve the adopter-owned Claude instruction file whose bytes must round-trip exactly.
     claude = target / "CLAUDE.md"
-    # Publish the externally visible effect after all required inputs are ready.
     claude.write_bytes(original)
 
     # Install the discipline and retain its upstream-file count for a non-vacuity assertion.

@@ -595,7 +595,6 @@ def build_rows(sections: Sequence[dict[str, object]]) -> list[Row]:
             # A migrated section without any rule target has not actually been integrated.
             disposition = "UNREVIEWED"
         rows.append(Row(source, heading, int(section["line"]), disposition, targets, note))
-    # Return one row per section, in census order to the caller.
     return rows
 
 
@@ -686,24 +685,20 @@ def build_claim_rows(
             # Distinguish absent policy from conflicting policies for actionable diagnostics.
             state = "unreviewed" if not matching else "multiply claimed"
             msg = f"{claim_id} is {state}: matched {len(matching)} policies"
-            # Propagate the localized failure so callers cannot mistake it for success.
             raise ProvenanceError(msg)
         if claim_id in seen:
             # Content-derived identity repetition proves duplicated extracted evidence.
             msg = f"duplicate extracted claim identity: {claim_id}"
-            # Propagate the localized failure so callers cannot mistake it for success.
             raise ProvenanceError(msg)
         seen.add(claim_id)
 
-        # Preserve the current decoded diagnostic line before location normalization.
+        # Re-derive content identity from the immutable source coordinates and prose.
         line = int(candidate["line"])
-        # Retain the immutable source representation consumed by subsequent analysis.
         text = str(candidate["text"])
         expected_id = f"CD-L{line:04d}-{hashlib.sha256(text.encode('utf-8')).hexdigest()[:12]}"
         if claim_id != expected_id:
             # Recompute identity from source facts to expose edited extraction records.
             msg = f"altered claim identity {claim_id}: source line and text derive {expected_id}"
-            # Propagate the localized failure so callers cannot mistake it for success.
             raise ProvenanceError(msg)
 
         # Use the sole matched policy only after cardinality and identity checks succeed.
@@ -711,18 +706,15 @@ def build_claim_rows(
         if policy.disposition not in CLAIM_DISPOSITIONS:
             # Reject integration states outside the closed disposition vocabulary.
             msg = f"{claim_id} has unknown disposition {policy.disposition!r}"
-            # Propagate the localized failure so callers cannot mistake it for success.
             raise ProvenanceError(msg)
         # Refuse baseline re-recording unless the caller supplies a nonblank audit reason.
         if not policy.reason.strip():
             # Every claim decision must carry an inspectable engineering rationale.
             msg = f"{claim_id} has no disposition reason"
-            # Propagate the localized failure so callers cannot mistake it for success.
             raise ProvenanceError(msg)
         if policy.disposition != "rejected-with-reason" and not policy.targets:
             # Retained or transformed claims must identify their integrated doctrine targets.
             msg = f"{claim_id} has no target for {policy.disposition}"
-            # Propagate the localized failure so callers cannot mistake it for success.
             raise ProvenanceError(msg)
         rows.append(
             ClaimRow(
@@ -737,7 +729,6 @@ def build_claim_rows(
                 reason=policy.reason,
             )
         )
-    # Return exact claim-level disposition rows in source order to the caller.
     return rows
 
 
@@ -776,7 +767,6 @@ def render_claim_ledger(rows: Sequence[ClaimRow], source_digest: str) -> str:
             for row in rows
         ],
     }
-    # Return deterministic, newline-terminated JSON to the caller.
     return json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
 
 
@@ -942,7 +932,6 @@ def render(rows: Sequence[Row], claims: Sequence[ClaimRow] = ()) -> str:
     # Each unreviewed element is one provenance row lacking a disposition; source row order is
     # preserved for the blocking report.
     unreviewed = [r for r in rows if r.disposition == "UNREVIEWED"]
-    # Handle the non-empty or enabled unreviewed state.
     if unreviewed:
         # Preserve lines element values in deterministic source order.
         lines += [
@@ -1016,7 +1005,6 @@ def _build_outputs(
         )
         # Require explicit review of every added or removed claim before regeneration.
         raise ProvenanceError(msg)
-    # Return section rows, claim rows, Markdown view, and JSON ledger to the caller.
     return rows, claims, render(rows, claims), render_claim_ledger(claims, source_digest)
 
 
@@ -1077,7 +1065,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             for path, expected in outputs
             if not path.is_file() or path.read_text(encoding="utf-8") != expected
         ]
-        # Handle the non-empty or enabled drifted state.
         if drifted:
             # Print each stale artifact path in deterministic output order.
             for path in drifted:
@@ -1088,9 +1075,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         # Resolve the repository-confined path used by this operation before filesystem access.
         # Process each candidate element in deterministic source order.
         for path, content in outputs:
-            # Publish the externally visible effect after all required inputs are ready.
+            # Publish validated projections only after every output has been derived successfully.
             path.parent.mkdir(parents=True, exist_ok=True)
-            # Publish the externally visible effect after all required inputs are ready.
             path.write_text(content, encoding="utf-8", newline="\n")
 
     # Summarize final section dispositions and select the mode-specific publication verb.

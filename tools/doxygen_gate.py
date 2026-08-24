@@ -236,5 +236,5 @@ def main(argv: list[str] | None = None) -> int:
 
 # Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
-    # Propagate the localized failure so callers cannot mistake it for success.
+    # Convert the gate verdict to a process status only at the executable boundary.
     raise SystemExit(main())

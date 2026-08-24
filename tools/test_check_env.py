@@ -34,9 +34,7 @@ def _write(tmp_path: Path, body: str) -> Path:
     """
     # Resolve the repository-confined path used by this operation before filesystem access.
     path = tmp_path / "environment.yml"
-    # Publish the externally visible effect after all required inputs are ready.
     path.write_text(body, encoding="utf-8")
-    # Return the path written to the caller.
     return path
 
 
@@ -121,8 +119,7 @@ def test_a_wrong_interpreter_is_drift() -> None:
 
 def test_a_matching_environment_reports_nothing() -> None:
     """The guard must not fire on the environment it was written for."""
-    # Select part, running as the current element from sys.version_info[ while test a matching
-    # environment reports nothing preserves traversal order.
+    # Reconstruct the exact lock spelling used by the environment verifier.
     running = ".".join(str(part) for part in sys.version_info[:3])
     assert check_env.drift(running, {"pytest": check_env.installed("pytest") or ""}) == []
 
@@ -170,7 +167,6 @@ def test_a_conda_pin_is_read(tmp_path: Path) -> None:
     """
     # Select the temporary environment declaration receiving the native-tool fixture.
     declaration = tmp_path / "environment.yml"
-    # Publish the externally visible effect after all required inputs are ready.
     declaration.write_text(
         "dependencies:\n  - python=3.13.14\n  - doxygen=1.10.0\n"
         "  - pip:\n      - ruff==0.16.3\n",
@@ -249,7 +245,6 @@ def test_the_installed_native_tools_match_their_pins() -> None:
     """
     # Parse shipped native-package pins for live executable-version comparison.
     _, _, _, conda = check_env.read_pins(check_env.ENVIRONMENT_PATH)
-    # Select the empty-or-disabled path when conda has no usable value.
     if not conda:
         pytest.skip("this declaration pins no native tools")
     assert check_env.drift(None, {}, conda) == []

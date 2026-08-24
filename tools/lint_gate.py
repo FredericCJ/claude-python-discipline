@@ -107,7 +107,6 @@ def run_ruff(root: Path, config: Path | None = None) -> tuple[list[dict[str, obj
     except OSError as exc:
         # Localize process-launch failure before translating it to the gate exception.
         message = f"could not run ruff: {exc}"
-        # Propagate the localized failure so callers cannot mistake it for success.
         raise RuntimeError(message) from exc
     # Distinguish Ruff's verdict statuses from an invocation failure status.
     if structured.returncode not in (0, 1):
@@ -116,7 +115,6 @@ def run_ruff(root: Path, config: Path | None = None) -> tuple[list[dict[str, obj
             f"ruff exited {structured.returncode}, which means it failed to run rather "
             f"than reporting a verdict:\n{structured.stderr[:400]}"
         )
-        # Propagate the localized failure so callers cannot mistake it for success.
         raise RuntimeError(message)
     # Return structured finding elements and their matching human-readable report together.
     return json.loads(structured.stdout or "[]"), human.stdout
@@ -145,7 +143,7 @@ def pairs_of(findings: Sequence[dict[str, object]], root: Path) -> set[tuple[str
         raw = str(finding.get("filename") or "")
         # Ignore malformed findings that cannot form a stable `(file, code)` pair.
         if not code or not raw:
-            # Advance after the current candidate has been conclusively excluded.
+            # Such records cannot participate in a reproducible debt baseline.
             continue
         # Interpret the reported filename as a path for portable normalization.
         path = Path(raw)
@@ -348,5 +346,5 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 # Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
-    # Propagate the localized failure so callers cannot mistake it for success.
+    # Expose baseline regressions as the process status consumed by CI.
     raise SystemExit(main())

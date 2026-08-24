@@ -210,5 +210,5 @@ def main(argv: list[str] | None = None) -> int:
 
 # Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
-    # Propagate the localized failure so callers cannot mistake it for success.
+    # Preserve the type gate's failure status for shell and CI callers.
     raise SystemExit(main())
