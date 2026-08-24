@@ -2,7 +2,7 @@
   "schema_version": 1,
   "release": "v5.0.0",
   "qualified_on": "2026-08-24",
-  "candidate_commit": "033046384e88afcbdde3a188a26427727931e6b0",
+  "candidate_commit": "58ae30f04ce5c3806bbba464ca562ff75aa79cc4",
   "toolchain": {
     "python": "3.13.14",
     "doxygen": "1.17.0",
@@ -19,7 +19,7 @@
     "environment": "claude",
     "source_gate": "all 11 steps passed",
     "release_command": "pass",
-    "notes": "This was the non-skipped archive-producing command at the candidate commit."
+    "notes": "This was the non-skipped archive-producing command over the frozen candidate package inputs; the root review and roadmap evidence are outside archive membership."
   },
   "linux": {
     "entrypoint": "sh dev/docker.sh",
@@ -30,7 +30,7 @@
     "runtime_uid": 1000,
     "workspace": "The default gate copied exact checkout bytes into a labeled Docker-managed Linux volume, normalized Python executable intent from shebangs, and removed all labeled containers and volumes after execution.",
     "source_gate": "all 11 steps passed",
-    "tests": "1046 passed, 1 intentional recursion skip",
+    "tests": "1089 passed, 1 intentional recursion skip",
     "discrimination": "D=180 above floor 167; all 194 mutations provoked their rule; S=192 with zero undiscriminated strategy claims or rule ids",
     "doxygen": "clean over 28 files; call=10, caller=15, dependency=8 relationship families",
     "cleanup_check": "No container or volume carrying the python-discipline.workspace-token label remained."
@@ -66,8 +66,34 @@
         "f4101fd"
       ],
       "final_evidence": "All 33 focused release tests and both complete platform gates passed; nearby temporary homes remain discriminating fixtures."
+    },
+    {
+      "failure": "The pinned Ruff 0.16.3 release gate found eleven unrecorded file/code pairs and one excess finding left by the source-wide documentation-content rewrite.",
+      "resolution_commits": [
+        "f685cab"
+      ],
+      "final_evidence": "Both complete platform gates report exactly 70 findings, none above the recorded ceiling, without raising the ratchet."
+    },
+    {
+      "failure": "The LEARN-006 reconstruction mutation anchored its preimage on generated ordinary-comment prose and became inapplicable when that narration was made truthful.",
+      "resolution_commits": [
+        "76dedcc"
+      ],
+      "final_evidence": "The mutation now anchors only on executable sync statements, a regression test prohibits narration in its preimage, and all 194 mutations pass on both legs."
+    },
+    {
+      "failure": "The expanded 194-case discrimination gate exceeded the inherited 420-second child ceiling when the Windows full suite repeated it under the release workload.",
+      "resolution_commits": [
+        "58ae30f"
+      ],
+      "final_evidence": "A finite 540-second child and 600-second outer budget passed in the canonical Windows release command and the unchanged Linux Docker gate."
     }
   ],
+  "qualification_interference": {
+    "observation": "Two already-running legacy-package launchers invoked Conda with an older .agent/environment.yml and rewrote the shared claude prefix during qualification.",
+    "evidence": "Conda history recorded the legacy transactions at 2026-08-24 13:58:25 and 14:13:31; the v5 launcher detected the resulting drift, repaired the exact environment, and re-executed every native and Python version probe.",
+    "disposition": "The final Windows and Linux runs had no concurrent legacy writer. Concurrent launchers targeting different locks remain an explicit operational residual rather than a v5 conformance claim."
+  },
   "documentation": {
     "governed_python_files": 180,
     "source_checks": [
@@ -88,18 +114,18 @@
   },
   "archive": {
     "path": "dist/agent-discipline-v5.0.0.zip",
-    "sha256": "58b76b260135a939e069fed560279d82a1d71b7e877ff2efac1e1831263b6871",
-    "size_bytes": 1842772,
+    "sha256": "f57f75f303efc27fdc9192ba2d6e9b24f88634985f74a295813a8122d48be2dd",
+    "size_bytes": 1888147,
     "members": 271,
     "upstream_files": 265,
     "manifest_release": "v5.0.0",
-    "manifest_content_hash": "341dc2aad152",
+    "manifest_content_hash": "3eccbdd68bd3",
     "root_documents": [
       "INSTALL-DISCIPLINE.md",
       "RELEASE-NOTES-v5.0.0.md"
     ],
     "timestamp_values": 1,
-    "determinism": "The complete final suite includes the independent two-build byte-equality test.",
+    "determinism": "The non-skipped verified archive and an independently staged inspection archive were byte-identical at the recorded SHA-256; the complete suite also exercises two-build equality.",
     "dependency_closure": "12 required Python distributions present",
     "learning_ledger": "seed files only; no project learning shipped",
     "leak_scan": "clean over 270 scanned members; 17 matches were review-only or exact justified proof fixtures"
@@ -108,6 +134,7 @@
     "Exact versions are locked, not dependency artifact hashes.",
     "The Docker image supplies discipline verifiers, not undeclared project runtime dependencies.",
     "Syntactic documentation coverage and association cannot prove prose truth; content-bound adversarial review owns that judgment.",
-    "The qualification covers one repository as an application or one independently developed component, not a multi-repository application root."
+    "The qualification covers one repository as an application or one independently developed component, not a multi-repository application root.",
+    "The Windows environment name is shared; concurrently running older packaged launchers can rewrite it to another exact lock, after which the v5 preflight detects and repairs the drift."
   ]
 }

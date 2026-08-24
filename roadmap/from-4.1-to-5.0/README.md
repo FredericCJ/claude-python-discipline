@@ -4,14 +4,14 @@
 
 | Field | Value |
 |---|---|
-| Status | Implementation and platform qualification complete; final content-bound review and tag follow this frozen candidate |
+| Status | Implementation, content audit and both-leg qualification complete; final content-bound review precedes the annotated tag |
 | Baseline | v4.1.0 at `40466474ac91c5152f58a3fb20b7a93601c4016d` |
 | Target | v5.0.0 |
 | Governed unit | Exactly one application repository or one independently developed component repository |
 | Distribution | One combined Claude Code and Codex discipline package |
 | Input | [`inputs/python-commenting-and-documentation-discipline.md`](inputs/python-commenting-and-documentation-discipline.md) |
 | Input SHA-256 | `23509318ef92d79240a931539eba0c57b4367f345f06c74ad99225bbd989fa72` |
-| Qualified candidate | `033046384e88afcbdde3a188a26427727931e6b0` |
+| Qualified candidate | `58ae30f04ce5c3806bbba464ca562ff75aa79cc4` |
 | Qualification evidence | [`evidence/release-qualification.json`](evidence/release-qualification.json) |
 
 ## Why this is v5
@@ -464,11 +464,17 @@ series:
 - the non-skipped Windows release command produced the deterministic, leak-clean archive
   recorded in `evidence/release-qualification.json`.
 
-The implementation exposed and closed four qualification defects rather than ratcheting
-them away: one stale textual discrimination target, NTFS executable-mode and metadata
-distortion, Docker Desktop's unavailable WSL-directory mount service, and a leak-scanner
-self-match on the package-authored disposable container home. The qualification artifact
-binds each failure to its repair and final counterevidence.
+The implementation exposed qualification defects rather than ratcheting them away. Earlier
+passes repaired a stale textual target, NTFS executable-mode and metadata distortion,
+Docker Desktop's unavailable WSL-directory mount service, and a leak-scanner self-match.
+The final content audit additionally repaired eleven new Ruff file/code pairs, removed a
+LEARN-006 mutation's dependency on generated narration, and raised the finite Windows
+meta-test budget after the expanded 194-case census exceeded its inherited 420-second
+ceiling. Two already-running legacy-package launchers also rewrote the shared `claude`
+environment during qualification; the v5 launcher detected and repaired that drift, and
+the final runs were made without a concurrent legacy writer. The qualification artifact
+binds each product failure to its repair and retains the shared-environment race as an
+explicit operational residual.
 
 ## Release acceptance
 
