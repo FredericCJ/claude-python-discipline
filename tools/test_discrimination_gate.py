@@ -224,6 +224,17 @@ def test_moving_the_floor_requires_a_reason(monkeypatch: pytest.MonkeyPatch,
     assert not baseline.exists()
 
 
+def test_reconstruction_mutation_does_not_anchor_on_narration() -> None:
+    """LEARN-006 remains applicable when truthful ordinary comments are rewritten."""
+    # Select the sole reconstruction mutation whose preimage must describe executable code.
+    candidates = [item for item in discrimination.MUTATIONS if item.rule_id == "LEARN-006"]
+    assert len(candidates) == 1
+    # Isolate the source preimage from its path and injected-defect text.
+    _, preimage, _ = candidates[0].replace[0]
+    # Comment prose is documentation, not part of this behavioral mutation's identity.
+    assert all(not line.lstrip().startswith("#") for line in preimage.splitlines())
+
+
 @pytest.mark.timeout(900)
 def test_the_committed_table_holds() -> None:
     """The real table, against the real reference, with nothing substituted.

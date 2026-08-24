@@ -3232,10 +3232,7 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
             (
                 "tools/learn.py",
                 (
-                    "    # Publish the externally visible effect after all required inputs "
-                    "are ready.\n"
                     "    store.dir.mkdir(parents=True, exist_ok=True)\n"
-                    "    # Compute connection using connect for later sync logic.\n"
                     "    connection = connect(store)"
                 ),
                 (
@@ -3245,10 +3242,7 @@ MUTATIONS: Final[tuple[Mutation, ...]] = (
                     "        # Return the trusted projection without replaying authoritative "
                     "events.\n"
                     "        return connect(store)\n"
-                    "    # Publish the externally visible effect after all required inputs "
-                    "are ready.\n"
                     "    store.dir.mkdir(parents=True, exist_ok=True)\n"
-                    "    # Compute connection using connect for later sync logic.\n"
                     "    connection = connect(store)"
                 ),
             ),
