@@ -83,7 +83,7 @@ def plan_for(output: str, route: str = "context") -> dict[str, object]:
         cwd=REPO_ROOT, capture_output=True, text=True,
         encoding="utf-8", errors="replace", check=False, timeout=180,
     )
-    # Enter the failure path only when the subprocess reports a nonzero status.
+    # Discard failed or silent benchmark probes because neither yields a valid observation.
     if finished.returncode != 0 or not finished.stdout.strip():
         # Failed or silent probes contribute no benchmark observation.
         return {}
@@ -281,7 +281,7 @@ def main(argv: list[str] | None = None) -> int:
                         help="write this run as the recorded baseline")
     parser.add_argument("--compare", type=Path, nargs="?", const=BASELINE_PATH,
                         help="report how this run differs from a recorded one")
-    # Capture the validated invocation arguments that govern this execution.
+    # Parse benchmark selection, repetition, and comparison controls before sampling.
     arguments = parser.parse_args(argv)
 
     # Measure the complete frozen defect roster before selecting presentation behavior.

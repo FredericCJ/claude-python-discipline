@@ -295,7 +295,7 @@ def _ruff_codes(root: Path) -> set[str]:
     @param root the tree to lint
     @return the codes, as ruff spells them
     """
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Retain Ruff findings long enough to compare complete diagnostic codes.
     findings, _ = lint_gate.run_ruff(root, config=RUFF_CONFIG)
     # Compare whole Ruff diagnostic codes, excluding any absent-code placeholders.
     return {str(finding.get("code") or "") for finding in findings}
@@ -795,7 +795,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--update-baseline", action="store_true",
                         help="record the current coverage as the new floor")
     parser.add_argument("--why", help="required with --update-baseline")
-    # Capture the validated invocation arguments that govern this execution.
+    # Parse discrimination execution or baseline-update intent before loading the matrix.
     arguments = parser.parse_args(argv)
 
     # Argument validation before the work, not after. The matrix takes about

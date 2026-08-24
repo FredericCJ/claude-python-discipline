@@ -722,7 +722,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                              "these entries are being re-recorded rather than left "
                              "at their original ref")
     parser.add_argument("--root", type=Path, default=REPO_ROOT)
-    # Capture the validated invocation arguments that govern this execution.
+    # Parse the governed root and baseline operation before resolving covered sources.
     args = parser.parse_args(argv)
     # Canonicalize the selected root once for every subsequent confinement calculation.
     root = args.root.resolve()

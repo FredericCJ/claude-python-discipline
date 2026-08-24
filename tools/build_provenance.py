@@ -815,7 +815,7 @@ def render(rows: Sequence[Row], claims: Sequence[ClaimRow] = ()) -> str:
         # Append the row to its source-specific ordered rendering group.
         by_source[row.source].append(row)
 
-    # Each lines element represents one decoded record; lexical order is preserved.
+    # Start the provenance ledger with canonical metadata and its aggregate disposition table.
     lines = [
         "---",
         "id: meta/PROVENANCE",
@@ -862,7 +862,7 @@ def render(rows: Sequence[Row], claims: Sequence[ClaimRow] = ()) -> str:
     if claims:
         # Summarize claim dispositions independently from section-level coverage.
         claim_counts = Counter(row.disposition for row in claims)
-        # Preserve lines element values in deterministic source order.
+        # Append the claim-level disposition table independently from section coverage.
         lines += [
             "## v5 claim-level disposition",
             "",
@@ -883,7 +883,7 @@ def render(rows: Sequence[Row], claims: Sequence[ClaimRow] = ()) -> str:
         ]
         lines.append("")
 
-    # Preserve lines element values in deterministic source order.
+    # Introduce the per-source routing table after aggregate disposition totals.
     lines += ["## By source document", "", "| Source | Sections | Goes to |", "|---|---|---|"]
     # Traverse source identities from the grouped row mapping without altering its records.
     # Emit one source summary row per lexical source identity.
@@ -896,7 +896,7 @@ def render(rows: Sequence[Row], claims: Sequence[ClaimRow] = ()) -> str:
         )
     lines.append("")
 
-    # Preserve lines element values in deterministic source order.
+    # Introduce named policy exceptions before rendering their exact source rationale.
     lines += [
         "## Named exceptions",
         "",
@@ -933,7 +933,7 @@ def render(rows: Sequence[Row], claims: Sequence[ClaimRow] = ()) -> str:
     # preserved for the blocking report.
     unreviewed = [r for r in rows if r.disposition == "UNREVIEWED"]
     if unreviewed:
-        # Preserve lines element values in deterministic source order.
+        # Append an explicit unreviewed section only when the census still has open rows.
         lines += [
             "## Unreviewed",
             "",
@@ -946,7 +946,7 @@ def render(rows: Sequence[Row], claims: Sequence[ClaimRow] = ()) -> str:
         lines += [f"| `{r.source}` | {r.line} | {_escape(r.heading)} |" for r in unreviewed]
         lines.append("")
 
-    # Preserve lines element values in deterministic source order.
+    # Append every dropped source section verbatim for auditability.
     lines += [
         "## Dropped material, in full",
         "",

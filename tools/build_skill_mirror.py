@@ -151,7 +151,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Regenerate both agent skill mirrors.")
     parser.add_argument("--check", action="store_true", help="report staleness, write nothing")
     parser.add_argument("--root", type=Path, default=REPO_ROOT, help="repository root")
-    # Capture the validated invocation arguments that govern this execution.
+    # Parse and resolve the repository root that owns canonical and host skill trees.
     args = parser.parse_args(argv)
     root = args.root.resolve()
 

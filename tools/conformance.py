@@ -385,7 +385,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--update-baseline", action="store_true",
                         help="accept the current findings as the floor")
     parser.add_argument("--why", help="required with --update-baseline")
-    # Capture the validated invocation arguments that govern this execution.
+    # Parse baseline update intent and its required rationale before running checkers.
     arguments = parser.parse_args(argument_list)
 
     # Refuse an unaudited baseline update before running any checks.
@@ -400,7 +400,7 @@ def main(argv: list[str] | None = None) -> int:
     paths = arguments.paths or [root / "src"]
     # Resolve the project-owned baseline below the selected adopter root.
     baseline_path = root / BASELINE_NAME
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Collect current checker findings before comparing them with the ratcheted baseline.
     findings = findings_for(paths)
 
     # Report mode explains the current state without enforcing or changing the ratchet.

@@ -1403,7 +1403,7 @@ def _render_context(payload: dict[str, object]) -> list[str]:
     shown, total = payload["rules_shown"], payload["rules_total"]
     # Disclose rule truncation in the heading and name the control that expands it.
     suffix = f" of {total} - raise --max-rules to see the rest" if shown < total else ""
-    # Each lines element represents one decoded record; lexical order is preserved.
+    # Start context output with the selected-rule count and truncation disclosure.
     lines = [f"RULES ({shown}{suffix})"]
     # Render selected rules in plan order with force, verifier caveat, and route evidence.
     for rule in payload["rules"]:  # type: ignore[union-attr]
@@ -1443,7 +1443,7 @@ def _render_applies(payload: dict[str, object]) -> list[str]:
     """
     # Retain the rule sequence once for both the heading count and detailed rows.
     rules = payload["rules"]
-    # Each lines element represents one decoded record; lexical order is preserved.
+    # Start file output with the governed path and its resolved-rule count.
     lines = [f"{payload['path']}  ({len(rules)} rules)"]  # type: ignore[arg-type]
     # Render governing rules first, carrying force, verifier availability, and evidence.
     for rule in rules:  # type: ignore[union-attr]
@@ -1469,7 +1469,7 @@ def _render_node(payload: dict[str, object]) -> list[str]:
         is deliberately unused.
     @return the lines to print
     """
-    # Each lines element represents one decoded record; lexical order is preserved.
+    # Start node output with identity before appending available metadata and relations.
     lines = [f"{payload['id']} - {payload.get('label', '')}"]
     # Render nonempty metadata and relation groups in payload declaration order.
     for key, value in payload.items():
@@ -1504,7 +1504,7 @@ def _render_stats(payload: dict[str, object]) -> list[str]:
         key order is deliberately unused.
     @return the lines to print
     """
-    # Each lines element represents one decoded record; lexical order is preserved.
+    # Start statistics output with node, edge, force, and strategy census rows.
     lines = [
         "NODES  " + ", ".join(f"{k}={v}" for k, v in payload["nodes"].items()),  # type: ignore[union-attr]
         "EDGES  " + ", ".join(f"{k}={v}" for k, v in payload["edges"].items()),  # type: ignore[union-attr]
@@ -1529,7 +1529,7 @@ def _render_diagnose(payload: dict[str, object]) -> list[str]:
         order is deliberately unused.
     @return the lines to print
     """
-    # Each lines element represents one decoded record; lexical order is preserved.
+    # Accumulate diagnosis output beginning with envelope identity and resolved rules.
     lines: list[str] = []
     # Lead with envelope identity and optional architectural layer when available.
     if payload.get("code"):

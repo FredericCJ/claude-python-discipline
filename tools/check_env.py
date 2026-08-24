@@ -238,7 +238,7 @@ def _ask_version(executable: str) -> str | None:
         (executable, "--version"), capture_output=True, text=True,
         encoding="utf-8", errors="replace", check=False, timeout=60,
     )
-    # Enter the failure path only when the subprocess reports a nonzero status.
+    # Treat an executable unable to report its version as unavailable for exact-pin comparison.
     if finished.returncode != 0:
         # A tool that cannot report its version cannot satisfy an exact pin.
         return None
@@ -314,7 +314,7 @@ def main(argv: list[str] | None = None) -> int:
                         help="the environment declaration to check against")
     parser.add_argument("--print-requirements", action="store_true",
                         help="emit the pins as a pip requirements file and exit")
-    # Capture the validated invocation arguments that govern this execution.
+    # Parse environment-reporting and export mode before comparing declared pins.
     args = parser.parse_args(argv)
 
     # Reject an absent declaration before attempting any version comparison.

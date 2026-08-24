@@ -819,7 +819,7 @@ def _block_after(lines: Sequence[str], index: int) -> list[str]:
     the section beneath it.
 
     @param lines the body, already split, with fenced blocks blanked
-        Each lines element represents one decoded record; lexical order is preserved.
+        Each element is one body line with fenced content blanked; source order is preserved.
     @param index position of the heading line
     @return the lines under it, up to the next heading or the end
     """

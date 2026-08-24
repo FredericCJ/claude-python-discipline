@@ -549,7 +549,7 @@ def _run_command(  # ruff: ignore[too-many-arguments] - process-boundary record
         ) from problem
     # Combine the checker's captured diagnostic streams without losing emission text.
     output = finished.stdout + finished.stderr
-    # Enter the failure path only when the subprocess reports a nonzero status.
+    # Reject Cosmic Ray initialization or execution failure before interpreting its inventory.
     if finished.returncode != 0:
         # Preserve combined tool output because initialization and execution failures are actionable.
         raise _problem(
@@ -934,7 +934,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--json", action="store_true")
-    # Capture the validated invocation arguments that govern this execution.
+    # Parse the exact project root and report format before constructing the mutation verdict.
     arguments = parser.parse_args(argv)
     # Produce the complete structured mutation verdict for the requested exact root.
     report = run(arguments.root)

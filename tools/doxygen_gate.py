@@ -170,7 +170,7 @@ def run(root: Path, minimum: int) -> tuple[int, str]:
         # Preserve call, caller, and directory graph counts in declared relation order.
         relations = result.relation_graphs
 
-    # Enter the failure path only when the subprocess reports a nonzero status.
+    # Convert Doxygen generation failure into a bounded diagnostic and failed gate verdict.
     if finished.returncode != 0:
         # Select the captured Doxygen diagnostics that explain the failed build.
         noise = (finished.stderr or finished.stdout).strip()
@@ -223,7 +223,7 @@ def main(argv: list[str] | None = None) -> int:
         default=MINIMUM_FILES,
         help="source pages required for a clean verdict",
     )
-    # Capture the validated invocation arguments that govern this execution.
+    # Parse the documented package root and minimum projection size before generation.
     arguments = parser.parse_args(argv)
 
     # Capture the gate status and its single user-facing diagnostic line together.

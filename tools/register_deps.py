@@ -215,7 +215,7 @@ def main(argv: list[str] | None = None) -> int:
                         help="print the contract body and exit")
     parser.add_argument("--check", action="store_true",
                         help="fail when a foreign import is unregistered")
-    # Capture the validated invocation arguments that govern this execution.
+    # Parse target and check/apply mode before surveying foreign imports.
     arguments = parser.parse_args(argv)
 
     # Survey the selected source tree before choosing report, emit, or check behavior.

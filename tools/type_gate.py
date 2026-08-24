@@ -156,7 +156,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--root", type=Path, default=None)
     parser.add_argument("--minimum", type=int, default=MINIMUM_FILES,
                         help="files each checker must analyse to count")
-    # Capture the validated invocation arguments that govern this execution.
+    # Parse the governed root and non-vacuity floor used by both strict type checkers.
     arguments = parser.parse_args(argv)
 
     # Preserve whether the caller explicitly selected an adopter root before default resolution.

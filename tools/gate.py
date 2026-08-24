@@ -100,7 +100,7 @@ def run(*, stop_early: bool = False) -> int:
         # Preserve the completed operation outcome for validation and publication.
         verdict = "ok  " if finished.returncode == 0 else "FAIL"
         print(f"{verdict} {name:22s} {lines[-1][:90] if lines else ''}")
-        # Enter the failure path only when the subprocess reports a nonzero status.
+        # Retain this stage name and diagnostics when its process makes the aggregate gate red.
         if finished.returncode != 0:
             failed.append(name)
             # Emit captured diagnostic detail only when nonblank output is available.

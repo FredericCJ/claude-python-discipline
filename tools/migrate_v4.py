@@ -685,7 +685,7 @@ def _render_declaration(
     @param newline original project line ending
     @return deterministic TOML block
     """
-    # Each lines element represents one decoded record; lexical order is preserved.
+    # Assemble the complete replacement TOML declaration in canonical field order.
     lines = [
         "[tool.agent-discipline]",
         f"unit = {_toml_string(draft.unit)}",
@@ -855,7 +855,7 @@ def plan(root: Path, unit: str | None) -> MigrationPlan:
     ):
         # Preserve exact bytes and report a clean no-op plan for already current repositories.
         return MigrationPlan(governed, project_file, before, before, ())
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Retain the drafted declaration and ordered migration diagnostics as one reviewed plan.
     draft, diagnostics = _draft(governed, document, table, unit)
 
     # Locate the only declaration span this migration is authorized to replace.
@@ -891,7 +891,7 @@ def preview(migration: MigrationPlan) -> str:
     @param migration complete migration plan
     @return stable human-readable preview
     """
-    # Each lines element represents one decoded record; lexical order is preserved.
+    # Lead the preview with ordered diagnostics before file identity and byte diff.
     lines = [
         f"{item.severity.upper()} {item.diagnostic_id}: {item.detail}"
         for item in migration.diagnostics
@@ -978,7 +978,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--unit", choices=("application", "component"))
     parser.add_argument("--apply", action="store_true")
-    # Capture the validated invocation arguments that govern this execution.
+    # Parse preview/apply intent and the target unit before constructing the migration plan.
     arguments = parser.parse_args(argv)
     migration = plan(arguments.root, arguments.unit)
     sys.stdout.write(preview(migration))

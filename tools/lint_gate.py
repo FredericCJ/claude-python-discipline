@@ -274,12 +274,12 @@ def main(argv: Sequence[str] | None = None) -> int:
                         help="record the tree as it stands as the new ceiling")
     parser.add_argument("--why", help="required with --update-baseline")
     parser.add_argument("--root", type=Path, default=REPO_ROOT)
-    # Capture the validated invocation arguments that govern this execution.
+    # Parse the governed root before running Ruff and applying the lint debt ceiling.
     args = parser.parse_args(argv)
 
     # Convert a Ruff adapter failure to infrastructure status before baseline comparison.
     try:
-        # Preserve finding-record elements in checker emission order for the final verdict.
+        # Retain Ruff's structured findings beside its human-readable diagnostics.
         findings, human = run_ruff(args.root)
     # Convert checker launch or report failures into the public gate status and diagnostic.
     except RuntimeError as exc:
@@ -314,7 +314,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # Load both baseline dimensions: total count and distinct stable path/code identities.
     recorded_count, recorded_pairs = load_baseline(args.root / "tools" / "lint_baseline.json")
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Classify current lint debt against protected rules, pair membership, and total count.
     errors, notices = judge(pairs, count, recorded_pairs, recorded_count)
 
     # Emit the full Ruff report and localized ratchet failures only when debt grew.

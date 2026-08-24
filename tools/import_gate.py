@@ -268,7 +268,7 @@ def main(argv: list[str] | None = None) -> int:
         dest="source_roots",
         help="repository-relative import root; repeat for multiple roots",
     )
-    # Capture the validated invocation arguments that govern this execution.
+    # Parse the governed root and import-contract declaration before boundary analysis.
     arguments = parser.parse_args(argv)
 
     # Preserve whether the caller explicitly selected an adopter root before default resolution.

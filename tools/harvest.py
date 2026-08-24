@@ -109,7 +109,7 @@ def render_report(target: Path, found: Sequence[dict[str, object]], min_evidence
     @param min_evidence the threshold applied, restated for the reader
     @return Markdown text, newline-terminated
     """
-    # Each lines element represents one decoded record; lexical order is preserved.
+    # Start the harvest report with its generation marker, scope, and candidate count.
     lines = [
         "# Harvest",
         "",
@@ -119,7 +119,7 @@ def render_report(target: Path, found: Sequence[dict[str, object]], min_evidence
     ]
     # Render an explicit empty state when no learning currently warrants promotion.
     if not found:
-        # Preserve lines element values in deterministic source order.
+        # Append the explicit empty-state explanation when no learning qualifies.
         lines += [
             "Nothing to harvest. Either the repository has recorded no discipline-level",
             "findings, or none has enough evidence yet. Both are ordinary states: a",
@@ -128,7 +128,7 @@ def render_report(target: Path, found: Sequence[dict[str, object]], min_evidence
         ]
         return "\n".join(lines)
 
-    # Preserve lines element values in deterministic source order.
+    # Introduce the candidate summary table before rendering qualifying learnings.
     lines += ["| Learning | Kind | Evidence | About | Claim |", "|---|---|---|---|---|"]
     for item in found:
         # Each row summarizes one eligible learning without expanding its full evidence trail.
@@ -155,7 +155,7 @@ def render_report(target: Path, found: Sequence[dict[str, object]], min_evidence
         # Expose related doctrine concerns only when the learning names them.
         if item["links"]:
             lines.append(f"- **Concerns** {', '.join(item['links'])}")  # type: ignore[arg-type]
-        # Preserve lines element values in deterministic source order.
+        # Append the selected learning's evidence, trigger, and proposed claim sections.
         lines += [
             "",
             "*Review question:* is this a defect in the rule, a gap in its mechanism, or a",
@@ -184,7 +184,7 @@ def render_patch(found: Sequence[dict[str, object]]) -> str:
         content; key order is deliberately unused.
     @return Markdown holding one proposed rule block per learning
     """
-    # Each lines element represents one decoded record; lexical order is preserved.
+    # Start the proposal artifact with its generated-file warning and review instructions.
     lines = [
         "# Proposed rules",
         "",
@@ -207,7 +207,7 @@ def render_patch(found: Sequence[dict[str, object]]) -> str:
         )
         # Render each proposal's doctrine links in the syntax consumed by authored rules.
         see = ", ".join(f"[{n}]" for n in item["links"])  # type: ignore[arg-type]
-        # Preserve lines element values in deterministic source order.
+        # Append one fenced candidate rule carrying source learning and doctrine links.
         lines += [
             "```markdown",
             f"### TODO-000 · {str(item['claim'])[:58]}  [BINDING] {mechanism}",

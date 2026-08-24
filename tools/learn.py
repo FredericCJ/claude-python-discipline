@@ -1261,7 +1261,7 @@ def _last_line(text: str) -> str:
     @return the final non-blank line, truncated to fit a terminal and marked when
         it was cut, or empty when the stream carried nothing
     """
-    # Each lines element represents one decoded record; lexical order is preserved.
+    # Normalize captured output into nonblank ANSI-free lines before tail truncation.
     lines = [_ANSI.sub("", line).strip() for line in text.splitlines()]
     # Each kept element is one nonblank normalized output line in stream order.
     kept = [line for line in lines if line]
@@ -1497,7 +1497,7 @@ def _render_learning_entry(connection: sqlite3.Connection, row: sqlite3.Row) -> 
             "SELECT node FROM link WHERE learning_id = ? ORDER BY node", (row["id"],)
         )
     ]
-    # Each lines element represents one decoded record; lexical order is preserved.
+    # Start one learning-status entry with identity and claim before lifecycle metadata.
     lines = [
         f"### {row['id']} · {row['claim']}",
         "",
@@ -1571,7 +1571,7 @@ def render_calibration(connection: sqlite3.Connection, config: dict[str, Any],
                                 config, as_of) < row["confidence"] / 2
     )
 
-    # Each lines element represents one decoded record; lexical order is preserved.
+    # Start the calibration report with its generated marker, measurement date, and headings.
     lines = [
         GENERATED,
         "",
@@ -2256,7 +2256,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     # Prefer UTF-8 replacement output where the host stream supports runtime reconfiguration.
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    # Capture the validated invocation arguments that govern this execution.
+    # Parse the selected learning lifecycle command before opening its repository store.
     args = build_parser().parse_args(argv)
     store = Store(args.root.resolve())
     # Translate expected domain refusals at the CLI boundary while preserving defects as traces.

@@ -1725,7 +1725,7 @@ def run(layout: Layout = DEFAULT_LAYOUT) -> list[Finding]:
     """
     # Load the shared front-matter schema once before parsing or checking corpus documents.
     schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Seed validation with document-parse findings before running checks on usable modules.
     documents, findings = load_documents(layout)
     for doc in documents:
         findings.extend(check_front_matter(doc, schema, layout))
@@ -1801,7 +1801,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         # Successful baseline mutation completes this maintenance mode without normal validation.
         return 0
 
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Run the complete validator before selecting errors and optional baseline updates.
     findings = run(Layout(root))
     # Each errors element represents one diagnostic record; discovery order is preserved.
     errors = [f for f in findings if f.severity is Severity.ERROR]

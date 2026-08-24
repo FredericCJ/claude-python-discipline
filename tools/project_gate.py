@@ -1160,7 +1160,7 @@ def _mutation_evaluation(
     status = report.get("status")
     mutants = report.get("mutants")
     domains = report.get("domains")
-    # Enter the failure path only when the subprocess reports a nonzero status.
+    # Reject either child failure or a non-passing mutation verdict before reading counts.
     if execution.returncode != 0 or status != "pass":
         # Prefer a mutation-specific diagnostic emitted by the child, falling back to gate policy.
         code = diagnostic if isinstance(diagnostic, str) else command.failure_diagnostic
@@ -1427,7 +1427,7 @@ def _native_version(executable: str) -> str:
     except (OSError, subprocess.TimeoutExpired) as problem:
         # Translate host-process failure to the adapter's execution boundary.
         raise CommandExecutionError(str(problem)) from problem
-    # Enter the failure path only when the subprocess reports a nonzero status.
+    # Reject a resolved native executable that cannot produce a usable version string.
     if finished.returncode != 0:
         # Treat an unversionable executable as unusable even though path lookup succeeded.
         raise CommandExecutionError(_tail(finished.stdout + finished.stderr))
@@ -1566,7 +1566,7 @@ def _run_doxygen_documentation(
             tool=f"doxygen {version}",
         )
     process = execution.process
-    # Enter the failure path only when the subprocess reports a nonzero status.
+    # Convert Doxygen warnings or process failure into the adapter's documentation finding.
     if process.returncode != 0:
         # Convert Doxygen warnings and nonzero generation status to a build failure.
         return StepResult(
@@ -2094,7 +2094,7 @@ class ArtifactBuildAdapter:
                 subjects=command.subjects,
                 tool=f"build {version}",
             )
-        # Enter the failure path only when the subprocess reports a nonzero status.
+        # Preserve backend diagnostics when isolated wheel construction fails.
         if execution.returncode != 0:
             # Preserve backend output because packaging findings are actionable repository defects.
             return StepResult(
@@ -2527,7 +2527,7 @@ def _install_wheel(
             command=plan.install.command,
             configuration=plan.install.configuration,
         )
-    # Enter the failure path only when the subprocess reports a nonzero status.
+    # Stop artifact qualification when installation into the isolated environment fails.
     if installed.returncode != 0:
         # Retain bounded pip output because dependency or wheel defects are actionable.
         return StepResult(
@@ -2590,7 +2590,7 @@ def _verify_installed_imports(
             configuration=plan.install.configuration,
         )
     duration = installed.duration_ms + imported.duration_ms
-    # Enter the failure path only when the subprocess reports a nonzero status.
+    # Reject the artifact when installed metadata or its import probe fails.
     if imported.returncode != 0:
         # Metadata mismatch and import failure both invalidate the installed artifact contract.
         return StepResult(
@@ -2655,7 +2655,7 @@ def _verify_installed_commands(
                 duration_ms=total,
             )
         total += observed.duration_ms
-        # Enter the failure path only when the subprocess reports a nonzero status.
+        # Compare each declared artifact probe with its explicit expected process status.
         if observed.returncode != probe.expected_exit:
             # Report the exact status mismatch before comparing output streams.
             return StepResult(
@@ -2828,7 +2828,7 @@ def _last_line(output: str) -> str:
     @param output combined process output
     @return line or a visible no-output marker
     """
-    # Each lines element represents one decoded record; lexical order is preserved.
+    # Normalize nonblank tool-output lines before selecting the final visible status.
     lines = [line.strip() for line in output.splitlines() if line.strip()]
     # Prefer the final visible tool status, with an explicit marker for silent success.
     return lines[-1] if lines else "completed with no textual output"
@@ -2855,7 +2855,7 @@ def _ordinary_evaluation(
     @param command prepared command and diagnostic
     @return pass or tool-finding evaluation
     """
-    # Enter the failure path only when the subprocess reports a nonzero status.
+    # Convert the tool process status into its predeclared project-gate diagnostic.
     if execution.returncode != 0:
         # Convert nonzero status to the tool-specific diagnostic prepared before launch.
         return Evaluation(
@@ -2909,9 +2909,9 @@ def _pyright_evaluation(
             _tail(execution.output),
         )
     analysed = summary.get("filesAnalyzed")
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Read Pyright's exact error count separately from its analyzed-file non-vacuity metric.
     errors = summary.get("errorCount")
-    # Enter the failure path only when the subprocess reports a nonzero status.
+    # Reject Pyright process failure or any reported strict-typing error.
     if execution.returncode != 0 or errors != 0:
         # Preserve both error and analysed-file counts in the failing summary.
         return Evaluation(
@@ -2945,7 +2945,7 @@ def _pytest_evaluation(
     @param command prepared command and expected test roots
     @return pass, test failure, or vacuity failure
     """
-    # Enter the failure path only when the subprocess reports a nonzero status.
+    # Preserve failed pytest diagnostics before applying the successful-run non-vacuity floor.
     if execution.returncode != 0:
         # Preserve configured test-file count and bounded pytest output on failure.
         return Evaluation(
@@ -3306,7 +3306,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--root", type=Path, default=_default_root())
     parser.add_argument("--json", type=Path, help="write the complete report as JSON")
-    # Capture the validated invocation arguments that govern this execution.
+    # Parse the project root and optional JSON report destination before running adapters.
     arguments = parser.parse_args(argv)
     # Execute the complete gate against the explicit or installation-derived root.
     report = run(arguments.root)
