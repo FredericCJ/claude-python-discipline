@@ -40,11 +40,14 @@ def store(tmp_path: Path) -> learn.Store:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the project-owned learning directory beneath this test's isolated root.
     target = tmp_path / "learning"
+    # Create the directory before copying immutable schema and configuration seeds.
     target.mkdir(parents=True)
+    # Seed exactly the two repository-owned files required to open a fresh store.
     for name in ("schema.sql", "config.toml"):
         shutil.copy(REPO_ROOT / "learning" / name, target / name)
+    # Return a store whose ledger and database can affect only this temporary root.
     return learn.Store(tmp_path)
 
 
@@ -635,12 +638,16 @@ def test_a_dry_run_starts_nothing(store: learn.Store) -> None:
     @par Effects
     May mutate caller-visible or process-local state in implementation order.
     """
-    # Preserve the external command representation and its observed completion outcome.
+    # Register a verification command whose execution would leave an unambiguous sentinel.
     command = script(store, "ran.py", "open('sentinel', 'w').write('x')\n")
     record(store, verification=command)
+    # Rebuild the query database from the newly appended learning event.
     connection = learn.sync(store)
+    # Invoke verification without execution so the command must remain observational data.
     results = learn.verify(store, connection)
+    # Release the synchronized database before filesystem outcome assertions.
     connection.close()
+    # Each result contributes its stable verification outcome in learning order.
     assert [r.outcome for r in results] == ["skipped"]
     assert not (store.root / "sentinel").exists()
     assert "would run" in results[0].detail
@@ -648,9 +655,11 @@ def test_a_dry_run_starts_nothing(store: learn.Store) -> None:
 
 def test_an_executed_verification_carries_its_exit_status(store: learn.Store) -> None:
     """With the opt-in flag the command runs, and a clean exit reads as passed."""
-    # Preserve the external command representation and its observed completion outcome.
+    # Register a zero-exit command whose sentinel proves opt-in execution occurred.
     command = script(store, "ok.py", "open('sentinel', 'w').write('x')\n")
+    # Execute the admitted command through the shared verification helper.
     results = verified(store, command)
+    # Each result contributes its outcome and native exit code in learning order.
     assert [(r.outcome, r.code) for r in results] == [("passed", 0)]
     assert (store.root / "sentinel").exists()
 
@@ -661,9 +670,11 @@ def test_a_failing_verification_is_data_not_a_crash(store: learn.Store) -> None:
     This is the whole point of the subcommand: the failure is the measurement, so
     it must never propagate as an exception.
     """
-    # Preserve the external command representation and its observed completion outcome.
+    # Register a command that emits one reason and exits with a distinctive failure code.
     command = script(store, "bad.py", "import sys\nprint('the claim moved')\nsys.exit(3)\n")
+    # Execute through the data-returning verification boundary rather than pytest exceptions.
     results = verified(store, command)
+    # Each result contributes its classified outcome and preserved process status.
     assert [(r.outcome, r.code) for r in results] == [("failed", 3)]
     assert "the claim moved" in results[0].detail
 
@@ -815,11 +826,14 @@ def test_a_verification_that_never_ends_is_killed(store: learn.Store) -> None:
     @par Effects
     May mutate caller-visible or process-local state in implementation order.
     """
-    # Preserve the external command representation and its observed completion outcome.
+    # Register a command whose runtime widely exceeds the one-second verification budget.
     command = script(store, "hang.py", "import time\ntime.sleep(30)\n")
     record(store, verification=command)
+    # Rebuild the query database from the timed verification learning.
     connection = learn.sync(store)
+    # Execute under the explicit timeout and retain the classified observation.
     results = learn.verify(store, connection, execute=True, timeout=1)
+    # Release the query database before checking that no refutation was appended.
     connection.close()
     assert results[0].outcome == "timeout"
     assert learn.refute_failures(store, results, "S-9") == []
@@ -834,12 +848,16 @@ def test_a_retired_learning_is_not_verified(store: learn.Store) -> None:
     @par Effects
     May mutate caller-visible or process-local state in implementation order.
     """
-    # Preserve the external command representation and its observed completion outcome.
+    # Register a passing command so retirement, rather than executable behavior, controls selection.
     command = script(store, "ok.py", "pass\n")
+    # Retain the learning id referenced by the subsequent refutation event.
     first = record(store, verification=command)
+    # Retire the learning before rebuilding the query projection.
     learn.append_event(store, "refute", "S-2", {"ref": first, "why": "wrong"})
+    # Rebuild current learning state so retirement is visible to verification selection.
     connection = learn.sync(store)
     assert learn.verify(store, connection, execute=True) == []
+    # Release the query database after proving no retired command was selected.
     connection.close()
 
 
@@ -850,7 +868,6 @@ def test_a_failure_refutes_only_when_asked(store: learn.Store) -> None:
     `--refute-failures` appends, and then as the existing `refute` event so the
     fold and the schema are untouched.
     """
-    # Preserve the external command representation and its observed completion outcome.
     # Retain pre-refutation ledger length, then compare execute-only and explicit-refute runs.
     command = script(store, "bad.py", "raise SystemExit(2)\n")
     first = record(store, verification=command)
@@ -877,9 +894,10 @@ def test_a_passing_verification_records_nothing(store: learn.Store) -> None:
     Recording a success would be the reflexive "helped" this database refuses to
     collect: a metric biased toward success is worse than no metric.
     """
-    # Preserve the external command representation and its observed completion outcome.
+    # Register a passing verification command whose success must not grow the ledger.
     command = script(store, "ok.py", "pass\n")
     record(store, verification=command)
+    # Snapshot ledger length immediately before executing the success path.
     before = len(learn.read_ledger(store))
     assert learn.main(
         ["--root", str(store.root), "verify", "--execute", "--refute-failures"]
@@ -982,7 +1000,6 @@ def test_an_empty_database_explains_the_first_run(store: learn.Store) -> None:
     """
     # Render calibration from a synchronized but event-empty database.
     connection = learn.sync(store)
-    # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
     report = learn.render_calibration(connection, store.config(), dt.date(2026, 8, 18))
     connection.close()
     assert "First-run protocol" in report
@@ -1002,7 +1019,6 @@ def test_calibration_reports_precision(store: learn.Store) -> None:
     learn.append_event(store, "use", "S-2", {"ref": first, "outcome": "helped"})
     learn.append_event(store, "use", "S-3", {"ref": first, "outcome": "noise"})
     connection = learn.sync(store)
-    # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
     report = learn.render_calibration(connection, store.config(), dt.date(2026, 8, 18))
     connection.close()
     assert "**50%**" in report
