@@ -57,7 +57,7 @@ class CompoundGateCheck(ModuleCheck):
             # Stop iteration because assertion-shape tooling owns test conditions.
             return
 
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Inspect branch, loop, and conditional-expression tests for compound decisions.
         for node in ast.walk(tree):
             # Only conditional expressions and branch/loop tests define decisions here.
             if not isinstance(node, (ast.If, ast.While, ast.IfExp)):

@@ -78,7 +78,7 @@ class SingleWiringPointCheck(ModuleCheck):
         @param layer the layer, named in the message
         @return finding elements in AST walk order, one per offending import
         """
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Inspect imports outside the declared composition-root module.
         for node in ast.walk(tree):
             # Render import and from-import modules into a normalized searchable spelling.
             module = (
@@ -111,7 +111,7 @@ class SingleWiringPointCheck(ModuleCheck):
         @param path the file it came from
         @return finding elements in function, annotation, then syntax walk order
         """
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Inspect callable annotations for direct construction of concrete infrastructure.
         for node in ast.walk(tree):
             # Only callable definitions publish type signatures.
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):

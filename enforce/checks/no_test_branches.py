@@ -71,7 +71,7 @@ class NoTestBranchesCheck(ModuleCheck):
         @param path the file it was parsed from
         @return finding elements in AST walk order, at most one per offending condition
         """
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Inspect production conditionals for branches controlled by test-only state.
         for node in ast.walk(tree):
             # Only statement and expression conditionals create divergent production behavior.
             if not isinstance(node, (ast.If, ast.IfExp)):
@@ -105,7 +105,7 @@ class NoTestBranchesCheck(ModuleCheck):
         @return finding elements in AST walk and comparison-before-import order, located at
             the enclosing comparison or `try`, which is where a reader can see the branch
         """
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Inspect comparisons and protected imports for test-runner presence checks.
         for node in ast.walk(tree):
             # Comparisons may ask whether a test runner is already loaded.
             if isinstance(node, ast.Compare):

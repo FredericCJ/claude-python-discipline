@@ -59,7 +59,7 @@ class LogOnceCheck(ModuleCheck):
         if is_test_path(path):
             # Stop iteration for the explicit test-code exemption.
             return
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Inspect exception handlers for logging that duplicates boundary reporting.
         for node in ast.walk(tree):
             # Exception handlers are the only scopes with handling-versus-propagation context.
             if isinstance(node, ast.ExceptHandler):

@@ -84,7 +84,7 @@ def _import_roots(tree: ast.Module) -> Iterable[tuple[str, int]]:
     @param tree parsed production module
     @return root-module/one-indexed-line pair elements in deterministic AST and alias order
     """
-    # Inspect each syntax-node element in deterministic AST walk order.
+    # Inspect import statements for capability roots and their authored alias order.
     for node in ast.walk(tree):
         # Direct imports may carry several aliases in authored order.
         if isinstance(node, ast.Import):
@@ -231,7 +231,7 @@ def _source_observations(source_roots: Sequence[Path]) -> list[Observation]:
                 )
                 for capability in IMPORT_CAPABILITIES.get(root, ())
             )
-        # Inspect each syntax-node element in deterministic AST walk order for calls.
+        # Inspect calls for direct use of capability-bearing module aliases.
         for node in ast.walk(tree):
             # Calls may independently imply destructive, bounded, or sensitive behavior.
             if isinstance(node, ast.Call):

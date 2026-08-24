@@ -111,7 +111,7 @@ class ExceptionShapeCheck(ModuleCheck):
         @param path the file it came from
         @return finding elements in function then raise walk order
         """
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Inspect callable bodies for deferred aggregation followed by exception propagation.
         for node in ast.walk(tree):
             # Only callable bodies can contain both accumulation and later propagation.
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):

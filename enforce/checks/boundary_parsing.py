@@ -75,7 +75,7 @@ class BoundaryParsingCheck(ModuleCheck):
             return
         # Build an unordered set whose each element is a locally declared protocol name.
         protocols = _protocol_names(tree)
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Inspect calls that define NewType aliases or runtime-checkable protocols.
         for node in ast.walk(tree):
             # Calls may define a NewType or perform runtime protocol checking.
             if isinstance(node, ast.Call):
@@ -175,7 +175,7 @@ def _protocol_names(tree: ast.Module) -> set[str]:
     """
     # Accumulate an unordered set whose each element is one local protocol class name.
     found: set[str] = set()
-    # Inspect each syntax-node element in deterministic AST walk order.
+    # Inspect class definitions for local protocol bases and runtime-checkable decorators.
     for node in ast.walk(tree):
         # Only class definitions can declare protocol bases or decorators.
         if not isinstance(node, ast.ClassDef):

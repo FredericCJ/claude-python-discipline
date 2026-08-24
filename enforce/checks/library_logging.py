@@ -60,7 +60,7 @@ class LibraryLoggingCheck(ModuleCheck):
             # Stop iteration for the two explicitly exempt ownership contexts.
             return
 
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Inspect method calls for direct root-logger configuration in library code.
         for node in ast.walk(tree):
             # Only method-style calls can match the configuration shapes owned here.
             if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):

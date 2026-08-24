@@ -77,7 +77,7 @@ class ExplicitEffectsCheck(ModuleCheck):
             # Stop iteration outside the rule's exact architectural subject.
             return
 
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Inspect imports and calls for undeclared direct effect acquisition.
         for node in ast.walk(tree):
             # Imports expose direct acquisition of effectful modules.
             if isinstance(node, (ast.Import, ast.ImportFrom)):

@@ -101,7 +101,7 @@ class PlanApplyCheck(ModuleCheck):
         @param path the file it came from
         @return finding elements in AST walk order, one per ungated destructive function
         """
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Inspect callables for destructive operations lacking a caller-supplied plan.
         for node in ast.walk(tree):
             # Only callable bodies can own caller-provided plan parameters.
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -148,7 +148,7 @@ class PlanApplyCheck(ModuleCheck):
         @param path the file it came from
         @return finding elements in AST walk order, one per open comparison
         """
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Inspect comparisons for state transitions against an open expected-value set.
         for node in ast.walk(tree):
             # Only comparisons with at least one right-hand operand can encode transitions.
             if not isinstance(node, ast.Compare) or not node.comparators:

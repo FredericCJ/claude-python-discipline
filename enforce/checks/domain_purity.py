@@ -127,7 +127,7 @@ class DomainPurityCheck(ModuleCheck):
         @return one ARCH-002 finding per offending name, so `import os, sys`
             yields two, both at the statement's line
         """
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Inspect import statements for infrastructure dependencies entering the domain.
         for node in ast.walk(tree):
             # Inspect each imported module/name/line tuple element in statement order.
             for module, name, lineno in _imported_modules(node):
@@ -168,7 +168,7 @@ class DomainPurityCheck(ModuleCheck):
         @param path the file it was parsed from
         @return one ARCH-013 finding per offending base, at the class statement
         """
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Inspect domain classes for inheritance from infrastructure-owned bases.
         for node in ast.walk(tree):
             # Only class definitions publish inheritance semantics.
             if not isinstance(node, ast.ClassDef):
@@ -200,7 +200,7 @@ class DomainPurityCheck(ModuleCheck):
         @param path the file it was parsed from
         @return TYPE-002, ARCH-013 and TYPE-006 findings, at the annotation's line
         """
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Inspect callable annotations for mutable, dynamic, or infrastructure types.
         for node in ast.walk(tree):
             # Only callable definitions publish parameter and return contracts.
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -260,7 +260,7 @@ class DomainPurityCheck(ModuleCheck):
         @param path the file it was parsed from
         @return one TYPE-007 finding per class, naming which keywords are missing
         """
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Inspect domain classes for the required frozen and slotted dataclass options.
         for node in ast.walk(tree):
             # Only class definitions can carry dataclass decorators.
             if not isinstance(node, ast.ClassDef):

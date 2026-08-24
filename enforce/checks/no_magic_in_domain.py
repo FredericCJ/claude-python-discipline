@@ -62,7 +62,7 @@ class NoMagicInDomainCheck(ModuleCheck):
             # Stop iteration outside the rule's exact architectural subject.
             return
 
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Inspect calls for dynamic builtins forbidden inside the domain layer.
         for node in ast.walk(tree):
             # Delegate calls to the closed dynamic-builtin classifier.
             if isinstance(node, ast.Call):

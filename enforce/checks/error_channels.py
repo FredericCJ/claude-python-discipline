@@ -83,7 +83,7 @@ class ErrorChannelsCheck(ModuleCheck):
             return
         # Build an unordered set whose each element is a locally defined exception name.
         local = _local_exceptions(tree)
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Inspect callable bodies for undeclared exception propagation channels.
         for node in ast.walk(tree):
             # Validate each function body as one propagation boundary.
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):

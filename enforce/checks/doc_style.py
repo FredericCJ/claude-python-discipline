@@ -139,7 +139,7 @@ class DocStyleCheck(ModuleCheck):
         # Read source-line elements in order for adjacent hash-block allocation and content.
         source = path.read_text(encoding="utf-8").splitlines()
 
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Inspect function and class entities for Doxygen-compatible docstring style.
         for node in ast.walk(tree):
             # Only functions and classes own Python docstring entity slots here.
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
@@ -273,7 +273,7 @@ class DocStyleCheck(ModuleCheck):
             # Yield content findings for this module value in stable predicate order.
             yield from self._hash_block_at(target, target, lineno, path, source)
 
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Inspect class bodies for value documentation allocated through hash blocks.
         for node in ast.walk(tree):
             # Only classes own class-level value blocks.
             if not isinstance(node, ast.ClassDef):

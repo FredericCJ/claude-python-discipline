@@ -354,7 +354,7 @@ def _module_findings(
         return []
     # Accumulate finding elements in deterministic import and predicate order.
     findings: list[Finding] = []
-    # Inspect each syntax-node element in deterministic AST walk order.
+    # Inspect imports to derive direct dependency edges before applying boundary predicates.
     for node in ast.walk(tree):
         # Only imports establish direct dependency edges.
         if not isinstance(node, (ast.Import, ast.ImportFrom)):

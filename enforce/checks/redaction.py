@@ -66,7 +66,7 @@ class RedactionCheck(ModuleCheck):
         if is_test_path(path):
             # Stop iteration for the explicit test-code exemption.
             return
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Inspect calls for secret-looking names passed into logging arguments.
         for node in ast.walk(tree):
             # Logging calls expose every secret-looking identifier reachable in arguments.
             if isinstance(node, ast.Call) and _is_log_call(node):

@@ -150,7 +150,7 @@ def _handlers(tree: ast.Module) -> Iterator[ast.ExceptHandler]:
     @param tree the module's syntax tree
     @return handler elements in deterministic AST traversal order
     """
-    # Inspect each syntax-node element in deterministic AST walk order.
+    # Yield exception handlers whose raises must preserve causal context.
     for node in ast.walk(tree):
         # Yield every exception-handler element at its walk position.
         if isinstance(node, ast.ExceptHandler):

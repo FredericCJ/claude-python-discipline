@@ -72,7 +72,7 @@ class ExceptionHasCodeCheck(ModuleCheck):
             return
         # Build an unordered set whose each element is a locally recognized exception name.
         known = _exception_names(tree)
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Inspect recognized exception classes for a stable diagnostic-code field.
         for node in ast.walk(tree):
             # Judge only class definitions recognized through built-in or local exception bases.
             if isinstance(node, ast.ClassDef) and _is_exception(node, known):
@@ -132,7 +132,7 @@ def _exception_names(tree: ast.Module) -> set[str]:
     found: set[str] = set()
     # Repeat three bounded passes so a subclass defined before its base can settle.
     for _ in range(3):
-        # Inspect each syntax-node element in deterministic AST walk order.
+        # Revisit class definitions until locally inherited exception identities settle.
         for node in ast.walk(tree):
             # Add any class whose bases reach built-in names or the current local set.
             if isinstance(node, ast.ClassDef) and _is_exception(node, found):
