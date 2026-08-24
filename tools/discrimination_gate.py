@@ -95,20 +95,15 @@ def findings_for(tree: Path, targets: Sequence[str]) -> set[str]:
     paths = [tree / target for target in targets]
     # Each retained element is an existing target path; declaration order determines traversal.
     present = [path for path in paths if path.exists()]
-    # Compute declaration using project.load for later findings for logic.
     declaration = project.load(tree)
     # Collect unique reported element values; their order is deliberately unordered.
     reported: set[str] = set()
-    # Select check as the current element from discover() while findings for preserves traversal
-    # Details: order.
-    # Advance findings for through the current input element in declared order.
     for check in discover():
-        # Update findings for state only after the required source facts are available.
+        # Bind every check to the same parsed declaration before examining the shared tree.
         check.declaration = declaration
-        # Select finding as the current element from check.run(present)) while findings for
-        # Details: preserves traversal order.
+        # Reduce emitted findings to stable rule identities; presentation details are irrelevant here.
         reported.update(finding.rule_id for finding in check.run(present))
-    # Return the rule ids reported, empty when the tree is clean to the caller.
+    # Report the union so one mutation can reveal collateral rule violations.
     return reported
 
 
@@ -122,14 +117,15 @@ def damaged(mutation: discrimination.Mutation, workspace: Path) -> Path:
         `broken_copy` raises rather than silently leaving the tree intact
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Builds one isolated damaged tree beneath ``workspace``.
     """
-    # Compute written using dict for later damaged logic.
+    # Collapse write entries by path because fixture construction consumes one final body per file.
     written = dict(mutation.write)
-    # Select the guarded path only after `mutation.base == 'repository'` is satisfied.
+    # Repository mutations need the discipline's own implementation and tests as their subject.
     if mutation.base == "repository":
-        # Resolve the repository-confined path used by this operation before filesystem access.
+        # Keep the copied checkout below the disposable workspace boundary.
         root = workspace / "repository"
+        # Exclude caches and agent state so only governed repository material influences the proof.
         shutil.copytree(
             REPO_ROOT,
             root,
@@ -140,25 +136,23 @@ def damaged(mutation: discrimination.Mutation, workspace: Path) -> Path:
             ),
         )
         _apply_damage(root, mutation)
-        # Return the damaged tree's root to the caller.
+        # Expose the fully damaged repository to the selected fitness node.
         return root
-    # Select the guarded path only after `mutation.base == 'empty'` is satisfied.
+    # Empty-base mutations describe their complete subject in the write table.
     if mutation.base == "empty":
-        # Resolve the repository-confined path used by this operation before filesystem access.
+        # Give synthetic checker subjects a dedicated root distinct from repository copies.
         root = workspace / "tree"
-        # Normalize the current repository path to its portable baseline key spelling.
-        # Advance damaged through the current input element in declared order.
+        # Materialize each declared path/body pair in table order for reproducible fixtures.
         for name, contents in written.items():
-            # Resolve the repository-confined path used by this operation before filesystem
-            # Details: access.
+            # Resolve each file beneath the isolated synthetic tree.
             target = root / name
-            # Publish the externally visible effect after all required inputs are ready.
+            # Create only the ancestry needed by the current synthetic file.
             target.parent.mkdir(parents=True, exist_ok=True)
-            # Publish the externally visible effect after all required inputs are ready.
+            # Preserve declared LF bytes so platform newline policy cannot alter the mutation.
             target.write_text(contents, encoding="utf-8", newline="\n")
-        # Return the damaged tree's root to the caller.
+        # Return the complete synthetic subject after every declared file exists.
         return root
-    # Return the damaged tree's root to the caller.
+    # Reference-base mutations use the shared conformant fixture plus declared damage.
     return broken_copy(workspace, drop=mutation.drop, write=written or None,
                        replace=mutation.replace)
 
@@ -171,59 +165,51 @@ def _apply_damage(root: Path, mutation: discrimination.Mutation) -> None:
     @throws FileNotFoundError when the declared damage no longer matches the tree
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Applies the mutation's removals, writes, and substitutions to ``root``.
     """
-    # Select relative as the current element from mutation.drop while apply damage preserves
-    # Details: traversal order.
-    # Advance apply damage through the current input element in declared order.
+    # Apply removals first so later writes may deliberately recreate a path.
     for relative in mutation.drop:
-        # Resolve the repository-confined path used by this operation before filesystem access.
+        # Anchor every declared removal inside the copied repository.
         target = root / relative
-        # Select the existing-artifact path only when `not target.exists()` is satisfied.
+        # Treat a missing target as matrix drift, never as a successful mutation.
         if not target.exists():
-            # Compute message using f"nothing to drop at {relative}; the repository has moved"
-            # Details: for later apply damage logic.
+            # Name the stale declaration so maintainers can repair the exact matrix entry.
             message = f"nothing to drop at {relative}; the repository has moved"
-            # Propagate the localized failure so callers cannot mistake it for success.
+            # Stop before granting rejection credit to an unchanged tree.
             raise FileNotFoundError(message)
-        # Refuse the target when its declared source directory is absent.
+        # Directories require recursive removal; files and links use unlink semantics.
         if target.is_dir():
             shutil.rmtree(target)
         else:
-            # Publish the externally visible effect after all required inputs are ready.
+            # Remove file-like targets without traversing beyond the declared path.
             target.unlink()
-    # Retain the immutable source representation consumed by subsequent analysis.
-    # Advance apply damage through the current input element in declared order.
+    # Apply complete-file writes after removals and before textual substitutions.
     for relative, body in mutation.write:
-        # Resolve the repository-confined path used by this operation before filesystem access.
+        # Anchor the new file inside the copied repository.
         target = root / relative
-        # Publish the externally visible effect after all required inputs are ready.
+        # Permit a mutation to introduce a previously absent package path.
         target.parent.mkdir(parents=True, exist_ok=True)
-        # Publish the externally visible effect after all required inputs are ready.
+        # Reproduce the table body exactly with stable LF newlines.
         target.write_text(body, encoding="utf-8", newline="\n")
-    # Select new, old, relative as the current element from mutation.replace while apply damage
-    # Details: preserves traversal order.
-    # Advance apply damage through the current input element in declared order.
+    # Apply bounded first-occurrence substitutions last against the resulting files.
     for relative, old, new in mutation.replace:
-        # Resolve the repository-confined path used by this operation before filesystem access.
+        # Anchor the edited file inside the copied repository.
         target = root / relative
-        # Select the existing-artifact path only when `not target.exists()` is satisfied.
+        # Refuse a vanished file because an unchanged subject cannot prove discrimination.
         if not target.exists():
-            # Compute message using f"nothing to edit at {relative}; the repository has moved"
-            # Details: for later apply damage logic.
+            # Localize repository drift to the stale replacement entry.
             message = f"nothing to edit at {relative}; the repository has moved"
-            # Propagate the localized failure so callers cannot mistake it for success.
+            # Abort this mutation without presenting it to a mechanism.
             raise FileNotFoundError(message)
-        # Retain the immutable source representation consumed by subsequent analysis.
+        # Read once so membership validation and replacement use identical source bytes.
         source = target.read_text(encoding="utf-8")
-        # Select the guarded path only after `old not in source` is satisfied.
+        # Refuse replacement when its expected preimage no longer exists.
         if old not in source:
-            # Compute message using f"{relative} does not contain {old!r}; the repository has mo
-            # Details: for later apply damage logic.
+            # Include the missing preimage in the drift diagnostic.
             message = f"{relative} does not contain {old!r}; the repository has moved"
-            # Propagate the localized failure so callers cannot mistake it for success.
+            # Prevent a no-op edit from earning false rejection credit.
             raise FileNotFoundError(message)
-        # Publish the externally visible effect after all required inputs are ready.
+        # Limit replacement to one occurrence because each mutation declares one defect injection.
         target.write_text(
             source.replace(old, new, 1), encoding="utf-8", newline="\n"
         )
@@ -247,17 +233,18 @@ def fails_against(node: str, root: Path, *, repository: bool = False) -> bool:
         True enables repository; false selects its disabled alternative.
     @return True when pytest reported the node as not passing
     """
-    # Build the child-process environment with the governed source root on its import path.
+    # Start from the caller environment so the proof runs under the qualified toolchain.
     environment = dict(os.environ)
-    # Compute working directory using REPO_ROOT for later fails against logic.
+    # Repository fitness nodes default to the canonical checkout unless their mutation says otherwise.
     working_directory = REPO_ROOT
-    # Handle the non-empty or enabled repository state.
+    # A repository mutation must execute both tests and implementation from its copied checkout.
     if repository:
+        # Remove fixture redirection because the copied repository itself is the subject.
         environment.pop("DISCIPLINE_REFERENCE", None)
-        # Compute working directory using root for later fails against logic.
+        # Run pytest from the copy so imports and relative paths cannot reach the pristine checkout.
         working_directory = root
     else:
-        # Update fails against state only after the required source facts are available.
+        # Redirect reference-oriented fitness nodes to the damaged fixture tree.
         environment["DISCIPLINE_REFERENCE"] = str(root)
     # Preserve the external command representation and its observed completion outcome.
     finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
@@ -266,7 +253,7 @@ def fails_against(node: str, root: Path, *, repository: bool = False) -> bool:
         capture_output=True, text=True, encoding="utf-8", errors="replace",
         check=False, timeout=600,
     )
-    # Return true when pytest reported the node as not passing to the caller.
+    # Any non-passing pytest outcome demonstrates that the damaged subject was rejected.
     return finished.returncode != 0
 
 
@@ -280,7 +267,7 @@ def proof_passes(node: str) -> bool:
     @param node pytest node id of the direct proof-of-failure case
     @return True only when pytest executes that proof successfully
     """
-    # Build the child-process environment with the governed source root on its import path.
+    # Inherit the qualified toolchain while clearing any outer fixture redirection.
     environment = dict(os.environ)
     environment.pop("DISCIPLINE_REFERENCE", None)
     # Preserve the external command representation and its observed completion outcome.
@@ -295,7 +282,7 @@ def proof_passes(node: str) -> bool:
         check=False,
         timeout=600,
     )
-    # Return true only when pytest executes that proof successfully to the caller.
+    # A direct proof witnesses rejection only when its own assertions pass.
     return finished.returncode == 0
 
 
@@ -312,9 +299,7 @@ def _ruff_codes(root: Path) -> set[str]:
     """
     # Preserve finding-record elements in checker emission order for the final verdict.
     findings, _ = lint_gate.run_ruff(root, config=RUFF_CONFIG)
-    # Select finding as the current element from findings} while ruff codes preserves traversal
-    # Details: order.
-    # Return the codes, as ruff spells them to the caller.
+    # Compare whole Ruff diagnostic codes, excluding any absent-code placeholders.
     return {str(finding.get("code") or "") for finding in findings}
 
 
@@ -326,7 +311,7 @@ def _mypy_output(root: Path) -> set[str]:
     """
     # Combine the checker's captured diagnostic streams without losing emission text.
     _, _, output = type_gate.run_mypy(root)
-    # Return a one-element set holding the output, so every tool has one shape to the caller.
+    # Preserve output as one searchable answer because mypy embeds codes inside lines.
     return {output}
 
 
@@ -338,7 +323,7 @@ def _pyright_output(root: Path) -> set[str]:
     """
     # Combine the checker's captured diagnostic streams without losing emission text.
     _, _, output = type_gate.run_pyright(root)
-    # Return a one-element set holding the output to the caller.
+    # Preserve output as one searchable answer because pyright embeds codes inside lines.
     return {output}
 
 
@@ -356,7 +341,7 @@ def _contract_output(root: Path) -> set[str]:
     """
     # Combine the checker's captured diagnostic streams without losing emission text.
     _, output = import_gate.check(root, import_gate.DEFAULT_CONFIG, 0)
-    # Return a one-element set holding the report to the caller.
+    # Preserve the report as one searchable answer because contract names are line fragments.
     return {output}
 
 
@@ -385,13 +370,11 @@ def _present(mutation: discrimination.Mutation, answers: set[str]) -> bool:
         Collect unique answers element values; their order is deliberately unordered.
     @return True when the diagnostic is present
     """
-    # Select the guarded path only after `mutation.tool == 'ruff'` is satisfied.
+    # Ruff exposes diagnostics as exact codes, unlike the text-reporting tools.
     if mutation.tool == "ruff":
-        # Return true when the diagnostic is present to the caller.
+        # Require equality so a shorter code cannot match an unrelated diagnostic.
         return mutation.diagnostic in answers
-    # Select answer as the current element from answers) while present preserves traversal
-    # Details: order.
-    # Return true when the diagnostic is present to the caller.
+    # Search each opaque report for the declared diagnostic token.
     return any(mutation.diagnostic in answer for answer in answers)
 
 
@@ -402,7 +385,7 @@ def emits(mutation: discrimination.Mutation, root: Path) -> bool:
     @param root the tree to run the tool over
     @return True when the diagnostic is present in what the tool reported
     """
-    # Return true when the diagnostic is present in what the tool reported to the caller.
+    # Dispatch through the declared tool and apply its matching convention uniformly.
     return _present(mutation, TOOLS[mutation.tool](root))
 
 
@@ -414,25 +397,25 @@ def provoke(mutation: discrimination.Mutation, workspace: Path) -> set[str]:
     @return the rule ids observed rejecting the damaged tree
     @throws FileNotFoundError when a path named for damage is not there
     """
-    # Select the guarded path only after `mutation.proof` is satisfied.
+    # Direct proof nodes own fixture construction and certify their rule by passing.
     if mutation.proof:
-        # Return the rule ids observed rejecting the damaged tree to the caller.
+        # Credit only the declared rule when its proof assertion succeeds.
         return {mutation.rule_id} if proof_passes(mutation.proof) else set()
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # All remaining strategies consume a table-described damaged tree.
     root = damaged(mutation, workspace)
-    # Select the guarded path only after `mutation.tool` is satisfied.
+    # External tools report one declared diagnostic rather than discipline rule ids.
     if mutation.tool:
-        # Return the rule ids observed rejecting the damaged tree to the caller.
+        # Translate a matching tool diagnostic back to the matrix rule identity.
         return {mutation.rule_id} if emits(mutation, root) else set()
-    # Select the guarded path only after `mutation.node` is satisfied.
+    # Fitness nodes reject damage through their own test outcome.
     if mutation.node:
-        # Return the rule ids observed rejecting the damaged tree to the caller.
+        # Translate a non-passing node to the one rule whose mutation it exercises.
         return {
             mutation.rule_id
         } if fails_against(
             mutation.node, root, repository=mutation.base == "repository"
         ) else set()
-    # Return the rule ids observed rejecting the damaged tree to the caller.
+    # Native checks already return every rule identity provoked by the damaged tree.
     return findings_for(root, mutation.targets)
 
 
@@ -441,19 +424,20 @@ def repository_preflight() -> list[str]:
 
     @return one complaint for each already-red unmutated test
     """
-    # Unpack nodes, mutation using sorted for later repository preflight logic.
+    # Deduplicate repository node ids and sort them for deterministic preflight reporting.
     nodes = sorted({
+        # Each mutation contributes its repository fitness node when one is declared.
         mutation.node
         for mutation in discrimination.MUTATIONS
         if mutation.base == "repository" and mutation.node
     })
-    # Treat the current node as the candidate element consumed by the enclosing transformation.
-    # Return one complaint for each already-red unmutated test to the caller.
+    # Name every node that is red before damage so it cannot earn mutation credit.
     return [
         (
             f"{node}: the unmutated repository fitness test does not pass, "
             "so a damaged copy could earn false rejection credit."
         )
+        # Evaluate repository nodes against the pristine canonical checkout.
         for node in nodes
         if fails_against(node, REPO_ROOT, repository=True)
     ]
@@ -468,30 +452,27 @@ def tool_preflight(reference: Path) -> list[str]:
     # Each complaints element is a diagnostic for a mutation signature already visible on the
     # conformant fixture; registry order is preserved so damage earns no pre-existing credit.
     complaints: list[str] = []
-    # Treat observed as mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Treat observed as mapping elements whose keys identify tools and whose values are unordered
+    # diagnostic-answer sets; key insertion order is deliberately unused.
     observed: dict[str, set[str]] = {}
-    # Select mutation as the current element from discrimination.MUTATIONS while tool preflight
-    # Details: preserves traversal order.
-    # Advance tool preflight through the current input element in declared order.
     for mutation in discrimination.MUTATIONS:
-        # Select the empty-or-disabled path when mutation.tool has no usable value.
+        # Native checks and fitness nodes are preflighted through their own paths.
         if not mutation.tool:
-            # Advance after the current candidate has been conclusively excluded.
+            # Skip entries outside the external-tool protocol.
             continue
-        # Select the guarded path only after `mutation.tool not in observed` is satisfied.
+        # Run each external tool once over the conformant reference.
         if mutation.tool not in observed:
-            # Update tool preflight state only after the required source facts are available.
+            # Retain all answers needed by that tool's subsequent mutation entries.
             observed[mutation.tool] = TOOLS[mutation.tool](reference)
-        # Select the guarded path only after `_present(mutation, observed[mutation.tool])` is
-        # Details: satisfied.
+        # A pre-existing signature would make the post-damage observation ambiguous.
         if _present(mutation, observed[mutation.tool]):
+            # Preserve matrix order when explaining which claims cannot be credited.
             complaints.append(
                 f"{mutation.rule_id}: {mutation.tool} already reports "
                 f"{mutation.diagnostic!r} against the CONFORMANT reference, so "
                 "seeing it after the damage would prove nothing."
             )
-    # Return one complaint for each already-present diagnostic to the caller.
+    # Return every contaminated signature rather than stopping at the first one.
     return complaints
 
 
@@ -507,19 +488,18 @@ def run() -> tuple[int, list[str], set[str]]:
     # Collect unique provoked element values; their order is deliberately unordered.
     provoked: set[str] = set()
 
-    # Compute reference using reference root for later run logic.
+    # Resolve the canonical conformant fixture shared by check and tool preflights.
     reference = reference_root()
-    # Compute dirty using findings for for later run logic.
+    # Capture any native-check rule ids already present before mutation.
     dirty = findings_for(reference, ("src", "tests"))
-    # Handle the non-empty or enabled dirty state.
+    # A dirty reference invalidates every native-check discrimination observation.
     if dirty:
         complaints.append(
             f"the conformant reference already reports {', '.join(sorted(dirty))}. "
             f"Every result below would be crediting a mechanism with a finding it "
             f"did not earn."
         )
-        # Return the exit status, one complaint per broken claim, and the rules that to the
-        # Details: caller.
+        # Stop before mutations can receive credit from pre-existing findings.
         return EXIT_FAILED, complaints, provoked
 
     # The same guard for the `auto:` tools, asked per diagnostic rather than per
@@ -530,52 +510,48 @@ def run() -> tuple[int, list[str], set[str]]:
     # its answer reused, because mypy over the reference is seconds, not
     # milliseconds.
     complaints.extend(tool_preflight(reference))
+    # Refuse the matrix when an external diagnostic already exists on the reference.
     if complaints:
-        # Return the exit status, one complaint per broken claim, and the rules that to the
-        # Details: caller.
+        # Preserve the preflight diagnostics and an empty witnessed set.
         return EXIT_FAILED, complaints, provoked
 
     complaints.extend(repository_preflight())
-    # Handle the non-empty or enabled complaints state.
+    # Repository fitness nodes must also begin green before any copied damage.
     if complaints:
-        # Return the exit status, one complaint per broken claim, and the rules that to the
-        # Details: caller.
+        # Preserve the failing node diagnostics and an empty witnessed set.
         return EXIT_FAILED, complaints, provoked
 
-    # Select mutation as the current element from discrimination.MUTATIONS while run preserves
-    # Details: traversal order.
-    # Advance run through the current input element in declared order.
+    # Isolate each mutation so no prior damage can influence a later observation.
     for mutation in discrimination.MUTATIONS:
-        # Compute workspace using Path for later run logic.
+        # Allocate a unique workspace that is removed regardless of proof outcome.
         workspace = Path(tempfile.mkdtemp(prefix="discrim-"))
-        # Protect the fallible operation so expected failures remain explicitly classified.
+        # Convert stale matrix paths into complaints while always reclaiming the workspace.
         try:
-            # Compute reported using provoke for later run logic.
+            # Record every rule identity reported after applying this one mutation.
             reported = provoke(mutation, workspace)
-        # Bind absent to the current value used by the next run decision.
-        # Translate the expected failure into this mechanism's stable diagnostic path.
+        # Missing damage targets indicate fixture drift, not mechanism rejection.
         except FileNotFoundError as absent:
             complaints.append(
                 f"{mutation.rule_id}: the mutation names {absent}, which is not in "
                 f"the tree -- the entry has drifted from the fixture"
             )
-            # Advance after the current candidate has been conclusively excluded.
+            # Continue auditing independent mutations after recording the stale entry.
             continue
         finally:
+            # Remove copied repositories and synthetic fixtures on success and failure alike.
             shutil.rmtree(workspace, ignore_errors=True)
 
-        # Select the guarded path only after `mutation.rule_id in reported` is satisfied.
+        # Credit a claim only when its own stable rule id appears after its mutation.
         if mutation.rule_id in reported:
             provoked.add(mutation.rule_id)
         else:
-            # Compute others using ", ".join(sorted(reported)) or "nothing at all" for later run
-            # Details: logic.
+            # Expose collateral findings so maintainers can distinguish silence from misattribution.
             others = ", ".join(sorted(reported)) or "nothing at all"
             complaints.append(
                 f"{mutation.rule_id}: {mutation.summary} -- and the checks reported "
                 f"{others}. The entry claims this mechanism catches this; it does not."
             )
-    # Return the exit status, one complaint per broken claim, and the rules that to the caller.
+    # Report the aggregate verdict after every independently recoverable mutation ran.
     return (EXIT_FAILED if complaints else EXIT_OK), complaints, provoked
 
 
@@ -593,12 +569,12 @@ def undiscriminated(provoked: set[str]) -> list[str]:
         Collect unique provoked element values; their order is deliberately unordered.
     @return the gap, sorted, so the ceiling has something to name
     """
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
-    # Return the gap, sorted, so the ceiling has something to name to the caller.
+    # Compute the stable complement of witnessed ids within mechanically claimed binding rules.
     return sorted(
+        # Each document contributes its binding rules in corpus traversal order before sorting.
         rule.rule_id
         for document in iter_documents(REPO_ROOT / "discipline")
+        # Each rule is evaluated against evidence and the witnessed rule-id set.
         for rule in document.rules
         if rule.force is Force.BINDING
         and rule.rule_id not in provoked
@@ -617,52 +593,50 @@ def resolved_strategy_witnesses() -> frozenset[tuple[str, str]]:
     @return exact rule/mechanism pairs represented by the matrix
     @throws ValueError when an unqualified entry is ambiguous or undeclared
     """
-    # Compute registry using load evidence for later resolved strategy witnesses logic.
+    # Load authoritative strategy declarations before resolving shorthand matrix entries.
     registry = load_evidence(EVIDENCE_PATH)
-    # Treat automated as mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Map each rule id to its automated mechanism names; registry order is preserved but unused.
     automated = {
+        # Each value is a tuple of automated mechanism names in evidence declaration order.
         rule_id: tuple(
+            # Each strategy contributes its mechanism only when automation can witness it.
             strategy.mechanism for strategy in record.strategies
             if strategy.is_automated
         )
+        # Each evidence record supplies the automated candidates for one stable rule id.
         for rule_id, record in registry.rules.items()
     }
     # Collect unique resolved element values; their order is deliberately unordered.
     resolved: set[tuple[str, str]] = set()
-    # Select mechanism, rule id as the current element from discrimination.covered_strategies()
-    # Details: while resolved strategy witnesses preserves traversal order.
-    # Advance resolved strategy witnesses through the current input element in declared order.
     for rule_id, mechanism in discrimination.covered_strategies():
-        # Compute candidates using automated.get for later resolved strategy witnesses logic.
+        # Look up the exact automated strategies that this matrix entry may credit.
         candidates = automated.get(rule_id, ())
-        # Select the empty-or-disabled path when candidates has no usable value.
+        # Retired or non-automated rules have no current strategy-level claim to ratchet.
         if not candidates:
             # Historical matrix entries remain readable after a rule is retired,
             # but an inactive rule has no current strategy to ratchet.
             continue
-        # Handle the non-empty or enabled mechanism state.
+        # An explicit mechanism must name one strategy declared for the same rule.
         if mechanism:
-            # Select the guarded path only after `mechanism not in candidates` is satisfied.
+            # Reject stale or cross-rule attribution before it enters the witness set.
             if mechanism not in candidates:
-                # Compute message using f"{rule_id} attributes rejection to undeclared
-                # Details: {mechanism}" for later resolved strategy witnesses logic.
+                # Localize the invalid attribution to its rule and mechanism.
                 message = f"{rule_id} attributes rejection to undeclared {mechanism}"
-                # Propagate the localized failure so callers cannot mistake it for success.
+                # Abort because ambiguous evidence cannot be made safe by omission.
                 raise ValueError(message)
             resolved.add((rule_id, mechanism))
-        # Select the guarded path only after `len(candidates) == 1` is satisfied.
+        # Shorthand is unambiguous only when the evidence model declares one candidate.
         elif len(candidates) == 1:
             resolved.add((rule_id, candidates[0]))
         else:
-            # Compute message using ( for later resolved strategy witnesses logic.
+            # Explain why a multi-strategy rule requires explicit matrix attribution.
             message = (
                 f"{rule_id} has {len(candidates)} automated strategies; "
                 "its mutation must name one"
             )
-            # Propagate the localized failure so callers cannot mistake it for success.
+            # Refuse to credit all candidates from one unqualified observation.
             raise ValueError(message)
-    # Return exact rule/mechanism pairs represented by the matrix to the caller.
+    # Freeze the exact pairs so callers cannot mutate the resolved evidence set.
     return frozenset(resolved)
 
 
@@ -674,14 +648,14 @@ def undiscriminated_strategies(
     @param witnessed resolved matrix pairs
     @return missing pairs in stable rule/mechanism order
     """
-    # Compute registry using load evidence for later undiscriminated strategies logic.
+    # Load the authoritative automated strategy universe used for the complement.
     registry = load_evidence(EVIDENCE_PATH)
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
-    # Return missing pairs in stable rule/mechanism order to the caller.
+    # Sort exact missing pairs for stable baseline and diagnostic serialization.
     return sorted(
         (rule_id, strategy.mechanism)
+        # Each evidence record contributes its strategies under the owning rule id.
         for rule_id, record in registry.rules.items()
+        # Each automated strategy is one independently ratcheted claim.
         for strategy in record.strategies
         if strategy.is_automated and (rule_id, strategy.mechanism) not in witnessed
     )
@@ -707,74 +681,61 @@ def ratchets_held(provoked: set[str], gap: list[str],
         content; key order is deliberately unused.
     @return an empty string when both hold, else what slipped and by how much
     """
-    # Compute floor using  baseline integer for later ratchets held logic.
+    # Read the recorded rule-id witness floor through strict JSON integer validation.
     floor = _baseline_integer(baseline, "count", 0)
-    # Select the guarded path only after `len(provoked) < floor` is satisfied.
+    # A smaller witnessed set means at least one formerly discriminating claim regressed.
     if len(provoked) < floor:
-        # Compute recorded using baseline.get for later ratchets held logic.
+        # Recover recorded identities so the regression names the lost rules, not only a count.
         recorded = baseline.get("rules", [])
-        # Treat the current item as the candidate element consumed by the enclosing
-        # Details: transformation.
-        # Select the empty-or-disabled path when isinstance(recorded, list) or not
-        # Details: all((isinstance(item, str) for item in recorded)) has no usable value.
+        # Reject malformed identity evidence before computing a misleading set difference.
         if not isinstance(recorded, list) or not all(isinstance(item, str) for item in recorded):
-            # Compute message using "discrimination baseline rules must be a list of strings"
-            # Details: for later ratchets held logic.
+            # Explain the exact baseline shape required for loss attribution.
             message = "discrimination baseline rules must be a list of strings"
-            # Propagate the localized failure so callers cannot mistake it for success.
+            # Treat invalid committed evidence as a gate error rather than an empty baseline.
             raise TypeError(message)
-        # Compute lost using ", ".join(sorted(set(cast("list[str]", recorded)) - provoked for
-        # Details: later ratchets held logic.
+        # Compute the stable names previously recorded but absent from this run.
         lost = ", ".join(sorted(set(cast("list[str]", recorded)) - provoked))
-        # Return an empty string when both hold, else what slipped and by how much to the
-        # Details: caller.
+        # Stop on the first ratchet dimension because rule-id regression dominates gap checks.
         return (f"D fell from {floor} to {len(provoked)} -- {lost} no longer "
                 f"provoked. A ratchet may only rise.")
 
-    # Compute ceiling using baseline.get for later ratchets held logic.
+    # Read the permitted undiscriminated-rule count when older baselines provide it.
     ceiling = baseline.get("gap")
-    # Select the guarded path only after `ceiling is not None and len(gap) >
-    # Details: _baseline_integer(baseline, 'gap', 0)` is satisfied.
+    # A larger gap means new mechanized rules arrived without witnessed rejection.
     if ceiling is not None and len(gap) > _baseline_integer(baseline, "gap", 0):
-        # Return an empty string when both hold, else what slipped and by how much to the
-        # Details: caller.
+        # Report both actual and recorded counts so baseline changes remain reviewable.
         return (f"{len(gap)} decided rule(s) are undiscriminated, above the "
                 f"recorded {ceiling}. A rule may not arrive carrying a mechanism "
                 f"and no mutation.")
-    # Compute strategy floor using baseline.get for later ratchets held logic.
+    # Preserve compatibility with baselines predating exact strategy attribution.
     strategy_floor = baseline.get("strategy_count")
-    # Compute strategy ceiling using baseline.get for later ratchets held logic.
+    # Read the permitted exact-strategy gap independently of the witness floor.
     strategy_ceiling = baseline.get("strategy_gap")
-    # Use the available-value path only when strategy floor is not None or strategy ceiling is
-    # Details: present.
+    # Evaluate strategy ratchets only when either strategy field has been adopted.
     if strategy_floor is not None or strategy_ceiling is not None:
-        # Compute witnessed using resolved strategy witnesses for later ratchets held logic.
+        # Resolve current matrix entries to exact rule/mechanism evidence pairs.
         witnessed = resolved_strategy_witnesses()
-        # Select the guarded path only after `strategy_floor is not None and len(witnessed) <
-        # Details: _baseline_integer(baseline, 'strategy_count', 0)` is satisfied.
+        # Detect loss of a formerly witnessed mechanism even when its rule id remains covered.
         if strategy_floor is not None and len(witnessed) < _baseline_integer(
             baseline, "strategy_count", 0
         ):
-            # Return an empty string when both hold, else what slipped and by how much to the
-            # Details: caller.
+            # Explain the exact-strategy regression without conflating it with D.
             return (
                 f"exact strategy coverage fell from {strategy_floor} to "
                 f"{len(witnessed)}. A mechanism-level ratchet may only rise."
             )
-        # Format the relationship labels whose generated graph count is zero.
+        # Compute automated strategy claims that still lack an observed rejection.
         missing = undiscriminated_strategies(witnessed)
-        # Select the guarded path only after `strategy_ceiling is not None and len(missing) >
-        # Details: _baseline_integer(baseline, 'strategy_gap', 0)` is satisfied.
+        # Reject growth in the mechanism-level coverage gap.
         if strategy_ceiling is not None and len(missing) > _baseline_integer(
             baseline, "strategy_gap", 0
         ):
-            # Return an empty string when both hold, else what slipped and by how much to the
-            # Details: caller.
+            # Report the widened strategy gap against its recorded ceiling.
             return (
                 f"{len(missing)} exact strategy claim(s) are undiscriminated, "
                 f"above the recorded {strategy_ceiling}."
             )
-    # Return an empty string when both hold, else what slipped and by how much to the caller.
+    # An empty complaint is the explicit signal that every applicable ratchet held.
     return ""
 
 
@@ -789,17 +750,15 @@ def _baseline_integer(baseline: dict[str, object], field: str, default: int) -> 
     @return validated integer
     @throws TypeError when the field is not an integer
     """
-    # Treat the current value as the candidate element consumed by the enclosing transformation.
+    # Preserve field absence as the caller-supplied compatibility default.
     value = baseline.get(field, default)
-    # Select the empty-or-disabled path when isinstance(value, int) or isinstance(value, bool)
-    # Details: has no usable value.
+    # JSON booleans are Python integers but are not valid quantitative evidence.
     if not isinstance(value, int) or isinstance(value, bool):
-        # Compute message using f"discrimination baseline {field} must be an integer" for later
-        # Details: baseline integer logic.
+        # Name the malformed field so baseline repair is direct.
         message = f"discrimination baseline {field} must be an integer"
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Fail closed instead of coercing strings or booleans into ratchet values.
         raise TypeError(message)
-    # Return validated integer to the caller.
+    # Return the validated count without changing its numeric value.
     return value
 
 
@@ -808,22 +767,19 @@ def read_baseline() -> dict[str, object]:
 
     @return the baseline document
     """
-    # Select the regular-file path only when `not BASELINE_PATH.is_file()` is satisfied.
+    # Bootstrap repositories without a committed ratchet at the neutral floor.
     if not BASELINE_PATH.is_file():
-        # Return the baseline document to the caller.
+        # Supply all legacy fields expected by callers before first baseline creation.
         return {"count": 0, "rules": [], "why": ""}
-    # Compute loaded using json.loads for later read baseline logic.
+    # Decode committed bytes without assuming the top-level JSON shape.
     loaded: object = json.loads(BASELINE_PATH.read_text(encoding="utf-8"))
-    # Treat the current key as the candidate element consumed by the enclosing transformation.
-    # Select the empty-or-disabled path when isinstance(loaded, dict) or not
-    # Details: all((isinstance(key, str) for key in loaded)) has no usable value.
+    # Require an object with textual field names before typed access.
     if not isinstance(loaded, dict) or not all(isinstance(key, str) for key in loaded):
-        # Compute message using "discrimination baseline must be a JSON object with string k for
-        # Details: later read baseline logic.
+        # Describe the minimum structural contract violated by the baseline.
         message = "discrimination baseline must be a JSON object with string keys"
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Reject corrupt evidence rather than silently resetting its ratchets.
         raise TypeError(message)
-    # Return the baseline document to the caller.
+    # Narrow the validated object for downstream field-specific checks.
     return cast("dict[str, object]", loaded)
 
 
@@ -834,7 +790,7 @@ def main(argv: list[str] | None = None) -> int:
     @return the process exit status
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Runs discrimination proofs, prints their verdict, and optionally rewrites the baseline.
     """
     # Configure the command-line parser that defines this tool's invocation contract.
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -852,34 +808,29 @@ def main(argv: list[str] | None = None) -> int:
         # Return the aggregate process status to the command-line boundary.
         return EXIT_FAILED
 
-    # Capture complaints, provoked, status as the completed main outcome for subsequent
-    # Details: validation or publication.
+    # Execute the complete proof matrix before comparing its observations to the baseline.
     status, complaints, provoked = run()
-    # Select complaint as the current element from complaints while main preserves traversal
-    # Details: order.
-    # Advance main through the current input element in declared order.
+    # Emit every broken claim so one invocation supplies a complete repair list.
     for complaint in complaints:
         print(f"  {complaint}", file=sys.stderr)
 
     # Hold baseline path keys mapped to their recorded behavior-fingerprint values.
     baseline = read_baseline()
-    # Compute floor using  baseline integer for later main logic.
     floor = _baseline_integer(baseline, "count", 0)
 
-    # Select the guarded path only after `arguments.update_baseline` is satisfied.
+    # Baseline updates are permitted only from a completely discriminating matrix run.
     if arguments.update_baseline:
-        # Select the guarded path only after `status != EXIT_OK` is satisfied.
+        # Refuse to bless the current counts when any declared mutation failed.
         if status != EXIT_OK:
             print("refusing to move the floor while a declared mutation is broken",
                   file=sys.stderr)
             # Return the aggregate process status to the command-line boundary.
             return EXIT_FAILED
-        # Compute strategies using resolved strategy witnesses for later main logic.
+        # Resolve exact mechanism witnesses for the strategy-level floor.
         strategies = resolved_strategy_witnesses()
-        # Compute strategy gap using undiscriminated strategies for later main logic.
+        # Record the current complement as the strategy-gap ceiling.
         strategy_gap = undiscriminated_strategies(strategies)
-        # Bind mechanism, rule id to the current value used by the next main decision.
-        # Publish the externally visible effect after all required inputs are ready.
+        # Replace the baseline atomically at the file level with deterministic JSON text.
         BASELINE_PATH.write_text(
             json.dumps({
                 "generated_by": "tools/discrimination_gate.py --update-baseline",
@@ -892,7 +843,9 @@ def main(argv: list[str] | None = None) -> int:
                 "gap": len(undiscriminated(provoked)),
                 "strategy_count": len(strategies),
                 "strategies": [
+                    # Serialize each exact pair as a named object for reviewable diffs.
                     {"rule": rule_id, "mechanism": mechanism}
+                    # Sort pairs so set iteration cannot perturb committed evidence.
                     for rule_id, mechanism in sorted(strategies)
                 ],
                 "strategy_gap": len(strategy_gap),
@@ -901,6 +854,7 @@ def main(argv: list[str] | None = None) -> int:
             encoding="utf-8",
             newline="\n",
         )
+        # Summarize the newly committed floors and ceiling for the operator.
         print(
             f"discrimination: floor recorded at D={len(provoked)}, "
             f"S={len(strategies)}, strategy gap={len(strategy_gap)} -- "
@@ -909,24 +863,24 @@ def main(argv: list[str] | None = None) -> int:
         # Return the aggregate process status to the command-line boundary.
         return EXIT_OK
 
-    # Select the guarded path only after `status != EXIT_OK` is satisfied.
+    # In ordinary gate mode, matrix failures take precedence over baseline comparisons.
     if status != EXIT_OK:
         print(f"discrimination: {len(complaints)} broken claim(s)", file=sys.stderr)
         # Return the aggregate process status to the command-line boundary.
         return EXIT_FAILED
-    # Compute gap using undiscriminated for later main logic.
+    # Compute newly mechanized rule ids that have no witnessed mutation.
     gap = undiscriminated(provoked)
-    # Compute slipped using ratchets held for later main logic.
+    # Compare both rule-level and strategy-level observations with committed ratchets.
     slipped = ratchets_held(provoked, gap, baseline)
-    # Handle the non-empty or enabled slipped state.
+    # Fail on any floor decrease or ceiling increase.
     if slipped:
         print(f"discrimination: {slipped}", file=sys.stderr)
         # Return the aggregate process status to the command-line boundary.
         return EXIT_FAILED
 
-    # Compute strategies using resolved strategy witnesses for later main logic.
+    # Resolve exact strategy evidence for the successful summary.
     strategies = resolved_strategy_witnesses()
-    # Compute strategy gap using undiscriminated strategies for later main logic.
+    # Count automated claims still lacking an exact witnessed rejection.
     strategy_gap = undiscriminated_strategies(strategies)
     print(f"discrimination: D={len(provoked)}, floor {floor}, "
           f"{len(discrimination.MUTATIONS)} mutation(s) all provoking their rule; "
@@ -938,5 +892,5 @@ def main(argv: list[str] | None = None) -> int:
 
 # Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
-    # Propagate the localized failure so callers cannot mistake it for success.
+    # Translate the command result into the process exit status at the sole script boundary.
     raise SystemExit(main())

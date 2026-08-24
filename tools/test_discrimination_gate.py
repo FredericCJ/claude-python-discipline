@@ -78,8 +78,7 @@ def test_a_true_claim_passes(monkeypatch: pytest.MonkeyPatch) -> None:
     @param monkeypatch used to substitute the declared table
     """
     monkeypatch.setattr(discrimination, "MUTATIONS", (_WORKS,))
-    # Capture complaints, provoked, status as the completed test a true claim passes outcome for
-    # Details: subsequent validation or publication.
+    # Capture the successful verdict, empty complaint list, and witnessed rule-id set together.
     status, complaints, provoked = discrimination_gate.run()
     assert status == discrimination_gate.EXIT_OK, complaints
     assert provoked == {"DOC-001"}
@@ -91,8 +90,7 @@ def test_a_claim_that_provokes_nothing_fails(monkeypatch: pytest.MonkeyPatch) ->
     @param monkeypatch used to substitute the declared table
     """
     monkeypatch.setattr(discrimination, "MUTATIONS", (_HOLLOW,))
-    # Capture complaints, provoked, status as the completed test a claim that provokes nothing
-    # Details: fails outcome for subsequent validation or publication.
+    # Observe how the runner reports a mutation whose claimed rule never appears.
     status, complaints, provoked = discrimination_gate.run()
     assert status == discrimination_gate.EXIT_FAILED
     assert provoked == set()
@@ -106,8 +104,7 @@ def test_a_passing_companion_proof_is_credited(monkeypatch: pytest.MonkeyPatch) 
     """
     monkeypatch.setattr(discrimination, "MUTATIONS", (_PROOF,))
     monkeypatch.setattr(discrimination_gate, "proof_passes", lambda _node: True)
-    # Capture complaints, provoked, status as the completed test a passing companion proof is
-    # Details: credited outcome for subsequent validation or publication.
+    # Capture the credit granted to a successful direct proof node.
     status, complaints, provoked = discrimination_gate.run()
     assert status == discrimination_gate.EXIT_OK, complaints
     assert provoked == {"DOC-001"}
@@ -120,8 +117,7 @@ def test_a_failing_companion_proof_is_refused(monkeypatch: pytest.MonkeyPatch) -
     """
     monkeypatch.setattr(discrimination, "MUTATIONS", (_PROOF,))
     monkeypatch.setattr(discrimination_gate, "proof_passes", lambda _node: False)
-    # Capture provoked, status as the completed test a failing companion proof is refused
-    # Details: outcome for subsequent validation or publication.
+    # Observe the failed verdict and empty witness set when the proof assertion fails.
     status, _, provoked = discrimination_gate.run()
     assert status == discrimination_gate.EXIT_FAILED
     assert provoked == set()
@@ -137,8 +133,7 @@ def test_a_mutation_naming_a_missing_path_is_reported(
 
     @param monkeypatch used to substitute the declared table
     """
-    # Compute stale using discrimination.Mutation for later test a mutation naming a missing
-    # Details: path is reported logic.
+    # Declare damage against a deliberately absent path to simulate matrix drift.
     stale = discrimination.Mutation(
         rule_id="DOC-001",
         summary="damage a file that is not there any more",
@@ -147,8 +142,7 @@ def test_a_mutation_naming_a_missing_path_is_reported(
         drop=("src/refpkg/domain/gone.py",),
     )
     monkeypatch.setattr(discrimination, "MUTATIONS", (stale,))
-    # Capture complaints, status as the completed test a mutation naming a missing path is
-    # Details: reported outcome for subsequent validation or publication.
+    # Capture the localized drift complaint emitted instead of rejection credit.
     status, complaints, _ = discrimination_gate.run()
     assert status == discrimination_gate.EXIT_FAILED
     assert "drifted" in complaints[0]
@@ -165,8 +159,7 @@ def test_a_dirty_reference_stops_the_run(monkeypatch: pytest.MonkeyPatch) -> Non
     """
     monkeypatch.setattr(discrimination_gate, "findings_for",
                         lambda *_args, **_kw: {"ARCH-002"})
-    # Capture complaints, provoked, status as the completed test a dirty reference stops the run
-    # Details: outcome for subsequent validation or publication.
+    # Observe the preflight refusal before any mutation can enter the witnessed set.
     status, complaints, provoked = discrimination_gate.run()
     assert status == discrimination_gate.EXIT_FAILED
     assert provoked == set()
@@ -181,11 +174,10 @@ def test_the_floor_may_not_fall(monkeypatch: pytest.MonkeyPatch,
     @param tmp_path holds a baseline claiming more coverage than the table gives
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes a temporary baseline whose recorded floor exceeds current coverage.
     """
-    # Hold baseline path keys mapped to their recorded behavior-fingerprint values.
+    # Isolate the regression baseline from the committed ratchet.
     baseline = tmp_path / "baseline.json"
-    # Publish the externally visible effect after all required inputs are ready.
     baseline.write_text(
         json.dumps({"count": 5, "rules": ["DOC-001", "ARCH-002", "ERR-013",
                                           "TYPE-002", "DIAG-002"]}),
@@ -207,7 +199,7 @@ def test_the_floor_will_not_move_while_a_claim_is_broken(
     @param monkeypatch used to substitute the table and the baseline path
     @param tmp_path holds the baseline that must not be written
     """
-    # Hold baseline path keys mapped to their recorded behavior-fingerprint values.
+    # Reserve a path whose absence proves a broken matrix cannot move the floor.
     baseline = tmp_path / "baseline.json"
     monkeypatch.setattr(discrimination_gate, "BASELINE_PATH", baseline)
     monkeypatch.setattr(discrimination, "MUTATIONS", (_HOLLOW,))
@@ -224,7 +216,7 @@ def test_moving_the_floor_requires_a_reason(monkeypatch: pytest.MonkeyPatch,
     @param monkeypatch used to substitute the baseline path
     @param tmp_path holds the baseline that must not be written
     """
-    # Hold baseline path keys mapped to their recorded behavior-fingerprint values.
+    # Reserve a path whose absence proves an unexplained update performs no write.
     baseline = tmp_path / "baseline.json"
     monkeypatch.setattr(discrimination_gate, "BASELINE_PATH", baseline)
     assert discrimination_gate.main(["--update-baseline"]) == \
@@ -239,8 +231,7 @@ def test_the_committed_table_holds() -> None:
     Every test above substitutes something. This one asserts the shipped matrix
     is currently true, which is the claim the recorded floor rests on.
     """
-    # Capture complaints, provoked, status as the completed test the committed table holds
-    # Details: outcome for subsequent validation or publication.
+    # Capture the real matrix verdict and its complete witnessed rule-id set.
     status, complaints, provoked = discrimination_gate.run()
     assert status == discrimination_gate.EXIT_OK, "; ".join(complaints)
     assert provoked == discrimination.covered()
@@ -281,8 +272,7 @@ def test_a_true_auto_claim_passes(monkeypatch: pytest.MonkeyPatch) -> None:
     @param monkeypatch used to substitute the declared table
     """
     monkeypatch.setattr(discrimination, "MUTATIONS", (_AUTO_WORKS,))
-    # Capture complaints, provoked, status as the completed test a true auto claim passes
-    # Details: outcome for subsequent validation or publication.
+    # Observe rule credit derived from the exact Ruff diagnostic.
     status, complaints, provoked = discrimination_gate.run()
     assert status == discrimination_gate.EXIT_OK, complaints
     assert provoked == {"ERR-008"}
@@ -296,8 +286,7 @@ def test_an_auto_claim_the_tool_does_not_report_fails(
     @param monkeypatch used to substitute the declared table
     """
     monkeypatch.setattr(discrimination, "MUTATIONS", (_AUTO_HOLLOW,))
-    # Capture provoked, status as the completed test an auto claim the tool does not report
-    # Details: fails outcome for subsequent validation or publication.
+    # Observe the failed verdict and empty witness set for an absent tool diagnostic.
     status, _, provoked = discrimination_gate.run()
     assert status == discrimination_gate.EXIT_FAILED
     assert provoked == set()
@@ -319,8 +308,7 @@ def test_a_diagnostic_the_reference_already_emits_is_refused(
     monkeypatch.setattr(discrimination, "MUTATIONS", (_AUTO_WORKS,))
     monkeypatch.setitem(discrimination_gate.TOOLS, "ruff",
                         lambda _root: {"BLE001"})
-    # Capture complaints, provoked, status as the completed test a diagnostic the reference
-    # Details: already emits is refused outcome for subsequent validation or publication.
+    # Capture the contamination complaint raised before the damaged tool run.
     status, complaints, provoked = discrimination_gate.run()
     assert status == discrimination_gate.EXIT_FAILED
     assert provoked == set()
@@ -350,8 +338,7 @@ def test_a_syntax_error_does_not_credit_an_auto_rule(
                   "from __future__ import annotations\n\ndef ("),),
     )
     monkeypatch.setattr(discrimination, "MUTATIONS", (broken,))
-    # Capture provoked, status as the completed test a syntax error does not credit an auto rule
-    # Details: outcome for subsequent validation or publication.
+    # Observe that a generic tool failure cannot substitute for the declared code.
     status, _, provoked = discrimination_gate.run()
     assert status == discrimination_gate.EXIT_FAILED
     assert provoked == set()
@@ -370,11 +357,10 @@ def test_a_rule_arriving_with_no_mutation_breaks_the_ceiling(
     @param tmp_path holds a baseline recording a narrower gap than now exists
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes a temporary baseline with a zero undiscriminated-rule ceiling.
     """
-    # Hold baseline path keys mapped to their recorded behavior-fingerprint values.
+    # Isolate the narrow-gap baseline from the committed ratchet.
     baseline = tmp_path / "baseline.json"
-    # Publish the externally visible effect after all required inputs are ready.
     baseline.write_text(
         json.dumps({"count": 1, "rules": ["DOC-001"], "gap": 0}),
         encoding="utf-8",
@@ -397,11 +383,10 @@ def test_a_baseline_with_no_ceiling_is_not_treated_as_zero(
     @param tmp_path holds a baseline in the pre-ceiling shape
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes a temporary legacy baseline that predates the gap ceiling.
     """
-    # Hold baseline path keys mapped to their recorded behavior-fingerprint values.
+    # Model an older installation whose baseline contains no gap field.
     baseline = tmp_path / "baseline.json"
-    # Publish the externally visible effect after all required inputs are ready.
     baseline.write_text(
         json.dumps({"count": 1, "rules": ["DOC-001"]}), encoding="utf-8",
     )
@@ -422,8 +407,7 @@ def test_the_exact_strategy_floor_may_not_fall(
         "resolved_strategy_witnesses",
         lambda: frozenset({("TYPE-001", "auto:mypy")}),
     )
-    # Compute message using discrimination gate.ratchets held for later test the exact strategy
-    # Details: floor may not fall logic.
+    # Capture the mechanism-level regression while rule-id coverage remains constant.
     message = discrimination_gate.ratchets_held(
         {"TYPE-001"},
         [],
@@ -441,15 +425,13 @@ def test_the_gap_counts_only_rules_a_mechanism_actually_decides() -> None:
     their check arm.
 
     @par Effects
-    May mutate caller-visible or process-local state in implementation order.
+    Removes one witnessed rule id from a test-local set.
     """
-    # Compute provoked using set for later test the gap counts only rules a mechanism actually
-    # Details: decides logic.
+    # Start from complete matrix coverage so one deliberate omission controls the gap.
     provoked = set(discrimination.covered())
-    # Publish the externally visible effect after all required inputs are ready.
+    # Remove a mechanically decided rule while leaving review-only rules untouched.
     provoked.remove("TYPE-001")
-    # Compute gap using set for later test the gap counts only rules a mechanism actually
-    # Details: decides logic.
+    # Compute the resulting gap through the same evidence-aware production query.
     gap = set(discrimination_gate.undiscriminated(provoked))
     assert "ALLOC-005" not in gap, (
         "ALLOC-005 is decided by structured review; it must not be counted as an "
