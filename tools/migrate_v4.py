@@ -273,12 +273,10 @@ def _confined_roots(
             or ".." in candidate.parts
             or not tuple(part for part in candidate.parts if part not in {"", "."})
         )
-        # Protect the fallible operation so expected failures remain explicitly classified.
         try:
             (root / Path(spelling)).resolve().relative_to(root.resolve())
             # True enables resolved escape; false selects its disabled alternative.
             resolved_escape = False
-        # Translate the expected failure into this mechanism's stable diagnostic path.
         except ValueError:
             # True enables resolved escape; false selects its disabled alternative.
             resolved_escape = True
@@ -536,11 +534,10 @@ def _import_roots(path: Path) -> set[str]:
     @param path Python module
     @return imported top-level names; malformed source produces an empty set
     """
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Parse without importing adopter code; unreadable modules provide no import evidence.
     try:
         # Parse the Python source into the syntax tree used for structural fingerprinting.
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except (OSError, SyntaxError, UnicodeError):
         # Unreadable source supplies no trustworthy import-ownership evidence.
         return set()
@@ -785,7 +782,7 @@ def _draft(
                 + ", ".join(sorted(unknown_v3_fields)),
             )
         )
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Decode legacy aliases while retaining a diagnostic and empty map for malformed declarations.
     try:
         # Translate legacy segment vocabulary before any production path is classified.
         aliases = _legacy_aliases(table)
@@ -840,7 +837,6 @@ def plan(root: Path, unit: str | None) -> MigrationPlan:
     """
     # Canonicalize the repository boundary before resolving or reading the declaration.
     governed = root.resolve()
-    # Resolve the repository-confined path used by this operation before filesystem access.
     project_file = governed / "pyproject.toml"
     before = project_file.read_bytes()
     # Retain the immutable source representation consumed by subsequent analysis.
@@ -947,7 +943,6 @@ def apply(migration: MigrationPlan) -> None:
         suffix=".toml",
         dir=migration.project_file.parent,
     )
-    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
         # Bound the raw descriptor so every buffered byte is flushed and synced before replace.
         with os.fdopen(descriptor, "wb") as stream:
@@ -986,14 +981,13 @@ def main(argv: list[str] | None = None) -> int:
     migration = plan(arguments.root, arguments.unit)
     sys.stdout.write(preview(migration))
     if migration.blocked:
-        # Return the aggregate process status to the command-line boundary.
+        # Preserve the fail-closed planning verdict without attempting any migration writes.
         return EXIT_BLOCKED
     if arguments.apply:
         apply(migration)
         print("APPLIED" if migration.changed else "ALREADY CURRENT")
     else:
         print("DRY RUN; pass --apply to write")
-    # Return the aggregate process status to the command-line boundary.
     return EXIT_OK
 
 

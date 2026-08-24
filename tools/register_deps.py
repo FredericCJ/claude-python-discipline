@@ -83,11 +83,10 @@ def imports_of(path: Path) -> set[str]:
     @param path the module to read
     @return the top-level names it brings in, relative imports excluded
     """
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Parse imports without importing adopter code; invalid modules contribute no dependency facts.
     try:
         # Parse imports from the module without executing adopter code.
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except (OSError, SyntaxError):
         # Unreadable or invalid modules contribute no trustworthy import facts.
         return set()
@@ -225,7 +224,7 @@ def main(argv: list[str] | None = None) -> int:
     # Emit mode prints the derived contract body and performs no completeness comparison.
     if arguments.emit:
         print(emit(holders))
-        # Return the aggregate process status to the command-line boundary.
+        # Emission is complete once the derived contract body reaches stdout.
         return EXIT_OK
 
     # Resolve an explicit contract path or the conventional file beside the source tree.
@@ -253,7 +252,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  no package under {arguments.root / 'src'} -- nothing was "
                   f"examined, which is not the same as nothing being found",
                   file=sys.stderr)
-            # Return the aggregate process status to the command-line boundary.
+            # Reject the vacuous survey because no package was available to inspect.
             return EXIT_INCOMPLETE
         print(f"  no foreign dependency across {len(found)} package(s)")
 
@@ -263,9 +262,8 @@ def main(argv: list[str] | None = None) -> int:
               f"{', '.join(missing)}.\nAn unregistered dependency is one the "
               f"ARCH-004 contract cannot forbid, and a contract with an empty "
               f"list passes forever.", file=sys.stderr)
-        # Return the aggregate process status to the command-line boundary.
+        # Fail check mode until every observed foreign root has a declared contract owner.
         return EXIT_INCOMPLETE
-    # Return the aggregate process status to the command-line boundary.
     return EXIT_OK
 
 

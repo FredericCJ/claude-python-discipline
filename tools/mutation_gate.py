@@ -429,7 +429,6 @@ def _isolated_copy(configuration: Configuration, workspace: Path) -> Path:
                 "MUTATION-004_SYMLINK",
                 f"mutation isolation refuses repository symlink {path}",
             )
-    # Resolve the repository-confined path used by this operation before filesystem access.
     destination = workspace / "repository"
     shutil.copytree(configuration.root, destination, ignore=_ignore)
     # Return the complete isolated repository only after the symlink-free copy succeeds.
@@ -527,9 +526,9 @@ def _run_command(  # ruff: ignore[too-many-arguments] - process-boundary record
     @return combined textual output
     @throws MutationGateError when the command cannot produce a green verdict
     """
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Execute the isolated mutation command while converting launch and timeout failures uniformly.
     try:
-        # Preserve the external command representation and its observed completion outcome.
+        # Retain status and both diagnostic channels as one mutation-step observation.
         finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
             tuple(arguments),
             cwd=root,
@@ -819,7 +818,6 @@ def execute(configuration: Configuration) -> tuple[DomainResult, ...]:
                 diagnostic_id="MUTATION-008_EXECUTION",
                 activity=f"mutation execution for {domain}",
             )
-            # Preserve the external command representation and its observed completion outcome.
             completed = _run_command(
                 (*prefix, "dump", str(session)),
                 root=copied_root,
@@ -872,11 +870,9 @@ def run(root: Path) -> Report:
     """
     # Measure the complete tool lookup, configuration, isolation, and mutation execution path.
     started = time.perf_counter()
-    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
         # Bind the report to the installed mutation engine version before reading project input.
         tool = f"cosmic-ray {version('cosmic-ray')}"
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except PackageNotFoundError:
         # Preserve an explicit unavailable-tool identity in the red report.
         tool = "cosmic-ray unavailable"
@@ -953,7 +949,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         # Print bounded external output only when the failure retained actionable detail.
         if report.output:
             print(report.output)
-    # Return the aggregate process status to the command-line boundary.
     return EXIT_GREEN if report.status == "pass" else EXIT_RED
 
 

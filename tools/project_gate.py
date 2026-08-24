@@ -396,7 +396,6 @@ def _load_context(root: Path, scratch: Path) -> tuple[StepResult, GateContext | 
     started = time.perf_counter()
     # Retain the immutable source representation consumed by subsequent analysis.
     source = root / "pyproject.toml"
-    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
         # Load the strict declaration, unit kind, configuration, and use evidence together.
         declaration = describe(root, source)
@@ -737,7 +736,6 @@ def _local_targets(
             raise _probe_error(field, f"target {value!r} does not exist")
         normalized.append(candidate.relative_to(context.root).as_posix())
         candidates = candidate.rglob("*.py") if candidate.is_dir() else (candidate,)
-        # Resolve the repository-confined path used by this operation before filesystem access.
         files.update(path.resolve() for path in candidates if path.is_file())
     # A syntactically valid target set must still provide a non-vacuous Python subject.
     if not files:
@@ -1142,13 +1140,13 @@ def _mutation_evaluation(
     """
     # Locate the structural boundary used to parse the external result safely.
     start = execution.output.find("{")
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Decode only the structured suffix; absent or malformed JSON cannot substantiate success.
     try:
-        # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
+        # Preserve a mapping candidate or explicit absence for the structural verdict below.
         report = json.loads(execution.output[start:]) if start >= 0 else None
-    # Translate the expected failure into this mechanism's stable diagnostic path.
+    # Invalid JSON follows the same unsubstantiated-report path as an absent suffix.
     except json.JSONDecodeError:
-        # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
+        # Record the lack of usable child evidence without leaking decoder exceptions.
         report = None
     # An unparsable child report cannot substantiate mutation success.
     if not isinstance(report, Mapping):
@@ -1322,7 +1320,6 @@ def _doxygen_values(text: str, key: str, field: str) -> tuple[str, ...]:
     if len(matches) != 1:
         # Require one authoritative single-line value for each consumed key.
         raise _probe_error(field, f"expected exactly one {key} assignment")
-    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
         # Parse the sole Doxyfile assignment with shell quoting and inline comments honored.
         values = tuple(shlex.split(matches[0], comments=True, posix=True))
@@ -1415,9 +1412,9 @@ def _native_version(executable: str) -> str:
     @return first non-empty version line
     @throws CommandExecutionError when the probe fails
     """
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Probe the executable directly and translate launch or timeout failure to the gate boundary.
     try:
-        # Preserve the external command representation and its observed completion outcome.
+        # Retain the completed version probe for status and first-line extraction.
         finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
             (executable, "--version"),
             capture_output=True,
@@ -1459,9 +1456,9 @@ def _execute_doxygen(
         + f"\nOUTPUT_DIRECTORY = {output.as_posix()}\n"
     )
     started = time.perf_counter()
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Run Doxygen with the prepared stdin configuration under the documented timeout.
     try:
-        # Preserve the external command representation and its observed completion outcome.
+        # Retain process status and diagnostics for the explicit documentation observation.
         finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
             (executable, "-"),
             cwd=context.root,
@@ -1478,7 +1475,6 @@ def _execute_doxygen(
         # Translate host-process failure to the documentation adapter boundary.
         raise CommandExecutionError(str(problem)) from problem
     duration = round((time.perf_counter() - started) * 1000)
-    # Preserve the external command representation and its observed completion outcome.
     process = CommandExecution(
         finished.returncode,
         finished.stdout + finished.stderr,
@@ -1526,7 +1522,7 @@ def _run_doxygen_documentation(
         Each element is one documentation-rule identifier in adapter declaration order.
     @return explicit Doxygen outcome
     """
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Prepare and validate the Doxygen configuration before any host-tool execution.
     try:
         # Prepare the complete Doxygen plan before probing host availability or version.
         plan = _prepare_doxygen(context)
@@ -1551,11 +1547,9 @@ def _run_doxygen_documentation(
             supported_platforms=("Windows", "Linux"),
         )
     version = "unknown"
-    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
         # Observe the native executable version before launching documentation generation.
         version = _native_version(executable)
-        # Preserve the external command representation and its observed completion outcome.
         execution = _execute_doxygen(executable, plan, context)
     # Version or generation launch failures share one bounded execution diagnostic.
     except CommandExecutionError as problem:
@@ -1572,7 +1566,6 @@ def _run_doxygen_documentation(
             subjects=plan.subjects,
             tool=f"doxygen {version}",
         )
-    # Preserve the external command representation and its observed completion outcome.
     process = execution.process
     # Enter the failure path only when the subprocess reports a nonzero status.
     if process.returncode != 0:
@@ -1861,7 +1854,6 @@ def _prepare_build(context: GateContext) -> tuple[BuildPlan, PreparedCommand]:
     # Retain the immutable source representation consumed by subsequent analysis.
     source = context.scratch / "isolated-source"
     artifacts = context.scratch / "artifacts"
-    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
         # Copy only materialized repository content into the isolated build source tree.
         subjects = _copy_isolated(context.root, source)
@@ -1880,7 +1872,6 @@ def _prepare_build(context: GateContext) -> tuple[BuildPlan, PreparedCommand]:
         ),
     )
     plan = BuildPlan(source, artifacts, name, version, subjects, (use,))
-    # Preserve the external command representation and its observed completion outcome.
     command = PreparedCommand(
         command=(
             sys.executable,
@@ -1938,7 +1929,7 @@ def _wheel_identity(path: Path) -> tuple[str, str]:
     @return distribution name and version
     @throws ArtifactError when membership or metadata is malformed
     """
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Open the wheel as untrusted archive data and localize archive-format failures.
     try:
         # Inspect the wheel archive and require exactly one distribution metadata member.
         with zipfile.ZipFile(path) as archive:
@@ -1992,7 +1983,7 @@ def _sdist_identity(path: Path) -> tuple[str, str]:
     @return distribution name and version
     @throws ArtifactError when membership or metadata is malformed
     """
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Decode the source archive while translating compression and tar failures to artifact errors.
     try:
         # Delegate membership and metadata validation to the already-openable archive helper.
         return _read_sdist_identity(path)
@@ -2051,9 +2042,9 @@ class ArtifactBuildAdapter:
         @param context exact governed repository
         @return explicit build outcome
         """
-        # Protect the fallible operation so expected failures remain explicitly classified.
+        # Prepare project isolation and artifact commands before looking up or running the frontend.
         try:
-            # Preserve the external command representation and its observed completion outcome.
+            # Retain both the validated build plan and its executable command contract.
             plan, command = _prepare_build(context)
         # Translate project or isolation configuration refusal before starting the backend.
         except ConfigurationProbeError as problem:
@@ -2067,11 +2058,10 @@ class ArtifactBuildAdapter:
                 summary=str(problem),
                 configuration=(_project_configuration(context, (problem.field,)),),
             )
-        # Protect the fallible operation so expected failures remain explicitly classified.
+        # Resolve the installed frontend identity without conflating absence with build failure.
         try:
             # Resolve the installed build frontend version before executing artifact creation.
             version = _distribution_version("build")
-        # Translate the expected failure into this mechanism's stable diagnostic path.
         # Missing build frontend is explicit unsupported tooling on a supported platform.
         except importlib.metadata.PackageNotFoundError:
             # Preserve the prepared build command and subject evidence without executing it.
@@ -2086,9 +2076,9 @@ class ArtifactBuildAdapter:
                 configuration=command.configuration,
                 subjects=command.subjects,
             )
-        # Protect the fallible operation so expected failures remain explicitly classified.
+        # Execute the prepared build while preserving launch and timeout failure separately.
         try:
-            # Preserve the external command representation and its observed completion outcome.
+            # Retain the complete process observation consumed by artifact validation.
             execution = _execute(command, context.root)
         # Translate backend launch or timeout failure separately from a nonzero build result.
         except CommandExecutionError as problem:
@@ -2122,7 +2112,6 @@ class ArtifactBuildAdapter:
                 duration_ms=execution.duration_ms,
                 output=_tail(execution.output),
             )
-        # Protect the fallible operation so expected failures remain explicitly classified.
         try:
             # Validate both produced artifact formats before publishing build success.
             artifacts = _validate_artifacts(plan)
@@ -2303,13 +2292,14 @@ def _create_venv(environment: Path) -> Path:
     @return fresh interpreter path
     @throws CommandExecutionError when creation is incomplete
     """
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Create the isolated environment while translating host filesystem failure at this boundary.
     try:
         venv.EnvBuilder(with_pip=True, clear=True).create(environment)
     # Preserve filesystem-level environment creation failure as execution detail.
     except OSError as problem:
         # Translate host failure to the clean-install adapter boundary.
         raise CommandExecutionError(str(problem)) from problem
+    # Resolve the platform-specific interpreter path expected from the new environment.
     interpreter = _fresh_python(environment)
     # Select the regular-file path only when `not interpreter.is_file()` is satisfied.
     if not interpreter.is_file():
@@ -2347,7 +2337,6 @@ def _probe_argv(probe: ArtifactProbe, interpreter: Path) -> tuple[str, ...]:
     # Each candidates element is an entry-point path, ordered as declared spelling then Windows
     # executable spelling.
     candidates = (scripts / first, (scripts / first).with_suffix(".exe"))
-    # Resolve the repository-confined path used by this operation before filesystem access.
     executable = next((path for path in candidates if path.is_file()), None)
     # Use the absence path when executable has no available value.
     if executable is None:
@@ -2376,9 +2365,9 @@ def _execute_with_timeout(
     # Wrap the explicit probe command in the shared execution contract and start bounded timing.
     prepared = PreparedCommand(command, (), 1, "", "probe")
     started = time.perf_counter()
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Execute the clean-environment probe and translate launch or timeout failure uniformly.
     try:
-        # Preserve the external command representation and its observed completion outcome.
+        # Retain process output and status for conversion to the shared execution record.
         finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
             prepared.command,
             cwd=root,
@@ -2450,7 +2439,6 @@ def _prepare_install(
             diagnostic_id="GATE-INSTALL-000_BUILD_REQUIRED",
             summary=f"expected one validated wheel from artifact-build, found {len(wheels)}",
         )
-    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
         # Parse declared import and command probes before allocating a fresh environment.
         imports, probes = _parse_artifact_probes(context)
@@ -2467,7 +2455,6 @@ def _prepare_install(
             summary=str(problem),
             configuration=(_project_configuration(context, (problem.field,)),),
         )
-    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
         # Create an empty virtual environment used only for wheel installation and probes.
         interpreter = _create_venv(context.scratch / "installed")
@@ -2524,7 +2511,7 @@ def _install_wheel(
         Each element is one delivered-artifact rule id in adapter declaration order.
     @return process observation or explicit failure
     """
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Install the built wheel inside the fresh interpreter before any import probe is attempted.
     try:
         # Execute wheel installation inside the isolated interpreter environment.
         installed = _execute(plan.install, context.scratch)
@@ -2583,7 +2570,6 @@ def _verify_installed_imports(
         f"assert metadata.version({plan.name!r}) == {plan.version!r}; "
         f"[importlib.import_module(name) for name in {plan.imports!r}]"
     )
-    # Protect the fallible operation so expected failures remain explicitly classified.
     try:
         # Execute the import proof with network-disabled inherited gate conditions and timeout.
         imported = _execute_with_timeout(
@@ -2800,9 +2786,9 @@ def _execute(command: PreparedCommand, root: Path) -> CommandExecution:
     """
     # Start timing immediately before the prepared external command boundary.
     started = time.perf_counter()
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Execute the prepared adapter command while localizing launch and timeout failures.
     try:
-        # Preserve the external command representation and its observed completion outcome.
+        # Retain status and diagnostics for the shared execution observation.
         finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
             command.command,
             cwd=root,
@@ -2897,13 +2883,13 @@ def _pyright_evaluation(
     """
     # Locate the structural boundary used to parse the external result safely.
     start = execution.output.find("{")
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Decode only the structured suffix; absent or malformed JSON cannot prove non-vacuity.
     try:
-        # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
+        # Preserve a mapping candidate or explicit absence for the pyright verdict below.
         report = json.loads(execution.output[start:]) if start >= 0 else None
-    # Translate the expected failure into this mechanism's stable diagnostic path.
+    # Invalid JSON follows the same missing-evidence path as an absent structured suffix.
     except json.JSONDecodeError:
-        # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
+        # Record unusable report evidence without exposing a decoder exception to the gate.
         report = None
     # Process success without parseable structured output cannot establish non-vacuity.
     if not isinstance(report, Mapping):
@@ -3045,19 +3031,17 @@ class ConfiguredToolAdapter:
                 summary=f"{platform.system()} is not in {self.supported_platforms}",
                 supported_platforms=self.supported_platforms,
             )
-        # Protect the fallible operation so expected failures remain explicitly classified.
+        # Prepare the adapter command while keeping configuration refusal distinct from execution.
         try:
-            # Preserve the external command representation and its observed completion outcome.
+            # Retain the validated command contract used by version lookup and execution.
             command = self.prepare(context)
         # Convert field-specific configuration refusal through the shared adapter renderer.
         except ConfigurationProbeError as problem:
             # Return before distribution lookup or command execution can obscure the root cause.
             return self._configuration_failure(context, problem)
-        # Protect the fallible operation so expected failures remain explicitly classified.
         try:
             # Resolve the exact verifier distribution version before command preparation.
             version = _distribution_version(self.distribution)
-        # Translate the expected failure into this mechanism's stable diagnostic path.
         # Missing verifier distribution is explicit unsupported tooling.
         except importlib.metadata.PackageNotFoundError:
             # Preserve prepared command and non-vacuity evidence without executing it.
@@ -3073,9 +3057,9 @@ class ConfiguredToolAdapter:
                 subjects=command.subjects,
                 supported_platforms=self.supported_platforms,
             )
-        # Protect the fallible operation so expected failures remain explicitly classified.
+        # Execute the prepared verifier while keeping launch and timeout failure explicit.
         try:
-            # Preserve the external command representation and its observed completion outcome.
+            # Retain the process observation consumed by this adapter's evaluator.
             execution = _execute(command, context.root)
         # Translate launch and timeout failure separately from a tool-reported verdict.
         except CommandExecutionError as problem:
@@ -3336,7 +3320,6 @@ def main(argv: list[str] | None = None) -> int:
             encoding="utf-8",
             newline="\n",
         )
-    # Return the aggregate process status to the command-line boundary.
     return EXIT_GREEN if report.green else EXIT_RED
 
 

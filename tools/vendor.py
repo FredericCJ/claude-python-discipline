@@ -438,7 +438,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     for problem in problems:
         print(problem)
     print(f"\n{len(problems)} difference(s)." if problems else "\nin step with upstream.")
-    # Return the aggregate process status to the command-line boundary.
     return 1 if problems else 0
 
 
