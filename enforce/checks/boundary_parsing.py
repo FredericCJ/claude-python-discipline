@@ -179,7 +179,7 @@ def _protocol_names(tree: ast.Module) -> set[str]:
     for node in ast.walk(tree):
         # Only class definitions can declare protocol bases or decorators.
         if not isinstance(node, ast.ClassDef):
-            # Advance without interpreting unrelated syntax nodes.
+            # Skip non-class syntax because it cannot declare a local protocol.
             continue
         # Build an unordered set whose each element is a terminal base-class name.
         names = {

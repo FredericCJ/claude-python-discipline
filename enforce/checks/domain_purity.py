@@ -172,7 +172,7 @@ class DomainPurityCheck(ModuleCheck):
         for node in ast.walk(tree):
             # Only class definitions publish inheritance semantics.
             if not isinstance(node, ast.ClassDef):
-                # Advance without interpreting unrelated syntax nodes.
+                # Skip non-callable syntax because it owns no parameter or return annotation.
                 continue
             # Inspect each base-expression element in authored declaration order.
             for base in node.bases:
@@ -204,7 +204,7 @@ class DomainPurityCheck(ModuleCheck):
         for node in ast.walk(tree):
             # Only callable definitions publish parameter and return contracts.
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                # Advance without interpreting unrelated syntax nodes.
+                # Skip non-class syntax because it cannot carry a dataclass decorator.
                 continue
             # Returns are excluded: handing back a fresh list is ordinary and
             # owns nothing of the caller's. The rule is about a parameter the
@@ -264,7 +264,7 @@ class DomainPurityCheck(ModuleCheck):
         for node in ast.walk(tree):
             # Only class definitions can carry dataclass decorators.
             if not isinstance(node, ast.ClassDef):
-                # Advance without interpreting unrelated syntax nodes.
+            # Skip non-subscript syntax because it cannot apply Literal to member values.
                 continue
             # Inspect each decorator-expression element in authored order.
             for decorator in node.decorator_list:
@@ -383,7 +383,7 @@ def _is_literal_union(annotation: ast.expr) -> bool:
     for node in ast.walk(annotation):
         # Only subscript expressions can apply Literal to member values.
         if not isinstance(node, ast.Subscript):
-            # Advance without interpreting unrelated syntax nodes.
+                # Skip non-class syntax because it publishes no inheritance relationship.
             continue
         # Select the subscripted base expression.
         base = node.value

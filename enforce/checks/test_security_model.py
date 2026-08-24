@@ -161,7 +161,7 @@ def test_every_architecture_contract_requires_one_boundary(tmp_path: Path) -> No
     payload = security_payload()
     # Replace the covered contract with an identity absent from local architecture.
     _records(payload, "trust_boundaries")[0]["contracts"] = ["unknown_contract"]
-    # Build the focused malformed model and its configured checker.
+    # Remove one trust-boundary join from an otherwise valid architecture/security model pair.
     check, source = _tree(tmp_path, payload=payload)
     assert _diagnostic(check, source) == "SECMODEL002_CONTRACT_JOIN"
 
@@ -175,7 +175,7 @@ def test_boundary_requires_validation_before_trust(tmp_path: Path) -> None:
     payload = security_payload()
     # Empty the ordered validation steps required before establishing trust.
     _records(payload, "trust_boundaries")[0]["validations"] = []
-    # Build the focused malformed model and its configured checker.
+    # Invert validation-before-trust ordering in one otherwise valid boundary.
     check, source = _tree(tmp_path, payload=payload)
     assert _diagnostic(check, source) == "SECMODEL001_SCHEMA"
 
@@ -189,7 +189,7 @@ def test_boundary_evidence_cannot_escape_the_repository(tmp_path: Path) -> None:
     payload = security_payload()
     # Point trust evidence at a peer path beyond the repository boundary.
     _records(payload, "trust_boundaries")[0]["evidence"] = "../peer/test.py"
-    # Build the focused malformed model and its configured checker.
+    # Point one boundary-evidence path outside the synthetic repository.
     check, source = _tree(tmp_path, payload=payload)
     assert _diagnostic(check, source) == "SECMODEL003_TRUST_BOUNDARY"
 
@@ -203,7 +203,7 @@ def test_data_source_must_join_a_trust_boundary(tmp_path: Path) -> None:
     payload = security_payload()
     # Replace the local trust-boundary source with an unknown peer endpoint.
     _records(payload, "data_classes")[0]["sources"] = ["peer_endpoint"]
-    # Build the focused malformed model and its configured checker.
+    # Name a data source that joins no declared trust boundary.
     check, source = _tree(tmp_path, payload=payload)
     assert _diagnostic(check, source) == "SECMODEL005_EXPOSURE"
 
@@ -217,7 +217,7 @@ def test_data_exposure_names_only_local_roles(tmp_path: Path) -> None:
     payload = security_payload()
     # Replace local role owners with an out-of-scope system integrator.
     _records(payload, "data_classes")[0]["allowed_roles"] = ["system_integrator"]
-    # Build the focused malformed model and its configured checker.
+    # Expose data to a role absent from the local architecture model.
     check, source = _tree(tmp_path, payload=payload)
     assert _diagnostic(check, source) == "SECMODEL005_EXPOSURE"
 

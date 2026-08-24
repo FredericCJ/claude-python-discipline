@@ -350,7 +350,7 @@ def _module_findings(
         )
     # Another check reports invalid syntax; dependency classification yields no false evidence.
     except SyntaxError:
-        # Return the ordered empty finding sequence.
+        # Yield no dependency evidence from a module another checker already found unparsable.
         return []
     # Accumulate finding elements in deterministic import and predicate order.
     findings: list[Finding] = []
@@ -358,7 +358,7 @@ def _module_findings(
     for node in ast.walk(tree):
         # Only imports establish direct dependency edges.
         if not isinstance(node, (ast.Import, ast.ImportFrom)):
-            # Advance without interpreting unrelated syntax nodes.
+            # Skip non-import syntax because it establishes no dependency edge.
             continue
         # Track an unordered set whose each element is a local target path already reported here.
         seen_targets: set[Path] = set()
@@ -402,7 +402,7 @@ class DependencyBoundariesCheck(Check):
         modules = _index(self)
         # Empty or unbounded declarations provide no safe complete dependency view.
         if not modules or self.declaration.root is None:
-            # Return the ordered empty finding sequence.
+            # Yield no dependency findings without both bounded modules and a repository root.
             return []
         # Accumulate finding elements in sorted module-path then syntax order.
         findings: list[Finding] = []

@@ -675,7 +675,7 @@ class ArchitectureModelCheck(Check):
         path = self.declaration.architecture_path()
         # A legacy direct-check fallback has no canonical model for this check to own.
         if path is None:
-            # Return the ordered empty finding sequence.
+            # Skip canonical architecture validation when direct-check fallback supplies no model.
             return []
         # Parse and cross-check the complete architecture model through its typed error channel.
         try:

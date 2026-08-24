@@ -593,7 +593,7 @@ class SecurityModelCheck(Check):
         root = self.declaration.root
         # Legacy direct-check fallbacks lacking any prerequisite have no model join to validate.
         if model_path is None or architecture_path is None or root is None:
-            # Return the ordered empty finding sequence.
+            # Skip security joins when either canonical model or the repository root is absent.
             return []
         # Parse both canonical models and validate their local joins through typed errors.
         try:

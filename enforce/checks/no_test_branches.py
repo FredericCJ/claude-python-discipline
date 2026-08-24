@@ -75,7 +75,7 @@ class NoTestBranchesCheck(ModuleCheck):
         for node in ast.walk(tree):
             # Only statement and expression conditionals create divergent production behavior.
             if not isinstance(node, (ast.If, ast.IfExp)):
-                # Advance without interpreting unrelated syntax nodes.
+                # Skip syntax that cannot create a test-controlled conditional branch.
                 continue
             # A matching literal matters only when the condition reads a plausible switch.
             if not _reads_a_switch(node.test):

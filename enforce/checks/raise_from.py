@@ -105,7 +105,7 @@ class RaiseFromCheck(ModuleCheck):
         for node in ast.walk(handler):
             # Only raise statements can preserve or sever exception causality.
             if not isinstance(node, ast.Raise):
-                # Advance without interpreting unrelated syntax nodes.
+                # Skip non-raise syntax because it cannot preserve exception causality.
                 continue
             # A bare `raise` re-raises and preserves the original traceback. It is
             # correct, and is deliberately not flagged -- see meta/CONFLICTS C4.

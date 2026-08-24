@@ -64,7 +64,7 @@ class LibraryLoggingCheck(ModuleCheck):
         for node in ast.walk(tree):
             # Only method-style calls can match the configuration shapes owned here.
             if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
-                # Advance without interpreting unrelated syntax nodes.
+                # Skip syntax that cannot be a method-style logging configuration call.
                 continue
             # Select the terminal called attribute for closed-vocabulary classification.
             attribute = node.func.attr

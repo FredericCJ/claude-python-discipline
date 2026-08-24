@@ -143,7 +143,7 @@ class DocStyleCheck(ModuleCheck):
         for node in ast.walk(tree):
             # Only functions and classes own Python docstring entity slots here.
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-                # Advance without interpreting unrelated syntax nodes.
+                # Skip syntax without a function or class docstring entity slot.
                 continue
             # Extract the entity's Python docstring without inherited cleanup.
             docstring = ast.get_docstring(node)
@@ -277,7 +277,7 @@ class DocStyleCheck(ModuleCheck):
         for node in ast.walk(tree):
             # Only classes own class-level value blocks.
             if not isinstance(node, ast.ClassDef):
-                # Advance without interpreting unrelated syntax nodes.
+                # Skip non-class syntax because it owns no class-level value blocks.
                 continue
             # Inspect each class-body named assignment pair in source order.
             for target, lineno in _named_assignments_in(node.body):

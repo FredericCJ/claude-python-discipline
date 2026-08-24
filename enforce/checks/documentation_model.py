@@ -769,7 +769,7 @@ class DocumentationModelCheck(Check):
         """
         # A legacy or synthetic declaration with no source has no v5 model artifact to validate.
         if self.declaration.source is None:
-            # Return the ordered empty finding sequence.
+            # Skip v5 model validation for legacy or synthetic declarations with no source.
             return []
         # Parse the complete model so any schema defect is captured through its typed channel.
         try:

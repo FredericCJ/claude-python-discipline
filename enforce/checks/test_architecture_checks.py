@@ -229,7 +229,7 @@ def test_source_roles_rejects_an_unmapped_source_directory(tmp_path: Path) -> No
     check.declaration = declaration
     # Preserve ordered findings from a deliberately narrower invocation origin.
     findings = check.run([source / "pkg/domain"])
-    # Compare each finding element's identity in diagnostic order.
+    # Require the exact unmapped-source-role diagnostic for the synthetic directory.
     assert [finding.diagnostic_id for finding in findings] == [
         "ARCH018_UNMAPPED_SOURCE"
     ]
@@ -252,7 +252,7 @@ def test_source_roles_rejects_an_absent_declared_root(tmp_path: Path) -> None:
     check.declaration = declaration
     # Preserve ordered findings from the repository root so absence cannot hide.
     findings = check.run([tmp_path])
-    # Compare each finding element's identity in diagnostic order.
+    # Require the exact absent-source-root diagnostic for the declared role.
     assert [finding.diagnostic_id for finding in findings] == [
         "ARCH018_SOURCE_ROOT_MISSING"
     ]
@@ -297,7 +297,7 @@ def test_application_to_concrete_adapter_has_its_own_diagnostic(
     check.declaration = declaration
     # Preserve ordered findings to distinguish selection from ownership diagnostics.
     findings = check.run([source])
-    # Compare each finding element's identity in diagnostic order.
+    # Require the dedicated application-to-concrete-adapter boundary diagnostic.
     assert [finding.diagnostic_id for finding in findings] == [
         "ARCH019_APPLICATION_TO_ADAPTER"
     ]
@@ -320,7 +320,7 @@ def test_second_adapter_importing_owned_technology_has_distinct_diagnostic(
     check.declaration = declaration
     # Preserve ordered findings to isolate direct foreign-ownership breach.
     findings = check.run([source])
-    # Compare each finding element's identity in diagnostic order.
+    # Require the distinct second-adapter technology-ownership diagnostic.
     assert [finding.diagnostic_id for finding in findings] == [
         "ARCH020_FOREIGN_OWNER_BREACH"
     ]
@@ -341,7 +341,7 @@ def test_domain_importing_shell_is_an_outward_policy_edge(tmp_path: Path) -> Non
     check.declaration = declaration
     # Preserve ordered findings to isolate the generic policy-direction diagnostic.
     findings = check.run([source])
-    # Compare each finding element's identity in diagnostic order.
+    # Require the outward domain-to-shell dependency diagnostic.
     assert [finding.diagnostic_id for finding in findings] == [
         "ARCH001_OUTWARD_POLICY_EDGE"
     ]
@@ -367,7 +367,7 @@ def test_one_adapter_boundary_cannot_import_another(tmp_path: Path) -> None:
     check.declaration = declaration
     # Preserve ordered findings to isolate adapter-to-adapter coupling.
     findings = check.run([source])
-    # Compare each finding element's identity in diagnostic order.
+    # Require the peer-adapter boundary diagnostic independently from technology ownership.
     assert [finding.diagnostic_id for finding in findings] == [
         "ARCH003_ADAPTER_TO_ADAPTER"
     ]
@@ -402,7 +402,7 @@ def test_architecture_unit_must_match_project_unit(tmp_path: Path) -> None:
     check.declaration = declaration
     # Preserve ordered findings to isolate canonical unit disagreement.
     findings = check.run([source])
-    # Compare each finding element's identity in diagnostic order.
+    # Require the project/architecture unit-identity mismatch diagnostic.
     assert [finding.diagnostic_id for finding in findings] == [
         "ARCH021_UNIT_MISMATCH"
     ]
@@ -432,7 +432,7 @@ def test_volatile_decision_requires_a_change_scenario(tmp_path: Path) -> None:
     check.declaration = declaration
     # Preserve ordered findings to isolate decision incompleteness.
     findings = check.run([source])
-    # Compare each finding element's identity in diagnostic order.
+    # Require the volatile-decision scenario-coverage diagnostic.
     assert [finding.diagnostic_id for finding in findings] == [
         "ARCH021_DECISION_INCOMPLETE"
     ]
@@ -462,7 +462,7 @@ def test_component_role_rejects_a_peer_repository_name(tmp_path: Path) -> None:
     check.declaration = declaration
     # Preserve ordered findings to isolate peer identity leakage.
     findings = check.run([source])
-    # Compare each finding element's identity in diagnostic order.
+    # Require the single-component role model to reject a peer repository identity.
     assert [finding.diagnostic_id for finding in findings] == [
         "ARCH023_ROLE_IDENTITY"
     ]
@@ -498,7 +498,7 @@ def test_component_model_rejects_a_deployment_endpoint(tmp_path: Path) -> None:
     check.declaration = declaration
     # Preserve ordered findings to isolate counterpart identity leakage.
     findings = check.run([source])
-    # Compare each finding element's identity in diagnostic order.
+    # Require the component model to reject a top-level deployment endpoint.
     assert [finding.diagnostic_id for finding in findings] == [
         "ARCH023_COUNTERPART_IDENTITY"
     ]
@@ -522,7 +522,7 @@ def test_empty_resource_view_requires_an_explanation(tmp_path: Path) -> None:
     check.declaration = declaration
     # Preserve ordered findings to isolate resource-ownership incompleteness.
     findings = check.run([source])
-    # Compare each finding element's identity in diagnostic order.
+    # Require an empty resource view to carry its explicit explanatory diagnostic.
     assert [finding.diagnostic_id for finding in findings] == [
         "ARCH022_RESOURCE_OWNER"
     ]

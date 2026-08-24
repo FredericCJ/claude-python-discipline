@@ -152,7 +152,7 @@ class PlanApplyCheck(ModuleCheck):
         for node in ast.walk(tree):
             # Only comparisons with at least one right-hand operand can encode transitions.
             if not isinstance(node, ast.Compare) or not node.comparators:
-                # Advance without interpreting unrelated syntax nodes.
+                # Skip syntax that cannot compare a current state with expected transitions.
                 continue
             # Select the left comparison expression that may carry state identity.
             left = node.left

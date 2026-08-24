@@ -262,7 +262,7 @@ def test_resource_and_recovery_ids_join_architecture(tmp_path: Path) -> None:
     # Replace explicit absence with an architecture resource identity that does not exist.
     record["resources"] = ["missing_resource"]
     record["resource_absence"] = None
-    # Build the focused malformed model and its configured checker.
+    # Break resource and recovery identity joins against the architecture model.
     check, source = _tree(tmp_path, active=active, payload=payload)
     assert _diagnostic(check, source) == "OPMODEL003_OWNERSHIP_JOIN"
 
@@ -284,7 +284,7 @@ def test_activated_interruption_requires_executable_evidence(tmp_path: Path) -> 
     # Remove executable proof and substitute an inadmissible prose excuse.
     interruption["test"] = None
     interruption["not_applicable"] = "Interruption is ignored."
-    # Build the focused malformed model and its configured checker.
+    # Activate interruption handling while removing its executable evidence.
     check, source = _tree(tmp_path, active=active, payload=payload)
     assert _diagnostic(check, source) == "OPMODEL004_LIFECYCLE"
 
@@ -298,7 +298,7 @@ def test_safe_and_degraded_states_are_both_required(tmp_path: Path) -> None:
     payload = operational_payload()
     # Replace the degraded state kind so no failure terminal state remains.
     _records(payload, "states")[1]["kind"] = "safe"
-    # Build the focused malformed model and its configured checker.
+    # Remove required safe and degraded operating states from the model.
     check, source = _tree(tmp_path, payload=payload)
     assert _diagnostic(check, source) == "OPMODEL005_STATE_OUTCOME"
 
@@ -312,7 +312,7 @@ def test_non_exception_terminal_outcome_is_observable(tmp_path: Path) -> None:
     payload = operational_payload()
     # Mark the only terminal outcome exceptional, erasing non-exception observability.
     _records(payload, "outcomes")[0]["exceptional"] = True
-    # Build the focused malformed model and its configured checker.
+    # Make a non-exception terminal outcome unobservable.
     check, source = _tree(tmp_path, payload=payload)
     assert _diagnostic(check, source) == "OPMODEL005_STATE_OUTCOME"
 
@@ -335,7 +335,7 @@ def test_activated_input_surface_requires_a_finite_budget(tmp_path: Path) -> Non
     budget["bound"] = None
     budget["measurement"] = None
     budget["not_applicable"] = "All inputs are accepted."
-    # Build the focused malformed model and its configured checker.
+    # Activate an input surface without its finite resource budget.
     check, source = _tree(tmp_path, active=active, payload=payload)
     assert _diagnostic(check, source) == "OPMODEL006_BUDGET"
 
@@ -352,7 +352,7 @@ def test_runtime_identity_names_version_and_build(tmp_path: Path) -> None:
     assert isinstance(identity, dict)
     # Retain version while removing the build identity needed to distinguish artifacts.
     identity["runtime_fields"] = ["version"]
-    # Build the focused malformed model and its configured checker.
+    # Remove version and build dimensions from the runtime identity.
     check, source = _tree(tmp_path, payload=payload)
     assert _diagnostic(check, source) == "OPMODEL007_IDENTITY_PLATFORM"
 

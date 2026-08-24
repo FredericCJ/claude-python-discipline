@@ -115,7 +115,7 @@ class SingleWiringPointCheck(ModuleCheck):
         for node in ast.walk(tree):
             # Only callable definitions publish type signatures.
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                # Advance without interpreting unrelated syntax nodes.
+                # Skip non-callable syntax because it publishes no API type signature.
                 continue
             # Private helpers do not form the published API subject of this rule.
             if node.name.startswith("_"):

@@ -174,7 +174,7 @@ def _parameters_by_function(tree: ast.Module) -> dict[str, frozenset[str]]:
     for node in ast.walk(tree):
         # Only function definitions own caller-supplied parameters.
         if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            # Advance without interpreting unrelated syntax nodes.
+            # Skip non-callable syntax because it owns no caller-supplied parameters.
             continue
         # Select the complete Python argument declaration.
         args = node.args
