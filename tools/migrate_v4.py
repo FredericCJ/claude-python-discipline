@@ -97,9 +97,7 @@ class MigrationPlan:
 
         @return true when at least one error diagnostic exists
         """
-        # Treat the current item as the candidate element consumed by the enclosing
-        # Details: transformation.
-        # Return true when at least one error diagnostic exists to the caller.
+        # Any error diagnostic forbids apply; warnings preserve a reviewable usable plan.
         return any(item.severity == "error" for item in self.diagnostics)
 
     @property
@@ -108,7 +106,7 @@ class MigrationPlan:
 
         @return true when apply would replace bytes
         """
-        # Return true when apply would replace bytes to the caller.
+        # Exact bytes, including line endings, decide whether atomic replacement is needed.
         return self.before != self.after
 
 
@@ -147,7 +145,6 @@ def _header_name(line: str) -> str | None:
     """
     # Preserve the optional pattern match that carries the reported analysis count.
     matched = TABLE_HEADER.match(line.rstrip("\r\n"))
-    # Return table path without brackets, or None for ordinary content to the caller.
     return None if matched is None else matched.group(1).strip()
 
 
@@ -163,46 +160,37 @@ def _discipline_span(text: str) -> tuple[int, int] | None:
     starts: list[int] = []
     # Locate the structural boundary used to parse the external result safely.
     offset = 0
-    # Preserve the current decoded diagnostic line before location normalization.
-    # Advance discipline span through the current input element in declared order.
     for line in lines:
         starts.append(offset)
         # Locate the structural boundary used to parse the external result safely.
         offset += len(line)
-    # Compute start line using None for later discipline span logic.
     start_line: int | None = None
-    # Compute end line using len for later discipline span logic.
     end_line = len(lines)
-    # Preserve the current decoded diagnostic line before location normalization.
-    # Advance discipline span through the current input element in declared order.
+    # Each indexed line may start the declaration family or the first following TOML table.
     for index, line in enumerate(lines):
-        # Normalize the current repository path to its portable baseline key spelling.
+        # The normalized table name is absent for ordinary content lines.
         name = _header_name(line)
         # Use the absence path when start line has no available value.
         if start_line is None:
-            # Select the guarded path only after `name == DISCIPLINE_HEADER` is satisfied.
+            # Only the exact root discipline table begins the replaceable span.
             if name == DISCIPLINE_HEADER:
-                # Compute start line using index for later discipline span logic.
+                # Retain this line index as the inclusive declaration-family start.
                 start_line = index
-            # Advance after the current candidate has been conclusively excluded.
+            # Until that root appears, subordinate-looking text has no migration ownership.
             continue
-        # Select the guarded path only after `name is not None and (not
-        # Details: name.startswith(f'{DISCIPLINE_HEADER}.'))` is satisfied.
+        # A new unrelated table closes the contiguous discipline table family.
         if name is not None and not name.startswith(f"{DISCIPLINE_HEADER}."):
-            # Compute end line using index for later discipline span logic.
+            # Retain this line index as the exclusive declaration-family end.
             end_line = index
             # Stop the scan once the decisive match has been established.
             break
     # Use the absence path when start line has no available value.
     if start_line is None:
-        # Return half-open span, or None when v3 was never configured to the caller.
+        # Absence is reported to the planner, which supplies the actionable diagnostic.
         return None
     # Locate the structural boundary used to parse the external result safely.
     start = starts[start_line]
-    # Compute end using starts[end_line] if end_line < len(starts) else len(text) for later
-    # Details: discipline span logic.
     end = starts[end_line] if end_line < len(starts) else len(text)
-    # Return half-open span, or None when v3 was never configured to the caller.
     return start, end
 
 
@@ -215,36 +203,28 @@ def _source_roots(document: Mapping[str, object], root: Path) -> tuple[PurePosix
     @param root governed repository root
     @return existing repository-relative source roots
     """
-    # Compute tool using document.get for later source roots logic.
+    # Walk the optional setuptools package-discovery tables without accepting scalar impostors.
     tool = document.get("tool", {})
-    # Select the guarded path only after `isinstance(tool, dict)` is satisfied.
     if isinstance(tool, dict):
-        # Compute setuptools using tool.get for later source roots logic.
+        # Setuptools owns declared package discovery beneath the general tool namespace.
         setuptools = tool.get("setuptools", {})
-        # Select the guarded path only after `isinstance(setuptools, dict)` is satisfied.
         if isinstance(setuptools, dict):
-            # Compute packages using setuptools.get for later source roots logic.
+            # Package configuration may itself be absent or a non-table legacy value.
             packages = setuptools.get("packages", {})
-            # Select the guarded path only after `isinstance(packages, dict)` is satisfied.
             if isinstance(packages, dict):
-                # Compute find using packages.get for later source roots logic.
+                # The find table is the only supported source-root declaration in this migration.
                 find = packages.get("find", {})
-                # Select the guarded path only after `isinstance(find, dict)` is satisfied.
                 if isinstance(find, dict):
-                    # Compute where using find.get for later source roots logic.
+                    # Each where element is one build-declared source root in authored order.
                     where = find.get("where")
-                    # Select the guarded path only after `isinstance(where, list) and where` is
-                    # Details: satisfied.
                     if isinstance(where, list) and where:
-                        # Treat the current item as the candidate element consumed by the
-                        # Details: enclosing transformation.
-                        # Return existing repository-relative source roots to the caller.
+                        # Preserve declaration order while normalizing each root to POSIX syntax.
                         return tuple(PurePosixPath(str(item)) for item in where)
     # Refuse the target when its declared source directory is absent.
     if (root / "src").is_dir():
-        # Return existing repository-relative source roots to the caller.
+        # Conventional src layout is the sole fallback when build metadata is silent.
         return (PurePosixPath("src"),)
-    # Return existing repository-relative source roots to the caller.
+    # Empty forces the planner to report that it cannot infer production scope.
     return ()
 
 
@@ -256,16 +236,14 @@ def _declaration_table(document: Mapping[str, object]) -> Mapping[str, object]:
         deliberately unused.
     @return declaration mapping, or an empty mapping for absent or invalid input
     """
-    # Compute tool using document.get for later declaration table logic.
+    # Decode only mapping-shaped tool and discipline tables from untrusted TOML structure.
     tool = document.get("tool", {})
-    # Select the empty-or-disabled path when isinstance(tool, dict) has no usable value.
     if not isinstance(tool, dict):
-        # Return declaration mapping, or an empty mapping for absent or invalid input to the
-        # Details: caller.
+        # A scalar tool value cannot contain a valid discipline declaration.
         return {}
-    # Compute table using tool.get for later declaration table logic.
+    # Preserve the exact v3 table for field accounting and conservative translation.
     table = tool.get("agent-discipline", {})
-    # Return declaration mapping, or an empty mapping for absent or invalid input to the caller.
+    # Malformed scalar declarations contribute no trustworthy migration facts.
     return table if isinstance(table, dict) else {}
 
 
@@ -284,13 +262,11 @@ def _confined_roots(
     safe: list[PurePosixPath] = []
     # Each diagnostics element is one unsafe-root refusal in candidate order.
     diagnostics: list[Diagnostic] = []
-    # Treat the current candidate as the candidate element consumed by the enclosing
-    # Details: transformation.
-    # Advance confined roots through the current input element in declared order.
+    # Each candidate is checked lexically and after filesystem resolution before admission.
     for candidate in candidates:
-        # Compute spelling using candidate.as posix for later confined roots logic.
+        # Spelling is the portable authored form used by both Windows and POSIX escape checks.
         spelling = candidate.as_posix()
-        # Unpack lexical escape, part using ( for later confined roots logic.
+        # Lexical escape covers absolute, drive-qualified, parent, and empty-effective paths.
         lexical_escape = (
             candidate.is_absolute()
             or bool(PureWindowsPath(spelling).drive)
@@ -306,7 +282,6 @@ def _confined_roots(
         except ValueError:
             # True enables resolved escape; false selects its disabled alternative.
             resolved_escape = True
-        # Select the guarded path only after `lexical_escape or resolved_escape` is satisfied.
         if lexical_escape or resolved_escape:
             diagnostics.append(
                 Diagnostic(
@@ -317,7 +292,6 @@ def _confined_roots(
             )
         else:
             safe.append(candidate)
-    # Return safe roots and one diagnostic per rejected spelling or resolution to the caller.
     return tuple(safe), diagnostics
 
 
@@ -342,28 +316,20 @@ def _legacy_aliases(table: Mapping[str, object]) -> dict[str, str]:
     }
     # Retain the immutable source representation consumed by subsequent analysis.
     raw = table.get("layers", {})
-    # Select the empty-or-disabled path when isinstance(raw, dict) has no usable value.
     if not isinstance(raw, dict):
-        # Compute detail using "the v3 layers declaration is not a TOML table" for later legacy
-        # Details: aliases logic.
+        # Preserve one stable explanation for a structurally unusable legacy layers value.
         detail = "the v3 layers declaration is not a TOML table"
-        # Propagate the localized failure so callers cannot mistake it for success.
         raise MigrationError(detail)
-    # Resolve the repository-confined path used by this operation before filesystem access.
-    # Advance legacy aliases through the current input element in declared order.
+    # Each legacy segment/target pair extends the canonical aliases after target validation.
     for segment, target in raw.items():
-        # Compute role using ROLE TARGETS.get for later legacy aliases logic.
+        # Translate legacy target vocabulary to the v4 canonical role name.
         role = ROLE_TARGETS.get(str(target))
         # Use the absence path when role has no available value.
         if role is None:
-            # Compute detail using f"legacy layer {segment!r} has unknown target {target!r}" for
-            # Details: later legacy aliases logic.
+            # Include both authored fields so the operator can repair the exact mapping.
             detail = f"legacy layer {segment!r} has unknown target {target!r}"
-            # Propagate the localized failure so callers cannot mistake it for success.
             raise MigrationError(detail)
-        # Update  legacy aliases state only after the required source facts are available.
         aliases[str(segment)] = role
-    # Return source segment to v4 role to the caller.
     return aliases
 
 
@@ -379,30 +345,25 @@ def _role_prefix(
         is deliberately unused.
     @return role and role-owning prefix, or None when inference is unsafe
     """
-    # Compute parts using relative.parts for later role prefix logic.
+    # Search directory segments before applying the narrower module-stem and package fallbacks.
     parts = relative.parts
-    # Locate the structural boundary used to parse the external result safely.
-    # Advance role prefix through the current input element in declared order.
+    # Each index/part pair is one possible explicit role boundary before the filename.
     for index, part in enumerate(parts[:-1]):
-        # Compute role using aliases.get for later role prefix logic.
+        # Resolve the current segment against canonical and v3-declared aliases.
         role = aliases.get(part)
-        # Use the available-value path only when role is present.
         if role is not None:
-            # Return role and role-owning prefix, or None when inference is unsafe to the
-            # Details: caller.
+            # The owning prefix ends exactly at the segment that supplied the role.
             return role, PurePosixPath(*parts[: index + 1])
-    # Compute stem role using aliases.get for later role prefix logic.
+    # Single-file role modules may encode the role in their stem rather than a directory.
     stem_role = aliases.get(PurePosixPath(parts[-1]).stem)
-    # Use the available-value path only when stem role is present.
     if stem_role is not None:
-        # Return role and role-owning prefix, or None when inference is unsafe to the caller.
+        # A stem-classified module is its own role-owning boundary.
         return stem_role, relative
-    # Select the guarded path only after `len(parts) == PACKAGE_ROOT_PARTS and parts[-1] in
-    # Details: {'__init__.py', '__main__.py'}` is satisfied.
+    # Top-level package entry points belong to shell only at the exact package-root depth.
     if len(parts) == PACKAGE_ROOT_PARTS and parts[-1] in {"__init__.py", "__main__.py"}:
-        # Return role and role-owning prefix, or None when inference is unsafe to the caller.
+        # Retain the individual entry-point file because no enclosing role directory exists.
         return "shell", relative
-    # Return role and role-owning prefix, or None when inference is unsafe to the caller.
+    # None forces discovery to report rather than guess an architectural role.
     return None
 
 
@@ -426,12 +387,9 @@ def _discover_roles(
     found: dict[str, set[PurePosixPath]] = {role: set() for role in ROLE_TARGETS.values()}
     # Each diagnostics element is one role-discovery refusal in source traversal order.
     diagnostics: list[Diagnostic] = []
-    # Select source root as the current element from source_roots while discover roles preserves
-    # Details: traversal order.
-    # Advance discover roles through the current input element in declared order.
+    # Traverse each declared import root independently so diagnostics retain its identity.
     for source_root in source_roots:
-        # Compute absolute using root / Path(source_root.as_posix()) for later discover roles
-        # Details: logic.
+        # Absolute is the confined filesystem directory corresponding to this declared root.
         absolute = root / Path(source_root.as_posix())
         # Refuse the target when its declared source directory is absent.
         if not absolute.is_dir():
@@ -442,18 +400,16 @@ def _discover_roles(
                     f"inferred source root {source_root} does not exist",
                 )
             )
-            # Advance after the current candidate has been conclusively excluded.
+            # Continue so other valid roots still receive a complete migration inventory.
             continue
-        # Resolve the repository-confined path used by this operation before filesystem access.
-        # Advance discover roles through the current input element in declared order.
+        # Each path is one production Python module in lexical filesystem order.
         for path in sorted(absolute.rglob("*.py")):
-            # Select the guarded path only after `'__pycache__' in path.parts` is satisfied.
+            # Interpreter caches are derived artifacts, never production role evidence.
             if "__pycache__" in path.parts:
-                # Advance after the current candidate has been conclusively excluded.
+                # Exclude this artifact without affecting subsequent source modules.
                 continue
-            # Compute relative using PurePosixPath for later discover roles logic.
+            # Classify the source-root-relative module path through explicit segment aliases.
             relative = PurePosixPath(path.relative_to(absolute).as_posix())
-            # Compute classified using  role prefix for later discover roles logic.
             classified = _role_prefix(relative, aliases)
             # Use the absence path when classified has no available value.
             if classified is None:
@@ -464,15 +420,13 @@ def _discover_roles(
                         f"{source_root / relative} has no v3 role; move it or map its segment",
                     )
                 )
-                # Advance after the current candidate has been conclusively excluded.
+                # Keep inventorying so the preview lists every unmapped production module.
                 continue
-            # Unpack prefix, role using classified for later discover roles logic.
             role, prefix = classified
             found[role].add(source_root / prefix)
     # Each compact key is a populated role and each value is its lexically sorted path tuple;
     # mapping key order is deliberately unused.
     compact = {role: tuple(sorted(paths, key=str)) for role, paths in found.items() if paths}
-    # Return role paths and fail-closed diagnostics to the caller.
     return compact, diagnostics
 
 
@@ -490,36 +444,28 @@ def _adapter_boundaries(
     """
     # Collect unique boundaries element values; their order is deliberately unordered.
     boundaries: set[PurePosixPath] = set()
-    # Select adapter as the current element from role_paths.get("adapters", ()) while adapter
-    # Details: boundaries preserves traversal order.
-    # Advance adapter boundaries through the current input element in declared order.
+    # Each adapter role path contributes itself or its independently selectable children.
     for adapter in role_paths.get("adapters", ()):
-        # Compute absolute using root / Path(adapter.as_posix()) for later adapter boundaries
-        # Details: logic.
+        # Resolve the inferred role path only for local filesystem shape inspection.
         absolute = root / Path(adapter.as_posix())
         # Select the regular-file path only when `absolute.is_file()` is satisfied.
         if absolute.is_file():
             boundaries.add(adapter)
-            # Advance after the current candidate has been conclusively excluded.
+            # A module adapter is already the smallest selectable boundary.
             continue
         # Collect unique candidates element values; their order is deliberately unordered.
         candidates: set[PurePosixPath] = set()
         # Refuse the target when its declared source directory is absent.
         if absolute.is_dir():
-            # Select child as the current element from sorted(absolute.iterdir()) while adapter
-            # Details: boundaries preserves traversal order.
-            # Advance adapter boundaries through the current input element in declared order.
+            # Each child is assessed as a package boundary or standalone module boundary.
             for child in sorted(absolute.iterdir()):
-                # Compute is package using child.is dir for later adapter boundaries logic.
+                # Package means a directory containing Python; module excludes package init.
                 is_package = child.is_dir() and any(child.rglob("*.py"))
-                # Compute is module using child.suffix == ".py" and child.name != "__init__.py"
-                # Details: for later adapter boundaries logic.
                 is_module = child.suffix == ".py" and child.name != "__init__.py"
-                # Select the guarded path only after `is_package or is_module` is satisfied.
+                # Only independently importable Python-bearing children become boundaries.
                 if is_package or is_module:
                     candidates.add(adapter / child.name)
         boundaries.update(candidates or {adapter})
-    # Return non-overlapping adapter package or module paths to the caller.
     return tuple(sorted(boundaries, key=str))
 
 
@@ -531,26 +477,22 @@ def _contracts(document: Mapping[str, object]) -> Iterable[Mapping[str, object]]
         deliberately unused.
     @return mapping records, silently excluding malformed non-record values
     """
-    # Compute tool using document.get for later contracts logic.
+    # Walk only mapping-shaped inline import-linter structure.
     tool = document.get("tool", {})
-    # Select the empty-or-disabled path when isinstance(tool, dict) has no usable value.
     if not isinstance(tool, dict):
-        # Return mapping records, silently excluding malformed non-record values to the caller.
+        # Malformed tool structure contains no safely enumerable contracts.
         return ()
-    # Compute importlinter using tool.get for later contracts logic.
+    # Preserve the import-linter subtable separately from unrelated tools.
     importlinter = tool.get("importlinter", {})
-    # Select the empty-or-disabled path when isinstance(importlinter, dict) has no usable value.
     if not isinstance(importlinter, dict):
-        # Return mapping records, silently excluding malformed non-record values to the caller.
+        # A scalar import-linter value cannot own contract records.
         return ()
     # Retain the immutable source representation consumed by subsequent analysis.
     raw = importlinter.get("contracts", [])
-    # Select the empty-or-disabled path when isinstance(raw, list) has no usable value.
     if not isinstance(raw, list):
-        # Return mapping records, silently excluding malformed non-record values to the caller.
+        # Non-list contracts are structurally unusable and contribute nothing inferred.
         return ()
-    # Treat the current item as the candidate element consumed by the enclosing transformation.
-    # Return mapping records, silently excluding malformed non-record values to the caller.
+    # Each returned element is one mapping-shaped contract in authored order.
     return tuple(item for item in raw if isinstance(item, dict))
 
 
@@ -566,34 +508,25 @@ def _legacy_foreign_names(root: Path, project: Mapping[str, object]) -> tuple[st
     # Each documents element is one decoded import-linter configuration, ordered as pyproject
     # then optional standalone file.
     documents: list[Mapping[str, object]] = [project]
-    # Compute standalone using root / "importlinter.toml" for later legacy foreign names logic.
     standalone = root / "importlinter.toml"
     # Select the regular-file path only when `standalone.is_file()` is satisfied.
     if standalone.is_file():
         documents.append(tomllib.loads(standalone.read_text(encoding="utf-8")))
     # Collect unique names element values; their order is deliberately unordered.
     names: set[str] = set()
-    # Inspect each decoded configuration mapping in pyproject-then-standalone order.
-    # Advance legacy foreign names through the current input element in declared order.
+    # Each document contributes standalone or inline contracts in deterministic source order.
     for document in documents:
-        # Select contract as the current element from _contracts(document) while legacy foreign
-        # Details: names preserves traversal order.
-        # Advance legacy foreign names through the current input element in declared order.
+        # Each contract is one mapping-shaped import-linter declaration.
         for contract in _contracts(document):
-            # Select the guarded path only after `'ARCH-004' not in str(contract.get('name',
-            # Details: ''))` is satisfied.
+            # Only the legacy ARCH-004 registration contract carries foreign-root ownership data.
             if "ARCH-004" not in str(contract.get("name", "")):
-                # Advance after the current candidate has been conclusively excluded.
+                # Unrelated architectural contracts have no migration meaning here.
                 continue
-            # Compute forbidden using contract.get for later legacy foreign names logic.
+            # Forbidden module entries encode the registered third-party import roots.
             forbidden = contract.get("forbidden_modules", [])
-            # Select the guarded path only after `isinstance(forbidden, list)` is satisfied.
             if isinstance(forbidden, list):
-                # Treat the current item as the candidate element consumed by the enclosing
-                # Details: transformation.
+                # Each item contributes its top-level import name; set order is deliberately unused.
                 names.update(str(item).partition(".")[0] for item in forbidden)
-    # Normalize the current repository path to its portable baseline key spelling.
-    # Return unique import roots in lexical order to the caller.
     return tuple(sorted(name for name in names if name))
 
 
@@ -609,23 +542,19 @@ def _import_roots(path: Path) -> set[str]:
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     # Translate the expected failure into this mechanism's stable diagnostic path.
     except (OSError, SyntaxError, UnicodeError):
-        # Return imported top-level names; malformed source produces an empty set to the caller.
+        # Unreadable source supplies no trustworthy import-ownership evidence.
         return set()
     # Collect unique roots element values; their order is deliberately unordered.
     roots: set[str] = set()
-    # Treat the current node as the candidate element consumed by the enclosing transformation.
-    # Advance import roots through the current input element in declared order.
+    # Inspect every syntax node for direct absolute import forms only.
     for node in ast.walk(tree):
-        # Select the guarded path only after `isinstance(node, ast.Import)` is satisfied.
+        # Plain imports may contribute several aliases, each reduced to its top-level root.
         if isinstance(node, ast.Import):
-            # Select alias as the current element from node.names) while import roots preserves
-            # Details: traversal order.
+            # Each alias contributes one imported root; set order is deliberately unused.
             roots.update(alias.name.partition(".")[0] for alias in node.names)
-        # Select the guarded path only after `isinstance(node, ast.ImportFrom) and node.level ==
-        # Details: 0 and node.module` is satisfied.
+        # Absolute from-imports contribute their declared module root; relatives are local.
         elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
             roots.add(node.module.partition(".")[0])
-    # Return imported top-level names; malformed source produces an empty set to the caller.
     return roots
 
 
@@ -643,7 +572,7 @@ def _containing_boundary(
         longest containing boundary wins.
     @return containing boundary or None outside all of them
     """
-    # Compute relative using PurePosixPath for later containing boundary logic.
+    # Compare a portable repository-relative file identity against every candidate boundary.
     relative = PurePosixPath(path.relative_to(root).as_posix())
     # Each matches element is one containing adapter boundary in supplied boundary order.
     matches = [
@@ -651,7 +580,6 @@ def _containing_boundary(
         for boundary in boundaries
         if relative == boundary or relative.is_relative_to(boundary)
     ]
-    # Return containing boundary or None outside all of them to the caller.
     return matches[0] if len(matches) == 1 else None
 
 
@@ -675,26 +603,21 @@ def _foreign_ownership(
     # Each holders key is a foreign import root and each value lists importing module paths in
     # source traversal order; mapping key order is deliberately unused.
     holders: dict[str, list[Path]] = {name: [] for name in names}
-    # Select source root as the current element from source_roots while foreign ownership
-    # Details: preserves traversal order.
-    # Advance foreign ownership through the current input element in declared order.
+    # Walk every declared production root while tolerating roots already diagnosed as absent.
     for source_root in source_roots:
-        # Compute absolute using root / Path(source_root.as_posix()) for later foreign ownership
-        # Details: logic.
+        # Absolute is the filesystem anchor used solely for deterministic module discovery.
         absolute = root / Path(source_root.as_posix())
         # Refuse the target when its declared source directory is absent.
         if not absolute.is_dir():
-            # Advance after the current candidate has been conclusively excluded.
+            # Role discovery owns the missing-root diagnostic, so ownership avoids duplication.
             continue
-        # Resolve the repository-confined path used by this operation before filesystem access.
-        # Advance foreign ownership through the current input element in declared order.
+        # Each path is one production module inspected in lexical order.
         for path in sorted(absolute.rglob("*.py")):
-            # Compute imported using  import roots for later foreign ownership logic.
+            # Imported contains unique direct absolute roots for this module; set order is unused.
             imported = _import_roots(path)
-            # Normalize the current repository path to its portable baseline key spelling.
-            # Advance foreign ownership through the current input element in declared order.
+            # Each name is one legacy-registered foreign root tested against this module.
             for name in names:
-                # Select the guarded path only after `name in imported` is satisfied.
+                # Record only observed import sites for later boundary attribution.
                 if name in imported:
                     holders[name].append(path)
     # Each ownership key is a foreign import root and each value is its unique adapter boundary;
@@ -702,8 +625,6 @@ def _foreign_ownership(
     ownership: dict[str, PurePosixPath] = {}
     # Each diagnostics element is one stale or ambiguous ownership report in import-name order.
     diagnostics: list[Diagnostic] = []
-    # Normalize the current repository path to its portable baseline key spelling.
-    # Advance foreign ownership through the current input element in declared order.
     for name in names:
         # Preserve paths element values in deterministic source order.
         paths = holders[name]
@@ -716,14 +637,12 @@ def _foreign_ownership(
                     f"ARCH-004 names {name!r}, but production source imports no such root",
                 )
             )
-            # Advance after the current candidate has been conclusively excluded.
+            # A stale registration has no owner to infer; continue with the remaining names.
             continue
         # Collect unique owners element values; their order is deliberately unordered.
         owners = {_containing_boundary(path, root, boundaries) for path in paths}
-        # Select the guarded path only after `None in owners or len(owners) != 1` is satisfied.
         if None in owners or len(owners) != 1:
-            # Resolve the repository-confined path used by this operation before filesystem
-            # Details: access.
+            # Locations enumerate every importer so the operator can split or move ownership.
             locations = ", ".join(str(path.relative_to(root)) for path in paths)
             diagnostics.append(
                 Diagnostic(
@@ -732,13 +651,9 @@ def _foreign_ownership(
                     f"{name!r} is imported at {locations}; one adapter boundary cannot be inferred",
                 )
             )
-            # Advance after the current candidate has been conclusively excluded.
+            # Ambiguous ownership is retained as an error rather than selecting arbitrarily.
             continue
-        # Select owner as the current element from owners if owner is not None) while foreign
-        # Details: ownership preserves traversal order.
-        # Update  foreign ownership state only after the required source facts are available.
         ownership[name] = next(owner for owner in owners if owner is not None)
-    # Return unique ownership records and ambiguity diagnostics to the caller.
     return ownership, diagnostics
 
 
@@ -748,7 +663,7 @@ def _toml_string(value: str) -> str:
     @param value arbitrary string
     @return quoted scalar
     """
-    # Return quoted scalar to the caller.
+    # JSON string quoting is a compatible deterministic subset of TOML basic strings.
     return json.dumps(value, ensure_ascii=False)
 
 
@@ -759,8 +674,7 @@ def _toml_array(values: Sequence[PurePosixPath]) -> str:
         Each element is one path rendered in caller-provided order.
     @return TOML array
     """
-    # Treat the current value as the candidate element consumed by the enclosing transformation.
-    # Return tOML array to the caller.
+    # Each element is one caller-ordered POSIX path rendered through the shared scalar encoder.
     return "[" + ", ".join(_toml_string(value.as_posix()) for value in values) + "]"
 
 
@@ -787,7 +701,6 @@ def _render_declaration(
         f"doc_engine = {_toml_string(draft.doc_engine)}",
         f"pedagogical_full_projection = {str(draft.pedagogical).lower()}",
     ]
-    # Select the guarded path only after `draft.boundaries` is satisfied.
     if draft.boundaries:
         lines.append(f"adapter_boundaries = {_toml_array(draft.boundaries)}")
     lines.extend([
@@ -807,17 +720,11 @@ def _render_declaration(
         "",
         "[tool.agent-discipline.roles]",
     ])
-    # Select role as the current element from ("domain", "application", "ports", "adapters",
-    # Details: "shell") while render declaration preserves traversal order.
-    # Advance render declaration through the current input element in declared order.
     for role in ("domain", "application", "ports", "adapters", "shell"):
         # Preserve paths element values in deterministic source order.
         paths = draft.roles.get(role)
-        # Handle the non-empty or enabled paths state.
         if paths:
             lines.append(f"{role} = {_toml_array(paths)}")
-    # Normalize the current repository path to its portable baseline key spelling.
-    # Advance render declaration through the current input element in declared order.
     for name, owner in sorted(draft.ownership.items()):
         lines.extend([
             "",
@@ -825,7 +732,6 @@ def _render_declaration(
             f"import_name = {_toml_string(name)}",
             f"owner = {_toml_string(owner.as_posix())}",
         ])
-    # Return deterministic TOML block to the caller.
     return newline.join(lines) + newline
 
 
@@ -849,8 +755,6 @@ def _draft(
     """
     # Each diagnostics element is one draft refusal or authoring warning in discovery order.
     diagnostics: list[Diagnostic] = []
-    # Select the guarded path only after `unit not in {'application', 'component'}` is
-    # Details: satisfied.
     if unit not in {"application", "component"}:
         diagnostics.append(
             Diagnostic(
@@ -859,11 +763,8 @@ def _draft(
                 "choose --unit application or --unit component; repository intent is not inferred",
             )
         )
-    # Unpack root diagnostics, roots using  confined roots for later draft logic.
     roots, root_diagnostics = _confined_roots(root, _source_roots(document, root))
     diagnostics.extend(root_diagnostics)
-    # Select the empty-or-disabled path when roots and (not root diagnostics) has no usable
-    # Details: value.
     if not roots and not root_diagnostics:
         diagnostics.append(
             Diagnostic(
@@ -874,9 +775,7 @@ def _draft(
         )
     # Collect unique known v3 fields element values; their order is deliberately unordered.
     known_v3_fields = {"doc_engine", "pedagogical_full_projection", "layers"}
-    # Compute unknown v3 fields using set for later draft logic.
     unknown_v3_fields = set(table) - known_v3_fields
-    # Handle the non-empty or enabled unknown v3 fields state.
     if unknown_v3_fields:
         diagnostics.append(
             Diagnostic(
@@ -888,10 +787,9 @@ def _draft(
         )
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
-        # Compute aliases using  legacy aliases for later draft logic.
+        # Translate legacy segment vocabulary before any production path is classified.
         aliases = _legacy_aliases(table)
-    # Bind problem to the current value used by the next draft decision.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
+    # Preserve the migration defect while continuing with an empty, non-guessing alias map.
     except MigrationError as problem:
         diagnostics.append(
             Diagnostic(
@@ -903,12 +801,9 @@ def _draft(
         # Preserve an empty segment-to-role mapping after malformed legacy aliases; mapping key
         # order is deliberately unused.
         aliases = {}
-    # Unpack role diagnostics, roles using  discover roles for later draft logic.
     roles, role_diagnostics = _discover_roles(root, roots, aliases)
     diagnostics.extend(role_diagnostics)
-    # Compute boundaries using  adapter boundaries for later draft logic.
     boundaries = _adapter_boundaries(root, roles)
-    # Unpack owner diagnostics, ownership using  foreign ownership for later draft logic.
     ownership, owner_diagnostics = _foreign_ownership(
         root,
         roots,
@@ -925,7 +820,6 @@ def _draft(
             "then run checks.capabilities because semantic intent is never inferred",
         )
     )
-    # Return renderable draft and diagnostics to the caller.
     return DeclarationDraft(
         unit=unit or "application",
         roots=roots,
@@ -944,22 +838,17 @@ def plan(root: Path, unit: str | None) -> MigrationPlan:
     @param unit explicit application or component kind
     @return complete plan, including blocking diagnostics
     """
-    # Compute governed using root.resolve for later plan logic.
+    # Canonicalize the repository boundary before resolving or reading the declaration.
     governed = root.resolve()
     # Resolve the repository-confined path used by this operation before filesystem access.
     project_file = governed / "pyproject.toml"
-    # Compute before using project file.read bytes for later plan logic.
     before = project_file.read_bytes()
     # Retain the immutable source representation consumed by subsequent analysis.
     text = before.decode("utf-8")
     # Decode pyproject keys to TOML values; mapping key order is deliberately unused.
     document = tomllib.loads(text)
-    # Compute table using  declaration table for later plan logic.
     table = _declaration_table(document)
-    # Treat the current key as the candidate element consumed by the enclosing transformation.
-    # Select the guarded path only after `all((key in table for key in ('unit', 'source_roots',
-    # Details: 'architecture', 'contract_conformance', 'operational_model', 'security_model',
-    # Details: 'adversarial_review', 'capabilities', 'roles')))` is satisfied.
+    # A declaration carrying every v4 structural field is already migration-complete.
     if all(
         key in table
         for key in (
@@ -968,12 +857,12 @@ def plan(root: Path, unit: str | None) -> MigrationPlan:
             "capabilities", "roles",
         )
     ):
-        # Return complete plan, including blocking diagnostics to the caller.
+        # Preserve exact bytes and report a clean no-op plan for already current repositories.
         return MigrationPlan(governed, project_file, before, before, ())
     # Preserve finding-record elements in checker emission order for the final verdict.
     draft, diagnostics = _draft(governed, document, table, unit)
 
-    # Compute span using  discipline span for later plan logic.
+    # Locate the only declaration span this migration is authorized to replace.
     span = _discipline_span(text)
     # Use the absence path when span has no available value.
     if span is None:
@@ -984,17 +873,13 @@ def plan(root: Path, unit: str | None) -> MigrationPlan:
                 "pyproject.toml has no [tool.agent-discipline] table to migrate conservatively",
             )
         )
-        # Return complete plan, including blocking diagnostics to the caller.
+        # Block with unchanged bytes because synthesizing a missing table would be a guess.
         return MigrationPlan(governed, project_file, before, before, tuple(diagnostics))
     # Locate the structural boundary used to parse the external result safely.
     start, end = span
-    # Compute newline using "\r\n" if "\r\n" in text else "\n" for later plan logic.
     newline = "\r\n" if "\r\n" in text else "\n"
-    # Compute rendered using  render declaration for later plan logic.
     rendered = _render_declaration(draft, newline)
-    # Compute after text using text[:start] + rendered + text[end:] for later plan logic.
     after_text = text[:start] + rendered + text[end:]
-    # Return complete plan, including blocking diagnostics to the caller.
     return MigrationPlan(
         governed,
         project_file,
@@ -1015,11 +900,10 @@ def preview(migration: MigrationPlan) -> str:
         f"{item.severity.upper()} {item.diagnostic_id}: {item.detail}"
         for item in migration.diagnostics
     ]
-    # Select the guarded path only after `migration.changed` is satisfied.
+    # Include a byte-derived declaration diff only when the reviewed plan changes content.
     if migration.changed:
-        # Compute before using migration.before.decode for later preview logic.
+        # These ordered line sequences retain terminators for an accurate unified diff.
         before = migration.before.decode("utf-8").splitlines(keepends=True)
-        # Compute after using migration.after.decode for later preview logic.
         after = migration.after.decode("utf-8").splitlines(keepends=True)
         lines.extend(
             difflib.unified_diff(
@@ -1031,8 +915,7 @@ def preview(migration: MigrationPlan) -> str:
         )
     else:
         lines.append("NO CHANGES")
-    # Preserve the current decoded diagnostic line before location normalization.
-    # Return stable human-readable preview to the caller.
+    # Normalize each diagnostic/diff element to one final report newline.
     return "\n".join(line.rstrip("\n") for line in lines) + "\n"
 
 
@@ -1045,26 +928,20 @@ def apply(migration: MigrationPlan) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Select the guarded path only after `migration.blocked` is satisfied.
+    # Never write a plan containing any diagnostic classified as an error.
     if migration.blocked:
-        # Compute detail using "migration has blocking diagnostics" for later apply logic.
+        # Keep the public exception stable while detailed causes remain in the preview.
         detail = "migration has blocking diagnostics"
-        # Propagate the localized failure so callers cannot mistake it for success.
         raise MigrationError(detail)
     # Preserve the documentation-stripped behavior fingerprint used for comparison.
     current = migration.project_file.read_bytes()
-    # Select the guarded path only after `current != migration.before` is satisfied.
     if current != migration.before:
-        # Compute detail using "pyproject.toml changed after preview; build a new plan" for
-        # Details: later apply logic.
+        # Concurrent byte drift invalidates every offset and inference in the reviewed plan.
         detail = "pyproject.toml changed after preview; build a new plan"
-        # Propagate the localized failure so callers cannot mistake it for success.
         raise MigrationError(detail)
-    # Select the empty-or-disabled path when migration.changed has no usable value.
     if not migration.changed:
-        # Return the completed apply result to its caller.
+        # An already-current plan requires no temporary file or filesystem mutation.
         return
-    # Unpack descriptor, temporary name using tempfile.mkstemp for later apply logic.
     descriptor, temporary_name = tempfile.mkstemp(
         prefix=".pyproject-v4-",
         suffix=".toml",
@@ -1072,21 +949,19 @@ def apply(migration: MigrationPlan) -> None:
     )
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
-        # Bind stream to the current value used by the next apply decision.
-        # Confine the acquired resource to this operation and release it on every exit.
+        # Bound the raw descriptor so every buffered byte is flushed and synced before replace.
         with os.fdopen(descriptor, "wb") as stream:
-            # Publish the externally visible effect after all required inputs are ready.
+            # Write, flush, and fsync the complete reviewed bytes before atomic publication.
             stream.write(migration.after)
-            # Publish the externally visible effect after all required inputs are ready.
             stream.flush()
             os.fsync(stream.fileno())
         Path(temporary_name).replace(migration.project_file)
     finally:
-        # Compute temporary using Path for later apply logic.
+        # Temporary names remain possible only when publication failed before replacement.
         temporary = Path(temporary_name)
         # Select the existing-artifact path only when `temporary.exists()` is satisfied.
         if temporary.exists():
-            # Publish the externally visible effect after all required inputs are ready.
+            # Remove only this explicitly allocated sibling temporary artifact.
             temporary.unlink()
 
 
@@ -1108,15 +983,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--apply", action="store_true")
     # Capture the validated invocation arguments that govern this execution.
     arguments = parser.parse_args(argv)
-    # Compute migration using plan for later main logic.
     migration = plan(arguments.root, arguments.unit)
-    # Publish the externally visible effect after all required inputs are ready.
     sys.stdout.write(preview(migration))
-    # Select the guarded path only after `migration.blocked` is satisfied.
     if migration.blocked:
         # Return the aggregate process status to the command-line boundary.
         return EXIT_BLOCKED
-    # Select the guarded path only after `arguments.apply` is satisfied.
     if arguments.apply:
         apply(migration)
         print("APPLIED" if migration.changed else "ALREADY CURRENT")
@@ -1128,5 +999,5 @@ def main(argv: list[str] | None = None) -> int:
 
 # Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
-    # Propagate the localized failure so callers cannot mistake it for success.
+    # Surface blocked migration status to shell and CI callers.
     raise SystemExit(main())
