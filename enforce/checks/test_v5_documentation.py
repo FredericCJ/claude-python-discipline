@@ -373,6 +373,23 @@ def test_syntactic_paraphrase_fails_doc_019(tmp_path: Path) -> None:
         "Bind result to the current value used by the next accept decision.",
         "Unpack left and right using result for later accept logic.",
         "Resolve the branch. Details: usable value.",
+        "Select the existing-artifact path only when target exists is satisfied.",
+        "Use the absence path when target has no available value.",
+        "Return the completed validation result to its caller.",
+        "Confine the acquired resource to this operation and release it on every exit.",
+        "Preserve the caught failure that explains why the external result is unusable.",
+        "Retain the immutable source representation consumed by subsequent analysis.",
+        "Preserve the optional pattern match that carries the reported analysis count.",
+        "Preserve the observed item count used by the non-vacuity verdict.",
+        "Process each candidate element in deterministic source order.",
+        "Publish the externally visible effect after all required inputs are available.",
+        "Resolve the repository-confined path before use.",
+        "Protect the fallible operation before returning.",
+        "Translate the expected failure at the boundary.",
+        "Preserve the external command representation for execution.",
+        "Return aggregate validation status.",
+        "Hold the decoded checker report for inspection.",
+        "Each findings element records a diagnostic.",
     ],
 )
 def test_known_scaffolding_prose_fails_doc_019(tmp_path: Path, comment: str) -> None:
@@ -566,6 +583,35 @@ def test_detectable_effect_without_contract_fails_doc_027(tmp_path: Path) -> Non
 
     # Require one finding element to identify the callable-effects obligation.
     assert any(item.rule_id == "DOC-027" for item in findings)
+
+
+def test_generated_effects_clause_fails_doc_027(tmp_path: Path) -> None:
+    """A ceremonial effects paragraph cannot substitute for a callable contract.
+
+    @param tmp_path fixture repository
+    """
+    # Materialize a write whose structured contract carries the retired migration filler.
+    module, declaration = _fixture(
+        tmp_path,
+        '''
+        """! Fixture module."""
+        def persist(path, payload) -> None:
+            """Persist the encoded payload.
+            @param path destination path
+            @param payload encoded bytes
+            @par Effects
+            Creates, replaces, or removes repository artifacts in implementation order.
+            """
+            # Commit the complete payload to the declared destination.
+            path.write_bytes(payload)
+        ''',
+    )
+
+    # Preserve semantic findings from the focused ceremonial-contract probe.
+    findings = _run(DocSemanticsCheck(), module, declaration)
+
+    # Require the dedicated filler diagnostic rather than accepting field presence alone.
+    assert [item.diagnostic_id for item in findings] == ["CALLABLE_EFFECTS_FILLER"]
 
 
 def test_immutable_string_replace_is_not_a_detectable_effect(tmp_path: Path) -> None:

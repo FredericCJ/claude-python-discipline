@@ -58,6 +58,11 @@ ORDER_MEANING = re.compile(
 )
 ## Doxygen-compatible custom effects paragraph.
 EFFECTS_FIELD = re.compile(r"@par\s+Effects\b(?P<text>.*?)(?=\n\s*@|\Z)", re.IGNORECASE | re.DOTALL)
+## Exact generated Effects clause that states no callable-specific behavior.
+GENERIC_EFFECTS = re.compile(
+    r"\bcreates,\s+replaces,\s+or removes repository artifacts in implementation order\.\s*",
+    re.IGNORECASE,
+)
 ## One parameter record through the next Doxygen command.
 PARAMETER_FIELD = re.compile(
     r"@param\s+\**(?P<name>\w+)\s+(?P<text>.*?)(?=\n\s*@|\Z)",
@@ -224,6 +229,18 @@ def _callable_findings(
     docstring = ast.get_docstring(node) or ""
     # Resolve the optional Doxygen Effects paragraph and its captured content.
     effects = EFFECTS_FIELD.search(docstring)
+    # A present but generated clause does not satisfy the semantic effects obligation.
+    if effects is not None and GENERIC_EFFECTS.search(effects.group("text")) is not None:
+        # Localize the rejected callable contract independently from effect-call detection.
+        yield Finding(
+            "DOC-027",
+            path,
+            node.lineno,
+            f"{node.name}() uses the generic generated `@par Effects` clause",
+            "Replace it with the callable's actual external state changes, ordering, and "
+            "no-write alternatives.",
+            diagnostic_id="CALLABLE_EFFECTS_FILLER",
+        )
     # Detectable externally visible behavior requires a structured effects contract.
     if _has_detectable_effect(node) and effects is None:
         # Report the missing field at the exact callable definition.

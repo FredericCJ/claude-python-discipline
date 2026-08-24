@@ -77,8 +77,8 @@ SYNTACTIC_WORDS: Final = frozenset({
 WORD = re.compile(r"[A-Za-z][A-Za-z0-9_]*")
 ## Minimum count of prose word elements required before narration can add useful meaning.
 MINIMUM_NARRATIVE_WORDS: Final = 4
-## Ordered expressions for known scaffolding prose that mechanically restates syntax or checker
-## state; order is stable only so focused diagnostics remain reproducible.
+## Ordered regular-expression elements for known scaffolding prose that mechanically restates
+## syntax or checker state; declaration order keeps focused diagnostics reproducible.
 KNOWN_FILLER_SHAPES: Final = (
     re.compile(r"\bdetails\s*:", re.IGNORECASE),
     re.compile(r"\bcompute\b.+\busing\b.+\bfor later\b.+\blogic\b", re.IGNORECASE),
@@ -107,6 +107,47 @@ KNOWN_FILLER_SHAPES: Final = (
         re.IGNORECASE,
     ),
     re.compile(r"\bunpack\b.+\busing\b.+\bfor later\b.+\blogic\b", re.IGNORECASE),
+    re.compile(
+        r"\bselect the existing-artifact path only when\b.+\bis satisfied\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\buse the absence path when\b.+\bhas no available value\b", re.IGNORECASE),
+    re.compile(r"\breturn the completed\b.+\bresult to its caller\b", re.IGNORECASE),
+    re.compile(
+        r"\bconfine the acquired resource to this operation and release it on every exit\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bpreserve the caught failure that explains why the external result is unusable\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bretain the immutable source representation consumed by subsequent analysis\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bpreserve the optional pattern match that carries the reported analysis count\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bpreserve the observed item count used by the non-vacuity verdict\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bprocess each candidate element in deterministic source order\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bpublish the externally visible effect after all required inputs\b.+\bavailable\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\bresolve the repository-confined path\b", re.IGNORECASE),
+    re.compile(r"\bprotect the fallible operation\b", re.IGNORECASE),
+    re.compile(r"\btranslate the expected failure\b", re.IGNORECASE),
+    re.compile(r"\bpreserve the external command representation\b", re.IGNORECASE),
+    re.compile(r"\breturn aggregate\b.+\bstatus\b", re.IGNORECASE),
+    re.compile(r"\bhold the decoded checker report\b", re.IGNORECASE),
+    re.compile(r"\beach findings element\b", re.IGNORECASE),
 )
 ## Ordered syntax/label pairs; each element maps an AST shape to its operation category.
 ## State and effect shapes need predicates below.
@@ -166,15 +207,15 @@ class DocNarrationCheck(ModuleCheck):
         text = path.read_text(encoding="utf-8")
         # Preserve each qualifying ordinary comment block in lexical source order.
         blocks = comment_blocks(text)
-        # Identify known scaffolding blocks independently of AST coverage so stray filler cannot
-        # hide merely by sitting beside an operation outside the mechanical census.
+        # Collect each known scaffolding block into an unordered rejection set independently of
+        # AST coverage, so stray filler cannot hide outside the operation census.
         rejected_blocks = {block for block in blocks if _known_filler(block.text)}
         # Report each rejected block once before operation-specific findings.
         yield from _known_filler_findings(blocks, rejected_blocks, path)
         # Resolve semantic-operation nodes to their unique, absent, or ambiguous comment owners.
         associations = semantic_associations(tree, text, blocks)
-        # Track operation-owner nodes already checked so a local binding on the same statement
-        # does not emit a duplicate semantic-content finding.
+        # Collect each already-checked operation owner in an unordered node set so a local binding
+        # on the same statement does not emit a duplicate semantic-content finding.
         checked_nodes: set[ast.AST] = set()
         # Judge every governed operation in stable source-position and category order.
         for operation in operations(tree):
@@ -408,7 +449,7 @@ def _known_filler_findings(
     """Report known scaffolding blocks once in lexical order.
 
     @param blocks ordinary-comment elements in lexical source order
-    @param rejected unordered subset matching the closed filler registry
+    @param rejected unordered subset whose each element is a block matching the filler registry
     @param path governed Python source
     @return one DOC-019 finding per rejected block
     """
