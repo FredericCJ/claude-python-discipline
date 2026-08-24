@@ -390,6 +390,12 @@ def test_syntactic_paraphrase_fails_doc_019(tmp_path: Path) -> None:
         "Return aggregate validation status.",
         "Hold the decoded checker report for inspection.",
         "Each findings element records a diagnostic.",
+        "Capture the validated invocation arguments that govern this execution.",
+        "Enter the failure path only when the subprocess reports a nonzero status.",
+        "Preserve finding-record elements in checker emission order for the final verdict.",
+        "Inspect each syntax-node element in deterministic AST walk order.",
+        "Preserve lines element values in deterministic source order.",
+        "Each lines element represents one decoded record; lexical order is preserved.",
     ],
 )
 def test_known_scaffolding_prose_fails_doc_019(tmp_path: Path, comment: str) -> None:

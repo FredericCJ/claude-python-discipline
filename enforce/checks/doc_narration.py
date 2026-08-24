@@ -148,6 +148,30 @@ KNOWN_FILLER_SHAPES: Final = (
     re.compile(r"\breturn aggregate\b.+\bstatus\b", re.IGNORECASE),
     re.compile(r"\bhold the decoded checker report\b", re.IGNORECASE),
     re.compile(r"\beach findings element\b", re.IGNORECASE),
+    re.compile(
+        r"\bcapture the validated invocation arguments that govern this execution\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\benter the failure path only when the subprocess reports a nonzero status\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bpreserve finding-record elements in checker emission order for the final verdict\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\binspect each syntax-node element in deterministic AST walk order\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bpreserve lines element values in deterministic source order\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\beach lines element represents one decoded record; lexical order is preserved\b",
+        re.IGNORECASE,
+    ),
 )
 ## Ordered syntax/label pairs; each element maps an AST shape to its operation category.
 ## State and effect shapes need predicates below.
