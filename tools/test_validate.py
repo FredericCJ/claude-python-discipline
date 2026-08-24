@@ -69,11 +69,11 @@ def write(path: Path, text: str) -> Path:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Publish the externally visible effect after all required inputs are ready.
+    # Create only the ancestry needed by the requested synthetic corpus artifact.
     path.parent.mkdir(parents=True, exist_ok=True)
-    # Publish the externally visible effect after all required inputs are ready.
+    # Dedent authored fixture literals before persisting their exact UTF-8 representation.
     path.write_text(dedent(text), encoding="utf-8")
-    # Return the same destination, so a caller can go on to move or read it to the caller.
+    # Return the materialized path so callers can mutate the fixture for one negative case.
     return path
 
 
@@ -117,7 +117,7 @@ def module(
         'load_when: ["alpha", "beta", "gamma"]',
         f"decay: {decay}",
     ]
-    # Use the available-value path only when verified is present.
+    # Include freshness evidence only when the caller is exercising a dated document genre.
     if verified is not None:
         front.append(f"verified: {verified}")
     front.append("---")
@@ -135,10 +135,11 @@ def codes(findings: Iterable[object]) -> list[str]:
     @param findings whatever a validation run produced
     @return one code per finding, in the order raised, duplicates kept
     """
-    # Select f as the current element from findings]  # type while codes preserves traversal
-    # Details: order.
-    # Return one code per finding, in the order raised, duplicates kept to the caller.
-    return [f.code for f in findings]  # type: ignore[attr-defined]
+    # Project each emitted finding to its stable code while preserving order and duplicates.
+    return [
+        # Each finding contributes the code asserted by focused validator tests.
+        f.code for f in findings  # type: ignore[attr-defined]
+    ]
 
 
 def run_on(root: Path) -> Sequence[object]:
@@ -147,7 +148,7 @@ def run_on(root: Path) -> Sequence[object]:
     @param root the directory holding a `discipline/` tree
     @return every finding, warnings included, since some checks only warn
     """
-    # Return every finding, warnings included, since some checks only warn to the caller.
+    # Run the complete validator against the caller's isolated repository layout.
     return run(Layout(root))
 
 
@@ -206,9 +207,9 @@ def test_v003_id_does_not_match_filename(tmp_path: Path) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Retain the created module path so the test can introduce only a filename/id mismatch.
     path = module(tmp_path)
-    # Publish the externally visible effect after all required inputs are ready.
+    # Rename the artifact without changing its embedded id, creating the V003 witness.
     path.rename(path.with_name("TYPES.md"))
     assert "V003" in codes(run_on(tmp_path))
 
@@ -220,17 +221,15 @@ def test_v004_kind_does_not_match_directory(tmp_path: Path) -> None:
     Creates, replaces, or removes repository artifacts in implementation order.
     """
     module(tmp_path, kind="law", name="TYPE")
-    # Compute src using tmp_path / "discipline" / "law" / "TYPE.md" for later test v004 kind
-    # Details: does not match directory logic.
+    # Identify the valid law source produced by the shared fixture builder.
     src = tmp_path / "discipline" / "law" / "TYPE.md"
-    # Compute dst using tmp_path / "discipline" / "fact" / "TYPE.md" for later test v004 kind
-    # Details: does not match directory logic.
+    # Identify the fact location that will contradict the document's declared law genre.
     dst = tmp_path / "discipline" / "fact" / "TYPE.md"
-    # Publish the externally visible effect after all required inputs are ready.
+    # Create the mismatching genre directory without changing document metadata.
     dst.parent.mkdir(parents=True, exist_ok=True)
-    # Publish the externally visible effect after all required inputs are ready.
+    # Copy the law body verbatim so location is the sole invalid dimension.
     dst.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
-    # Publish the externally visible effect after all required inputs are ready.
+    # Remove the conformant original, preventing duplicate-id findings from satisfying the test.
     src.unlink()
     assert "V004" in codes(run_on(tmp_path))
 
@@ -290,13 +289,13 @@ def test_v021_accepts_an_explicit_family_partition(tmp_path: Path) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Retain the partitioned module whose family prefix will be declared explicitly.
     path = module(
         tmp_path,
         name="TYPE-BOUNDARIES",
         body=CONFORMANT_RULE,
     )
-    # Publish the externally visible effect after all required inputs are ready.
+    # Add the parent family prefix without changing the split document's own identity.
     path.write_text(
         path.read_text(encoding="utf-8").replace(
             "kind: law\n", "kind: law\nrule_prefix: TYPE\n",
@@ -312,13 +311,13 @@ def test_v021_rejects_a_partition_prefix_unrelated_to_its_module(tmp_path: Path)
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Retain the partitioned module whose declared family will be made unrelated.
     path = module(
         tmp_path,
         name="ERR-BOUNDARIES",
         body=CONFORMANT_RULE,
     )
-    # Publish the externally visible effect after all required inputs are ready.
+    # Claim TYPE ownership from an ERR partition to create the cross-family violation.
     path.write_text(
         path.read_text(encoding="utf-8").replace(
             "kind: law\n", "kind: law\nrule_prefix: TYPE\n",
@@ -364,8 +363,7 @@ def test_v024_overlong_title_warns(tmp_path: Path) -> None:
     The severity is asserted as well as the code: a warning promoted to an error
     would fail the build over a long sentence.
     """
-    # Compute long title using "Domain code carries no Any anywhere at all under any circum for
-    # Details: later test v024 overlong title warns logic.
+    # Exceed the readability ceiling while leaving the rule statement and mechanism conformant.
     long_title = "Domain code carries no Any anywhere at all under any circumstance"
     module(
         tmp_path,
@@ -378,8 +376,6 @@ def test_v024_overlong_title_warns(tmp_path: Path) -> None:
     # Preserve finding-record elements in checker emission order for the final verdict.
     findings = run_on(tmp_path)
     assert "V024" in codes(findings)
-    # Select f as the current element from findings if f.code == "V024")  # type while test v024
-    # Details: overlong title warns preserves traversal order.
     assert all(f.severity is Severity.WARN for f in findings if f.code == "V024")  # type: ignore[attr-defined]
 
 
@@ -474,12 +470,11 @@ def test_v041_does_not_resolve_a_reference_through_sources(tmp_path: Path) -> No
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Compute superseded using tmp_path / "sources" / "doctrine" for later test v041 does not
-    # Details: resolve a reference through sources logic.
+    # Place the apparent target only beneath the explicitly non-shipped source archive.
     superseded = tmp_path / "sources" / "doctrine"
-    # Publish the externally visible effect after all required inputs are ready.
+    # Reproduce the archive path that must remain outside the validator's resolution set.
     superseded.mkdir(parents=True)
-    # Publish the externally visible effect after all required inputs are ready.
+    # Materialize a plausible target whose mere archived existence must not satisfy V041.
     (superseded / "TESTING.md").write_text("# superseded\n", encoding="utf-8")
     module(tmp_path, body=CONFORMANT_RULE + "\nSee `doctrine/TESTING.md` section 4.\n")
     assert "V041" in codes(run_on(tmp_path))
@@ -499,8 +494,7 @@ def test_v060_stale_fact_warns(tmp_path: Path) -> None:
     The date is computed from today, so the test cannot rot into a false pass the
     way a hard-coded one would.
     """
-    # Compute stale using (dt.date.today() - dt.timedelta(days=400)).isoformat() for later test
-    # Details: v060 stale fact warns logic.
+    # Derive a date safely beyond the monthly decay window on every execution day.
     stale = (dt.date.today() - dt.timedelta(days=400)).isoformat()
     module(tmp_path, kind="fact", name="pytyping", verified=stale, decay="months", body="")
     assert "V060" in codes(run_on(tmp_path))
@@ -544,39 +538,31 @@ def mechanism_resolvers() -> Iterator[tuple[str, str]]:
 
     @return each such function as its POSIX-relative file and its name
     """
-    # Select directory as the current element from ("tools", "enforce") while mechanism
-    # Details: resolvers preserves traversal order.
-    # Advance mechanism resolvers through the current input element in declared order.
+    # Search both executable source families in their fixed repository order.
     for directory in ("tools", "enforce"):
-        # Resolve the repository-confined path used by this operation before filesystem access.
-        # Advance mechanism resolvers through the current input element in declared order.
+        # Traverse candidate modules deterministically so duplicate diagnostics are reproducible.
         for path in sorted((REPO_ROOT / directory).rglob("*.py")):
-            # Select the guarded path only after `path.stem.startswith('test_')` is satisfied.
+            # Test modules contain probes of this very shape and are not production resolvers.
             if path.stem.startswith("test_"):
-                # Advance after the current candidate has been conclusively excluded.
+                # Exclude test-only lookalikes before parsing their function bodies.
                 continue
-            # Protect the fallible operation so expected failures remain explicitly classified.
+            # Treat each candidate module as source data rather than importing its side effects.
             try:
-                # Parse the Python source into the syntax tree used for structural
-                # Details: fingerprinting.
+                # Parse once to obtain the function boundaries used by shape recognition.
                 tree = ast.parse(path.read_text(encoding="utf-8"))
-            # Translate the expected failure into this mechanism's stable diagnostic path.
+            # An unreadable or invalid module cannot contribute a reliable resolver definition.
             except (OSError, SyntaxError):  # pragma: no cover - not a corpus defect
-                # Advance after the current candidate has been conclusively excluded.
+                # Continue the census because candidates are independent.
                 continue
-            # Treat the current node as the candidate element consumed by the enclosing
-            # Details: transformation.
-            # Advance mechanism resolvers through the current input element in declared order.
+            # Inspect every nested and top-level function in this parsed module.
             for node in ast.walk(tree):
-                # Select the empty-or-disabled path when isinstance(node, (ast.FunctionDef,
-                # Details: ast.AsyncFunctionDef)) has no usable value.
+                # Only function definitions can own the resolver implementation shape.
                 if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                    # Advance after the current candidate has been conclusively excluded.
+                    # Continue past non-callable syntax nodes.
                     continue
-                # Retain the immutable source representation consumed by subsequent analysis.
+                # Recover this definition's exact source for the deliberately name-independent probe.
                 source = ast.get_source_segment(path.read_text(encoding="utf-8"), node) or ""
-                # Select the guarded path only after `'"checks"' in source and '"fitness"' in
-                # Details: source and ('exists()' in source)` is satisfied.
+                # A resolver joins both mechanism directories and tests concrete module existence.
                 if '"checks"' in source and '"fitness"' in source and "exists()" in source:
                     yield path.relative_to(REPO_ROOT).as_posix(), node.name
 
@@ -606,16 +592,15 @@ def corpus(root: Path, *, built: Sequence[str] = ()) -> Path:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Compute checks using root / "enforce" / "checks" for later corpus logic.
+    # Locate the synthetic checker directory resolved by ``mechanism_is_implemented``.
     checks = root / "enforce" / "checks"
-    # Publish the externally visible effect after all required inputs are ready.
+    # Make an empty checker family valid even when this case declares no built mechanisms.
     checks.mkdir(parents=True, exist_ok=True)
-    # Normalize the current repository path to its portable baseline key spelling.
-    # Advance corpus through the current input element in declared order.
+    # Materialize exactly the checker stems the case declares implemented.
     for name in built:
-        # Publish the externally visible effect after all required inputs are ready.
+        # Module existence is sufficient for this resolver-level fixture.
         (checks / f"{name}.py").write_text("", encoding="utf-8")
-    # Return the same root, for use as the resolution root to the caller.
+    # Return the root passed to the mechanism classifier.
     return root
 
 
@@ -716,8 +701,7 @@ def test_rules_json_separates_verification_from_normative_force() -> None:
     # Decode generated-index field keys to their JSON values; mapping key order is deliberately
     # unused.
     payload = json.loads(path.read_text(encoding="utf-8"))
-    # Compute rules using payload["rules"] for later test rules json separates verification from
-    # Details: normative force logic.
+    # Isolate the generated rule records whose evidence schema is under test.
     rules = payload["rules"]
     # Collect unique vocabulary element values; their order is deliberately unordered.
     vocabulary = {str(value) for value in VerificationState}
@@ -729,26 +713,20 @@ def test_rules_json_separates_verification_from_normative_force() -> None:
         if rule.get("verification", {}).get("state") not in vocabulary
     }
     assert unknown == {}, unknown
-    # Select rule as the current element from rules) while test rules json separates
-    # Details: verification from normative force preserves traversal order.
+    # No rule may retain the superseded synthetic enforcement field.
     assert all("enforcement" not in rule for rule in rules)
-    # Select rule as the current element from rules) while test rules json separates
-    # Details: verification from normative force preserves traversal order.
+    # No rule may retain the superseded boolean mechanical-enforcement shortcut.
     assert all("mechanically_enforced" not in rule for rule in rules)
-    # Select rule as the current element from rules) while test rules json separates
-    # Details: verification from normative force preserves traversal order.
+    # Every rule must publish its verifier strategies, including an explicit empty collection.
     assert all(rule["verification"].get("strategies") is not None for rule in rules)
-    # Select rule as the current element from rules) while test rules json separates
-    # Details: verification from normative force preserves traversal order.
+    # Every rule must preserve its failure consequence and migration disposition.
     assert all("failure_mode" in rule and "migration" in rule for rule in rules)
-    # Compute observations using payload["field_observations"] for later test rules json
-    # Details: separates verification from normative force logic.
+    # Isolate the shared observation registry referenced by individual rule records.
     observations = payload["field_observations"]
     # Collect unique referenced element values; their order is deliberately unordered.
     referenced = {observation for rule in rules for observation in rule["field_observations"]}
     assert referenced <= set(observations)
-    # Bind observation to the current value used by the next test rules json separates
-    # Details: verification from normative force decision.
+    # Every published observation must state both the claim being observed and its scope.
     assert all(
         "claim" in observation and "scope" in observation for observation in observations.values()
     )
@@ -792,8 +770,7 @@ def test_nav_renders_a_binding_unbuilt_verifier_distinguishably() -> None:
     # Each unbuilt key is a navigator rule-record field and each value is its synthetic content;
     # mapping key order is deliberately unused.
     unbuilt = {**available, "id": "ARCH-008", "verification": "unbuilt"}
-    # Compute rendered using nav.render for later test nav renders a binding unbuilt verifier
-    # Details: distinguishably logic.
+    # Render otherwise identical rules together so only verifier availability can distinguish them.
     rendered = nav.render("applies", {"path": "p.py", "rules": [available, unbuilt], "modules": []})
     assert "ARCH-008" in rendered
     assert "[BINDING - VERIFIER NOT BUILT]" in rendered
@@ -827,10 +804,10 @@ def test_baseline_round_trips(tmp_path: Path) -> None:
     """What `write_v080_baseline` writes is exactly what `load_v080_baseline` reads back."""
     # Resolve the repository-confined path used by this operation before filesystem access.
     path = tmp_path / "baseline.json"
-    # Compute pairs using frozenset for later test baseline round trips logic.
+    # Preserve two unordered rule/mechanism identities as the baseline's authoritative content.
     pairs = frozenset({("ALLOC-001", "check:x"), ("ALLOC-002", "check:y")})
     write_v080_baseline(pairs, "test fixture", path)
-    # Compute loaded using load v080 baseline for later test baseline round trips logic.
+    # Reload through the production decoder rather than inspecting emitted JSON directly.
     loaded = load_v080_baseline(path)
     assert loaded == V080Baseline(count=2, pairs=pairs, why="test fixture")
 
@@ -852,12 +829,11 @@ def test_a_hand_raised_count_is_refused(tmp_path: Path) -> None:
     # Resolve the repository-confined path used by this operation before filesystem access.
     path = tmp_path / "baseline.json"
     write_v080_baseline(frozenset({("ALLOC-001", "check:x")}), "test fixture", path)
-    # Compute data using json.loads for later test a hand raised count is refused logic.
+    # Decode the valid artifact so only its redundant count can be forged.
     data = json.loads(path.read_text(encoding="utf-8"))
-    # Update test a hand raised count is refused state only after the required source facts are
-    # Details: available.
+    # Inflate the convenience count without changing the authoritative pair set.
     data["count"] = 9999
-    # Publish the externally visible effect after all required inputs are ready.
+    # Persist the internally contradictory baseline presented to the production loader.
     path.write_text(json.dumps(data), encoding="utf-8")
 
     # Confine the acquired resource to this operation and release it on every exit.
@@ -879,7 +855,7 @@ def test_a_baseline_missing_a_field_is_refused(tmp_path: Path, payload: dict[str
     """
     # Resolve the repository-confined path used by this operation before filesystem access.
     path = tmp_path / "baseline.json"
-    # Publish the externally visible effect after all required inputs are ready.
+    # Persist exactly the parameterized incomplete shape without builder normalization.
     path.write_text(json.dumps(payload), encoding="utf-8")
 
     # Confine the acquired resource to this operation and release it on every exit.
@@ -905,17 +881,14 @@ def test_v081_fires_when_the_unbuilt_count_rises(tmp_path: Path) -> None:
     one unbuilt mechanism is already over it, and V081 must say so as an error.
     """
     module(tmp_path, body=CONFORMANT_RULE.replace("[auto:mypy]", "[check:not_yet_written]"))
-    # Compute layout using Layout for later test v081 fires when the unbuilt count rises logic.
+    # Bind validation to the synthetic corpus rather than the repository's live doctrine.
     layout = Layout(tmp_path)
-    # Compute documents using load documents for later test v081 fires when the unbuilt count
-    # Details: rises logic.
+    # Parse the single unbuilt-mechanism rule consumed by the ratchet.
     documents, _ = load_documents(layout)
     # Hold baseline path keys mapped to their recorded behavior-fingerprint values.
     baseline = V080Baseline(count=0, pairs=frozenset(), why=None)
     # Preserve finding-record elements in checker emission order for the final verdict.
     findings = list(check_v080_ratchet(documents, layout, baseline=baseline))
-    # Select f as the current element from findings] == ["V081"] while test v081 fires when the
-    # Details: unbuilt count rises preserves traversal order.
     assert [f.code for f in findings] == ["V081"]
     assert findings[0].severity is Severity.ERROR
     assert "TYPE-001" in findings[0].message
@@ -934,11 +907,9 @@ def test_v081_is_silent_when_a_new_rule_names_a_built_mechanism(tmp_path: Path) 
     to leave it alone.
     """
     module(tmp_path)  # CONFORMANT_RULE, unmodified: [auto:mypy]
-    # Compute layout using Layout for later test v081 is silent when a new rule names a built
-    # Details: mechanism logic.
+    # Bind validation to the synthetic corpus rather than the repository's live doctrine.
     layout = Layout(tmp_path)
-    # Compute documents using load documents for later test v081 is silent when a new rule names
-    # Details: a built mechanism logic.
+    # Parse the externally verified rule that must not enter the unbuilt set.
     documents, _ = load_documents(layout)
     # Hold baseline path keys mapped to their recorded behavior-fingerprint values.
     baseline = V080Baseline(count=0, pairs=frozenset(), why=None)
@@ -953,11 +924,9 @@ def test_v082_warns_without_failing_when_the_unbuilt_count_falls(tmp_path: Path)
     ratchet exists to keep out of everyone's way.
     """
     module(tmp_path)  # CONFORMANT_RULE: zero unbuilt mechanisms here
-    # Compute layout using Layout for later test v082 warns without failing when the unbuilt
-    # Details: count falls logic.
+    # Bind validation to the synthetic corpus rather than the repository's live doctrine.
     layout = Layout(tmp_path)
-    # Compute documents using load documents for later test v082 warns without failing when the
-    # Details: unbuilt count falls logic.
+    # Parse the zero-unbuilt corpus compared with a nonzero historical baseline.
     documents, _ = load_documents(layout)
     # Hold baseline path keys mapped to their recorded behavior-fingerprint values.
     baseline = V080Baseline(
@@ -967,8 +936,6 @@ def test_v082_warns_without_failing_when_the_unbuilt_count_falls(tmp_path: Path)
     )
     # Preserve finding-record elements in checker emission order for the final verdict.
     findings = list(check_v080_ratchet(documents, layout, baseline=baseline))
-    # Select f as the current element from findings] == ["V082"] while test v082 warns without
-    # Details: failing when the unbuilt count falls preserves traversal order.
     assert [f.code for f in findings] == ["V082"]
     assert findings[0].severity is Severity.WARN
 
@@ -976,11 +943,9 @@ def test_v082_warns_without_failing_when_the_unbuilt_count_falls(tmp_path: Path)
 def test_v08x_silent_when_the_count_matches_the_baseline(tmp_path: Path) -> None:
     """No news, no finding: an unchanged count is the ordinary, silent case."""
     module(tmp_path, body=CONFORMANT_RULE.replace("[auto:mypy]", "[check:not_yet_written]"))
-    # Compute layout using Layout for later test v08x silent when the count matches the baseline
-    # Details: logic.
+    # Bind validation to the synthetic corpus rather than the repository's live doctrine.
     layout = Layout(tmp_path)
-    # Compute documents using load documents for later test v08x silent when the count matches
-    # Details: the baseline logic.
+    # Parse the one-unbuilt corpus whose count exactly matches its injected baseline.
     documents, _ = load_documents(layout)
     # Hold baseline path keys mapped to their recorded behavior-fingerprint values.
     baseline = V080Baseline(
@@ -998,11 +963,9 @@ def test_ratchet_ignores_a_throwaway_tree_when_no_baseline_is_injected(tmp_path:
     exactly this way. This test pins the guard directly.
     """
     module(tmp_path, body=CONFORMANT_RULE.replace("[auto:mypy]", "[check:not_yet_written]"))
-    # Compute layout using Layout for later test ratchet ignores a throwaway tree when no
-    # Details: baseline is injected logic.
+    # Bind validation to the throwaway tree for the no-injected-baseline guard case.
     layout = Layout(tmp_path)
-    # Compute documents using load documents for later test ratchet ignores a throwaway tree
-    # Details: when no baseline is injected logic.
+    # Parse the synthetic rule that would spuriously look like a massive baseline improvement.
     documents, _ = load_documents(layout)
     assert list(check_v080_ratchet(documents, layout)) == []
 
@@ -1022,14 +985,12 @@ def test_the_live_corpus_is_clean() -> None:
     """The repository itself passes every check."""
     # Each findings element is one live-corpus error in validator emission order.
     findings = [f for f in run() if f.severity is Severity.ERROR]  # type: ignore[attr-defined]
-    # Select f as the current element from findings)  # type while test the live corpus is clean
-    # Details: preserves traversal order.
     assert findings == [], "\n".join(f.render() for f in findings)  # type: ignore[attr-defined]
 
 
 # Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
-    # Propagate the localized failure so callers cannot mistake it for success.
+    # Preserve pytest's process status when this test module is invoked as a script.
     raise SystemExit(pytest.main([__file__, "-q"]))
 
 
@@ -1045,15 +1006,14 @@ def test_v051_warns_before_the_always_loaded_ceiling(tmp_path: Path) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Compute kernel using tmp_path / "discipline" / "KERNEL.md" for later test v051 warns
-    # Details: before the always loaded ceiling logic.
+    # Select the always-loaded artifact whose warning threshold is lower than its hard ceiling.
     kernel = tmp_path / "discipline" / "KERNEL.md"
-    # Publish the externally visible effect after all required inputs are ready.
+    # Create the meta-document directory before the direct fixture write.
     kernel.parent.mkdir(parents=True, exist_ok=True)
     module(tmp_path, body=CONFORMANT_RULE)
     # Preserve the observed item count used by the non-vacuity verdict.
     filler = "\n".join(f"Padding sentence {n}." for n in range(430))
-    # Publish the externally visible effect after all required inputs are ready.
+    # Materialize a kernel near the threshold while leaving the rest of the corpus conformant.
     kernel.write_text(
         "---\nid: meta/KERNEL\nkind: meta\ntitle: Kernel\ntokens: 0\n"
         'load_when: ["x"]\ndecay: none\n---\n\n# Kernel\n\n' + filler + "\n",
@@ -1078,13 +1038,11 @@ def test_v097_notices_a_loop_that_only_writes(tmp_path: Path) -> None:
     Creates, replaces, or removes repository artifacts in implementation order.
     """
     module(tmp_path)
-    # Compute ledger using tmp_path / "learning" / "ledger.jsonl" for later test v097 notices a
-    # Details: loop that only writes logic.
+    # Select the synthetic append-only ledger inspected by the outcome-ratio check.
     ledger = tmp_path / "learning" / "ledger.jsonl"
-    # Publish the externally visible effect after all required inputs are ready.
+    # Create the learning subsystem directory independently of doctrine fixture creation.
     ledger.parent.mkdir(parents=True, exist_ok=True)
-    # Preserve the observed item count used by the non-vacuity verdict.
-    # Publish the externally visible effect after all required inputs are ready.
+    # Write twenty learning events and deliberately no use outcomes.
     ledger.write_text(
         "\n".join(
             json.dumps({
@@ -1096,6 +1054,7 @@ def test_v097_notices_a_loop_that_only_writes(tmp_path: Path) -> None:
                 "actor": "agent",
                 "payload": {},
             })
+            # Each sequence number becomes one distinct learning event.
             for n in range(1, 21)
         )
         + "\n",
@@ -1116,12 +1075,11 @@ def test_v097_is_silent_once_outcomes_are_reported(tmp_path: Path) -> None:
     Creates, replaces, or removes repository artifacts in implementation order.
     """
     module(tmp_path)
-    # Compute ledger using tmp_path / "learning" / "ledger.jsonl" for later test v097 is silent
-    # Details: once outcomes are reported logic.
+    # Select the synthetic append-only ledger inspected by the outcome-ratio check.
     ledger = tmp_path / "learning" / "ledger.jsonl"
-    # Publish the externally visible effect after all required inputs are ready.
+    # Create the learning subsystem directory independently of doctrine fixture creation.
     ledger.parent.mkdir(parents=True, exist_ok=True)
-    # Preserve the observed item count used by the non-vacuity verdict.
+    # Combine enough learn events with three reported uses to clear the feedback threshold.
     events = [
         {
             "seq": n,
@@ -1132,6 +1090,7 @@ def test_v097_is_silent_once_outcomes_are_reported(tmp_path: Path) -> None:
             "actor": "agent",
             "payload": {},
         }
+        # Each sequence number becomes one distinct learning event.
         for n in range(1, 11)
     ] + [
         {
@@ -1143,10 +1102,9 @@ def test_v097_is_silent_once_outcomes_are_reported(tmp_path: Path) -> None:
             "actor": "agent",
             "payload": {"outcome": "helped"},
         }
+        # Each sequence number links one prior learning to a reported outcome.
         for n in range(1, 4)
     ]
-    # Select e as the current element from events) + "\n", encoding="utf-8") while test v097 is
-    # Details: silent once outcomes are reported preserves traversal order.
-    # Publish the externally visible effect after all required inputs are ready.
+    # Serialize the complete event stream as newline-delimited JSON in ledger order.
     ledger.write_text("\n".join(json.dumps(e) for e in events) + "\n", encoding="utf-8")
     assert "V097" not in codes(run_on(tmp_path))
