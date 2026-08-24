@@ -913,6 +913,7 @@ def main(argv: Sequence[str] | None = None) -> int:
           f"release {vendor.RELEASE}")
     return 0
 
+
 # Invoke release construction only when this module owns the process entry point.
 if __name__ == "__main__":
     # Convert the command verdict to the process status expected by development gates.

@@ -264,7 +264,7 @@ class DomainPurityCheck(ModuleCheck):
         for node in ast.walk(tree):
             # Only class definitions can carry dataclass decorators.
             if not isinstance(node, ast.ClassDef):
-            # Skip non-subscript syntax because it cannot apply Literal to member values.
+                # Skip syntax that cannot carry a dataclass decorator.
                 continue
             # Inspect each decorator-expression element in authored order.
             for decorator in node.decorator_list:
@@ -383,7 +383,7 @@ def _is_literal_union(annotation: ast.expr) -> bool:
     for node in ast.walk(annotation):
         # Only subscript expressions can apply Literal to member values.
         if not isinstance(node, ast.Subscript):
-                # Skip non-class syntax because it publishes no inheritance relationship.
+            # Skip syntax that cannot apply Literal to member values.
             continue
         # Select the subscripted base expression.
         base = node.value

@@ -101,7 +101,7 @@ def findings_for(tree: Path, targets: Sequence[str]) -> set[str]:
     for check in discover():
         # Bind every check to the same parsed declaration before examining the shared tree.
         check.declaration = declaration
-        # Reduce emitted findings to stable rule identities; presentation details are irrelevant here.
+        # Reduce emitted findings to stable rule identities, ignoring presentation details.
         reported.update(finding.rule_id for finding in check.run(present))
     # Report the union so one mutation can reveal collateral rule violations.
     return reported
@@ -235,7 +235,7 @@ def fails_against(node: str, root: Path, *, repository: bool = False) -> bool:
     """
     # Start from the caller environment so the proof runs under the qualified toolchain.
     environment = dict(os.environ)
-    # Repository fitness nodes default to the canonical checkout unless their mutation says otherwise.
+    # Fitness nodes use the canonical checkout unless their mutation says otherwise.
     working_directory = REPO_ROOT
     # A repository mutation must execute both tests and implementation from its copied checkout.
     if repository:
@@ -863,7 +863,7 @@ def main(argv: list[str] | None = None) -> int:
     # In ordinary gate mode, matrix failures take precedence over baseline comparisons.
     if status != EXIT_OK:
         print(f"discrimination: {len(complaints)} broken claim(s)", file=sys.stderr)
-        # Matrix breakage takes precedence over ratchet comparison because its evidence is incomplete.
+        # Matrix breakage precedes ratchet comparison because its evidence is incomplete.
         return EXIT_FAILED
     # Compute newly mechanized rule ids that have no witnessed mutation.
     gap = undiscriminated(provoked)

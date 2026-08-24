@@ -331,7 +331,7 @@ def check_front_matter(
     # Apply the declared genre schema with Draft 2020-12 semantics and stable error ordering.
     validator = jsonschema.Draft202012Validator(schema)
     for error in sorted(validator.iter_errors(dict(doc.front_matter)), key=str):
-        # Convert the schema path into a readable field identity, using root for whole-object errors.
+        # Convert the schema path to a field identity, using root for whole-object errors.
         location = "/".join(str(p) for p in error.absolute_path) or "(root)"
         yield Finding(
             code="V002",

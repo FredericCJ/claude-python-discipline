@@ -1275,7 +1275,7 @@ def _prepare_import_contracts(context: GateContext) -> PreparedCommand:
     )
     # Expand each governed source root into the wrapper's repeated command-line option.
     source_arguments = tuple(item for source in source_roots for item in ("--source-root", source))
-    # Construct the wrapper argv with every governed source root and minimum contract count explicit.
+    # Construct wrapper argv with every source root and the minimum contract count explicit.
     return PreparedCommand(
         command=(
             sys.executable,

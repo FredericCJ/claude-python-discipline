@@ -588,7 +588,7 @@ class Document:
 
         @return the half after the slash, or the whole id when there is no slash
         """
-        # Strip the genre prefix when present while retaining malformed unslashed ids for validation.
+        # Strip a present genre prefix while retaining malformed unslashed ids for validation.
         return self.doc_id.split("/", 1)[-1] if "/" in self.doc_id else self.doc_id
 
     @property
@@ -889,7 +889,7 @@ def _field_of(block: Sequence[str], name: str) -> str | None:
                 break
             # Begin capture only for the exact requested controlled field name.
             if found.group("name") == name:
-                # True means continuation lines belong to this field; false means no field is active.
+                # Mark later continuation lines as belonging to this field.
                 capturing = True
                 collected.append(found.group("body").strip())
             # Field header handling is complete; do not treat it as a continuation line.

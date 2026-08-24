@@ -560,7 +560,7 @@ def mechanism_resolvers() -> Iterator[tuple[str, str]]:
                 if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                     # Continue past non-callable syntax nodes.
                     continue
-                # Recover this definition's exact source for the deliberately name-independent probe.
+                # Recover this definition's source for the name-independent probe.
                 source = ast.get_source_segment(path.read_text(encoding="utf-8"), node) or ""
                 # A resolver joins both mechanism directories and tests concrete module existence.
                 if '"checks"' in source and '"fitness"' in source and "exists()" in source:

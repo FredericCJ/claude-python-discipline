@@ -370,7 +370,7 @@ def test_archive_refuses_a_codex_collision_without_blocking_claude(
     # Seed unmistakably project-owned bytes that the package must not overwrite.
     codex.write_bytes(b"project-owned Codex skill\r\n")
 
-    # Retain the partial integration outcome so collision status and independent Claude success align.
+    # Retain the partial outcome so collision status and independent Claude success align.
     completed = _integrate(root)
 
     assert completed.returncode == 1
@@ -625,7 +625,7 @@ def test_dropping_an_unusable_identifier_is_reported_not_silent() -> None:
     # Ask the companion diagnostic path which provided identities were excluded and why.
     dropped = release.unusable_identifiers("jdoe", "MAIN", "D:/home/jdoe")
     assert [
-        # Each exclusion contributes its label and original value; the reason is asserted separately.
+        # Each exclusion contributes its label and value; assert its reason separately.
         (label, value) for label, value, _ in dropped
     ] == [("build hostname", "MAIN")]
     assert "too common" in dropped[0][2]
@@ -763,7 +763,7 @@ def test_an_empty_project_directory_is_recorded(tmp_path: Path) -> None:
     """
     # Create the intentionally empty adopter-extension directory that the manifest must preserve.
     (tmp_path / ".agent" / "overrides").mkdir(parents=True)
-    # Create a non-empty sibling directory to discriminate general emptiness from required emptiness.
+    # Create a non-empty sibling to distinguish general from required emptiness.
     (tmp_path / ".agent" / "learning").mkdir()
     # Populate the sibling so it cannot appear in the empty-directory report.
     (tmp_path / ".agent" / "learning" / "schema.sql").write_text("x", encoding="utf-8")

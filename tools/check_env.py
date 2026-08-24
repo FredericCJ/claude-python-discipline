@@ -344,7 +344,7 @@ def main(argv: list[str] | None = None) -> int:
     # Refuse a declaration with no exact pip pins because it cannot constrain the gate.
     if not pins:
         print(f"{args.file} pins nothing; there is no lock to check", file=sys.stderr)
-        # Refuse a vacuous lock verdict when no exact Python distributions constrain the environment.
+        # Refuse a vacuous lock verdict when no exact Python pins constrain the environment.
         return 2
 
     # Compare every declared dimension against the running environment.

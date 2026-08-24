@@ -398,7 +398,7 @@ class Graph:
                 for neighbor in self.neighbors(node_id, types, undirected=undirected):
                     # Admit only first discovery so later, longer routes cannot replace distance.
                     if neighbor not in distance:
-                        # Record a node only on first discovery, which proves its shortest hop count.
+                        # First discovery proves and records this node's shortest hop count.
                         distance[neighbor] = hop
                         following.append(neighbor)
             if not following:
@@ -452,7 +452,7 @@ class Graph:
                     previous[edge.dst] = edge
                     # Stop at the first breadth-first encounter of the requested destination.
                     if edge.dst == dst:
-                        # Reconstruct immediately when breadth-first search first reaches the target.
+                        # Reconstruct when breadth-first search first reaches the target.
                         return _unwind(previous, src, dst)
                     following.append(edge.dst)
             frontier = following

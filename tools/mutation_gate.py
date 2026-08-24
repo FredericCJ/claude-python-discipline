@@ -551,7 +551,7 @@ def _run_command(  # ruff: ignore[too-many-arguments] - process-boundary record
     output = finished.stdout + finished.stderr
     # Reject Cosmic Ray initialization or execution failure before interpreting its inventory.
     if finished.returncode != 0:
-        # Preserve combined tool output because initialization and execution failures are actionable.
+        # Preserve combined output because initialization and execution failures are actionable.
         raise _problem(
             diagnostic_id,
             f"{activity} exited {finished.returncode}",
@@ -890,7 +890,7 @@ def run(root: Path) -> Report:
             results = execute(configuration)
         # Retain the structured gate error for the shared red report construction.
         except MutationGateError as caught:
-            # Preserve the exact diagnostic, summary, and bounded output from the failed proposition.
+            # Preserve the failed proposition's exact diagnostic, summary, and bounded output.
             problem = caught
         else:
             # Sum independently positive domain counts into the report's total mutant evidence.
