@@ -120,10 +120,13 @@ def write_settings(root: Path, allow: list[str]) -> Path:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select Claude's project settings file beneath the simulated adopter.
     path = root / ".claude" / "settings.json"
+    # Create the host-owned settings directory before the initial fixture write.
     path.parent.mkdir(parents=True, exist_ok=True)
+    # Persist exactly the pre-existing permission entries integration must preserve.
     path.write_text(json.dumps({"permissions": {"allow": allow}}, indent=2), encoding="utf-8")
+    # Return the settings path for byte and decoded-content assertions.
     return path
 
 
@@ -137,10 +140,13 @@ def write_vendored_skill(root: Path, text: str = SHARED_SKILL) -> Path:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the package-owned canonical skill consumed by both host integrations.
     path = root / ".agent" / "skills" / "python-discipline" / "SKILL.md"
+    # Create only the canonical skill ancestry inside the simulated package.
     path.parent.mkdir(parents=True, exist_ok=True)
+    # Preserve caller-supplied newline bytes so mirror comparisons remain exact.
     path.write_text(text, encoding="utf-8", newline="")
+    # Return the canonical skill path for drift and ownership assertions.
     return path
 
 
@@ -346,7 +352,6 @@ def test_skill_integration_is_idempotent(repo: Path) -> None:
     assert plan.changing == []
     assert plan.problems == []
     assert run(repo) == 0
-    # Resolve the repository-confined path used by this operation before filesystem access.
     assert snapshot == {
         path.relative_to(repo).as_posix(): path.read_bytes()
         for path in repo.rglob("*") if path.is_file()
@@ -419,8 +424,9 @@ def test_an_existing_file_keeps_every_byte_it_had(
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the pre-existing Claude entry file whose surrounding bytes must survive insertion.
     path = repo / "CLAUDE.md"
+    # Seed the parameterized prefix and newline representation before integration.
     path.write_bytes(original)
     assert kinds(repo)["CLAUDE.md"] is Kind.INSERT
     run(repo)
@@ -448,8 +454,9 @@ def test_the_block_matches_the_host_files_line_endings(
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the Claude entry file used to exercise this newline representation.
     path = repo / "CLAUDE.md"
+    # Persist exact input bytes so mixed-newline detection is meaningful.
     path.write_bytes(original)
     run(repo)
     # Retain the immutable source representation consumed by subsequent analysis.
@@ -504,10 +511,12 @@ def test_replacing_a_block_in_a_crlf_file_leaves_no_stray_carriage_return(
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the CRLF entry file whose managed block will be refreshed after a vendor upgrade.
     path = repo / "CLAUDE.md"
+    # Seed an existing managed block using Windows newlines.
     path.write_bytes(EXISTING_CRLF)
     run(repo)
+    # Change only the package version marker so the second run performs block replacement.
     (repo / ".agent" / "MANIFEST.json").write_text(
         json.dumps({"version": "def456"}), encoding="utf-8"
     )
@@ -528,9 +537,11 @@ def test_content_around_an_existing_block_survives_replacement(repo: Path) -> No
     Creates, replaces, or removes repository artifacts in implementation order.
     """
     run(repo)
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the integrated entry file before appending project-owned trailing content.
     path = repo / "CLAUDE.md"
+    # Add content outside the managed block that the refresh must retain verbatim.
     path.write_bytes(path.read_bytes() + b"\n## Deploy\n\nAsk first.\n")
+    # Force a managed-block refresh through a changed package version marker.
     (repo / ".agent" / "MANIFEST.json").write_text(
         json.dumps({"version": "def456"}), encoding="utf-8"
     )
@@ -671,8 +682,9 @@ def test_removal_restores_the_original_file(
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the existing entry file whose exact bytes removal must restore.
     path = repo / "CLAUDE.md"
+    # Seed the parameterized original content before install and removal.
     path.write_bytes(original)
     run(repo)
     run(repo, "--remove")
@@ -792,7 +804,6 @@ def test_the_record_survives_a_vendor_upgrade(tmp_path: Path) -> None:
     """
     # Retain the immutable source representation consumed by subsequent analysis.
     source = Path(__file__).resolve().parent.parent
-    # Resolve the repository-confined path used by this operation before filesystem access.
     target = tmp_path / "host"
     target.mkdir()
     vendor.install(vendor.Plan(source, target))
@@ -908,9 +919,10 @@ def _hooks_path(root: Path) -> str:
     @param root the repository to ask
     @return the configured value, or the empty string when unset
     """
-    # Preserve the external command representation and its observed completion outcome.
+    # Query Git directly so the assertion observes repository configuration, not integrator state.
     finished = subprocess.run(("git", "config", "core.hooksPath"),  # ruff: ignore[start-process-with-partial-path]
                               cwd=root, capture_output=True, text=True, check=False)
+    # Normalize Git's trailing newline while preserving an unset value as empty text.
     return finished.stdout.strip()
 
 
@@ -923,7 +935,7 @@ def test_hooks_are_pointed_at_not_copied(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build a synthetic Git repository containing the package-owned hook templates.
     root = _repo(tmp_path)
     integrate.install_hooks(root, ".agent")
     assert _hooks_path(root) == "enforce/templates/hooks"
@@ -937,7 +949,7 @@ def test_removing_the_hooks_leaves_nothing_behind(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build a synthetic Git repository whose hook pointer will be installed then removed.
     root = _repo(tmp_path)
     integrate.install_hooks(root, ".agent")
     integrate.install_hooks(root, ".agent", remove=True)
@@ -953,7 +965,7 @@ def test_a_missing_hook_directory_refuses(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build a repository that deliberately omits the package-owned hook-template directory.
     root = _repo(tmp_path, with_hooks=False)
     # Confine the acquired resource to this operation and release it on every exit.
     with pytest.raises(FileNotFoundError):
