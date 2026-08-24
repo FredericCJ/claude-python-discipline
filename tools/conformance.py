@@ -265,7 +265,7 @@ def judge(findings: Sequence[Finding], root: Path,
         # Protected rule families are absolute and bypass every debt allowance.
         return complaints
 
-    # Use the absence path when baseline has no available value.
+    # Require a new repository either to be clean or to establish its debt ceiling explicitly.
     if baseline is None:
         # A fresh repository must either be clean or explicitly establish its debt ratchet.
         if findings:

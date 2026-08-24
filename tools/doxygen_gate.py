@@ -149,7 +149,7 @@ def run(root: Path, minimum: int) -> tuple[int, str]:
     """
     # Resolve the qualified native Doxygen executable required by this gate.
     executable = locate_native("doxygen")
-    # Use the absence path when executable has no available value.
+    # Refuse documentation generation with environment remediation when Doxygen is unavailable.
     if executable is None:
         # Return the missing-tool refusal and its environment remediation.
         return EXIT_FAILED, (

@@ -394,7 +394,7 @@ def _load_context(root: Path, scratch: Path) -> tuple[StepResult, GateContext | 
     """
     # Start declaration timing before any filesystem or parser boundary is crossed.
     started = time.perf_counter()
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Locate the one project declaration whose bytes and schema decide preflight.
     source = root / "pyproject.toml"
     try:
         # Load the strict declaration, unit kind, configuration, and use evidence together.
@@ -723,14 +723,14 @@ def _local_targets(
     # Collect unique files element values; their order is deliberately unordered.
     files: set[Path] = set()
     for value in values:
-        # Retain the immutable source representation consumed by subsequent analysis.
+        # Interpret each configured value as a repository-relative path before confinement checks.
         raw = Path(value)
         candidate = (context.root / raw).resolve()
         # Absolute and parent-relative targets could make the gate inspect another repository.
         if raw.is_absolute() or not candidate.is_relative_to(context.root):
             # Refuse before testing existence outside the governed root.
             raise _probe_error(field, f"target {value!r} escapes the governed repository")
-        # Select the existing-artifact path only when `not candidate.exists()` is satisfied.
+        # Reject a confined but absent path so configuration cannot silently narrow coverage.
         if not candidate.exists():
             # Reject stale configuration instead of silently narrowing the scan.
             raise _probe_error(field, f"target {value!r} does not exist")
@@ -784,7 +784,7 @@ def _relative_configuration_file(
     if not isinstance(value, str) or not value.strip():
         # Reject absence and blank paths before filesystem resolution.
         raise _probe_error(field, "expected a non-empty repository-relative file")
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Resolve the declared repository-relative file before checking confinement and type.
     raw = Path(value)
     candidate = (context.root / raw).resolve()
     # Absolute and parent-relative configuration files could borrow sibling policy.
@@ -1201,7 +1201,6 @@ def _import_root_present(
     """
     # Convert the import name to its relative package path for source-root probing.
     relative = Path(*package.split("."))
-    # Retain the immutable source representation consumed by subsequent analysis.
     # Refuse the target when its declared source directory is absent.
     if any(
         (
@@ -1274,7 +1273,7 @@ def _prepare_import_contracts(context: GateContext) -> PreparedCommand:
         context,
         ("tool.agent-discipline-gate.import_contracts", "tool.agent-discipline.source_roots"),
     )
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Expand each governed source root into the wrapper's repeated command-line option.
     source_arguments = tuple(item for source in source_roots for item in ("--source-root", source))
     # Construct the wrapper argv with every governed source root and minimum contract count explicit.
     return PreparedCommand(
@@ -1349,7 +1348,7 @@ def _prepare_doxygen(context: GateContext) -> DoxygenPlan:
         "tool.agent-discipline-gate.doxyfile",
         ("INPUT", "FILE_PATTERNS", "WARN_AS_ERROR", "GENERATE_HTML"),
     )
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Parse Doxyfile input roots from the exact shipped configuration text.
     text = doxyfile.read_text(encoding="utf-8")
     input_field = "Doxyfile.INPUT"
     inputs, subjects = _local_targets(
@@ -1532,7 +1531,7 @@ def _run_doxygen_documentation(
         return _documentation_configuration_failure(context, rules, problem)
     # Resolve the qualified native Doxygen executable required by this gate.
     executable = _native_executable("doxygen")
-    # Use the absence path when executable has no available value.
+    # Report the supported native tool as unavailable when no Doxygen executable resolves.
     if executable is None:
         # Distinguish unavailable supported tooling from malformed repository configuration.
         return StepResult(
@@ -1851,7 +1850,7 @@ def _prepare_build(context: GateContext) -> tuple[BuildPlan, PreparedCommand]:
     # Read the static distribution name and version that both artifacts must publish.
     name, version = _project_identity(context)
     _validate_build_system(context)
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Allocate isolated source and artifact roots beneath the adapter scratch boundary.
     source = context.scratch / "isolated-source"
     artifacts = context.scratch / "artifacts"
     try:
@@ -1967,7 +1966,7 @@ def _read_sdist_identity(path: Path) -> tuple[str, str]:
             detail = f"{path.name} contains {len(members)} root PKG-INFO files"
             raise _artifact_error(detail)
         stream = archive.extractfile(members[0])
-        # Use the absence path when stream has no available value.
+        # Reject a metadata member that the archive index names but cannot expose as bytes.
         if stream is None:
             # A declared metadata member without readable bytes cannot prove identity.
             detail = f"cannot read {path.name}:{members[0].name}"
@@ -2261,7 +2260,7 @@ def _parse_artifact_probes(
     if not isinstance(raw_probes, list):
         # Reject non-array shapes before indexed diagnostic paths are constructed.
         raise _probe_error(probes_field, "expected an array")
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Materialize configured artifact probes in declaration order after schema validation.
     probes = tuple(
         _artifact_probe(raw, f"{probes_field}[{index}]") for index, raw in enumerate(raw_probes)
     )
@@ -2338,7 +2337,7 @@ def _probe_argv(probe: ArtifactProbe, interpreter: Path) -> tuple[str, ...]:
     # executable spelling.
     candidates = (scripts / first, (scripts / first).with_suffix(".exe"))
     executable = next((path for path in candidates if path.is_file()), None)
-    # Use the absence path when executable has no available value.
+    # Fail closed when the installed wheel publishes none of the supported entry points.
     if executable is None:
         # Fail closed when the installed wheel did not publish the declared entry point.
         raise _probe_error(probe.name, f"installed entry point {first} does not exist")
@@ -3248,7 +3247,7 @@ def run(root: Path, *, steps: Sequence[StepAdapter] = DEFAULT_STEPS) -> GateRepo
         # Each outcomes element is one step result, beginning with declaration validation and
         # followed by adapter outcomes in scheduled order.
         outcomes = [declaration_result]
-        # Use the absence path when context has no available value.
+        # Withhold every adapter when declaration preflight cannot construct a safe context.
         if context is None:
             # Mark every configured adapter not-run when declaration preflight withheld context.
             outcomes.extend(_not_run(adapter, declaration_result) for adapter in steps)

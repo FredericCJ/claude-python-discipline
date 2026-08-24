@@ -80,7 +80,7 @@ def run_mypy(root: Path, *, config: Path | None = None) -> tuple[bool, int, str]
     )
     # Combine the checker's captured diagnostic streams without losing emission text.
     output = finished.stdout + finished.stderr
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Extract mypy's analyzed-file count so a vacuous successful invocation still fails the gate.
     found = _MYPY_COUNT.search(output)
     # Return checker success, analyzed-file count, and diagnostics to the type gate.
     return finished.returncode == 0, int(found.group(1)) if found else 0, output
@@ -111,9 +111,9 @@ def run_pyright(root: Path) -> tuple[bool, int, str]:
 
     # Decode the located JSON suffix while keeping malformed checker output a red result.
     try:
-        # Hold the decoded checker report mapping for summary and diagnostic extraction.
+        # Decode Pyright's report object before extracting its summary and diagnostics.
         report = json.loads(finished.stdout[start:])
-    # Preserve the caught failure that explains why the external result is unusable.
+    # Report malformed checker JSON with its localized decoder failure and original output.
     except json.JSONDecodeError as broken:
         # Return checker failure with the localized JSON decoding cause.
         return False, 0, f"pyright emitted no parseable report: {broken}"
@@ -161,7 +161,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # Preserve whether the caller explicitly selected an adopter root before default resolution.
     root = arguments.root
-    # Use the absence path when root has no available value.
+    # Require an explicit target root when invoked from a vendored discipline installation.
     if root is None:
         # Refuse implicit target selection inside a vendored installation.
         if vendored():

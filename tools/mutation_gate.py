@@ -264,7 +264,7 @@ def _local_path(raw: object, field: str, root: Path) -> PurePosixPath:
             "MUTATION-001_CONFIGURATION",
             f"{field} path {raw!r} escapes the governed repository",
         )
-    # Select the existing-artifact path only when `not absolute.exists()` is satisfied.
+    # Reject a confined but absent mutation target before Cosmic Ray configuration is generated.
     if not absolute.exists():
         _reject(
             "MUTATION-001_CONFIGURATION",
@@ -473,7 +473,7 @@ def _cosmic_configuration(
     @par Effects
     Writes one generated Cosmic Ray configuration to ``path``.
     """
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Render the exact Cosmic Ray session declaration from the validated project model.
     body = (
         "[cosmic-ray]\n"
         f"module-path = {json.dumps(domain.as_posix())}\n"
@@ -567,7 +567,7 @@ def _mutant_count(output: str) -> int:
     @return parsed work-item count
     @throws MutationGateError when output is malformed or empty
     """
-    # Preserve the observed item count used by the non-vacuity verdict.
+    # Count parsed mutation records so an empty inventory cannot pass as success.
     count = 0
     for number, line in enumerate(output.splitlines(), 1):
         # Ignore separator lines while retaining original one-based diagnostic numbering.
@@ -594,7 +594,7 @@ def _mutant_count(output: str) -> int:
                 f"Cosmic Ray dump line {number} is not a work-item/result pair",
                 output,
             )
-        # Preserve the observed item count used by the non-vacuity verdict.
+        # Credit this line only after its mutation outcome and module fields parse successfully.
         count += 1
     # A zero-item inventory cannot establish mutation-testing competence.
     if count == 0:

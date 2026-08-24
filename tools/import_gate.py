@@ -273,7 +273,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # Preserve whether the caller explicitly selected an adopter root before default resolution.
     root = arguments.root
-    # Use the absence path when root has no available value.
+    # Require an explicit target root when invoked from a vendored discipline installation.
     if root is None:
         # Refuse implicit target selection inside a vendored installation.
         if vendored():

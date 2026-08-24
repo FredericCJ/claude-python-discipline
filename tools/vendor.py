@@ -417,7 +417,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     plan = Plan(args.source.resolve(), args.target.resolve())
     # Install mode performs the copy and reports project-owned seeding decisions.
     if args.command == "install":
-        # Preserve the observed item count used by the non-vacuity verdict.
+        # Retain the installed-file count and project-owned notes for the public summary.
         count, notes = install(plan, force=args.force)
         print(f"installed {count} upstream file(s) into {plan.agent_dir}")
         # Print project-half status notes in declared directory order.

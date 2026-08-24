@@ -525,7 +525,7 @@ def check_behaviour(paths: Sequence[Path], root: Path) -> Iterator[Failure]:
         try:
             # Preserve the documentation-stripped behavior fingerprint used for comparison.
             current = fingerprint(path)
-        # Preserve the caught failure that explains why the external result is unusable.
+        # Attribute an unparsable governed file to behavior coverage at its exact source error.
         except SyntaxError as exc:
             yield Failure("behaviour", name, f"does not parse: {exc.msg} at line {exc.lineno}")
             # Continue so one malformed file does not conceal drift elsewhere.
@@ -681,7 +681,7 @@ def _run_baseline(args: argparse.Namespace, parser: argparse.ArgumentParser, roo
         try:
             # Re-record the validated target set and retain its non-vacuity count.
             count = rerecord_baseline(root, paths, args.reason)
-        # Preserve the caught failure that explains why the external result is unusable.
+        # Route an invalid re-record request through argparse's stable usage-error boundary.
         except ValueError as exc:
             parser.error(str(exc))
         print(f"re-recorded {count} fingerprint(s) in "

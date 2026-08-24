@@ -88,7 +88,7 @@ def run(*, stop_early: bool = False) -> int:
     """
     # Each failed element names one unsuccessful gate step; execution order is preserved.
     failed: list[str] = []
-    # Process each candidate element in deterministic source order.
+    # Execute gate stages in the declared order while retaining every failed stage name.
     for name, command in GATE:
         # Execute this declared gate step and retain both diagnostics for the aggregate report.
         finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]

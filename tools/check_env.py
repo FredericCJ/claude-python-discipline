@@ -269,7 +269,7 @@ def drift(python: str | None, pins: dict[str, str],
     for name, pinned in sorted(pins.items()):
         # Query the running interpreter's installed distribution metadata.
         found = installed(name)
-        # Use the absence path when found has no available value.
+        # Report a pinned Python distribution that the active environment does not install.
         if found is None:
             problems.append(f"{name}: pinned {pinned}, not installed")
         # Report exact-version drift when the distribution exists at another version.
@@ -288,7 +288,7 @@ def drift(python: str | None, pins: dict[str, str],
             continue
         # Execute the package-specific version probe after verifier coverage is established.
         found = native_version(name)
-        # Use the absence path when found has no available value.
+        # Report a pinned native executable that cannot be resolved from the active environment.
         if found is None:
             problems.append(f"{name}: pinned {pinned}, not installed")
         # Report exact-version drift when the native tool reports another version.

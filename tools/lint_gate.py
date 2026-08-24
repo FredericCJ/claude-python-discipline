@@ -102,7 +102,7 @@ def run_ruff(root: Path, config: Path | None = None) -> tuple[list[dict[str, obj
             capture_output=True, text=True, encoding="utf-8", errors="replace",
             cwd=root, check=False,
         )
-    # Preserve the caught failure that explains why the external result is unusable.
+    # Translate an operating-system launch failure into the gate's stable runtime error.
     except OSError as exc:
         # Localize process-launch failure before translating it to the gate exception.
         message = f"could not run ruff: {exc}"
@@ -281,7 +281,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         # Preserve finding-record elements in checker emission order for the final verdict.
         findings, human = run_ruff(args.root)
-    # Preserve the caught failure that explains why the external result is unusable.
+    # Convert checker launch or report failures into the public gate status and diagnostic.
     except RuntimeError as exc:
         print(str(exc), file=sys.stderr)
         # Surface an unusable Ruff invocation as gate infrastructure failure.
