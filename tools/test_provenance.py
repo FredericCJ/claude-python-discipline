@@ -34,31 +34,24 @@ def _candidates() -> Sequence[dict[str, object]]:
 
     @return candidate dictionaries from the committed extraction
     """
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Decode the committed extraction and select its ordered candidate-record list.
     payload = yaml.safe_load(EXTRACTION.read_text(encoding="utf-8"))
-    # Compute candidates using payload["candidates"] for later candidates logic.
     candidates = payload["candidates"]
     assert isinstance(candidates, list)
-    # Return candidate dictionaries from the committed extraction to the caller.
     return candidates
 
 
 def test_frozen_source_and_all_claims_are_accounted_for() -> None:
     """The frozen input has one unique reviewed row for every extracted claim."""
-    # Derive digest from verify commenting source for the next test frozen source and all claims
-    # Details: are accounted for decision.
+    # Digest authenticates source bytes; rows prove every extracted proposition has one owner.
     digest = verify_commenting_source()
     # Preserve rows element values in deterministic source order.
     rows = build_claim_rows(_candidates())
 
+    # These assertions compare source identity, census cardinality, uniqueness, and disposition.
     assert digest == COMMENTING_SHA256
     assert len(rows) == COMMENTING_CLAIM_COUNT
-    # Select row as the current element from rows}) == len(rows) while test frozen source and
-    # Details: all claims are accounted for preserves traversal order.
     assert len({row.claim_id for row in rows}) == len(rows)
-    # Select row as the current element from rows) while test frozen source and all claims are
-    # Details: accounted for preserves traversal order.
     assert all(row.disposition != "UNREVIEWED" for row in rows)
 
 
@@ -70,10 +63,8 @@ def test_changed_source_is_rejected(tmp_path: Path) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Derive changed from tmp_path / "input.md" for the next test changed source is rejected
-    # Details: decision.
+    # The copied input differs by one byte sequence while retaining otherwise valid Markdown.
     changed = tmp_path / "input.md"
-    # Publish the externally visible effect after all required inputs are ready.
     changed.write_bytes(COMMENTING_SOURCE.read_bytes() + b"\n")
 
     # Confine the acquired resource to this operation and release it on every exit.
@@ -83,8 +74,7 @@ def test_changed_source_is_rejected(tmp_path: Path) -> None:
 
 def test_missing_policy_is_reported_as_unreviewed() -> None:
     """Removing an owning policy cannot silently discard its claims."""
-    # Select policies, policy as the current element from COMMENTING_POLICIES if policy.section
-    # Details: != 1) while test missing policy is reported as unreviewed preserves traversal order.
+    # Each retained policy belongs to a section other than the deliberately orphaned first one.
     policies = tuple(policy for policy in COMMENTING_POLICIES if policy.section != 1)
 
     # Confine the acquired resource to this operation and release it on every exit.
@@ -94,11 +84,8 @@ def test_missing_policy_is_reported_as_unreviewed() -> None:
 
 def test_duplicate_policy_is_reported_as_multiply_claimed() -> None:
     """A second apparent owner cannot overwrite the first owner's judgment."""
-    # Derive first from COMMENTING_POLICIES[0] for the next test duplicate policy is reported as
-    # Details: multiply claimed decision.
+    # Clone the first policy's selector while changing only its review rationale.
     first = COMMENTING_POLICIES[0]
-    # Derive duplicate from ClaimPolicy for the next test duplicate policy is reported as
-    # Details: multiply claimed decision.
     duplicate = ClaimPolicy(
         section=first.section,
         disposition="retained",
@@ -113,11 +100,9 @@ def test_duplicate_policy_is_reported_as_multiply_claimed() -> None:
 
 def test_changed_claim_identity_is_rejected() -> None:
     """A stale identity cannot be attached to altered claim text."""
-    # Treat the current candidate, item as the candidate element consumed by the enclosing
-    # Details: transformation.
+    # Mutate one commenting-doctrine claim without recomputing its content-derived identity.
     candidate = next(item for item in _candidates() if item.get("source") == "CD")
-    # Treat altered as mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Keys retain candidate schema fields and values retain content except text; order is unused.
     altered = {**candidate, "text": f"{candidate['text']} altered"}
 
     # Confine the acquired resource to this operation and release it on every exit.
@@ -129,13 +114,10 @@ def test_committed_ledger_is_the_deterministic_projection() -> None:
     """The claim evidence on disk is exactly the builder's sorted projection."""
     # Preserve rows element values in deterministic source order.
     rows = build_claim_rows(_candidates())
-    # Derive expected from render claim ledger for the next test committed ledger is the
-    # Details: deterministic projection decision.
     expected = render_claim_ledger(rows, COMMENTING_SHA256)
 
     assert COMMENTING_LEDGER.read_text(encoding="utf-8") == expected
-    # Derive parsed from json.loads for the next test committed ledger is the deterministic
-    # Details: projection decision.
+    # Decode the rendered projection to assert its aggregate closed-world counters.
     parsed = json.loads(expected)
     assert parsed["unreviewed_count"] == 0
     assert parsed["multiply_claimed_count"] == 0

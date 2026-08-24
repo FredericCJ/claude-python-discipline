@@ -110,7 +110,7 @@ class Failure:
 
         @return a single line naming the gate, the file and the problem
         """
-        # Return a single line naming the gate, the file and the problem to the caller.
+        # Keep gate, location, and remediation detail on one grep-friendly record.
         return f"  [{self.gate}] {self.path}: {self.detail}"
 
 
@@ -161,12 +161,12 @@ def strip_documentation(tree: ast.Module) -> ast.Module:
         body = getattr(node, "body", None)
         # Stop stripping when the syntax owner has no executable statement list.
         if not isinstance(body, list) or not body:
-            # Advance after the current candidate has been conclusively excluded.
+            # Nodes without suites cannot own Python docstrings.
             continue
         # Recurse only into syntax owners that can contain documented statement suites.
         if not isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef,
                                  ast.AsyncFunctionDef)):
-            # Advance after the current candidate has been conclusively excluded.
+            # Other statement-list owners use string expressions as data, not docstrings.
             continue
         # Only the first statement can carry a Python docstring.
         first = body[0]
@@ -181,7 +181,6 @@ def strip_documentation(tree: ast.Module) -> ast.Module:
             # Keep the mutated suite representable when documentation was its entire body.
             if not body:
                 body.append(ast.Pass())
-    # Return the same module with docstring expressions dropped to the caller.
     return tree
 
 
@@ -193,7 +192,6 @@ def fingerprint(path: Path) -> str:
     """
     # Parse the Python source into the syntax tree used for structural fingerprinting.
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    # Return the dumped syntax tree with docstrings stripped to the caller.
     return ast.dump(strip_documentation(tree), annotate_fields=False)
 
 
@@ -231,7 +229,6 @@ class BaselineEntry:
         if self.reason is not None:
             # Attach the mandatory explanation carried by an intentional re-record.
             out["reason"] = self.reason
-        # Return a mapping with `fingerprint`, `ref` and, when present, `reason` to the caller.
         return out
 
     @staticmethod
@@ -246,9 +243,8 @@ class BaselineEntry:
         """
         # Upgrade a legacy bare fingerprint using the document-level reference.
         if isinstance(raw, str):
-            # Return the parsed entry to the caller.
+            # Preserve v4 baselines by attaching their shared provenance during decode.
             return BaselineEntry(fingerprint=raw, ref=default_ref)
-        # Return the parsed entry to the caller.
         return BaselineEntry(
             fingerprint=raw["fingerprint"],
             ref=raw.get("ref", default_ref),
@@ -269,7 +265,6 @@ def _current_ref(root: Path) -> str:
         ["git", "rev-parse", "HEAD"],
         capture_output=True, encoding="utf-8", cwd=root, check=False,
     )
-    # Return the resolved commit sha, or `"working-tree"` when git cannot to the caller.
     return shown.stdout.strip() if shown.returncode == 0 else "working-tree"
 
 
@@ -290,7 +285,7 @@ def _ref_for(name: str, root: Path, head: str) -> str:
     """
     # Preserve the sentinel when no commit identity was available to validate.
     if head == "working-tree":
-        # Return `head` when the file matches that commit, else `"working-tree"` to the caller.
+        # Unresolved Git identity cannot support stronger file provenance.
         return head
     # Verify that the named file is unchanged before attributing it to the commit.
     shown = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv, no shell
@@ -299,9 +294,8 @@ def _ref_for(name: str, root: Path, head: str) -> str:
     )
     # Use honest working-tree provenance when Git failed or reported any file change.
     if shown.returncode != 0 or shown.stdout.strip():
-        # Return `head` when the file matches that commit, else `"working-tree"` to the caller.
+        # Never attribute modified or uninspectable bytes to the nominal HEAD commit.
         return "working-tree"
-    # Return `head` when the file matches that commit, else `"working-tree"` to the caller.
     return head
 
 
@@ -363,7 +357,6 @@ def write_baseline(root: Path) -> int:
             fingerprint=fingerprint(path), ref=_ref_for(name, root, head),
         )
     _write_baseline_document(files)
-    # Return how many files were fingerprinted to the caller.
     return len(files)
 
 
@@ -401,7 +394,6 @@ def write_baseline_from_ref(root: Path, ref: str) -> int:
         # Attribute the historical fingerprint directly to the requested revision.
         files[name] = BaselineEntry(fingerprint=fp, ref=ref)
     _write_baseline_document(files)
-    # Return how many files were fingerprinted to the caller.
     return len(files)
 
 
@@ -427,7 +419,6 @@ def rerecord_baseline(root: Path, paths: Sequence[Path], reason: str) -> int:
     if not reason or not reason.strip():
         # Localize the invariant failure before propagating it to API and CLI callers.
         no_reason = "a reason is required to re-record a baseline entry"
-        # Propagate the localized failure so callers cannot mistake it for success.
         raise ValueError(no_reason)
     # Hold baseline path keys mapped to their recorded behavior-fingerprint values.
     existing = load_baseline()
@@ -435,7 +426,6 @@ def rerecord_baseline(root: Path, paths: Sequence[Path], reason: str) -> int:
     if not existing:
         # Localize the missing-oracle failure before any replacement can be written.
         no_baseline = "no baseline recorded; run --baseline (with no paths) first"
-        # Propagate the localized failure so callers cannot mistake it for success.
         raise ValueError(no_baseline)
     # Preserve the immutable revision identity used as provenance for this comparison.
     head = _current_ref(root)
@@ -456,7 +446,6 @@ def rerecord_baseline(root: Path, paths: Sequence[Path], reason: str) -> int:
     # Preserve the optional baseline note while re-recording selected entries.
     note = _load_note()
     _write_baseline_document(files, note=note)
-    # Return how many entries were re-recorded to the caller.
     return len(targets)
 
 
@@ -467,10 +456,8 @@ def _load_note() -> str | None:
     """
     # An absent baseline cannot carry optional document context.
     if not BASELINE_PATH.exists():
-        # Return the top-level `note`, or `None` when there is no baseline or no note to the
-        # caller.
+        # Optional note absence is represented without inventing an empty note.
         return None
-    # Return the top-level `note`, or `None` when there is no baseline or no note to the caller.
     return json.loads(BASELINE_PATH.read_text(encoding="utf-8")).get("note")
 
 
@@ -481,13 +468,12 @@ def load_baseline() -> dict[str, BaselineEntry]:
     """
     # Treat an absent baseline as an empty oracle for callers that validate preconditions.
     if not BASELINE_PATH.exists():
-        # Return file path mapped to its recorded entry to the caller.
+        # No file means no accepted fingerprints, distinct from corrupt JSON.
         return {}
     # Decode the complete baseline document before adapting individual entries.
     document = json.loads(BASELINE_PATH.read_text(encoding="utf-8"))
     # Preserve the document-level reference used only by the legacy flat-entry format.
     default_ref = document.get("ref", "working-tree")
-    # Return file path mapped to its recorded entry to the caller.
     return {
         name: BaselineEntry.from_json(raw, default_ref)
         # Upgrade every stored value while retaining its repository-relative path key.
@@ -504,11 +490,11 @@ def _relative(path: Path, root: Path) -> str:
     """
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
-        # Return the relative POSIX path, or the absolute one if it lies outside to the caller.
+        # Repository-owned files use portable lookup keys shared with Git baselines.
         return path.resolve().relative_to(root).as_posix()
     # Translate the expected failure into this mechanism's stable diagnostic path.
     except ValueError:
-        # Return the relative POSIX path, or the absolute one if it lies outside to the caller.
+        # Preserve an external path honestly instead of fabricating repository ownership.
         return path.as_posix()
 
 
@@ -525,7 +511,7 @@ def check_behaviour(paths: Sequence[Path], root: Path) -> Iterator[Failure]:
     # Refuse comparison or update when no recorded baseline exists.
     if not baseline:
         yield Failure("behaviour", "-", "no baseline recorded; run --baseline first")
-        # Return one failure per file whose code changed to the caller.
+        # Without an oracle, no per-file behavior comparison is meaningful.
         return
     # Compare each selected file against the matching recorded fingerprint.
     for path in paths:
@@ -545,7 +531,7 @@ def check_behaviour(paths: Sequence[Path], root: Path) -> Iterator[Failure]:
         # Translate the expected failure into this mechanism's stable diagnostic path.
         except SyntaxError as exc:
             yield Failure("behaviour", name, f"does not parse: {exc.msg} at line {exc.lineno}")
-            # Advance after the current candidate has been conclusively excluded.
+            # Continue so one malformed file does not conceal drift elsewhere.
             continue
         # Report behavior drift when the current fingerprint differs from its recorded identity.
         if current != entry.fingerprint:
@@ -567,7 +553,7 @@ def run_check(module: str, paths: Sequence[Path], root: Path) -> Iterator[Failur
     """
     # Return the empty-result contract when the caller selected no governed paths.
     if not paths:
-        # Return one failure per reported finding to the caller.
+        # Empty selection is a vacuous iterator, not a subprocess invocation.
         return
     # Execute the named checker with this interpreter so imports match the active environment.
     finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv, no shell
@@ -591,7 +577,7 @@ def run_ruff(paths: Sequence[Path], root: Path) -> Iterator[Failure]:
     """
     # Return the empty-result contract when the caller selected no governed paths.
     if not paths:
-        # Return one failure per reported diagnostic to the caller.
+        # Avoid asking Ruff to infer a broader default surface than the caller selected.
         return
     # Run only the pydocstyle subset used by this gate and force parseable output.
     finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv, no shell
@@ -627,9 +613,8 @@ def _ruff() -> str:
     ):
         # Use the first installed candidate rather than an unrelated executable on PATH.
         if candidate.exists():
-            # Return an absolute path to ruff, or the bare name as a last resort to the caller.
+            # Environment-local Ruff is part of the qualified toolchain identity.
             return str(candidate)
-    # Return an absolute path to ruff, or the bare name as a last resort to the caller.
     return "ruff"
 
 
@@ -644,7 +629,7 @@ def _split_location(line: str, root: Path) -> tuple[str, str]:
     # drive. Anchor on the `.py:<line>` pair instead.
     found = _LOCATION.match(line)
     if found is None:
-        # Return the path and the remaining message to the caller.
+        # Preserve unstructured diagnostics verbatim with an explicit unknown location.
         return "-", line.strip()
     where = Path(found.group("path"))
     try:
@@ -667,7 +652,6 @@ def gate(paths: Sequence[Path], root: Path) -> list[Failure]:
     """
     # Expand paths once so all gate mechanisms inspect the identical ordered file set.
     files = list(iter_python(paths))
-    # Return every failure found, behaviour first to the caller.
     return [
         *check_behaviour(files, root),
         *run_check("doc_coverage", files, root),
@@ -713,12 +697,10 @@ def _run_baseline(args: argparse.Namespace, parser: argparse.ArgumentParser, roo
         print(f"recorded {write_baseline_from_ref(root, args.from_ref)} fingerprint(s) "
               f"from {args.from_ref} in "
               f"{BASELINE_PATH.relative_to(root).as_posix()}")
-        # Return 0; every path either prints a result or exits through `parser.error` to the
-        # caller.
+        # Historical recording is complete and must not fall through to working-tree capture.
         return 0
     print(f"recorded {write_baseline(root)} fingerprint(s) in "
           f"{BASELINE_PATH.relative_to(root).as_posix()}")
-    # Return 0; every path either prints a result or exits through `parser.error` to the caller.
     return 0
 
 

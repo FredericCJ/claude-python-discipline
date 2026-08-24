@@ -47,13 +47,9 @@ def seed_learning(root: Path) -> learn.Store:
     """
     # Resolve the repository-confined path used by this operation before filesystem access.
     target = root / "learning"
-    # Publish the externally visible effect after all required inputs are ready.
     target.mkdir(parents=True, exist_ok=True)
-    # Normalize the current repository path to its portable baseline key spelling.
-    # Process each candidate element in deterministic source order.
     for name in ("schema.sql", "config.toml"):
         shutil.copy(REPO_ROOT / "learning" / name, target / name)
-    # Return the store, with schema and configuration in place to the caller.
     return learn.Store(root)
 
 
@@ -78,12 +74,9 @@ def test_v080_is_silent_once_the_check_exists(tmp_path: Path) -> None:
     Creates, replaces, or removes repository artifacts in implementation order.
     """
     module(tmp_path, body=UNBUILT_RULE)
-    # Derive checks dir from tmp_path / "enforce" / "checks" for the next test v080 is silent
-    # Details: once the check exists decision.
+    # Materialize the exact checker module whose declaration was previously unresolved.
     checks_dir = tmp_path / "enforce" / "checks"
-    # Publish the externally visible effect after all required inputs are ready.
     checks_dir.mkdir(parents=True, exist_ok=True)
-    # Publish the externally visible effect after all required inputs are ready.
     (checks_dir / "nothing_built_here.py").write_text(
         '"""A check that now exists."""\n', encoding="utf-8"
     )
@@ -112,10 +105,9 @@ def test_v096_ledger_and_index_disagree(tmp_path: Path) -> None:
     May mutate caller-visible or process-local state in implementation order.
     """
     module(tmp_path)
-    # Compute store using seed learning for later test v096 ledger and index disagree logic.
+    # Sync the first event, then leave a second ledger event absent from the derived index.
     store = seed_learning(tmp_path)
     learn.append_event(store, "session", "S-1", {"task": "first"})
-    # Publish the externally visible effect after all required inputs are ready.
     learn.sync(store).close()
     # Append without syncing: the ledger moves on, the index does not.
     learn.append_event(store, "session", "S-2", {"task": "second"})
@@ -129,11 +121,10 @@ def test_v096_clears_after_a_sync(tmp_path: Path) -> None:
     May mutate caller-visible or process-local state in implementation order.
     """
     module(tmp_path)
-    # Compute store using seed learning for later test v096 clears after a sync logic.
+    # Append both events before one synchronization so ledger and index end at the same head.
     store = seed_learning(tmp_path)
     learn.append_event(store, "session", "S-1", {"task": "first"})
     learn.append_event(store, "session", "S-2", {"task": "second"})
-    # Publish the externally visible effect after all required inputs are ready.
     learn.sync(store).close()
     assert "V096" not in codes(run_on(tmp_path))
 
@@ -145,8 +136,7 @@ def test_v096_is_silent_without_a_database(tmp_path: Path) -> None:
     every fresh checkout, which is how a finding gets ignored.
     """
     module(tmp_path)
-    # Derive store from seed learning for the next test v096 is silent without a database
-    # Details: decision.
+    # Create ledger state without its optional derived database to model a fresh clone.
     store = seed_learning(tmp_path)
     learn.append_event(store, "session", "S-1", {"task": "first"})
     assert not store.db.exists()
@@ -160,23 +150,17 @@ def test_v096_reports_an_unreadable_ledger(tmp_path: Path) -> None:
     Creates, replaces, or removes repository artifacts in implementation order.
     """
     module(tmp_path)
-    # Derive store from seed learning for the next test v096 reports an unreadable ledger
-    # Details: decision.
+    # Start from a valid synchronized record before appending malformed ledger syntax.
     store = seed_learning(tmp_path)
     learn.append_event(store, "session", "S-1", {"task": "first"})
-    # Publish the externally visible effect after all required inputs are ready.
     learn.sync(store).close()
-    # Derive handle from "utf-8") as handle: for the next test v096 reports an unreadable ledger
-    # Details: decision.
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Append through a bounded handle so the corruption is flushed before validation.
     with store.ledger.open("a", encoding="utf-8") as handle:
-        # Publish the externally visible effect after all required inputs are ready.
+        # This invalid second record must be localized to its ledger line.
         handle.write("{ not json\n")
     # Preserve finding-record elements in checker emission order for the final verdict.
     findings = run_on(tmp_path)
     assert "V096" in codes(findings)
-    # Select f as the current element from findings)  # type while test v096 reports an
-    # Details: unreadable ledger preserves traversal order.
     assert any("ledger.jsonl:2" in f.message for f in findings)  # type: ignore[attr-defined]
 
 
@@ -189,20 +173,14 @@ def test_the_ledger_survives_a_round_trip(tmp_path: Path) -> None:
     @par Effects
     May mutate caller-visible or process-local state in implementation order.
     """
-    # Derive store from seed learning for the next test the ledger survives a round trip
-    # Details: decision.
+    # Seed three ordered sessions so the round trip exercises more than one ledger edge.
     store = seed_learning(tmp_path)
     # Locate the structural boundary used to parse the external result safely.
     # Process each candidate element in deterministic source order.
     for index in range(3):
         learn.append_event(store, "session", f"S-{index}", {"task": str(index)})
-    # Derive connection from learn.sync for the next test the ledger survives a round trip
-    # Details: decision.
     connection = learn.sync(store)
-    # Derive stored from connection.execute for the next test the ledger survives a round trip
-    # Details: decision.
     stored = connection.execute("SELECT COUNT(*) FROM event").fetchone()[0]
-    # Publish the externally visible effect after all required inputs are ready.
     connection.close()
     assert stored == len(learn.read_ledger(store)) == 3
 
@@ -230,11 +208,9 @@ def write_fitness(root: Path, declaration: str = "") -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Compute suite using root / "enforce" / "fitness" for later write fitness logic.
+    # Publish one minimal fitness test, optionally with an explicit rule-owner decorator.
     suite = root / "enforce" / "fitness"
-    # Publish the externally visible effect after all required inputs are ready.
     suite.mkdir(parents=True, exist_ok=True)
-    # Publish the externally visible effect after all required inputs are ready.
     (suite / "test_types.py").write_text(
         '"""A fitness suite."""\n\n\n'
         + (declaration + "\n" if declaration else "")
@@ -307,12 +283,9 @@ def test_the_declaration_is_read_from_tools_as_well(tmp_path: Path) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Derive tools from tmp_path / "tools" for the next test the declaration is read from tools
-    # Details: as well decision.
+    # Place the deciding test in the tools scope rather than the default fitness tree.
     tools = tmp_path / "tools"
-    # Publish the externally visible effect after all required inputs are ready.
     tools.mkdir(parents=True, exist_ok=True)
-    # Publish the externally visible effect after all required inputs are ready.
     (tools / "test_thing.py").write_text(
         '"""A suite outside enforce/fitness."""\n\n\n'
         '@decides("DEP-013")\n'
@@ -354,7 +327,7 @@ def test_the_decorated_function_is_returned_unchanged() -> None:
 
         @return a constant
         """
-        # Return a constant to the caller.
+        # A constant result isolates decorator transparency from function behavior.
         return 7
 
     assert decides("ARCH-002")(sample) is sample
@@ -375,12 +348,8 @@ def write_matrix(root: Path, *covered: str) -> None:
     """
     # Resolve the repository-confined path used by this operation before filesystem access.
     target = root / "enforce"
-    # Publish the externally visible effect after all required inputs are ready.
     target.mkdir(parents=True, exist_ok=True)
-    # Select listed, rule as the current element from covered) while write matrix preserves
-    # Details: traversal order.
     listed = ", ".join(f'"{rule}"' for rule in covered)
-    # Publish the externally visible effect after all required inputs are ready.
     (target / "discrimination.py").write_text(
         '"""A matrix."""\n\n\n'
         "def covered():\n"
@@ -440,5 +409,5 @@ def test_v098_is_silent_when_the_tree_carries_no_matrix(tmp_path: Path) -> None:
 
 # Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
-    # Propagate the localized failure so callers cannot mistake it for success.
+    # Direct execution runs this proof-of-failure module through pytest.
     raise SystemExit(pytest.main([__file__, "-q"]))
