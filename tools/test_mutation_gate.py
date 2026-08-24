@@ -26,7 +26,7 @@ def _project(root: Path, assertion: str) -> None:
     @param assertion body of the one unit-test oracle
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only the pytest-owned mutation fixture used to exercise survival policy.
     """
     # Build isolated domain and test roots, then publish one deterministic mutation subject.
     domain = root / "src" / "sample" / "domain"
@@ -107,7 +107,7 @@ def test_a_positive_survival_allowance_is_refused(tmp_path: Path) -> None:
     @param tmp_path isolated project root
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only the pytest-owned mutation fixture used to exercise survival policy.
     """
     _project(tmp_path, "assert increment(0) == 1")
     # Corrupt only the release-deciding zero-survivor policy in the generated declaration.

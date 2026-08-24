@@ -30,7 +30,7 @@ def _write(tmp_path: Path, body: str) -> Path:
     @return the path written
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned environment declarations used to exercise dependency discovery.
     """
     # Select the isolated environment declaration consumed by each parser case.
     path = tmp_path / "environment.yml"
@@ -165,7 +165,7 @@ def test_a_conda_pin_is_read(tmp_path: Path) -> None:
     @param tmp_path the fixture directory
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned environment declarations used to exercise dependency discovery.
     """
     # Select the temporary environment declaration receiving the native-tool fixture.
     declaration = tmp_path / "environment.yml"

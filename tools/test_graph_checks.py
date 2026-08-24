@@ -46,7 +46,7 @@ def add_front_matter(path: Path, line: str) -> None:
     @param line the front-matter entry to add, without a trailing newline
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only the pytest-owned graph fixture used to isolate relationship validation.
     """
     # Retain the immutable source representation consumed by subsequent analysis.
     text = path.read_text(encoding="utf-8")

@@ -90,7 +90,7 @@ def test_a_broken_layer_is_caught(tree: Path) -> None:
     @param tree a writable copy of the reference
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned project fixtures used to exercise a toolchain-gate verdict.
     """
     # Select the domain module whose new outward import violates the central layer contract.
     model = tree / "src" / "refpkg" / "domain" / "model.py"
@@ -140,7 +140,7 @@ def test_a_declared_nonstandard_source_root_is_used(tree: Path) -> None:
     @param tree writable reference copy
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned project fixtures used to exercise a toolchain-gate verdict.
     """
     # Move the package to a declared non-default root without changing its contents.
     (tree / "src").rename(tree / "code")
@@ -200,7 +200,7 @@ def test_an_untyped_definition_is_caught(tree: Path) -> None:
     @param tree a writable copy of the reference
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned project fixtures used to exercise a toolchain-gate verdict.
     """
     # Select a governed module so the new definition lies inside both checkers' census.
     model = tree / "src" / "refpkg" / "domain" / "model.py"
@@ -229,7 +229,7 @@ def test_a_checker_that_examined_nothing_fails(tmp_path: Path) -> None:
     @param tmp_path the per-test directory
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned project fixtures used to exercise a toolchain-gate verdict.
     """
     # Present a syntactically valid but source-empty layout to the wrapper's vacuity guard.
     (tmp_path / "src").mkdir()
@@ -298,7 +298,7 @@ def test_pytest_timeout_terminates_a_slow_test(tmp_path: Path) -> None:
     @param tmp_path isolated pytest project
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned project fixtures used to exercise a toolchain-gate verdict.
     """
     # Name the isolated test module whose runtime deliberately exceeds the requested timeout.
     test = tmp_path / "test_slow.py"
@@ -322,7 +322,7 @@ def test_pytest_socket_blocks_ambient_network(tmp_path: Path) -> None:
     @param tmp_path isolated pytest project
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned project fixtures used to exercise a toolchain-gate verdict.
     """
     # Name the isolated test module that attempts the forbidden ambient capability.
     test = tmp_path / "test_network.py"
@@ -347,7 +347,7 @@ def test_pytest_randomly_exposes_an_order_dependency(tmp_path: Path) -> None:
     @param tmp_path isolated pytest project
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned project fixtures used to exercise a toolchain-gate verdict.
     """
     # Use an external marker as the intentionally hidden dependency between two tests.
     marker = tmp_path / "produced"
@@ -396,7 +396,7 @@ def test_a_stale_import_does_not_decide_the_verdict(tree: Path) -> None:
     @param tree a writable copy of the reference
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned project fixtures used to exercise a toolchain-gate verdict.
     """
     sys.path.insert(0, str(REFERENCE / "src"))
     importlib.import_module("refpkg.domain.model")

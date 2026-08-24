@@ -43,7 +43,7 @@ def seed_learning(root: Path) -> learn.Store:
     @return the store, with schema and configuration in place
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned mechanism fixtures used to exercise rule-verification checks.
     """
     # Select the synthetic project's learning directory used by mechanism checks.
     target = root / "learning"
@@ -74,7 +74,7 @@ def test_v080_is_silent_once_the_check_exists(tmp_path: Path) -> None:
     """Creating the named module clears the warning, with nothing else changed.
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned mechanism fixtures used to exercise rule-verification checks.
     """
     module(tmp_path, body=UNBUILT_RULE)
     # Materialize the exact checker module whose declaration was previously unresolved.
@@ -150,7 +150,7 @@ def test_v096_reports_an_unreadable_ledger(tmp_path: Path) -> None:
     """A ledger line that is not JSON is named by file and line number.
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned mechanism fixtures used to exercise rule-verification checks.
     """
     module(tmp_path)
     # Start from a valid synchronized record before appending malformed ledger syntax.
@@ -209,7 +209,7 @@ def write_fitness(root: Path, declaration: str = "") -> None:
     @param declaration a `@decides(...)` line, or the empty string for none
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned mechanism fixtures used to exercise rule-verification checks.
     """
     # Publish one minimal fitness test, optionally with an explicit rule-owner decorator.
     suite = root / "enforce" / "fitness"
@@ -284,7 +284,7 @@ def test_the_declaration_is_read_from_tools_as_well(tmp_path: Path) -> None:
     `DEP-014` and the four `LEARN` rules.
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned mechanism fixtures used to exercise rule-verification checks.
     """
     # Place the deciding test in the tools scope rather than the default fitness tree.
     tools = tmp_path / "tools"
@@ -347,7 +347,7 @@ def write_matrix(root: Path, *covered: str) -> None:
     @param covered rule ids the matrix should report as discriminated
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned mechanism fixtures used to exercise rule-verification checks.
     """
     # Select the synthetic enforcement package loaded by matrix-evidence checks.
     target = root / "enforce"

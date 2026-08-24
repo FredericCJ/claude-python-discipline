@@ -25,7 +25,7 @@ def write_evidence(root: Path, payload: dict[str, object]) -> Path:
     @return registry path
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned evidence fixtures used to exercise structural validation.
     """
     # Select the canonical authored evidence-registry path beneath the synthetic corpus.
     path = root / "discipline" / "meta" / "evidence.json"
@@ -50,7 +50,7 @@ def write_matrix(root: Path, *covered: tuple[str, str]) -> None:
         order is preserved in the generated matrix.
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned evidence fixtures used to exercise structural validation.
         Each covered element represents one governed path; traversal order is preserved.
     """
     # Select the exact module imported by the strategy-witness resolver.
@@ -94,7 +94,7 @@ def test_v100_reports_structural_corruption(tmp_path: Path) -> None:
     """Malformed evidence becomes an actionable validator finding, not a crash.
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned evidence fixtures used to exercise structural validation.
     """
     # Select the canonical registry path so malformed bytes reach the production loader.
     path = tmp_path / "discipline" / "meta" / "evidence.json"

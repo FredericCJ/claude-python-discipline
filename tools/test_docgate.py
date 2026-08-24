@@ -67,7 +67,7 @@ def repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     @return the fake repository root, containing `tools/sample.py`
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only a pytest-owned legacy baseline used to exercise compatibility loading.
     """
     # Treat pytest's isolated directory as the complete synthetic repository boundary.
     root = tmp_path
@@ -149,7 +149,7 @@ def test_rerecord_with_reason_updates_only_named_entry(repo: Path) -> None:
     @param repo the fake repository, from the fixture
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only the pytest-owned repository used to exercise docgate behavior.
     """
     # Establish two baseline entries so selective rerecording can prove non-target preservation.
     (repo / "tools" / "other.py").write_text(_SAMPLE_SOURCE, encoding="utf-8")
@@ -190,7 +190,7 @@ def test_load_baseline_accepts_pre_provenance_flat_format(repo: Path) -> None:
     @param repo the fake repository, from the fixture
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only a pytest-owned provenance-aware baseline used to exercise check mode.
     """
     # Preserve the documentation-stripped behavior fingerprint used for comparison.
     fp = docgate.fingerprint(_sample(repo))
@@ -217,7 +217,7 @@ def test_check_behaviour_reads_new_format(repo: Path) -> None:
     @param repo the fake repository, from the fixture
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Replaces the pytest-owned baseline while preserving its existing reviewer note.
     """
     docgate.write_baseline(repo)
     # Introduce executable drift after baseline capture so behavior validation must fail.
@@ -237,7 +237,7 @@ def test_note_survives_a_rerecord(repo: Path) -> None:
     @param repo the fake repository, from the fixture
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Commits then dirties only the pytest-owned repository used to test attribution.
     """
     docgate.write_baseline(repo)
     # Inject a document-level note, then rerecord only one file entry beneath it.
@@ -311,7 +311,7 @@ def test_a_dirty_file_is_never_attributed_to_the_commit(git_repo: Path) -> None:
     @param git_repo the fake repository with one commit, from the fixture
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Adds only a pytest-owned untracked source used to test working-tree attribution.
     """
     # Preserve the immutable revision identity used as provenance for this comparison.
     head = _git(git_repo, "rev-parse", "HEAD").stdout.strip()
@@ -339,7 +339,7 @@ def test_an_untracked_file_is_attributed_to_the_working_tree(git_repo: Path) -> 
     @param git_repo the fake repository with one commit, from the fixture
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Replaces only the named entry in the pytest-owned documentation baseline.
     """
     # Add an untracked governed file so baseline provenance cannot name the prior commit.
     (git_repo / "tools" / "fresh.py").write_text(_SAMPLE_SOURCE, encoding="utf-8")

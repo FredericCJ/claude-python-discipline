@@ -429,7 +429,7 @@ def test_an_envelope_resolves_the_rules_it_names(tmp_path: Path) -> None:
     @param tmp_path holds the serialized envelope
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned corpus fixtures used to exercise navigation resolution.
     """
     # Serialize one valid envelope naming exactly two corpus rules.
     envelope = tmp_path / "e.json"
@@ -492,7 +492,7 @@ def test_an_id_the_corpus_does_not_carry_is_reported_not_dropped(
     @param tmp_path holds the serialized envelope
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned corpus fixtures used to exercise navigation resolution.
     """
     # Pair one resolvable rule with one nonexistent id in the serialized envelope.
     envelope = tmp_path / "e.json"

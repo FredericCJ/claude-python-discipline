@@ -50,7 +50,7 @@ def tree(root: Path, **modules: str) -> Path:
     @return the project root
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned checker fixtures used to exercise baseline conformance.
     """
     # Retain the immutable source representation consumed by subsequent analysis.
     source = root / "src"
@@ -108,7 +108,7 @@ def test_project_declaration_reaches_every_check(
     @param monkeypatch substitutes one declaration-observing check
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned checker fixtures used to exercise baseline conformance.
     """
     # Build a conformant project whose declaration will be expanded to multiple source roots.
     root = tree(tmp_path, widget='"""A module."""\n')
@@ -210,7 +210,7 @@ def test_a_new_file_with_the_same_rule_still_fails(tmp_path: Path) -> None:
     @param tmp_path the scratch directory
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned checker fixtures used to exercise baseline conformance.
     """
     # Start from one accepted undocumented module before adding a second-file violation.
     root = tree(tmp_path, widget=UNDOCUMENTED)
@@ -232,7 +232,7 @@ def test_more_of_the_same_rule_in_a_baselined_file_still_fails(
     @param tmp_path the scratch directory
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned checker fixtures used to exercise baseline conformance.
     """
     # Start from one accepted finding before increasing that rule's multiplicity in place.
     root = tree(tmp_path, widget=UNDOCUMENTED)
@@ -248,7 +248,7 @@ def test_clearing_a_finding_does_not_fail(tmp_path: Path) -> None:
     @param tmp_path the scratch directory
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned checker fixtures used to exercise baseline conformance.
     """
     # Start from two accepted same-rule findings before removing one occurrence.
     root = tree(tmp_path, widget=UNDOCUMENTED_TWICE)
@@ -269,7 +269,7 @@ def test_a_protected_rule_is_refused_before_the_baseline_is_read(
     @param tmp_path the scratch directory
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned checker fixtures used to exercise baseline conformance.
     """
     # Build a clean tree whose forged baseline names a policy-protected rule.
     root = tree(tmp_path)
@@ -356,7 +356,7 @@ def test_an_unreadable_baseline_is_treated_as_absent(tmp_path: Path) -> None:
     @param tmp_path the scratch directory
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned checker fixtures used to exercise baseline conformance.
     """
     # Build a regressed tree and pair it with a deliberately malformed baseline payload.
     root = tree(tmp_path, widget=UNDOCUMENTED)

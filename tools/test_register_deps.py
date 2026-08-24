@@ -39,7 +39,7 @@ def _tree(root: Path, files: dict[str, str]) -> Path:
     @return the tree root, holding `src/`
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only the pytest-owned project fixture used to exercise dependency registration.
     """
     # Materialize each relative module-name key and source-body value in mapping iteration order.
     for name, body in files.items():

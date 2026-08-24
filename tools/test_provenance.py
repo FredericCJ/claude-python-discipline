@@ -61,7 +61,7 @@ def test_changed_source_is_rejected(tmp_path: Path) -> None:
     @param tmp_path isolated source copy that may be damaged safely
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only the pytest-owned extraction fixture used to exercise provenance rejection.
     """
     # The copied input differs by one byte sequence while retaining otherwise valid Markdown.
     changed = tmp_path / "input.md"

@@ -93,7 +93,7 @@ def _run_inline_source(
     @return native exit status and combined diagnostics
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned source projections used to exercise Doxygen gate failures.
     """
     # Confine the reduced Doxygen project and generated output to this test directory.
     root = tmp_path / "inline"
@@ -153,7 +153,7 @@ def test_a_documented_parameter_that_does_not_exist_is_caught(tree: Path) -> Non
     @param tree a writable copy of the reference
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned source projections used to exercise Doxygen gate failures.
     """
     # Retain the exact original module so only one nonexistent parameter is introduced.
     plan = tree / "src" / "refpkg" / "domain" / "plan.py"
@@ -188,7 +188,7 @@ def test_generating_nothing_is_not_generating_cleanly(tmp_path: Path) -> None:
     @param tmp_path the fixture directory
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned source projections used to exercise Doxygen gate failures.
     """
     # Supply the expected source directory but deliberately no documentable files.
     (tmp_path / "src").mkdir()
@@ -206,7 +206,7 @@ def test_a_projection_without_every_relation_is_rejected(
     @param monkeypatch isolated gate substitution
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned source projections used to exercise Doxygen gate failures.
     """
     # Give the synthetic generator a valid project root while its relation counts are patched.
     (tmp_path / "src").mkdir()
@@ -276,7 +276,7 @@ def test_an_undocumented_function_is_caught_here(tree: Path) -> None:
     @param tree a writable copy of the reference
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned source projections used to exercise Doxygen gate failures.
     """
     # Append one representable function without a contract to an otherwise conformant module.
     model = tree / "src" / "refpkg" / "domain" / "model.py"

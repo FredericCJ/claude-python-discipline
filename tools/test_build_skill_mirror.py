@@ -27,7 +27,7 @@ def seed(root: Path) -> Path:
     @return the canonical skill directory
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned discipline sources and their generated Claude/Codex mirror fixtures.
     """
     # Retain the immutable source representation consumed by subsequent analysis.
     source = root / "skills" / "python-discipline"
@@ -78,7 +78,7 @@ def test_check_names_the_host_copy_that_drifted(
     @param capsys pytest's captured-console fixture
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned discipline sources and their generated Claude/Codex mirror fixtures.
     """
     seed(tmp_path)
     assert build_skill_mirror.main(["--root", str(tmp_path)]) == 0
@@ -98,7 +98,7 @@ def test_retired_files_are_removed_from_both_host_mirrors(tmp_path: Path) -> Non
     @param tmp_path the throwaway repository root
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned discipline sources and their generated Claude/Codex mirror fixtures.
     """
     # Retain the immutable source representation consumed by subsequent analysis.
     source = seed(tmp_path)
