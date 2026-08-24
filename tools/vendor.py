@@ -106,7 +106,7 @@ class Plan:
 
         @return the `.agent/` directory, which need not exist yet
         """
-        # Return the `.agent/` directory, which need not exist yet to the caller.
+        # All installed package material is confined below the adopter-owned agent root.
         return self.target / ".agent"
 
     @property
@@ -117,7 +117,7 @@ class Plan:
 
         @return the manifest's path, which need not exist yet
         """
-        # Return the manifest's path, which need not exist yet to the caller.
+        # The manifest lives beside the content whose exact provenance it records.
         return self.agent_dir / "MANIFEST.json"
 
 
@@ -145,17 +145,17 @@ def iter_upstream(source: Path) -> Iterator[Path]:
         root = source / name
         # Skip optional upstream directories absent from this source checkout.
         if not root.exists():
-            # Advance after the current candidate has been conclusively excluded.
+            # Optional package surfaces contribute nothing when not shipped.
             continue
         # Traverse the current directory recursively in lexical path order.
         for path in sorted(root.rglob("*")):
             # Exclude directories and generated file suffixes from the manifest stream.
             if path.is_dir() or path.suffix in SKIP_SUFFIXES:
-                # Advance after the current candidate has been conclusively excluded.
+                # Only distributable source files receive manifest ownership.
                 continue
             # Exclude any file nested beneath a known cache directory.
             if SKIP_DIRS & set(path.parts):
-                # Advance after the current candidate has been conclusively excluded.
+                # Derived caches must never become release inputs.
                 continue
             yield path
 
@@ -170,7 +170,7 @@ def digest(path: Path) -> str:
     @param path the file to hash
     @return the leading 16 hex characters of its digest
     """
-    # Return the leading 16 hex characters of its digest to the caller.
+    # A short content identity is sufficient for drift reports while remaining deterministic.
     return hashlib.sha256(path.read_bytes()).hexdigest()[:16]
 
 
@@ -194,7 +194,6 @@ def build_manifest(source: Path) -> dict[str, object]:
         # Serialize each path key and digest value in lexical key order before hashing.
         "".join(f"{k}:{v}" for k, v in sorted(files.items())).encode()
     ).hexdigest()[:12]
-    # Return the release name, the content stamp, the generating tool, and every to the caller.
     return {
         "release": RELEASE,
         "version": combined,
@@ -223,7 +222,7 @@ def _replace_upstream(plan: Plan) -> None:
         source_dir = plan.source / name
         # Leave the target untouched when the source checkout omits this directory.
         if not source_dir.exists():
-            # Advance after the current candidate has been conclusively excluded.
+            # Absence upstream never authorizes deleting an adopter path of the same name.
             continue
         # Resolve the corresponding vendored directory under `.agent/`.
         target_dir = plan.agent_dir / name
@@ -236,7 +235,7 @@ def _replace_upstream(plan: Plan) -> None:
         for path in iter_upstream(plan.source):
             # Ignore root files and files belonging to the other upstream directories.
             if not path.is_relative_to(source_dir):
-                # Advance after the current candidate has been conclusively excluded.
+                # Each replacement pass owns exactly one declared upstream subtree.
                 continue
             # Preserve the upstream-relative path below the vendored `.agent/` root.
             destination = plan.agent_dir / path.relative_to(plan.source)
@@ -281,7 +280,7 @@ def _seed_project_half(plan: Plan, *, force: bool) -> list[str]:
         # Leave an existing directory untouched unless the caller requested missing-seed repair.
         if target_dir.exists() and not force:
             notes.append(f"{name}/ already present and left untouched")
-            # Advance after the current candidate has been conclusively excluded.
+            # Default installation preserves every pre-existing project-owned directory.
             continue
         # Create the project directory if absent without changing existing contents.
         target_dir.mkdir(parents=True, exist_ok=True)
@@ -297,7 +296,6 @@ def _seed_project_half(plan: Plan, *, force: bool) -> list[str]:
                 if source_file.exists() and not destination.exists():
                     shutil.copy2(source_file, destination)
             notes.append("learning/ seeded; the ledger starts empty")
-    # Return one note per project directory left untouched or seeded to the caller.
     return notes
 
 
@@ -338,7 +336,7 @@ def install(plan: Plan, *, force: bool = False) -> tuple[int, list[str]]:
         encoding="utf-8",
         newline="\n",
     )
-    # Return how many upstream files the manifest records, and a note for each to the caller.
+    # Report installed upstream cardinality separately from project-seeding decisions.
     return len(manifest["files"]), notes  # type: ignore[arg-type]
 
 
@@ -355,7 +353,7 @@ def check(plan: Plan) -> list[str]:
     """
     # A missing manifest proves no comparable vendored state exists.
     if not plan.manifest.exists():
-        # Return one line per difference; empty when the target is in step to the caller.
+        # Without recorded provenance, individual target files cannot be judged safely.
         return [f"no manifest at {plan.manifest}; the target has not been vendored"]
     # Decode the target's recorded manifest field names and values.
     recorded = json.loads(plan.manifest.read_text(encoding="utf-8"))
@@ -388,7 +386,6 @@ def check(plan: Plan) -> list[str]:
         for name in PROJECT_OWNED
         if not (plan.agent_dir / name).exists()
     )
-    # Return one line per difference; empty when the target is in step to the caller.
     return problems
 
 

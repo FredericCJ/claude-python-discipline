@@ -67,7 +67,7 @@ class Artifact:
 
         @return True when writing would change the tree
         """
-        # Return true when writing would change the tree to the caller.
+        # Absence and any byte delta are equally host-mirror drift.
         return not self.path.is_file() or self.path.read_bytes() != self.content
 
     def write(self) -> None:
@@ -89,8 +89,7 @@ def source_files(source_dir: Path) -> list[Path]:
     @param source_dir the authored `skills/python-discipline/` directory
     @return the canonical skill files, sorted for deterministic output
     """
-    # Traverse the canonical tree and sort files by path for reproducible mirror plans.
-    # Return the canonical skill files, sorted for deterministic output to the caller.
+    # File-only traversal plus lexical order gives both hosts the same copy plan.
     return sorted(path for path in source_dir.rglob("*") if path.is_file())
 
 
@@ -101,7 +100,7 @@ def build_artifacts(source_dir: Path, dest_dir: Path) -> list[Artifact]:
     @param dest_dir one host's generated discovery directory
     @return one exact-copy artifact per source file
     """
-    # Return one exact-copy artifact per source file to the caller.
+    # Each element couples canonical bytes to the same relative path below one host root.
     return [
         Artifact(dest_dir / path.relative_to(source_dir), path.read_bytes())
         # Preserve each canonical file's relative path while copying its exact bytes.
@@ -122,11 +121,11 @@ def orphaned_files(source_dir: Path, dest_dir: Path) -> list[Path]:
     """
     # An absent host mirror cannot contain stale generated files.
     if not dest_dir.exists():
-        # Return generated files with no source counterpart, sorted to the caller.
+        # No discovery root means there are no retired projections to remove.
         return []
     # Collect unique wanted element values; their order is deliberately unordered.
     wanted = {path.relative_to(source_dir) for path in source_files(source_dir)}
-    # Return generated files with no source counterpart, sorted to the caller.
+    # Every returned path is a generated destination with no canonical counterpart.
     return sorted(
         path
         # Retain only regular mirror files whose relative path lacks a canonical source.

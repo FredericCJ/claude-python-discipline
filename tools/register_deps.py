@@ -70,7 +70,7 @@ def packages_of(root: Path) -> list[Path]:
     source = root / "src"
     # Refuse the target when its declared source directory is absent.
     if not source.is_dir():
-        # Return the package directories, empty when there is no `src/` at all to the caller.
+        # No source root means there are no owned packages to survey.
         return []
     # Retain initialized immediate child directories in lexical path order.
     return [p for p in sorted(source.iterdir())
@@ -89,7 +89,7 @@ def imports_of(path: Path) -> set[str]:
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     # Translate the expected failure into this mechanism's stable diagnostic path.
     except (OSError, SyntaxError):
-        # Return the top-level names it brings in, relative imports excluded to the caller.
+        # Unreadable or invalid modules contribute no trustworthy import facts.
         return set()
     # Each found element is one unique top-level import-root string; set order is deliberately
     # unordered.
@@ -103,7 +103,6 @@ def imports_of(path: Path) -> set[str]:
         # Record only absolute from-import roots; relative imports stay inside the package.
         elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
             found.add(node.module.split(".", 1)[0])
-    # Return the top-level names it brings in, relative imports excluded to the caller.
     return found
 
 
@@ -131,7 +130,7 @@ def survey(root: Path) -> dict[str, set[str]]:
         for module in sorted(package.rglob("*.py")):
             # Exclude interpreter cache paths from source analysis.
             if "__pycache__" in module.parts:
-                # Advance after the current candidate has been conclusively excluded.
+                # Bytecode caches are derived artifacts, never importing owners.
                 continue
             # Convert the module path to its dotted importer identity, collapsing package init.
             dotted = ".".join(module.relative_to(package.parent)
@@ -141,10 +140,9 @@ def survey(root: Path) -> dict[str, set[str]]:
                 # Exclude standard-library, project-owned, tooling, and private import roots.
                 if (name in STDLIB or name in own or name in IGNORED
                         or name.startswith("_")):
-                    # Advance after the current candidate has been conclusively excluded.
+                    # Only third-party roots belong in the dependency registration proposal.
                     continue
                 holders[name].add(dotted)
-    # Return each third-party root against the dotted module names importing it to the caller.
     return dict(holders)
 
 
@@ -156,7 +154,7 @@ def registered(config: Path) -> set[str]:
     """
     # An absent contract file registers no dependencies.
     if not config.is_file():
-        # Return every module named in any contract's `forbidden_modules` to the caller.
+        # Missing policy cannot establish ownership for any foreign import root.
         return set()
     # Decode TOML schema keys to configuration values; mapping order is deliberately unused.
     document = tomllib.loads(config.read_text(encoding="utf-8"))
@@ -169,7 +167,6 @@ def registered(config: Path) -> set[str]:
     for contract in contracts:
         # Add each contract's forbidden module root to the unordered registered-name set.
         named |= {str(m).split(".", 1)[0] for m in contract.get("forbidden_modules", [])}
-    # Return every module named in any contract's `forbidden_modules` to the caller.
     return named
 
 
@@ -186,7 +183,7 @@ def emit(holders: dict[str, set[str]]) -> str:
     """
     # Render an explicit non-vacuous empty register only when no foreign import exists.
     if not holders:
-        # Return the `forbidden_modules` body, with an owner comment per entry to the caller.
+        # Keep the empty state reviewable instead of omitting the contract field.
         return "forbidden_modules = []  # nothing foreign is imported at all"
     # Each lines element is one output-line string; exact TOML emission order is preserved.
     lines = ["forbidden_modules = ["]
@@ -198,7 +195,6 @@ def emit(holders: dict[str, set[str]]) -> str:
         note = owners[0] if len(owners) == 1 else f"SHARED by {', '.join(owners)}"
         lines.append(f'    "{name}",  # owned by {note}')
     lines.append("]")
-    # Return the `forbidden_modules` body, with an owner comment per entry to the caller.
     return "\n".join(lines)
 
 
@@ -275,5 +271,5 @@ def main(argv: list[str] | None = None) -> int:
 
 # Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
-    # Propagate the localized failure so callers cannot mistake it for success.
+    # Surface unregistered dependency ownership as command failure.
     raise SystemExit(main())

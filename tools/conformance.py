@@ -145,7 +145,6 @@ def findings_for(paths: Sequence[Path]) -> list[Finding]:
         # Bind the shared declaration before collecting this check's ordered findings.
         check.declaration = declaration
         collected.extend(check.run(list(paths)))
-    # Return the findings, in check-name then walk order to the caller.
     return collected
 
 
@@ -176,7 +175,6 @@ def pairs_of(findings: Sequence[Finding], root: Path) -> set[tuple[str, str]]:
             # Preserve an external finding as an absolute POSIX path when confinement fails.
             name = finding.path.as_posix()
         pairs.add((name, finding.rule_id))
-    # Return one pair per distinct file and rule to the caller.
     return pairs
 
 
@@ -193,8 +191,7 @@ def load_baseline(path: Path) -> tuple[int, set[tuple[str, str]]] | None:
     """
     # An absent or non-file baseline means the adopter has not established a ratchet.
     if not path.is_file():
-        # Return the count and pairs, or None when the file is absent or unreadable to the
-        # caller.
+        # Absence is distinct from an established zero-finding baseline.
         return None
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
@@ -202,8 +199,7 @@ def load_baseline(path: Path) -> tuple[int, set[tuple[str, str]]] | None:
         data = json.loads(path.read_text(encoding="utf-8"))
     # Translate the expected failure into this mechanism's stable diagnostic path.
     except (OSError, json.JSONDecodeError):
-        # Return the count and pairs, or None when the file is absent or unreadable to the
-        # caller.
+        # Unreadable debt cannot be trusted as an acceptance boundary.
         return None
     # Restore the recorded count and an unordered set of `(file, rule)` tuple elements.
     return int(data.get("count", 0)), {(f, c) for f, c in data.get("pairs", [])}
@@ -269,18 +265,18 @@ def judge(findings: Sequence[Finding], root: Path,
     ]
     # Return protected failures immediately so no baseline can mask them.
     if complaints:
-        # Return one complaint per regression, empty when the tree holds to the caller.
+        # Protected rule families are absolute and bypass every debt allowance.
         return complaints
 
     # Use the absence path when baseline has no available value.
     if baseline is None:
-        # Handle the non-empty or enabled findings state.
+        # A fresh repository must either be clean or explicitly establish its debt ratchet.
         if findings:
             complaints.append(
                 f"{len(findings)} finding(s) and no baseline recorded. Fix them, "
                 f'or accept them for now with --update-baseline --why "...".'
             )
-        # Return one complaint per regression, empty when the tree holds to the caller.
+        # Empty means the unbaselined repository is already conformant.
         return complaints
 
     # Split the recorded ceiling into total-count and distinct-pair dimensions.
@@ -298,7 +294,6 @@ def judge(findings: Sequence[Finding], root: Path,
             f"finding total rose from {recorded_count} to {len(findings)} with no "
             f"new (file, rule) pair: an existing rule gained instances"
         )
-    # Return one complaint per regression, empty when the tree holds to the caller.
     return complaints
 
 
@@ -365,7 +360,6 @@ def render_report(findings: Sequence[Finding], root: Path,
             "  A rule cleared in one module is a rule that can be cleared in the",
             "  next; a thousand scattered findings are where adoption stops.",
         ]
-    # Return the report, ready to print to the caller.
     return "\n".join(lines)
 
 
@@ -463,5 +457,5 @@ def main(argv: list[str] | None = None) -> int:
 
 # Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
-    # Propagate the localized failure so callers cannot mistake it for success.
+    # Preserve conformance regressions as a failing process status.
     raise SystemExit(main())

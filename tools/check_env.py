@@ -112,7 +112,7 @@ def read_pins(path: Path) -> tuple[str | None, dict[str, str], list[str], dict[s
         line = raw.split("#", 1)[0]
         # Ignore blank and comment-only declaration lines.
         if not line.strip():
-            # Advance after the current candidate has been conclusively excluded.
+            # Empty declaration records carry no lock information.
             continue
         # Test the line against the exact conda interpreter grammar first.
         found_python = _PYTHON.match(line)
@@ -120,7 +120,7 @@ def read_pins(path: Path) -> tuple[str | None, dict[str, str], list[str], dict[s
         if found_python is not None:
             # Preserve the captured exact interpreter version string.
             python = found_python.group(1)
-            # Advance after the current candidate has been conclusively excluded.
+            # A matched interpreter record cannot also be a package declaration.
             continue
         # Test the remaining line against the exact pip requirement grammar.
         found = _PINNED.match(line)
@@ -128,14 +128,14 @@ def read_pins(path: Path) -> tuple[str | None, dict[str, str], list[str], dict[s
         if found is not None:
             # Store the distribution/version pair after both captures are available.
             pins[found.group(1)] = found.group(2)
-            # Advance after the current candidate has been conclusively excluded.
+            # Exact pip records need no range or native-package classification.
             continue
         # Detect range operators that violate the exact-lock contract.
         vague = _LOOSE.match(line)
         # Preserve an actionable complaint for every ranged requirement.
         if vague is not None:
             loose.append(f"{vague.group(1)} is given a range, not an exact version")
-            # Advance after the current candidate has been conclusively excluded.
+            # Preserve the loose-pin defect without misclassifying its package syntax.
             continue
         # Finally test the line against an exact native conda-package pin.
         native = _CONDA.match(line)
@@ -143,7 +143,7 @@ def read_pins(path: Path) -> tuple[str | None, dict[str, str], list[str], dict[s
         if native is not None:
             # Store the native package/version pair after both captures are available.
             conda[native.group(1)] = native.group(2)
-    # Return the interpreter version or None, the pip pins by distribution name, to the caller.
+    # Keep interpreter, pip, lock defects, and native pins separate for precise diagnostics.
     return python, pins, loose, conda
 
 
@@ -155,11 +155,11 @@ def installed(name: str) -> str | None:
     """
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
-        # Return the installed version, or None when the distribution is absent to the caller.
+        # Metadata is authoritative for import-only Python distributions.
         return version(name)
     # Translate the expected failure into this mechanism's stable diagnostic path.
     except PackageNotFoundError:
-        # Return the installed version, or None when the distribution is absent to the caller.
+        # An absent distribution is the expected negative probe result, not a tool failure.
         return None
 
 
@@ -179,7 +179,7 @@ def native_version(name: str) -> str | None:
     """
     # Locate the declared package's executable using conda-aware search precedence.
     located = locate_native(name)
-    # Return the normalized dotted version from its `--version` output, or None to the caller.
+    # An unavailable executable has no version; otherwise normalize its own report.
     return _ask_version(located) if located else None
 
 
@@ -210,9 +210,9 @@ def locate_native(name: str) -> str | None:
                           root / "bin" / filename):
             # Return the first concrete executable candidate found in conda precedence order.
             if candidate.is_file():
-                # Return the path to run, or None when it cannot be found at all to the caller.
+                # Prefer the active environment over any unrelated executable on PATH.
                 return str(candidate)
-    # Return the path to run, or None when it cannot be found at all to the caller.
+    # PATH remains the fallback for tools intentionally provided outside the prefix.
     return shutil.which(name)
 
 
@@ -224,7 +224,7 @@ def parse_native_version(output: str) -> str | None:
     """
     # Locate the first dotted numeric token accepted by the native-version grammar.
     found = _NATIVE_VERSION.search(output)
-    # Return the normalized numeric version, or None when none is present to the caller.
+    # Ignore vendor decoration while retaining the comparable dotted release token.
     return found.group(1) if found is not None else None
 
 
@@ -241,9 +241,9 @@ def _ask_version(executable: str) -> str | None:
     )
     # Enter the failure path only when the subprocess reports a nonzero status.
     if finished.returncode != 0:
-        # Return the version token, or None when the call fails to the caller.
+        # A tool that cannot report its version cannot satisfy an exact pin.
         return None
-    # Return the version token, or None when the call fails to the caller.
+    # Native tools vary between stdout and stderr, so parse their combined report.
     return parse_native_version(f"{finished.stdout}\n{finished.stderr}")
 
 
@@ -285,7 +285,7 @@ def drift(python: str | None, pins: dict[str, str],
                 f"no way to verify it. Add it to NATIVE_VERIFIERS or remove the "
                 f"pin -- a declared dependency nobody checks is not a lock."
             )
-            # Advance after the current candidate has been conclusively excluded.
+            # Never execute an undeclared probe command merely because a package is pinned.
             continue
         # Execute the package-specific version probe after verifier coverage is established.
         found = native_version(name)
@@ -295,8 +295,6 @@ def drift(python: str | None, pins: dict[str, str],
         # Report exact-version drift when the native tool reports another version.
         elif found != pinned:
             problems.append(f"{name}: pinned {pinned}, installed {found}")
-    # Return one line per departure, naming the package, the pin and what is there to the
-    # caller.
     return problems
 
 
@@ -378,5 +376,5 @@ def main(argv: list[str] | None = None) -> int:
 
 # Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
-    # Propagate the localized failure so callers cannot mistake it for success.
+    # Make environment drift observable to shell launchers and CI.
     raise SystemExit(main())

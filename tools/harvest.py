@@ -65,7 +65,7 @@ def collect(store: learn.Store, min_evidence: int) -> list[dict[str, object]]:
         for row in rows:
             # Exclude weak observations that also offer no command capable of verifying them.
             if row["helped"] < min_evidence and not row["verification"]:
-                # Advance after the current candidate has been conclusively excluded.
+                # Neither repeated utility nor a reproducible check justifies promotion.
                 continue
             # Each links element is one graph-node id attached to this learning; SQL lexical
             # node order is preserved.
@@ -92,7 +92,7 @@ def collect(store: learn.Store, min_evidence: int) -> list[dict[str, object]]:
         # Expose the surviving promotion candidates in database id order.
         return found
     finally:
-        # Publish the externally visible effect after all required inputs are ready.
+        # Close the read connection even when malformed learning data aborts collection.
         connection.close()
 
 
@@ -127,14 +127,12 @@ def render_report(target: Path, found: Sequence[dict[str, object]], min_evidence
             "single session disagreeing with a rule is not evidence the rule is wrong.",
             "",
         ]
-        # Return markdown text, newline-terminated to the caller.
         return "\n".join(lines)
 
     # Preserve lines element values in deterministic source order.
     lines += ["| Learning | Kind | Evidence | About | Claim |", "|---|---|---|---|---|"]
-    # Treat the current item as the candidate element consumed by the enclosing transformation.
-    # Process each candidate element in deterministic source order.
     for item in found:
+        # Each row summarizes one eligible learning without expanding its full evidence trail.
         # Preserve the observed item count used by the non-vacuity verdict.
         about = ", ".join(f"`{n}`" for n in item["links"]) or "—"  # type: ignore[arg-type]
         lines.append(
@@ -143,8 +141,7 @@ def render_report(target: Path, found: Sequence[dict[str, object]], min_evidence
         )
     lines.append("")
 
-    # Treat the current item as the candidate element consumed by the enclosing transformation.
-    # Process each candidate element in deterministic source order.
+    # Expand each eligible learning into a detail section in collection order.
     for item in found:
         # Preserve lines, t element values in deterministic source order.
         lines += [
@@ -167,7 +164,7 @@ def render_report(target: Path, found: Sequence[dict[str, object]], min_evidence
             "belong upstream.",
             "",
         ]
-    # Return markdown text, newline-terminated to the caller.
+    # Normalize the report to exactly one terminal newline for stable review diffs.
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -197,8 +194,6 @@ def render_patch(found: Sequence[dict[str, object]]) -> str:
         "mechanism — the three things a harvest cannot decide for you.",
         "",
     ]
-    # Treat the current item as the candidate element consumed by the enclosing transformation.
-    # Process each candidate element in deterministic source order.
     for item in found:
         # Select mechanical enforcement for a verifiable learning and review ownership otherwise.
         mechanism = (
@@ -225,7 +220,6 @@ def render_patch(found: Sequence[dict[str, object]]) -> str:
             "```",
             "",
         ]
-    # Return markdown holding one proposed rule block per learning to the caller.
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -262,7 +256,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(render_report(target, found, args.min_evidence))
     # Persist the proposed doctrine patch only when the caller requested an output artifact.
     if args.patch:
-        # Publish the externally visible effect after all required inputs are ready.
+        # Write proposals separately from the report so harvesting never edits doctrine directly.
         args.patch.write_text(render_patch(found), encoding="utf-8", newline="\n")
         print(f"proposed rule text written to {args.patch}")
     # Return the aggregate process status to the command-line boundary.
