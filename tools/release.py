@@ -55,7 +55,7 @@ import gate
 import vendor
 from discipline_core import REPO_ROOT
 
-# Import annotation-only protocols without adding runtime dependencies.
+# Keep annotation-only collection protocols out of the release tool's runtime imports.
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator, Sequence
 
@@ -229,7 +229,7 @@ class Finding:
 
         @return a single line naming the file, the line and what matched
         """
-        # Return a single line naming the file, the line and what matched to the caller.
+        # Render archive identity, location, category, and bounded evidence as one terminal line.
         return f"  {self.member}:{self.line}: {self.pattern}: {self.excerpt}"
 
 
@@ -266,7 +266,7 @@ def build_identity() -> tuple[str | None, str | None, str | None]:
     @return the login name, the machine name and the home directory, each as the
         environment gives it or None where it says nothing
     """
-    # Return the login name, the machine name and the home directory, each as the to the caller.
+    # Snapshot all builder-identifying environment inputs once so scan and diagnostics agree.
     return (
         os.environ.get("USERNAME") or os.environ.get("USER"),
         platform.node(),
@@ -284,7 +284,7 @@ def _named_identifiers(
     @param home the building account's home directory
     @return each value beside the label a finding would name it by
     """
-    # Return each value beside the label a finding would name it by to the caller.
+    # Attach stable diagnostic labels without changing the environment-provided values.
     return (("build username", username), ("build hostname", hostname),
             ("build home directory", home))
 
@@ -295,25 +295,22 @@ def _unusable_because(value: str | None) -> str | None:
     @param value the identifier as the environment gave it
     @return the reason it is unusable, or None when it can be matched on
     """
-    # Select the guarded path only after `value is None or not value.strip()` is satisfied.
+    # Reject absent identity evidence before normalization could erase that distinction.
     if value is None or not value.strip():
-        # Return the reason it is unusable, or None when it can be matched on to the caller.
+        # Report absence separately from a present identifier that is too weak to scan.
         return "absent"
-    # Compute cleaned using value.strip for later unusable because logic.
     cleaned = value.strip()
     # Exclude a fixed package-owned sandbox value that cannot identify the current builder.
     if cleaned.replace("\\", "/").rstrip("/") in PACKAGE_OWNED_IDENTIFIERS:
         # Return the explicit non-identity reason for release diagnostics.
         return "fixed package-owned runtime path, not a builder identity"
-    # Select the guarded path only after `len(cleaned) < MINIMUM_IDENTIFIER` is satisfied.
     if len(cleaned) < MINIMUM_IDENTIFIER:
-        # Return the reason it is unusable, or None when it can be matched on to the caller.
+        # Very short identities would match ordinary source too often to localize a leak.
         return f"shorter than {MINIMUM_IDENTIFIER} characters"
-    # Select the guarded path only after `cleaned.lower() in COMMON_IDENTIFIERS` is satisfied.
     if cleaned.lower() in COMMON_IDENTIFIERS:
-        # Return the reason it is unusable, or None when it can be matched on to the caller.
+        # Common repository vocabulary cannot distinguish host identity from authored content.
         return "too common in source to distinguish a leak from ordinary code"
-    # Return the reason it is unusable, or None when it can be matched on to the caller.
+    # A remaining identity is specific enough to become a bounded leak pattern.
     return None
 
 
@@ -336,9 +333,7 @@ def environment_literals(
     @param home the building account's home directory
     @return one case-insensitive pattern per usable identifier
     """
-    # Treat the current label, value as the candidate element consumed by the enclosing
-    # Details: transformation.
-    # Return one case-insensitive pattern per usable identifier to the caller.
+    # Compile only usable identity values as bounded, case-insensitive literal patterns.
     return tuple(
         (label, re.compile(rf"(?<!\w){re.escape(value.strip())}(?!\w)", re.IGNORECASE))
         for label, value in _named_identifiers(username, hostname, home)
@@ -361,23 +356,18 @@ def unusable_identifiers(
     @param home the building account's home directory
     @return the label, the value and the reason, for each present-but-unusable one
     """
-    # Each dropped element is a label/value/refusal-reason triple in identifier-probe order.
+    # Collect present identities omitted from scanning so reduced coverage is visible to builders.
+    # Each element is a label/value/reason triple retained in environment-probe order.
     dropped = []
-    # Treat the current label, value as the candidate element consumed by the enclosing
-    # Details: transformation.
-    # Advance unusable identifiers through the current input element in declared order.
     for label, value in _named_identifiers(username, hostname, home):
-        # Select the guarded path only after `value is None or not value.strip()` is satisfied.
+        # Absence supplies no sensitive literal and therefore needs no degraded-scan warning.
         if value is None or not value.strip():
-            # Advance after the current candidate has been conclusively excluded.
+            # Leave absent environment fields out of the present-but-unusable report.
             continue
-        # Compute reason using  unusable because for later unusable identifiers logic.
         reason = _unusable_because(value)
-        # Use the available-value path only when reason is present.
         if reason is not None:
+            # Preserve the exact omitted value and its refusal rationale for release output.
             dropped.append((label, value.strip(), reason))
-    # Return the label, the value and the reason, for each present-but-unusable one to the
-    # Details: caller.
     return tuple(dropped)
 
 
@@ -391,19 +381,15 @@ def scan_text(
     @param patterns the named patterns to apply
     @return one finding per match, in line order
     """
-    # Compute compiled using tuple for later scan text logic.
+    # Materialize the pattern stream once because every decoded line reuses the same scan set.
     compiled = tuple(patterns)
-    # Preserve the current decoded diagnostic line before location normalization.
-    # Advance scan text through the current input element in declared order.
     for number, line in enumerate(text.splitlines(), start=1):
-        # Select label, pattern as the current element from compiled while scan text preserves
-        # Details: traversal order.
-        # Advance scan text through the current input element in declared order.
+        # Test every leak category against the current physical line for precise diagnostics.
         for label, pattern in compiled:
-            # Preserve the optional pattern match that carries the reported analysis count.
+            # Retain the optional match object because it supplies the exact reported excerpt.
             found = pattern.search(line)
-            # Use the available-value path only when found is present.
             if found is not None:
+                # Emit the bounded excerpt with its archive member and one-based line identity.
                 yield Finding(member, number, label, found.group(0)[:80])
 
 
@@ -418,8 +404,7 @@ def unsafe_members(names: Sequence[str]) -> list[str]:
         Each element is an archive path; input order is preserved among rejected names.
     @return every name that is absolute, drive-qualified or escapes upwards
     """
-    # Normalize the current repository path to its portable baseline key spelling.
-    # Return every name that is absolute, drive-qualified or escapes upwards to the caller.
+    # Retain only absolute, drive-qualified, or upward-traversing archive identities.
     return [
         name for name in names
         if name.startswith(("/", "\\"))
@@ -443,13 +428,12 @@ def stage(source: Path, staging: Path) -> tuple[int, list[str]]:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Publish the externally visible effect after all required inputs are ready.
+    # Reproduce an adopter installation in a fresh Git repository before inspecting its output.
     staging.mkdir(parents=True, exist_ok=True)
     subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv, no shell
         ["git", "init", "--quiet", str(staging)],
         capture_output=True, encoding="utf-8", errors="replace", check=True,
     )
-    # Return how many upstream files the manifest records, and the installer's to the caller.
     return vendor.install(vendor.Plan(source.resolve(), staging.resolve()))
 
 
@@ -462,27 +446,24 @@ def prune(root: Path) -> list[str]:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Each removed element is one pruned archive-relative path in deepest-first traversal order.
+    # Track each deletion while visiting deepest paths first so parent removal hides nothing.
+    # Each element is an archive-relative path retained in actual deletion order.
     removed: list[str] = []
-    # Visit each staged path deepest-first so parent deletion cannot hide a child decision.
     for path in sorted(root.rglob("*"), key=lambda p: len(p.parts), reverse=True):
-        # Skip a child whose already-pruned parent removed it during the same traversal.
+        # A removed parent may already have consumed a path from the precomputed traversal.
         if not path.exists():
-            # Advance because a previously removed parent already consumed this path.
+            # Skip the stale traversal entry without recording a second deletion.
             continue
-        # Compute relative using path.relative to for later prune logic.
         relative = path.relative_to(root).as_posix()
-        # Refuse the target when its declared source directory is absent.
         if path.is_dir() and path.name in PRUNED_DIRS:
+            # Remove excluded cache or build directories as complete staged subtrees.
             shutil.rmtree(path)
             removed.append(f"{relative}/")
-        # Select the regular-file path only when `path.is_file() and path.suffix in
-        # Details: PRUNED_SUFFIXES` is satisfied.
+        # Delete excluded individual artifacts after directories have received precedence.
         elif path.is_file() and path.suffix in PRUNED_SUFFIXES:
-            # Publish the externally visible effect after all required inputs are ready.
+            # Remove excluded generated or nested-artifact files independently.
             path.unlink()
             removed.append(relative)
-    # Return each deleted path, relative to `root`, in the order removed to the caller.
     return removed
 
 
@@ -493,25 +474,21 @@ def ledger_problems(agent_dir: Path) -> list[str]:
     @return one line per file that would ship somebody else's learning, plus a
             line if the seeds themselves are missing
     """
-    # Compute learning using agent_dir / "learning" for later ledger problems logic.
+    # Compare staged learning contents with the immutable seed allowlist only. Each problem element
+    # is one actionable ledger diagnostic in unexpected-file then missing-seed order.
     learning = agent_dir / "learning"
-    # Select the existing-artifact path only when `not learning.exists()` is satisfied.
     if not learning.exists():
-        # Return one line per file that would ship somebody else's learning, plus a to the
-        # Details: caller.
+        # Missing seed storage proves the installer did not produce a valid discipline bundle.
         return ["learning/ is missing; the installer did not seed it"]
-    # Each findings element is one emitted diagnostic mapping; checker order is preserved.
     problems = [
         f"learning/{path.relative_to(learning).as_posix()} is not a seed and must not ship"
         for path in sorted(learning.rglob("*")) if path.is_file()
         and path.relative_to(learning).as_posix() not in LEDGER_SEEDS
     ]
-    # Unpack problems, seed using [ for later ledger problems logic.
     problems += [
         f"learning/{seed} is missing from the seeded ledger"
         for seed in sorted(LEDGER_SEEDS) if not (learning / seed).exists()
     ]
-    # Return one line per file that would ship somebody else's learning, plus a to the caller.
     return problems
 
 
@@ -525,49 +502,36 @@ def requirement_problems(path: Path) -> list[str]:
     @param path shipped requirements manifest
     @return stable diagnostics; empty only for complete exact pins
     """
-    # Select the regular-file path only when `not path.is_file()` is satisfied.
+    # Refuse absence before parsing because an empty dependency claim is not closed evidence.
     if not path.is_file():
-        # Return stable diagnostics; empty only for complete exact pins to the caller.
+        # Localize the missing shipped manifest for the release refusal.
         return [f"required dependency manifest is missing: {path}"]
-    # Treat pins as mapping elements whose keys identify fields and values carry their content;
-    # Details: key order is deliberately unused.
+    # Index accepted exact pins by normalized distribution name while retaining every defect.
+    # Pin keys map to exact version values in manifest order; each problem is ordered by source.
     pins: dict[str, str] = {}
-    # Each findings element is one emitted diagnostic mapping; checker order is preserved.
     problems: list[str] = []
-    # Retain the immutable source representation consumed by subsequent analysis.
-    # Advance requirement problems through the current input element in declared order.
     for number, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-        # Preserve the current decoded diagnostic line before location normalization.
+        # Normalize presentation whitespace without changing package or version spelling.
         line = raw.strip()
-        # Select the empty-or-disabled path when line or line.startswith('#') has no usable
-        # Details: value.
         if not line or line.startswith("#"):
-            # Advance after the current candidate has been conclusively excluded.
+            # Ignore manifest prose and separators; they declare no dependency.
             continue
-        # Normalize the current repository path to its portable baseline key spelling.
         name, separator, version = line.partition("==")
-        # Compute normalized using  DISTRIBUTION PUNCTUATION.sub for later requirement problems
-        # Details: logic.
         normalized = _DISTRIBUTION_PUNCTUATION.sub("-", name.strip()).lower()
-        # Select the empty-or-disabled path when separator or not normalized or (not
-        # Details: version.strip()) or (';' in version) has no usable value.
         if not separator or not normalized or not version.strip() or ";" in version:
+            # Ranges, markers, and malformed entries cannot identify one reproducible verifier.
             problems.append(f"requirements.txt:{number}: expected one exact name==version pin")
-            # Advance after the current candidate has been conclusively excluded.
             continue
-        # Select the guarded path only after `normalized in pins` is satisfied.
         if normalized in pins:
+            # A second declaration makes dependency identity ambiguous even when versions agree.
             problems.append(f"requirements.txt:{number}: duplicate pin for {normalized}")
-            # Advance after the current candidate has been conclusively excluded.
             continue
-        # Update requirement problems state only after the required source facts are available.
+        # Retain the canonical name-to-version relation for closure comparison.
         pins[normalized] = version.strip()
-    # Format the relationship labels whose generated graph count is zero.
     problems.extend(
         f"requirements.txt: missing required distribution {missing}"
         for missing in sorted(REQUIRED_PYTHON_DISTRIBUTIONS - pins.keys())
     )
-    # Return stable diagnostics; empty only for complete exact pins to the caller.
     return problems
 
 
@@ -577,11 +541,10 @@ def verify_requirements(agent_dir: Path) -> None:
     @param agent_dir staged `.agent` bundle
     @throws RuntimeError when the manifest is absent, floating, or incomplete
     """
-    # Compute problems using requirement problems for later verify requirements logic.
+    # Aggregate all pinning and closure defects before refusing the staged package once.
     problems = requirement_problems(agent_dir / "requirements.txt")
-    # Handle the non-empty or enabled problems state.
     if problems:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Keep every actionable manifest defect in the single release-boundary failure.
         raise RuntimeError(
             "the adopter dependency manifest is incomplete:\n  " + "\n  ".join(problems)
         )
@@ -597,8 +560,7 @@ def members_of(root: Path) -> list[str]:
     @param root the staged tree
     @return the member names, sorted, using forward slashes
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
-    # Return the member names, sorted, using forward slashes to the caller.
+    # Convert every staged regular file to a sorted portable archive identity.
     return sorted(
         path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file()
     )
@@ -615,8 +577,7 @@ def empty_dirs(root: Path) -> list[str]:
     @param root the staged tree
     @return the directory names, sorted, each with a trailing slash
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
-    # Return the directory names, sorted, each with a trailing slash to the caller.
+    # Preserve only directory subtrees that contain no file and would vanish from a file-only zip.
     return sorted(
         path.relative_to(root).as_posix() + "/"
         for path in root.rglob("*")
@@ -633,34 +594,28 @@ def scan_tree(root: Path, members: Sequence[str]) -> tuple[list[Finding], list[s
     @return every finding, blocking and reviewable together, and one note per
             file that could not be decoded as UTF-8
     """
-    # Each patterns element pairs a diagnostic label with a regex, ordered as blocking, review,
-    # then build-identity patterns.
+    # Combine static secret shapes with current-builder identity literals for one complete scan.
+    # Each pattern element is a label/regex pair in blocking, review, then environment order;
+    # finding and undecodable-member elements preserve archive scan order.
     patterns = (
         *BLOCKING_PATTERNS,
         *REVIEW_PATTERNS,
         *environment_literals(*build_identity()),
     )
-    # Each findings element is one emitted diagnostic mapping; checker order is preserved.
     findings: list[Finding] = []
-    # Each undecodable element is one non-UTF-8 member path in archive order.
     undecodable: list[str] = []
-    # Select member as the current element from members while scan tree preserves traversal
-    # Details: order.
-    # Advance scan tree through the current input element in declared order.
     for member in members:
-        # Retain the immutable source representation consumed by subsequent analysis.
+        # Inspect the exact staged bytes that will enter the archive rather than source copies.
         raw = (root / member).read_bytes()
-        # Protect the fallible operation so expected failures remain explicitly classified.
+        # Decode text strictly so binary members cannot be misrepresented as partially scanned.
         try:
-            # Retain the immutable source representation consumed by subsequent analysis.
+            # The complete UTF-8 representation is the only text admitted to pattern scanning.
             text = raw.decode("utf-8")
-        # Translate the expected failure into this mechanism's stable diagnostic path.
         except UnicodeDecodeError:
+            # Disclose unscanned binary membership while preserving its bytes for packaging.
             undecodable.append(member)
-            # Advance after the current candidate has been conclusively excluded.
             continue
         findings.extend(scan_text(member, text, patterns))
-    # Return every finding, blocking and reviewable together, and one note per to the caller.
     return findings, undecodable
 
 
@@ -675,15 +630,13 @@ def excuse(member: str, pattern: str) -> str | None:
     @param pattern the name of the pattern that matched
     @return the recorded reason, or None when this match is not excused
     """
-    # Normalize the current repository path to its portable baseline key spelling.
-    # Advance excuse through the current input element in declared order.
+    # Require both the exact leak category and an exact or installed-suffix member identity.
     for name, label, reason in ALLOWED:
-        # Select the guarded path only after `pattern == label and (member == name or
-        # Details: member.endswith(f'/{name}'))` is satisfied.
+        # Grant an exception only when both dimensions match the recorded fixture declaration.
         if pattern == label and (member == name or member.endswith(f"/{name}")):
-            # Return the recorded reason, or None when this match is not excused to the caller.
+            # Expose the recorded fixture rationale instead of silently suppressing the match.
             return reason
-    # Return the recorded reason, or None when this match is not excused to the caller.
+    # Absence of a narrow recorded exception leaves the finding unexcused.
     return None
 
 
@@ -697,21 +650,17 @@ def partition(findings: Sequence[Finding]) -> tuple[list[Finding], list[Finding]
         Each findings element is one emitted diagnostic mapping; checker order is preserved.
     @return the blocking findings and the reviewable ones, each in scan order
     """
-    # Collect unique reviewable element values; their order is deliberately unordered.
+    # Classify findings without reordering scanner output or discarding accepted evidence.
+    # Each output element is the original finding in scan order, partitioned into blocking stops
+    # or non-blocking seen evidence; reviewable labels form an unordered membership set.
     reviewable = {label for label, _ in REVIEW_PATTERNS}
-    # Each stops element is one unexcused blocking finding in scan order.
     stops: list[Finding] = []
-    # Each seen element is one reviewable or excused finding in scan order.
     seen: list[Finding] = []
-    # Select finding as the current element from findings while partition preserves traversal
-    # Details: order.
-    # Advance partition through the current input element in declared order.
     for finding in findings:
-        # Compute passed using (finding.pattern in reviewable for later partition logic.
+        # Only review-category patterns and exact fixture exceptions avoid the blocking set.
         passed = (finding.pattern in reviewable
                   or excuse(finding.member, finding.pattern) is not None)
         (seen if passed else stops).append(finding)
-    # Return the blocking findings and the reviewable ones, each in scan order to the caller.
     return stops, seen
 
 
@@ -723,24 +672,19 @@ def copy_documents(source: Path, staging: Path) -> list[str]:
     @return the names copied, in archive order
     @throws FileNotFoundError if a required document has not been written
     """
-    # Each copied element is one archive-root document name in required document order.
+    # Resolve each required root document through its declared authoring precedence. Each copied
+    # element is a root filename in release order; candidate paths retain source precedence.
     copied: list[str] = []
-    # Normalize the current repository path to its portable baseline key spelling.
-    # Advance copy documents through the current input element in declared order.
     for name in ROOT_DOCUMENTS:
-        # Each candidates element is one possible authored source path in lookup-precedence order.
+        # Preserve each candidate source path in declared precedence order for deterministic lookup.
         candidates = [source / directory / name for directory in DOCUMENT_SOURCES]
-        # Preserve the optional pattern match that carries the reported analysis count.
         found = next((path for path in candidates if path.is_file()), None)
-        # Use the absence path when found has no available value.
         if found is None:
-            # Format the relationship labels whose generated graph count is zero.
+            # Refuse packaging before a release can omit its installation or release account.
             missing = f"{name} is required at the archive root but was not found"
-            # Propagate the localized failure so callers cannot mistake it for success.
             raise FileNotFoundError(missing)
         shutil.copy2(found, staging / name)
         copied.append(name)
-    # Return the names copied, in archive order to the caller.
     return copied
 
 
@@ -764,29 +708,20 @@ def write_archive(
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Publish the externally visible effect after all required inputs are ready.
+    # Establish the output location before opening one deterministic archive transaction.
     destination.parent.mkdir(parents=True, exist_ok=True)
-    # Bind archive to the current value used by the next write archive decision.
-    # Confine the acquired resource to this operation and release it on every exit.
     with zipfile.ZipFile(destination, "w", zipfile.ZIP_DEFLATED) as archive:
-        # Normalize the current repository path to its portable baseline key spelling.
-        # Advance write archive through the current input element in declared order.
+        # Materialize otherwise invisible empty directories with fixed timestamp and mode metadata.
         for name in directories:
-            # Treat the current entry as the candidate element consumed by the enclosing
-            # Details: transformation.
+            # Build a directory member record independent of checkout filesystem metadata.
             entry = zipfile.ZipInfo(name, date_time=ZIP_EPOCH)
-            # Update write archive state only after the required source facts are available.
             entry.external_attr = ZIP_DIR_MODE
             archive.writestr(entry, b"")
-        # Select member as the current element from members while write archive preserves
-        # Details: traversal order.
-        # Advance write archive through the current input element in declared order.
+        # Serialize staged file bytes in caller-provided order with host-independent metadata.
         for member in members:
-            # Compute info using zipfile.ZipInfo for later write archive logic.
+            # Build a regular-file member record independent of checkout filesystem metadata.
             info = zipfile.ZipInfo(member, date_time=ZIP_EPOCH)
-            # Update write archive state only after the required source facts are available.
             info.compress_type = zipfile.ZIP_DEFLATED
-            # Update write archive state only after the required source facts are available.
             info.external_attr = ZIP_FILE_MODE
             archive.writestr(info, (root / member).read_bytes())
 
@@ -802,86 +737,68 @@ def build(source: Path, destination: Path, staging: Path) -> tuple[int, list[Fin
             archive root, a required member is missing, or the scan finds
             anything blocking
     """
-    # Preserve the observed item count used by the non-vacuity verdict.
+    # Construct the adopter-shaped staging tree and disclose every installer observation.
     count, notes = stage(source, staging)
     print(f"staged {count} upstream file(s) into {staging}")
-    # Preserve the optional baseline note while re-recording selected entries.
-    # Advance build through the current input element in declared order.
     for note in notes:
+        # Indent installer notes beneath the staging summary without changing their content.
         print(f"  {note}")
 
-    # Compute removed using prune for later build logic.
+    # Remove non-shipping state before membership, closure, or leak evidence is computed.
     removed = prune(staging)
     print(f"pruned {len(removed)} path(s) that must not ship")
-    # Resolve the repository-confined path used by this operation before filesystem access.
-    # Advance build through the current input element in declared order.
     for path in removed:
+        # Make every defense-in-depth deletion independently reviewable in build output.
         print(f"  removed {path}")
 
-    # Compute problems using ledger problems for later build logic.
+    # Prove private learning history is absent while all required empty-ledger seeds remain.
     problems = ledger_problems(staging / ".agent")
-    # Handle the non-empty or enabled problems state.
     if problems:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Refuse the complete set of ledger violations at the release boundary.
         raise RuntimeError("the ledger would not ship empty:\n  " + "\n  ".join(problems))
     print("ledger ships empty: seeds only")
 
-    # Compute copied using copy documents for later build logic.
+    # Add release-facing documents only after package-owned ledger contents are clean.
     copied = copy_documents(source, staging)
     print(f"archive root carries {', '.join(copied)}")
 
-    # Compute members using members of for later build logic.
+    # Freeze the final file and empty-directory inventories before validating archive identities.
     members = members_of(staging)
-    # Compute directories using empty dirs for later build logic.
     directories = empty_dirs(staging)
-    # Normalize the current repository path to its portable baseline key spelling.
-    # Advance build through the current input element in declared order.
     for name in directories:
+        # Disclose each explicit directory member that file enumeration would otherwise hide.
         print(f"recording empty directory {name}")
-    # Compute escaping using unsafe members for later build logic.
     escaping = unsafe_members([*members, *directories])
-    # Handle the non-empty or enabled escaping state.
     if escaping:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Prevent archive extraction from addressing anything outside its destination root.
         raise RuntimeError("member path escapes the archive root: " + ", ".join(escaping))
-    # Each absent element is one missing required-member path in declaration order.
+    # Retain each missing load-bearing archive identity in declaration order for one refusal.
     absent = [name for name in REQUIRED_MEMBERS if name not in members]
-    # Handle the non-empty or enabled absent state.
     if absent:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Refuse an internally consistent archive that still lacks a load-bearing member.
         raise RuntimeError("required member(s) missing: " + ", ".join(absent))
     verify_requirements(staging / ".agent")
 
-    # Treat the current label, reason, value as the candidate element consumed by the enclosing
-    # Details: transformation.
-    # Advance build through the current input element in declared order.
+    # Disclose every present builder identity omitted from dynamic leak protection.
     for label, value, reason in unusable_identifiers(*build_identity()):
         print(f"  leak scan dropped the {label} ({value!r}): {reason}")
 
-    # Preserve finding-record elements in checker emission order for the final verdict.
+    # Scan final staged bytes, preserving binary exceptions and all textual matches separately.
     findings, undecodable = scan_tree(staging, members)
-    # Select member as the current element from undecodable while build preserves traversal
-    # Details: order.
-    # Advance build through the current input element in declared order.
     for member in undecodable:
+        # Name each unscanned binary member so release review can account for the residual.
         print(f"  not UTF-8, shipped unread: {member}")
-    # Unpack reviewable, stops using partition for later build logic.
     stops, reviewable = partition(findings)
-    # Handle the non-empty or enabled stops state.
     if stops:
-        # Select finding, rendered as the current element from stops) while build preserves
-        # Details: traversal order.
+        # Render every blocking match into one refusal without losing member-level evidence.
         rendered = "\n".join(finding.render() for finding in stops)
-        # Compute leaked using f"leak scan found {len(stops)} blocking match(es):\n{rendere for
-        # Details: later build logic.
         leaked = f"leak scan found {len(stops)} blocking match(es):\n{rendered}"
-        # Propagate the localized failure so callers cannot mistake it for success.
         raise RuntimeError(leaked)
     print(f"leak scan clean: {len(members)} member(s), "
           f"{len(reviewable)} reviewable match(es)")
 
+    # Write bytes only after structure, dependency closure, and leak checks all accept the tree.
     write_archive(staging, members, directories, destination)
-    # Return the number of members written, and every reviewable finding to the caller.
     return len(members) + len(directories), reviewable
 
 
@@ -902,31 +819,24 @@ def run_gate(source: Path) -> list[str]:
     @param source the checkout to run the gate in
     @return the name of each step that did not exit 0, in gate order
     """
-    # Each failed element names one unsuccessful gate step; execution order is preserved.
+    # Execute the canonical gate sequence while retaining only failed step identities for refusal.
+    # Each failed element is a canonical gate name in execution order.
     failed: list[str] = []
-    # Normalize the current repository path to its portable baseline key spelling.
-    # Advance run gate through the current input element in declared order.
     for name, command in gate.GATE:
-        # Preserve the external command representation and its observed completion outcome.
+        # Capture the complete child outcome before reducing it to release diagnostics.
         finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv from gate.GATE
             command, cwd=source, capture_output=True, text=True,
             encoding="utf-8", errors="replace", check=False,
         )
-        # Capture status as the completed run gate outcome for subsequent validation or
-        # Details: publication.
         status = "ok" if finished.returncode == 0 else f"FAILED ({finished.returncode})"
         print(f"  gate: {name:<22} {status}")
-        # Enter the failure path only when the subprocess reports a nonzero status.
         if finished.returncode != 0:
+            # Preserve the failed gate name and a bounded diagnostic tail for terminal triage.
             failed.append(name)
-            # Compute tail using (finished.stdout or finished.stderr or "").strip().splitline
-            # Details: for later run gate logic.
             tail = (finished.stdout or finished.stderr or "").strip().splitlines()[-6:]
-            # Preserve the current decoded diagnostic line before location normalization.
-            # Advance run gate through the current input element in declared order.
             for line in tail:
+                # Indent child diagnostics beneath their canonical gate identity.
                 print(f"      {line}")
-    # Return the name of each step that did not exit 0, in gate order to the caller.
     return failed
 
 
@@ -936,11 +846,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     @param argv command-line arguments, defaulting to `sys.argv`
     @return 0 when the archive was written, 1 when a gate refused it
     """
-    # Select the guarded path only after `isinstance(sys.stdout, io.TextIOWrapper)` is
-    # Details: satisfied.
+    # Stabilize terminal encoding when Python exposes a reconfigurable text stream.
     if isinstance(sys.stdout, io.TextIOWrapper):
+        # Replace unencodable child diagnostics rather than losing the release verdict.
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    # Configure the command-line parser that defines this tool's invocation contract.
     parser = argparse.ArgumentParser(description="Build the redistributable archive.")
     parser.add_argument("--source", type=Path, default=REPO_ROOT,
                         help="the upstream checkout to install from")
@@ -953,64 +862,55 @@ def main(argv: Sequence[str] | None = None) -> int:
                         help="leave the staged tree in place for inspection")
     parser.add_argument("--skip-gate", action="store_true",
                         help="build without running the gate; the archive is unverified")
-    # Capture the validated invocation arguments that govern this execution.
     args = parser.parse_args(argv)
 
-    # Select the guarded path only after `args.skip_gate` is satisfied.
+    # Make uncertified inspection mode unmistakable; normal mode must prove the source tree first.
     if args.skip_gate:
         print("!! --skip-gate: the gate did NOT run. This archive is unverified and")
         print("!! must not be published. Use it for inspection only.")
     else:
+        # Preserve the failed gate identities so normal mode can refuse before staging.
         print("running the gate before staging anything")
-        # Preserve failed step-name string elements in gate execution order.
         failed = run_gate(args.source)
-        # Report aggregate failure only when at least one gate step was unsuccessful.
         if failed:
+            # Stop before staging when any canonical source-tree obligation failed.
             print(f"refusing to build: {len(failed)} gate step(s) failed "
                   f"({', '.join(failed)}). A release cannot be recalled; fix the "
                   f"tree, or pass --skip-gate to build an archive marked unverified.",
                   file=sys.stderr)
-            # Return the aggregate process status to the command-line boundary.
             return 1
 
-    # Compute staging using args.staging or Path(tempfile.mkdtemp(prefix="agent-discipli for
-    # Details: later main logic.
+    # Use caller-owned staging when supplied, otherwise allocate an isolated disposable root.
     staging = args.staging or Path(tempfile.mkdtemp(prefix="agent-discipline-"))
-    # Select the existing-artifact path only when `staging.exists() and any(staging.iterdir())`
-    # Details: is satisfied.
     if staging.exists() and any(staging.iterdir()):
+        # Remove pre-existing staging contents so unrelated bytes cannot enter the inventory.
         shutil.rmtree(staging)
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Translate expected release refusals to a stable command exit while always containing staging.
     try:
-        # Preserve the observed item count used by the non-vacuity verdict.
+        # Retain archive membership and review evidence for the success-only terminal report.
         count, reviewable = build(args.source, args.out, staging)
-    # Preserve the caught failure that explains why the external result is unusable.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except (RuntimeError, FileNotFoundError) as exc:
+        # Present policy or source-artifact refusal without an internal traceback.
         print(f"\nrelease refused: {exc}")
-        # Return the aggregate process status to the command-line boundary.
         return 1
     finally:
-        # Select the existing-artifact path only when `not args.keep_staging and
-        # Details: staging.exists()` is satisfied.
+        # Preserve staging only for an explicit inspection request; normal runs leave no residue.
         if not args.keep_staging and staging.exists():
+            # Delete only the selected staging root unless explicit inspection retention was asked.
             shutil.rmtree(staging, ignore_errors=True)
 
-    # Select finding as the current element from reviewable while main preserves traversal
-    # Details: order.
-    # Advance main through the current input element in declared order.
+    # Surface non-blocking scan evidence after the archive is known to exist.
     for finding in reviewable:
-        # Compute why using excuse for later main logic.
+        # Pair an exact built-in excuse with its match; otherwise mark it for human review.
         why = excuse(finding.member, finding.pattern)
         print(finding.render() + (f"  [allowed: {why}]" if why else "  [review]"))
-    # Compute size using args.out.stat for later main logic.
+    # Measure the completed artifact for the release summary and later hash verification.
     size = args.out.stat().st_size
     print(f"\nwrote {args.out} -- {count} member(s), {size:,} bytes, "
           f"release {vendor.RELEASE}")
-    # Return the aggregate process status to the command-line boundary.
     return 0
 
-
-# Enter the command-line boundary only when this module is executed directly.
+# Invoke release construction only when this module owns the process entry point.
 if __name__ == "__main__":
+    # Convert the command verdict to the process status expected by development gates.
     sys.exit(main())
