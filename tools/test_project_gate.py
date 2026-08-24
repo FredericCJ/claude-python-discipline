@@ -899,10 +899,10 @@ def test_installed_probe_checks_exact_input_and_output(
 @pytest.mark.timeout(120)
 def test_real_build_and_clean_install_pipeline(tmp_path: Path) -> None:
     """The configured reference really builds, installs, and imports from its wheel."""
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build the fully configured tool project used by the real artifact and clean-install adapters.
     root = _configured_tool_project(tmp_path)
 
-    # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
+    # Retain the aggregate report from exactly the two delivered-artifact steps under test.
     report = project_gate.run(
         root,
         steps=(project_gate.ArtifactBuildAdapter(), project_gate.CleanInstallAdapter()),

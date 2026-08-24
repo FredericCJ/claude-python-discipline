@@ -45,11 +45,14 @@ def seed_learning(root: Path) -> learn.Store:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the synthetic project's learning directory used by mechanism checks.
     target = root / "learning"
+    # Create the directory before copying its immutable schema and configuration seeds.
     target.mkdir(parents=True, exist_ok=True)
+    # Seed exactly the files required to open a fresh project learning store.
     for name in ("schema.sql", "config.toml"):
         shutil.copy(REPO_ROOT / "learning" / name, target / name)
+    # Return a store whose mutable state remains below the synthetic root.
     return learn.Store(root)
 
 
@@ -346,10 +349,16 @@ def write_matrix(root: Path, *covered: str) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the synthetic enforcement package loaded by matrix-evidence checks.
     target = root / "enforce"
+    # Create the package directory before writing its one matrix module.
     target.mkdir(parents=True, exist_ok=True)
-    listed = ", ".join(f'"{rule}"' for rule in covered)
+    # Each listed value is one covered rule id in caller order for deterministic source.
+    listed = ", ".join(
+        # Quote each rule as a Python literal in the synthetic return set.
+        f'"{rule}"' for rule in covered
+    )
+    # Materialize the minimal importable matrix consumed by the production resolver.
     (target / "discrimination.py").write_text(
         '"""A matrix."""\n\n\n'
         "def covered():\n"

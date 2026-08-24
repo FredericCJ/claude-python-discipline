@@ -72,7 +72,6 @@ def test_the_image_uses_the_declared_node_before_pyright() -> None:
     """Pyright must not provision a hidden runtime on first execution."""
     # Compare lexical build positions to prove the declared Node runtime precedes Pyright.
     dockerfile = _text("dev/Dockerfile")
-    # Resolve the repository-confined path used by this operation before filesystem access.
     path = dockerfile.index('PATH="/opt/conda/envs/claude/bin')
     pyright = dockerfile.index("python -m pyright --version")
     assert path < pyright

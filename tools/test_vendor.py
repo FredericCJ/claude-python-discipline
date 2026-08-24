@@ -65,9 +65,11 @@ def target(tmp_path: Path) -> Path:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select an isolated adopter root for every vendor lifecycle mutation.
     root = tmp_path / "adopter"
+    # Materialize the empty target expected by the installer.
     root.mkdir()
+    # Return the adopter boundary whose prior bytes each test owns.
     return root
 
 
@@ -103,7 +105,6 @@ def test_the_manifest_names_every_upstream_file(target: Path) -> None:
     # Collect unique installed element values; their order is deliberately unordered.
     installed = {
         p.relative_to(target / ".agent").as_posix()
-        # Resolve the repository-confined path used by this operation before filesystem access.
         for root in vendor.UPSTREAM
         for p in (target / ".agent" / root).rglob("*")
         if p.is_file()

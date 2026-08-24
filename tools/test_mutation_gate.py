@@ -73,7 +73,7 @@ def test_cosmic_ray_kills_a_non_empty_domain_mutant_set(tmp_path: Path) -> None:
         "assert increment(0) == 1 and increment(1) == 2 and increment(2) == 3",
     )
 
-    # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
+    # Run the mutation gate over a suite that kills every generated arithmetic mutant.
     report = mutation_gate.run(tmp_path)
 
     assert report.status == "pass", report.output
@@ -90,7 +90,7 @@ def test_cosmic_ray_rejects_a_suite_that_only_executes_the_core(tmp_path: Path) 
     """
     _project(tmp_path, "assert isinstance(increment(0), int)")
 
-    # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
+    # Run the mutation gate over the deliberately weak type-only oracle.
     report = mutation_gate.run(tmp_path)
 
     assert report.status == "fail", report.as_dict()
@@ -120,7 +120,7 @@ def test_a_positive_survival_allowance_is_refused(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
+    # Run the mutation gate against the forged positive survival allowance.
     report = mutation_gate.run(tmp_path)
 
     assert report.status == "fail"

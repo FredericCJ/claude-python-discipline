@@ -74,7 +74,7 @@ def test_every_package_is_surveyed_not_just_one(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build two source packages importing distinct foreign roots for the complete survey census.
     root = _tree(tmp_path, {
         "src/one/__init__.py": "",
         "src/one/models.py": "import pydantic\n",
@@ -96,7 +96,7 @@ def test_a_dependency_with_two_importers_names_both(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build two modules sharing one foreign root so holder provenance can be compared.
     root = _tree(tmp_path, {
         "src/pkg/__init__.py": "",
         "src/pkg/a.py": "import httpx\n",
@@ -110,7 +110,7 @@ def test_the_standard_library_is_not_a_dependency(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build a package containing only standard-library and internal imports.
     root = _tree(tmp_path, {
         "src/pkg/__init__.py": "",
         "src/pkg/a.py": "import json\nimport pathlib\nfrom pkg import b\n",
@@ -124,7 +124,7 @@ def test_an_unregistered_import_fails_the_check(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build a package whose observed httpx import is absent from its declared register.
     root = _tree(tmp_path, {
         "src/pkg/__init__.py": "",
         "src/pkg/a.py": "import httpx\n",
@@ -139,7 +139,7 @@ def test_a_registered_import_passes_the_check(tmp_path: Path) -> None:
 
     @param tmp_path the fixture directory
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build the same package with a complete forbidden-dependency contract for httpx.
     root = _tree(tmp_path, {
         "src/pkg/__init__.py": "",
         "src/pkg/a.py": "import httpx\n",

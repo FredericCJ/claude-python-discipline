@@ -123,7 +123,7 @@ def test_an_absent_baseline_reads_as_empty(tmp_path: Path) -> None:
 
 def test_a_baseline_round_trips(tmp_path: Path) -> None:
     """What the tool writes is what it reads back; the file is not hand-edited."""
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the isolated baseline artifact used for production writer/reader round-trip.
     path = tmp_path / "lint_baseline.json"
     lint_gate.write_baseline(2, {("a.py", "E501"), ("b.py", "TC003")}, "because", path)
     assert lint_gate.load_baseline(path) == (2, {("a.py", "E501"), ("b.py", "TC003")})

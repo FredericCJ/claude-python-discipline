@@ -73,7 +73,6 @@ def run_mypy(root: Path, *, config: Path | None = None) -> tuple[bool, int, str]
     if config is not None:
         arguments.extend(("--config-file", str(config.resolve())))
     arguments.extend(("--strict", "--explicit-package-bases", "-p", PACKAGE))
-    # Preserve the external command representation and its observed completion outcome.
     finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
         arguments,
         cwd=root, env=environment, capture_output=True, text=True,
@@ -96,7 +95,7 @@ def run_pyright(root: Path) -> tuple[bool, int, str]:
     @param root the tree holding `src/` and `pyrightconfig.json`
     @return whether it passed, how many files it analysed, and its output
     """
-    # Preserve the external command representation and its observed completion outcome.
+    # Execute pyright once and retain its JSON report plus any provisioning diagnostics.
     finished = subprocess.run(
         (sys.executable, "-m", "pyright", "--outputjson"),
         cwd=root, capture_output=True, text=True,
@@ -110,12 +109,11 @@ def run_pyright(root: Path) -> tuple[bool, int, str]:
         # Return checker failure with the unparseable captured output.
         return False, 0, finished.stdout + finished.stderr
 
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Decode the located JSON suffix while keeping malformed checker output a red result.
     try:
         # Hold the decoded checker report mapping for summary and diagnostic extraction.
         report = json.loads(finished.stdout[start:])
     # Preserve the caught failure that explains why the external result is unusable.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
     except json.JSONDecodeError as broken:
         # Return checker failure with the localized JSON decoding cause.
         return False, 0, f"pyright emitted no parseable report: {broken}"
@@ -161,7 +159,7 @@ def main(argv: list[str] | None = None) -> int:
     # Capture the validated invocation arguments that govern this execution.
     arguments = parser.parse_args(argv)
 
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Preserve whether the caller explicitly selected an adopter root before default resolution.
     root = arguments.root
     # Use the absence path when root has no available value.
     if root is None:
@@ -173,7 +171,6 @@ def main(argv: list[str] | None = None) -> int:
                   file=sys.stderr)
             # Reject invocation outside a discoverable project unless the root was explicit.
             return EXIT_FAILED
-        # Resolve the repository-confined path used by this operation before filesystem access.
         root = DEFAULT_ROOT
 
     # Refuse the target when its declared source directory is absent.
@@ -204,7 +201,6 @@ def main(argv: list[str] | None = None) -> int:
             status = EXIT_FAILED
         else:
             print(f"type gate: {name} clean over {analysed} file(s)")
-    # Return the aggregate process status to the command-line boundary.
     return status
 
 
