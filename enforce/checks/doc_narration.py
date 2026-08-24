@@ -172,6 +172,15 @@ KNOWN_FILLER_SHAPES: Final = (
         r"\beach lines element represents one decoded record; lexical order is preserved\b",
         re.IGNORECASE,
     ),
+    re.compile(r"\badvance without interpreting unrelated syntax nodes\b", re.IGNORECASE),
+    re.compile(r"\breturn the ordered empty finding sequence\b", re.IGNORECASE),
+    re.compile(r"\bstop the scan once the decisive match has been established\b", re.IGNORECASE),
+    re.compile(
+        r"\blocate the structural boundary used to parse the external result safely\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\bcompare each finding element's identity in diagnostic order\b", re.IGNORECASE),
+    re.compile(r"\bbuild the focused malformed model and its configured checker\b", re.IGNORECASE),
 )
 ## Ordered syntax/label pairs; each element maps an AST shape to its operation category.
 ## State and effect shapes need predicates below.

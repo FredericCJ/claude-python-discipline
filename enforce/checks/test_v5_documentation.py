@@ -396,6 +396,12 @@ def test_syntactic_paraphrase_fails_doc_019(tmp_path: Path) -> None:
         "Inspect each syntax-node element in deterministic AST walk order.",
         "Preserve lines element values in deterministic source order.",
         "Each lines element represents one decoded record; lexical order is preserved.",
+        "Advance without interpreting unrelated syntax nodes.",
+        "Return the ordered empty finding sequence.",
+        "Stop the scan once the decisive match has been established.",
+        "Locate the structural boundary used to parse the external result safely.",
+        "Compare each finding element's identity in diagnostic order.",
+        "Build the focused malformed model and its configured checker.",
     ],
 )
 def test_known_scaffolding_prose_fails_doc_019(tmp_path: Path, comment: str) -> None:
