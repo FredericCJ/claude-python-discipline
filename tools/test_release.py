@@ -40,33 +40,31 @@ def _extract_archive(archive_path: Path, root: Path) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Publish the externally visible effect after all required inputs are ready.
+    # Establish the extraction root before resolving any archive member beneath it.
     root.mkdir(parents=True, exist_ok=True)
-    # Bind archive to the current value used by the next extract archive decision.
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Keep the archive handle bounded to validation and extraction of this package.
     with zipfile.ZipFile(archive_path) as archive:
-        # Compute infos using archive.infolist for later extract archive logic.
+        # Read the central-directory records once so safety and extraction use the same census.
         infos = archive.infolist()
-        # Select escaping, info as the current element from infos]) while extract archive
-        # Details: preserves traversal order.
-        escaping = release.unsafe_members([info.filename for info in infos])
+        # Classify every member name before any member bytes reach the filesystem.
+        escaping = release.unsafe_members([
+            # Each archive record contributes its declared portable member name.
+            info.filename for info in infos
+        ])
         assert escaping == []
-        # Select info as the current element from infos while extract archive preserves
-        # Details: traversal order.
-        # Advance extract archive through the current input element in declared order.
+        # Extract validated records in archive order to reproduce the packaged tree.
         for info in infos:
-            # Resolve the repository-confined path used by this operation before filesystem
-            # Details: access.
+            # Resolve slash-separated archive names beneath the already-confined root.
             destination = root.joinpath(*info.filename.split("/"))
-            # Refuse the target when its declared source directory is absent.
+            # Directory records preserve intentionally empty package directories.
             if info.is_dir():
-                # Publish the externally visible effect after all required inputs are ready.
+                # Materialize the empty directory and any required ancestry.
                 destination.mkdir(parents=True, exist_ok=True)
-                # Advance after the current candidate has been conclusively excluded.
+                # Directory records carry no payload bytes.
                 continue
-            # Publish the externally visible effect after all required inputs are ready.
+            # Create parents for file records whose archives omit explicit directory entries.
             destination.parent.mkdir(parents=True, exist_ok=True)
-            # Publish the externally visible effect after all required inputs are ready.
+            # Write the validated member's exact packaged bytes.
             destination.write_bytes(archive.read(info))
 
 
@@ -78,7 +76,7 @@ def _run_script(root: Path, script: Path, *arguments: str) -> subprocess.Complet
     @param arguments public CLI arguments
     @return captured process result
     """
-    # Return captured process result to the caller.
+    # Spawn a fresh interpreter rooted in the adopter so source-checkout imports cannot leak in.
     return subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] -- fixed interpreter and extracted script
         (sys.executable, str(script), *arguments),
         cwd=root,
@@ -98,7 +96,7 @@ def _integrate(root: Path, *arguments: str) -> subprocess.CompletedProcess[str]:
     @param arguments integration mode such as check or remove
     @return captured process result
     """
-    # Return captured process result to the caller.
+    # Invoke the package's canonical integration entry point with the repository root explicit.
     return _run_script(
         root,
         root / ".agent" / "tools" / "integrate.py",
@@ -123,7 +121,7 @@ def _native_skill(root: Path, host: str) -> Path:
     @param host `.claude` or `.agents`
     @return host-native skill entry point
     """
-    # Return host-native skill entry point to the caller.
+    # Resolve the host mirror beneath the adopter without assuming either host is primary.
     return root / host / "skills" / "python-discipline" / "SKILL.md"
 
 
@@ -135,9 +133,7 @@ def _run_packaged_checks(root: Path) -> subprocess.CompletedProcess[str]:
     """
     # Build the child-process environment with the governed source root on its import path.
     environment = os.environ.copy()
-    # Update  run packaged checks state only after the required source facts are available.
     environment["PYTHONPATH"] = str(root / ".agent" / "enforce")
-    # Return captured aggregate check result to the caller.
     return subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] -- fixed packaged module
         (
             sys.executable,
@@ -169,23 +165,17 @@ def _refresh_fixture_review(root: Path) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Compute declaration using discipline project.parse for later refresh fixture review logic.
+    # Parse the migrated project's own declaration before recomputing its review scope.
     declaration = discipline_project.parse(root / "pyproject.toml")
     # Preserve the observed item count used by the non-vacuity verdict.
     count, digest = scope_snapshot(declaration)
     # Resolve the repository-confined path used by this operation before filesystem access.
     path = root / "adversarial-review.json"
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
     payload = json.loads(path.read_text(encoding="utf-8"))
-    # Compute scope using payload["scope"] for later refresh fixture review logic.
     scope = payload["scope"]
     assert isinstance(scope, dict)
-    # Update  refresh fixture review state only after the required source facts are available.
     scope["file_count"] = count
-    # Update  refresh fixture review state only after the required source facts are available.
     scope["digest"] = digest
-    # Publish the externally visible effect after all required inputs are ready.
     path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
@@ -196,18 +186,15 @@ def built_archives(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path
     @param tmp_path_factory session-scoped temporary-directory provider
     @return two independently staged archives
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Allocate one session-owned directory shared by two independent staging runs.
     root = tmp_path_factory.mktemp("release-archives")
-    # Compute first using root / "first.zip" for later built archives logic.
+    # Name the first package output independently of its staging directory.
     first = root / "first.zip"
-    # Compute second using root / "second.zip" for later built archives logic.
+    # Name the second package output independently of its staging directory.
     second = root / "second.zip"
-    # Compute first count using release.build for later built archives logic.
     first_count, _ = release.build(REPO_ROOT, first, root / "stage-first")
-    # Compute second count using release.build for later built archives logic.
     second_count, _ = release.build(REPO_ROOT, second, root / "stage-second")
     assert first_count == second_count > 0
-    # Return two independently staged archives to the caller.
     return first, second
 
 
@@ -219,41 +206,37 @@ def _copy_release_source(destination: Path) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Publish the externally visible effect after all required inputs are ready.
+    # Establish a mutable source root containing no unconsumed checkout artifacts.
     destination.mkdir(parents=True)
-    # Compute ignored using shutil.ignore patterns for later copy release source logic.
+    # Apply the production vendor exclusions while copying directories into the release source.
     ignored = shutil.ignore_patterns(
         *vendor.SKIP_DIRS,
         "build",
         "dist",
         ".git",
     )
-    # Normalize the current repository path to its portable baseline key spelling.
-    # Advance copy release source through the current input element in declared order.
+    # Copy every upstream directory the package contract declares.
     for name in vendor.UPSTREAM:
         shutil.copytree(REPO_ROOT / name, destination / name, ignore=ignored)
-    # Normalize the current repository path to its portable baseline key spelling.
-    # Advance copy release source through the current input element in declared order.
+    # Copy every root file the package contract declares.
     for name in vendor.UPSTREAM_FILES:
         shutil.copy2(REPO_ROOT / name, destination / name)
-    # Compute learning using destination / "learning" for later copy release source logic.
+    # Recreate the learning source family from distributable seeds only.
     learning = destination / "learning"
-    # Publish the externally visible effect after all required inputs are ready.
+    # Keep mutable project ledgers out of this source tree.
     learning.mkdir()
-    # Normalize the current repository path to its portable baseline key spelling.
-    # Advance copy release source through the current input element in declared order.
+    # Copy each seed artifact required to initialize a new adopter.
     for name in vendor.LEARNING_SEED:
         shutil.copy2(REPO_ROOT / "learning" / name, learning / name)
-    # Compute packaging using destination / "packaging" for later copy release source logic.
+    # Recreate the packaging family containing the adopter-facing install guide.
     packaging = destination / "packaging"
-    # Publish the externally visible effect after all required inputs are ready.
+    # Materialize the packaging directory before its selected file is copied.
     packaging.mkdir()
     shutil.copy2(
         REPO_ROOT / "packaging" / "INSTALL-DISCIPLINE.md",
         packaging / "INSTALL-DISCIPLINE.md",
     )
-    # Compute notes using f"RELEASE-NOTES-{vendor.RELEASE}.md" for later copy release source
-    # Details: logic.
+    # Select only the notes for the release identity being built.
     notes = f"RELEASE-NOTES-{vendor.RELEASE}.md"
     shutil.copy2(REPO_ROOT / notes, destination / notes)
 
@@ -270,29 +253,19 @@ def test_two_clean_archive_builds_are_byte_identical(
     @param built_archives independently staged packages
         Each element is one independently staged archive, ordered first then second build.
     """
-    # Unpack first, second using built_archives for later test two clean archive builds are byte
-    # Details: identical logic.
+    # Unpack the fixture's ordered pair as independently staged first and second packages.
     first, second = built_archives
     assert first.read_bytes() == second.read_bytes()
-    # Bind archive to the current value used by the next test two clean archive builds are byte
-    # Details: identical decision.
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Inspect member metadata and manifest content from one byte-identical representative.
     with zipfile.ZipFile(first) as archive:
-        # Compute infos using archive.infolist for later test two clean archive builds are byte
-        # Details: identical logic.
+        # Retain archive records for path, timestamp, and permission assertions.
         infos = archive.infolist()
         # Each names element is one archive member path in central-directory order.
         names = [info.filename for info in infos]
         assert release.unsafe_members(names) == []
         assert set(release.REQUIRED_MEMBERS) <= set(names)
-        # Select info as the current element from infos) while test two clean archive builds are
-        # Details: byte identical preserves traversal order.
         assert all(info.date_time == release.ZIP_EPOCH for info in infos)
-        # Hold the decoded mapping elements whose keys identify fields and values carry their
-        # Details: content; key order is deliberately unused.
         manifest = json.loads(archive.read(".agent/MANIFEST.json"))
-        # Compute canonical using archive.read for later test two clean archive builds are byte
-        # Details: identical logic.
         canonical = archive.read(".agent/skills/python-discipline/SKILL.md")
     assert manifest["release"] == vendor.RELEASE
     assert "skills/python-discipline/SKILL.md" in manifest["files"]
@@ -317,44 +290,36 @@ def test_archive_installs_checks_and_removes_both_host_entries(
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Confine the simulated adopter and all installer effects to this test directory.
     root = tmp_path / "adopter"
-    # Publish the externally visible effect after all required inputs are ready.
     root.mkdir()
-    # Treat original as mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Each original key is a project-relative path and each value its exact pre-install bytes;
+    # insertion order is preserved only to keep fixture setup and restoration deterministic.
     original = {
         "CLAUDE.md": b"# Project Claude\r\n",
         "AGENTS.md": b"# Project Codex\n",
         ".gitignore": b"project-output/\n",
     }
-    # Retain the immutable source representation consumed by subsequent analysis.
-    # Advance test archive installs checks and removes both host entries through the current
-    # Details: input element in declared order.
+    # Seed each project-owned host or ignore file that installation must later restore.
     for name, content in original.items():
-        # Resolve the repository-confined path used by this operation before filesystem access.
+        # Resolve this declared project artifact beneath the simulated adopter root.
         path = root / name
-        # Publish the externally visible effect after all required inputs are ready.
+        # Create host-specific parents only when the artifact requires them.
         path.parent.mkdir(parents=True, exist_ok=True)
-        # Publish the externally visible effect after all required inputs are ready.
+        # Preserve deliberately mixed newline bytes for exact restoration assertions.
         path.write_bytes(content)
-    # Treat settings as mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Each settings key is a host-owned section and each nested value its preserved content;
+    # key order is deliberately irrelevant because comparison occurs after JSON decoding.
     settings = {
         "project": {"owner": "adopter"},
         "permissions": {"allow": ["Bash(project-check:*)"]},
     }
-    # Compute settings path using root / ".claude" / "settings.json" for later test archive
-    # Details: installs checks and removes both host entries logic.
     settings_path = root / ".claude" / "settings.json"
-    # Publish the externally visible effect after all required inputs are ready.
     settings_path.parent.mkdir(parents=True)
-    # Publish the externally visible effect after all required inputs are ready.
     settings_path.write_text(json.dumps(settings, indent=2), encoding="utf-8")
     _extract_archive(built_archives[0], root)
 
-    # Compute vendored check using  run script for later test archive installs checks and
-    # Details: removes both host entries logic.
+    # Verify the extracted package against itself before allowing integration to consume it.
     vendored_check = _run_script(
         root,
         root / ".agent" / "tools" / "vendor.py",
@@ -367,20 +332,14 @@ def test_archive_installs_checks_and_removes_both_host_entries(
     _assert_ok(_integrate(root))
     _assert_ok(_integrate(root, "--check"))
 
-    # Compute canonical using root / ".agent" / "skills" / "python-discipline" / "SKILL.md for
-    # Details: later test archive installs checks and removes both host entries logic.
+    # Treat the package-owned skill as the byte source for both host-native mirrors.
     canonical = root / ".agent" / "skills" / "python-discipline" / "SKILL.md"
-    # Select host as the current element from (".claude", ".agents") while test archive installs
-    # Details: checks and removes both host entries preserves traversal order.
-    # Advance test archive installs checks and removes both host entries through the current
-    # Details: input element in declared order.
+    # Compare both independently installed host entries with the canonical package bytes.
     for host in (".claude", ".agents"):
         assert _native_skill(root, host).read_bytes() == canonical.read_bytes()
 
     _assert_ok(_integrate(root, "--remove"))
-    # Retain the immutable source representation consumed by subsequent analysis.
-    # Advance test archive installs checks and removes both host entries through the current
-    # Details: input element in declared order.
+    # Verify removal restores every pre-install project artifact byte for byte.
     for name, content in original.items():
         assert (root / name).read_bytes() == content
     assert json.loads(settings_path.read_text(encoding="utf-8")) == settings
@@ -405,12 +364,8 @@ def test_archive_refuses_a_codex_collision_without_blocking_claude(
     # Resolve the repository-confined path used by this operation before filesystem access.
     root = tmp_path / "collision"
     _extract_archive(built_archives[0], root)
-    # Compute codex using  native skill for later test archive refuses a codex collision without
-    # Details: blocking claude logic.
     codex = _native_skill(root, ".agents")
-    # Publish the externally visible effect after all required inputs are ready.
     codex.parent.mkdir(parents=True)
-    # Publish the externally visible effect after all required inputs are ready.
     codex.write_bytes(b"project-owned Codex skill\r\n")
 
     # Preserve the external command representation and its observed completion outcome.
@@ -441,37 +396,30 @@ def test_archive_upgrade_preserves_project_state_and_updates_both_hosts(
     root = tmp_path / "upgrade-adopter"
     _extract_archive(built_archives[0], root)
     _assert_ok(_integrate(root))
-    # Compute learning using root / ".agent" / "learning" / "config.toml" for later test archive
-    # Details: upgrade preserves project state and updates both hosts logic.
+    # Select a package-initialized file whose post-install bytes now belong to the adopter.
     learning = root / ".agent" / "learning" / "config.toml"
-    # Compute project learning using learning.read bytes for later test archive upgrade
-    # Details: preserves project state and updates both hosts logic.
+    # Append an adopter-owned marker that an upgrade must preserve.
     project_learning = learning.read_bytes() + b"\n# project-owned\n"
-    # Publish the externally visible effect after all required inputs are ready.
+    # Persist project ownership before constructing the upgraded package.
     learning.write_bytes(project_learning)
 
     # Retain the immutable source representation consumed by subsequent analysis.
     source = tmp_path / "upgrade-source"
     _copy_release_source(source)
-    # Compute source skill using source / "skills" / "python-discipline" / "SKILL.md" for later
-    # Details: test archive upgrade preserves project state and updates both hosts logic.
+    # Select the canonical skill inside the mutable release source.
     source_skill = source / "skills" / "python-discipline" / "SKILL.md"
-    # Compute marker using b"\nArchive upgrade marker.\n" for later test archive upgrade
-    # Details: preserves project state and updates both hosts logic.
+    # Use a unique trailing byte marker to prove upgraded canonical content propagated.
     marker = b"\nArchive upgrade marker.\n"
-    # Publish the externally visible effect after all required inputs are ready.
+    # Change only a package-owned artifact in the simulated new release.
     source_skill.write_bytes(source_skill.read_bytes() + marker)
-    # Compute upgraded archive using tmp_path / "upgraded.zip" for later test archive upgrade
-    # Details: preserves project state and updates both hosts logic.
+    # Name the upgraded archive independently of both source and staging tree.
     upgraded_archive = tmp_path / "upgraded.zip"
     release.build(source, upgraded_archive, tmp_path / "upgrade-stage")
-    # Compute upgrade package using tmp_path / "upgrade-package" for later test archive upgrade
-    # Details: preserves project state and updates both hosts logic.
+    # Extract the upgraded package separately so its vendor entry point is exercised in-package.
     upgrade_package = tmp_path / "upgrade-package"
     _extract_archive(upgraded_archive, upgrade_package)
 
-    # Compute installed using  run script for later test archive upgrade preserves project state
-    # Details: and updates both hosts logic.
+    # Upgrade through the newly extracted vendor tool, targeting the existing adopter.
     installed = _run_script(
         upgrade_package,
         upgrade_package / ".agent" / "tools" / "vendor.py",
@@ -486,14 +434,10 @@ def test_archive_upgrade_preserves_project_state_and_updates_both_hosts(
 
     _assert_ok(_integrate(root))
     _assert_ok(_integrate(root, "--check"))
-    # Compute canonical using root / ".agent" / "skills" / "python-discipline" / "SKILL.md for
-    # Details: later test archive upgrade preserves project state and updates both hosts logic.
+    # Re-read the adopter's canonical skill after the package upgrade.
     canonical = root / ".agent" / "skills" / "python-discipline" / "SKILL.md"
     assert canonical.read_bytes().endswith(marker)
-    # Select host as the current element from (".claude", ".agents") while test archive upgrade
-    # Details: preserves project state and updates both hosts preserves traversal order.
-    # Advance test archive upgrade preserves project state and updates both hosts through the
-    # Details: current input element in declared order.
+    # Confirm the next integration refreshes both host mirrors from upgraded canonical bytes.
     for host in (".claude", ".agents"):
         assert _native_skill(root, host).read_bytes() == canonical.read_bytes()
 
@@ -520,46 +464,39 @@ def test_archive_rejects_then_migrates_both_v4_repository_shapes(
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Isolate one legacy repository for the parameterized application or component shape.
     root = tmp_path / f"legacy-{unit}"
+    # Start from the conformant reference, then regress only v5-specific declarations.
     shutil.copytree(REPO_ROOT / "enforce" / "fixtures" / "reference", root)
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the project declaration rewritten into the requested v4 shape.
     project_file = root / "pyproject.toml"
-    # Compute project text using project file.read text for later test archive rejects then
-    # Details: migrates both v4 repository shapes logic.
+    # Retain its complete text so replacements preserve unrelated project configuration.
     project_text = project_file.read_text(encoding="utf-8")
-    # Compute project text using project text.replace for later test archive rejects then
-    # Details: migrates both v4 repository shapes logic.
+    # Exercise both supported repository scopes through the same packaged migrator.
     project_text = project_text.replace('unit = "application"', f'unit = "{unit}"')
-    # Compute project text using project text.replace for later test archive rejects then
-    # Details: migrates both v4 repository shapes logic.
+    # Reintroduce the parameterized v4 documentation-engine selection.
     project_text = project_text.replace('doc_engine = "doxygen"', f'doc_engine = "{legacy_engine}"')
-    # Compute project text using project text.replace for later test archive rejects then
-    # Details: migrates both v4 repository shapes logic.
+    # Remove the v5 documentation-model declaration rather than leaving a contradictory hybrid.
     project_text = project_text.replace(
         'documentation_model = "documentation-model.json"\n', ""
     )
-    # Publish the externally visible effect after all required inputs are ready.
+    # Persist the fully regressed project declaration with portable newlines.
     project_file.write_text(project_text, encoding="utf-8", newline="\n")
-    # Publish the externally visible effect after all required inputs are ready.
+    # Remove the v5 model artifact so the fixture has the same absence migration must repair.
     (root / "documentation-model.json").unlink()
-    # Compute architecture path using root / "architecture.json" for later test archive rejects
-    # Details: then migrates both v4 repository shapes logic.
+    # Select the architecture model whose repository-unit declaration must match pyproject.
     architecture_path = root / "architecture.json"
-    # Compute architecture using json.loads for later test archive rejects then migrates both v4
-    # Details: repository shapes logic.
+    # Decode the model without disturbing unrelated architectural declarations.
     architecture = json.loads(architecture_path.read_text(encoding="utf-8"))
-    # Update test archive rejects then migrates both v4 repository shapes state only after the
-    # Details: required source facts are available.
+    # Align the legacy model with this parameterized application or component case.
     architecture["unit"] = unit
-    # Publish the externally visible effect after all required inputs are ready.
+    # Persist the regressed architecture model before overlaying the v5 package.
     architecture_path.write_text(
         json.dumps(architecture, indent=2) + "\n", encoding="utf-8", newline="\n"
     )
     _extract_archive(built_archives[0], root)
 
-    # Compute refused using  run script for later test archive rejects then migrates both v4
-    # Details: repository shapes logic.
+    # Prove the packaged project gate fails closed and points to the bounded migration path.
     refused = _run_script(
         root,
         root / ".agent" / "tools" / "project_gate.py",
@@ -570,8 +507,7 @@ def test_archive_rejects_then_migrates_both_v4_repository_shapes(
     assert "DISC-PROJECT-021" in refused.stdout
     assert "migrate entity comments" in refused.stdout
 
-    # Compute migrated using  run script for later test archive rejects then migrates both v4
-    # Details: repository shapes logic.
+    # Apply migration through the extracted package rather than the source checkout.
     migrated = _run_script(
         root,
         root / ".agent" / "tools" / "migrate_v5.py",
@@ -582,8 +518,7 @@ def test_archive_rejects_then_migrates_both_v4_repository_shapes(
     _assert_ok(migrated)
     _refresh_fixture_review(root)
 
-    # Compute checked using  run packaged checks for later test archive rejects then migrates
-    # Details: both v4 repository shapes logic.
+    # Run every packaged documentation check over the migrated source and tests.
     checked = _run_packaged_checks(root)
     _assert_ok(checked)
     assert "0 finding(s)" in checked.stdout
@@ -600,8 +535,6 @@ def test_an_absolute_windows_path_is_found() -> None:
     text = "see C:/Users/someone/Documents/repo/tools/nav.py for the navigator\n"
     # Preserve the optional pattern match that carries the reported analysis count.
     found = list(release.scan_text("a.md", text, release.BLOCKING_PATTERNS))
-    # Select f as the current element from found] == ["windows user path"] while test an
-    # Details: absolute windows path is found preserves traversal order.
     assert [f.pattern for f in found] == ["windows user path"]
     assert found[0].line == 1
 
@@ -611,8 +544,6 @@ def test_a_posix_home_path_is_found() -> None:
     # Preserve the optional pattern match that carries the reported analysis count.
     found = list(release.scan_text(
         "a.md", "run /home/someone/src/x.py\n", release.BLOCKING_PATTERNS))
-    # Select f as the current element from found] == ["posix home path"] while test a posix home
-    # Details: path is found preserves traversal order.
     assert [f.pattern for f in found] == ["posix home path"]
 
 
@@ -627,8 +558,6 @@ def test_a_credential_prefix_is_found() -> None:
     """Published token formats are recognisable on sight, so recognise them."""
     # Retain the immutable source representation consumed by subsequent analysis.
     text = "token = 'ghp_" + "a" * 30 + "'\n"
-    # Select f as the current element from release.scan_text( while test a credential prefix is
-    # Details: found preserves traversal order.
     assert [f.pattern for f in release.scan_text(
         "a.py", text, release.BLOCKING_PATTERNS)] == ["github token"]
 
@@ -646,28 +575,23 @@ def test_a_credential_assignment_is_reviewable_not_blocking() -> None:
     findings = list(release.scan_text(
         "a.py", 'password = "hunter2000"\n',
         (*release.BLOCKING_PATTERNS, *release.REVIEW_PATTERNS)))
-    # Unpack reviewable, stops using release.partition for later test a credential assignment is
-    # Details: reviewable not blocking logic.
+    # Partition the same finding census into release blockers and human-review candidates.
     stops, reviewable = release.partition(findings)
     assert not stops
-    # Select f as the current element from reviewable] == ["credential-shaped assignment"] while
-    # Details: test a credential assignment is reviewable not blocking preserves traversal order.
     assert [f.pattern for f in reviewable] == ["credential-shaped assignment"]
 
 
 def test_the_building_account_is_derived_not_written_down() -> None:
     """The scan protects whoever runs it, not only its author's machine."""
-    # Compute patterns using release.environment literals for later test the building account is
-    # Details: derived not written down logic.
+    # Derive identity patterns from a representative build account instead of checked-in literals.
     patterns = release.environment_literals("jdoe", "BUILD-BOX", "D:/home/jdoe")
-    # Select label as the current element from patterns] == [ while test the building account is
-    # Details: derived not written down preserves traversal order.
-    assert [label for label, _ in patterns] == [
+    assert [
+        # Each derived pair contributes the diagnostic label visible to release operators.
+        label for label, _ in patterns
+    ] == [
         "build username", "build hostname", "build home directory"]
     # Preserve the optional pattern match that carries the reported analysis count.
     found = list(release.scan_text("a.md", "written on build-box\n", patterns))
-    # Select f as the current element from found] == ["build hostname"] while test the building
-    # Details: account is derived not written down preserves traversal order.
     assert [f.pattern for f in found] == ["build hostname"]
 
 
@@ -683,13 +607,12 @@ def test_a_host_named_after_a_common_word_can_still_build() -> None:
     every mention of the branch, so the build aborted on thousands of findings
     and could not complete on that host at all.
     """
-    # Compute patterns using release.environment literals for later test a host named after a
-    # Details: common word can still build logic.
+    # Derive patterns with a deliberately common hostname that must be rejected as unusable.
     patterns = release.environment_literals("jdoe", "MAIN", "D:/home/jdoe")
-    # Select label as the current element from patterns] == ["build username", "build home
-    # Details: directory"] while test a host named after a common word can still build preserves
-    # Details: traversal order.
-    assert [label for label, _ in patterns] == ["build username", "build home directory"]
+    assert [
+        # Each retained pair contributes one usable environment-identity signal.
+        label for label, _ in patterns
+    ] == ["build username", "build home directory"]
     # Retain the immutable source representation consumed by subsequent analysis.
     source = 'def main() -> int:\n    if __name__ == "__main__":\n        main()\n'
     assert list(release.scan_text("a.py", source, patterns)) == []
@@ -697,12 +620,12 @@ def test_a_host_named_after_a_common_word_can_still_build() -> None:
 
 def test_dropping_an_unusable_identifier_is_reported_not_silent() -> None:
     """A scan running with fewer signals than usual must say so."""
-    # Compute dropped using release.unusable identifiers for later test dropping an unusable
-    # Details: identifier is reported not silent logic.
+    # Ask the companion diagnostic path which provided identities were excluded and why.
     dropped = release.unusable_identifiers("jdoe", "MAIN", "D:/home/jdoe")
-    # Treat the current label, value as the candidate element consumed by the enclosing
-    # Details: transformation.
-    assert [(label, value) for label, value, _ in dropped] == [("build hostname", "MAIN")]
+    assert [
+        # Each exclusion contributes its label and original value; the reason is asserted separately.
+        (label, value) for label, value, _ in dropped
+    ] == [("build hostname", "MAIN")]
     assert "too common" in dropped[0][2]
 
 
@@ -739,37 +662,29 @@ def test_an_absent_identifier_is_not_reported_as_dropped() -> None:
 
 def test_an_identifier_inside_a_longer_word_is_not_a_leak() -> None:
     """A short login name must not match every word that contains it."""
-    # Compute patterns using release.environment literals for later test an identifier inside a
-    # Details: longer word is not a leak logic.
+    # Derive a bounded username pattern from a short but still usable identifier.
     patterns = release.environment_literals("ana", None, None)
     assert list(release.scan_text("a.md", "analysis of a banana\n", patterns)) == []
     # Preserve the optional pattern match that carries the reported analysis count.
     found = list(release.scan_text("a.md", "written by ana today\n", patterns))
-    # Select f as the current element from found] == ["build username"] while test an identifier
-    # Details: inside a longer word is not a leak preserves traversal order.
     assert [f.pattern for f in found] == ["build username"]
 
 
 def test_a_genuine_identifier_is_still_caught_after_bounding() -> None:
     """Precision must not have been bought by switching the guard off."""
-    # Compute patterns using release.environment literals for later test a genuine identifier is
-    # Details: still caught after bounding logic.
+    # Derive all three usable identity patterns for a positive leak witness.
     patterns = release.environment_literals("jdoe", "BUILD-BOX", "D:/home/jdoe")
     # Retain the immutable source representation consumed by subsequent analysis.
     text = "built under D:/home/jdoe by jdoe on build-box\n"
-    # Select f as the current element from release.scan_text("a.md", text, patterns)} == { while
-    # Details: test a genuine identifier is still caught after bounding preserves traversal order.
     assert {f.pattern for f in release.scan_text("a.md", text, patterns)} == {
         "build username", "build hostname", "build home directory"}
 
 
 def test_an_excused_file_does_not_stop_the_build() -> None:
     """A fixture that proves a guard works must be allowed to contain its bait."""
-    # Compute finding using release.Finding for later test an excused file does not stop the
-    # Details: build logic.
+    # Construct the exact bait shape and member covered by the narrow release exception.
     finding = release.Finding(".agent/tools/test_learn.py", 1, "aws access key", "AKIA...")
-    # Unpack reviewable, stops using release.partition for later test an excused file does not
-    # Details: stop the build logic.
+    # Partition one excused finding to prove it remains visible without blocking publication.
     stops, reviewable = release.partition([finding])
     assert not stops
     assert reviewable == [finding]
@@ -778,11 +693,9 @@ def test_an_excused_file_does_not_stop_the_build() -> None:
 
 def test_an_excuse_covers_one_pattern_only() -> None:
     """The excuse is per shape, so a different leak in the same file still stops."""
-    # Compute finding using release.Finding for later test an excuse covers one pattern only
-    # Details: logic.
+    # Keep the excused member constant while changing only the detected leak pattern.
     finding = release.Finding(".agent/tools/test_learn.py", 1, "windows user path", "C:/Users/")
-    # Compute stops using release.partition for later test an excuse covers one pattern only
-    # Details: logic.
+    # Partition the non-excused shape to prove exceptions do not apply at file granularity.
     stops, _ = release.partition([finding])
     assert stops == [finding]
 
@@ -819,18 +732,18 @@ def test_caches_and_databases_are_pruned(tmp_path: Path) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Publish the externally visible effect after all required inputs are ready.
+    # Create a generated bytecode-cache directory that must never enter a package.
     (tmp_path / ".agent" / "tools" / "__pycache__").mkdir(parents=True)
-    # Publish the externally visible effect after all required inputs are ready.
+    # Add one cache payload so pruning proves removal of content, not only an empty directory.
     (tmp_path / ".agent" / "tools" / "__pycache__" / "nav.pyc").write_bytes(b"\x00")
-    # Publish the externally visible effect after all required inputs are ready.
+    # Create the learning directory that legitimately survives pruning.
     (tmp_path / ".agent" / "learning").mkdir(parents=True)
-    # Publish the externally visible effect after all required inputs are ready.
+    # Add mutable adopter-state data that a distributable archive must exclude.
     (tmp_path / ".agent" / "learning" / "learning.db").write_bytes(b"\x00")
-    # Publish the externally visible effect after all required inputs are ready.
+    # Add one authored tool as the positive survivor control.
     (tmp_path / ".agent" / "tools" / "nav.py").write_text("x = 1\n", encoding="utf-8")
 
-    # Compute removed using release.prune for later test caches and databases are pruned logic.
+    # Prune the staged tree and retain its portable removal report.
     removed = release.prune(tmp_path)
 
     assert ".agent/tools/__pycache__/" in removed
@@ -846,11 +759,11 @@ def test_an_empty_project_directory_is_recorded(tmp_path: Path) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Publish the externally visible effect after all required inputs are ready.
+    # Create the intentionally empty adopter-extension directory that the manifest must preserve.
     (tmp_path / ".agent" / "overrides").mkdir(parents=True)
-    # Publish the externally visible effect after all required inputs are ready.
+    # Create a non-empty sibling directory to discriminate general emptiness from required emptiness.
     (tmp_path / ".agent" / "learning").mkdir()
-    # Publish the externally visible effect after all required inputs are ready.
+    # Populate the sibling so it cannot appear in the empty-directory report.
     (tmp_path / ".agent" / "learning" / "schema.sql").write_text("x", encoding="utf-8")
     assert release.empty_dirs(tmp_path) == [".agent/overrides/"]
 
@@ -866,12 +779,11 @@ def _seed(agent: Path) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Publish the externally visible effect after all required inputs are ready.
+    # Establish the project-owned learning directory inside the staged agent tree.
     (agent / "learning").mkdir(parents=True)
-    # Normalize the current repository path to its portable baseline key spelling.
-    # Advance seed through the current input element in declared order.
+    # Materialize every immutable seed declared by the release contract.
     for name in release.LEDGER_SEEDS:
-        # Publish the externally visible effect after all required inputs are ready.
+        # Give each required seed benign nonempty bytes while keeping runtime ledgers absent.
         (agent / "learning" / name).write_text("-- seed\n", encoding="utf-8")
 
 
@@ -893,7 +805,7 @@ def test_a_populated_ledger_is_refused(tmp_path: Path) -> None:
     Creates, replaces, or removes repository artifacts in implementation order.
     """
     _seed(tmp_path / ".agent")
-    # Publish the externally visible effect after all required inputs are ready.
+    # Add one project-specific ledger event to an otherwise distributable seed set.
     (tmp_path / ".agent" / "learning" / "ledger.jsonl").write_text("{}\n", encoding="utf-8")
     assert release.ledger_problems(tmp_path / ".agent") == [
         "learning/ledger.jsonl is not a seed and must not ship"
@@ -908,7 +820,7 @@ def test_a_missing_seed_is_refused(tmp_path: Path) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Publish the externally visible effect after all required inputs are ready.
+    # Create the learning directory without any of the immutable installer seeds.
     (tmp_path / ".agent" / "learning").mkdir(parents=True)
     assert len(release.ledger_problems(tmp_path / ".agent")) == len(release.LEDGER_SEEDS)
 
@@ -921,7 +833,7 @@ def test_a_missing_learning_directory_is_refused(tmp_path: Path) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Publish the externally visible effect after all required inputs are ready.
+    # Create an agent root with the entire project-owned learning subsystem absent.
     (tmp_path / ".agent").mkdir()
     assert release.ledger_problems(tmp_path / ".agent") == [
         "learning/ is missing; the installer did not seed it"
@@ -944,24 +856,25 @@ def test_a_floating_or_missing_gate_dependency_is_refused(tmp_path: Path) -> Non
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Compute requirements using tmp_path / "requirements.txt" for later test a floating or
-    # Details: missing gate dependency is refused logic.
+    # Select the isolated manifest that will combine one missing exact pin with one floating range.
     requirements = tmp_path / "requirements.txt"
-    # Compute exact using sorted for later test a floating or missing gate dependency is refused
-    # Details: logic.
+    # Pin every required distribution except ruff to keep the malformed dimensions precise.
     exact = sorted(release.REQUIRED_PYTHON_DISTRIBUTIONS - {"ruff"})
-    # Normalize the current repository path to its portable baseline key spelling.
-    # Publish the externally visible effect after all required inputs are ready.
+    # Persist exact dummy versions for controls and a range for the deliberately invalid ruff entry.
     requirements.write_text(
-        "\n".join([*(f"{name}==1" for name in exact), "ruff>=0.16"]) + "\n",
+        "\n".join([
+            # Each retained verifier distribution contributes one exact control pin.
+            *(f"{name}==1" for name in exact),
+            "ruff>=0.16",
+        ]) + "\n",
         encoding="utf-8",
     )
 
-    # Compute problems using release.requirement problems for later test a floating or missing
-    # Details: gate dependency is refused logic.
+    # Collect all closure diagnostics because the same malformed line should expose both defects.
     problems = release.requirement_problems(requirements)
 
-    # Select problem as the current element from problems) while test a floating or missing gate
-    # Details: dependency is refused preserves traversal order.
-    assert any("expected one exact name==version pin" in problem for problem in problems)
+    # Search each problem independently of emission order for the floating-pin refusal.
+    assert any(
+        "expected one exact name==version pin" in problem for problem in problems
+    )
     assert "requirements.txt: missing required distribution ruff" in problems
