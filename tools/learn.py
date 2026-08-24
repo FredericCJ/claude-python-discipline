@@ -298,7 +298,8 @@ def append_event(store: Store, kind: str, session: str, payload: dict[str, Any],
     @throws LearnError when the payload contains anything credential-shaped
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Creates the learning directory when absent and appends one fsync-backed JSONL event;
+    rejected payloads leave the ledger untouched.
     """
     # Reject credentials before assigning an id or touching the append-only record.
     guard_secrets(payload)
@@ -391,7 +392,8 @@ def sync(store: Store) -> sqlite3.Connection:
     @throws LearnError when the ledger cannot be read
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Recreates every disposable SQLite projection from the append-only ledger and leaves the
+    returned database connection open for its caller.
     """
     # Ensure the disposable projection has a parent before SQLite opens it.
     store.dir.mkdir(parents=True, exist_ok=True)
@@ -1657,7 +1659,8 @@ def write_views(store: Store, connection: sqlite3.Connection, as_of: dt.date) ->
     @param as_of the date the calibration report is measured to
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Atomically replaces the generated status and calibration views from the same folded
+    ledger snapshot.
     """
     # Render both views from one policy snapshot and one already-folded connection.
     config = store.config()
@@ -2092,7 +2095,8 @@ def _apply_settings(store: Store, assignments: Sequence[str]) -> dict[str, list[
     @throws LearnError when an assignment has no `=`, or names no setting in the file
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Replaces ``config.toml`` only after every requested assignment has parsed and matched,
+    preserving unrelated text and comments.
     """
     # Keep the original TOML text so comments and formatting survive targeted value changes.
     text = store.config_path.read_text(encoding="utf-8")

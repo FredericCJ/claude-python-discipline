@@ -1018,7 +1018,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     @return 0 once the ledger is written, or 1 when the census file is absent
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    In write mode, replaces the provenance and commenting-claim ledgers only after both
+    render successfully; ``--check`` leaves them unchanged.
     """
     # The console encoding is not ours to choose, and a tool that dies on one is
     # worse than one that renders a character imperfectly.

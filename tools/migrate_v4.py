@@ -922,7 +922,8 @@ def apply(migration: MigrationPlan) -> None:
     @throws ValueError when diagnostics block migration or source bytes drifted
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Atomically replaces only declarations whose planned source bytes still match; a blocked
+    or drifted plan performs no migration writes.
     """
     # Never write a plan containing any diagnostic classified as an error.
     if migration.blocked:
@@ -967,7 +968,8 @@ def main(argv: list[str] | None = None) -> int:
     @return zero for a usable plan, two for a blocked one
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Prints the migration preview and, only with ``--apply`` on an unblocked plan, atomically
+    replaces the planned declaration files.
     """
     # Configure the command-line parser that defines this tool's invocation contract.
     parser = argparse.ArgumentParser(

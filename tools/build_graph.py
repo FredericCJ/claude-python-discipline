@@ -772,7 +772,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     @return 0 on success, 1 when `--check` finds the written graph out of date
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    In write mode, replaces ``discipline/graph.json`` after the complete graph renders;
+    ``--check`` leaves repository bytes unchanged.
     """
     # The console encoding is not ours to choose, and a tool that dies on one is
     # worse than one that renders a character imperfectly.

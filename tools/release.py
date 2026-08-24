@@ -426,7 +426,8 @@ def stage(source: Path, staging: Path) -> tuple[int, list[str]]:
             own notes about the project-owned half
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Initializes ``staging`` as a Git repository and installs the discipline into that fresh
+    adopter-shaped tree.
     """
     # Reproduce an adopter installation in a fresh Git repository before inspecting its output.
     staging.mkdir(parents=True, exist_ok=True)
@@ -444,7 +445,8 @@ def prune(root: Path) -> list[str]:
     @return each deleted path, relative to `root`, in the order removed
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Removes only excluded files and now-empty directories beneath ``root`` while recording
+    each deleted relative path.
     """
     # Track each deletion while visiting deepest paths first so parent removal hides nothing.
     # Each element is an archive-relative path retained in actual deletion order.
@@ -706,7 +708,8 @@ def write_archive(
     @param destination the archive to write, whose parent is created if absent
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Creates the destination directory when needed and replaces ``destination`` with one
+    deterministic archive assembled from the staged members.
     """
     # Establish the output location before opening one deterministic archive transaction.
     destination.parent.mkdir(parents=True, exist_ok=True)

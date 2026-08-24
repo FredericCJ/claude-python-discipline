@@ -233,7 +233,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             failure, and must not fail a build that runs this
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Prints the harvest report and, when requested, replaces the proposal output with the
+    rendered candidates; otherwise repository files remain unchanged.
     """
     # The console encoding is not ours to choose, and a tool that dies on one is
     # worse than one that renders a character imperfectly.

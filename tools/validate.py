@@ -989,7 +989,8 @@ def write_v080_baseline(
     @param path where to write the baseline, defaulting to the checked-in one
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Replaces the v0.8 baseline with the sorted pair ceiling, generator identity, and supplied
+    rationale; an empty rationale is rejected before writing.
     """
     # Each payload key is a baseline field and each value records generator identity, rationale,
     # count, ordered pairs, or operator reason; insertion order produces stable JSON.

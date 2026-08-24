@@ -244,7 +244,8 @@ def write_preserving(path: Path, text: str) -> None:
     @param text exactly the bytes to store, once encoded
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Replaces ``path`` with exactly the UTF-8 encoding of ``text`` without newline
+    translation.
     """
     # Disable output newline expansion so the planned text is the text stored on disk.
     with path.open("w", encoding="utf-8", newline="") as handle:
@@ -1245,7 +1246,8 @@ def apply(plan: Plan) -> list[Action]:
     @return the actions that were written or deleted
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes and deletes only the changing paths already recorded in ``plan``, preserving
+    action order and leaving skipped actions untouched.
     """
     # Each written element is one completed changing action in plan application order.
     written: list[Action] = []

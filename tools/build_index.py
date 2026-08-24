@@ -106,7 +106,7 @@ class Artifact:
         in the intended state either way.
 
         @par Effects
-        Creates, replaces, or removes repository artifacts in implementation order.
+        Creates the destination directory and replaces this one derived artifact.
         """
         # Publish the complete derived artifact only after its destination exists.
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -195,7 +195,8 @@ def refresh_tokens(documents: Sequence[Document], *, write: bool) -> list[Path]:
     @return the modules whose declared count was wrong, whether or not it was fixed
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    When ``write`` is true, replaces only module files whose declared token count is stale;
+    measurement mode leaves every document unchanged.
     """
     # Each stale element is one document path whose authored token count differs; input document
     # order is preserved.
@@ -1048,7 +1049,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     @return 0 on success, 1 when `--check` finds anything out of date
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    In write mode, refreshes stale token declarations before replacing the three derived
+    corpus artifacts; ``--check`` performs no writes.
     """
     # The console encoding is not ours to choose, and a tool that dies on one is
     # worse than one that renders a character imperfectly.
