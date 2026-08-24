@@ -28,17 +28,12 @@ def _project(root: Path, assertion: str) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Compute domain using root / "src" / "sample" / "domain" for later project logic.
+    # Build isolated domain and test roots, then publish one deterministic mutation subject.
     domain = root / "src" / "sample" / "domain"
-    # Compute tests using root / "tests" / "unit" for later project logic.
     tests = root / "tests" / "unit"
-    # Publish the externally visible effect after all required inputs are ready.
     domain.mkdir(parents=True)
-    # Publish the externally visible effect after all required inputs are ready.
     tests.mkdir(parents=True)
-    # Publish the externally visible effect after all required inputs are ready.
     (domain / "__init__.py").write_text("", encoding="utf-8")
-    # Publish the externally visible effect after all required inputs are ready.
     (domain / "core.py").write_text(
         '"""A deliberately tiny mutation subject."""\n\n\n'
         "def increment(value: int) -> int:\n"
@@ -46,14 +41,12 @@ def _project(root: Path, assertion: str) -> None:
         "    return value + 1\n",
         encoding="utf-8",
     )
-    # Publish the externally visible effect after all required inputs are ready.
     (tests / "test_core.py").write_text(
         "from sample.domain.core import increment\n\n\n"
         "def test_increment() -> None:\n"
         f"    {assertion}\n",
         encoding="utf-8",
     )
-    # Publish the externally visible effect after all required inputs are ready.
     (root / "pyproject.toml").write_text(
         "[tool.agent-discipline]\n"
         'unit = "application"\n'
@@ -117,10 +110,8 @@ def test_a_positive_survival_allowance_is_refused(tmp_path: Path) -> None:
     Creates, replaces, or removes repository artifacts in implementation order.
     """
     _project(tmp_path, "assert increment(0) == 1")
-    # Compute project using tmp_path / "pyproject.toml" for later test a positive survival
-    # Details: allowance is refused logic.
+    # Corrupt only the release-deciding zero-survivor policy in the generated declaration.
     project = tmp_path / "pyproject.toml"
-    # Publish the externally visible effect after all required inputs are ready.
     project.write_text(
         project.read_text(encoding="utf-8").replace(
             "maximum_survival = 0.0",

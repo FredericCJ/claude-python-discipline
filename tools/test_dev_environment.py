@@ -25,14 +25,13 @@ def _text(relative: str) -> str:
     @param relative source-root-relative file name
     @return the complete UTF-8 text
     """
-    # Return the complete UTF-8 text to the caller.
+    # Read shipped launcher bytes through the repository anchor, never the process directory.
     return (ROOT / relative).read_text(encoding="utf-8")
 
 
 def test_every_remote_docker_build_input_is_immutable() -> None:
     """Neither the frontend nor base image may move behind a readable tag."""
-    # Compute dockerfile using  text for later test every remote docker build input is immutable
-    # Details: logic.
+    # Dockerfile text is the release surface whose remote identities must be digest-pinned.
     dockerfile = _text("dev/Dockerfile")
     # Preserve lines element values in deterministic source order.
     lines = dockerfile.splitlines()
@@ -40,8 +39,6 @@ def test_every_remote_docker_build_input_is_immutable() -> None:
         r"# syntax=docker/dockerfile:1@sha256:[0-9a-f]{64}",
         lines[0],
     )
-    # Each from lines element carries one from line value produced or consumed by this
-    # Details: operation; construction order is preserved.
     from_lines = [line for line in lines if line.startswith("FROM ")]
     assert len(from_lines) == 1
     assert re.fullmatch(
@@ -73,13 +70,10 @@ def test_the_docker_context_contains_only_the_three_build_inputs() -> None:
 
 def test_the_image_uses_the_declared_node_before_pyright() -> None:
     """Pyright must not provision a hidden runtime on first execution."""
-    # Compute dockerfile using  text for later test the image uses the declared node before
-    # Details: pyright logic.
+    # Compare lexical build positions to prove the declared Node runtime precedes Pyright.
     dockerfile = _text("dev/Dockerfile")
     # Resolve the repository-confined path used by this operation before filesystem access.
     path = dockerfile.index('PATH="/opt/conda/envs/claude/bin')
-    # Compute pyright using dockerfile.index for later test the image uses the declared node
-    # Details: before pyright logic.
     pyright = dockerfile.index("python -m pyright --version")
     assert path < pyright
     assert 'PYRIGHT_PYTHON_GLOBAL_NODE="true"' in dockerfile
@@ -88,8 +82,7 @@ def test_the_image_uses_the_declared_node_before_pyright() -> None:
 
 def test_the_image_never_cleans_the_mounted_conda_package_cache() -> None:
     """A reusable package cache must retain every manifest-owned file."""
-    # Compute dockerfile using  text for later test the image never cleans the mounted conda
-    # Details: package cache logic.
+    # Dockerfile text must distinguish the reusable package cache from disposable env files.
     dockerfile = _text("dev/Dockerfile")
     assert "id=python-discipline-conda-v5,target=/opt/conda/pkgs" in dockerfile
     assert "find /opt/conda/envs/claude" in dockerfile
@@ -98,11 +91,8 @@ def test_the_image_never_cleans_the_mounted_conda_package_cache() -> None:
 
 def test_the_linux_leg_preserves_identity_and_signal_delivery() -> None:
     """The runtime workspace stays developer-owned and the tool becomes PID 1."""
-    # Compute launcher using  text for later test the linux leg preserves identity and signal
-    # Details: delivery logic.
+    # The launcher owns host identity discovery while the entrypoint owns privilege drop.
     launcher = _text("dev/docker.sh")
-    # Compute entrypoint using  text for later test the linux leg preserves identity and signal
-    # Details: delivery logic.
     entrypoint = _text("dev/container-entrypoint.sh")
     assert "runtime_uid=$(id -u)" in launcher
     assert "runtime_gid=$(id -g)" in launcher
@@ -134,8 +124,7 @@ def test_a_windows_backed_default_gate_uses_a_docker_volume_projection() -> None
 
 def test_the_wsl_fallback_rejects_a_nonfunctional_docker_stub() -> None:
     """A discoverable Docker command is not accepted until its engine responds."""
-    # Compute launcher using  text for later test the wsl fallback rejects a nonfunctional
-    # Details: docker stub logic.
+    # Launcher text must pair WSL executable discovery with an engine-health probe.
     launcher = _text("dev/docker.sh")
     assert "docker version >/dev/null 2>&1" in launcher
     assert "/mnt/c/Program Files/Docker/Docker/resources/bin/docker.exe" in launcher
@@ -144,8 +133,7 @@ def test_the_wsl_fallback_rejects_a_nonfunctional_docker_stub() -> None:
 
 def test_every_linux_invocation_reconciles_the_image_inputs() -> None:
     """A pre-existing mutable local tag must not stand in for current build bytes."""
-    # Compute launcher using  text for later test every linux invocation reconciles the image
-    # Details: inputs logic.
+    # The launch path must rebuild from current inputs instead of trusting tag presence.
     launcher = _text("dev/docker.sh")
     assert launcher.count("\nbuild_image\n") == 1
     assert "image inspect" not in launcher
@@ -153,8 +141,7 @@ def test_every_linux_invocation_reconciles_the_image_inputs() -> None:
 
 def test_the_windows_leg_delegates_environment_ownership_only_to_conda() -> None:
     """No undeclared host package manager enters the native bootstrap path."""
-    # Compute launcher using  text for later test the windows leg delegates environment
-    # Details: ownership only to conda logic.
+    # Windows launcher text is inspected as the complete host bootstrap contract.
     launcher = _text("dev/windows.ps1")
     assert "Get-Command conda" in launcher
     assert '"env", "update", "--name"' in launcher
@@ -169,8 +156,7 @@ def test_the_windows_leg_delegates_environment_ownership_only_to_conda() -> None
 
 def test_the_windows_leg_reserves_only_leading_launcher_options() -> None:
     """Dashed Python arguments must pass through without PowerShell binding."""
-    # Compute launcher using  text for later test the windows leg reserves only leading launcher
-    # Details: options logic.
+    # Raw argument handling must reserve launcher flags without parsing child options.
     launcher = _text("dev/windows.ps1")
     assert "[CmdletBinding" not in launcher
     assert "$rawArguments = @($args)" in launcher

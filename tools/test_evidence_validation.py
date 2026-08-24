@@ -29,15 +29,11 @@ def write_evidence(root: Path, payload: dict[str, object]) -> Path:
     """
     # Resolve the repository-confined path used by this operation before filesystem access.
     path = root / "discipline" / "meta" / "evidence.json"
-    # Publish the externally visible effect after all required inputs are ready.
     path.parent.mkdir(parents=True, exist_ok=True)
-    # Publish the externally visible effect after all required inputs are ready.
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-    # Publish the externally visible effect after all required inputs are ready.
     (path.parent / "observations.json").write_text(
         json.dumps({"schema_version": 1, "observations": {}}), encoding="utf-8"
     )
-    # Return registry path to the caller.
     return path
 
 
@@ -55,12 +51,8 @@ def write_matrix(root: Path, *covered: tuple[str, str]) -> None:
     """
     # Resolve the repository-confined path used by this operation before filesystem access.
     path = root / "enforce" / "discrimination.py"
-    # Publish the externally visible effect after all required inputs are ready.
     path.parent.mkdir(parents=True, exist_ok=True)
-    # Select pair, values as the current element from covered) while write matrix preserves
-    # Details: traversal order.
     values = ", ".join(repr(pair) for pair in covered)
-    # Publish the externally visible effect after all required inputs are ready.
     path.write_text(
         '"""Synthetic discrimination matrix."""\n\n\n'
         "def covered_strategies() -> frozenset[tuple[str, str]]:\n"
@@ -76,10 +68,8 @@ def evidence_findings(root: Path) -> list[Finding]:
     @param root synthetic repository root
     @return evidence findings
     """
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Parse the synthetic law module once, then validate that exact document graph.
     document = parse_document(module(root))
-    # Return evidence findings to the caller.
     return list(check_evidence([document], Layout(root), required=True))
 
 
@@ -87,8 +77,6 @@ def test_v100_requires_the_registry(tmp_path: Path) -> None:
     """A v4 corpus cannot omit the evidence layer."""
     # Preserve finding-record elements in checker emission order for the final verdict.
     findings = list(check_evidence([], Layout(tmp_path), required=True))
-    # Select finding as the current element from findings] == ["V100"] while test v100 requires
-    # Details: the registry preserves traversal order.
     assert [finding.code for finding in findings] == ["V100"]
 
 
@@ -100,32 +88,23 @@ def test_v100_reports_structural_corruption(tmp_path: Path) -> None:
     """
     # Resolve the repository-confined path used by this operation before filesystem access.
     path = tmp_path / "discipline" / "meta" / "evidence.json"
-    # Publish the externally visible effect after all required inputs are ready.
     path.parent.mkdir(parents=True)
-    # Publish the externally visible effect after all required inputs are ready.
     path.write_text("{", encoding="utf-8")
     # Preserve finding-record elements in checker emission order for the final verdict.
     findings = list(check_evidence([], Layout(tmp_path), required=True))
-    # Select finding as the current element from findings] == ["V100"] while test v100 reports
-    # Details: structural corruption preserves traversal order.
     assert [finding.code for finding in findings] == ["V100"]
     assert findings[0].severity is Severity.ERROR
 
 
 def test_v104_rejects_a_strategy_not_named_by_the_heading(tmp_path: Path) -> None:
     """The evidence layer cannot quietly substitute another mechanism."""
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Mutate only the evidence mechanism so the heading/evidence join is the failing edge.
     payload = valid_payload()
-    # Update test v104 rejects a strategy not named by the heading state only after the required
-    # Details: source facts are available.
     strategy(payload)["mechanism"] = "auto:pyright"
     write_evidence(tmp_path, payload)
     write_matrix(tmp_path, ("TYPE-001", "auto:mypy"))
     # Preserve finding-record elements in checker emission order for the final verdict.
     findings = evidence_findings(tmp_path)
-    # Select finding as the current element from findings} while test v104 rejects a strategy
-    # Details: not named by the heading preserves traversal order.
     assert "V104" in {finding.code for finding in findings}
 
 
@@ -135,16 +114,13 @@ def test_v107_counts_an_unwitnessed_strategy_without_calling_it_green(tmp_path: 
     write_matrix(tmp_path)
     # Preserve finding-record elements in checker emission order for the final verdict.
     findings = evidence_findings(tmp_path)
-    # Select finding as the current element from findings] == ["V107"] while test v107 counts an
-    # Details: unwitnessed strategy without calling it green preserves traversal order.
     assert [finding.code for finding in findings] == ["V107"]
     assert findings[0].severity is Severity.WARN
 
 
 def test_a_witnessed_complete_record_is_silent(tmp_path: Path) -> None:
     """The positive control joins all three layers without residue in the validator."""
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # This complete rule/evidence/observation graph is the validator's positive control.
     payload = valid_payload()
     write_evidence(tmp_path, payload)
     write_matrix(tmp_path, ("TYPE-001", "auto:mypy"))
@@ -153,22 +129,14 @@ def test_a_witnessed_complete_record_is_silent(tmp_path: Path) -> None:
 
 def test_v109_rejects_an_observation_that_does_not_resolve(tmp_path: Path) -> None:
     """Field evidence must be a packaged record, not an anecdotal string."""
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Navigate the single-rule fixture to corrupt only its observation reference.
     payload = valid_payload()
-    # Derive evidence from payload["rules"] for the next test v109 rejects an observation that
-    # Details: does not resolve decision.
     evidence = payload["rules"]
     assert isinstance(evidence, dict)
-    # Derive sole from evidence["TYPE-001"] for the next test v109 rejects an observation that
-    # Details: does not resolve decision.
     sole = evidence["TYPE-001"]
     assert isinstance(sole, dict)
-    # Update test v109 rejects an observation that does not resolve state only after the
-    # Details: required source facts are available.
+    # Point the otherwise valid record at an observation absent from the packaged registry.
     sole["observations"] = ["V4E-999"]
     write_evidence(tmp_path, payload)
     write_matrix(tmp_path, ("TYPE-001", "auto:mypy"))
-    # Select finding as the current element from evidence_findings(tmp_path)] == ["V109"] while
-    # Details: test v109 rejects an observation that does not resolve preserves traversal order.
     assert [finding.code for finding in evidence_findings(tmp_path)] == ["V109"]

@@ -83,8 +83,7 @@ def test_every_protected_code_names_a_rule_mechanism() -> None:
     its `Check` line names D205, D400 and D415, and all three decide it. That
     authored `Check` line survives in `rules.json`, which is why it counts here.
     """
-    # Compute rules using json.loads for later test every protected code names a rule mechanism
-    # Details: logic.
+    # Each rule element supplies the authored mechanisms checked against protected Ruff codes.
     rules = json.loads(
         (lint_gate.REPO_ROOT / "discipline" / "rules.json").read_text(encoding="utf-8")
     )
@@ -95,18 +94,10 @@ def test_every_protected_code_names_a_rule_mechanism() -> None:
         for mechanism in rule.get("mechanisms", [])
         if mechanism.startswith("auto:ruff:")
     }
-    # Compute template using (lint_gate.REPO_ROOT / "enforce" / "templates" / "pyproject. for
-    # Details: later test every protected code names a rule mechanism logic.
     template = (lint_gate.REPO_ROOT / "enforce" / "templates" / "pyproject.toml").read_text(
         encoding="utf-8"
     )
-    # Select checks, rule as the current element from rules["rules"]) while test every protected
-    # Details: code names a rule mechanism preserves traversal order.
     checks = "\n".join(str(rule.get("check") or "") for rule in rules["rules"])
-    # Capture code as the completed test every protected code names a rule mechanism outcome for
-    # Details: subsequent validation or publication.
-    # Advance test every protected code names a rule mechanism through the current input element
-    # Details: in declared order.
     for code in lint_gate.PROTECTED:
         assert code in tagged or code in template or code in checks, (
             f"{code} is protected but nothing ties it to a rule -- no mechanism tag, "
@@ -141,11 +132,9 @@ def test_a_baseline_round_trips(tmp_path: Path) -> None:
 
 def test_the_committed_baseline_holds_no_protected_code() -> None:
     """The live claim, checked rather than asserted in prose."""
-    # Compute pairs using lint gate.load baseline for later test the committed baseline holds no
-    # Details: protected code logic.
+    # Each pair identifies one accepted file/code combination in the committed debt ledger.
     _, pairs = lint_gate.load_baseline()
-    # Capture code, offenders as the completed test the committed baseline holds no protected
-    # Details: code outcome for subsequent validation or publication.
+    # Offenders are protected codes that absolute policy forbids the baseline from masking.
     offenders = sorted({code for _, code in pairs if code in lint_gate.PROTECTED})
     assert offenders == [], f"protected code(s) in the committed baseline: {offenders}"
 
@@ -159,7 +148,7 @@ def test_line_numbers_are_dropped_from_the_pair(tmp_path: Path) -> None:
     They churn on every edit above a finding and would make the baseline
     unreviewable; the count is what catches a second instance instead.
     """
-    # Each findings element is one emitted diagnostic mapping; checker order is preserved.
+    # Each ordered element repeats one file/code identity at a deliberately different row.
     findings = [
         {"filename": str(tmp_path / "a.py"), "code": "E501", "location": {"row": 1}},
         {"filename": str(tmp_path / "a.py"), "code": "E501", "location": {"row": 99}},

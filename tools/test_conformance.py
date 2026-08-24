@@ -54,13 +54,12 @@ def tree(root: Path, **modules: str) -> Path:
     """
     # Retain the immutable source representation consumed by subsequent analysis.
     source = root / "src"
-    # Publish the externally visible effect after all required inputs are ready.
+    # Establish the governed source boundary before publishing the requested modules.
     source.mkdir(parents=True, exist_ok=True)
     # Materialize each module-stem key and source-body value in fixture declaration order.
     for stem, body in modules.items():
-        # Publish the externally visible effect after all required inputs are ready.
+        # Publish each requested module body beneath the governed source boundary.
         (source / f"{stem}.py").write_text(body, encoding="utf-8")
-    # Return the project root to the caller.
     return root
 
 
@@ -70,7 +69,7 @@ def judge(root: Path) -> int:
     @param root the project root
     @return the exit status
     """
-    # Return the exit status to the caller.
+    # Exercise the public command boundary so verdict status matches adopter use.
     return conformance.main(["--root", str(root), str(root / "src")])
 
 
@@ -81,7 +80,7 @@ def accept(root: Path, why: str = "adoption") -> int:
     @param why the reason written into the baseline
     @return the exit status
     """
-    # Return the exit status to the caller.
+    # Establish debt through the same explicit acceptance path exposed to adopters.
     return conformance.main(
         ["--root", str(root), str(root / "src"), "--update-baseline", "--why", why]
     )
@@ -115,7 +114,6 @@ def test_project_declaration_reaches_every_check(
     root = tree(tmp_path, widget='"""A module."""\n')
     # Select the temporary project's declaration for the observed-load assertion.
     declaration = root / "pyproject.toml"
-    # Publish the externally visible effect after all required inputs are ready.
     declaration.write_text(
         "[tool.agent-discipline]\n"
         'unit = "application"\n'
@@ -136,7 +134,6 @@ def test_project_declaration_reaches_every_check(
         encoding="utf-8",
         newline="\n",
     )
-    # Publish the externally visible effect after all required inputs are ready.
     (root / "documentation-model.json").write_text(
         json.dumps(
             {
@@ -171,7 +168,7 @@ def test_project_declaration_reaches_every_check(
             @return no findings after the assertion succeeds
             """
             assert self.declaration.source == declaration.resolve()
-            # Return no findings after the assertion succeeds to the caller.
+            # Assertion success is the probe's verdict; it emits no conformance findings.
             return []
 
     monkeypatch.setattr(conformance, "discover", lambda: [DeclarationProbe()])
@@ -218,7 +215,6 @@ def test_a_new_file_with_the_same_rule_still_fails(tmp_path: Path) -> None:
     # Resolve the repository-confined path used by this operation before filesystem access.
     root = tree(tmp_path, widget=UNDOCUMENTED)
     assert accept(root) == conformance.EXIT_OK
-    # Publish the externally visible effect after all required inputs are ready.
     (root / "src" / "gadget.py").write_text(UNDOCUMENTED, encoding="utf-8")
     assert judge(root) == conformance.EXIT_REGRESSED
 
@@ -240,7 +236,6 @@ def test_more_of_the_same_rule_in_a_baselined_file_still_fails(
     # Resolve the repository-confined path used by this operation before filesystem access.
     root = tree(tmp_path, widget=UNDOCUMENTED)
     assert accept(root) == conformance.EXIT_OK
-    # Publish the externally visible effect after all required inputs are ready.
     (root / "src" / "widget.py").write_text(UNDOCUMENTED_TWICE, encoding="utf-8")
     assert judge(root) == conformance.EXIT_REGRESSED
 
@@ -256,7 +251,6 @@ def test_clearing_a_finding_does_not_fail(tmp_path: Path) -> None:
     # Resolve the repository-confined path used by this operation before filesystem access.
     root = tree(tmp_path, widget=UNDOCUMENTED_TWICE)
     assert accept(root) == conformance.EXIT_OK
-    # Publish the externally visible effect after all required inputs are ready.
     (root / "src" / "widget.py").write_text(UNDOCUMENTED, encoding="utf-8")
     assert judge(root) == conformance.EXIT_OK
 
@@ -278,11 +272,9 @@ def test_a_protected_rule_is_refused_before_the_baseline_is_read(
     root = tree(tmp_path)
     # Hold baseline path keys mapped to their recorded behavior-fingerprint values.
     baseline = root / conformance.BASELINE_NAME
-    # Publish the externally visible effect after all required inputs are ready.
     baseline.parent.mkdir(parents=True, exist_ok=True)
     # Select one deterministic protected rule for the baseline-precedence fixture.
     protected = min(conformance.PROTECTED)
-    # Publish the externally visible effect after all required inputs are ready.
     baseline.write_text(
         json.dumps({"count": 99, "pairs": [["src/widget.py", protected]]}),
         encoding="utf-8",
@@ -367,9 +359,7 @@ def test_an_unreadable_baseline_is_treated_as_absent(tmp_path: Path) -> None:
     root = tree(tmp_path, widget=UNDOCUMENTED)
     # Hold baseline path keys mapped to their recorded behavior-fingerprint values.
     baseline = root / conformance.BASELINE_NAME
-    # Publish the externally visible effect after all required inputs are ready.
     baseline.parent.mkdir(parents=True, exist_ok=True)
-    # Publish the externally visible effect after all required inputs are ready.
     baseline.write_text("{ not json", encoding="utf-8")
     assert conformance.load_baseline(baseline) is None
     assert judge(root) == conformance.EXIT_REGRESSED
@@ -410,5 +400,5 @@ def test_the_report_names_a_concrete_next_target(tmp_path: Path) -> None:
 
 # Enter the command-line boundary only when this module is executed directly.
 if __name__ == "__main__":
-    # Propagate the localized failure so callers cannot mistake it for success.
+    # Direct execution is a no-op smoke boundary; pytest owns actual test discovery.
     raise SystemExit(sys.exit(0))

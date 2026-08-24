@@ -25,17 +25,12 @@ def _project(tmp_path: Path, *, engine: str = "none", unit: str = "application")
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Publish the externally visible effect after all required inputs are ready.
+    # Create every governed scope and seed one module in each for non-vacuous inventory.
     (tmp_path / "src/pkg").mkdir(parents=True)
-    # Publish the externally visible effect after all required inputs are ready.
     (tmp_path / "tests").mkdir()
-    # Publish the externally visible effect after all required inputs are ready.
     (tmp_path / "tools").mkdir()
-    # Publish the externally visible effect after all required inputs are ready.
     (tmp_path / "src/pkg/__init__.py").write_text('"""Package."""\n', encoding="utf-8")
-    # Publish the externally visible effect after all required inputs are ready.
     (tmp_path / "tests/test_pkg.py").write_text('"""Tests."""\n', encoding="utf-8")
-    # Publish the externally visible effect after all required inputs are ready.
     (tmp_path / "tools/build.py").write_text('"""Build."""\n', encoding="utf-8")
     # Render a complete v4 declaration while varying only the engine and repository shape.
     project = dedent(f"""
@@ -66,9 +61,7 @@ def _project(tmp_path: Path, *, engine: str = "none", unit: str = "application")
         [tool.ruff]
         line-length = 99
     """).lstrip()
-    # Publish the externally visible effect after all required inputs are ready.
     (tmp_path / "pyproject.toml").write_text(project, encoding="utf-8")
-    # Return repository root to the caller.
     return tmp_path
 
 
@@ -78,8 +71,7 @@ def _diagnostics(migration: migrate_v5.MigrationPlan) -> set[str]:
     @param migration migration plan
     @return distinct diagnostic identifiers
     """
-    # Collect each stable diagnostic identifier into an unordered assertion set.
-    # Return distinct diagnostic identifiers to the caller.
+    # Each set element is one stable diagnostic identity, independent of message ordering.
     return {item.diagnostic_id for item in migration.diagnostics}
 
 
@@ -177,9 +169,7 @@ def test_existing_artifacts_are_never_overwritten(tmp_path: Path) -> None:
     """
     # Resolve the repository-confined path used by this operation before filesystem access.
     root = _project(tmp_path)
-    # Publish the externally visible effect after all required inputs are ready.
     (root / "documentation-model.json").write_text("project model\n", encoding="utf-8")
-    # Publish the externally visible effect after all required inputs are ready.
     (root / "Doxyfile").write_text("project doxyfile\n", encoding="utf-8")
 
     # Plan around project-owned artifacts so apply can prove it never replaces them.
@@ -201,9 +191,7 @@ def test_unclassified_python_requires_scope_review(tmp_path: Path) -> None:
     """
     # Resolve the repository-confined path used by this operation before filesystem access.
     root = _project(tmp_path)
-    # Publish the externally visible effect after all required inputs are ready.
     (root / "scripts").mkdir()
-    # Publish the externally visible effect after all required inputs are ready.
     (root / "scripts/deploy.py").write_text('"""Deployment."""\n', encoding="utf-8")
 
     # Inventory the unclassified Python subtree without guessing its governance kind.
@@ -225,7 +213,6 @@ def test_incomplete_v4_declaration_blocks_without_writes(tmp_path: Path) -> None
     root = _project(tmp_path)
     # Select the declaration whose required v4 architecture field will be removed.
     project = root / "pyproject.toml"
-    # Publish the externally visible effect after all required inputs are ready.
     project.write_text(
         project.read_text(encoding="utf-8").replace(
             'architecture = "architecture.json"\n', ""
@@ -255,7 +242,6 @@ def test_artifact_path_cannot_escape_to_a_sibling(tmp_path: Path) -> None:
     root = _project(tmp_path)
     # Select the declaration whose documentation-model path will be made unsafe.
     project = root / "pyproject.toml"
-    # Publish the externally visible effect after all required inputs are ready.
     project.write_text(
         project.read_text(encoding="utf-8").replace(
             'doc_engine = "none"',
@@ -285,7 +271,6 @@ def test_apply_refuses_a_project_changed_after_preview(tmp_path: Path) -> None:
     migration = migrate_v5.plan(root)
     # Select the planned declaration and introduce a concurrent byte-level change.
     project = root / "pyproject.toml"
-    # Publish the externally visible effect after all required inputs are ready.
     project.write_text(project.read_text(encoding="utf-8") + "# concurrent\n", encoding="utf-8")
 
     # Confine the acquired resource to this operation and release it on every exit.
