@@ -62,7 +62,7 @@ def repo(tmp_path: Path) -> Path:
     @return the repository root
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     # Seed only the vendored corpus marker and manifest required by every integration plan.
     (tmp_path / ".agent" / "discipline").mkdir(parents=True)
@@ -118,7 +118,7 @@ def write_settings(root: Path, allow: list[str]) -> Path:
     @return the settings file
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     # Select Claude's project settings file beneath the simulated adopter.
     path = root / ".claude" / "settings.json"
@@ -138,7 +138,7 @@ def write_vendored_skill(root: Path, text: str = SHARED_SKILL) -> Path:
     @return the vendored source path
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     # Select the package-owned canonical skill consumed by both host integrations.
     path = root / ".agent" / "skills" / "python-discipline" / "SKILL.md"
@@ -247,7 +247,7 @@ def test_a_vendor_upgrade_updates_both_unchanged_native_skills(repo: Path) -> No
     @param repo an otherwise empty repository with a vendored discipline
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     # Retain the immutable source representation consumed by subsequent analysis.
     source = write_vendored_skill(repo)
@@ -268,7 +268,7 @@ def test_an_existing_native_skill_is_reported_and_never_overwritten(repo: Path) 
     @param repo an otherwise empty repository with a vendored discipline
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     # Retain the immutable source representation consumed by subsequent analysis.
     source = write_vendored_skill(repo)
@@ -294,7 +294,7 @@ def test_a_directory_at_the_skill_path_blocks_without_crashing(repo: Path) -> No
     @param repo an otherwise empty repository with a vendored discipline
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     # Retain the immutable source representation consumed by subsequent analysis.
     source = write_vendored_skill(repo)
@@ -313,7 +313,7 @@ def test_remove_deletes_only_unchanged_skill_files_it_created(repo: Path) -> Non
     @param repo an otherwise empty repository with a vendored discipline
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     write_vendored_skill(repo)
     assert run(repo) == 0
@@ -367,7 +367,7 @@ def test_a_release_is_named_beside_the_content_hash(repo: Path) -> None:
     @param repo an otherwise empty repository with a vendored discipline at version `abc123`
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     # Replace the fixture manifest with both human release name and content identity.
     (repo / ".agent" / "MANIFEST.json").write_text(
@@ -394,7 +394,7 @@ def test_a_manifest_that_is_not_an_object_is_reported_not_crashed_on(repo: Path)
     @param repo an otherwise empty repository with a vendored discipline at version `abc123`
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     # Preserve valid JSON while violating the manifest's required object shape.
     (repo / ".agent" / "MANIFEST.json").write_text(json.dumps(["v1.0.0"]), encoding="utf-8")
@@ -422,7 +422,7 @@ def test_an_existing_file_keeps_every_byte_it_had(
     @param original the host file's exact bytes before the integrator runs
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     # Select the pre-existing Claude entry file whose surrounding bytes must survive insertion.
     path = repo / "CLAUDE.md"
@@ -452,7 +452,7 @@ def test_the_block_matches_the_host_files_line_endings(
     @param original the host file's exact bytes before the integrator runs
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     # Select the Claude entry file used to exercise this newline representation.
     path = repo / "CLAUDE.md"
@@ -484,7 +484,7 @@ def test_an_existing_block_is_replaced_not_duplicated(repo: Path) -> None:
     @param repo an otherwise empty repository with a vendored discipline at version `abc123`
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     run(repo)
     # Retain the first managed block before simulating a new vendored manifest version.
@@ -509,7 +509,7 @@ def test_replacing_a_block_in_a_crlf_file_leaves_no_stray_carriage_return(
     @param repo an otherwise empty repository with a vendored discipline at version `abc123`
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     # Select the CRLF entry file whose managed block will be refreshed after a vendor upgrade.
     path = repo / "CLAUDE.md"
@@ -534,7 +534,7 @@ def test_content_around_an_existing_block_survives_replacement(repo: Path) -> No
     @param repo an otherwise empty repository with a vendored discipline at version `abc123`
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     run(repo)
     # Select the integrated entry file before appending project-owned trailing content.
@@ -558,7 +558,7 @@ def test_existing_permissions_are_never_removed(repo: Path) -> None:
     @param repo an otherwise empty repository with a vendored discipline at version `abc123`
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     # Seed settings containing unrelated allow, deny, and model state before integration.
     settings_path = repo / ".claude" / "settings.json"
@@ -583,7 +583,7 @@ def test_unparseable_settings_are_left_alone(repo: Path) -> None:
     @param repo an otherwise empty repository with a vendored discipline at version `abc123`
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     # Seed malformed project-owned settings whose bytes the integrator must not guess at.
     settings_path = repo / ".claude" / "settings.json"
@@ -605,7 +605,7 @@ def test_running_twice_changes_nothing_the_second_time(repo: Path) -> None:
     @param repo an otherwise empty repository with a vendored discipline at version `abc123`
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     # Start from CRLF host bytes so idempotence includes line-ending preservation.
     (repo / "CLAUDE.md").write_bytes(EXISTING_CRLF)
@@ -644,7 +644,7 @@ def test_check_reports_a_stale_block(repo: Path) -> None:
     @param repo an otherwise empty repository with a vendored discipline at version `abc123`
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     run(repo)
     # Advance only the vendored identity so the installed block becomes detectably stale.
@@ -680,7 +680,7 @@ def test_removal_restores_the_original_file(
     @param original the host file's exact bytes before the integrator runs
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     # Select the existing entry file whose exact bytes removal must restore.
     path = repo / "CLAUDE.md"
@@ -697,7 +697,7 @@ def test_removal_takes_back_only_our_permissions(repo: Path) -> None:
     @param repo an otherwise empty repository with a vendored discipline at version `abc123`
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     run(repo)
     # Add one project-owned permission after installation, then persist that mixed state.
@@ -736,7 +736,7 @@ def test_an_ignore_entry_the_project_already_had_survives_add_then_remove(repo: 
     @param repo an otherwise empty repository with a vendored discipline at version `abc123`
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     # These original ignore entries are project-owned and must survive install plus removal.
     original = "*.pyc\nbuild/doc/\n"
@@ -756,7 +756,7 @@ def test_an_install_without_a_record_removes_no_permission_at_all(repo: Path) ->
     @param repo an otherwise empty repository with a vendored discipline at version `abc123`
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     write_settings(repo, ["Bash(make:*)", SHARED_PERMISSION])
     run(repo)
@@ -800,7 +800,7 @@ def test_the_record_survives_a_vendor_upgrade(tmp_path: Path) -> None:
     @param tmp_path the per-test directory
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     # Retain the immutable source representation consumed by subsequent analysis.
     source = Path(__file__).resolve().parent.parent
@@ -827,7 +827,7 @@ def test_removal_restores_an_existing_gitignore(repo: Path) -> None:
     @param repo an otherwise empty repository with a vendored discipline at version `abc123`
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     # Preserve the exact pre-install ignore bytes as the uninstall oracle.
     original = "*.pyc\n__pycache__/\n"
@@ -899,7 +899,7 @@ def _repo(root: Path, *, with_hooks: bool = True) -> Path:
     @return the repository root
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
     subprocess.run(("git", "init", "-q", "."), cwd=root, check=True,  # ruff: ignore[start-process-with-partial-path]
                    capture_output=True)

@@ -23,7 +23,7 @@ def _project(tmp_path: Path, *, engine: str = "none", unit: str = "application")
     @return repository root
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned project fixtures used to exercise the v5 migration boundary.
     """
     # Create every governed scope and seed one module in each for non-vacuous inventory.
     (tmp_path / "src/pkg").mkdir(parents=True)
@@ -165,7 +165,7 @@ def test_existing_artifacts_are_never_overwritten(tmp_path: Path) -> None:
     @param tmp_path scratch repository root
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned project fixtures used to exercise the v5 migration boundary.
     """
     # Build a v4 project whose target v5 artifacts will be pre-owned by the adopter.
     root = _project(tmp_path)
@@ -189,7 +189,7 @@ def test_unclassified_python_requires_scope_review(tmp_path: Path) -> None:
     @param tmp_path scratch repository root
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned project fixtures used to exercise the v5 migration boundary.
     """
     # Build a v4 project before adding a Python subtree absent from its governance declaration.
     root = _project(tmp_path)
@@ -211,7 +211,7 @@ def test_incomplete_v4_declaration_blocks_without_writes(tmp_path: Path) -> None
     @param tmp_path scratch repository root
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned project fixtures used to exercise the v5 migration boundary.
     """
     # Build a v4 project whose required architecture declaration will be removed.
     root = _project(tmp_path)
@@ -240,7 +240,7 @@ def test_artifact_path_cannot_escape_to_a_sibling(tmp_path: Path) -> None:
     @param tmp_path scratch repository root
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned project fixtures used to exercise the v5 migration boundary.
     """
     # Build a v4 project whose proposed documentation-model path will escape its root.
     root = _project(tmp_path)
@@ -267,7 +267,7 @@ def test_apply_refuses_a_project_changed_after_preview(tmp_path: Path) -> None:
     @param tmp_path scratch repository root
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned project fixtures used to exercise the v5 migration boundary.
     """
     # Build a v4 project whose declaration will change after its migration plan is bound.
     root = _project(tmp_path)

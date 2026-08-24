@@ -63,7 +63,7 @@ def target(tmp_path: Path) -> Path:
     @return the repository root
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned adopter fixtures used to exercise manifest and upgrade behavior.
     """
     # Select an isolated adopter root for every vendor lifecycle mutation.
     root = tmp_path / "adopter"
@@ -197,7 +197,7 @@ def test_the_version_stamp_is_stable_across_two_installs(target: Path, tmp_path:
     @param tmp_path holds a second, independent target
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned adopter fixtures used to exercise manifest and upgrade behavior.
     """
     _install(target)
     # Select a second independent target for deterministic stamp comparison.
@@ -225,7 +225,7 @@ def test_a_file_retired_upstream_does_not_survive_an_update(target: Path) -> Non
     @param target an empty repository
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned adopter fixtures used to exercise manifest and upgrade behavior.
     """
     _install(target)
     # Resolve a synthetic retired upstream-owned file inside the vendored check tree.
@@ -247,7 +247,7 @@ def test_the_project_half_survives_an_update(target: Path) -> None:
     @param target an empty repository
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned adopter fixtures used to exercise manifest and upgrade behavior.
     """
     _install(target)
     # Resolve a project-owned learning ledger used to prove update preservation.
@@ -273,7 +273,7 @@ def test_force_restores_a_seed_without_overwriting_work(target: Path) -> None:
     @param target an empty repository
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned adopter fixtures used to exercise manifest and upgrade behavior.
     """
     _install(target)
     # Resolve the existing project ledger whose authored bytes force must preserve.
@@ -305,7 +305,7 @@ def test_check_reports_an_edited_vendored_file_by_name(target: Path) -> None:
     @param target an empty repository
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned adopter fixtures used to exercise manifest and upgrade behavior.
     """
     _install(target)
     # Resolve one upstream-owned tool for an intentional in-place drift mutation.
@@ -361,7 +361,7 @@ def test_the_whole_round_trip_preserves_every_prior_byte(
     @param original the configuration the project already had
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned adopter fixtures used to exercise manifest and upgrade behavior.
     """
     # Resolve the adopter-owned Claude instruction file whose bytes must round-trip exactly.
     claude = target / "CLAUDE.md"

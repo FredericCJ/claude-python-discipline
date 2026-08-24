@@ -67,7 +67,7 @@ def write(path: Path, text: str) -> Path:
     @return the same destination, so a caller can go on to move or read it
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned doctrine fixtures used to exercise corpus validation.
     """
     # Create only the ancestry needed by the requested synthetic corpus artifact.
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -205,7 +205,7 @@ def test_v003_id_does_not_match_filename(tmp_path: Path) -> None:
     path that no longer holds anything.
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned doctrine fixtures used to exercise corpus validation.
     """
     # Retain the created module path so the test can introduce only a filename/id mismatch.
     path = module(tmp_path)
@@ -218,7 +218,7 @@ def test_v004_kind_does_not_match_directory(tmp_path: Path) -> None:
     """A law document filed under `fact/` is caught, because the genre governs what it may say.
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned doctrine fixtures used to exercise corpus validation.
     """
     module(tmp_path, kind="law", name="TYPE")
     # Identify the valid law source produced by the shared fixture builder.
@@ -287,7 +287,7 @@ def test_v021_accepts_an_explicit_family_partition(tmp_path: Path) -> None:
     """A large rule family can split documents without renumbering public ids.
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned doctrine fixtures used to exercise corpus validation.
     """
     # Retain the partitioned module whose family prefix will be declared explicitly.
     path = module(
@@ -309,7 +309,7 @@ def test_v021_rejects_a_partition_prefix_unrelated_to_its_module(tmp_path: Path)
     """rule_prefix cannot become an arbitrary cross-module placement alias.
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned doctrine fixtures used to exercise corpus validation.
     """
     # Retain the partitioned module whose declared family will be made unrelated.
     path = module(
@@ -468,7 +468,7 @@ def test_v041_does_not_resolve_a_reference_through_sources(tmp_path: Path) -> No
     supposed to be the adopter's first check.
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned doctrine fixtures used to exercise corpus validation.
     """
     # Place the apparent target only beneath the explicitly non-shipped source archive.
     superseded = tmp_path / "sources" / "doctrine"
@@ -590,7 +590,7 @@ def corpus(root: Path, *, built: Sequence[str] = ()) -> Path:
     @return the same root, for use as the resolution root
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned doctrine fixtures used to exercise corpus validation.
     """
     # Locate the synthetic checker directory resolved by ``mechanism_is_implemented``.
     checks = root / "enforce" / "checks"
@@ -824,7 +824,7 @@ def test_a_hand_raised_count_is_refused(tmp_path: Path) -> None:
     @param tmp_path pytest's per-test temporary directory
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned doctrine fixtures used to exercise corpus validation.
     """
     # Select the valid baseline artifact whose redundant count will be forged.
     path = tmp_path / "baseline.json"
@@ -851,7 +851,7 @@ def test_a_baseline_missing_a_field_is_refused(tmp_path: Path, payload: dict[str
         mapping key order is deliberately unused.
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned doctrine fixtures used to exercise corpus validation.
     """
     # Select the isolated baseline path written with this incomplete parameterized payload.
     path = tmp_path / "baseline.json"
@@ -1004,7 +1004,7 @@ def test_v051_warns_before_the_always_loaded_ceiling(tmp_path: Path) -> None:
     @param tmp_path the fixture directory
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned doctrine fixtures used to exercise corpus validation.
     """
     # Select the always-loaded artifact whose warning threshold is lower than its hard ceiling.
     kernel = tmp_path / "discipline" / "KERNEL.md"
@@ -1035,7 +1035,7 @@ def test_v097_notices_a_loop_that_only_writes(tmp_path: Path) -> None:
     @param tmp_path the fixture directory
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned doctrine fixtures used to exercise corpus validation.
     """
     module(tmp_path)
     # Select the synthetic append-only ledger inspected by the outcome-ratio check.
@@ -1072,7 +1072,7 @@ def test_v097_is_silent_once_outcomes_are_reported(tmp_path: Path) -> None:
     @param tmp_path the fixture directory
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned doctrine fixtures used to exercise corpus validation.
     """
     module(tmp_path)
     # Select the synthetic append-only ledger inspected by the outcome-ratio check.

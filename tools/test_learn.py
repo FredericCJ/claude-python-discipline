@@ -38,7 +38,7 @@ def store(tmp_path: Path) -> learn.Store:
     @return a store rooted there, so no test touches the repository's own ledger
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned learning fixtures used to exercise ledger and runner behavior.
     """
     # Select the project-owned learning directory beneath this test's isolated root.
     target = tmp_path / "learning"
@@ -117,7 +117,7 @@ def test_the_database_is_reconstructible_from_the_ledger(store: learn.Store) -> 
     """The ledger is the record; the database is a query index over it.
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned learning fixtures used to exercise ledger and runner behavior.
     """
     # Record one learning and one use event, then retain the first folded database image.
     first = record(store)
@@ -175,7 +175,7 @@ def test_a_corrupt_ledger_line_names_itself(store: learn.Store) -> None:
     the offending line rather than to the whole file.
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned learning fixtures used to exercise ledger and runner behavior.
     """
     record(store)
     # Append malformed syntax through a bounded handle so it is flushed before the read.
@@ -603,7 +603,7 @@ def script(store: learn.Store, name: str, body: str) -> str:
     @return the command a learning would record to run it
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned learning fixtures used to exercise ledger and runner behavior.
     """
     # Publish the in-tree program before returning the relative interpreter command.
     (store.root / name).write_text(body, encoding="utf-8")
@@ -726,7 +726,7 @@ def test_a_refusal_is_reported_rather_than_run(store: learn.Store) -> None:
     what is actually asserted.
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned learning fixtures used to exercise ledger and runner behavior.
     """
     # Seed a side-effecting script, then submit it through a path-qualified forbidden command.
     (store.root / "evil.py").write_text("open('breach', 'w').write('x')\n", encoding="utf-8")
@@ -745,7 +745,7 @@ def test_an_admitted_program_may_not_be_pointed_out_of_the_tree(store: learn.Sto
     refusal from a run that was merely labelled one.
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned learning fixtures used to exercise ledger and runner behavior.
     """
     # Place executable test code and its breach sentinel outside the governed repository root.
     neighbour = store.root.parent / "next-door"
@@ -794,7 +794,7 @@ def test_no_shell_ever_sees_the_command(store: learn.Store) -> None:
     second never starts -- which is what the sentinel file proves.
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes only pytest-owned learning fixtures used to exercise ledger and runner behavior.
     """
     # Chain two apparent programs; only the first argv should execute without a shell.
     first = script(store, "first.py", "open('first-ran', 'w').write('x')\n")
