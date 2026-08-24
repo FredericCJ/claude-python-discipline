@@ -9,7 +9,7 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 | Status | Count |
 |---|---|
 | active | 6 |
-| candidate | 108 |
+| candidate | 109 |
 | superseded | 1 |
 
 ## active
@@ -990,6 +990,15 @@ Confidence here is the stored, evidence-derived value. What retrieval uses is th
 - **Triggers** `error:build home directory`, `glob:tools/release.py`
 - **About** DEP-008
 - **Verify** `python -m pytest -q tools/test_release.py`
+
+### L-0116 · A mass documentation migration can satisfy lexical checks while retaining semantically empty repeated prose.
+
+- **Do** Before qualification, audit repeated prose source-wide and add every confirmed generator family to DOC-019 discrimination fixtures.
+- **Kind** defect · **scope** discipline · **evidence** observed (+0/-0 over 1 session(s))
+- **Confidence** 0.50, last seen 2026-08-24
+- **Triggers** `term:documentation migration`
+- **About** DOC-019
+- **Verify** `python -m enforce.checks.doc_narration`
 
 ## superseded
 
