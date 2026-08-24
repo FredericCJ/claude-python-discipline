@@ -81,7 +81,7 @@ def test_every_package_is_surveyed_not_just_one(tmp_path: Path) -> None:
         "src/two/__init__.py": "",
         "src/two/store.py": "import yaml\n",
     })
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Survey imported distributions after excluding standard-library and local modules.
     found = register_deps.survey(root)
     assert set(found) == {"pydantic", "yaml"}, (
         "a multi-package tree was not fully surveyed"

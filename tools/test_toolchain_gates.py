@@ -94,7 +94,7 @@ def test_a_broken_layer_is_caught(tree: Path) -> None:
     """
     # Select the domain module whose new outward import violates the central layer contract.
     model = tree / "src" / "refpkg" / "domain" / "model.py"
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Read the reference domain module before injecting exactly one forbidden adapter import.
     text = model.read_text(encoding="utf-8")
     # Inject one adapter dependency while preserving all other reference behavior.
     model.write_text(
@@ -128,7 +128,7 @@ def test_the_vacuity_guard_fires() -> None:
 
 def test_a_missing_configuration_is_not_silence() -> None:
     """No contract file is a failure, not an empty pass."""
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require import checking to reject a missing contract declaration.
     with pytest.raises(FileNotFoundError):
         import_gate.check(REFERENCE, "no-such-file.toml",
                           import_gate.MINIMUM_CONTRACTS)
@@ -161,7 +161,7 @@ def test_an_escaping_source_root_is_refused(tree: Path) -> None:
 
     @param tree writable reference copy
     """
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require import checking to reject a declared source root that escapes the repository.
     with pytest.raises(import_gate.SourceRootError, match="escape"):
         import_gate.check(
             tree,

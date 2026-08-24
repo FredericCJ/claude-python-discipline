@@ -116,7 +116,7 @@ def test_the_baseline_refuses_to_move_without_a_reason(tmp_path: Path) -> None:
 
 def test_an_absent_baseline_reads_as_empty(tmp_path: Path) -> None:
     """A missing ceiling must demand a clean tree, never accept whatever is there."""
-    # Preserve the observed item count used by the non-vacuity verdict.
+    # Read the absent-baseline result as a zero-count, empty-pair debt ceiling.
     count, pairs = lint_gate.load_baseline(tmp_path / "nothing.json")
     assert (count, pairs) == (0, set())
 

@@ -99,7 +99,7 @@ def test_write_baseline_records_ref_per_entry(repo: Path) -> None:
 
     @param repo the fake repository, from the fixture
     """
-    # Preserve the observed item count used by the non-vacuity verdict.
+    # Retain the number of governed files written to the fresh provenance baseline.
     count = docgate.write_baseline(repo)
     assert count == 1
     # Preserve entries element values in deterministic source order.
@@ -120,10 +120,10 @@ def test_rerecord_without_reason_is_refused(repo: Path) -> None:
     @param repo the fake repository, from the fixture
     """
     docgate.write_baseline(repo)
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require rerecording to reject an empty rationale.
     with pytest.raises(ValueError, match="reason"):
         docgate.rerecord_baseline(repo, [_sample(repo)], "")
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require rerecording to reject a whitespace-only rationale.
     with pytest.raises(ValueError, match="reason"):
         docgate.rerecord_baseline(repo, [_sample(repo)], "   ")
 
@@ -158,7 +158,7 @@ def test_rerecord_with_reason_updates_only_named_entry(repo: Path) -> None:
 
     # Change only the selected sample before replacing its baseline entry with a reason.
     (repo / "tools" / "sample.py").write_text(_SAMPLE_SOURCE_CHANGED, encoding="utf-8")
-    # Preserve the observed item count used by the non-vacuity verdict.
+    # Retain the number of named baseline entries replaced by the justified rerecord.
     count = docgate.rerecord_baseline(repo, [_sample(repo)], "changed on purpose")
 
     assert count == 1
@@ -176,7 +176,7 @@ def test_rerecord_requires_existing_baseline(repo: Path) -> None:
 
     @param repo the fake repository, from the fixture
     """
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require selective rerecording to reject a repository with no existing baseline.
     with pytest.raises(ValueError, match="no baseline"):
         docgate.rerecord_baseline(repo, [_sample(repo)], "a reason")
 

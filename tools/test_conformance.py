@@ -52,7 +52,7 @@ def tree(root: Path, **modules: str) -> Path:
     @par Effects
     Writes only pytest-owned checker fixtures used to exercise baseline conformance.
     """
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Establish the synthetic repository's governed source root before writing selected modules.
     source = root / "src"
     # Establish the governed source boundary before publishing the requested modules.
     source.mkdir(parents=True, exist_ok=True)

@@ -326,7 +326,7 @@ def test_a_syntax_error_does_not_credit_an_auto_rule(
 
     @param monkeypatch used to substitute the declared table
     """
-    # Preserve the caught failure that explains why the external result is unusable.
+    # Construct a deliberately invalid mutation record whose proof names no test function.
     broken = discrimination.Mutation(
         rule_id="ERR-008",
         summary="the file no longer parses, which is not the rule being tested",

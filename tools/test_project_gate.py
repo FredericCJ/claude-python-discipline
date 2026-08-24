@@ -605,7 +605,7 @@ def test_artifact_build_uses_only_an_isolated_repository_copy(
         @param _root governed working directory
         @return successful build observation
         """
-        # Retain the immutable source representation consumed by subsequent analysis.
+        # Inspect the adapter's isolated source copy before allowing the fake builder to continue.
         source = Path(command.command[-1])
         assert not (source / ".agent").exists()
         # Combine the checker's captured diagnostic streams without losing emission text.

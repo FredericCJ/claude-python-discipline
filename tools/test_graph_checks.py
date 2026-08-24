@@ -48,7 +48,7 @@ def add_front_matter(path: Path, line: str) -> None:
     @par Effects
     Writes only the pytest-owned graph fixture used to isolate relationship validation.
     """
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Preserve the existing front matter while inserting one controlled field before decay.
     text = path.read_text(encoding="utf-8")
     path.write_text(text.replace("decay: ", f"{line}\ndecay: ", 1), encoding="utf-8")
 
@@ -119,7 +119,7 @@ def test_a_declared_edge_between_real_rules_is_accepted(tmp_path: Path) -> None:
           - pair: [TYPE-001, ERR-001]
         """,
     )
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Collect validation codes after adding a well-formed signal-to-rule edge.
     found = codes(run_on(tmp_path))
     assert "V093" not in found
     assert "V090" not in found

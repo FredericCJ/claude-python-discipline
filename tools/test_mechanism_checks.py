@@ -179,7 +179,7 @@ def test_the_ledger_survives_a_round_trip(tmp_path: Path) -> None:
     # Seed three ordered sessions so the round trip exercises more than one ledger edge.
     store = seed_learning(tmp_path)
     # Locate the structural boundary used to parse the external result safely.
-    # Process each candidate element in deterministic source order.
+    # Append three ordered sessions so retention can distinguish old from recent records.
     for index in range(3):
         learn.append_event(store, "session", f"S-{index}", {"task": str(index)})
     connection = learn.sync(store)
@@ -310,14 +310,14 @@ def test_declaring_no_rule_is_refused() -> None:
 
     Worse than no decorator: it looks migrated, so nobody comes back to it.
     """
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require the evidence decorator to reject an identifier absent from the doctrine corpus.
     with pytest.raises(ValueError, match="names no rule"):
         decides()
 
 
 def test_a_malformed_rule_id_is_refused() -> None:
     """A typo must fail at collection, not resolve to a rule that does not exist."""
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require the evidence decorator to reject malformed rule identifiers during collection.
     with pytest.raises(ValueError, match="not rule ids"):
         decides("ARCH-2")
 

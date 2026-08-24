@@ -49,7 +49,7 @@ def test_every_remote_docker_build_input_is_immutable() -> None:
 
 def test_the_docker_context_contains_only_the_three_build_inputs() -> None:
     """Application source and repository metadata never reach the builder."""
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Extract Docker build-context directives from the shipped ignore file.
     directives = tuple(
         line
         for raw in _text(".dockerignore").splitlines()

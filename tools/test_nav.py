@@ -160,7 +160,7 @@ def test_every_rule_is_reachable(graph: Graph) -> None:
     A rule nobody can arrive at is a rule that exists and cannot be found. Three
     hops from any module is the ceiling the corpus is held to.
     """
-    # Preserve the observed item count used by the non-vacuity verdict.
+    # Use every module node as a seed before checking that all rules are reachable.
     seeds = sorted(n.id for n in graph.of_type(NodeType.MODULE))
     unreachable = graph.unreachable_from(seeds, NodeType.RULE, depth=3)
     assert unreachable == []
@@ -241,7 +241,7 @@ def test_an_adapter_file_reaches_the_adapter_rules(graph: Graph) -> None:
     Precision matters as much as recall: an answer that names every rule is the
     same as no answer at all.
     """
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Collect the rule identities selected for an adapter-path context.
     found = _rule_ids(nav.cmd_context(graph, _ns(file="src/pkg/adapters/fs.py")))
     assert {"ARCH-003", "ARCH-020", "ARCH-025", "DEP-003", "TEST-020"} <= found
     assert "TYPE-002" not in found, "a domain-only rule must not govern an adapter"
@@ -249,7 +249,7 @@ def test_an_adapter_file_reaches_the_adapter_rules(graph: Graph) -> None:
 
 def test_a_domain_file_reaches_the_purity_rules(graph: Graph) -> None:
     """The mirror case: purity, typing and effects arrive; the adapter-only rule does not."""
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Collect the rule identities selected for a domain-path context.
     found = _rule_ids(nav.cmd_context(graph, _ns(file="src/pkg/domain/outline.py")))
     assert {"ARCH-002", "TYPE-002", "TYPE-007", "EFCT-001", "DEP-001"} <= found
     assert "ARCH-003" not in found, "an adapter-only rule must not govern the domain"
@@ -262,7 +262,7 @@ def test_an_import_linter_failure_reaches_its_rule(graph: Graph) -> None:
         "lint-imports: contract adapters-are-independent FAILED",
         "ARCH-003 adapters are independent: broken",
     ):
-        # Preserve the optional pattern match that carries the reported analysis count.
+        # Collect rule identities for each supported spelling of the same adapter error.
         found = _rule_ids(nav.cmd_context(graph, _ns(error=text)))
         assert "ARCH-003" in found, text
 
@@ -373,7 +373,7 @@ def test_a_reported_path_can_actually_be_opened(monkeypatch: pytest.MonkeyPatch)
     monkeypatch.chdir(REPO_ROOT.parent)
     # Preserve the completed Git query with its status and captured content.
     shown = nav.openable("discipline/law/ARCH.md:51")
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Remove the rendered line suffix before verifying the openable repository path.
     body = shown.rsplit(":", 1)[0]
     assert (REPO_ROOT.parent / body).exists(), f"{shown} does not resolve from {Path.cwd()}"
     assert body.endswith("discipline/law/ARCH.md")
@@ -514,6 +514,6 @@ def test_diagnose_refuses_when_given_nothing() -> None:
     An empty answer reads as "no rule governs this", which is a claim, and it
     would be one nobody made.
     """
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require diagnose to reject an invocation containing neither an envelope nor a file.
     with pytest.raises(SystemExit):
         _diagnose()

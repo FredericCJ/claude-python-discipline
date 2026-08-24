@@ -295,7 +295,7 @@ def test_117_projects_supported_python_entities_and_contract_commands() -> None:
     # Keep generated output alive while checking entity prose and contract-section projection.
     with _generated_probe() as result:
         assert result.finished.returncode == 0, result.finished.stderr
-        # Retain the immutable source representation consumed by subsequent analysis.
+        # Render all generated HTML into one searchable projection for entity assertions.
         body = _html_text(result.output)
         for phrase in (
             "Number of attempts permitted",
@@ -347,7 +347,7 @@ def test_117_generates_text_call_caller_and_dependency_relations() -> None:
     """Enabled relationship features produce evidence, not merely settings."""
     # Inspect relation prose and graph artifacts within one bounded qualified generation.
     with _generated_probe() as result:
-        # Retain the immutable source representation consumed by subsequent analysis.
+        # Render generated HTML once before checking textual relationship evidence.
         body = _html_text(result.output)
         assert "References" in body
         assert "Referenced by" in body

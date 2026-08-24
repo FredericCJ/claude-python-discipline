@@ -29,7 +29,7 @@ def seed(root: Path) -> Path:
     @par Effects
     Writes only pytest-owned discipline sources and their generated Claude/Codex mirror fixtures.
     """
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Establish the canonical skill source whose generated host mirrors are under test.
     source = root / "skills" / "python-discipline"
     (source / "assets").mkdir(parents=True)
     (source / "SKILL.md").write_bytes(b"---\nname: python-discipline\n---\n")
@@ -54,7 +54,7 @@ def test_one_source_is_mirrored_byte_for_byte_to_both_hosts(tmp_path: Path) -> N
 
     @param tmp_path the throwaway repository root
     """
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Retain the canonical source while checking freshly generated host mirrors.
     source = seed(tmp_path)
 
     assert build_skill_mirror.main(["--root", str(tmp_path)]) == 0
@@ -100,7 +100,7 @@ def test_retired_files_are_removed_from_both_host_mirrors(tmp_path: Path) -> Non
     @par Effects
     Writes only pytest-owned discipline sources and their generated Claude/Codex mirror fixtures.
     """
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Retain the canonical source while removing one upstream file before regeneration.
     source = seed(tmp_path)
     assert build_skill_mirror.main(["--root", str(tmp_path)]) == 0
     (source / "assets" / "routing.txt").unlink()
