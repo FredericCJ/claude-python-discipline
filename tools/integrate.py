@@ -167,7 +167,7 @@ class Action:
 
         @return True when before and after differ or the action is a deletion
         """
-        # Return true when before and after differ or the action is a deletion to the caller.
+        # Deletion changes filesystem state even though its after-content is empty.
         return self.kind is Kind.DELETE or self.before != self.after
 
     def diff(self, root: Path) -> str:
@@ -176,13 +176,13 @@ class Action:
         @param root the repository root, for display paths
         @return the diff text, empty when nothing changes
         """
-        # Select the empty-or-disabled path when self.changes has no usable value.
+        # Skip diff construction for actions whose before/after contract is identical.
         if not self.changes:
-            # Return the diff text, empty when nothing changes to the caller.
+            # Empty text keeps no-op actions visible in the plan without a fake patch.
             return ""
-        # Normalize the current repository path to its portable baseline key spelling.
+        # Express the target from the repository root using portable patch-path separators.
         name = self.path.relative_to(root).as_posix()
-        # Return the diff text, empty when nothing changes to the caller.
+        # Diff exact preserved lines so CRLF changes, if any, remain reviewable.
         return "".join(
             difflib.unified_diff(
                 self.before.splitlines(keepends=True),
@@ -212,9 +212,7 @@ class Plan:
 
         @return the subset whose before and after differ
         """
-        # Select a as the current element from self.actions if a.changes] while changing
-        # Details: preserves traversal order.
-        # Return the subset whose before and after differ to the caller.
+        # Preserve application order while selecting only actions with a filesystem effect.
         return [a for a in self.actions if a.changes]
 
 
@@ -233,10 +231,9 @@ def read_preserving(path: Path) -> str:
     @param path the file to read
     @return the decoded text, carriage returns included
     """
-    # Compute handle using "utf-8", newline="") as handle: for later read preserving logic.
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Disable universal-newline translation for the complete read lifetime.
     with path.open(encoding="utf-8", newline="") as handle:
-        # Return the decoded text, carriage returns included to the caller.
+        # Decode UTF-8 while preserving every original carriage return.
         return handle.read()
 
 
@@ -249,10 +246,9 @@ def write_preserving(path: Path, text: str) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Compute handle using "utf-8", newline="") as handle: for later write preserving logic.
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Disable output newline expansion so the planned text is the text stored on disk.
     with path.open("w", encoding="utf-8", newline="") as handle:
-        # Publish the externally visible effect after all required inputs are ready.
+        # Commit the already-rendered content without host-dependent transformation.
         handle.write(text)
 
 
@@ -265,9 +261,9 @@ def dominant_newline(text: str) -> str:
     @param text the file as it stands
     @return CRLF when carriage returns are in the majority, LF otherwise
     """
-    # Compute crlf using text.count for later dominant newline logic.
+    # Count CRLF pairs separately from the total newline count used to derive bare LF count.
     crlf = text.count("\r\n")
-    # Return cRLF when carriage returns are in the majority, LF otherwise to the caller.
+    # Choose CRLF only on a strict majority; ties and empty content retain the LF default.
     return "\r\n" if crlf > text.count("\n") - crlf else "\n"
 
 
@@ -282,7 +278,7 @@ def with_newline(text: str, newline: str) -> str:
     @param newline the ending to use
     @return the same text with every line ending replaced
     """
-    # Return the same text with every line ending replaced to the caller.
+    # Collapse authored endings to LF before expanding them uniformly to the host choice.
     return text.replace("\r\n", "\n").replace("\n", newline)
 
 
@@ -299,7 +295,7 @@ def render_block(version: str, agent_dir: str) -> str:
     @param agent_dir where the discipline was vendored, relative to the root
     @return the block text, markers included, with LF line endings
     """
-    # Return the block text, markers included, with LF line endings to the caller.
+    # Render one compact session bootstrap whose marker carries exact package identity.
     return f"""{BEGIN} {version} -- managed by {agent_dir}/tools/integrate.py; \
 edits inside this block are overwritten -->
 ## Engineering discipline
@@ -357,30 +353,26 @@ def read_version(root: Path, agent_dir: str) -> str:
     """
     # Locate the manifest whose exact content identity names the vendored discipline.
     manifest = root / agent_dir / "MANIFEST.json"
-    # Select the existing-artifact path only when `not manifest.exists()` is satisfied.
+    # Absence means the vendored content predates or bypassed versioned packaging.
     if not manifest.exists():
-        # Return `release (hash)` when a release is recorded, the hash alone when it to the
-        # Details: caller.
+        # Distinguish missing provenance from an unreadable manifest.
         return "unversioned"
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Decode the manifest defensively because integration must still produce an actionable block.
     try:
-        # Compute recorded using json.loads for later read version logic.
+        # Retain decoded manifest fields until the required object shape is established.
         recorded = json.loads(manifest.read_text(encoding="utf-8"))
-    # Translate the expected failure into this mechanism's stable diagnostic path.
+    # Filesystem and JSON failures share the honest unreadable identity.
     except (json.JSONDecodeError, OSError):
-        # Return `release (hash)` when a release is recorded, the hash alone when it to the
-        # Details: caller.
+        # Do not invent a hash or release from untrusted manifest bytes.
         return "unreadable"
-    # Select the empty-or-disabled path when isinstance(recorded, dict) has no usable value.
+    # Non-object JSON cannot carry named version and release fields.
     if not isinstance(recorded, dict):
-        # Return `release (hash)` when a release is recorded, the hash alone when it to the
-        # Details: caller.
+        # Report the same unusable-manifest state as malformed JSON.
         return "unreadable"
-    # Compute stamp using str for later read version logic.
+    # Preserve the exact content stamp and add the optional human release label.
     stamp = str(recorded.get("version", "?"))
-    # Compute release using recorded.get for later read version logic.
     release = recorded.get("release")
-    # Return `release (hash)` when a release is recorded, the hash alone when it to the caller.
+    # Keep the machine-comparable stamp present in both labeled and unlabeled forms.
     return f"{release} ({stamp})" if release else stamp
 
 
@@ -397,19 +389,19 @@ def load_record(path: Path) -> dict[str, object] | None:
     @param path the record file
     @return the parsed record, or None when there is none to trust
     """
-    # Select the existing-artifact path only when `not path.exists()` is satisfied.
+    # No record grants no removal authority and therefore maps to the conservative None state.
     if not path.exists():
-        # Return the parsed record, or None when there is none to trust to the caller.
+        # Preserve the explicit untrusted-absence result for every removal planner.
         return None
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Parse provenance only when the complete UTF-8 JSON artifact is trustworthy.
     try:
-        # Compute parsed using json.loads for later load record logic.
+        # Retain the decoded value until its required object shape is checked below.
         parsed = json.loads(path.read_text(encoding="utf-8"))
-    # Translate the expected failure into this mechanism's stable diagnostic path.
+    # Any read, decode, or parse failure removes authority rather than guessing ownership.
     except (json.JSONDecodeError, OSError, UnicodeDecodeError):
-        # Return the parsed record, or None when there is none to trust to the caller.
+        # Treat damaged provenance exactly like no provenance: delete nothing automatically.
         return None
-    # Return the parsed record, or None when there is none to trust to the caller.
+    # Only a mapping can carry versioned ownership fields; other JSON types grant nothing.
     return parsed if isinstance(parsed, dict) else None
 
 
@@ -422,20 +414,17 @@ def recorded_entries(record: dict[str, object] | None, key: str) -> tuple[str, .
             when there is no record at all -- the two must not be confused, since
             one authorises removal of nothing and the other forbids removal
     """
-    # Use the absence path when record has no available value.
+    # Preserve missing-record semantics because they explicitly forbid entry deletion.
     if record is None:
-        # Return the entries, empty when the record carries no such list, and None to the
-        # Details: caller.
+        # None remains distinct from a present record containing an empty owned list.
         return None
-    # Treat the current value as the candidate element consumed by the enclosing transformation.
+    # Read the named ownership list without trusting arbitrary record value types.
     value = record.get(key)
-    # Select the empty-or-disabled path when isinstance(value, list) has no usable value.
+    # A present but invalid or absent list authorizes removal of no entries.
     if not isinstance(value, list):
-        # Return the entries, empty when the record carries no such list, and None to the
-        # Details: caller.
+        # Empty tuple represents the trusted zero-owned-entry state.
         return ()
-    # Treat the current item as the candidate element consumed by the enclosing transformation.
-    # Return the entries, empty when the record carries no such list, and None to the caller.
+    # Normalize each persisted entry to text while retaining recorded removal order.
     return tuple(str(item) for item in value)
 
 
@@ -446,21 +435,20 @@ def recorded_separator(record: dict[str, object] | None, name: str) -> str | Non
     @param name the markdown target, as it is keyed in the record
     @return the recorded separator, or None when nothing was recorded for it
     """
-    # Compute markdown using (record or {}).get("markdown") for later recorded separator logic.
+    # Read the markdown ownership section from a present record or neutral empty mapping.
     markdown = (record or {}).get("markdown")
-    # Select the empty-or-disabled path when isinstance(markdown, dict) has no usable value.
+    # Invalid section shape grants no separator-removal authority.
     if not isinstance(markdown, dict):
-        # Return the recorded separator, or None when nothing was recorded for it to the caller.
+        # Leave every target's surrounding whitespace project-owned.
         return None
-    # Treat the current entry as the candidate element consumed by the enclosing transformation.
+    # Resolve the exact target entry before reading its separator contribution.
     entry = markdown.get(name)
-    # Select the empty-or-disabled path when isinstance(entry, dict) has no usable value.
+    # Missing or malformed target provenance leaves surrounding whitespace project-owned.
     if not isinstance(entry, dict):
-        # Return the recorded separator, or None when nothing was recorded for it to the caller.
+        # Return no separator rather than inferring ownership from current file layout.
         return None
-    # Compute separator using entry.get for later recorded separator logic.
+    # Admit only textual separator bytes to the later conservative removal operation.
     separator = entry.get("separator")
-    # Return the recorded separator, or None when nothing was recorded for it to the caller.
     return separator if isinstance(separator, str) else None
 
 
@@ -469,8 +457,7 @@ def empty_record() -> dict[str, object]:
 
     @return a record claiming no permission, ignore, markdown, or skill contribution
     """
-    # Return a record claiming no permission, ignore, markdown, or skill contribution to the
-    # Details: caller.
+    # Materialize every ownership section so trusted empty and missing remain distinguishable.
     return {
         "record_version": RECORD_VERSION,
         "permissions_added": [],
@@ -493,10 +480,9 @@ def _merged(record: dict[str, object] | None, key: str, newly: Sequence[str]) ->
         Each element is one newly owned entry in caller order.
     @return the union, in recorded order first
     """
-    # Compute kept using list for later merged logic.
+    # Begin with trusted prior ownership, treating no record as an empty installation history.
     kept = list(recorded_entries(record, key) or ())
-    # Treat the current entry as the candidate element consumed by the enclosing transformation.
-    # Return the union, in recorded order first to the caller.
+    # Append genuinely new entries once while preserving historical removal order first.
     return [*kept, *(entry for entry in newly if entry not in kept)]
 
 
@@ -510,14 +496,12 @@ def _skills_record(record: dict[str, object] | None) -> dict[str, dict[str, obje
     @param record the install record as it stands, or None
     @return valid path-to-entry mappings, empty when none can be trusted
     """
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Read the skill-ownership section without granting authority from non-mapping data.
     raw = (record or {}).get("skills")
-    # Select the empty-or-disabled path when isinstance(raw, dict) has no usable value.
     if not isinstance(raw, dict):
-        # Return valid path-to-entry mappings, empty when none can be trusted to the caller.
+        # Empty mapping represents no trustworthy native-skill provenance.
         return {}
-    # Resolve the repository-confined path used by this operation before filesystem access.
-    # Return valid path-to-entry mappings, empty when none can be trusted to the caller.
+    # Copy only string path keys with mapping entries so callers cannot mutate the loaded record.
     return {
         str(path): dict(entry)
         for path, entry in raw.items()
@@ -531,7 +515,7 @@ def _content_digest(text: str) -> str:
     @param text exact decoded file contents, line endings included
     @return the first 16 hexadecimal characters of its SHA-256
     """
-    # Return the first 16 hexadecimal characters of its SHA-256 to the caller.
+    # Hash exact UTF-8 contents, including line endings, before shortening display/storage width.
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
 
 
@@ -541,13 +525,13 @@ def _skill_ownership(entry: dict[str, object] | None) -> tuple[bool, str | None]
     @param entry one path's record, or None when the path was never recorded
     @return whether this installer created it, and the digest it wrote
     """
-    # Use the absence path when entry has no available value.
+    # An unrecorded path is project-owned and carries no expected installer digest.
     if entry is None:
-        # Return whether this installer created it, and the digest it wrote to the caller.
+        # Deny both creation authority and any digest-based replacement or deletion authority.
         return False, None
-    # Compute digest using entry.get for later skill ownership logic.
+    # Read the recorded digest only when it has the textual shape produced by this installer.
     digest = entry.get("digest")
-    # Return whether this installer created it, and the digest it wrote to the caller.
+    # Creation authority requires an explicit true flag; all other values are conservative false.
     return entry.get("created") is True, digest if isinstance(digest, str) else None
 
 
@@ -564,67 +548,54 @@ def _install_skill_action(
     @param entry prior ownership and digest, if recorded
     @return the action, next record entry, and a blocking problem if any
     """
-    # Select the regular-file path only when `path.is_symlink() or (path.exists() and (not
-    # Details: path.is_file()))` is satisfied.
+    # Never replace symlinks, directories, or other non-regular project-owned entry points.
     if path.is_symlink() or (path.exists() and not path.is_file()):
-        # Compute reason using "a non-regular path already occupies the skill entry point;  for
-        # Details: later install skill action logic.
+        # Describe both the skipped action and blocking collision from the same observed shape.
         reason = "a non-regular path already occupies the skill entry point; left untouched"
-        # Compute action using Action for later install skill action logic.
         action = Action(Kind.SKIP, path, "", "", reason)
-        # Compute next entry using dict for later install skill action logic.
         next_entry = dict(entry) if entry is not None else {"created": False, "digest": ""}
-        # Compute problem using f"cannot install the shared skill at {relative}: {reason}" for
-        # Details: later install skill action logic.
         problem = f"cannot install the shared skill at {relative}: {reason}"
-        # Return the action, next record entry, and a blocking problem if any to the caller.
+        # Preserve prior provenance while preventing an incomplete install from looking clean.
         return action, next_entry, problem
-    # Select the regular-file path only when `not path.is_file()` is satisfied.
+    # An absent regular file can be created safely and grants future deletion authority.
     if not path.is_file():
-        # Compute action using Action for later install skill action logic.
+        # Plan exact canonical skill contents and record installer ownership plus digest.
         action = Action(
             Kind.CREATE, path, "", source,
             "creating the native entry point from the shared vendored skill",
         )
-        # Return the action, next record entry, and a blocking problem if any to the caller.
         return action, {"created": True, "digest": source_digest}, None
 
-    # Compute before using read preserving for later install skill action logic.
+    # Compare existing bytes against both current source and the last installer-owned digest.
     before = read_preserving(path)
-    # Unpack created, expected using  skill ownership for later install skill action logic.
     created, expected = _skill_ownership(entry)
-    # Select the guarded path only after `before == source` is satisfied.
+    # An already-current file needs no write but retains its established ownership status.
     if before == source:
-        # Compute action using Action for later install skill action logic.
+        # Refresh the recorded digest even when content requires no mutation.
         action = Action(
             Kind.SKIP, path, before, before,
             "native skill already matches the shared vendored source",
         )
-        # Return the action, next record entry, and a blocking problem if any to the caller.
         return action, {"created": created, "digest": source_digest}, None
-    # Select the guarded path only after `created and expected is not None and
-    # Details: (_content_digest(before) == expected)` is satisfied.
+    # Replace only a file this installer created and whose bytes still match its prior digest.
     if created and expected is not None and _content_digest(before) == expected:
-        # Compute action using Action for later install skill action logic.
+        # Upgrade the untouched owned copy to the new canonical shared skill.
         action = Action(
             Kind.REPLACE, path, before, source,
             "updating the unchanged skill file created by this install",
         )
-        # Return the action, next record entry, and a blocking problem if any to the caller.
         return action, {"created": True, "digest": source_digest}, None
 
-    # Compute reason using ( for later install skill action logic.
+    # Distinguish local edits to an owned file from a collision that was never installer-owned.
     reason = (
         "recorded skill was locally modified; left untouched" if created
         else "an unowned skill already exists at this path; left untouched"
     )
-    # Compute action using Action for later install skill action logic.
+    # Preserve existing bytes and whatever trustworthy provenance was already recorded.
     action = Action(Kind.SKIP, path, before, before, reason)
-    # Compute next entry using (dict(entry) if entry is not None else for later install skill
-    # Details: action logic.
     next_entry = (dict(entry) if entry is not None else
                   {"created": False, "digest": _content_digest(before)})
-    # Return the action, next record entry, and a blocking problem if any to the caller.
+    # Surface the unresolved collision so callers cannot mistake partial integration for success.
     return action, next_entry, f"cannot install the shared skill at {relative}: {reason}"
 
 
@@ -638,52 +609,44 @@ def _remove_skill_action(
     @param entry prior ownership and digest, if recorded
     @return the action and any conservative-removal warning
     """
-    # Select the regular-file path only when `path.is_symlink() or (path.exists() and (not
-    # Details: path.is_file()))` is satisfied.
+    # Non-regular entry points are always project-owned regardless of stale record metadata.
     if path.is_symlink() or (path.exists() and not path.is_file()):
-        # Compute action using Action for later remove skill action logic.
+        # Plan no mutation and explain why provenance cannot authorize deletion.
         action = Action(
             Kind.SKIP, path, "", "",
             "non-regular skill entry point is project-owned; left untouched",
         )
-        # Return the action and any conservative-removal warning to the caller.
         return action, [f"{relative} is not a regular file and was not removed"]
-    # Select the regular-file path only when `not path.is_file()` is satisfied.
+    # Absence already satisfies removal and needs neither warning nor filesystem action.
     if not path.is_file():
-        # Return the action and any conservative-removal warning to the caller.
+        # Keep the target accounted for explicitly in the uninstall plan.
         return Action(Kind.SKIP, path, "", "", "skill file absent"), []
 
-    # Compute before using read preserving for later remove skill action logic.
+    # Compare present bytes with the only record that could authorize deleting them.
     before = read_preserving(path)
-    # Unpack created, expected using  skill ownership for later remove skill action logic.
     created, expected = _skill_ownership(entry)
-    # Select the empty-or-disabled path when created has no usable value.
+    # A file not explicitly created by this installer belongs to the project.
     if not created:
-        # Compute action using Action for later remove skill action logic.
+        # Preserve it and warn only when ownership provenance is completely absent.
         action = Action(
             Kind.SKIP, path, before, before,
             "skill file was not created by this install; left untouched",
         )
-        # Select warning as the current element from place" while remove skill action preserves
-        # Details: traversal order.
         warning = (f"no {RECORD_NAME} ownership for {relative}; left it in place"
                    if entry is None else "")
-        # Return the action and any conservative-removal warning to the caller.
         return action, [warning] if warning else []
-    # Select the guarded path only after `expected is None or _content_digest(before) !=
-    # Details: expected` is satisfied.
+    # Local edits revoke deletion authority even for a path originally created by integration.
     if expected is None or _content_digest(before) != expected:
-        # Compute action using Action for later remove skill action logic.
+        # Plan no mutation and disclose the digest/provenance mismatch.
         action = Action(
             Kind.SKIP, path, before, before,
             "skill file changed after integration; left untouched",
         )
-        # Return the action and any conservative-removal warning to the caller.
         return action, [
             (f"{relative} differs from the copy this install wrote; it now "
              "belongs to the project and was not removed"),
         ]
-    # Return the action and any conservative-removal warning to the caller.
+    # Delete only an unchanged regular file whose creation and exact bytes are both recorded.
     return Action(
         Kind.DELETE, path, before, "",
         "unchanged skill file created by this install",
@@ -702,11 +665,9 @@ def _skill_actions(
         True enables remove; false selects its disabled alternative.
     @return actions, next skill record, advisory warnings, and blocking conflicts
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Bind the canonical skill source and recovered per-target ownership to this repository.
     source_path = root / agent_dir / SKILL_SOURCE_PATH
-    # Compute installed using  skills record for later skill actions logic.
     installed = _skills_record(record)
-    # Compute wanted using dict for later skill actions logic.
     wanted = dict(installed)
     # Each actions element is one native-skill mutation in Claude-then-Codex target order.
     actions: list[Action] = []
@@ -715,52 +676,41 @@ def _skill_actions(
     # Each problems element is one project-owned skill collision in target order.
     problems: list[str] = []
 
-    # Select the regular-file path only when `not remove and (not source_path.is_file())` is
-    # Details: satisfied.
+    # Installation cannot expose a canonical skill that the vendored package does not carry.
     if not remove and not source_path.is_file():
         warnings.append(
             f"no shared skill found at {agent_dir}/{SKILL_SOURCE_PATH}; "
             "native Claude Code and Codex skill entry points were not planned"
         )
-        # Return actions, next skill record, advisory warnings, and blocking conflicts to the
-        # Details: caller.
+        # Return an empty skill plan while leaving Markdown and other integration work available.
         return actions, wanted, warnings, problems
 
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Read and digest canonical contents once; uninstall needs neither value.
     source = "" if remove else read_preserving(source_path)
-    # Compute source digest using "" if remove else _content_digest(source) for later skill
-    # Details: actions logic.
     source_digest = "" if remove else _content_digest(source)
-    # Select relative as the current element from SKILL_TARGETS while skill actions preserves
-    # Details: traversal order.
-    # Advance skill actions through the current input element in declared order.
+    # Plan Claude then Codex native entry points in declared deterministic order.
     for relative in SKILL_TARGETS:
-        # Resolve the repository-confined path used by this operation before filesystem access.
+        # Resolve the repository-local discovery path and its prior provenance entry.
         path = root / relative
-        # Treat the current entry as the candidate element consumed by the enclosing
-        # Details: transformation.
         entry = installed.get(relative)
-        # Handle the non-empty or enabled remove state.
+        # Removal and installation have distinct authority decisions but share result aggregation.
         if remove:
-            # Unpack action, notes using  remove skill action for later skill actions logic.
+            # Uninstall only provenance-intact skill copies and collect conservative warnings.
             action, notes = _remove_skill_action(path, relative, entry)
             actions.append(action)
             warnings.extend(notes)
-            # Advance after the current candidate has been conclusively excluded.
+            # Do not run installation planning for a removal target.
             continue
-        # Unpack action, next entry, problem using  install skill action for later skill actions
-        # Details: logic.
+        # Install, refresh, or surface a collision for the current host discovery path.
         action, next_entry, problem = _install_skill_action(
             path, relative, source, source_digest, entry,
         )
         actions.append(action)
-        # Update  skill actions state only after the required source facts are available.
         wanted[relative] = next_entry
-        # Use the available-value path only when problem is present.
+        # Blocking collisions are retained separately from non-blocking removal notes.
         if problem is not None:
             problems.append(problem)
-    # Return actions, next skill record, advisory warnings, and blocking conflicts to the
-    # Details: caller.
+    # Return ordered mutations, next ownership state, advisories, and blockers as one result.
     return actions, wanted, warnings, problems
 
 
@@ -779,19 +729,17 @@ def build_plan(root: Path, agent_dir: str, *, remove: bool = False,
         Each targets element represents one governed path; traversal order is preserved.
     @return the plan
     """
-    # Compute plan using Plan for later build plan logic.
+    # Start an effect-free plan and render the exact versioned Markdown block once.
     plan = Plan()
-    # Compute block using render block for later build plan logic.
     block = render_block(read_version(root, agent_dir), agent_dir)
-    # Compute record path using root / agent_dir / RECORD_NAME for later build plan logic.
     record_path = root / agent_dir / RECORD_NAME
     # Load integration-record field keys to recorded ownership values; mapping key order is
     # deliberately unused.
     record = load_record(record_path)
 
-    # Select the existing-artifact path only when `not (root / agent_dir /
-    # Details: 'discipline').exists()` is satisfied.
+    # Warn when integration is being planned before the discipline corpus is actually vendored.
     if not (root / agent_dir / "discipline").exists():
+        # Keep planning so dry-run output still explains every other target.
         plan.warnings.append(
             f"no discipline found at {agent_dir}/discipline -- run vendor.py install first"
         )
@@ -799,45 +747,36 @@ def build_plan(root: Path, agent_dir: str, *, remove: bool = False,
     # Each installed key is a managed Markdown filename and each value records its separator;
     # mapping key order is deliberately unused.
     installed: dict[str, object] = dict(_markdown_record(record))
-    # Normalize the current repository path to its portable baseline key spelling.
-    # Advance build plan through the current input element in declared order.
+    # Plan each host instruction file while preserving its recorded separator contribution.
     for name in targets:
-        # Compute action using  markdown action for later build plan logic.
+        # Compute the Markdown mutation without touching the host file.
         action = _markdown_action(root / name, block, root, remove=remove,
                                   separator=recorded_separator(record, name))
         plan.actions.append(action)
-        # Select the empty-or-disabled path when remove and action.kind is Kind.INSERT has no
-        # Details: usable value.
+        # Record only separators newly introduced by an insertion this run owns.
         if not remove and action.kind is Kind.INSERT:
-            # Update build plan state only after the required source facts are available.
+            # Persist exact blank-space ownership needed for byte-preserving uninstall.
             installed[name] = {"separator": _separator(action.before)}
 
-    # Unpack installed skills, skill actions, skill notes, skill problems using  skill actions
-    # Details: for later build plan logic.
+    # Plan both native skill mirrors and merge their ownership diagnostics into the main plan.
     skill_actions, installed_skills, skill_notes, skill_problems = _skill_actions(
         root, agent_dir, record, remove=remove,
     )
-    # Update build plan state only after the required source facts are available.
     plan.actions += skill_actions
-    # Update build plan state only after the required source facts are available.
     plan.warnings += skill_notes
-    # Update build plan state only after the required source facts are available.
     plan.problems += skill_problems
 
-    # Unpack settings, settings notes using  settings action for later build plan logic.
+    # Plan structured Claude permissions and derived-artifact ignore entries independently.
     settings, settings_notes = _settings_action(
         root / SETTINGS_PATH, remove=remove,
         added=recorded_entries(record, "permissions_added"))
-    # Unpack ignore notes, ignores using  gitignore action for later build plan logic.
     ignores, ignore_notes = _gitignore_action(
         root / ".gitignore", remove=remove,
         added=recorded_entries(record, "gitignore_added"))
-    # Update build plan state only after the required source facts are available.
     plan.actions += [settings, ignores]
-    # Update build plan state only after the required source facts are available.
     plan.warnings += settings_notes + ignore_notes
 
-    # Update build plan state only after the required source facts are available.
+    # Plan the provenance record last from ownership actually observed by all earlier actions.
     plan.actions += _record_actions(record_path, record, remove=remove, wanted={
         "record_version": RECORD_VERSION,
         "permissions_added": _merged(record, "permissions_added",
@@ -848,13 +787,12 @@ def build_plan(root: Path, agent_dir: str, *, remove: bool = False,
         "skills": installed_skills,
     })
 
-    # Select the empty-or-disabled path when remove and (not  is git repository(root)) has no
-    # Details: usable value.
+    # Installation outside Git has no history-based undo, so make that risk visible before apply.
     if not remove and not _is_git_repository(root):
         plan.warnings.append(
             "this is not a git repository, so there is no undo -- review the dry run first"
         )
-    # Return the plan to the caller.
+    # Expose the complete effect-free plan in exact application order.
     return plan
 
 
@@ -864,9 +802,8 @@ def _markdown_record(record: dict[str, object] | None) -> dict[str, object]:
     @param record the record as it stands, or None when there is none
     @return the per-file entries, empty when there are none
     """
-    # Compute markdown using (record or {}).get("markdown") for later markdown record logic.
+    # Copy the Markdown ownership section only when the record carries a mapping.
     markdown = (record or {}).get("markdown")
-    # Return the per-file entries, empty when there are none to the caller.
     return dict(markdown) if isinstance(markdown, dict) else {}
 
 
@@ -876,14 +813,13 @@ def _separator(before: str) -> str:
     @param before the file as it stands, never empty on this path
     @return the run of newlines leaving exactly one blank line before the block
     """
-    # Compute newline using dominant newline for later separator logic.
+    # Match the host file's dominant ending when calculating the inserted blank-line run.
     newline = dominant_newline(before)
-    # Select the guarded path only after `before.endswith(newline * 2)` is satisfied.
+    # Existing blank separation needs no additional bytes owned by the integrator.
     if before.endswith(newline * 2):
-        # Return the run of newlines leaving exactly one blank line before the block to the
-        # Details: caller.
+        # Record an empty separator so removal leaves all existing whitespace untouched.
         return ""
-    # Return the run of newlines leaving exactly one blank line before the block to the caller.
+    # Add one or two endings according to whether the host already terminates its final line.
     return newline if before.endswith(newline) else newline * 2
 
 
@@ -900,46 +836,40 @@ def _markdown_action(path: Path, block: str, root: Path, *, remove: bool,
         block, or None when no record covers this file
     @return the action for this file
     """
-    # Compute exists using path.exists for later markdown action logic.
+    # Snapshot existence and exact bytes before deciding create, replace, insert, or removal.
     exists = path.exists()
-    # Compute before using read preserving for later markdown action logic.
     before = read_preserving(path) if exists else ""
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Locate any prior managed region independently of its embedded discipline version.
     found = BLOCK_RE.search(before)
 
-    # Handle the non-empty or enabled remove state.
+    # Removal touches only marker-owned content and any explicitly recorded separator.
     if remove:
-        # Use the absence path when found has no available value.
+        # A host with no managed region is already in the requested state.
         if found is None:
-            # Return the action for this file to the caller.
+            # Account for the target without changing its project-owned bytes.
             return Action(Kind.SKIP, path, before, before, "no managed block present")
-        # Return the action for this file to the caller.
+        # Delegate byte-exact excision because separator provenance affects its boundary.
         return _removal(path, before, found, separator)
 
-    # Compute rendered using with newline for later markdown action logic.
+    # Render generated block endings to match the existing host before any comparison.
     rendered = with_newline(block, dominant_newline(before))
-    # Select the empty-or-disabled path when exists has no usable value.
+    # Greenfield integration creates only a title and the managed bootstrap block.
     if not exists:
-        # Return the action for this file to the caller.
+        # Preserve the host's future ownership by generating no additional project policy.
         return Action(
             Kind.CREATE, path, "", f"# {root.name}\n\n" + rendered,
             "file absent; creating a minimal one -- the rest is the project's to write",
         )
-    # Use the available-value path only when found is present.
+    # Existing managed regions are replaced wholesale, leaving every outside byte unchanged.
     if found is not None:
-        # Compute after using BLOCK RE.sub for later markdown action logic.
+        # Substitute exactly one region and classify equality separately from stale replacement.
         after = BLOCK_RE.sub(lambda _: rendered, before, count=1)
-        # Compute reason using ("managed block already current" if after == before for later
-        # Details: markdown action logic.
         reason = ("managed block already current" if after == before
                   else "managed block replaced; everything outside it is untouched")
-        # Compute kind using Kind.SKIP if after == before else Kind.REPLACE for later markdown
-        # Details: action logic.
         kind = Kind.SKIP if after == before else Kind.REPLACE
-        # Return the action for this file to the caller.
         return Action(kind, path, before, after, reason)
 
-    # Return the action for this file to the caller.
+    # Append a first managed region with exactly the separator this installation records.
     return Action(
         Kind.INSERT, path, before, before + _separator(before) + rendered,
         "appended; every byte already in the file is left exactly as it was",
@@ -960,21 +890,19 @@ def _removal(path: Path, before: str, found: re.Match[str], separator: str | Non
     @param separator the recorded blank space, or None when no record covers it
     @return the action for this file
     """
-    # Locate the structural boundary used to parse the external result safely.
+    # Start from the exact marker match boundary before considering separately owned whitespace.
     start = found.start()
-    # Select the guarded path only after `separator and before[max(start - len(separator),
-    # Details: 0):start] == separator` is satisfied.
+    # Remove the preceding separator only when record and current bytes agree exactly.
     if separator and before[max(start - len(separator), 0):start] == separator:
-        # Return the action for this file to the caller.
+        # Excision restores the host prefix to the byte preceding integration-owned whitespace.
         return Action(Kind.REMOVE, path, before,
                       before[:start - len(separator)] + before[found.end():],
                       "managed block removed, with the blank space it was inserted after")
-    # Compute reason using ("managed block removed" if separator is not None else for later
-    # Details: removal logic.
+    # Explain whether retained whitespace was known project content or lacked ownership evidence.
     reason = ("managed block removed" if separator is not None else
               "managed block removed; no install record, so any blank line inserted "
               "before it is left in place")
-    # Return the action for this file to the caller.
+    # Remove only marker-owned bytes when separator provenance is absent or no longer matches.
     return Action(Kind.REMOVE, path, before, before[:start] + before[found.end():], reason)
 
 
@@ -985,19 +913,19 @@ def parse_settings(before: str) -> dict[str, object] | None:
     @return the parsed mapping, empty for an empty file, and None when the
             content is not JSON or not an object
     """
-    # Select the empty-or-disabled path when before.strip() has no usable value.
+    # Empty or whitespace-only settings are the valid empty-object bootstrap state.
     if not before.strip():
-        # Return the parsed mapping, empty for an empty file, and None when the to the caller.
+        # Return a mutable empty mapping ready for structured permission merge.
         return {}
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Parse complete JSON before granting structured merge authority.
     try:
-        # Compute parsed using json.loads for later parse settings logic.
+        # Retain the decoded value until top-level object shape is validated below.
         parsed = json.loads(before)
-    # Translate the expected failure into this mechanism's stable diagnostic path.
+    # Invalid JSON makes the file project-owned opaque text rather than a merge target.
     except json.JSONDecodeError:
-        # Return the parsed mapping, empty for an empty file, and None when the to the caller.
+        # None tells the caller to skip rather than overwrite an unparseable host file.
         return None
-    # Return the parsed mapping, empty for an empty file, and None when the to the caller.
+    # Only an object supports the named ``permissions`` section this integrator edits.
     return parsed if isinstance(parsed, dict) else None
 
 
@@ -1007,13 +935,11 @@ def allowed_entries(settings: dict[str, object] | None) -> list[str]:
     @param settings the parsed settings, or None when they could not be read
     @return the entries, empty when there are none to read
     """
-    # Compute permissions using (settings or {}).get("permissions") for later allowed entries
-    # Details: logic.
+    # Resolve the nested permissions object from a valid mapping or neutral empty state.
     permissions = (settings or {}).get("permissions")
-    # Compute allow using permissions.get for later allowed entries logic.
+    # Read ``allow`` only from a structured permissions object.
     allow = permissions.get("allow") if isinstance(permissions, dict) else None
-    # Treat the current entry as the candidate element consumed by the enclosing transformation.
-    # Return the entries, empty when there are none to read to the caller.
+    # Normalize list entries to strings in host order; malformed values grant no entries.
     return [str(entry) for entry in allow] if isinstance(allow, list) else []
 
 
@@ -1026,16 +952,14 @@ def absent_permissions(before: str) -> list[str]:
     @param before the settings file as it stands
     @return our entries that are missing, in our order
     """
-    # Compute settings using parse settings for later absent permissions logic.
+    # Determine absence only from safely parsed structured settings.
     settings = parse_settings(before)
-    # Use the absence path when settings has no available value.
+    # Opaque settings cannot justify any planned addition or later ownership claim.
     if settings is None:
-        # Return our entries that are missing, in our order to the caller.
+        # Report no absent entries because the integrator cannot safely add any.
         return []
-    # Compute allow using allowed entries for later absent permissions logic.
+    # Compare existing allowances against the fixed discipline permission order.
     allow = allowed_entries(settings)
-    # Treat the current entry as the candidate element consumed by the enclosing transformation.
-    # Return our entries that are missing, in our order to the caller.
     return [entry for entry in PERMISSIONS if entry not in allow]
 
 
@@ -1045,10 +969,8 @@ def absent_ignores(before: str) -> list[str]:
     @param before the ignore file as it stands
     @return our entries that are missing, in our order
     """
-    # Compute present using set for later absent ignores logic.
+    # Compare exact ignore lines as a set while emitting missing entries in declaration order.
     present = set(before.splitlines())
-    # Treat the current entry as the candidate element consumed by the enclosing transformation.
-    # Return our entries that are missing, in our order to the caller.
     return [entry for entry in GITIGNORE_ENTRIES if entry not in present]
 
 
@@ -1065,18 +987,18 @@ def _unrecorded(kind: str, mine: Sequence[str], present: Sequence[str]) -> list[
     """
     # Each leftover element is one discipline-shaped entry retained in original file order.
     leftover = [entry for entry in present if entry in mine]
-    # Select the empty-or-disabled path when leftover has no usable value.
+    # Silence the conservative warning when no discipline-shaped entries remain present.
     if not leftover:
-        # Return one warning naming every entry left behind, or nothing to say to the caller.
+        # Empty warning list keeps a clean removal plan quiet.
         return []
-    # Compute told using ( for later unrecorded logic.
+    # Explain precisely why value equality cannot establish removal ownership.
     told = (
         f"no {RECORD_NAME} from an earlier apply, so {len(leftover)} {kind} entr(ies) "
         f"were left in place: {', '.join(leftover)} -- this install predates the record, "
         f"and nothing distinguishes an entry the discipline added from one the project "
         f"already had. Remove them by hand if they are not yours."
     )
-    # Return one warning naming every entry left behind, or nothing to say to the caller.
+    # Return one consolidated warning naming every deliberately retained ambiguous entry.
     return [told]
 
 
@@ -1095,47 +1017,43 @@ def _settings_action(path: Path, *, remove: bool,
         there is no record to consult
     @return the action for the settings file, and any warning it raises
     """
-    # Compute before using read preserving for later settings action logic.
+    # Snapshot exact host bytes and parse structured settings before any merge decision.
     before = read_preserving(path) if path.exists() else ""
-    # Compute settings using parse settings for later settings action logic.
     settings = parse_settings(before)
-    # Use the absence path when settings has no available value.
+    # Opaque or non-object JSON is left untouched rather than reconstructed by guesswork.
     if settings is None:
-        # Return the action for the settings file, and any warning it raises to the caller.
+        # Plan an explicit skip so dry run exposes the unmodified opaque settings file.
         return Action(Kind.SKIP, path, before, before,
                       "settings file is not valid JSON or not an object; left alone "
                       "rather than guessed at"), []
 
-    # Compute newline using dominant newline for later settings action logic.
+    # Preserve host newline style and all permission categories outside the allow-list.
     newline = dominant_newline(before)
-    # Compute stored using settings.get for later settings action logic.
     stored = settings.get("permissions")
     # Each permissions key is a Claude permission category and each value is its configured
     # entries; insertion order is preserved when rewriting JSON but has no policy meaning.
     permissions: dict[str, object] = dict(stored) if isinstance(stored, dict) else {}
-    # Compute allow using allowed entries for later settings action logic.
     allow = allowed_entries(settings)
 
-    # Handle the non-empty or enabled remove state.
+    # Removal is governed exclusively by recorded ownership, never by matching values alone.
     if remove:
-        # Use the absence path when added has no available value.
+        # No record means no entry is safe to remove automatically.
         if added is None:
-            # Return the action for the settings file, and any warning it raises to the caller.
+            # Retain every allowance and explain any discipline-shaped values left behind.
             return (Action(Kind.SKIP, path, before, before,
                            "no install record; permission entries left in place"),
                     _unrecorded("permission", PERMISSIONS, allow))
         # Each kept element is one permission not owned by this install, in existing file order.
         kept = [entry for entry in allow if entry not in added]
-        # Select the guarded path only after `kept == allow` is satisfied.
+        # Equality means every recorded contribution was already absent.
         if kept == allow:
-            # Return the action for the settings file, and any warning it raises to the caller.
+            # Preserve settings bytes when uninstall has no remaining owned allowance to remove.
             return Action(Kind.SKIP, path, before, before,
                           "no entry the discipline added is still present"), []
-        # Update  settings action state only after the required source facts are available.
+        # Replace only the allow-list with its project-owned ordered remainder.
         permissions["allow"] = kept
-        # Update  settings action state only after the required source facts are available.
         settings["permissions"] = permissions
-        # Return the action for the settings file, and any warning it raises to the caller.
+        # Serialize the minimally changed settings object with the host's newline style.
         return Action(Kind.MERGE, path, before, _dump(settings, newline),
                       f"removed {len(allow) - len(kept)} permission entr(ies) this "
                       f"install added"), []
@@ -1143,15 +1061,14 @@ def _settings_action(path: Path, *, remove: bool,
     # Each missing element is one required permission absent from the existing allow-list, in
     # discipline declaration order.
     missing = [entry for entry in PERMISSIONS if entry not in allow]
-    # Select the empty-or-disabled path when missing has no usable value.
+    # A complete permission set requires no rewrite or new ownership claim.
     if not missing:
-        # Return the action for the settings file, and any warning it raises to the caller.
+        # Preserve exact settings formatting when policy already contains every required entry.
         return Action(Kind.SKIP, path, before, before, "all permissions already allowed"), []
-    # Update  settings action state only after the required source facts are available.
+    # Append only absent discipline entries after every existing project allowance.
     permissions["allow"] = [*allow, *missing]
-    # Update  settings action state only after the required source facts are available.
     settings["permissions"] = permissions
-    # Return the action for the settings file, and any warning it raises to the caller.
+    # Create or merge according to prior file presence while preserving unrelated settings.
     return Action(
         Kind.MERGE if before else Kind.CREATE, path, before, _dump(settings, newline),
         f"adding {len(missing)} permission entr(ies); existing entries kept",
@@ -1169,42 +1086,40 @@ def _gitignore_action(path: Path, *, remove: bool,
         there is no record to consult
     @return the action for the ignore file, and any warning it raises
     """
-    # Compute before using read preserving for later gitignore action logic.
+    # Snapshot exact ignore bytes and choose the same newline style for generated additions.
     before = read_preserving(path) if path.exists() else ""
-    # Compute newline using dominant newline for later gitignore action logic.
     newline = dominant_newline(before)
 
-    # Handle the non-empty or enabled remove state.
+    # Removal takes back only ignore lines named by the installation record.
     if remove:
-        # Use the absence path when added has no available value.
+        # Without provenance, retain all matching lines and report the ambiguous residue.
         if added is None:
-            # Return the action for the ignore file, and any warning it raises to the caller.
+            # Plan no mutation and attach the conservative ownership warning.
             return (Action(Kind.SKIP, path, before, before,
                            "no install record; ignore entries left in place"),
                     _unrecorded("ignore", GITIGNORE_ENTRIES, before.splitlines()))
-        # Compute after using  without ignores for later gitignore action logic.
+        # Remove recorded lines and their installer-owned header while retaining host order.
         after = _without_ignores(before, added, newline)
-        # Select the guarded path only after `after == before` is satisfied.
+        # An already-clean file requires no write.
         if after == before:
-            # Return the action for the ignore file, and any warning it raises to the caller.
+            # Preserve bytes when no recorded ignore contribution remains present.
             return Action(Kind.SKIP, path, before, before,
                           "no entry the discipline added is still present"), []
-        # Return the action for the ignore file, and any warning it raises to the caller.
+        # Publish the exact byte-preserving removal planned by the helper.
         return Action(Kind.REMOVE, path, before, after, "removed the entries this "
                       "install added, and the header introducing them"), []
 
-    # Format the relationship labels whose generated graph count is zero.
+    # Identify only discipline-derived paths not already ignored by the project.
     missing = absent_ignores(before)
-    # Select the empty-or-disabled path when missing has no usable value.
+    # A complete ignore set requires no new block or ownership entry.
     if not missing:
-        # Return the action for the ignore file, and any warning it raises to the caller.
+        # Preserve exact ignore formatting when all required paths are already covered.
         return Action(Kind.SKIP, path, before, before, "already ignored"), []
-    # Compute prefix using before if not before or before.endswith(("\n", "\r")) else b for
-    # Details: later gitignore action logic.
+    # Terminate preexisting content before appending the discipline-owned block.
     prefix = before if not before or before.endswith(("\n", "\r")) else before + newline
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Render the header followed by missing paths in declaration order.
     body = newline.join([GITIGNORE_HEADER, *missing])
-    # Return the action for the ignore file, and any warning it raises to the caller.
+    # Add one separating newline and a final terminator in the host style.
     return Action(Kind.MERGE if before else Kind.CREATE, path, before,
                   prefix + newline + body + newline,
                   f"ignoring {len(missing)} derived path(s)"), []
@@ -1227,29 +1142,26 @@ def _without_ignores(before: str, added: Sequence[str], newline: str) -> str:
     """
     # Each kept element is one project-owned source line in original file order.
     kept: list[str] = []
-    # Preserve the current decoded diagnostic line before location normalization.
-    # Advance without ignores through the current input element in declared order.
+    # Inspect source lines in original order, retaining only project-owned or unrelated content.
     for line in before.splitlines():
-        # Select the guarded path only after `line in added` is satisfied.
+        # Drop exact ignore entries whose installation ownership is recorded.
         if line in added:
-            # Advance after the current candidate has been conclusively excluded.
+            # Continue without copying this installer-owned line.
             continue
-        # Select the guarded path only after `added and line == GITIGNORE_HEADER` is satisfied.
+        # Remove the installer header only when at least one owned entry set was supplied.
         if added and line == GITIGNORE_HEADER:
-            # Select the guarded path only after `kept and (not kept[-1].strip())` is satisfied.
+            # Take back at most the single blank separator immediately preceding the header.
             if kept and not kept[-1].strip():
                 kept.pop()
-            # Advance after the current candidate has been conclusively excluded.
+            # Continue without retaining the now-obsolete installer header.
             continue
         kept.append(line)
-    # Select the empty-or-disabled path when kept has no usable value.
+    # An empty remainder produces an actually empty ignore file.
     if not kept:
-        # Return the file as it should read after removal to the caller.
+        # Avoid retaining a newline or header after the last project-owned line disappears.
         return ""
-    # Compute trailing using newline if before.endswith(("\n", "\r")) else "" for later without
-    # Details: ignores logic.
+    # Preserve whether the original file ended with a newline after joining retained lines.
     trailing = newline if before.endswith(("\n", "\r")) else ""
-    # Return the file as it should read after removal to the caller.
     return newline.join(kept) + trailing
 
 
@@ -1270,26 +1182,22 @@ def _record_actions(path: Path, record: dict[str, object] | None, *, remove: boo
         insertion order is preserved for stable output.
     @return the action for the record, or nothing when there is none to write
     """
-    # Use the absence path when remove and record has no available value.
+    # Removing an installation that never had a record must not create provenance debris.
     if remove and record is None:
-        # Return the action for the record, or nothing when there is none to write to the
-        # Details: caller.
+        # Empty action list represents the deliberate no-record no-op.
         return []
-    # Compute before using read preserving for later record actions logic.
+    # Snapshot existing record bytes and render the complete desired ownership state.
     before = read_preserving(path) if path.exists() else ""
-    # Compute after using json.dumps for later record actions logic.
     after = json.dumps(empty_record() if remove else wanted, indent=2,
                        ensure_ascii=False) + "\n"
-    # Select the guarded path only after `after == before` is satisfied.
+    # Avoid rewriting an already exact ownership record.
     if after == before:
-        # Return the action for the record, or nothing when there is none to write to the
-        # Details: caller.
+        # Retain the record as an accounted-for skip action in the plan.
         return [Action(Kind.SKIP, path, before, before, "install record already accurate")]
-    # Compute reason using ("install record emptied; nothing of ours is installed" if r for
-    # Details: later record actions logic.
+    # Explain whether the record is relinquishing or establishing removal authority.
     reason = ("install record emptied; nothing of ours is installed" if remove else
               "recording which entries were absent, so --remove takes back only those")
-    # Return the action for the record, or nothing when there is none to write to the caller.
+    # Create the first record or replace the existing one as the final planned action.
     return [Action(Kind.MERGE if before else Kind.CREATE, path, before, after, reason)]
 
 
@@ -1302,7 +1210,7 @@ def _dump(settings: dict[str, object], newline: str) -> str:
     @param newline the ending the file already used
     @return pretty-printed JSON with a trailing newline
     """
-    # Return pretty-printed JSON with a trailing newline to the caller.
+    # Pretty-print stable mapping order, add one terminator, then adopt the host newline style.
     return with_newline(json.dumps(settings, indent=2, ensure_ascii=False) + "\n", newline)
 
 
@@ -1312,18 +1220,18 @@ def _is_git_repository(root: Path) -> bool:
     @param root the directory to test
     @return True when git reports a working tree
     """
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Ask Git directly without inheriting shell parsing or emitting its diagnostic output.
     try:
-        # Preserve the external command representation and its observed completion outcome.
+        # Retain the completed probe for both exit-status and exact affirmative-output checks.
         finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true] - fixed argv, no shell
             ["git", "-C", str(root), "rev-parse", "--is-inside-work-tree"],
             capture_output=True, text=True, timeout=10, check=False,
         )
-    # Translate the expected failure into this mechanism's stable diagnostic path.
+    # Missing Git, timeout, or startup failure all mean no available history-backed undo.
     except (OSError, subprocess.SubprocessError):
-        # Return true when git reports a working tree to the caller.
+        # Report the conservative non-repository verdict instead of propagating probe failure.
         return False
-    # Return true when git reports a working tree to the caller.
+    # Require both successful completion and Git's canonical affirmative answer.
     return finished.returncode == 0 and finished.stdout.strip() == "true"
 
 
@@ -1341,22 +1249,21 @@ def apply(plan: Plan) -> list[Action]:
     """
     # Each written element is one completed changing action in plan application order.
     written: list[Action] = []
-    # Select action as the current element from plan.changing while apply preserves traversal
-    # Details: order.
-    # Advance apply through the current input element in declared order.
+    # Execute the immutable plan in declared order without recomputing any decisions.
     for action in plan.changing:
-        # Select the guarded path only after `action.kind is Kind.DELETE` is satisfied.
+        # Deletion is authorized only for actions whose planning phase proved ownership.
         if action.kind is Kind.DELETE:
-            # Publish the externally visible effect after all required inputs are ready.
+            # Remove the exact planned file, then record completion before advancing.
             action.path.unlink()
             written.append(action)
-            # Advance after the current candidate has been conclusively excluded.
+            # Skip creation/write handling for the completed deletion.
             continue
-        # Publish the externally visible effect after all required inputs are ready.
+        # Materialize parent directories only for actions that will write a file.
         action.path.parent.mkdir(parents=True, exist_ok=True)
+        # Store the exact planned bytes with newline translation disabled.
         write_preserving(action.path, action.after)
         written.append(action)
-    # Return the actions that were written or deleted to the caller.
+    # Expose only successfully completed mutations in application order.
     return written
 
 
@@ -1369,29 +1276,22 @@ def render_plan(plan: Plan, root: Path, *, show_diff: bool) -> Iterator[str]:
         True enables show diff; false selects its disabled alternative.
     @return the lines to print
     """
-    # Select action as the current element from plan.actions while render plan preserves
-    # Details: traversal order.
-    # Advance render plan through the current input element in declared order.
+    # Render every target, including skips, so the plan accounts for the complete integration.
     for action in plan.actions:
-        # Normalize the current repository path to its portable baseline key spelling.
+        # Express target paths relative to the repository with portable separators.
         name = action.path.relative_to(root).as_posix()
-        # Compute mark using " " if action.kind is Kind.SKIP else "*" for later render plan
-        # Details: logic.
+        # Distinguish no-op accounting from filesystem mutations at a glance.
         mark = " " if action.kind is Kind.SKIP else "*"
         yield f" {mark} {action.kind.value:<8} {name:<26} {action.reason}"
-        # Select the guarded path only after `show_diff and action.changes` is satisfied.
+        # Dry-run detail uses the exact action diff only for effective changes.
         if show_diff and action.changes:
-            # Preserve the current decoded diagnostic line before location normalization.
+            # Indent unified-diff lines without retaining their transport newline terminators.
             yield from ("     " + line.rstrip("\r\n")
                         for line in action.diff(root).splitlines())
-    # Select warning as the current element from plan.warnings while render plan preserves
-    # Details: traversal order.
-    # Advance render plan through the current input element in declared order.
+    # Append advisory notes after all target actions in discovery order.
     for warning in plan.warnings:
         yield f"\n   warning: {warning}"
-    # Select problem as the current element from plan.problems while render plan preserves
-    # Details: traversal order.
-    # Advance render plan through the current input element in declared order.
+    # Append blocking collisions last so incomplete integration cannot be overlooked.
     for problem in plan.problems:
         yield f"\n   ERROR: {problem}"
 
@@ -1420,40 +1320,37 @@ def install_hooks(root: Path, agent_dir: str, *, remove: bool = False) -> list[s
         pointing git at a directory with no hooks would silently disable the
         hooks a project already had
     """
-    # Compute hooks using root / agent_dir / "enforce" / "templates" / "hooks" for later install
-    # Details: hooks logic.
+    # Prefer hooks inside a vendored agent directory, with source-repository layout as fallback.
     hooks = root / agent_dir / "enforce" / "templates" / "hooks"
-    # Refuse the target when its declared source directory is absent.
     if not hooks.is_dir():
-        # Compute hooks using root / "enforce" / "templates" / "hooks" for later install hooks
-        # Details: logic.
+        # Resolve the source-tree hook location used when running integration before vendoring.
         hooks = root / "enforce" / "templates" / "hooks"
-    # Refuse the target when its declared source directory is absent.
+    # Installation must not redirect Git to an empty directory that disables existing hooks.
     if not remove and not hooks.is_dir():
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Fail before changing configuration and name the absent directory as the repair subject.
         raise FileNotFoundError(hooks)
 
-    # Handle the non-empty or enabled remove state.
+    # Removal restores Git's default hook discovery without requiring the old directory to exist.
     if remove:
+        # Unset is idempotent; a missing value is not a failure for uninstall semantics.
         subprocess.run(("git", "config", "--unset", "core.hooksPath"),  # ruff: ignore[start-process-with-partial-path]
                        cwd=root, capture_output=True, text=True, check=False)
-        # Return the lines to print, describing what was done to the caller.
+        # Report the effective default-hook state after the best-effort unset.
         return ["core.hooksPath unset; git's default hooks are in force again"]
 
-    # Compute relative using hooks.relative to for later install hooks logic.
+    # Store a repository-relative portable path so the configured checkout remains relocatable.
     relative = hooks.relative_to(root).as_posix()
-    # Preserve the external command representation and its observed completion outcome.
+    # Apply the local Git configuration and retain diagnostics instead of raising generically.
     finished = subprocess.run(  # ruff: ignore[subprocess-without-shell-equals-true]
         ("git", "config", "core.hooksPath", relative),  # ruff: ignore[start-process-with-partial-path]
         cwd=root, capture_output=True, text=True, check=False)
-    # Enter the failure path only when the subprocess reports a nonzero status.
+    # Return Git's concrete diagnostic when the configuration mutation did not complete.
     if finished.returncode != 0:
-        # Return the lines to print, describing what was done to the caller.
+        # Keep command failure recoverable by returning stderr as operator-facing output.
         return [f"could not set core.hooksPath: {finished.stderr.strip()}"]
-    # Select h, installed as the current element from hooks.iterdir() if h.is_file()) while
-    # Details: install hooks preserves traversal order.
+    # Enumerate regular hook files now active through the configured pointer.
     installed = sorted(h.name for h in hooks.iterdir() if h.is_file())
-    # Return the lines to print, describing what was done to the caller.
+    # Explain pointer, active hooks, bypass, and explicit removal as one operator handoff.
     return [
         f"core.hooksPath -> {relative}",
         f"  active: {', '.join(installed)}",
@@ -1475,21 +1372,19 @@ def _hooks_command(root: Path, agent_dir: str, *, remove: bool) -> int:
         True enables remove; false selects its disabled alternative.
     @return the process exit status
     """
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Configure or remove hooks and translate only the expected missing-directory condition.
     try:
-        # Preserve the current decoded diagnostic line before location normalization.
-        # Advance hooks command through the current input element in declared order.
+        # Print each operator-facing hook result line in the order installation produced it.
         for line in install_hooks(root, agent_dir, remove=remove):
             print(line)
-    # Bind absent to the current value used by the next hooks command decision.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
+    # Explain why refusing configuration preserves any hooks the repository already owns.
     except FileNotFoundError as absent:
         print(f"no hook directory at {absent}; nothing was configured, and "
               f"pointing git at it would have disabled the hooks this repository "
               f"already has", file=sys.stderr)
-        # Return the process exit status to the caller.
+        # Status one distinguishes safe refusal from successful hook configuration.
         return 1
-    # Return the process exit status to the caller.
+    # All hook configuration output was published successfully.
     return 0
 
 
@@ -1499,10 +1394,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     @param argv command-line arguments, defaulting to `sys.argv`
     @return the process exit status
     """
-    # Select the guarded path only after `hasattr(sys.stdout, 'reconfigure')` is satisfied.
+    # Prefer UTF-8 replacement output where the host stream supports reconfiguration.
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    # Configure the command-line parser that defines this tool's invocation contract.
+    # Define the mutually composable plan, check, removal, hook, and target controls.
     parser = argparse.ArgumentParser(
         description="Announce a vendored discipline to a repository's agent configuration.",
     )
@@ -1519,62 +1414,55 @@ def main(argv: Sequence[str] | None = None) -> int:
                              "gate runs before a push (FLOW-009)")
     parser.add_argument("--only", action="append", choices=list(MARKDOWN_TARGETS),
                         help="restrict to one markdown target; repeatable")
-    # Capture the validated invocation arguments that govern this execution.
+    # Parse one validated invocation before resolving repository paths or planning effects.
     args = parser.parse_args(argv)
 
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Canonicalize the selected repository root once for every subsequent target calculation.
     root = args.root.resolve()
 
-    # Select the guarded path only after `args.hooks` is satisfied.
+    # Hook configuration is an independent explicit mode and bypasses file integration planning.
     if args.hooks:
-        # Return the aggregate process status to the command-line boundary.
+        # Return the dedicated hook-path status directly to the process boundary.
         return _hooks_command(root, args.agent_dir, remove=args.remove)
 
-    # Compute plan using build plan for later main logic.
+    # Compute the complete immutable plan before check, dry-run, or application branches diverge.
     plan = build_plan(root, args.agent_dir, remove=args.remove,
                       targets=args.only or MARKDOWN_TARGETS)
 
-    # Select the guarded path only after `args.check` is satisfied.
+    # Check mode reports stale targets and blockers without writing any path.
     if args.check:
-        # Compute stale using plan.changing for later main logic.
+        # Snapshot effective mutations so counting and status derive from the same plan.
         stale = plan.changing
-        # Preserve the current decoded diagnostic line before location normalization.
-        # Advance main through the current input element in declared order.
+        # Render the complete no-diff accounting before the aggregate verdict.
         for line in render_plan(plan, root, show_diff=False):
             print(line)
-        # Compute out using len for later main logic.
         out = len(stale) + len(plan.problems)
         print(f"\n{len(stale)} file(s) out of step, "
               f"{len(plan.problems)} blocking conflict(s)." if out
               else "\nagent configuration is in step with the discipline.")
-        # Return the aggregate process status to the command-line boundary.
+        # Any stale file or blocking collision makes integration check fail closed.
         return 1 if out else 0
 
-    # Select the guarded path only after `args.dry_run` is satisfied.
+    # Dry-run mode renders exact diffs from the same plan apply would execute.
     if args.dry_run:
         print("PLAN (nothing written)\n")
-        # Preserve the current decoded diagnostic line before location normalization.
-        # Advance main through the current input element in declared order.
+        # Show all actions and effective unified diffs without invoking the apply boundary.
         for line in render_plan(plan, root, show_diff=True):
             print(line)
         print(f"\n{len(plan.changing)} file(s) would change. Re-run without --dry-run to apply.")
-        # Return the aggregate process status to the command-line boundary.
+        # Blocking collisions fail dry run even though recoverable planned changes remain visible.
         return 1 if plan.problems else 0
 
-    # Preserve the current decoded diagnostic line before location normalization.
-    # Advance main through the current input element in declared order.
+    # Apply mode first publishes the no-diff plan, then executes exactly its changing actions.
     for line in render_plan(plan, root, show_diff=False):
         print(line)
-    # Compute written using apply for later main logic.
     written = apply(plan)
-    # Compute verb using "removed from" if args.remove else "integrated into" for later main
-    # Details: logic.
     verb = "removed from" if args.remove else "integrated into"
     print(f"\ndiscipline {verb} {len(written)} file(s).")
-    # Select the empty-or-disabled path when args.remove and written has no usable value.
+    # A successful nonempty installation requires a fresh session to load host instructions.
     if not args.remove and written:
         print("Start a fresh agent session so the new configuration is loaded.")
-    # Return the aggregate process status to the command-line boundary.
+    # Completed recoverable actions do not hide any blocking partial-integration conflicts.
     return 1 if plan.problems else 0
 
 
