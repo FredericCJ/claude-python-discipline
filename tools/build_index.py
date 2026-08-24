@@ -273,7 +273,7 @@ def _external_tool_section() -> list[str]:
         # Surface the complete unknown-tool set as one configuration failure.
         raise ValueError(message)
 
-    # Build the external-tool section from pinned native versions and generated help text.
+    # Each element is one external-tool Markdown line in canonical heading and table order.
     lines = [
         "## External tool integration",
         "",
@@ -513,7 +513,7 @@ def build_index(documents: Sequence[Document], root: Path) -> Artifact:
     for rule in rules:
         by_module[rule.module_id].append(rule)
 
-    # Start the navigation index with canonical metadata and aggregate corpus counts.
+    # Each element is one navigation-index Markdown line in canonical section order.
     lines = [
         "---",
         "id: meta/INDEX",
@@ -559,7 +559,7 @@ def build_index(documents: Sequence[Document], root: Path) -> Artifact:
         "",
     ]
 
-    # Unpack catalogue, d from sorted for the next build index decision.
+    # Sort canonical documents by kind and identity for a stable module catalogue.
     catalogue = sorted(
         (d for d in documents if d.kind in {Kind.LAW, Kind.FACT, Kind.FRAME, Kind.OPS}),
         key=lambda d: (str(d.kind), d.doc_id),
@@ -587,7 +587,7 @@ def build_index(documents: Sequence[Document], root: Path) -> Artifact:
         # Introduce the rule catalogue before grouping rules by owning module.
         lines += ["## Rules", ""]
         for module_id, module_rules in sorted(by_module.items()):
-        # Append unresolved rule identities only when policy decisions remain open.
+            # Append one module heading and table header before its ordered rules.
             lines += [
                 f"### {module_id}",
                 "",
@@ -848,7 +848,7 @@ def build_enforcement(documents: Sequence[Document], root: Path) -> Artifact:
     covered = discrimination_covered(root)
     census = _evidence_census(rules, root, registry, status, covered)
 
-    # Start the enforcement report with its generated marker, scope, and evidence census.
+    # Each element is one enforcement-report Markdown line in canonical section order.
     lines = [
         GENERATED_BANNER,
         "",
@@ -932,7 +932,7 @@ def build_enforcement(documents: Sequence[Document], root: Path) -> Artifact:
 
     # Emit a dedicated table only when binding rules lack usable mechanisms or evidence.
     if census.unavailable:
-            # Append one module heading and table header before its ordered rules.
+        # Append the table of binding rules whose declared strategies remain unavailable.
         lines += [
             "## Binding rules without an available strategy",
             "",
@@ -954,7 +954,7 @@ def build_enforcement(documents: Sequence[Document], root: Path) -> Artifact:
 
     # Emit pending mechanism ownership only when declared code has no witnessed implementation.
     if census.pending_mechanisms:
-        # Append the table of binding rules whose declared strategies remain unavailable.
+        # Append unresolved mechanism owners only when implementation evidence is absent.
         lines += [
             (
                 "> **Mechanisms still to build.** Listed rather than assumed closed: a rule "
@@ -973,7 +973,7 @@ def build_enforcement(documents: Sequence[Document], root: Path) -> Artifact:
 
     # Render per-rule evidence only when the corpus contains rule owners.
     if rules:
-        # Append unresolved mechanism owners only when implementation evidence is absent.
+        # Introduce the per-rule evidence table for nonempty rule corpora.
         lines += [
             "## Rule evidence",
             "",
@@ -994,15 +994,15 @@ def build_enforcement(documents: Sequence[Document], root: Path) -> Artifact:
 
         # Count mechanism families by tag prefix for the aggregate coverage table.
         counts = Counter(m.split(":", 1)[0] for r in rules for m in r.mechanisms)
-        # Introduce the per-rule evidence table for nonempty rule corpora.
+        # Append the mechanism-family census derived from declared rule tags.
         lines += ["### Mechanisms in use", "", "| Kind | Rules |", "|---|---|"]
-        # Preserve kind, lines, n element values in deterministic source order.
+        # Render each mechanism family with its rule count in lexical family order.
         lines += [f"| `{kind}` | {n} |" for kind, n in sorted(counts.items())]
         lines.append("")
 
     # Render advisory rules separately because their lack of mechanism is explicitly justified.
     if census.advisory:
-        # Append the mechanism-family census derived from declared rule tags.
+        # Append rationale for advisory rules that intentionally have no mechanism.
         lines += [
             "## Advisory rationale",
             "",
@@ -1022,14 +1022,14 @@ def build_enforcement(documents: Sequence[Document], root: Path) -> Artifact:
 
     # Render unresolved rule identities only when the corpus still carries open policy.
     if census.open_rules:
-        # Append rationale for advisory rules that intentionally have no mechanism.
+        # Append unresolved rule identities only when policy decisions remain open.
         lines += [
             "## Blocked on an open decision",
             "",
             "| Rule | Title |",
             "|---|---|",
         ]
-        # Preserve lines, r element values in deterministic source order.
+        # Render open rules in their canonical corpus order.
         lines += [f"| `{r.rule_id}` | {r.title} |" for r in census.open_rules]
         lines.append("")
 
