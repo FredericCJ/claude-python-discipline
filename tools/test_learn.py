@@ -246,7 +246,7 @@ def test_record_refuses_a_missing_claim_or_action(
         "--claim", "the parser failed", "--action", "inspect the input",
         "--trigger", "rule:LEARN-002",
     ]
-    # Locate the structural boundary used to parse the external result safely.
+    # Locate the omitted argument's exact position before removing its flag-value pair.
     position = arguments.index(omitted)
     # Carry out this operation at its documented position in the semantic sequence.
     del arguments[position:position + 2]

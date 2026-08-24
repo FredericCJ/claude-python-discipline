@@ -219,7 +219,7 @@ def refresh_tokens(documents: Sequence[Document], *, write: bool) -> list[Path]:
             # Recompute the self-referential token line until its measured value stabilizes.
             candidate = _TOKENS_LINE.sub(f"tokens: {count_tokens(updated)}", updated, count=1)
             if candidate == updated:
-                # Stop the scan once the decisive match has been established.
+                # End token rewriting once the self-measured declaration reaches a fixed point.
                 break
             # Carry the latest measured text into the next bounded convergence attempt.
             updated = candidate

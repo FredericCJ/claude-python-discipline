@@ -788,7 +788,7 @@ def test_nav_warns_on_a_binding_rule_without_a_verifier() -> None:
     # Skip only when the generated rules projection has not been built in this checkout.
     if not path.exists():
         pytest.skip("discipline/rules.json not built; run tools/build_index.py")
-    # Locate the structural boundary used to parse the external result safely.
+    # Load the verifier-state index derived from the existing generated rules projection.
     index = nav.verification_index(REPO_ROOT)
     assert index, "rules.json carried no verifier states"
     assert nav.force_tag("BINDING", "unbuilt") == "[BINDING - VERIFIER NOT BUILT]"

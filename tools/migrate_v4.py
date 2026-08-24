@@ -158,11 +158,11 @@ def _discipline_span(text: str) -> tuple[int, int] | None:
     lines = text.splitlines(keepends=True)
     # Each starts element is the byte offset of its corresponding line, in lexical order.
     starts: list[int] = []
-    # Locate the structural boundary used to parse the external result safely.
+    # Start cumulative byte-offset construction at the beginning of project text.
     offset = 0
     for line in lines:
         starts.append(offset)
-        # Locate the structural boundary used to parse the external result safely.
+        # Advance the cumulative byte offset by this line's exact encoded character length.
         offset += len(line)
     start_line: int | None = None
     end_line = len(lines)
@@ -182,13 +182,13 @@ def _discipline_span(text: str) -> tuple[int, int] | None:
         if name is not None and not name.startswith(f"{DISCIPLINE_HEADER}."):
             # Retain this line index as the exclusive declaration-family end.
             end_line = index
-            # Stop the scan once the decisive match has been established.
+            # End the replaceable discipline-table span at the next top-level table.
             break
     # Report absence to the planner instead of inventing an insertion location.
     if start_line is None:
         # Absence is reported to the planner, which supplies the actionable diagnostic.
         return None
-    # Locate the structural boundary used to parse the external result safely.
+    # Convert the identified table-line span into exact text byte boundaries.
     start = starts[start_line]
     end = starts[end_line] if end_line < len(starts) else len(text)
     return start, end
@@ -871,7 +871,7 @@ def plan(root: Path, unit: str | None) -> MigrationPlan:
         )
         # Block with unchanged bytes because synthesizing a missing table would be a guess.
         return MigrationPlan(governed, project_file, before, before, tuple(diagnostics))
-    # Locate the structural boundary used to parse the external result safely.
+    # Unpack the reviewed table boundaries before constructing replacement bytes.
     start, end = span
     newline = "\r\n" if "\r\n" in text else "\n"
     rendered = _render_declaration(draft, newline)

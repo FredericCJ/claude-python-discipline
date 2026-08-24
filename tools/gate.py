@@ -109,7 +109,7 @@ def run(*, stop_early: bool = False) -> int:
                 print("\n".join(f"       {x[:110]}" for x in lines[-12:]))
             # Stop after this failure only when the caller selected early termination.
             if stop_early:
-                # Stop the scan once the decisive match has been established.
+                # Honor fail-fast mode after recording this failed gate stage.
                 break
     # Report aggregate failure only when at least one gate step was unsuccessful.
     if failed:

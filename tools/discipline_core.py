@@ -829,7 +829,7 @@ def _block_after(lines: Sequence[str], index: int) -> list[str]:
     for line in lines[index + 1 :]:
         # Any subsequent Markdown heading terminates ownership of this rule body.
         if line.startswith("#"):
-            # Stop the scan once the decisive match has been established.
+            # End rule-body capture at the next Markdown heading.
             break
         block.append(line)
     return block
@@ -852,7 +852,7 @@ def _statement_of(block: Sequence[str]) -> str:
     for line in block:
         # The first structured field terminates free-form normative statement prose.
         if _FIELD.match(line):
-            # Stop the scan once the decisive match has been established.
+            # End normative-statement capture before the first structured field.
             break
         # Blank lines do not contribute whitespace tokens to the folded statement.
         if line.strip():
@@ -885,7 +885,7 @@ def _field_of(block: Sequence[str], name: str) -> str | None:
         if found is not None:
             # The next field header ends continuation ownership of the requested field.
             if capturing:
-                # Stop the scan once the decisive match has been established.
+                # End the requested field once the next field header begins.
                 break
             # Begin capture only for the exact requested controlled field name.
             if found.group("name") == name:
@@ -898,7 +898,7 @@ def _field_of(block: Sequence[str], name: str) -> str | None:
         if capturing:
             # A blank line terminates continuation ownership.
             if not line.strip():
-                # Stop the scan once the decisive match has been established.
+                # End field continuation at the first blank separator line.
                 break
             collected.append(line.strip())
     # Fold captured lines or preserve absence distinctly when the field was not found.

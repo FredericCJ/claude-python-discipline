@@ -1138,7 +1138,7 @@ def _mutation_evaluation(
     @param command prepared command and expected source/test files
     @return pass or exact mutation failure
     """
-    # Locate the structural boundary used to parse the external result safely.
+    # Find the JSON suffix in mutation output before decoding its structured verdict.
     start = execution.output.find("{")
     # Decode only the structured suffix; absent or malformed JSON cannot substantiate success.
     try:
@@ -2880,7 +2880,7 @@ def _pyright_evaluation(
     @param command prepared command and expected subject set
     @return pass, findings, or vacuity failure
     """
-    # Locate the structural boundary used to parse the external result safely.
+    # Find the JSON suffix in Pyright output before decoding summary metrics.
     start = execution.output.find("{")
     # Decode only the structured suffix; absent or malformed JSON cannot prove non-vacuity.
     try:

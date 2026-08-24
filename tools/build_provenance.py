@@ -784,7 +784,7 @@ def _with_current_token_count(text: str) -> str:
         candidate = _TOKENS_LINE.sub(f"tokens: {count_tokens(updated)}", updated, count=1)
         # Stop when replacement leaves the self-measured document byte-identical.
         if candidate == updated:
-            # Stop the scan once the decisive match has been established.
+            # End token rewriting once the self-measured declaration reaches a fixed point.
             break
         # Feed the revised token declaration into the next convergence attempt.
         updated = candidate

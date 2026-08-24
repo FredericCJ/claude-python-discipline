@@ -402,7 +402,7 @@ class Graph:
                         distance[neighbor] = hop
                         following.append(neighbor)
             if not following:
-                # Stop the scan once the decisive match has been established.
+                # End breadth expansion when the current depth reaches no new nodes.
                 break
             frontier = sorted(set(following))
         return distance
@@ -524,7 +524,7 @@ class Graph:
                     walk(edge.dst)
                 # A grey destination is a back-edge closing a cycle on the active stack.
                 elif state == 1:
-                    # Locate the structural boundary used to parse the external result safely.
+                    # Locate the repeated active-stack node that begins the discovered cycle.
                     start = stack.index(edge.dst)
                     found.append([*stack[start:], edge.dst])
             stack.pop()

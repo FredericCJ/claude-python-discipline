@@ -178,7 +178,7 @@ def test_the_ledger_survives_a_round_trip(tmp_path: Path) -> None:
     """
     # Seed three ordered sessions so the round trip exercises more than one ledger edge.
     store = seed_learning(tmp_path)
-    # Locate the structural boundary used to parse the external result safely.
+    # Create the learning store whose retention boundary is exercised by the added sessions.
     # Append three ordered sessions so retention can distinguish old from recent records.
     for index in range(3):
         learn.append_event(store, "session", f"S-{index}", {"task": str(index)})

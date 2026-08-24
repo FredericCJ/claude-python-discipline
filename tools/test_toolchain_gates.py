@@ -377,7 +377,7 @@ def test_pytest_randomly_exposes_an_order_dependency(tmp_path: Path) -> None:
         if finished.returncode != 0 and "order dependency exposed" in output:
             # True means this seed exposed the dependency; false means no tried seed has exposed it.
             exposed = True
-            # Stop the scan once the decisive match has been established.
+            # Stop after the first seed that demonstrably exposes the order dependency.
             break
     assert exposed, "ten explicit randomized orders all concealed the dependency"
 
