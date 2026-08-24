@@ -69,12 +69,15 @@ def repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Treat pytest's isolated directory as the complete synthetic repository boundary.
     root = tmp_path
+    # Create the only governed source family selected by the patched gate configuration.
     (root / "tools").mkdir()
+    # Seed one stable documented module whose mutations drive focused baseline cases.
     (root / "tools" / "sample.py").write_text(_SAMPLE_SOURCE, encoding="utf-8")
     monkeypatch.setattr(docgate, "BASELINE_PATH", root / "tools" / "doc_baseline.json")
     monkeypatch.setattr(docgate, "COVERED", ("tools",))
+    # Return the patched repository root shared by the test and gate globals.
     return root
 
 

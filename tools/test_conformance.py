@@ -93,7 +93,7 @@ def test_a_clean_tree_passes_without_a_baseline(
 
     @param tmp_path the scratch directory
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build a conformant one-module control whose checker report is also forced empty.
     root = tree(tmp_path, widget='"""A module."""\n')
     monkeypatch.setattr(conformance, "findings_for", lambda _paths: [])
     assert judge(root) == conformance.EXIT_OK
@@ -110,7 +110,7 @@ def test_project_declaration_reaches_every_check(
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build a conformant project whose declaration will be expanded to multiple source roots.
     root = tree(tmp_path, widget='"""A module."""\n')
     # Select the temporary project's declaration for the observed-load assertion.
     declaration = root / "pyproject.toml"
@@ -184,7 +184,7 @@ def test_an_unbaselined_finding_fails(tmp_path: Path) -> None:
 
     @param tmp_path the scratch directory
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build one undocumented module against an empty accepted baseline.
     root = tree(tmp_path, widget=UNDOCUMENTED)
     assert judge(root) == conformance.EXIT_REGRESSED
 
@@ -197,7 +197,7 @@ def test_a_baselined_tree_goes_green(tmp_path: Path) -> None:
 
     @param tmp_path the scratch directory
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build one undocumented module whose current debt will be explicitly accepted.
     root = tree(tmp_path, widget=UNDOCUMENTED)
     assert accept(root) == conformance.EXIT_OK
     assert (root / conformance.BASELINE_NAME).is_file()
@@ -212,9 +212,10 @@ def test_a_new_file_with_the_same_rule_still_fails(tmp_path: Path) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Start from one accepted undocumented module before adding a second-file violation.
     root = tree(tmp_path, widget=UNDOCUMENTED)
     assert accept(root) == conformance.EXIT_OK
+    # Add the same rule under a new path so pair identity—not only count—must regress.
     (root / "src" / "gadget.py").write_text(UNDOCUMENTED, encoding="utf-8")
     assert judge(root) == conformance.EXIT_REGRESSED
 
@@ -233,9 +234,10 @@ def test_more_of_the_same_rule_in_a_baselined_file_still_fails(
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Start from one accepted finding before increasing that rule's multiplicity in place.
     root = tree(tmp_path, widget=UNDOCUMENTED)
     assert accept(root) == conformance.EXIT_OK
+    # Double the same file/rule finding while keeping its stable pair unchanged.
     (root / "src" / "widget.py").write_text(UNDOCUMENTED_TWICE, encoding="utf-8")
     assert judge(root) == conformance.EXIT_REGRESSED
 
@@ -248,9 +250,10 @@ def test_clearing_a_finding_does_not_fail(tmp_path: Path) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Start from two accepted same-rule findings before removing one occurrence.
     root = tree(tmp_path, widget=UNDOCUMENTED_TWICE)
     assert accept(root) == conformance.EXIT_OK
+    # Reduce the finding count without introducing any new file/rule identity.
     (root / "src" / "widget.py").write_text(UNDOCUMENTED, encoding="utf-8")
     assert judge(root) == conformance.EXIT_OK
 
@@ -268,7 +271,7 @@ def test_a_protected_rule_is_refused_before_the_baseline_is_read(
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build a clean tree whose forged baseline names a policy-protected rule.
     root = tree(tmp_path)
     # Hold baseline path keys mapped to their recorded behavior-fingerprint values.
     baseline = root / conformance.BASELINE_NAME
@@ -303,7 +306,7 @@ def test_a_protected_violation_will_not_be_recorded(
     @param tmp_path the scratch directory
     @param monkeypatch used to substitute what the checks report
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build a clean tree while the checker is replaced with one protected diagnostic.
     root = tree(tmp_path)
     # Select one deterministic protected rule for the update-refusal fixture.
     protected = min(conformance.PROTECTED)
@@ -323,7 +326,7 @@ def test_moving_the_baseline_requires_a_reason(tmp_path: Path) -> None:
 
     @param tmp_path the scratch directory
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build a regressed tree whose requested baseline update omits its audit reason.
     root = tree(tmp_path, widget=UNDOCUMENTED)
     assert conformance.main(["--root", str(root), "--update-baseline"]) == \
         conformance.EXIT_REGRESSED
@@ -355,7 +358,7 @@ def test_an_unreadable_baseline_is_treated_as_absent(tmp_path: Path) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build a regressed tree and pair it with a deliberately malformed baseline payload.
     root = tree(tmp_path, widget=UNDOCUMENTED)
     # Hold baseline path keys mapped to their recorded behavior-fingerprint values.
     baseline = root / conformance.BASELINE_NAME
@@ -389,7 +392,7 @@ def test_the_report_names_a_concrete_next_target(tmp_path: Path) -> None:
 
     @param tmp_path the scratch directory
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build two affected modules so the report must name one concrete repair concentration.
     root = tree(tmp_path, widget=UNDOCUMENTED, gadget=UNDOCUMENTED)
     # Render the two-module defect concentration for a concrete-target assertion.
     rendered = conformance.render_report(

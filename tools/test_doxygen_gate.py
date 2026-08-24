@@ -95,11 +95,14 @@ def _run_inline_source(
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Confine the reduced Doxygen project and generated output to this test directory.
     root = tmp_path / "inline"
+    # Create the canonical source root expected by the production configuration.
     (root / "src").mkdir(parents=True)
+    # Materialize exactly the caller-supplied Python behavior probe.
     (root / "src" / "probe.py").write_text(source, encoding="utf-8")
     assert _DOXYGEN is not None
+    # Keep generated output alive only long enough to capture status and diagnostics.
     with doxygen_gate.generated(
         _DOXYGEN,
         root,
@@ -119,11 +122,12 @@ def tree(tmp_path: Path) -> Path:
     @param tmp_path the per-test directory
     @return the copy's root
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select an isolated writable destination for negative mutations of the reference package.
     destination = tmp_path / "reference"
     shutil.copytree(doxygen_gate.DEFAULT_ROOT, destination,
                     ignore=shutil.ignore_patterns("__pycache__", "build",
                                                   ".pytest_cache", ".mypy_cache"))
+    # Return the copied repository root consumed by the gate.
     return destination
 
 
@@ -154,7 +158,6 @@ def test_a_documented_parameter_that_does_not_exist_is_caught(tree: Path) -> Non
     # Retain the exact original module so only one nonexistent parameter is introduced.
     plan = tree / "src" / "refpkg" / "domain" / "plan.py"
     original = plan.read_text(encoding="utf-8")
-    # Resolve the repository-confined path used by this operation before filesystem access.
     target = (
         "    @param entries each file under consideration; input order is "
         "deliberately irrelevant"
@@ -223,7 +226,7 @@ def test_a_projection_without_every_relation_is_rejected(
         @return successful generation record with one absent relation family
         """
         del extra_configuration
-        # Preserve the external command representation and its observed completion outcome.
+        # Model a successful native process independently from the missing caller relation.
         finished = subprocess.CompletedProcess(("doxygen", "-"), 0, "", "")
         yield doxygen_gate.GeneratedDocumentation(
             finished=finished,
@@ -362,9 +365,11 @@ def test_117_generated_site_has_no_remote_runtime_dependency() -> None:
     """First view works offline and AUTO Mermaid's CDN string is absent."""
     # Search every locally delivered runtime asset before the temporary site is removed.
     with _generated_probe() as result:
-        # Resolve the repository-confined path used by this operation before filesystem access.
+        # Each asset contributes decoded CSS, HTML, JavaScript, or SVG text; recursive path order
+        # is deliberately irrelevant because the joined body is searched only for remote URLs.
         assets = "\n".join(
             path.read_text(encoding="utf-8", errors="replace")
+            # Each path is one locally generated runtime asset selected by its suffix.
             for path in (result.output / "html").rglob("*")
             if path.suffix in {".css", ".html", ".js", ".svg"}
         )

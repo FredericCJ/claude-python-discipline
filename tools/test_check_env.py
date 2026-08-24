@@ -32,9 +32,11 @@ def _write(tmp_path: Path, body: str) -> Path:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the isolated environment declaration consumed by each parser case.
     path = tmp_path / "environment.yml"
+    # Persist the caller's exact YAML so each test controls every declared dependency.
     path.write_text(body, encoding="utf-8")
+    # Return the materialized declaration path to the parser or CLI under test.
     return path
 
 
@@ -43,7 +45,7 @@ def _write(tmp_path: Path, body: str) -> Path:
 
 def test_exact_pins_are_read(tmp_path: Path) -> None:
     """The declaration is read without importing the parser it pins."""
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Materialize one interpreter pin and two exact pip pins as the positive parser control.
     path = _write(tmp_path, "dependencies:\n  - python=3.13.14\n  - pip:\n"
                             "      - ruff==0.16.3\n      - PyYAML==6.0.3\n")
     # Unpack loose, pins, python from check env.read pins for the next test exact pins are read
@@ -60,7 +62,7 @@ def test_a_package_named_only_in_a_comment_is_not_a_pin(tmp_path: Path) -> None:
     Mistaking that prose for a requirement would make the checker demand tools
     the file says outright are not installed.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Materialize a real pin beside a commented-out package-shaped line.
     path = _write(tmp_path, "dependencies:\n  - pip:\n      - ruff==0.16.3\n"
                             "# - mutmut==3.4.0 is named by TEST-013 and NOT pinned here\n")
     # Parse the fixture and isolate exact pip pins from explanatory comments.
@@ -70,7 +72,7 @@ def test_a_package_named_only_in_a_comment_is_not_a_pin(tmp_path: Path) -> None:
 
 def test_a_range_is_reported_as_a_defect_in_the_lock(tmp_path: Path) -> None:
     """A range is not a lock. Accepting one quietly would defeat the file."""
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Materialize a ranged requirement whose lack of exactness must be reported.
     path = _write(tmp_path, "dependencies:\n  - pip:\n      - ruff>=0.16.3\n")
     # Parse the ranged requirement into the declaration-defect list.
     _, _, loose, _ = check_env.read_pins(path)
@@ -80,7 +82,7 @@ def test_a_range_is_reported_as_a_defect_in_the_lock(tmp_path: Path) -> None:
 
 def test_a_declaration_that_pins_nothing_is_refused(tmp_path: Path) -> None:
     """An empty lock must not read as a satisfied one."""
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Materialize a syntactically present pip section with no lock entries.
     path = _write(tmp_path, "dependencies:\n  - pip:\n")
     assert check_env.main(["--file", str(path)]) == 2
 
@@ -126,7 +128,7 @@ def test_a_matching_environment_reports_nothing() -> None:
 
 def test_drift_exits_non_zero(tmp_path: Path) -> None:
     """A verifier that reports drift on stdout and exits 0 blocks nothing."""
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Materialize an exact pin for a distribution guaranteed absent from the environment.
     path = _write(tmp_path, "dependencies:\n  - pip:\n"
                             "      - a-package-that-is-not-installed==1.0\n")
     assert check_env.main(["--file", str(path)]) == 1
@@ -141,7 +143,7 @@ def test_requirements_are_emitted_for_ci(tmp_path: Path, capsys: object) -> None
     @param tmp_path the directory the fixture declaration is written into
     @param capsys pytest's capture fixture, read for the emitted lines
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Materialize unsorted exact pins whose CLI projection must be stably sorted.
     path = _write(tmp_path, "dependencies:\n  - python=3.13.14\n  - pip:\n"
                             "      - ruff==0.16.3\n      - PyYAML==6.0.3\n")
     assert check_env.main(["--file", str(path), "--print-requirements"]) == 0

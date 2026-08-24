@@ -27,13 +27,17 @@ def write_evidence(root: Path, payload: dict[str, object]) -> Path:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the canonical authored evidence-registry path beneath the synthetic corpus.
     path = root / "discipline" / "meta" / "evidence.json"
+    # Create the registry's metadata directory before writing either joined artifact.
     path.parent.mkdir(parents=True, exist_ok=True)
+    # Persist the caller's evidence payload in a readable deterministic JSON form.
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    # Supply the minimal empty observation registry required by evidence validation.
     (path.parent / "observations.json").write_text(
         json.dumps({"schema_version": 1, "observations": {}}), encoding="utf-8"
     )
+    # Return the authored evidence path for tests that need direct mutation.
     return path
 
 
@@ -49,10 +53,16 @@ def write_matrix(root: Path, *covered: tuple[str, str]) -> None:
     Creates, replaces, or removes repository artifacts in implementation order.
         Each covered element represents one governed path; traversal order is preserved.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the exact module imported by the strategy-witness resolver.
     path = root / "enforce" / "discrimination.py"
+    # Create the synthetic enforcement package before materializing its matrix.
     path.parent.mkdir(parents=True, exist_ok=True)
-    values = ", ".join(repr(pair) for pair in covered)
+    # Each value is one exact rule/mechanism tuple in caller order for deterministic source.
+    values = ", ".join(
+        # Render each covered pair as a Python literal consumed by the synthetic module.
+        repr(pair) for pair in covered
+    )
+    # Materialize a loadable matrix whose only evidence is the declared pair set.
     path.write_text(
         '"""Synthetic discrimination matrix."""\n\n\n'
         "def covered_strategies() -> frozenset[tuple[str, str]]:\n"
@@ -86,9 +96,11 @@ def test_v100_reports_structural_corruption(tmp_path: Path) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the canonical registry path so malformed bytes reach the production loader.
     path = tmp_path / "discipline" / "meta" / "evidence.json"
+    # Create the otherwise-valid metadata directory.
     path.parent.mkdir(parents=True)
+    # Persist an unterminated JSON object as the sole structural defect.
     path.write_text("{", encoding="utf-8")
     # Preserve finding-record elements in checker emission order for the final verdict.
     findings = list(check_evidence([], Layout(tmp_path), required=True))
