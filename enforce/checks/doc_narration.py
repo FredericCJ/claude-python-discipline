@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 from . import Finding, ModuleCheck, main
-from .comment_association import associate, comment_blocks, semantic_associations
+from .comment_association import associate, bindings, comment_blocks, semantic_associations
 from .documentation_model import governed_paths
 
 # Import static protocol types without adding runtime package dependencies.
@@ -162,8 +162,13 @@ class DocNarrationCheck(ModuleCheck):
         blocks = comment_blocks(text)
         # Resolve semantic-operation nodes to their unique, absent, or ambiguous comment owners.
         associations = semantic_associations(tree, text, blocks)
+        # Track operation-owner nodes already checked so a local binding on the same statement
+        # does not emit a duplicate semantic-content finding.
+        checked_nodes: set[ast.AST] = set()
         # Judge every governed operation in stable source-position and category order.
         for operation in operations(tree):
+            # Record the exact AST owner before evaluating its associated prose.
+            checked_nodes.add(operation.node)
             # Reuse suite-aware ownership, falling back to direct adjacency for isolated nodes.
             association = associations.get(
                 operation.node, associate(operation.node, blocks)
@@ -202,6 +207,36 @@ class DocNarrationCheck(ModuleCheck):
                     f"{operation.kind} comment only paraphrases Python syntax",
                     "Name the technical or domain operation, represented information, "
                     "ordering, or constraint instead of translating tokens.",
+                    diagnostic_id="NARRATION_SYNTACTIC",
+                )
+        # Plain local assignments are binding steps rather than control/effect operations, but
+        # their ordinary comments carry the same semantic-content obligation.
+        for binding in bindings(tree):
+            # One statement may introduce several bindings; inspect its prose only once.
+            if binding.owner_node in checked_nodes:
+                # Continue after the earlier operation or binding already decided this owner.
+                continue
+            # Mark the owner before any absence path so later names on the statement stay deduped.
+            checked_nodes.add(binding.owner_node)
+            # Reuse the same suite-aware association that DOC-016 uses for binding presence.
+            association = associations.get(
+                binding.owner_node, associate(binding.owner_node, blocks)
+            )
+            # Missing and ambiguous owners are reported by coverage; only present prose belongs
+            # to DOC-019's semantic-content predicate here.
+            if association.owner is None:
+                # Advance without duplicating DOC-016 or DOC-018 ownership diagnostics.
+                continue
+            # Compare the binding-step prose with its complete owning statement.
+            if _syntactic_only(binding.owner_node, association.owner.text):
+                # Report one stable finding at the first binding introduced by the statement.
+                yield Finding(
+                    "DOC-019",
+                    path,
+                    binding.line,
+                    "local-binding comment is scaffolding or only paraphrases Python syntax",
+                    "State what the temporary value represents, why it exists, or how the "
+                    "step contributes to the surrounding operation.",
                     diagnostic_id="NARRATION_SYNTACTIC",
                 )
 

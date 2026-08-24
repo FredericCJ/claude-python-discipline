@@ -403,6 +403,34 @@ def test_known_scaffolding_prose_fails_doc_019(tmp_path: Path, comment: str) -> 
     assert any(item.rule_id == "DOC-019" for item in findings)
 
 
+def test_plain_binding_scaffolding_fails_doc_019(tmp_path: Path) -> None:
+    """A local assignment cannot hide filler outside the operation census.
+
+    @param tmp_path fixture repository
+    """
+    # Materialize a plain binding with template prose and a separately meaningful return owner.
+    module, declaration = _fixture(
+        tmp_path,
+        '''
+        """! Fixture module."""
+        def calculate() -> int:
+            """Return one calibrated value.
+            @return the calibrated value
+            """
+            # Compute result using calibrate for later calculate logic.
+            result = 1
+            # Expose the calibrated domain value as the public result.
+            return result
+        ''',
+    )
+
+    # Preserve narration findings from the assignment-only filler probe.
+    findings = _run(DocNarrationCheck(), module, declaration)
+
+    # Require exactly the binding step to carry the semantic-content diagnostic.
+    assert [item.rule_id for item in findings] == ["DOC-019"]
+
+
 def test_two_narration_owners_fail_doc_018(tmp_path: Path) -> None:
     """A preceding and trailing block make semantic-step ownership ambiguous.
 
