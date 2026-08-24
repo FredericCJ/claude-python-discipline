@@ -43,13 +43,13 @@ def _tree(root: Path, files: dict[str, str]) -> Path:
     """
     # Materialize each relative module-name key and source-body value in mapping iteration order.
     for name, body in files.items():
-        # Resolve the repository-confined path used by this operation before filesystem access.
+        # Resolve each declared fixture path beneath the isolated repository root.
         target = root / name
-        # Publish the externally visible effect after all required inputs are ready.
+        # Create only the ancestry required by the current fixture file.
         target.parent.mkdir(parents=True, exist_ok=True)
-        # Publish the externally visible effect after all required inputs are ready.
+        # Materialize the exact source or configuration body supplied by the test.
         target.write_text(body, encoding="utf-8")
-    # Return the tree root, holding `src/` to the caller.
+    # Return the complete synthetic repository to the dependency-registration operation.
     return root
 
 
