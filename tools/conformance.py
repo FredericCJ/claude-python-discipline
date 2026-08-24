@@ -320,7 +320,7 @@ def render_report(findings: Sequence[Finding], root: Path,
     # order is preserved.
     lines = [f"conformance: {len(findings)} finding(s) over {root}"]
 
-    # Use the available-value path only when baseline is present.
+    # Apply ratchet accounting only when a prior conformance baseline was loaded.
     if baseline is not None:
         # Split the recorded baseline into count and unordered pair dimensions.
         recorded_count, recorded_pairs = baseline

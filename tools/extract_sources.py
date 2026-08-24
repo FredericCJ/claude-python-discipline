@@ -282,7 +282,7 @@ def scan(tag: str, path: Path) -> tuple[list[Section], list[Candidate]]:
 
         # Match accepted ATX heading levels before applying any claim detector.
         heading = _HEADING.match(line)
-        # Use the available-value path only when heading is present.
+        # Update the nearest owning section before classifying claims beneath this heading.
         if heading is not None:
             # Make this heading the nearest section for subsequent candidate lines.
             current = heading.group("text")
@@ -331,7 +331,7 @@ def _explicit_candidate(
     """
     # Search first for an explicit BINDING or ADVISORY force tag.
     tagged = _TAGGED.search(line)
-    # Use the available-value path only when tagged is present.
+    # Let an explicit force tag override every syntax-derived force default.
     if tagged is not None:
         # Select the named or bare capture as the authoritative force hint.
         force = tagged.group("tag") or tagged.group("bare")
@@ -343,7 +343,7 @@ def _explicit_candidate(
         return _candidate(context, line_no, "numbered-rule", stripped, "unclassified")
     # Match checklist syntax only after tagged and numbered forms are excluded.
     checkbox = _CHECKBOX.match(line)
-    # Use the available-value path only when checkbox is present.
+    # Admit checklist syntax only after the stronger tagged and numbered forms are excluded.
     if checkbox is not None:
         # Return an explicitly tagged, numbered, or checklist claim when present to the caller.
         return _candidate(context, line_no, "checklist", checkbox.group("text"), "unclassified")
@@ -364,7 +364,7 @@ def _commenting_candidate(
     """
     # Treat doctrine list items as binding enumerated claims.
     bullet = _BULLET.match(line)
-    # Use the available-value path only when bullet is present.
+    # Treat each commenting-doctrine bullet as one enumerated normative claim.
     if bullet is not None:
         # Return one commenting-doctrine claim when present to the caller.
         return _candidate(context, line_no, "enumerated-claim", bullet.group("text"), "BINDING")
@@ -399,7 +399,7 @@ def _candidate_in(context: CandidateContext, line_no: int, line: str) -> Candida
         return None
     # Give tagged, numbered, and checklist syntax first claim on the line.
     explicit = _explicit_candidate(context, line_no, line, stripped)
-    # Use the available-value path only when explicit is present.
+    # Give tagged, numbered, and checklist claims precedence over source-specific heuristics.
     if explicit is not None:
         # Return the one candidate selected for this line, or None to the caller.
         return explicit
@@ -407,7 +407,7 @@ def _candidate_in(context: CandidateContext, line_no: int, line: str) -> Candida
     if context.source == "CD":
         # Test enumerated, allocation-table, then normative-prose signals in order.
         commenting = _commenting_candidate(context, line_no, line, stripped)
-        # Use the available-value path only when commenting is present.
+        # Accept the commenting-doctrine-specific claim after the shared explicit forms decline it.
         if commenting is not None:
             # Return the one candidate selected for this line, or None to the caller.
             return commenting

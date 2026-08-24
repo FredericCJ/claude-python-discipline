@@ -300,7 +300,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         print(render(report))
 
-    # Use the available-value path only when arguments.compare is present.
+    # Compare the current measurements only when the caller supplied a baseline report.
     if arguments.compare is not None:
         # Reject comparison when the requested baseline is not a regular file.
         if not arguments.compare.is_file():

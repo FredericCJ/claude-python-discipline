@@ -48,10 +48,9 @@ def collect(store: learn.Store, min_evidence: int) -> list[dict[str, object]]:
     """
     # Select the existing-artifact path only when `not store.ledger.exists()` is satisfied.
     if not store.ledger.exists():
-        # Return one mapping per qualifying learning, ordered by id; empty when the to the
-        # Details: caller.
+        # An absent ledger represents an empty learning history, not a query failure.
         return []
-    # Compute connection using learn.sync for later collect logic.
+    # Synchronize the derived store before selecting promotion candidates from it.
     connection = learn.sync(store)
     # Protect the fallible operation so expected failures remain explicitly classified.
     try:
@@ -60,14 +59,11 @@ def collect(store: learn.Store, min_evidence: int) -> list[dict[str, object]]:
             "SELECT * FROM learning WHERE scope = 'discipline' "
             "AND status NOT IN ('superseded','refuted') ORDER BY id"
         ).fetchall()
-        # Treat found as mapping elements whose keys identify fields and values carry their
-        # Details: content; key order is deliberately unused.
+        # Accumulate mappings whose each element is one qualifying learning, in database id order.
         found: list[dict[str, object]] = []
-        # Select row as the current element from rows while collect preserves traversal order.
-        # Process each candidate element in deterministic source order.
+        # Evaluate each active discipline learning against the promotion evidence threshold.
         for row in rows:
-            # Select the guarded path only after `row['helped'] < min_evidence and (not
-            # Details: row['verification'])` is satisfied.
+            # Exclude weak observations that also offer no command capable of verifying them.
             if row["helped"] < min_evidence and not row["verification"]:
                 # Advance after the current candidate has been conclusively excluded.
                 continue
@@ -93,8 +89,7 @@ def collect(store: learn.Store, min_evidence: int) -> list[dict[str, object]]:
                 "verification": row["verification"], "links": links,
                 "triggers": triggers, "status": row["status"],
             })
-        # Return one mapping per qualifying learning, ordered by id; empty when the to the
-        # Details: caller.
+        # Expose the surviving promotion candidates in database id order.
         return found
     finally:
         # Publish the externally visible effect after all required inputs are ready.
@@ -123,7 +118,7 @@ def render_report(target: Path, found: Sequence[dict[str, object]], min_evidence
         "recorded outcome(s), or a verification command.",
         "",
     ]
-    # Select the empty-or-disabled path when found has no usable value.
+    # Render an explicit empty state when no learning currently warrants promotion.
     if not found:
         # Preserve lines element values in deterministic source order.
         lines += [
@@ -158,10 +153,10 @@ def render_report(target: Path, found: Sequence[dict[str, object]], min_evidence
             f"- **Proposed action** {item['action']}",
             f"- **Triggers** {', '.join(f'`{t}`' for t in item['triggers'])}",  # type: ignore[arg-type]
         ]
-        # Select the guarded path only after `item['verification']` is satisfied.
+        # Include a verification command only when the learning actually supplied one.
         if item["verification"]:
             lines.append(f"- **Verification offered** `{item['verification']}`")
-        # Select the guarded path only after `item['links']` is satisfied.
+        # Expose related doctrine concerns only when the learning names them.
         if item["links"]:
             lines.append(f"- **Concerns** {', '.join(item['links'])}")  # type: ignore[arg-type]
         # Preserve lines element values in deterministic source order.
@@ -205,12 +200,12 @@ def render_patch(found: Sequence[dict[str, object]]) -> str:
     # Treat the current item as the candidate element consumed by the enclosing transformation.
     # Process each candidate element in deterministic source order.
     for item in found:
-        # Compute mechanism using ( for later render patch logic.
+        # Select mechanical enforcement for a verifiable learning and review ownership otherwise.
         mechanism = (
             f"[check:{str(item['id']).lower().replace('-', '_')}]"
             if item["verification"] else "[review]"
         )
-        # Compute check line using ( for later render patch logic.
+        # Render the exact verifier or a conspicuous unresolved-mechanism diagnostic.
         check_line = (
             f"- **Check** `{item['verification']}`" if item["verification"]
             else "- **Check** TODO: no mechanism proposed; the rule cannot be binding "
@@ -265,7 +260,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     found = collect(learn.Store(root), args.min_evidence)
 
     print(render_report(target, found, args.min_evidence))
-    # Select the guarded path only after `args.patch` is satisfied.
+    # Persist the proposed doctrine patch only when the caller requested an output artifact.
     if args.patch:
         # Publish the externally visible effect after all required inputs are ready.
         args.patch.write_text(render_patch(found), encoding="utf-8", newline="\n")

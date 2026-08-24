@@ -69,7 +69,7 @@ def run_mypy(root: Path, *, config: Path | None = None) -> tuple[bool, int, str]
     environment = dict(os.environ, MYPYPATH=str(root / "src"))
     # Each arguments element is one process argument string; invocation order is preserved.
     arguments = [sys.executable, "-m", "mypy"]
-    # Use the available-value path only when config is present.
+    # Bind mypy to the project configuration only when that local file exists.
     if config is not None:
         arguments.extend(("--config-file", str(config.resolve())))
     arguments.extend(("--strict", "--explicit-package-bases", "-p", PACKAGE))
