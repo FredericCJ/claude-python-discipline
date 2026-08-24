@@ -88,7 +88,7 @@ def test_legacy_engine_migrates_both_repository_shapes(
     @param engine former v4 engine
     @param unit supported one-repository shape
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build the parameterized v4 engine and repository-unit shape under migration.
     root = _project(tmp_path, engine=engine, unit=unit)
     # Derive the complete no-write migration plan for the selected v4 repository shape.
     migration = migrate_v5.plan(root)
@@ -121,12 +121,12 @@ def test_preview_is_pure_and_shows_every_created_artifact(tmp_path: Path) -> Non
 
     @param tmp_path scratch repository root
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build a default v4 project whose migration is inspected without applying writes.
     root = _project(tmp_path)
     # Snapshot exact declaration bytes before the pure preview operation.
     before = (root / "pyproject.toml").read_bytes()
 
-    # Hold the decoded checker report mapping for typed summary and diagnostic extraction.
+    # Render the complete proposed migration while retaining it as observational output only.
     report = migrate_v5.preview(migrate_v5.plan(root))
 
     assert (root / "pyproject.toml").read_bytes() == before
@@ -142,7 +142,7 @@ def test_apply_preserves_unrelated_tables_and_is_idempotent(tmp_path: Path) -> N
 
     @param tmp_path scratch repository root
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build a v4 project already selecting Doxygen so idempotence isolates v5 artifacts.
     root = _project(tmp_path, engine="doxygen")
     migrate_v5.apply(migrate_v5.plan(root))
     # Snapshot the once-migrated declaration for byte-level idempotence.
@@ -167,9 +167,11 @@ def test_existing_artifacts_are_never_overwritten(tmp_path: Path) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build a v4 project whose target v5 artifacts will be pre-owned by the adopter.
     root = _project(tmp_path)
+    # Seed project-owned model bytes that migration must never replace.
     (root / "documentation-model.json").write_text("project model\n", encoding="utf-8")
+    # Seed project-owned Doxyfile bytes that migration must never replace.
     (root / "Doxyfile").write_text("project doxyfile\n", encoding="utf-8")
 
     # Plan around project-owned artifacts so apply can prove it never replaces them.
@@ -189,9 +191,11 @@ def test_unclassified_python_requires_scope_review(tmp_path: Path) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build a v4 project before adding a Python subtree absent from its governance declaration.
     root = _project(tmp_path)
+    # Create the unclassified scripts directory without altering declared source scopes.
     (root / "scripts").mkdir()
+    # Add one valid Python module so the inventory cannot dismiss the directory as empty.
     (root / "scripts/deploy.py").write_text('"""Deployment."""\n', encoding="utf-8")
 
     # Inventory the unclassified Python subtree without guessing its governance kind.
@@ -209,7 +213,7 @@ def test_incomplete_v4_declaration_blocks_without_writes(tmp_path: Path) -> None
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build a v4 project whose required architecture declaration will be removed.
     root = _project(tmp_path)
     # Select the declaration whose required v4 architecture field will be removed.
     project = root / "pyproject.toml"
@@ -238,7 +242,7 @@ def test_artifact_path_cannot_escape_to_a_sibling(tmp_path: Path) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build a v4 project whose proposed documentation-model path will escape its root.
     root = _project(tmp_path)
     # Select the declaration whose documentation-model path will be made unsafe.
     project = root / "pyproject.toml"
@@ -265,7 +269,7 @@ def test_apply_refuses_a_project_changed_after_preview(tmp_path: Path) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build a v4 project whose declaration will change after its migration plan is bound.
     root = _project(tmp_path)
     # Capture a plan bound to the declaration's current exact bytes.
     migration = migrate_v5.plan(root)

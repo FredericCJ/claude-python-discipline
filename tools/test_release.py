@@ -169,7 +169,6 @@ def _refresh_fixture_review(root: Path) -> None:
     declaration = discipline_project.parse(root / "pyproject.toml")
     # Preserve the observed item count used by the non-vacuity verdict.
     count, digest = scope_snapshot(declaration)
-    # Resolve the repository-confined path used by this operation before filesystem access.
     path = root / "adversarial-review.json"
     payload = json.loads(path.read_text(encoding="utf-8"))
     scope = payload["scope"]
@@ -361,14 +360,17 @@ def test_archive_refuses_a_codex_collision_without_blocking_claude(
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the isolated adopter in which only Codex already owns the native skill path.
     root = tmp_path / "collision"
     _extract_archive(built_archives[0], root)
+    # Resolve the Codex-native path that will be occupied before integration.
     codex = _native_skill(root, ".agents")
+    # Create the otherwise absent Codex skill directory.
     codex.parent.mkdir(parents=True)
+    # Seed unmistakably project-owned bytes that the package must not overwrite.
     codex.write_bytes(b"project-owned Codex skill\r\n")
 
-    # Preserve the external command representation and its observed completion outcome.
+    # Retain the partial integration outcome so collision status and independent Claude success align.
     completed = _integrate(root)
 
     assert completed.returncode == 1
@@ -392,7 +394,7 @@ def test_archive_upgrade_preserves_project_state_and_updates_both_hosts(
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the existing adopter targeted by the simulated package upgrade.
     root = tmp_path / "upgrade-adopter"
     _extract_archive(built_archives[0], root)
     _assert_ok(_integrate(root))

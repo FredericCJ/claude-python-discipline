@@ -307,7 +307,6 @@ def test_pytest_timeout_terminates_a_slow_test(tmp_path: Path) -> None:
         "import time\n\n\ndef test_slow() -> None:\n    time.sleep(2)\n",
         encoding="utf-8",
     )
-    # Preserve the external command representation and its observed completion outcome.
     finished = _pytest_control(
         "-p", "no:randomly", "--timeout=0.05", str(test), cwd=tmp_path,
     )
@@ -332,7 +331,6 @@ def test_pytest_socket_blocks_ambient_network(tmp_path: Path) -> None:
         "import socket\n\n\ndef test_network() -> None:\n    socket.socket()\n",
         encoding="utf-8",
     )
-    # Preserve the external command representation and its observed completion outcome.
     finished = _pytest_control(
         "-p", "no:randomly", "--disable-socket", str(test), cwd=tmp_path,
     )
@@ -370,7 +368,6 @@ def test_pytest_randomly_exposes_an_order_dependency(tmp_path: Path) -> None:
     for seed in range(1, 11):
         # Reset cross-seed state so only the current ordering can satisfy the consumer.
         marker.unlink(missing_ok=True)
-        # Preserve the external command representation and its observed completion outcome.
         finished = _pytest_control(
             f"--randomly-seed={seed}", "-p", "no:socket", str(test), cwd=tmp_path,
         )

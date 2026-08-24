@@ -630,7 +630,7 @@ def test_every_status_is_reachable(
     @param mechanisms mechanism tags; each element is one evidence mechanism in tuple order
     @param expected classification required for that mechanism tuple
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build a resolver tree where only the named ``present`` check exists.
     root = corpus(tmp_path, built=["present"])
     assert enforcement_of(mechanisms, root) is expected
 
@@ -642,7 +642,7 @@ def test_review_only_is_never_counted_as_enforced(tmp_path: Path) -> None:
     judgment as mechanical enforcement is exactly the overstatement the status
     field was added to remove.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build an empty resolver tree so review remains the mechanism set's only arm.
     root = corpus(tmp_path)
     assert enforcement_of(("review",), root).is_mechanical is False
     assert Enforcement.UNBUILT.is_mechanical is False
@@ -672,7 +672,7 @@ def test_mechanical_claim_census_keeps_each_real_arm(
         Each element is one evidence mechanism tag; set order is deliberately unordered.
     @param expected_mechanical one when the set claims a mechanical proposition
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build a resolver tree that distinguishes one implemented check from absent checks.
     root = corpus(tmp_path, built=["present"])
     assert has_mechanical_claim(mechanisms, root) is bool(expected_mechanical)
 
@@ -683,7 +683,7 @@ def test_an_unverifiable_mechanism_is_none_not_false(tmp_path: Path) -> None:
     Flattening them to False would report every externally checked rule as unbuilt
     and bury the 106 that really are.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Build the same resolver control for external, review, present, and absent classifications.
     root = corpus(tmp_path, built=["present"])
     assert mechanism_is_implemented("auto:mypy", root) is None
     assert mechanism_is_implemented("review", root) is None
@@ -693,7 +693,7 @@ def test_an_unverifiable_mechanism_is_none_not_false(tmp_path: Path) -> None:
 
 def test_rules_json_separates_verification_from_normative_force() -> None:
     """The generated contract carries complete evidence without a synthetic verdict."""
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the generated machine-readable rule contract whose evidence fields are asserted.
     path = REPO_ROOT / "discipline" / "rules.json"
     # Select the existing-artifact path only when `not path.exists()` is satisfied.
     if not path.exists():
@@ -734,7 +734,7 @@ def test_rules_json_separates_verification_from_normative_force() -> None:
 
 def test_index_md_carries_the_distinct_evidence_columns() -> None:
     """An agent grepping the index cannot confuse force with verifier evidence."""
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the generated human index whose distinct verifier columns are asserted.
     path = REPO_ROOT / "discipline" / "INDEX.md"
     # Select the existing-artifact path only when `not path.exists()` is satisfied.
     if not path.exists():
@@ -783,7 +783,7 @@ def test_nav_renders_a_binding_unbuilt_verifier_distinguishably() -> None:
 
 def test_nav_warns_on_a_binding_rule_without_a_verifier() -> None:
     """`nav rule` states the availability gap without fabricating a result."""
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the generated verifier-state source consumed by the navigator.
     path = REPO_ROOT / "discipline" / "rules.json"
     # Select the existing-artifact path only when `not path.exists()` is satisfied.
     if not path.exists():
@@ -802,7 +802,7 @@ def test_nav_warns_on_a_binding_rule_without_a_verifier() -> None:
 
 def test_baseline_round_trips(tmp_path: Path) -> None:
     """What `write_v080_baseline` writes is exactly what `load_v080_baseline` reads back."""
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the isolated V080 baseline used for writer/loader round-trip.
     path = tmp_path / "baseline.json"
     # Preserve two unordered rule/mechanism identities as the baseline's authoritative content.
     pairs = frozenset({("ALLOC-001", "check:x"), ("ALLOC-002", "check:y")})
@@ -826,7 +826,7 @@ def test_a_hand_raised_count_is_refused(tmp_path: Path) -> None:
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the valid baseline artifact whose redundant count will be forged.
     path = tmp_path / "baseline.json"
     write_v080_baseline(frozenset({("ALLOC-001", "check:x")}), "test fixture", path)
     # Decode the valid artifact so only its redundant count can be forged.
@@ -853,7 +853,7 @@ def test_a_baseline_missing_a_field_is_refused(tmp_path: Path, payload: dict[str
     @par Effects
     Creates, replaces, or removes repository artifacts in implementation order.
     """
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Select the isolated baseline path written with this incomplete parameterized payload.
     path = tmp_path / "baseline.json"
     # Persist exactly the parameterized incomplete shape without builder normalization.
     path.write_text(json.dumps(payload), encoding="utf-8")
