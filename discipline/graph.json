@@ -1790,7 +1790,7 @@
    "type": "module",
    "label": "Implementation Narration",
    "path": "discipline/law/DOC-NARRATION.md",
-   "tokens": 1296,
+   "tokens": 1372,
    "attrs": {
     "decay": "none",
     "kind": "law",
@@ -3089,7 +3089,7 @@
    "type": "rule",
    "label": "Narration states semantics, not Python tokens",
    "path": "discipline/law/DOC-NARRATION.md:74",
-   "tokens": 94,
+   "tokens": 154,
    "attrs": {
     "force": "BINDING",
     "module": "law/DOC-NARRATION"

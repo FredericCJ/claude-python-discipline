@@ -379,7 +379,7 @@
       "id": "law/DOC-NARRATION",
       "kind": "law",
       "title": "Implementation Narration",
-      "tokens": 1296,
+      "tokens": 1372,
       "load_when": [
         "local variable comment",
         "semantic step",
@@ -6409,9 +6409,9 @@
       "mechanisms": [
         "check:doc_narration"
       ],
-      "statement": "Implementation narration MUST name the technical or domain operation, represented information, ordering, constraint, or reason. It MUST NOT merely translate syntax such as “iterate over items,” “set the value,” or “return the result.” Semantic restatement is permitted here and is distinct from implementation narration inside an entity contract.",
+      "statement": "Implementation narration MUST name the technical or domain operation, represented information, ordering, constraint, or reason. It MUST NOT merely translate syntax such as “iterate over items,” “set the value,” or “return the result.” Known migration-scaffolding forms such as “compute X using Y for later Z logic,” syntax copied into a “guarded path,” and placeholder “Details” clauses MUST NOT receive credit merely because identifiers add lexical novelty. Semantic restatement is permitted here and is distinct from implementation narration inside an entity contract.",
       "why": "Token paraphrase adds another line to maintain without reducing inference. Semantic narration lets the source be followed as a documented procedure.",
-      "check": "`python -m checks.doc_narration` rejects the narrow case in which no informative vocabulary exists outside the operation's syntax. Truth and adequacy remain [DOC-028] review residuals.",
+      "check": "`python -m checks.doc_narration` rejects the narrow case in which no informative vocabulary exists outside the operation's syntax and rejects its closed set of known scaffolding templates. Truth and adequacy remain [DOC-028] review residuals.",
       "no_mechanism": null,
       "see": [
         "DOC-009",
@@ -6443,8 +6443,8 @@
             "mechanism": "check:doc_narration",
             "kind": "static",
             "relation": "proxy",
-            "proposition": "Narration with no informative vocabulary beyond the owned operation's syntax and generic procedural words is rejected.",
-            "residual": "Lexical novelty is only a proxy: sophisticated paraphrase can pass and concise domain vocabulary can be falsely suspected.",
+            "proposition": "Narration with no informative vocabulary beyond the owned operation's syntax and generic procedural words, or matching a known migration-scaffolding template, is rejected.",
+            "residual": "Lexical novelty and a closed filler-template set are only proxies: unrecognized sophisticated paraphrase can pass and concise domain vocabulary can be falsely suspected.",
             "must_pass": "fixture:reference semantically worded narration",
             "must_reject": "discrimination:DOC-019/check:doc_narration",
             "platforms": [

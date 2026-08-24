@@ -3500,8 +3500,8 @@
           "mechanism": "check:doc_narration",
           "kind": "static",
           "relation": "proxy",
-          "proposition": "Narration with no informative vocabulary beyond the owned operation's syntax and generic procedural words is rejected.",
-          "residual": "Lexical novelty is only a proxy: sophisticated paraphrase can pass and concise domain vocabulary can be falsely suspected.",
+          "proposition": "Narration with no informative vocabulary beyond the owned operation's syntax and generic procedural words, or matching a known migration-scaffolding template, is rejected.",
+          "residual": "Lexical novelty and a closed filler-template set are only proxies: unrecognized sophisticated paraphrase can pass and concise domain vocabulary can be falsely suspected.",
           "must_pass": "fixture:reference semantically worded narration",
           "must_reject": "discrimination:DOC-019/check:doc_narration",
           "platforms": [

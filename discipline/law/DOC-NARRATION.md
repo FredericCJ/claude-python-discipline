@@ -3,7 +3,7 @@ id: law/DOC-NARRATION
 kind: law
 rule_prefix: DOC
 title: Implementation Narration
-tokens: 1296
+tokens: 1372
 load_when:
   - "local variable comment"
   - "semantic step"
@@ -74,13 +74,16 @@ file-level prose MUST NOT float into a local step.
 ### DOC-019 · Narration states semantics, not Python tokens  [BINDING] [check:doc_narration]
 Implementation narration MUST name the technical or domain operation, represented
 information, ordering, constraint, or reason. It MUST NOT merely translate syntax such as
-“iterate over items,” “set the value,” or “return the result.” Semantic restatement is
-permitted here and is distinct from implementation narration inside an entity contract.
+“iterate over items,” “set the value,” or “return the result.” Known migration-scaffolding
+forms such as “compute X using Y for later Z logic,” syntax copied into a “guarded path,”
+and placeholder “Details” clauses MUST NOT receive credit merely because identifiers add
+lexical novelty. Semantic restatement is permitted here and is distinct from implementation
+narration inside an entity contract.
 - **Why** Token paraphrase adds another line to maintain without reducing inference.
   Semantic narration lets the source be followed as a documented procedure.
 - **Check** `python -m checks.doc_narration` rejects the narrow case in which no
-  informative vocabulary exists outside the operation's syntax. Truth and adequacy remain
-  [DOC-028] review residuals.
+  informative vocabulary exists outside the operation's syntax and rejects its closed set
+  of known scaffolding templates. Truth and adequacy remain [DOC-028] review residuals.
 - **See** [DOC-009] · [meta/CONFLICTS] · [examples/documentation]
 
 ---

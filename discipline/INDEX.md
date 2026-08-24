@@ -37,7 +37,7 @@ decay: none
 | [law/DIAG](law/DIAG.md) | law | 2634 | 16 | exception, traceback, logging, error message, error code, correlation id |
 | [law/DOC](law/DOC.md) | law | 3521 | 19 | docstring, documentation comment, doxygen, @param, @return, document this function |
 | [law/DOC-NAMING](law/DOC-NAMING.md) | law | 992 | 4 | identifier grammar, abbreviation, semantic dimension, generated name, documentation-model.json |
-| [law/DOC-NARRATION](law/DOC-NARRATION.md) | law | 1296 | 4 | local variable comment, semantic step, control flow comment, data flow comment, quasi-literate, comment association |
+| [law/DOC-NARRATION](law/DOC-NARRATION.md) | law | 1372 | 4 | local variable comment, semantic step, control flow comment, data flow comment, quasi-literate, comment association |
 | [law/EFCT](law/EFCT.md) | law | 2408 | 16 | write a file, mutation, state machine, transaction, rollback, dry run |
 | [law/ERR](law/ERR.md) | law | 2629 | 16 | raise, except, Result, error type, exception hierarchy, validation |
 | [law/EVID](law/EVID.md) | law | 1288 | 8 | why is this a rule, verification strategy, mechanism, proxy, residual, discrimination |
@@ -187,7 +187,7 @@ decay: none
 | `DOC-016` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Association proves neither that the prose is true nor that it captures the value's important do… | none | Every local binding has semantic documentation |
 | `DOC-017` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | The bounded syntax and method vocabulary misses domain-specific semantic operations, and a pres… | none | Governed execution steps are narrated |
 | `DOC-018` | BINDING | `local-verifier` | `direct` | `rule-level witnessed` | `linux`, `windows` | Unique lexical proximity cannot establish that the selected prose is conceptually allocated to… | none | A semantic step has exactly one nearby owner |
-| `DOC-019` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Lexical novelty is only a proxy: sophisticated paraphrase can pass and concise domain vocabular… | none | Narration states semantics, not Python tokens |
+| `DOC-019` | BINDING | `local-verifier` | `proxy` | `rule-level witnessed` | `linux`, `windows` | Lexical novelty and a closed filler-template set are only proxies: unrecognized sophisticated p… | none | Narration states semantics, not Python tokens |
 
 ### law/EFCT
 

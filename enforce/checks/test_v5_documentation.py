@@ -8,6 +8,7 @@ from pathlib import PurePosixPath
 from textwrap import dedent
 from typing import TYPE_CHECKING
 
+import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
@@ -350,6 +351,55 @@ def test_syntactic_paraphrase_fails_doc_019(tmp_path: Path) -> None:
     findings = _run(DocNarrationCheck(), module, declaration)
 
     # Require one finding element to identify semantic-content failure.
+    assert any(item.rule_id == "DOC-019" for item in findings)
+
+
+@pytest.mark.parametrize(
+    "comment",
+    [
+        "Compute result using calculate for later accept logic.",
+        (
+            "Select item as the current element from items while accept preserves "
+            "traversal order."
+        ),
+        "Update accept state only after the required source facts are available.",
+        (
+            "Capture result as the completed accept outcome for subsequent validation "
+            "or publication."
+        ),
+        "Select the guarded path only after value is negative is satisfied.",
+        "Select the empty-or-disabled path when value has no usable value.",
+        "Use the available-value path only when value is present.",
+        "Bind result to the current value used by the next accept decision.",
+        "Unpack left and right using result for later accept logic.",
+        "Resolve the branch. Details: usable value.",
+    ],
+)
+def test_known_scaffolding_prose_fails_doc_019(tmp_path: Path, comment: str) -> None:
+    """Migration templates do not gain meaning from incidental identifier words.
+
+    @param tmp_path fixture repository
+    @param comment known filler text
+    """
+    # Materialize one return path whose owner carries the selected scaffolding template.
+    module, declaration = _fixture(
+        tmp_path,
+        f'''\
+        """! Fixture module."""
+        def accept(value: int) -> int:
+            """Return one accepted value.
+            @param value accepted value
+            @return the accepted value
+            """
+            # {comment}
+            return value
+        ''',
+    )
+
+    # Preserve narration findings from the focused known-filler probe.
+    findings = _run(DocNarrationCheck(), module, declaration)
+
+    # Require the selected template to fail through the stable semantic-content rule.
     assert any(item.rule_id == "DOC-019" for item in findings)
 
 

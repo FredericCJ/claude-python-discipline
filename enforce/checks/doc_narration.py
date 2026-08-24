@@ -71,6 +71,37 @@ SYNTACTIC_WORDS: Final = frozenset({
 WORD = re.compile(r"[A-Za-z][A-Za-z0-9_]*")
 ## Minimum count of prose word elements required before narration can add useful meaning.
 MINIMUM_NARRATIVE_WORDS: Final = 4
+## Ordered expressions for known scaffolding prose that mechanically restates syntax or checker
+## state; order is stable only so focused diagnostics remain reproducible.
+KNOWN_FILLER_SHAPES: Final = (
+    re.compile(r"\bdetails\s*:", re.IGNORECASE),
+    re.compile(r"\bcompute\b.+\busing\b.+\bfor later\b.+\blogic\b", re.IGNORECASE),
+    re.compile(
+        r"\bselect\b.+\bas the current element from\b.+\bwhile\b.+"
+        r"\bpreserves traversal order\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bupdate\b.+\bstate only after the required source facts are\b.+\bavailable\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bcapture\b.+\bas the completed\b.+"
+        r"\boutcome for subsequent validation or publication\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\bselect the guarded path only after\b.+\bis satisfied\b", re.IGNORECASE),
+    re.compile(
+        r"\bselect the empty-or-disabled path when\b.+\bhas no usable value\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\buse the available-value path only when\b", re.IGNORECASE),
+    re.compile(
+        r"\bbind\b.+\bto the current value used by the next\b.+\bdecision\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\bunpack\b.+\busing\b.+\bfor later\b.+\blogic\b", re.IGNORECASE),
+)
 ## Ordered syntax/label pairs; each element maps an AST shape to its operation category.
 ## State and effect shapes need predicates below.
 OPERATION_KINDS: Final = (
@@ -296,6 +327,11 @@ def _syntactic_only(node: ast.AST, prose: str) -> bool:
     @param prose associated ordinary comment text
     @return true when no informative extra vocabulary remains
     """
+    # Reject recognized migration scaffolding before its incidental identifiers can masquerade
+    # as domain vocabulary under the lexical-novelty fallback.
+    if any(shape.search(prose) is not None for shape in KNOWN_FILLER_SHAPES):
+        # True identifies a known filler family independently of the owned AST operation.
+        return True
     # Collect each normalized prose word as an unordered vocabulary set.
     prose_words = {word.lower() for word in WORD.findall(prose)}
     # Collect each normalized operation-syntax word as an unordered comparison set.
