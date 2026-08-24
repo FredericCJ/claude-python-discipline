@@ -341,7 +341,7 @@ class Graph:
         # preserved before optional reverse neighbors are appended.
         found = [e.dst for e in self.out_edges(node_id, types)]
         if undirected:
-            # Preserve the optional pattern match that carries the reported analysis count.
+            # Include incoming sources when the caller requests an undirected neighborhood.
             found += [e.src for e in self.in_edges(node_id, types)]
         # Deduplicate neighbor identities in first-edge order; each key represents one node ID.
         seen: dict[str, None] = {}
@@ -433,7 +433,7 @@ class Graph:
         # Each frontier element is one node id at the current breadth-first depth; discovery
         # order is preserved until the next lexical sort.
         frontier = [src]
-        # Process each candidate element in deterministic source order.
+        # Expand the breadth-first frontier until no newly reachable node remains.
         while frontier:
             # Each following element is one newly reached node id for the next breadth-first
             # depth; current frontier and edge order are preserved.
@@ -623,8 +623,7 @@ class Graph:
         """
         # Reconstruct an empty graph before replaying serialized nodes and edges in payload order.
         graph = cls()
-        # Retain the immutable source representation consumed by subsequent analysis.
-        # Process each candidate element in deterministic source order.
+        # Reconstruct nodes from serialized order after normalizing each optional metadata map.
         for raw in payload.get("nodes", []):  # type: ignore[union-attr]
             # Normalize optional node metadata to a key/value mapping before string conversion.
             attrs = raw.get("attrs") or {}
@@ -639,8 +638,7 @@ class Graph:
                     attrs=tuple(sorted((str(k), str(v)) for k, v in attrs.items())),
                 )
             )
-        # Retain the immutable source representation consumed by subsequent analysis.
-        # Process each candidate element in deterministic source order.
+        # Reconstruct edges in serialized order so adjacency traversal remains byte-stable.
         for raw in payload.get("edges", []):  # type: ignore[union-attr]
             graph.add_edge(
                 Edge(
@@ -679,7 +677,7 @@ def _unwind(previous: dict[str, Edge], src: str, dst: str) -> list[Edge]:
     # order is preserved until the final reversal.
     path: list[Edge] = []
     cursor = dst
-    # Process each candidate element in deterministic source order.
+    # Walk predecessor links backward until the path reaches its requested source.
     while cursor != src:
         # Follow each recorded predecessor edge backward from destination to source.
         edge = previous[cursor]

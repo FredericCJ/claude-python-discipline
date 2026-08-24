@@ -1153,7 +1153,7 @@ def check_graph(documents: Sequence[Document], layout: Layout) -> Iterator[Findi
             remediation="Load order would be undefined. Break the cycle in front-matter.",
         )
 
-    # Preserve the observed item count used by the non-vacuity verdict.
+    # Use every module node as a reachability seed before identifying orphaned rules.
     seeds = sorted(n.id for n in graph.of_type(NodeType.MODULE))
     unreachable = graph.unreachable_from(seeds, NodeType.RULE, depth=REACH_DEPTH)
     for rule_id in unreachable:
@@ -1675,7 +1675,7 @@ def load_documents(layout: Layout) -> tuple[list[Document], list[Finding]]:
     """
     # Each documents element is one successfully parsed corpus document in repository-path order.
     documents: list[Document] = []
-    # Each findings element is one V001 parse diagnostic in repository-path order.
+    # Its elements are V001 parse diagnostics in the same path order as document discovery.
     findings: list[Finding] = []
     # An absent discipline root is a valid empty fixture corpus, not a filesystem failure.
     if not layout.discipline.exists():

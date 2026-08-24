@@ -93,7 +93,7 @@ class Artifact:
 
         @return True when writing would change the tree
         """
-        # Select the existing-artifact path only when `not self.path.exists()` is satisfied.
+        # Treat an absent generated artifact as stale before attempting a byte comparison.
         if not self.path.exists():
             # A missing generated artifact is always stale regardless of intended text.
             return True
@@ -165,7 +165,7 @@ def load(root: Path) -> list[Document]:
     # Each documents element is one successfully parsed canonical document; lexical path order
     # is preserved.
     documents: list[Document] = []
-    # Process each candidate element in deterministic source order.
+    # Visit authored modules in lexical path order so derived artifacts remain reproducible.
     for path in sorted((root / "discipline").rglob("*.md")):
         # Exclude the generated index before parsing authored modules.
         if path.name == "INDEX.md":
@@ -173,7 +173,7 @@ def load(root: Path) -> list[Document]:
             continue
         try:
             documents.append(parse_document(path))
-        # Preserve the caught failure that explains why the external result is unusable.
+        # Name and skip one malformed module while continuing to index the usable corpus.
         except ParseError as exc:
             print(f"skipping unparsable {path}: {exc.reason}", file=sys.stderr)
     return documents
@@ -202,7 +202,7 @@ def refresh_tokens(documents: Sequence[Document], *, write: bool) -> list[Path]:
     # order is preserved.
     stale: list[Path] = []
     for doc in documents:
-        # Retain the immutable source representation consumed by subsequent analysis.
+        # Measure the exact authored bytes whose front-matter token declaration may be refreshed.
         text = doc.path.read_text(encoding="utf-8")
         measured = count_tokens(text)
         declared = doc.front_matter.get("tokens")
@@ -418,7 +418,7 @@ def _discrimination(rule: Rule, evidence: RuleEvidence, covered: frozenset[str] 
     if not automated:
         # Discrimination does not apply when the rule declares no automated strategy.
         return "n/a"
-    # Use the absence path when covered has no available value.
+    # Render absent mutation-matrix coverage as unknown rather than as a failed witness.
     if covered is None:
         # Missing matrix data leaves witness state unknown rather than silently pending.
         return "`unknown`"
@@ -441,7 +441,7 @@ def _residual(evidence: RuleEvidence, *, limit: int = 96) -> str:
     if not residuals:
         # Rules without strategies have no mechanism residual to summarize.
         return "n/a"
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Join all residual claims before applying the display-length limit to their summary.
     text = "; ".join(residuals)
     if len(text) <= limit:
         # Preserve complete residual prose whenever it fits the scanning-table budget.
@@ -1083,7 +1083,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # Compare every generated artifact in check mode without writing any repository state.
     if args.check:
-        # Process each candidate element in deterministic source order.
+        # Report stale authored token declarations in their already-sorted document order.
         for path in stale_tokens:
             print(f"stale tokens: {path.relative_to(root).as_posix()}")
         for artifact in stale:

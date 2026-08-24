@@ -554,7 +554,7 @@ class Document:
 
         @return the front-matter ``id`` when it is a string, else the empty string
         """
-        # Retain the immutable source representation consumed by subsequent analysis.
+        # Read the authored document identity without coercing malformed front matter.
         raw = self.front_matter.get("id")
         # Preserve textual identity exactly; malformed values become the validator-visible empty id.
         return raw if isinstance(raw, str) else ""
@@ -565,7 +565,7 @@ class Document:
 
         @return the matching genre, or None for anything unrecognized
         """
-        # Retain the immutable source representation consumed by subsequent analysis.
+        # Read the authored genre value before checking its controlled-vocabulary type.
         raw = self.front_matter.get("kind")
         # Only textual front-matter values can name the controlled genre vocabulary.
         if isinstance(raw, str):
@@ -602,7 +602,7 @@ class Document:
 
         @return uppercase rule prefix
         """
-        # Retain the immutable source representation consumed by subsequent analysis.
+        # Read the optional explicit rule partition before applying the document-id default.
         raw = self.front_matter.get("rule_prefix")
         # Prefer an explicit partition prefix; otherwise derive the module's uppercase identity.
         return raw if isinstance(raw, str) else self.module_name.upper()
@@ -694,9 +694,9 @@ def parse_document(path: Path) -> Document:
     @return the document, its rules carrying line numbers absolute in the file
     @throws ParseError when the header is absent, is not valid YAML, or is not a mapping
     """
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Read the complete module once so front-matter and body locations share one coordinate space.
     text = path.read_text(encoding="utf-8")
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Match the required opening YAML fence before attempting to parse its payload.
     match = _FRONT_MATTER.match(text)
     # A corpus document must start with the delimited YAML header.
     if match is None:
@@ -724,7 +724,7 @@ def parse_document(path: Path) -> Document:
         for key, value in loaded.items()
     }
 
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Preserve body text and compute its source-line offset from the same front-matter match.
     body = text[match.end() :]
     body_offset = text[: match.end()].count("\n")
     doc = Document(path=path, front_matter=loaded, body=body, body_offset=body_offset)

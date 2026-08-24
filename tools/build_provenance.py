@@ -539,7 +539,7 @@ def disposition_for(source: str, heading: str) -> tuple[str, str] | None:
     best: tuple[str, str] | None = None
     best_len = -1
     # Preserve the optional baseline note while re-recording selected entries.
-    # Process each candidate element in deterministic source order.
+    # Apply the reviewed source-and-heading disposition table in declaration order.
     for src, needle, disposition, note in DISPOSITIONS:
         # Restrict candidate policy to the current source document.
         if src != source:
@@ -576,12 +576,12 @@ def build_rows(sections: Sequence[dict[str, object]]) -> list[Row]:
     # Each rows element represents one decoded record; lexical order is preserved.
     rows: list[Row] = []
     for section in sections:
-        # Retain the immutable source representation consumed by subsequent analysis.
+        # Preserve the exact extraction source identity used by disposition policy.
         source = str(section["source"])
         heading = str(section["heading"])
-        # Preserve the optional pattern match that carries the reported analysis count.
+        # Resolve the reviewed disposition and rationale for this exact source heading.
         found = disposition_for(source, heading)
-        # Use the absence path when found has no available value.
+        # Default only unreviewed extraction sections to the migration disposition.
         if found is None:
             # Use the default `(migrated disposition, empty reason)` tuple in that element order
             # when no section exception matched.
@@ -778,7 +778,7 @@ def _with_current_token_count(text: str) -> str:
     """
     # Carry the latest self-measured text through a bounded fixed-point calculation.
     updated = text
-    # Process each candidate element in deterministic source order.
+    # Iterate the bounded token-count rewrite until the declaration length converges.
     for _ in range(4):
         # Derive one revised token declaration from the complete current document.
         candidate = _TOKENS_LINE.sub(f"tokens: {count_tokens(updated)}", updated, count=1)
@@ -852,8 +852,8 @@ def render(rows: Sequence[Row], claims: Sequence[ClaimRow] = ()) -> str:
         "| Disposition | Sections |",
         "|---|---|",
     ]
-    # Preserve the observed item count used by the non-vacuity verdict.
-    # Process each candidate element in deterministic source order.
+    # Render the complete provenance disposition census above its per-source rows.
+    # Emit each disposition tally in lexical key order for a byte-stable summary.
     for disposition, count in sorted(counts.items()):
         lines.append(f"| {disposition} | {count} |")
     lines.append("")
@@ -885,8 +885,8 @@ def render(rows: Sequence[Row], claims: Sequence[ClaimRow] = ()) -> str:
 
     # Preserve lines element values in deterministic source order.
     lines += ["## By source document", "", "| Source | Sections | Goes to |", "|---|---|---|"]
-    # Retain the immutable source representation consumed by subsequent analysis.
-    # Process each candidate element in deterministic source order.
+    # Traverse source identities from the grouped row mapping without altering its records.
+    # Emit one source summary row per lexical source identity.
     for source in sorted(by_source):
         # Preserve governed Python-path elements in deterministic traversal order.
         targets = DEFAULT_TARGETS.get(source, ())
@@ -916,7 +916,7 @@ def render(rows: Sequence[Row], claims: Sequence[ClaimRow] = ()) -> str:
         if disposition_for(row.source, row.heading) is None:
             # Only notes attached to an active disposition policy belong here.
             continue
-        # Preserve the observed item count used by the non-vacuity verdict.
+        # Distinguish broad source defaults from heading-specific disposition reviews.
         needle_specific = any(
             n and n.lower() in row.heading.lower() for s, n, _, _ in DISPOSITIONS if s == row.source
         )
@@ -1038,7 +1038,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    # Select the existing-artifact path only when `not args.extraction.exists()` is satisfied.
+    # Refuse generation before parsing when the authoritative extraction census is absent.
     if not args.extraction.exists():
         print(f"missing {args.extraction}; run tools/extract_sources.py first", file=sys.stderr)
         # Stop before provenance construction because its authoritative extraction input is absent.
@@ -1048,7 +1048,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         # Retain section rows, claim rows, and both rendered outputs for check/write modes.
         rows, claims, provenance, claim_ledger = _build_outputs(args.extraction)
-    # Preserve the caught failure that explains why the external result is unusable.
+    # Convert malformed extraction or claim-ledger structure into one public build failure.
     except (KeyError, TypeError, ValueError, yaml.YAMLError) as exc:
         print(f"provenance build failed: {exc}", file=sys.stderr)
         # Convert malformed source or ledger structure to the public build-failure status.
@@ -1071,7 +1071,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 print(f"DRIFT: {path}", file=sys.stderr)
             return 1
     else:
-        # Process each candidate element in deterministic source order.
+        # Publish both validated provenance projections in their fixed output order.
         for path, content in outputs:
             # Publish validated projections only after every output has been derived successfully.
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -1081,8 +1081,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     counts = Counter(r.disposition for r in rows)
     action = "checked" if args.check else "wrote"
     print(f"{action} {args.out.relative_to(REPO_ROOT).as_posix()}: {len(rows)} sections")
-    # Preserve the observed item count used by the non-vacuity verdict.
-    # Process each candidate element in deterministic source order.
+    # Report the same provenance census that was written to the generated ledger.
+    # Print provenance disposition totals in lexical key order.
     for disposition, count in sorted(counts.items()):
         print(f"  {disposition}: {count}")
     claim_counts = Counter(row.disposition for row in claims)
@@ -1090,8 +1090,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         f"{action} {args.claim_out.relative_to(REPO_ROOT).as_posix()}: "
         f"{len(claims)} claims, 0 unreviewed, 0 multiply claimed"
     )
-    # Preserve the observed item count used by the non-vacuity verdict.
-    # Process each candidate element in deterministic source order.
+    # Report the independent commenting-claim census after provenance totals.
+    # Print claim-ledger disposition totals in lexical key order.
     for disposition, count in sorted(claim_counts.items()):
         print(f"  {disposition}: {count}")
     return 0

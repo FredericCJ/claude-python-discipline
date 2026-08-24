@@ -46,7 +46,7 @@ def collect(store: learn.Store, min_evidence: int) -> list[dict[str, object]]:
     @par Effects
     May mutate caller-visible or process-local state in implementation order.
     """
-    # Select the existing-artifact path only when `not store.ledger.exists()` is satisfied.
+    # Treat an absent learning ledger as an empty history rather than a query failure.
     if not store.ledger.exists():
         # An absent ledger represents an empty learning history, not a query failure.
         return []
@@ -132,7 +132,7 @@ def render_report(target: Path, found: Sequence[dict[str, object]], min_evidence
     lines += ["| Learning | Kind | Evidence | About | Claim |", "|---|---|---|---|---|"]
     for item in found:
         # Each row summarizes one eligible learning without expanding its full evidence trail.
-        # Preserve the observed item count used by the non-vacuity verdict.
+        # Render the learning's related doctrine identities as a compact Markdown cell.
         about = ", ".join(f"`{n}`" for n in item["links"]) or "—"  # type: ignore[arg-type]
         lines.append(
             f"| `{item['id']}` | {item['kind']} | {item['evidence']}"
@@ -205,7 +205,7 @@ def render_patch(found: Sequence[dict[str, object]]) -> str:
             else "- **Check** TODO: no mechanism proposed; the rule cannot be binding "
                  "without one"
         )
-        # Preserve the observed item count used by the non-vacuity verdict.
+        # Render each proposal's doctrine links in the syntax consumed by authored rules.
         see = ", ".join(f"[{n}]" for n in item["links"])  # type: ignore[arg-type]
         # Preserve lines element values in deterministic source order.
         lines += [

@@ -143,7 +143,7 @@ def _header_name(line: str) -> str | None:
     @param line source line including or excluding its newline
     @return table path without brackets, or None for ordinary content
     """
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Match only TOML table headers and expose their normalized table name.
     matched = TABLE_HEADER.match(line.rstrip("\r\n"))
     return None if matched is None else matched.group(1).strip()
 
@@ -170,7 +170,7 @@ def _discipline_span(text: str) -> tuple[int, int] | None:
     for index, line in enumerate(lines):
         # The normalized table name is absent for ordinary content lines.
         name = _header_name(line)
-        # Use the absence path when start line has no available value.
+        # Start the replaceable span only at the exact root discipline table.
         if start_line is None:
             # Only the exact root discipline table begins the replaceable span.
             if name == DISCIPLINE_HEADER:
@@ -184,7 +184,7 @@ def _discipline_span(text: str) -> tuple[int, int] | None:
             end_line = index
             # Stop the scan once the decisive match has been established.
             break
-    # Use the absence path when start line has no available value.
+    # Report absence to the planner instead of inventing an insertion location.
     if start_line is None:
         # Absence is reported to the planner, which supplies the actionable diagnostic.
         return None
@@ -312,7 +312,7 @@ def _legacy_aliases(table: Mapping[str, object]) -> dict[str, str]:
         "adapters": "adapters",
         "shell": "shell",
     }
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Read the legacy layer-role mapping without coercing malformed table shapes.
     raw = table.get("layers", {})
     if not isinstance(raw, dict):
         # Preserve one stable explanation for a structurally unusable legacy layers value.
@@ -322,7 +322,7 @@ def _legacy_aliases(table: Mapping[str, object]) -> dict[str, str]:
     for segment, target in raw.items():
         # Translate legacy target vocabulary to the v4 canonical role name.
         role = ROLE_TARGETS.get(str(target))
-        # Use the absence path when role has no available value.
+        # Diagnose legacy layer targets that have no unambiguous v4 role mapping.
         if role is None:
             # Include both authored fields so the operator can repair the exact mapping.
             detail = f"legacy layer {segment!r} has unknown target {target!r}"
@@ -409,7 +409,7 @@ def _discover_roles(
             # Classify the source-root-relative module path through explicit segment aliases.
             relative = PurePosixPath(path.relative_to(absolute).as_posix())
             classified = _role_prefix(relative, aliases)
-            # Use the absence path when classified has no available value.
+            # Require every governed Python path to belong to exactly one inferred role prefix.
             if classified is None:
                 diagnostics.append(
                     Diagnostic(
@@ -485,7 +485,7 @@ def _contracts(document: Mapping[str, object]) -> Iterable[Mapping[str, object]]
     if not isinstance(importlinter, dict):
         # A scalar import-linter value cannot own contract records.
         return ()
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Read legacy import contracts without accepting a non-array declaration.
     raw = importlinter.get("contracts", [])
     if not isinstance(raw, list):
         # Non-list contracts are structurally unusable and contribute nothing inferred.
@@ -839,7 +839,7 @@ def plan(root: Path, unit: str | None) -> MigrationPlan:
     governed = root.resolve()
     project_file = governed / "pyproject.toml"
     before = project_file.read_bytes()
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Decode the exact reviewed project bytes before locating the replaceable declaration span.
     text = before.decode("utf-8")
     # Decode pyproject keys to TOML values; mapping key order is deliberately unused.
     document = tomllib.loads(text)
@@ -860,7 +860,7 @@ def plan(root: Path, unit: str | None) -> MigrationPlan:
 
     # Locate the only declaration span this migration is authorized to replace.
     span = _discipline_span(text)
-    # Use the absence path when span has no available value.
+    # Block migration when no exact legacy discipline table can be replaced safely.
     if span is None:
         diagnostics.append(
             Diagnostic(
@@ -955,7 +955,7 @@ def apply(migration: MigrationPlan) -> None:
     finally:
         # Temporary names remain possible only when publication failed before replacement.
         temporary = Path(temporary_name)
-        # Select the existing-artifact path only when `temporary.exists()` is satisfied.
+        # Remove the allocated sibling temporary file if atomic replacement did not consume it.
         if temporary.exists():
             # Remove only this explicitly allocated sibling temporary artifact.
             temporary.unlink()

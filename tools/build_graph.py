@@ -130,7 +130,7 @@ def _load(root: Path, warnings: list[str]) -> list[Document]:
     # Each documents element is one successfully parsed canonical document; lexical path order
     # is preserved.
     documents: list[Document] = []
-    # Process each candidate element in deterministic source order.
+    # Emit declared dependency edges in the author's front-matter order.
     for path in sorted((root / "discipline").rglob("*.md")):
         # Exclude the generated index before parsing authored corpus modules.
         if path.name == "INDEX.md":
@@ -138,7 +138,7 @@ def _load(root: Path, warnings: list[str]) -> list[Document]:
             continue
         try:
             documents.append(parse_document(path))
-        # Preserve the caught failure that explains why the external result is unusable.
+        # Downgrade one malformed module to a named warning while retaining the usable corpus.
         except ParseError as exc:
             warnings.append(f"unparsable {path.name}: {exc.reason}")
     return documents
@@ -228,10 +228,10 @@ def _module_edges(graph: Graph, doc: Document) -> None:
     """
     # Interpret relationship-bearing front matter once for all emitted module edges.
     front = doc.front_matter
-    # Process each candidate element in deterministic source order.
+    # Emit grounding edges separately so their relationship type remains explicit.
     for target in _as_list(front.get("requires")):
         graph.add_edge(Edge(EdgeType.REQUIRES, doc.doc_id, target))
-    # Process each candidate element in deterministic source order.
+    # Connect cross-references after enforcement edges, preserving their declared order.
     for target in _as_list(front.get("grounds_on")):
         graph.add_edge(Edge(EdgeType.GROUNDS_ON, doc.doc_id, target))
     for keyword in _as_list(front.get("load_when")):
@@ -273,7 +273,7 @@ def _rule_edges(graph: Graph, doc: Document, rule: object) -> None:
                  attrs=(("family", mechanism.split(":", 1)[0]),))
         )
         graph.add_edge(Edge(EdgeType.ENFORCED_BY, rule_id, node_id))
-    # Process each candidate element in deterministic source order.
+    # Add source nodes and grounding edges in provenance-row order.
     for target in rule.see:  # type: ignore[attr-defined]
         graph.add_edge(Edge(EdgeType.CITES, rule_id, target.split("#", 1)[0]))
     if rule.superseded_by:  # type: ignore[attr-defined]
@@ -302,8 +302,8 @@ def _add_terms(graph: Graph, documents: Sequence[Document]) -> None:
         if doc.doc_id != "meta/GLOSSARY":
             # Term headings in ordinary modules are prose, not glossary definitions.
             continue
-        # Preserve the optional pattern match that carries the reported analysis count.
-        # Process each candidate element in deterministic source order.
+        # Bind each body-ordered glossary match while preserving displayed term spelling.
+        # Extract each glossary definition in body order to preserve displayed spelling.
         for match in _TERM.finditer(doc.body):
             # Preserve displayed term text while normalizing only its graph identity.
             term = match.group("term").strip()
@@ -334,21 +334,21 @@ def _add_decisions(graph: Graph, root: Path) -> None:
     for name in ("CONFLICTS", "OPEN"):
         # Resolve this ledger name to its authored meta-document beneath the selected corpus.
         path = root / "discipline" / "meta" / f"{name}.md"
-        # Select the existing-artifact path only when `not path.exists()` is satisfied.
+        # Treat each decision ledger as optional because not every installation ships one.
         if not path.exists():
             # Optional absent ledgers add neither decisions nor warnings.
             continue
-        # Retain the immutable source representation consumed by subsequent analysis.
+        # Keep authored ledger text intact for both supported decision-row syntaxes.
         text = path.read_text(encoding="utf-8")
         # Map each decision identity to its heading label in source occurrence order.
         found: dict[str, str] = {}
-        # Preserve the optional pattern match that carries the reported analysis count.
-        # Process each candidate element in deterministic source order.
+        # Bind each heading match before its decision identity and label are recorded.
+        # Prefer heading-form decisions because they carry each decision's primary label.
         for match in _DECISION_HEADING.finditer(text):
             # Retain the parsed decision label under its stable authored identity.
             found[match.group("id")] = match.group("label").strip()
-        # Preserve the optional pattern match that carries the reported analysis count.
-        # Process each candidate element in deterministic source order.
+        # Bind each table-row match used to fill decisions absent from heading form.
+        # Fill identities found only in table rows without replacing heading-derived labels.
         for match in _DECISION_ROW.finditer(text):
             found.setdefault(match.group("id"), match.group("label").strip())
         for decision_id, label in sorted(found.items()):
@@ -374,14 +374,14 @@ def _add_sources(graph: Graph, root: Path) -> None:
     """
     # Locate the generated provenance view whose rows connect sources to doctrine targets.
     path = root / "discipline" / "meta" / "PROVENANCE.md"
-    # Select the existing-artifact path only when `not path.exists()` is satisfied.
+    # An installation without a generated provenance view contributes no source nodes.
     if not path.exists():
-        # Return the completed  add sources result to its caller.
+        # Leave the graph unchanged because no source-to-doctrine rows can be recovered.
         return
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Parse the generated provenance projection exactly as committed by its builder.
     text = path.read_text(encoding="utf-8")
-    # Preserve the optional pattern match that carries the reported analysis count.
-    # Process each candidate element in deterministic source order.
+    # Bind each contract-heading match used to derive an import trigger.
+    # Derive one trigger from each authored import-contract heading in configuration order.
     for match in _SOURCE_ROW.finditer(text):
         # Preserve the exact source tag that rules cite through grounding relations.
         tag = match.group("tag")
@@ -468,12 +468,12 @@ def _add_contract_triggers(graph: Graph, config: Path) -> None:
     @param graph the graph under construction
     @param config the import-linter configuration, skipped when absent
     """
-    # Select the existing-artifact path only when `not config.exists()` is satisfied.
+    # Skip import-contract triggers when the optional import-linter declaration is absent.
     if not config.exists():
-        # Return the completed  add contract triggers result to its caller.
+        # No import contract can contribute a graph trigger without its declaration.
         return
-    # Preserve the optional pattern match that carries the reported analysis count.
-    # Process each candidate element in deterministic source order.
+    # Bind each provenance-row match that contributes a source node and grounding edge.
+    # Visit authored modules in lexical path order so graph construction is reproducible.
     for match in _CONTRACT_NAME.finditer(config.read_text(encoding="utf-8")):
         # The captured name is the authored contract heading used to derive its trigger label.
         name = match.group("name")
@@ -507,9 +507,9 @@ def _add_signal_triggers(graph: Graph, config: Path) -> None:
     @param graph the graph under construction
     @param config the signal table, skipped when absent
     """
-    # Select the existing-artifact path only when `not config.exists()` is satisfied.
+    # Skip signal triggers when the optional signal table is absent.
     if not config.exists():
-        # Return the completed  add signal triggers result to its caller.
+        # No signal relationship is inferable without the declared table.
         return
     document = tomllib.loads(config.read_text(encoding="utf-8"))
     for entry in document.get("signal", []):
@@ -539,9 +539,9 @@ def _add_ruff_triggers(graph: Graph, pyproject: Path) -> None:
     @param graph the graph under construction
     @param pyproject the enforcement template, skipped when absent
     """
-    # Select the existing-artifact path only when `not pyproject.exists()` is satisfied.
+    # Skip lint-selection triggers when the enforcement template is absent.
     if not pyproject.exists():
-        # Return the completed  add ruff triggers result to its caller.
+        # No Ruff selection can contribute a trigger without the template.
         return
     for line in pyproject.read_text(encoding="utf-8").splitlines():
         # Ignore unannotated TOML because it carries no discipline relationship metadata.
@@ -598,10 +598,10 @@ def _add_declared(graph: Graph, root: Path, warnings: list[str]) -> None:
     """
     # Locate the optional authored edge supplement beneath the selected corpus.
     path = root / "discipline" / "meta" / "edges.yaml"
-    # Select the existing-artifact path only when `not path.exists()` is satisfied.
+    # Report an absent edge supplement as a degraded, empty declared layer.
     if not path.exists():
         warnings.append("no discipline/meta/edges.yaml; declared layer is empty")
-        # Return the completed  add declared result to its caller.
+        # Preserve the inferred graph while omitting only unavailable declared edges.
         return
     spec = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     _add_declared_layers(graph, spec)
@@ -792,7 +792,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # Select the canonical generated graph artifact compared or replaced by this command.
     target = root / "discipline" / "graph.json"
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Render once so staleness comparison and publication use identical graph bytes.
     text = render(graph)
     stale = not target.exists() or target.read_text(encoding="utf-8") != text
 
