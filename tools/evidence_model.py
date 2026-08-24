@@ -187,7 +187,7 @@ class VerificationState(StrEnum):
 
         @return true only when no structured judgment remains in the strategy
         """
-        # Return true only when no structured judgment remains in the strategy to the caller.
+        # Treat every machine-executed verifier state as automated, including mixed tools.
         return self in {
             VerificationState.LOCAL_VERIFIER,
             VerificationState.EXTERNAL_VERIFIER,
@@ -237,7 +237,7 @@ class Strategy:
 
         @return false only for a structured review
         """
-        # Return false only for a structured review to the caller.
+        # Structured review alone requires human judgment; every other kind executes mechanically.
         return self.kind is not MechanismKind.STRUCTURED_REVIEW
 
 
@@ -352,9 +352,9 @@ class EvidenceParseError(ValueError):
         @param where JSON path or file carrying the invalid value
         @param detail violated structural requirement
         """
-        # Update   init   state only after the required source facts are available.
+        # Retain the structured JSON path independently of the formatted exception message.
         self.where = where
-        # Update   init   state only after the required source facts are available.
+        # Retain the violated requirement for callers that need machine-readable detail.
         self.detail = detail
         super().__init__(f"{where}: {detail}")
 
@@ -366,35 +366,30 @@ def load_evidence(path: Path = EVIDENCE_PATH) -> EvidenceRegistry:
     @return a typed registry whose nested fields are all present and recognized
     @throws EvidenceParseError when JSON or any field violates the schema
     """
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Translate filesystem and JSON failures into the registry's stable structural error type.
     try:
-        # Retain the immutable source representation consumed by subsequent analysis.
+        # Decode without narrowing so every schema assumption remains explicit below.
         raw: object = json.loads(path.read_text(encoding="utf-8"))
-    # Bind problem to the current value used by the next load evidence decision.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
+    # Preserve the originating read or decoder failure as the exception cause.
     except (OSError, json.JSONDecodeError) as problem:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Localize the failure to the registry file before crossing the parser boundary.
         raise EvidenceParseError(str(path), str(problem)) from problem
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Narrow the document root before any keyed schema access.
     root = _mapping(raw, "registry")
     _exact_fields(root, {"schema_version", "rules"}, "registry")
-    # Compute version using  integer for later load evidence logic.
     version = _integer(root["schema_version"], "registry.schema_version")
-    # Select the guarded path only after `version != 1` is satisfied.
+    # Reject unknown schema versions rather than interpreting them with v1 semantics.
     if version != 1:
         _invalid("registry.schema_version", f"expected 1, got {version}")
-    # Compute raw rules using  mapping for later load evidence logic.
     raw_rules = _mapping(root["rules"], "registry.rules")
-    # Treat parsed as mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Treat parsed as mapping elements whose keys are stable rule ids and whose values are typed
+    # evidence records; authored key order is preserved for deterministic diagnostics.
     parsed: dict[str, RuleEvidence] = {}
-    # Treat the current rule id, value as the candidate element consumed by the enclosing
-    # Details: transformation.
-    # Process each candidate element in deterministic source order.
+    # Parse each authored rule record under a path retaining its stable id.
     for rule_id, value in raw_rules.items():
-        # Update load evidence state only after the required source facts are available.
+        # Store the typed record under the same id used by normative joins.
         parsed[rule_id] = _rule_evidence(rule_id, value)
-    # Return a typed registry whose nested fields are all present and recognized to the caller.
+    # Publish a registry only after every nested record has validated.
     return EvidenceRegistry(schema_version=version, rules=parsed)
 
 
@@ -405,35 +400,30 @@ def load_observations(path: Path = OBSERVATIONS_PATH) -> ObservationRegistry:
     @return typed observations addressable by stable evidence id
     @throws EvidenceParseError when JSON or a field violates the contract
     """
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Translate filesystem and JSON failures into the observation registry's stable error type.
     try:
-        # Retain the immutable source representation consumed by subsequent analysis.
+        # Decode without narrowing so all observation schema assumptions remain explicit.
         raw: object = json.loads(path.read_text(encoding="utf-8"))
-    # Bind problem to the current value used by the next load observations decision.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
+    # Preserve the originating read or decoder failure as the exception cause.
     except (OSError, json.JSONDecodeError) as problem:
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Localize the failure to the observation file before crossing the parser boundary.
         raise EvidenceParseError(str(path), str(problem)) from problem
-    # Resolve the repository-confined path used by this operation before filesystem access.
+    # Narrow the document root before keyed schema access.
     root = _mapping(raw, "observations")
     _exact_fields(root, {"schema_version", "observations"}, "observations")
-    # Compute version using  integer for later load observations logic.
     version = _integer(root["schema_version"], "observations.schema_version")
-    # Select the guarded path only after `version != 1` is satisfied.
+    # Reject unknown schema versions rather than interpreting them with v1 semantics.
     if version != 1:
         _invalid("observations.schema_version", f"expected 1, got {version}")
     # Preserve records element values in deterministic source order.
     records = _mapping(root["observations"], "observations.observations")
-    # Treat parsed as mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Map each stable observation id to its typed record in authored order.
     parsed: dict[str, FieldObservation] = {}
-    # Treat the current observation id, value as the candidate element consumed by the enclosing
-    # Details: transformation.
-    # Process each candidate element in deterministic source order.
+    # Validate each observation independently while retaining its registry key in diagnostics.
     for observation_id, value in records.items():
-        # Update load observations state only after the required source facts are available.
+        # Store the typed observation under the same id referenced by rule evidence.
         parsed[observation_id] = _field_observation(observation_id, value)
-    # Return typed observations addressable by stable evidence id to the caller.
+    # Publish the observation registry only after all references are structurally usable.
     return ObservationRegistry(schema_version=version, observations=parsed)
 
 
@@ -444,15 +434,12 @@ def _field_observation(observation_id: str, value: object) -> FieldObservation:
     @param value untrusted JSON value beneath that key
     @return typed observation
     """
-    # Derive where from f"observations.{observation_id}" for the next  field observation
-    # Details: decision.
+    # Build the diagnostic prefix once so every nested failure names the same record.
     where = f"observations.{observation_id}"
-    # Use the absence path when  OBSERVATION ID.fullmatch(observation id) has no available
-    # Details: value.
+    # Enforce the versioned observation-id grammar before parsing its body.
     if _OBSERVATION_ID.fullmatch(observation_id) is None:
         _invalid(where, "expected V<major>E-NNN")
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Narrow the record before exact-field validation and member access.
     record = _mapping(value, where)
     _exact_fields(
         record,
@@ -467,18 +454,18 @@ def _field_observation(observation_id: str, value: object) -> FieldObservation:
         },
         where,
     )
-    # Compute locations using  strings for later field observation logic.
+    # Preserve each authored evidence location in declaration order.
     locations = _strings(record["observed_in"], f"{where}.observed_in")
-    # Select the empty-or-disabled path when locations has no usable value.
+    # A field observation without any resolvable location cannot support an audit.
     if not locations:
         _invalid(f"{where}.observed_in", "at least one evidence location is required")
-    # Compute reproduction using record["reproduction"] for later field observation logic.
+    # Preserve explicit null as the distinction between observed and reproducible evidence.
     reproduction = record["reproduction"]
-    # Use the available-value path only when reproduction is present.
+    # Validate reproduction text only when the author claims one exists.
     if reproduction is not None:
-        # Compute reproduction using  nonempty for later field observation logic.
+        # Narrow the optional value to a non-empty command or procedure.
         reproduction = _nonempty(reproduction, f"{where}.reproduction")
-    # Return typed observation to the caller.
+    # Assemble the immutable observation after every member has been validated.
     return FieldObservation(
         observation_id=observation_id,
         classification=_enum(
@@ -503,10 +490,9 @@ def _rule_evidence(rule_id: str, value: object) -> RuleEvidence:
     @return the typed record
     @throws EvidenceParseError when the record is incomplete or malformed
     """
-    # Compute where using f"rules.{rule_id}" for later rule evidence logic.
+    # Build one diagnostic prefix tying every nested error to the normative rule id.
     where = f"rules.{rule_id}"
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Narrow the record before exact-field validation and member access.
     record = _mapping(value, where)
     _exact_fields(
         record,
@@ -521,36 +507,33 @@ def _rule_evidence(rule_id: str, value: object) -> RuleEvidence:
         },
         where,
     )
-    # Treat the current units, index, item as the candidate element consumed by the enclosing
-    # Details: transformation.
+    # Preserve each governed unit in authored order while validating the controlled vocabulary.
     units = tuple(
+        # Each indexed item becomes one UnitKind with its exact JSON path retained on failure.
         _enum(UnitKind, item, f"{where}.units[{index}]")
         for index, item in enumerate(_sequence(record["units"], f"{where}.units"))
     )
-    # Select the empty-or-disabled path when units has no usable value.
+    # Evidence must state whether the rule governs applications, components, or both.
     if not units:
         _invalid(f"{where}.units", "at least one governed unit is required")
-    # Compute capabilities using  strings for later rule evidence logic.
+    # Preserve capability names in authored order for later scope validation.
     capabilities = _strings(record["capabilities"], f"{where}.capabilities")
     # Each invalid element is one capability name rejected by the grammar; declaration order is
     # preserved for the error.
     invalid = [name for name in capabilities if _CAPABILITY.fullmatch(name) is None]
-    # Handle the non-empty or enabled invalid state.
     if invalid:
         _invalid(f"{where}.capabilities", f"invalid name {invalid[0]!r}")
-    # Treat the current warrants, index, item as the candidate element consumed by the enclosing
-    # Details: transformation.
+    # Parse source warrants in authored order because their sequence is review-significant.
     warrants = tuple(
         _warrant(item, f"{where}.warrants[{index}]")
         for index, item in enumerate(_sequence(record["warrants"], f"{where}.warrants"))
     )
-    # Treat the current strategies, index, item as the candidate element consumed by the
-    # Details: enclosing transformation.
+    # Parse verification strategies in authored order for deterministic joins and publication.
     strategies = tuple(
         _strategy(item, f"{where}.strategies[{index}]")
         for index, item in enumerate(_sequence(record["strategies"], f"{where}.strategies"))
     )
-    # Return the typed record to the caller.
+    # Assemble the immutable rule record only after all nested structures validate.
     return RuleEvidence(
         rule_id=rule_id,
         units=units,
@@ -570,11 +553,10 @@ def _warrant(value: object, where: str) -> Warrant:
     @param where diagnostic path of that value
     @return the typed warrant
     """
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Narrow the warrant object before enforcing its complete field set.
     record = _mapping(value, where)
     _exact_fields(record, {"source", "relation", "confidence"}, where)
-    # Return the typed warrant to the caller.
+    # Assemble the warrant while validating its source and controlled vocabularies.
     return Warrant(
         source=_nonempty(record["source"], f"{where}.source"),
         relation=_enum(WarrantRelation, record["relation"], f"{where}.relation"),
@@ -589,8 +571,7 @@ def _strategy(value: object, where: str) -> Strategy:
     @param where diagnostic path of that value
     @return the typed strategy
     """
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Narrow the strategy object before enforcing its complete field set.
     record = _mapping(value, where)
     _exact_fields(
         record,
@@ -607,18 +588,18 @@ def _strategy(value: object, where: str) -> Strategy:
         },
         where,
     )
-    # Compute rejected using record["must_reject"] for later strategy logic.
+    # Preserve explicit null for structured reviews that have no executable rejection fixture.
     rejected = record["must_reject"]
-    # Use the available-value path only when rejected is present.
+    # Automated rejection text, when present, must identify a non-empty witness.
     if rejected is not None:
-        # Compute rejected using  nonempty for later strategy logic.
+        # Narrow the optional rejection marker before constructing the strategy.
         rejected = _nonempty(rejected, f"{where}.must_reject")
-    # Compute platforms using  strings for later strategy logic.
+    # Preserve supported platform ids in declaration order.
     platforms = _strings(record["platforms"], f"{where}.platforms")
-    # Select the empty-or-disabled path when platforms has no usable value.
+    # Every verification strategy must declare at least one supported execution platform.
     if not platforms:
         _invalid(f"{where}.platforms", "at least one platform is required")
-    # Return the typed strategy to the caller.
+    # Assemble the immutable strategy after its proposition, witness, and scope validate.
     return Strategy(
         mechanism=_nonempty(record["mechanism"], f"{where}.mechanism"),
         kind=_enum(MechanismKind, record["kind"], f"{where}.kind"),
@@ -639,11 +620,10 @@ def _migration(value: object, where: str) -> Migration:
     @param where diagnostic path of that value
     @return the typed migration
     """
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Narrow the migration object before enforcing its complete historical fields.
     record = _mapping(value, where)
     _exact_fields(record, {"source", "disposition", "guidance"}, where)
-    # Return the typed migration to the caller.
+    # Assemble the stable-id history after its controlled disposition validates.
     return Migration(
         source=_nonempty(record["source"], f"{where}.source"),
         disposition=_enum(MigrationDisposition, record["disposition"], f"{where}.disposition"),
@@ -667,29 +647,29 @@ def validate_evidence(
     @param observation_ids resolvable field-evidence ids, when the registry is available
     @return every mismatch in stable rule-id order
     """
-    # Treat normative as mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Treat normative as mapping elements whose keys are stable rule ids and whose values are
+    # canonical Rule records; input order is preserved but set joins below define comparison order.
     normative = {rule.rule_id: rule for rule in rules}
-    # Each findings element is one emitted diagnostic mapping; checker order is preserved.
+    # Each findings element is one cross-record mismatch; sorted rule-id order is preserved.
     findings = [
         EvidenceFinding("E001", rule_id, "rule has no evidence record")
+        # Each missing normative id contributes exactly one absent-evidence finding.
         for rule_id in sorted(normative.keys() - registry.rules.keys())
     ]
-    # Bind rule id to the current value used by the next validate evidence decision.
+    # Add orphan evidence records after missing records to keep diagnostic categories stable.
     findings.extend(
         EvidenceFinding("E002", rule_id, "evidence names no normative rule")
+        # Each orphan registry id contributes exactly one absent-rule finding.
         for rule_id in sorted(registry.rules.keys() - normative.keys())
     )
-    # Select rule id as the current element from sorted(normative.keys() &
-    # Details: registry.rules.keys()) while validate evidence preserves traversal order.
-    # Process each candidate element in deterministic source order.
+    # Validate only ids present on both sides after reporting each unmatched side.
     for rule_id in sorted(normative.keys() & registry.rules.keys()):
-        # Compute rule using normative[rule_id] for later validate evidence logic.
+        # Select the canonical heading for this joined stable id.
         rule = normative[rule_id]
-        # Compute evidence using registry.rules[rule_id] for later validate evidence logic.
+        # Select its authored evidence record from the same joined stable id.
         evidence = registry.rules[rule_id]
         findings.extend(_validate_record(rule, evidence, discriminated, observation_ids))
-    # Return every mismatch in stable rule-id order to the caller.
+    # Return all mismatches instead of truncating the evidence audit at first failure.
     return findings
 
 
@@ -707,18 +687,17 @@ def _validate_record(
     @param observation_ids resolvable field-evidence ids, or None when unavailable
     @return semantic mismatches for this pair
     """
-    # Each findings element is one emitted diagnostic mapping; checker order is preserved.
+    # Each findings element is one mismatch for this rule; validation order is preserved.
     findings: list[EvidenceFinding] = []
-    # Select the empty-or-disabled path when evidence.warrants has no usable value.
+    # Every active or historical rule requires at least one source relationship.
     if not evidence.warrants:
         findings.append(EvidenceFinding("E003", rule.rule_id, "rule names no warrant"))
     findings.extend(_unresolved_observations(evidence, observation_ids))
-    # Compute declared using Counter for later validate record logic.
+    # Count heading mechanisms so duplicate declarations remain semantically visible.
     declared = Counter(rule.mechanisms)
-    # Select evidenced, strategy as the current element from evidence.strategies) while
-    # Details: validate record preserves traversal order.
+    # Count evidence strategies by mechanism so multiplicity must match the heading exactly.
     evidenced = Counter(strategy.mechanism for strategy in evidence.strategies)
-    # Select the guarded path only after `declared != evidenced` is satisfied.
+    # Reject missing, extra, or duplicated strategy mechanisms as the same join mismatch.
     if declared != evidenced:
         findings.append(
             EvidenceFinding(
@@ -726,28 +705,22 @@ def _validate_record(
                 rule.rule_id,
                 f"strategy mechanisms {dict(evidenced)} do not match heading {dict(declared)}",
             )
-        )
+    )
     findings.extend(_retirement_findings(rule, evidence))
-    # Select strategy as the current element from evidence.strategies while  validate record
-    # Details: preserves traversal order.
-    # Process each candidate element in deterministic source order.
+    # Validate every strategy independently so one rule can expose all evidence defects.
     for strategy in evidence.strategies:
-        # Use the absence path when strategy.is automated and strategy.must reject has no
-        # Details: available value.
+        # Automated mechanisms require a declared negative witness.
         if strategy.is_automated and strategy.must_reject is None:
             findings.append(
                 EvidenceFinding(
                     "E008", rule.rule_id, f"{strategy.mechanism} has no must-reject case"
                 )
             )
-        # Use the available-value path only when strategy.is automated and strategy.must reject
-        # Details: is present.
+        # When present, an automated witness must resolve to this exact rule/mechanism pair.
         if strategy.is_automated and strategy.must_reject is not None:
-            # Derive expected marker from f"discrimination:{rule.rule_id}/{strategy.mechanism}"
-            # Details: for the next  validate record decision.
+            # Derive the only admissible marker from the joined identity.
             expected_marker = f"discrimination:{rule.rule_id}/{strategy.mechanism}"
-            # Select the guarded path only after `strategy.must_reject != expected_marker` is
-            # Details: satisfied.
+            # Reject markers that could lend another mechanism's observation as evidence.
             if strategy.must_reject != expected_marker:
                 findings.append(
                     EvidenceFinding(
@@ -756,10 +729,9 @@ def _validate_record(
                         f"{strategy.mechanism} must-reject marker is not {expected_marker!r}",
                     )
                 )
-        # Bind placeholder to the current value used by the next  validate record decision.
-        # Select the guarded path only after `strategy.is_automated and any((placeholder in
-        # Details: strategy.proposition for placeholder in _VAGUE_PROPOSITION))` is satisfied.
+        # Generated placeholder prose is not an observable verification proposition.
         if strategy.is_automated and any(
+            # Each placeholder is one forbidden generic phrase searched within the proposition.
             placeholder in strategy.proposition for placeholder in _VAGUE_PROPOSITION
         ):
             findings.append(
@@ -779,9 +751,9 @@ def _validate_record(
                     "E009", rule.rule_id, f"{strategy.mechanism} is not witnessed rejecting"
                 )
             )
-        # Compute expected using  expected kind for later validate record logic.
+        # Resolve mechanism-tag grammar to the evidence kinds it can honestly support.
         expected = _expected_kind(strategy.mechanism)
-        # Select the guarded path only after `strategy.kind not in expected` is satisfied.
+        # Reject a kind that overstates or contradicts how the mechanism executes.
         if strategy.kind not in expected:
             findings.append(
                 EvidenceFinding(
@@ -790,7 +762,7 @@ def _validate_record(
                     f"{strategy.mechanism} cannot use kind {strategy.kind}",
                 )
             )
-    # Return semantic mismatches for this pair to the caller.
+    # Return the complete per-rule mismatch set in validation order.
     return findings
 
 
@@ -810,7 +782,7 @@ def _strategy_witnessed(
     @param discriminated exact pairs
     @return whether rejection credit resolves
     """
-    # Return whether rejection credit resolves to the caller.
+    # Require the exact pair; rule-only coverage cannot certify sibling strategies.
     return (rule_id, mechanism) in discriminated
 
 
@@ -821,36 +793,32 @@ def _retirement_findings(rule: Rule, evidence: RuleEvidence) -> list[EvidenceFin
     @param evidence migration and strategy record joined to that heading
     @return every retirement/supersession mismatch
     """
-    # Derive disposition from evidence.migration.disposition for the next  retirement findings
-    # Details: decision.
+    # Read historical disposition once for all force and successor consistency checks.
     disposition = evidence.migration.disposition
-    # Compute retired using disposition in { for later retirement findings logic.
+    # Collapse all inactive dispositions to the retirement truth required by the heading.
     retired = disposition in {
         MigrationDisposition.SUPERSEDED,
         MigrationDisposition.CONSOLIDATED,
         MigrationDisposition.RETIRED,
     }
-    # Each findings element is one emitted diagnostic mapping; checker order is preserved.
+    # Each findings element is one history inconsistency; check order is preserved.
     findings: list[EvidenceFinding] = []
-    # Select the guarded path only after `retired and evidence.strategies` is satisfied.
+    # Inactive rules cannot retain verification strategies for current behavior.
     if retired and evidence.strategies:
         findings.append(EvidenceFinding("E005", rule.rule_id, "retired rule has strategies"))
-    # Select the guarded path only after `retired is not (rule.force is Force.RETIRED)` is
-    # Details: satisfied.
+    # Migration disposition and normative force must agree on whether the rule is active.
     if retired is not (rule.force is Force.RETIRED):
         findings.append(
             EvidenceFinding(
                 "E006", rule.rule_id, "retired force and migration disposition disagree"
             )
         )
-    # Select the guarded path only after `rule.superseded_by is not None and (not retired)` is
-    # Details: satisfied.
+    # A heading naming a successor must have an inactive historical disposition.
     if rule.superseded_by is not None and not retired:
         findings.append(
             EvidenceFinding("E006", rule.rule_id, "heading has a successor but migration is active")
         )
-    # Select the guarded path only after `rule.superseded_by is None and disposition in
-    # Details: {MigrationDisposition.SUPERSEDED, MigrationDisposition.CONSOLIDATED}` is satisfied.
+    # Replacement dispositions require the heading to identify what superseded this rule.
     if rule.superseded_by is None and disposition in {
         MigrationDisposition.SUPERSEDED,
         MigrationDisposition.CONSOLIDATED,
@@ -858,7 +826,7 @@ def _retirement_findings(rule: Rule, evidence: RuleEvidence) -> list[EvidenceFin
         findings.append(
             EvidenceFinding("E007", rule.rule_id, "replacement disposition names no successor")
         )
-    # Return every retirement/supersession mismatch to the caller.
+    # Return every independently actionable historical mismatch.
     return findings
 
 
@@ -871,14 +839,14 @@ def _unresolved_observations(
     @param observation_ids complete resolvable ID set, or None for legacy callers
     @return one finding per unresolved reference
     """
-    # Use the absence path when observation ids has no available value.
+    # Legacy callers that supplied no registry cannot support a resolution claim.
     if observation_ids is None:
-        # Return one finding per unresolved reference to the caller.
+        # Preserve backward compatibility by declining the optional cross-registry check.
         return []
-    # Bind observation to the current value used by the next  unresolved observations decision.
-    # Return one finding per unresolved reference to the caller.
+    # Emit one stable mismatch for each authored reference absent from the registry.
     return [
         EvidenceFinding("E011", evidence.rule_id, f"observation {observation} does not resolve")
+        # Each referenced observation id is checked without reordering authored evidence.
         for observation in evidence.observations
         if observation not in observation_ids
     ]
@@ -894,57 +862,47 @@ def verification_state(
     @param root repository against which local mechanisms are located
     @return the honest strategy state
     """
-    # Select the guarded path only after `evidence.migration.disposition in
-    # Details: {MigrationDisposition.SUPERSEDED, MigrationDisposition.CONSOLIDATED,
-    # Details: MigrationDisposition.RETIRED}` is satisfied.
+    # Historical disposition dominates every active-strategy classification.
     if evidence.migration.disposition in {
         MigrationDisposition.SUPERSEDED,
         MigrationDisposition.CONSOLIDATED,
         MigrationDisposition.RETIRED,
     }:
-        # Compute state using VerificationState.RETIRED for later verification state logic.
+        # Represent inactive stable ids without implying any current verifier.
         state = VerificationState.RETIRED
-    # Select the empty-or-disabled path when evidence.strategies has no usable value.
+    # Active evidence with no strategy has not declared how the rule is verified.
     elif not evidence.strategies:
-        # Derive state from VerificationState.UNDECLARED for the next verification state
-        # Details: decision.
+        # Distinguish missing strategy declaration from a named but absent implementation.
         state = VerificationState.UNDECLARED
-    # Bind strategy to the current value used by the next verification state decision.
-    # Select the guarded path only after `any((mechanism_is_implemented(strategy.mechanism,
-    # Details: root, rule.rule_id) is False for strategy in evidence.strategies))` is satisfied.
+    # A named local mechanism absent from the repository makes the strategy unbuilt.
     elif any(
+        # Each strategy must resolve against its own rule id and repository root.
         mechanism_is_implemented(strategy.mechanism, root, rule.rule_id) is False
         for strategy in evidence.strategies
     ):
-        # Compute state using VerificationState.UNBUILT for later verification state logic.
+        # Do not infer partial availability when any required verifier is absent.
         state = VerificationState.UNBUILT
     else:
         # Collect unique kinds element values; their order is deliberately unordered.
         kinds = {strategy.kind for strategy in evidence.strategies}
-        # Select the guarded path only after `kinds == {MechanismKind.STRUCTURED_REVIEW}` is
-        # Details: satisfied.
+        # Purely human judgment remains distinct from every executable verifier state.
         if kinds == {MechanismKind.STRUCTURED_REVIEW}:
-            # Derive state from VerificationState.STRUCTURED_REVIEW for the next verification
-            # Details: state decision.
+            # Record the human-only classification selected by the homogeneous kind set.
             state = VerificationState.STRUCTURED_REVIEW
-        # Select the guarded path only after `MechanismKind.STRUCTURED_REVIEW in kinds or
-        # Details: (MechanismKind.TOOL in kinds and len(kinds) > 1)` is satisfied.
+        # Mixed review or multiple executable classes require an aggregate presentation.
         elif MechanismKind.STRUCTURED_REVIEW in kinds or (
             MechanismKind.TOOL in kinds and len(kinds) > 1
         ):
-            # Derive state from VerificationState.MIXED_VERIFIERS for the next verification
-            # Details: state decision.
+            # Record that no single verifier class describes the combined strategy set.
             state = VerificationState.MIXED_VERIFIERS
-        # Select the guarded path only after `kinds == {MechanismKind.TOOL}` is satisfied.
+        # A homogeneous tool-only strategy is externally delegated.
         elif kinds == {MechanismKind.TOOL}:
-            # Derive state from VerificationState.EXTERNAL_VERIFIER for the next verification
-            # Details: state decision.
+            # Record external delegation without implying that the tool ran successfully.
             state = VerificationState.EXTERNAL_VERIFIER
         else:
-            # Derive state from VerificationState.LOCAL_VERIFIER for the next verification state
-            # Details: decision.
+            # Remaining implemented check and fitness strategies execute inside the repository.
             state = VerificationState.LOCAL_VERIFIER
-    # Return the honest strategy state to the caller.
+    # Return the classified availability without claiming the verifier passed this run.
     return state
 
 
@@ -959,41 +917,41 @@ def _discrimination_value(root: Path, getter_name: str) -> object | None:
     @param getter_name zero-argument matrix function to invoke
     @return the returned value, or None when the matrix cannot be trusted
     """
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Resolve the matrix from the requested repository rather than the caller's import path.
     source = root / "enforce" / "discrimination.py"
-    # Select the regular-file path only when `not source.is_file()` is satisfied.
+    # Absence means this repository publishes no trustworthy discrimination matrix.
     if not source.is_file():
-        # Return the returned value, or None when the matrix cannot be trusted to the caller.
+        # Preserve None as distinct from a valid matrix that covers nothing.
         return None
-    # Derive spec from importlib.util.spec from file location for the next  discrimination value
-    # Details: decision.
+    # Build an isolated module specification tied to the repository-local source file.
     spec = importlib.util.spec_from_file_location("_discipline_discrimination", source)
-    # Use the absence path when spec is None or spec.loader has no available value.
+    # A missing specification or loader makes the matrix unexecutable.
     if spec is None or spec.loader is None:
-        # Return the returned value, or None when the matrix cannot be trusted to the caller.
+        # Decline evidence rather than falling back to an ambient module.
         return None
-    # Derive discrimination from importlib.util.module from spec for the next  discrimination
-    # Details: value decision.
+    # Instantiate the isolated module before registering it for dataclass resolution.
     discrimination = importlib.util.module_from_spec(spec)
     # ``dataclass(slots=True)`` resolves the defining module during execution.
     sys.modules[spec.name] = discrimination
+    # Treat authored matrix execution as untrusted evidence and always clear module state.
     try:
         spec.loader.exec_module(discrimination)
-        # Compute getter using getattr for later discrimination value logic.
+        # Resolve only the zero-argument evidence getter requested by the caller.
         getter: object = getattr(discrimination, getter_name, None)
-        # Select the empty-or-disabled path when callable(getter) has no usable value.
+        # A missing or non-callable getter indicates an incompatible matrix surface.
         if not callable(getter):
-            # Return the returned value, or None when the matrix cannot be trusted to the
-            # Details: caller.
+            # Decline the incompatible evidence API without guessing a fallback.
             return None
-        # Preserve the completed operation outcome for validation and publication.
+        # Invoke the validated getter while the repository-local module remains registered.
         result: object = getter()
-    # Translate the expected failure into this mechanism's stable diagnostic path.
+    # Any authored-code failure makes the matrix untrustworthy as evidence.
     except Exception:  # ruff: ignore[blind-except] - authored matrix is input
-        # Return the returned value, or None when the matrix cannot be trusted to the caller.
+        # Collapse execution defects to unavailable evidence at this query boundary.
         return None
     finally:
+        # Remove the temporary module so later repositories cannot reuse its definitions.
         sys.modules.pop(spec.name, None)
+    # Return the opaque value for caller-specific structural validation.
     return result
 
 
@@ -1006,18 +964,15 @@ def discrimination_covered(root: Path = REPO_ROOT) -> frozenset[str] | None:
     @param root repository whose matrix supplies the evidence
     @return witnessed stable ids, or None when the matrix is absent or malformed
     """
-    # Preserve the completed operation outcome for validation and publication.
+    # Ask the repository-local matrix for its covered rule-id set.
     result = _discrimination_value(root, "covered")
-    # Treat the current item as the candidate element consumed by the enclosing transformation.
-    # Select the empty-or-disabled path when isinstance(result, (set, frozenset)) or not
-    # Details: all((isinstance(item, str) for item in result)) has no usable value.
+    # Require a set-like collection containing only stable textual ids.
     if not isinstance(result, (set, frozenset)) or not all(
         isinstance(item, str) for item in result
     ):
-        # Return witnessed stable ids, or None when the matrix is absent or malformed to the
-        # Details: caller.
+        # Treat malformed and unavailable matrices identically as untrusted evidence.
         return None
-    # Return witnessed stable ids, or None when the matrix is absent or malformed to the caller.
+    # Freeze a valid result so callers cannot mutate evidence returned by authored code.
     return frozenset(result)
 
 
@@ -1034,74 +989,67 @@ def discrimination_witnesses(
     @param root repository whose matrix supplies the evidence
     @return exact pairs, or None for an absent, legacy, or malformed matrix
     """
-    # Preserve the completed operation outcome for validation and publication.
+    # Ask the repository-local matrix for raw rule/mechanism witness pairs.
     result = _discrimination_value(root, "covered_strategies")
-    # Select the empty-or-disabled path when isinstance(result, (set, frozenset)) has no usable
-    # Details: value.
+    # Exact strategy resolution starts only from a set-like matrix result.
     if not isinstance(result, (set, frozenset)):
-        # Return exact pairs, or None for an absent, legacy, or malformed matrix to the caller.
+        # Reject legacy or malformed getter values without coercion.
         return None
     # Collect unique raw element values; their order is deliberately unordered.
     raw: set[DiscriminationWitness] = set()
-    # Treat the current item as the candidate element consumed by the enclosing transformation.
-    # Process each candidate element in deterministic source order.
     for item in result:
-        # Bind part to the current value used by the next discrimination witnesses decision.
-        # Reject witness entries unless they are fixed two-string tuples.
+        # Require every raw witness to be a two-part tuple of strings.
         if not (
             isinstance(item, tuple)
             and len(item) == _WITNESS_PARTS
             and all(isinstance(part, str) for part in item)
         ):
-            # Return exact pairs, or None for an absent, legacy, or malformed matrix to the
-            # Details: caller.
+            # One malformed witness invalidates the matrix as a whole.
             return None
         raw.add(item)
 
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Join raw entries to the same repository's evidence declarations.
     try:
-        # Compute registry using load evidence for later discrimination witnesses logic.
+        # Load exact automated strategies from the repository under inspection.
         registry = load_evidence(root / "discipline" / "meta" / "evidence.json")
-    # Translate the expected failure into this mechanism's stable diagnostic path.
+    # Missing or malformed evidence prevents trustworthy mechanism attribution.
     except (EvidenceParseError, OSError):
-        # Return exact pairs, or None for an absent, legacy, or malformed matrix to the caller.
+        # Decline all strategy witnesses rather than using an ambient registry.
         return None
-    # Treat automated as mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Treat automated as mapping elements whose keys are stable rule ids and whose values are
+    # mechanism tuples in evidence order; key order is preserved but not semantically significant.
     automated = {
+        # Each tuple contains only automated mechanism names declared for that rule.
         rule_id: tuple(
+            # Each strategy contributes its exact tag only when machine-executed.
             strategy.mechanism for strategy in record.strategies if strategy.is_automated
         )
+        # Each evidence record establishes one rule's admissible candidates.
         for rule_id, record in registry.rules.items()
     }
     # Collect unique witnesses element values; their order is deliberately unordered.
     witnesses: set[DiscriminationWitness] = set()
-    # Select mechanism, rule id as the current element from raw while discrimination witnesses
-    # Details: preserves traversal order.
-    # Process each candidate element in deterministic source order.
     for rule_id, mechanism in raw:
-        # Compute candidates using automated.get for later discrimination witnesses logic.
+        # Resolve the raw entry against automated candidates declared for the same rule.
         candidates = automated.get(rule_id, ())
-        # Select the empty-or-disabled path when candidates has no usable value.
+        # Ignore retired and review-only rules that expose no current automated strategy.
         if not candidates:
-            # Advance after the current candidate has been conclusively excluded.
+            # Continue resolving independent active entries.
             continue
-        # Handle the non-empty or enabled mechanism state.
+        # Explicit mechanism attribution must match the joined evidence record.
         if mechanism:
-            # Select the guarded path only after `mechanism not in candidates` is satisfied.
+            # Reject stale and cross-rule mechanism names.
             if mechanism not in candidates:
-                # Return exact pairs, or None for an absent, legacy, or malformed matrix to the
-                # Details: caller.
+                # One false attribution invalidates all evidence from this matrix.
                 return None
             witnesses.add((rule_id, mechanism))
-        # Select the guarded path only after `len(candidates) == 1` is satisfied.
+        # Legacy shorthand is admissible only when exactly one candidate exists.
         elif len(candidates) == 1:
             witnesses.add((rule_id, candidates[0]))
         else:
-            # Return exact pairs, or None for an absent, legacy, or malformed matrix to the
-            # Details: caller.
+            # Refuse to guess which sibling strategy the mutation observed.
             return None
-    # Return exact pairs, or None for an absent, legacy, or malformed matrix to the caller.
+    # Freeze exact pairs after every raw entry resolves without ambiguity.
     return frozenset(witnesses)
 
 
@@ -1111,25 +1059,25 @@ def _expected_kind(mechanism: str) -> frozenset[MechanismKind]:
     @param mechanism heading tag
     @return allowed evidence kinds; empty when the tag grammar is unknown
     """
-    # Compute prefix using mechanism.partition for later expected kind logic.
+    # Read only the mechanism grammar prefix while preserving exact review tags below.
     prefix = mechanism.partition(":")[0]
-    # Select the guarded path only after `prefix == 'check'` is satisfied.
+    # Native checks may provide static or generated-drift evidence.
     if prefix == "check":
-        # Return allowed evidence kinds; empty when the tag grammar is unknown to the caller.
+        # Return both admissible kinds because the specific check selects between them.
         return frozenset({MechanismKind.STATIC, MechanismKind.GENERATED_DRIFT})
-    # Select the guarded path only after `prefix == 'fitness'` is satisfied.
+    # Fitness tests may observe behavior or generated artifact drift.
     if prefix == "fitness":
-        # Return allowed evidence kinds; empty when the tag grammar is unknown to the caller.
+        # Return both admissible kinds because the named node determines the relation.
         return frozenset({MechanismKind.BEHAVIORAL, MechanismKind.GENERATED_DRIFT})
-    # Select the guarded path only after `prefix == 'auto'` is satisfied.
+    # Auto tags delegate their verdict to a configured external tool.
     if prefix == "auto":
-        # Return allowed evidence kinds; empty when the tag grammar is unknown to the caller.
+        # Restrict auto evidence to the external-tool kind.
         return frozenset({MechanismKind.TOOL})
-    # Select the guarded path only after `mechanism == 'review'` is satisfied.
+    # The exact review tag identifies a structured human judgment.
     if mechanism == "review":
-        # Return allowed evidence kinds; empty when the tag grammar is unknown to the caller.
+        # Restrict review evidence to structured review rather than machine execution.
         return frozenset({MechanismKind.STRUCTURED_REVIEW})
-    # Return allowed evidence kinds; empty when the tag grammar is unknown to the caller.
+    # Unknown mechanism grammar has no honest compatible evidence kind.
     return frozenset()
 
 
@@ -1141,12 +1089,10 @@ def _mapping(value: object, where: str) -> dict[str, object]:
     @return the narrowed mapping
     @throws EvidenceParseError when the value is not a string-keyed object
     """
-    # Treat the current key as the candidate element consumed by the enclosing transformation.
-    # Select the empty-or-disabled path when isinstance(value, dict) or not all((isinstance(key,
-    # Details: str) for key in value)) has no usable value.
+    # Require both object shape and textual keys before exposing mapping operations.
     if not isinstance(value, dict) or not all(isinstance(key, str) for key in value):
         _invalid(where, "expected an object")
-    # Return the narrowed mapping to the caller.
+    # Narrow only after the runtime key contract has been established.
     return cast("dict[str, object]", value)
 
 
@@ -1158,10 +1104,10 @@ def _sequence(value: object, where: str) -> list[object]:
     @return the narrowed list
     @throws EvidenceParseError when the value is not a list
     """
-    # Select the empty-or-disabled path when isinstance(value, list) has no usable value.
+    # JSON arrays alone preserve the authored element order required by nested paths.
     if not isinstance(value, list):
         _invalid(where, "expected an array")
-    # Return the narrowed list to the caller.
+    # Narrow only after confirming the mutable JSON array representation.
     return cast("list[object]", value)
 
 
@@ -1173,15 +1119,15 @@ def _strings(value: object, where: str) -> tuple[str, ...]:
     @return strings in authored order
     @throws EvidenceParseError when an entry is empty, non-string, or repeated
     """
-    # Treat the current values, index, item as the candidate element consumed by the enclosing
-    # Details: transformation.
+    # Preserve authored order while validating every indexed item as non-empty text.
     values = tuple(
+        # Each item retains its array index in any structural diagnostic.
         _nonempty(item, f"{where}[{index}]") for index, item in enumerate(_sequence(value, where))
     )
-    # Select the guarded path only after `len(values) != len(set(values))` is satisfied.
+    # Duplicate entries would make scope and evidence multiplicity ambiguous.
     if len(values) != len(set(values)):
         _invalid(where, "entries must be unique")
-    # Return strings in authored order to the caller.
+    # Return the immutable authored sequence after uniqueness validation.
     return values
 
 
@@ -1193,11 +1139,10 @@ def _nonempty(value: object, where: str) -> str:
     @return stripped string
     @throws EvidenceParseError when it carries no text
     """
-    # Select the empty-or-disabled path when isinstance(value, str) or not value.strip() has no
-    # Details: usable value.
+    # Reject non-text and whitespace-only values at their exact JSON path.
     if not isinstance(value, str) or not value.strip():
         _invalid(where, "expected a non-empty string")
-    # Return stripped string to the caller.
+    # Normalize surrounding whitespace while retaining internal authored text.
     return value.strip()
 
 
@@ -1209,11 +1154,10 @@ def _integer(value: object, where: str) -> int:
     @return integer value
     @throws EvidenceParseError when the value is not an integer
     """
-    # Select the guarded path only after `isinstance(value, bool) or not isinstance(value, int)`
-    # Details: is satisfied.
+    # JSON booleans are Python integers but cannot stand in for schema versions.
     if isinstance(value, bool) or not isinstance(value, int):
         _invalid(where, "expected an integer")
-    # Return integer value to the caller.
+    # Return the unchanged validated integer.
     return value
 
 
@@ -1226,22 +1170,19 @@ def _enum(kind: type[_EnumT], value: object, where: str) -> _EnumT:
     @return matching enumeration member
     @throws EvidenceParseError when the value is outside the vocabulary
     """
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Validate textual shape before delegating vocabulary membership to the enum.
     text = _nonempty(value, where)
-    # Protect the fallible operation so expected failures remain explicitly classified.
+    # Translate enum construction failures into path-aware evidence diagnostics.
     try:
-        # Return matching enumeration member to the caller.
+        # Return the matching controlled-vocabulary member on the success path.
         return kind(text)
-    # Bind problem to the current value used by the next  enum decision.
-    # Translate the expected failure into this mechanism's stable diagnostic path.
+    # Retain the rejected value and admissible vocabulary when membership fails.
     except ValueError as problem:
-        # Select expected, member as the current element from kind) while  enum preserves
-        # Details: traversal order.
+        # Format expected enum values in their declaration order for direct repair.
         expected = ", ".join(member.value for member in kind)
-        # Derive detail from f"expected one of {expected}; got {text!r}" for the next  enum
-        # Details: decision.
+        # Preserve both vocabulary and actual text in the structural detail.
         detail = f"expected one of {expected}; got {text!r}"
-        # Propagate the localized failure so callers cannot mistake it for success.
+        # Chain the native enum failure beneath the repository-specific parse error.
         raise EvidenceParseError(where, detail) from problem
 
 
@@ -1256,21 +1197,22 @@ def _exact_fields(record: Mapping[str, object], expected: set[str], where: str) 
     @param where diagnostic path
     @throws EvidenceParseError on the first missing or unknown field set
     """
-    # Format the relationship labels whose generated graph count is zero.
+    # Compute missing fields in sorted order for deterministic diagnostics.
     missing = sorted(expected - record.keys())
-    # Compute unknown using sorted for later exact fields logic.
+    # Compute unknown fields separately so both schema deviations can be reported together.
     unknown = sorted(record.keys() - expected)
-    # Select the guarded path only after `missing or unknown` is satisfied.
+    # Build a diagnostic only when the actual field set differs from the schema.
     if missing or unknown:
         # Each parts element is one missing- or unknown-field diagnostic fragment; category order
         # is preserved before joining.
         parts = []
-        # Handle the non-empty or enabled missing state.
+        # Emit the absent-field fragment before any unknown-field fragment.
         if missing:
             parts.append(f"missing {', '.join(missing)}")
-        # Handle the non-empty or enabled unknown state.
+        # Retain all surplus fields instead of silently ignoring forward-incompatible data.
         if unknown:
             parts.append(f"unknown {', '.join(unknown)}")
+        # Raise one localized structural error containing both independently useful fragments.
         _invalid(where, "; ".join(parts))
 
 
@@ -1282,5 +1224,5 @@ def _invalid(where: str, detail: str) -> Never:
     @return never; this helper always raises
     @throws EvidenceParseError always
     """
-    # Propagate the localized failure so callers cannot mistake it for success.
+    # Centralize structural failure construction so every parser reports the same shape.
     raise EvidenceParseError(where, detail)

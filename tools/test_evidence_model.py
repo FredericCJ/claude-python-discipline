@@ -27,7 +27,7 @@ def valid_payload() -> dict[str, object]:
 
     @return mutable JSON-shaped test data
     """
-    # Return mutable JSON-shaped test data to the caller.
+    # Return a fresh mutable document so each test can damage one invariant in isolation.
     return {
         "schema_version": 1,
         "rules": {
@@ -78,11 +78,11 @@ def write_payload(path: Path, payload: dict[str, object]) -> Path:
     @return destination
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Serializes ``payload`` to ``path`` as UTF-8 JSON.
     """
-    # Publish the externally visible effect after all required inputs are ready.
+    # Materialize the mutated JSON document consumed by the structural parser.
     path.write_text(json.dumps(payload), encoding="utf-8")
-    # Return destination to the caller.
+    # Return the same destination for direct composition with parser calls.
     return path
 
 
@@ -94,20 +94,19 @@ def strategy(payload: dict[str, object]) -> dict[str, object]:
         content; key order is deliberately unused.
     @return mutable strategy mapping
     """
-    # Compute rules using payload["rules"] for later strategy logic.
+    # Narrow the top-level rule registry before selecting its sole fixture record.
     rules = payload["rules"]
     assert isinstance(rules, dict)
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Select the TYPE-001 evidence object whose strategy the test will mutate.
     record = rules["TYPE-001"]
     assert isinstance(record, dict)
-    # Compute strategies using record["strategies"] for later strategy logic.
+    # Narrow the ordered strategy array before indexing its sole fixture entry.
     strategies = record["strategies"]
     assert isinstance(strategies, list)
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Select the single strategy while retaining runtime shape validation.
     found = strategies[0]
     assert isinstance(found, dict)
-    # Return mutable strategy mapping to the caller.
+    # Expose the mutable strategy object to one-invariant fixture mutations.
     return found
 
 
@@ -119,13 +118,13 @@ def record(payload: dict[str, object]) -> dict[str, object]:
         content; key order is deliberately unused.
     @return mutable evidence mapping
     """
-    # Compute rules using payload["rules"] for later record logic.
+    # Narrow the top-level rule registry before selecting its sole fixture record.
     rules = payload["rules"]
     assert isinstance(rules, dict)
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Select the TYPE-001 record while retaining runtime shape validation.
     found = rules["TYPE-001"]
     assert isinstance(found, dict)
-    # Return mutable evidence mapping to the caller.
+    # Expose the mutable evidence object to one-invariant fixture mutations.
     return found
 
 
@@ -144,7 +143,7 @@ def rule(
     @param force normative or historical force tag
     @return normative rule
     """
-    # Return normative rule to the caller.
+    # Build a canonical heading whose controlled variations drive semantic join tests.
     return Rule(
         rule_id="TYPE-001",
         module_id="law/TYPE",
@@ -176,12 +175,11 @@ def rule(
 )
 def test_every_rule_field_is_required(tmp_path: Path, field: str) -> None:
     """Deleting any evidence layer field makes the registry invalid."""
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Start from a complete rule record so the parameterized deletion is the sole defect.
     payload = valid_payload()
-    # Carry out this operation at its documented position in the semantic sequence.
+    # Remove exactly the selected required field from the rule evidence object.
     del record(payload)[field]
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require the parser to localize the missing field in its structural error.
     with pytest.raises(EvidenceParseError, match=field):
         load_evidence(write_payload(tmp_path / "evidence.json", payload))
 
@@ -202,33 +200,30 @@ def test_every_rule_field_is_required(tmp_path: Path, field: str) -> None:
 )
 def test_every_strategy_field_is_required(tmp_path: Path, field: str) -> None:
     """Deleting any decidable-layer field makes the registry invalid."""
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Start from a complete strategy so the parameterized deletion is the sole defect.
     payload = valid_payload()
-    # Carry out this operation at its documented position in the semantic sequence.
+    # Remove exactly the selected required field from the strategy object.
     del strategy(payload)[field]
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require the parser to localize the missing strategy field.
     with pytest.raises(EvidenceParseError, match=field):
         load_evidence(write_payload(tmp_path / "evidence.json", payload))
 
 
 def test_unknown_fields_are_rejected(tmp_path: Path) -> None:
     """A misspelled field cannot disappear silently."""
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Start from a complete document so the surplus key is the sole schema defect.
     payload = valid_payload()
-    # Update test unknown fields are rejected state only after the required source facts are
-    # Details: available.
+    # Introduce a plausible misspelling that permissive parsing might ignore.
     strategy(payload)["residue"] = "misspelled"
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require the exact unknown key to survive into the repair diagnostic.
     with pytest.raises(EvidenceParseError, match="unknown residue"):
         load_evidence(write_payload(tmp_path / "evidence.json", payload))
 
 
 def test_field_observations_are_typed_and_reproducible(tmp_path: Path) -> None:
     """An observation ID resolves to a bounded claim and named evidence location."""
-    # Treat payload as mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Treat payload as mapping elements whose keys name observation-registry fields and whose
+    # values carry schema data; insertion order is preserved for deterministic fixture JSON.
     payload = {
         "schema_version": 1,
         "observations": {
@@ -243,16 +238,15 @@ def test_field_observations_are_typed_and_reproducible(tmp_path: Path) -> None:
             }
         },
     }
-    # Derive registry from load observations for the next test field observations are typed and
-    # Details: reproducible decision.
+    # Parse the authored document through the public observation registry boundary.
     registry = load_observations(write_payload(tmp_path / "observations.json", payload))
     assert registry.observations["V4E-001"].evidence_kind is ObservationKind.REPRODUCED
 
 
 def test_field_observation_requires_a_location(tmp_path: Path) -> None:
     """An unlocated anecdote cannot satisfy a field-evidence reference."""
-    # Treat payload as mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Treat payload as mapping elements whose keys name observation-registry fields and whose
+    # values carry schema data; insertion order is preserved for deterministic fixture JSON.
     payload = {
         "schema_version": 1,
         "observations": {
@@ -267,28 +261,25 @@ def test_field_observation_requires_a_location(tmp_path: Path) -> None:
             }
         },
     }
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require the parser to reject evidence that an auditor cannot locate.
     with pytest.raises(EvidenceParseError, match="at least one evidence location"):
         load_observations(write_payload(tmp_path / "observations.json", payload))
 
 
 def test_capabilities_use_configuration_key_grammar(tmp_path: Path) -> None:
     """Capability names are valid TOML-style identifiers before activation exists."""
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Start from a structurally complete rule before damaging capability grammar.
     payload = valid_payload()
-    # Update test capabilities use configuration key grammar state only after the required
-    # Details: source facts are available.
+    # Use spaces and capitals to violate the configuration-key naming contract.
     record(payload)["capabilities"] = ["Network I/O"]
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require localization to the invalid capability name.
     with pytest.raises(EvidenceParseError, match="invalid name"):
         load_evidence(write_payload(tmp_path / "evidence.json", payload))
 
 
 def test_heading_and_strategy_mechanisms_must_match(tmp_path: Path) -> None:
     """Evidence cannot describe a verifier the normative heading does not name."""
-    # Derive registry from load evidence for the next test heading and strategy mechanisms must
-    # Details: match decision.
+    # Parse evidence naming mypy so a pyright-only heading creates the intended mismatch.
     registry = load_evidence(write_payload(tmp_path / "evidence.json", valid_payload()))
     # Preserve finding-record elements in checker emission order for the final verdict.
     findings = validate_evidence(
@@ -296,51 +287,38 @@ def test_heading_and_strategy_mechanisms_must_match(tmp_path: Path) -> None:
         [rule(mechanisms=("auto:pyright",))],
         {("TYPE-001", "auto:mypy")},
     )
-    # Select finding as the current element from findings] == ["E004"] while test heading and
-    # Details: strategy mechanisms must match preserves traversal order.
     assert [finding.code for finding in findings] == ["E004"]
 
 
 def test_automated_strategy_needs_a_must_reject_case(tmp_path: Path) -> None:
     """A positive reference alone cannot demonstrate discrimination."""
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Start from complete automated evidence before removing only its negative witness.
     payload = valid_payload()
-    # Update test automated strategy needs a must reject case state only after the required
-    # Details: source facts are available.
+    # Replace the exact rejection marker with the structured-review-only null form.
     strategy(payload)["must_reject"] = None
-    # Derive registry from load evidence for the next test automated strategy needs a must
-    # Details: reject case decision.
+    # Parse the damaged evidence so semantic rather than structural validation owns the verdict.
     registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
     # Preserve finding-record elements in checker emission order for the final verdict.
     findings = validate_evidence(registry, [rule()], {("TYPE-001", "auto:mypy")})
-    # Select finding as the current element from findings} while test automated strategy needs a
-    # Details: must reject case preserves traversal order.
     assert "E008" in {finding.code for finding in findings}
 
 
 def test_declared_mutation_must_have_been_witnessed(tmp_path: Path) -> None:
     """A must-reject label without an executed matrix entry receives no credit."""
-    # Derive registry from load evidence for the next test declared mutation must have been
-    # Details: witnessed decision.
+    # Parse complete evidence whose declared marker will be compared with an empty witness set.
     registry = load_evidence(write_payload(tmp_path / "evidence.json", valid_payload()))
     # Preserve finding-record elements in checker emission order for the final verdict.
     findings = validate_evidence(registry, [rule()], set())
-    # Select finding as the current element from findings} while test declared mutation must
-    # Details: have been witnessed preserves traversal order.
     assert "E009" in {finding.code for finding in findings}
 
 
 def test_must_reject_names_the_exact_rule_and_mechanism(tmp_path: Path) -> None:
     """A legacy rule-only label cannot identify which verifier rejected it."""
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Start from a complete document before degrading its witness to v3 rule-only form.
     payload = valid_payload()
-    # Update test must reject names the exact rule and mechanism state only after the required
-    # Details: source facts are available.
+    # Remove the mechanism suffix that distinguishes sibling verifier strategies.
     strategy(payload)["must_reject"] = "discrimination:TYPE-001"
-    # Derive registry from load evidence for the next test must reject names the exact rule and
-    # Details: mechanism decision.
+    # Parse the structurally valid legacy marker for semantic validation.
     registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
 
     # Preserve finding-record elements in checker emission order for the final verdict.
@@ -350,23 +328,19 @@ def test_must_reject_names_the_exact_rule_and_mechanism(tmp_path: Path) -> None:
         {("TYPE-001", "auto:mypy")},
     )
 
-    # Select finding as the current element from findings} while test must reject names the
-    # Details: exact rule and mechanism preserves traversal order.
+    # Project findings to stable codes so presentation wording cannot satisfy the test.
     assert "E012" in {finding.code for finding in findings}
 
 
 def test_generated_placeholder_is_not_an_observable_proposition(tmp_path: Path) -> None:
     """Evidence must state the finite condition, not merely name a checker."""
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Start from direct evidence before replacing its proposition with generated filler.
     payload = valid_payload()
-    # Update test generated placeholder is not an observable proposition state only after the
-    # Details: required source facts are available.
+    # Use the exact vague template the semantic validator must distinguish from an observable.
     strategy(payload)["proposition"] = (
         "auto:mypy reports no diagnostic corresponding to TYPE-001 under config."
     )
-    # Derive registry from load evidence for the next test generated placeholder is not an
-    # Details: observable proposition decision.
+    # Parse the structurally valid placeholder for semantic validation.
     registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
 
     # Preserve finding-record elements in checker emission order for the final verdict.
@@ -376,8 +350,7 @@ def test_generated_placeholder_is_not_an_observable_proposition(tmp_path: Path) 
         {("TYPE-001", "auto:mypy")},
     )
 
-    # Select finding as the current element from findings} while test generated placeholder is
-    # Details: not an observable proposition preserves traversal order.
+    # Project findings to stable codes so only the intended placeholder diagnostic counts.
     assert "E013" in {finding.code for finding in findings}
 
 
@@ -385,14 +358,13 @@ def test_rule_only_matrix_cannot_supply_v4_rejection_credit(tmp_path: Path) -> N
     """The v3 coverage view cannot conceal an unwitnessed second mechanism.
 
     @par Effects
-    Creates, replaces, or removes repository artifacts in implementation order.
+    Writes a temporary legacy discrimination module beneath ``tmp_path``.
     """
-    # Derive matrix from tmp_path / "enforce" / "discrimination.py" for the next test rule only
-    # Details: matrix cannot supply v4 rejection credit decision.
+    # Address the repository-local matrix path expected by the evidence loader.
     matrix = tmp_path / "enforce" / "discrimination.py"
-    # Publish the externally visible effect after all required inputs are ready.
+    # Create the package directory before materializing the legacy module.
     matrix.parent.mkdir(parents=True)
-    # Publish the externally visible effect after all required inputs are ready.
+    # Publish only the v3 rule-id getter, deliberately omitting exact strategy evidence.
     matrix.write_text(
         '"""Legacy matrix."""\n\n\n'
         "def covered() -> frozenset[str]:\n"
@@ -406,22 +378,18 @@ def test_rule_only_matrix_cannot_supply_v4_rejection_credit(tmp_path: Path) -> N
 
 def test_one_tool_cannot_lend_rejection_credit_to_another(tmp_path: Path) -> None:
     """Exact strategy pairs prevent a shared rule id from masking a gap."""
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Start from one witnessed mypy strategy under TYPE-001.
     payload = valid_payload()
-    # Derive pyright from deepcopy for the next test one tool cannot lend rejection credit to
-    # Details: another decision.
+    # Clone the complete strategy so only its mechanism identity differs.
     pyright = deepcopy(strategy(payload))
-    # Update test one tool cannot lend rejection credit to another state only after the required
-    # Details: source facts are available.
+    # Attribute the sibling strategy to pyright while retaining the fixture's other fields.
     pyright["mechanism"] = "auto:pyright"
-    # Derive strategies from record for the next test one tool cannot lend rejection credit to
-    # Details: another decision.
+    # Narrow the rule's authored strategy list before adding the sibling verifier.
     strategies = record(payload)["strategies"]
     assert isinstance(strategies, list)
+    # Add the unwitnessed pyright claim alongside the witnessed mypy claim.
     strategies.append(pyright)
-    # Derive registry from load evidence for the next test one tool cannot lend rejection credit
-    # Details: to another decision.
+    # Parse the two-strategy evidence for exact-pair semantic validation.
     registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
     # Preserve finding-record elements in checker emission order for the final verdict.
     findings = validate_evidence(
@@ -429,8 +397,6 @@ def test_one_tool_cannot_lend_rejection_credit_to_another(tmp_path: Path) -> Non
         [rule(mechanisms=("auto:mypy", "auto:pyright"))],
         {("TYPE-001", "auto:mypy")},
     )
-    # Select finding as the current element from findings if finding.code == "E009"] == [ while
-    # Details: test one tool cannot lend rejection credit to another preserves traversal order.
     assert [finding.message for finding in findings if finding.code == "E009"] == [
         "auto:pyright is not witnessed rejecting"
     ]
@@ -438,42 +404,31 @@ def test_one_tool_cannot_lend_rejection_credit_to_another(tmp_path: Path) -> Non
 
 def test_tag_and_kind_cannot_disagree(tmp_path: Path) -> None:
     """An external-tool tag cannot be presented as a local static check."""
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Start from a correctly classified external-tool strategy.
     payload = valid_payload()
-    # Update test tag and kind cannot disagree state only after the required source facts are
-    # Details: available.
+    # Misclassify the auto tag as a repository-local static mechanism.
     strategy(payload)["kind"] = "static"
-    # Derive registry from load evidence for the next test tag and kind cannot disagree
-    # Details: decision.
+    # Parse the structurally valid mismatch for semantic validation.
     registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
     # Preserve finding-record elements in checker emission order for the final verdict.
     findings = validate_evidence(registry, [rule()], {("TYPE-001", "auto:mypy")})
-    # Select finding as the current element from findings} while test tag and kind cannot
-    # Details: disagree preserves traversal order.
     assert "E010" in {finding.code for finding in findings}
 
 
 def test_retirement_preserves_the_id_and_removes_strategies(tmp_path: Path) -> None:
     """A superseded heading remains resolvable but cannot look actively verified."""
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Copy the fixture so retirement edits cannot affect later tests.
     payload = deepcopy(valid_payload())
-    # Update test retirement preserves the id and removes strategies state only after the
-    # Details: required source facts are available.
+    # Remove active strategies because superseded rules describe history only.
     record(payload)["strategies"] = []
-    # Derive migration from record for the next test retirement preserves the id and removes
-    # Details: strategies decision.
+    # Narrow the migration record before changing its historical disposition.
     migration = record(payload)["migration"]
     assert isinstance(migration, dict)
-    # Update test retirement preserves the id and removes strategies state only after the
-    # Details: required source facts are available.
+    # Mark the stable id as replaced rather than merely clarified.
     migration["disposition"] = MigrationDisposition.SUPERSEDED
-    # Derive registry from load evidence for the next test retirement preserves the id and
-    # Details: removes strategies decision.
+    # Parse the historical evidence after all retirement fields agree.
     registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
-    # Derive retired from rule for the next test retirement preserves the id and removes
-    # Details: strategies decision.
+    # Build the corresponding retired normative heading with its explicit successor.
     retired = rule(mechanisms=(), superseded_by="TYPE-002", force=Force.RETIRED)
     assert validate_evidence(registry, [retired], set()) == []
     assert verification_state(retired, registry.rules["TYPE-001"]) is VerificationState.RETIRED
@@ -481,24 +436,18 @@ def test_retirement_preserves_the_id_and_removes_strategies(tmp_path: Path) -> N
 
 def test_withdrawal_without_a_replacement_is_representable(tmp_path: Path) -> None:
     """A rule can leave scope without inventing a successor that does not exist."""
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Copy the fixture so withdrawal edits cannot affect later tests.
     payload = deepcopy(valid_payload())
-    # Update test withdrawal without a replacement is representable state only after the
-    # Details: required source facts are available.
+    # Remove active strategies because withdrawn rules describe history only.
     record(payload)["strategies"] = []
-    # Derive migration from record for the next test withdrawal without a replacement is
-    # Details: representable decision.
+    # Narrow the migration record before changing its historical disposition.
     migration = record(payload)["migration"]
     assert isinstance(migration, dict)
-    # Update test withdrawal without a replacement is representable state only after the
-    # Details: required source facts are available.
+    # Use retired rather than superseded to state that no successor exists.
     migration["disposition"] = MigrationDisposition.RETIRED
-    # Derive registry from load evidence for the next test withdrawal without a replacement is
-    # Details: representable decision.
+    # Parse the internally consistent withdrawn evidence.
     registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
-    # Derive withdrawn from rule for the next test withdrawal without a replacement is
-    # Details: representable decision.
+    # Build the corresponding retired heading without a successor id.
     withdrawn = rule(mechanisms=(), force=Force.RETIRED)
     assert validate_evidence(registry, [withdrawn], set()) == []
     assert verification_state(withdrawn, registry.rules["TYPE-001"]) is VerificationState.RETIRED
@@ -506,33 +455,25 @@ def test_withdrawal_without_a_replacement_is_representable(tmp_path: Path) -> No
 
 def test_replacement_disposition_requires_a_successor(tmp_path: Path) -> None:
     """Superseded cannot mean retired-without-replacement by implication."""
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # Details: content; key order is deliberately unused.
+    # Copy the fixture so the malformed history is local to this test.
     payload = deepcopy(valid_payload())
-    # Update test replacement disposition requires a successor state only after the required
-    # Details: source facts are available.
+    # Remove strategies to isolate successor consistency from active-verifier findings.
     record(payload)["strategies"] = []
-    # Derive migration from record for the next test replacement disposition requires a
-    # Details: successor decision.
+    # Narrow the migration record before changing its disposition.
     migration = record(payload)["migration"]
     assert isinstance(migration, dict)
-    # Update test replacement disposition requires a successor state only after the required
-    # Details: source facts are available.
+    # Claim replacement while the normative heading deliberately names no successor.
     migration["disposition"] = MigrationDisposition.SUPERSEDED
-    # Derive registry from load evidence for the next test replacement disposition requires a
-    # Details: successor decision.
+    # Parse the structurally valid but historically inconsistent evidence.
     registry = load_evidence(write_payload(tmp_path / "evidence.json", payload))
     # Preserve finding-record elements in checker emission order for the final verdict.
     findings = validate_evidence(registry, [rule(mechanisms=(), force=Force.RETIRED)], set())
-    # Select finding as the current element from findings] == ["E007"] while test replacement
-    # Details: disposition requires a successor preserves traversal order.
     assert [finding.code for finding in findings] == ["E007"]
 
 
 def test_verification_state_says_what_exists_not_that_it_passed(tmp_path: Path) -> None:
     """An external strategy is a verifier declaration, never a synthetic pass."""
-    # Derive registry from load evidence for the next test verification state says what exists
-    # Details: not that it passed decision.
+    # Parse a declared external strategy without executing or mocking its tool.
     registry = load_evidence(write_payload(tmp_path / "evidence.json", valid_payload()))
     assert (
         verification_state(rule(), registry.rules["TYPE-001"], tmp_path)
