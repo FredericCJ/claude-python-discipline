@@ -120,8 +120,7 @@ def test_the_generated_manifest_is_byte_stable_across_hosts(target: Path) -> Non
     @param target an empty repository
     """
     _install(target)
-    # Hold the decoded mapping elements whose keys identify fields and values carry their
-    # content; key order is deliberately unused.
+    # Retain the manifest's raw bytes so newline stability is checked before JSON normalization.
     manifest = (target / ".agent" / "MANIFEST.json").read_bytes()
     assert manifest.endswith(b"\n")
     assert b"\r\n" not in manifest
