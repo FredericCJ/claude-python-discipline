@@ -431,6 +431,32 @@ def test_plain_binding_scaffolding_fails_doc_019(tmp_path: Path) -> None:
     assert [item.rule_id for item in findings] == ["DOC-019"]
 
 
+def test_stray_scaffolding_comment_fails_doc_019(tmp_path: Path) -> None:
+    """Filler receives no safe harbor beside syntax outside the operation census.
+
+    @param tmp_path fixture repository
+    """
+    # Materialize a filler block beside an assertion, which is not itself a governed operation.
+    module, declaration = _fixture(
+        tmp_path,
+        '''
+        """! Fixture module."""
+        def verify(value: int) -> None:
+            """Verify one accepted value.
+            @param value accepted value
+            """
+            # Select the guarded path only after value is positive is satisfied.
+            assert value > 0
+        ''',
+    )
+
+    # Preserve narration findings from the source-wide known-filler scan.
+    findings = _run(DocNarrationCheck(), module, declaration)
+
+    # Require the stray block to carry the dedicated scaffolding diagnostic exactly once.
+    assert [item.diagnostic_id for item in findings] == ["NARRATION_KNOWN_FILLER"]
+
+
 def test_two_narration_owners_fail_doc_018(tmp_path: Path) -> None:
     """A preceding and trailing block make semantic-step ownership ambiguous.
 

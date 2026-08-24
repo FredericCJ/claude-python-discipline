@@ -13,7 +13,13 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 from . import Finding, ModuleCheck, main
-from .comment_association import associate, bindings, comment_blocks, semantic_associations
+from .comment_association import (
+    CommentBlock,
+    associate,
+    bindings,
+    comment_blocks,
+    semantic_associations,
+)
 from .documentation_model import governed_paths
 
 # Import static protocol types without adding runtime package dependencies.
@@ -160,6 +166,11 @@ class DocNarrationCheck(ModuleCheck):
         text = path.read_text(encoding="utf-8")
         # Preserve each qualifying ordinary comment block in lexical source order.
         blocks = comment_blocks(text)
+        # Identify known scaffolding blocks independently of AST coverage so stray filler cannot
+        # hide merely by sitting beside an operation outside the mechanical census.
+        rejected_blocks = {block for block in blocks if _known_filler(block.text)}
+        # Report each rejected block once before operation-specific findings.
+        yield from _known_filler_findings(blocks, rejected_blocks, path)
         # Resolve semantic-operation nodes to their unique, absent, or ambiguous comment owners.
         associations = semantic_associations(tree, text, blocks)
         # Track operation-owner nodes already checked so a local binding on the same statement
@@ -198,7 +209,9 @@ class DocNarrationCheck(ModuleCheck):
                     diagnostic_id="NARRATION_MISSING",
                 )
             # A present unique owner still fails when it only translates Python tokens.
-            elif _syntactic_only(operation.node, association.owner.text):
+            elif association.owner not in rejected_blocks and _syntactic_only(
+                operation.node, association.owner.text
+            ):
                 # Require technical or domain vocabulary while preserving semantic review residuals.
                 yield Finding(
                     "DOC-019",
@@ -228,7 +241,9 @@ class DocNarrationCheck(ModuleCheck):
                 # Advance without duplicating DOC-016 or DOC-018 ownership diagnostics.
                 continue
             # Compare the binding-step prose with its complete owning statement.
-            if _syntactic_only(binding.owner_node, association.owner.text):
+            if association.owner not in rejected_blocks and _syntactic_only(
+                binding.owner_node, association.owner.text
+            ):
                 # Report one stable finding at the first binding introduced by the statement.
                 yield Finding(
                     "DOC-019",
@@ -364,7 +379,7 @@ def _syntactic_only(node: ast.AST, prose: str) -> bool:
     """
     # Reject recognized migration scaffolding before its incidental identifiers can masquerade
     # as domain vocabulary under the lexical-novelty fallback.
-    if any(shape.search(prose) is not None for shape in KNOWN_FILLER_SHAPES):
+    if _known_filler(prose):
         # True identifies a known filler family independently of the owned AST operation.
         return True
     # Collect each normalized prose word as an unordered vocabulary set.
@@ -375,6 +390,44 @@ def _syntactic_only(node: ast.AST, prose: str) -> bool:
     informative = prose_words - syntax_words - SYNTACTIC_WORDS
     # True means prose is too short or adds no informative word; false leaves semantic review.
     return len(prose_words) < MINIMUM_NARRATIVE_WORDS or not informative
+
+
+def _known_filler(prose: str) -> bool:
+    """Whether prose matches one closed scaffolding family.
+
+    @param prose normalized ordinary-comment block text
+    @return true for a recognized migration template and false for every other shape
+    """
+    # Match the complete closed template registry without inferring truth from other prose.
+    return any(shape.search(prose) is not None for shape in KNOWN_FILLER_SHAPES)
+
+
+def _known_filler_findings(
+    blocks: Sequence[CommentBlock], rejected: set[CommentBlock], path: Path
+) -> Iterator[Finding]:
+    """Report known scaffolding blocks once in lexical order.
+
+    @param blocks ordinary-comment elements in lexical source order
+    @param rejected unordered subset matching the closed filler registry
+    @param path governed Python source
+    @return one DOC-019 finding per rejected block
+    """
+    # Preserve lexical block order while selecting only mechanically recognized filler.
+    for block in blocks:
+        # Unrecognized prose remains under the content-bound review residual.
+        if block not in rejected:
+            # Continue without claiming that arbitrary prose is true or useful.
+            continue
+        # Localize the scaffolding itself rather than an incidental neighboring AST node.
+        yield Finding(
+            "DOC-019",
+            path,
+            block.start,
+            "implementation comment matches a known narration-scaffolding template",
+            "Replace the generated shape with prose authored from the actual operation, "
+            "representation, ordering, constraint, or reason.",
+            diagnostic_id="NARRATION_KNOWN_FILLER",
+        )
 
 
 # Run the standalone check command only at the module's process boundary.
