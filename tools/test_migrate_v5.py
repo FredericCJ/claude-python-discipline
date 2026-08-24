@@ -228,7 +228,7 @@ def test_incomplete_v4_declaration_blocks_without_writes(tmp_path: Path) -> None
 
     assert migration.blocked
     assert "MIGRATE-V5-001_NOT_V4" in _diagnostics(migration)
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require apply to reject a plan blocked by an incomplete v4 declaration.
     with pytest.raises(migrate_v5.MigrationError, match="blocking diagnostics"):
         migrate_v5.apply(migration)
     assert not (root / "documentation-model.json").exists()
@@ -277,6 +277,6 @@ def test_apply_refuses_a_project_changed_after_preview(tmp_path: Path) -> None:
     project = root / "pyproject.toml"
     project.write_text(project.read_text(encoding="utf-8") + "# concurrent\n", encoding="utf-8")
 
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require apply to reject source bytes changed after the reviewed preview.
     with pytest.raises(migrate_v5.MigrationError, match="changed after"):
         migrate_v5.apply(migration)

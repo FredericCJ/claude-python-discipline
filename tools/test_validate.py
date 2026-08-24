@@ -482,7 +482,7 @@ def test_v041_does_not_resolve_a_reference_through_sources(tmp_path: Path) -> No
 
 def test_v050_over_token_budget(tmp_path: Path) -> None:
     """A module too large to load is a module an agent will skip, so the ceiling binds."""
-    # Preserve the observed item count used by the non-vacuity verdict.
+    # Generate enough authored prose to exceed the per-module token ceiling.
     filler = "\n".join(f"Sentence number {n} of padding prose." for n in range(2_000))
     module(tmp_path, body=CONFORMANT_RULE + "\n" + filler)
     assert "V050" in codes(run_on(tmp_path))
@@ -575,7 +575,7 @@ def test_the_mechanism_check_has_exactly_one_implementation() -> None:
     two answers to "is this rule enforced", one of which is wrong and neither of
     which announces itself.
     """
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Enumerate resolver identities to prove discovery neither duplicates nor omits the owner.
     found = sorted(mechanism_resolvers())
     assert found == [("tools/discipline_core.py", "mechanism_is_implemented")], found
 
@@ -695,7 +695,7 @@ def test_rules_json_separates_verification_from_normative_force() -> None:
     """The generated contract carries complete evidence without a synthetic verdict."""
     # Select the generated machine-readable rule contract whose evidence fields are asserted.
     path = REPO_ROOT / "discipline" / "rules.json"
-    # Select the existing-artifact path only when `not path.exists()` is satisfied.
+    # Skip only when the generated rules projection has not been built in this checkout.
     if not path.exists():
         pytest.skip("discipline/rules.json not built; run tools/build_index.py")
     # Decode generated-index field keys to their JSON values; mapping key order is deliberately
@@ -736,10 +736,10 @@ def test_index_md_carries_the_distinct_evidence_columns() -> None:
     """An agent grepping the index cannot confuse force with verifier evidence."""
     # Select the generated human index whose distinct verifier columns are asserted.
     path = REPO_ROOT / "discipline" / "INDEX.md"
-    # Select the existing-artifact path only when `not path.exists()` is satisfied.
+    # Skip only when the generated navigation index has not been built in this checkout.
     if not path.exists():
         pytest.skip("discipline/INDEX.md not built; run tools/build_index.py")
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Inspect the generated index text for the expected rules-projection relationship.
     text = path.read_text(encoding="utf-8")
     assert (
         "| Rule | Force | Verifier | Relation | Rejection | Platforms | Residual | Field | Title |"
@@ -785,7 +785,7 @@ def test_nav_warns_on_a_binding_rule_without_a_verifier() -> None:
     """`nav rule` states the availability gap without fabricating a result."""
     # Select the generated verifier-state source consumed by the navigator.
     path = REPO_ROOT / "discipline" / "rules.json"
-    # Select the existing-artifact path only when `not path.exists()` is satisfied.
+    # Skip only when the generated rules projection has not been built in this checkout.
     if not path.exists():
         pytest.skip("discipline/rules.json not built; run tools/build_index.py")
     # Locate the structural boundary used to parse the external result safely.
@@ -836,7 +836,7 @@ def test_a_hand_raised_count_is_refused(tmp_path: Path) -> None:
     # Persist the internally contradictory baseline presented to the production loader.
     path.write_text(json.dumps(data), encoding="utf-8")
 
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require a structurally incomplete pair ceiling to fail during baseline loading.
     with pytest.raises(ValueError, match="pairs"):
         load_v080_baseline(path)
 
@@ -858,7 +858,7 @@ def test_a_baseline_missing_a_field_is_refused(tmp_path: Path, payload: dict[str
     # Persist exactly the parameterized incomplete shape without builder normalization.
     path.write_text(json.dumps(payload), encoding="utf-8")
 
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require a JSON object of the wrong artifact kind to fail baseline identity checks.
     with pytest.raises(ValueError, match="not a V080 baseline"):
         load_v080_baseline(path)
 
@@ -972,7 +972,7 @@ def test_ratchet_ignores_a_throwaway_tree_when_no_baseline_is_injected(tmp_path:
 
 def test_update_baseline_requires_why(tmp_path: Path) -> None:
     """`--update-baseline` with no `--why` refuses, in the `learn.py calibrate --set` idiom."""
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require baseline updates without a rationale to stop at the command-line boundary.
     with pytest.raises(SystemExit):
         validate_main(["--update-baseline", "--root", str(tmp_path)])
 
@@ -983,7 +983,7 @@ def test_update_baseline_requires_why(tmp_path: Path) -> None:
 @pytest.mark.timeout(90)
 def test_the_live_corpus_is_clean() -> None:
     """The repository itself passes every check."""
-    # Each findings element is one live-corpus error in validator emission order.
+    # Its elements are live-corpus error records in validator emission order.
     findings = [f for f in run() if f.severity is Severity.ERROR]  # type: ignore[attr-defined]
     assert findings == [], "\n".join(f.render() for f in findings)  # type: ignore[attr-defined]
 
@@ -1011,7 +1011,7 @@ def test_v051_warns_before_the_always_loaded_ceiling(tmp_path: Path) -> None:
     # Create the meta-document directory before the direct fixture write.
     kernel.parent.mkdir(parents=True, exist_ok=True)
     module(tmp_path, body=CONFORMANT_RULE)
-    # Preserve the observed item count used by the non-vacuity verdict.
+    # Generate a kernel near the total-corpus warning threshold without corrupting its rules.
     filler = "\n".join(f"Padding sentence {n}." for n in range(430))
     # Materialize a kernel near the threshold while leaving the rest of the corpus conformant.
     kernel.write_text(
@@ -1019,7 +1019,7 @@ def test_v051_warns_before_the_always_loaded_ceiling(tmp_path: Path) -> None:
         'load_when: ["x"]\ndecay: none\n---\n\n# Kernel\n\n' + filler + "\n",
         encoding="utf-8",
     )
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Collect validation codes after constructing the near-threshold corpus.
     found = codes(run_on(tmp_path))
     assert "V051" in found or "V050" in found, (
         "a nearly-full always-loaded file produced no signal at all"

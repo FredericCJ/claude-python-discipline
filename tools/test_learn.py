@@ -182,7 +182,7 @@ def test_a_corrupt_ledger_line_names_itself(store: learn.Store) -> None:
     with store.ledger.open("a", encoding="utf-8") as handle:
         # This second physical record is the line the diagnostic must name.
         handle.write("{not json\n")
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require ledger decoding to identify the corrupt second JSONL record.
     with pytest.raises(learn.LearnError, match=r"ledger\.jsonl:2"):
         learn.read_ledger(store)
 
@@ -193,7 +193,7 @@ def test_a_corrupt_ledger_line_names_itself(store: learn.Store) -> None:
 @decides("LEARN-003")
 def test_a_credential_is_refused(store: learn.Store) -> None:
     """DIAG-014 applied to the ledger: it is designed to be read widely."""
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require direct credential-shaped payloads to be refused before append.
     with pytest.raises(learn.LearnError, match="credential"):
         learn.append_event(
             store, "learn", "S-1",
@@ -218,7 +218,7 @@ def test_each_secret_shape_is_refused(store: learn.Store, secret: str) -> None:
     directory path each trip a separate pattern, so the guard is shown to be a
     family of shapes rather than one regex.
     """
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require credential scanning to recurse through nested event payloads.
     with pytest.raises(learn.LearnError):
         learn.append_event(store, "learn", "S-1", {"claim": secret})
 
@@ -291,7 +291,7 @@ def test_an_unknown_trigger_type_is_rejected() -> None:
     The accepting half is pinned too: a valid argument splits at the first colon
     into the two-field form the payload stores.
     """
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require trigger parsing to reject values outside the controlled trigger kinds.
     with pytest.raises(learn.LearnError, match="trigger must be one of"):
         learn.parse_trigger("nonsense:whatever")
     assert learn.parse_trigger("glob:src/**") == {"type": "glob", "pattern": "src/**"}
@@ -311,7 +311,7 @@ def test_a_glob_trigger_matches_a_path(store: learn.Store) -> None:
     record(store, triggers=[{"type": "glob", "pattern": "src/**/adapters/*.py"}])
     # Query the synchronized entry from a concrete path covered by its glob trigger.
     connection = learn.sync(store)
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Retrieve candidates whose file glob covers the selected adapter path.
     found = learn.retrieve(store, connection, file="src/pkg/adapters/fs.py",
                            today=dt.date(2026, 8, 1))
     connection.close()
@@ -334,7 +334,7 @@ def test_an_error_signature_ignores_separator_style(store: learn.Store) -> None:
     # Each text is a real-world spelling of the same normalized error signature.
     for text in ("contract adapters-are-independent FAILED",
                  "adapters_are_independent broke"):
-        # Preserve the optional pattern match that carries the reported analysis count.
+        # Retrieve through each supported error-separator spelling of the same signature.
         found = learn.retrieve(store, connection, error=text, today=dt.date(2026, 8, 1))
         assert [c.id for c in found] == ["L-0001"], text
     connection.close()
@@ -349,7 +349,7 @@ def test_a_rule_trigger_matches_a_selected_rule(store: learn.Store) -> None:
     record(store, triggers=[{"type": "rule", "pattern": "ARCH-003"}])
     # Retrieve from the exact selected-rule identity without supplying path or error hints.
     connection = learn.sync(store)
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Retrieve candidates linked directly to the selected doctrine rule.
     found = learn.retrieve(store, connection, rules=["ARCH-003"], today=dt.date(2026, 8, 1))
     connection.close()
     assert [c.id for c in found] == ["L-0001"]
@@ -367,7 +367,7 @@ def test_nothing_matches_an_unrelated_situation(store: learn.Store) -> None:
     record(store, triggers=[{"type": "glob", "pattern": "docs/**"}])
     # Query a source path outside the sole documentation glob in the synchronized index.
     connection = learn.sync(store)
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Query an unrelated domain path to prove the adapter trigger does not overmatch.
     found = learn.retrieve(store, connection, file="src/pkg/domain/x.py",
                            today=dt.date(2026, 8, 1))
     connection.close()
@@ -412,7 +412,7 @@ def test_retrieval_respects_the_budget(store: learn.Store) -> None:
     for _ in range(6):
         record(store, claim="a long claim " * 40, action="a long action " * 40)
     connection = learn.sync(store)
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Retrieve candidates under a one-item budget to verify deterministic ranking.
     found = learn.retrieve(store, connection, file="src/a.py", today=dt.date(2026, 8, 1))
     connection.close()
     budget = store.config()["retrieval"]["budget_tokens"]
@@ -447,7 +447,7 @@ def test_a_retired_learning_is_not_offered(store: learn.Store) -> None:
     first = record(store)
     learn.append_event(store, "refute", "S-2", {"ref": first, "why": "wrong here"})
     connection = learn.sync(store)
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Query after retirement to prove inactive learnings are excluded.
     found = learn.retrieve(store, connection, file="src/a.py", today=dt.date(2026, 8, 1))
     connection.close()
     assert found == []
@@ -484,7 +484,7 @@ def test_a_decayed_learning_falls_below_the_floor(store: learn.Store) -> None:
     record(store)
     # Query the unchanged entry years after its observation timestamp.
     connection = learn.sync(store)
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Query after the decay horizon to prove low-score learnings fall below the floor.
     found = learn.retrieve(store, connection, file="src/a.py", today=dt.date(2030, 1, 1))
     connection.close()
     assert found == [], "an entry untouched for years should stop being offered"
@@ -554,7 +554,7 @@ def test_promotion_retires_a_learning(store: learn.Store) -> None:
                        {"ref": first, "mechanism": "check:whatever"})
     assert states(store)[first] == "promoted"
     connection = learn.sync(store)
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Query after promotion to prove the source learning was retired by the lifecycle event.
     found = learn.retrieve(store, connection, file="src/a.py", today=dt.date(2026, 8, 1))
     connection.close()
     assert found == []
@@ -810,7 +810,7 @@ def test_no_shell_ever_sees_the_command(store: learn.Store) -> None:
 
 def test_unbalanced_quoting_is_refused_not_guessed(store: learn.Store) -> None:
     """A command that will not parse is refused, rather than split on whitespace."""
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require malformed quoted verification commands to fail before execution.
     with pytest.raises(learn.LearnError, match="cannot be parsed"):
         learn.verification_argv('python "unclosed.py')
     results = verified(store, 'python "unclosed.py')
@@ -1054,7 +1054,7 @@ def test_calibrate_refuses_a_change_without_a_reason(store: learn.Store) -> None
 
 def test_an_unknown_parameter_is_refused(store: learn.Store) -> None:
     """A name matching no line in config.toml raises rather than moving nothing."""
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require configuration edits to reject an assignment naming no shipped setting.
     with pytest.raises(learn.LearnError, match="no setting named"):
         learn._apply_settings(store, ["retrieval.nonsense=1"])
 

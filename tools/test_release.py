@@ -167,7 +167,7 @@ def _refresh_fixture_review(root: Path) -> None:
     """
     # Parse the migrated project's own declaration before recomputing its review scope.
     declaration = discipline_project.parse(root / "pyproject.toml")
-    # Preserve the observed item count used by the non-vacuity verdict.
+    # Record the governed-file count and digest that bind the refreshed review fixture.
     count, digest = scope_snapshot(declaration)
     path = root / "adversarial-review.json"
     payload = json.loads(path.read_text(encoding="utf-8"))
@@ -405,7 +405,7 @@ def test_archive_upgrade_preserves_project_state_and_updates_both_hosts(
     # Persist project ownership before constructing the upgraded package.
     learning.write_bytes(project_learning)
 
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Build a fresh temporary release source before simulating an upgrade.
     source = tmp_path / "upgrade-source"
     _copy_release_source(source)
     # Select the canonical skill inside the mutable release source.
@@ -533,9 +533,9 @@ def test_archive_rejects_then_migrates_both_v4_repository_shapes(
 
 def test_an_absolute_windows_path_is_found() -> None:
     """A path rooted in a user's home names the machine it was written on."""
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Supply a literal Windows home path whose environment leak must be detected.
     text = "see C:/Users/someone/Documents/repo/tools/nav.py for the navigator\n"
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Collect blocking-pattern findings for the Windows-path leak.
     found = list(release.scan_text("a.md", text, release.BLOCKING_PATTERNS))
     assert [f.pattern for f in found] == ["windows user path"]
     assert found[0].line == 1
@@ -543,7 +543,7 @@ def test_an_absolute_windows_path_is_found() -> None:
 
 def test_a_posix_home_path_is_found() -> None:
     """The same leak on the other platform."""
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Collect blocking-pattern findings for the Unix home-path leak.
     found = list(release.scan_text(
         "a.md", "run /home/someone/src/x.py\n", release.BLOCKING_PATTERNS))
     assert [f.pattern for f in found] == ["posix home path"]
@@ -551,14 +551,14 @@ def test_a_posix_home_path_is_found() -> None:
 
 def test_a_relative_path_is_not_mistaken_for_a_home_path() -> None:
     """`tools/home/x` and a URL path must not fire the home-directory pattern."""
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Supply benign vocabulary that resembles paths but carries no workstation identity.
     text = "tools/home/x.py and https://example.com/users/api/v1\n"
     assert not list(release.scan_text("a.md", text, release.BLOCKING_PATTERNS))
 
 
 def test_a_credential_prefix_is_found() -> None:
     """Published token formats are recognisable on sight, so recognise them."""
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Assemble a recognizable token literal without storing a real credential in the fixture.
     text = "token = 'ghp_" + "a" * 30 + "'\n"
     assert [f.pattern for f in release.scan_text(
         "a.py", text, release.BLOCKING_PATTERNS)] == ["github token"]
@@ -566,7 +566,7 @@ def test_a_credential_prefix_is_found() -> None:
 
 def test_ordinary_corpus_prose_is_clean() -> None:
     """The scan must not fire on the discipline's own vocabulary."""
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Supply doctrine vocabulary that the blocking scan must accept without false positives.
     text = "tokens: 1876\nThe secret is that there is no secret.\n`.agent/tools/nav.py`\n"
     assert not list(release.scan_text("a.md", text, release.BLOCKING_PATTERNS))
 
@@ -592,7 +592,7 @@ def test_the_building_account_is_derived_not_written_down() -> None:
         label for label, _ in patterns
     ] == [
         "build username", "build hostname", "build home directory"]
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Collect the finding that distinguishes hostname leakage from overlapping literals.
     found = list(release.scan_text("a.md", "written on build-box\n", patterns))
     assert [f.pattern for f in found] == ["build hostname"]
 
@@ -615,7 +615,7 @@ def test_a_host_named_after_a_common_word_can_still_build() -> None:
         # Each retained pair contributes one usable environment-identity signal.
         label for label, _ in patterns
     ] == ["build username", "build home directory"]
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Supply a Python main guard that must not be mistaken for a leaked user identity.
     source = 'def main() -> int:\n    if __name__ == "__main__":\n        main()\n'
     assert list(release.scan_text("a.py", source, patterns)) == []
 
@@ -667,7 +667,7 @@ def test_an_identifier_inside_a_longer_word_is_not_a_leak() -> None:
     # Derive a bounded username pattern from a short but still usable identifier.
     patterns = release.environment_literals("ana", None, None)
     assert list(release.scan_text("a.md", "analysis of a banana\n", patterns)) == []
-    # Preserve the optional pattern match that carries the reported analysis count.
+    # Collect the username finding after word-boundary false-positive controls pass.
     found = list(release.scan_text("a.md", "written by ana today\n", patterns))
     assert [f.pattern for f in found] == ["build username"]
 
@@ -676,7 +676,7 @@ def test_a_genuine_identifier_is_still_caught_after_bounding() -> None:
     """Precision must not have been bought by switching the guard off."""
     # Derive all three usable identity patterns for a positive leak witness.
     patterns = release.environment_literals("jdoe", "BUILD-BOX", "D:/home/jdoe")
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Supply one text sample containing every normalized workstation literal.
     text = "built under D:/home/jdoe by jdoe on build-box\n"
     assert {f.pattern for f in release.scan_text("a.md", text, patterns)} == {
         "build username", "build hostname", "build home directory"}

@@ -136,7 +136,7 @@ def test_install_carries_one_shared_agent_skill_source(target: Path) -> None:
     @param target an empty repository
     """
     _install(target)
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Compare the canonical skill entrypoint with both installed host mirrors byte for byte.
     source = SOURCE / "skills" / "python-discipline" / "SKILL.md"
     # Resolve the installed canonical skill entrypoint for byte comparison.
     installed = target / ".agent" / "skills" / "python-discipline" / "SKILL.md"
@@ -282,7 +282,7 @@ def test_force_restores_a_seed_without_overwriting_work(target: Path) -> None:
     ledger.write_text('{"seq": 99}\n', encoding="utf-8")
     # Resolve then remove one canonical seed so force has a missing file to restore.
     schema = target / ".agent" / "learning" / "schema.sql"
-    # Select the existing-artifact path only when `schema.exists()` is satisfied.
+    # Remove the installed schema when present to model missing upstream-owned material.
     if schema.exists():
         # Force must restore missing package material without replacing project state.
         schema.unlink()

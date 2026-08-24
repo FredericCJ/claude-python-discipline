@@ -67,7 +67,7 @@ def test_changed_source_is_rejected(tmp_path: Path) -> None:
     changed = tmp_path / "input.md"
     changed.write_bytes(COMMENTING_SOURCE.read_bytes() + b"\n")
 
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require source-digest verification to reject commentary input changed after review.
     with pytest.raises(ValueError, match="input changed"):
         verify_commenting_source(changed)
 
@@ -77,7 +77,7 @@ def test_missing_policy_is_reported_as_unreviewed() -> None:
     # Each retained policy belongs to a section other than the deliberately orphaned first one.
     policies = tuple(policy for policy in COMMENTING_POLICIES if policy.section != 1)
 
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require claim construction to reject any source sentence left unreviewed.
     with pytest.raises(ValueError, match="is unreviewed"):
         build_claim_rows(_candidates(), policies)
 
@@ -93,7 +93,7 @@ def test_duplicate_policy_is_reported_as_multiply_claimed() -> None:
         reason="Deliberate collision used to prove duplicate detection.",
     )
 
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require claim construction to reject overlapping policies for one source sentence.
     with pytest.raises(ValueError, match="multiply claimed"):
         build_claim_rows(_candidates(), (*COMMENTING_POLICIES, duplicate))
 
@@ -105,7 +105,7 @@ def test_changed_claim_identity_is_rejected() -> None:
     # Keys retain candidate schema fields and values retain content except text; order is unused.
     altered = {**candidate, "text": f"{candidate['text']} altered"}
 
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require claim construction to reject policy text that changes the reviewed claim identity.
     with pytest.raises(ValueError, match="altered claim identity"):
         build_claim_rows([altered])
 

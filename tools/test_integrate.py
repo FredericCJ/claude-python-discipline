@@ -103,7 +103,7 @@ def allow_list(root: Path) -> list[str]:
     @param root the repository root
     @return the entries, in file order
     """
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Decode the installed Claude permission list from the generated settings fixture.
     text = (root / ".claude" / "settings.json").read_text(encoding="utf-8")
     allowed = json.loads(text)["permissions"]["allow"]
     return [str(entry) for entry in allowed]
@@ -179,7 +179,7 @@ def test_greenfield_creates_both_markdown_targets(repo: Path) -> None:
     run(repo)
     # Each name is one host instruction file expected to contain the managed block.
     for name in ("CLAUDE.md", "AGENTS.md"):
-        # Retain the immutable source representation consumed by subsequent analysis.
+        # Inspect each generated host instruction file for one complete managed block.
         text = (repo / name).read_text(encoding="utf-8")
         assert integrate.BEGIN in text
         assert integrate.END in text
@@ -192,7 +192,7 @@ def test_a_created_file_stays_minimal(repo: Path) -> None:
     @param repo an otherwise empty repository with a vendored discipline at version `abc123`
     """
     run(repo)
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Remove the managed block to verify every byte of surrounding project prose survives.
     text = (repo / "CLAUDE.md").read_text(encoding="utf-8")
     outside = integrate.BLOCK_RE.sub("", text).strip()
     assert outside == f"# {repo.name}"
@@ -213,7 +213,7 @@ def test_derived_paths_are_ignored(repo: Path) -> None:
     @param repo an otherwise empty repository with a vendored discipline at version `abc123`
     """
     run(repo)
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Inspect the generated ignore file for both disposable learning artifacts.
     text = (repo / ".gitignore").read_text(encoding="utf-8")
     assert ".agent/learning/learning.db" in text
     assert "build/doc/" in text
@@ -224,7 +224,7 @@ def test_greenfield_installs_the_same_skill_for_claude_and_codex(repo: Path) -> 
 
     @param repo an otherwise empty repository with a vendored discipline
     """
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Seed the vendored skill version whose first integration creates both native mirrors.
     source = write_vendored_skill(repo)
 
     assert run(repo) == 0
@@ -249,7 +249,7 @@ def test_a_vendor_upgrade_updates_both_unchanged_native_skills(repo: Path) -> No
     @par Effects
     Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Retain the upgraded vendored skill root used to verify both unchanged mirrors advance.
     source = write_vendored_skill(repo)
     assert run(repo) == 0
     upgraded = SHARED_SKILL + "\nUpgrade marker.\n"
@@ -270,7 +270,7 @@ def test_an_existing_native_skill_is_reported_and_never_overwritten(repo: Path) 
     @par Effects
     Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Retain the vendored skill root whose fingerprint distinguishes owned from native content.
     source = write_vendored_skill(repo)
     # Hold baseline path keys mapped to their recorded behavior-fingerprint values.
     existing = native_skill(repo, ".agents")
@@ -296,7 +296,7 @@ def test_a_directory_at_the_skill_path_blocks_without_crashing(repo: Path) -> No
     @par Effects
     Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Retain the vendored skill root while creating a project-owned Codex collision beside it.
     source = write_vendored_skill(repo)
     collision = native_skill(repo, ".agents")
     collision.mkdir(parents=True)
@@ -374,7 +374,7 @@ def test_a_release_is_named_beside_the_content_hash(repo: Path) -> None:
         json.dumps({"release": "v1.0.0", "version": "abc123"}), encoding="utf-8"
     )
     run(repo)
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Inspect the generated Claude block for the installed release and content hash.
     text = (repo / "CLAUDE.md").read_text(encoding="utf-8")
     assert "v1.0.0 (abc123)" in text
 
@@ -459,7 +459,7 @@ def test_the_block_matches_the_host_files_line_endings(
     # Persist exact input bytes so mixed-newline detection is meaningful.
     path.write_bytes(original)
     run(repo)
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Read exact host-file bytes so the original newline convention remains observable.
     body = path.read_bytes()
     if original.count(b"\r"):
         assert body.count(b"\r\n") == body.count(b"\n"), f"{label}: a bare LF crept in"
@@ -521,7 +521,7 @@ def test_replacing_a_block_in_a_crlf_file_leaves_no_stray_carriage_return(
         json.dumps({"version": "def456"}), encoding="utf-8"
     )
     run(repo)
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Read exact CRLF bytes to detect stray carriage returns after block replacement.
     body = path.read_bytes()
     assert body.startswith(EXISTING_CRLF)
     assert body.count(b"\r") == body.count(b"\r\n")
@@ -546,7 +546,7 @@ def test_content_around_an_existing_block_survives_replacement(repo: Path) -> No
         json.dumps({"version": "def456"}), encoding="utf-8"
     )
     run(repo)
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Inspect surrounding project prose after replacing the managed instruction block.
     text = path.read_text(encoding="utf-8")
     assert text.startswith(f"# {repo.name}")
     assert text.rstrip().endswith("Ask first.")
@@ -802,7 +802,7 @@ def test_the_record_survives_a_vendor_upgrade(tmp_path: Path) -> None:
     @par Effects
     Writes only pytest-owned host fixtures used to exercise integration and removal behavior.
     """
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Use this checkout as immutable release input while installing into the temporary host.
     source = Path(__file__).resolve().parent.parent
     target = tmp_path / "host"
     target.mkdir()
@@ -967,7 +967,7 @@ def test_a_missing_hook_directory_refuses(tmp_path: Path) -> None:
     """
     # Build a repository that deliberately omits the package-owned hook-template directory.
     root = _repo(tmp_path, with_hooks=False)
-    # Confine the acquired resource to this operation and release it on every exit.
+    # Require hook installation to surface the missing vendored hook template.
     with pytest.raises(FileNotFoundError):
         integrate.install_hooks(root, ".agent")
     assert not _hooks_path(root)
@@ -982,7 +982,7 @@ def test_the_shipped_hook_runs_the_whole_gate() -> None:
     # Resolve the shipped pre-push template rather than a synthetic integration fixture.
     hook = (Path(integrate.__file__).resolve().parent.parent / "enforce"
             / "templates" / "hooks" / "pre-push")
-    # Retain the immutable source representation consumed by subsequent analysis.
+    # Inspect the installed pre-push hook for its actual aggregate-gate invocation.
     body = hook.read_text(encoding="utf-8")
     assert "gate.py" in body, "the hook does not run the gate at all"
     assert "--no-verify" in body, (
