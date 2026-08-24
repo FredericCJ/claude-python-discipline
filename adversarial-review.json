@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "review_id": "v4_1_release_adversarial_acceptance",
-  "reviewed_commit": "1480333b5671da2271240219dc14dc9673e6945f",
+  "review_id": "v5_0_release_adversarial_acceptance",
+  "reviewed_commit": "bd44acfa0a1720e129b6152c1d4d48826ff8ed8a",
   "scope": {
     "algorithm": "sha256",
-    "digest": "sha256:1c6bb80c6300191678be753164378cd9618025e737ed938562db0f3cc9e18e80",
-    "file_count": 298,
+    "digest": "sha256:5960aeee0a09e5327ebb2ba0f20214b16c9a1776a1ab2e1ac6f0712b70d14a2e",
+    "file_count": 324,
     "categories": [
       "project_declaration",
       "canonical_models",
@@ -16,12 +16,12 @@
       "repository_assets"
     ]
   },
-  "authors": ["codex_v4_implementation", "codex_v4_certification", "codex_v4_1_development_environment"],
+  "authors": ["codex_v5_documentation_integration", "codex_v5_content_audit"],
   "reviewer": {
-    "identity": "codex_v4_1_release_adversarial_pass",
+    "identity": "codex_v5_release_adversarial_pass",
     "role": "adversarial_reviewer",
     "independence": "role_separated",
-    "basis": "A separate hostile review pass challenged the completed v4.1 environment implementation, remote build inputs, package lifecycle, native Windows bootstrap, WSL bridge, container identity, and qualification evidence. It was performed in the same Codex session as authorship, so this records cognitive role separation rather than personal or organizational independence."
+    "basis": "A separate hostile review pass challenged the completed v5 documentation model, generated migration, mechanical checks, package lifecycle, and both retained development legs. It was performed in the same Codex session as authorship, so this records cognitive role separation rather than personal or organizational independence."
   },
   "questions": [
     {
@@ -63,20 +63,20 @@
     {
       "id": "supply_chain",
       "challenge": "Can generated doctrine views, mirrored host skills, development images, vendored manifests, or a delivered archive drift from authored source while the gate stays green?",
-      "conclusion": "Generated drift and byte-identical host mirrors are checked, vendoring preserves a manifest, and every Linux invocation reconciles current build inputs. The Docker frontend and base are digest-pinned, the context admits only three declared inputs, and the application checkout enters only through a non-root runtime mount. Independent archive staging is byte-identical, both extracted development legs execute, and archive construction refuses absent or floating direct Python verifier dependencies.",
-      "evidence": ["environment.yml", ".dockerignore", "dev/Dockerfile", "dev/docker.sh", "tools/test_dev_environment.py", "tools/test_release.py", "roadmap/from-4.0-to-4.1/evidence/development-environment-qualification.json"]
+      "conclusion": "Generated drift and byte-identical host mirrors are checked, vendoring preserves a manifest, and every Linux invocation reconciles current build inputs. The Docker frontend and base are digest-pinned, the context admits only three declared inputs, and the checkout enters through a non-root managed-volume projection. Two independently staged 271-member archives are byte-identical, both shipped legs passed all eleven source-gate stages, and archive construction refuses absent or floating direct Python verifier dependencies.",
+      "evidence": ["environment.yml", ".dockerignore", "dev/Dockerfile", "dev/docker.sh", "tools/test_dev_environment.py", "tools/test_release.py", "roadmap/from-4.1-to-5.0/evidence/release-qualification.json"]
     },
     {
       "id": "test_oracles",
       "challenge": "Can a mechanism be counted as enforcement without a mutation proving that its stated observable proposition is rejected?",
-      "conclusion": "The evidence registry separates direct, proxy, behavioral, tool, and review claims; review-only obligations do not enter the mutation census, and all 179 mechanical strategies now bind exact rule/mechanism markers to witnessed rejection. Validation refuses rule-only or pending credit and generated proposition boilerplate. The portable core-mutation adapter additionally refuses zero work, survivors, and non-verdict tool outcomes.",
+      "conclusion": "The evidence registry separates direct, proxy, behavioral, tool, and review claims; review-only obligations do not enter the mutation census. Both release legs report D=180 above its 167 floor, all 194 declared mutations provoking their rule, and S=192 with no undiscriminated exact strategy or rule identity. Validation refuses rule-only or pending credit and generated proposition boilerplate; the mutation adapter also refuses zero work, survivors, and non-verdict tool outcomes.",
       "evidence": ["discipline/meta/evidence.json", "tools/evidence_model.py", "enforce/discrimination.py", "tools/discrimination_gate.py"]
     },
     {
       "id": "documentation_truth",
       "challenge": "Which v5 entity contract or semantic-step comment can disagree with the exact implementation and tests it now describes?",
-      "conclusion": "The v5 pass compares every migrated comment with its current AST operation and relevant executable cases; static presence and vocabulary checks are not treated as proof of truth.",
-      "evidence": ["documentation-model.json", "discipline/law/DOC.md", "enforce/checks/doc_semantics.py"]
+      "conclusion": "The hostile pass found that mechanically conforming generated templates had survived the initial migration as thousands of semantically empty comments. The affected source was rewritten by ownership family, known template families and the generic callable-effects clause now fail DOC-019 or DOC-027, and L-0116 retains the failure mode. These closed-shape checks are not treated as proof that all remaining prose is true.",
+      "evidence": ["documentation-model.json", "discipline/law/DOC.md", "enforce/checks/doc_narration.py", "enforce/checks/doc_semantics.py", "enforce/checks/test_v5_documentation.py"]
     },
     {
       "id": "documentation_allocation",
@@ -106,7 +106,7 @@
       "disposition": "accepted_risk",
       "resolution": "The artifact states the limitation without claiming independent identity. Native Windows and independent Linux execution provide platform separation and field evidence, but are not misrepresented as cognitive independence.",
       "evidence": "discipline/law/SEC.md",
-      "owner": "v4_release_maintainer",
+      "owner": "v5_release_maintainer",
       "review_trigger": "Repeat with a genuinely independent reviewer when one is available or whenever the independence claim changes."
     },
     {
@@ -148,7 +148,7 @@
       "severity": "high",
       "statement": "A missing doc_engine field was converted to none, silently deactivating Doxygen-specific rules, while DOC-014 claimed the field was mandatory; DOC-008 also emitted real findings without listing its own rule ID.",
       "disposition": "resolved",
-      "resolution": "Require an explicit closed doc_engine value in every v4 declaration, retain an emitting diagnostic fallback only for direct legacy checks, register DOC-008 in doc_style, and witness both failures in the discrimination matrix.",
+      "resolution": "Require the sole Doxygen engine explicitly in every v5 declaration, reject an unmigrated v4 declaration with an actionable diagnostic, retain an emitting fallback only for direct legacy checks, and witness the failures in the discrimination matrix.",
       "evidence": "enforce/checks/test_doc_checks.py::test_an_undeclared_documentation_engine_fires_once",
       "owner": "project_declaration_maintainer",
       "review_trigger": "Review again whenever declaration defaults, documentation engines, doc_style predicates, or aggregate-gate configuration loading changes."
@@ -181,7 +181,7 @@
       "severity": "high",
       "statement": "A documentation subprocess can exit zero after its configured inputs are filtered out, while an absent or implicitly narrowed engine can suppress the subprocess entirely.",
       "disposition": "resolved",
-      "resolution": "Require an explicit engine declaration, bind Doxygen INPUT to the exact declared source roots and Sphinx to one local documentation root, enforce warning-as-error posture, run into ephemeral output, and count generated pages before accepting the process exit status.",
+      "resolution": "Require Doxygen as the explicit sole engine, bind INPUT to the exact declared source roots, enforce warning-as-error and offline posture, run into ephemeral output, and count generated pages plus relationship families before accepting process status.",
       "evidence": "tools/test_project_gate.py::test_doxygen_zero_output_is_not_green",
       "owner": "documentation_gate_maintainer",
       "review_trigger": "Review again whenever an engine, input grammar, output generator, warning policy, or documentation source-root convention changes."
@@ -212,9 +212,9 @@
       "id": "incomplete_adopter_dependency_manifest",
       "category": "supply_chain",
       "severity": "critical",
-      "statement": "The delivered requirements file carried only YAML and JSON-schema support even though the canonical adopter gate invokes Ruff, mypy, pyright, import-linter, three pytest controls, build, mutation, and optionally Sphinx. A fresh package could therefore be structurally installed while most required verification was unavailable.",
+      "statement": "The delivered requirements file once carried only YAML and JSON-schema support even though the canonical adopter gate invokes Ruff, mypy, pyright, import-linter, three pytest controls, build, and mutation. A fresh package could therefore be structurally installed while most required verification was unavailable.",
       "disposition": "resolved",
-      "resolution": "Ship exact pins for every Python gate branch, retain Doxygen as an explicit native prerequisite, make archive construction reject absent or non-exact pins, choose the Sphinx 8.2 line compatible with the Python 3.11 floor, and execute a real non-empty Sphinx build in the maintainer environment.",
+      "resolution": "Ship exact pins for every Python gate branch, make archive construction reject absent or non-exact pins, and retain Doxygen plus Graphviz as execution-checked native prerequisites in both development legs. V5 removes the alternate Sphinx branch instead of carrying an optional verifier path.",
       "evidence": "tools/test_release.py::test_a_floating_or_missing_gate_dependency_is_refused",
       "owner": "release_dependency_maintainer",
       "review_trigger": "Review again whenever a gate adapter, supported documentation engine, Python floor, distribution name, or verifier version changes."
@@ -223,12 +223,12 @@
       "id": "release_certification_complete",
       "category": "test_oracles",
       "severity": "high",
-      "statement": "A zero mechanism gap and a tested package lifecycle do not certify the doctrine until the complete application, every component adopter, and the discipline source pass on both release platforms.",
+      "statement": "A zero mechanism gap and a synthetic package lifecycle do not certify v5 until the discipline source, application and single-component package shapes, documentation projection, and release archive pass on both supported legs.",
       "disposition": "resolved",
-      "resolution": "Freeze five exact adopter commits after all 110 required Windows/Linux project-gate steps passed, including 5,052 killed mutants, 20 built artifacts, and 10 clean-install verdicts. Require the discipline gate and two byte-identical archive builds at the release tag.",
-      "evidence": "roadmap/from-3.2-to-4.0/evidence/adopter-certification.json",
-      "owner": "v4_release_maintainer",
-      "review_trigger": "Repeat the full platform and adopter matrix for any changed doctrine bytes or changed certified adopter commit."
+      "resolution": "Run all eleven source-gate stages through Windows/Conda and Linux/Docker, round-trip both in-scope repository shapes through the staged package, require real Doxygen relationships, and compare independently staged archives byte-for-byte. The authorized python-doctrine-test exercise remains field observation of fail-closed authorship debt, not a claim that v5 made that adopter conformant.",
+      "evidence": "roadmap/from-4.1-to-5.0/evidence/release-qualification.json",
+      "owner": "v5_release_maintainer",
+      "review_trigger": "Repeat both platform gates, package-shape round trips, and archive construction whenever shipped package inputs change."
     },
     {
       "id": "platform_only_runtime_and_stub_surfaces",
@@ -267,10 +267,10 @@
       "id": "windows_discrimination_budget_false",
       "category": "test_oracles",
       "severity": "high",
-      "statement": "The meta-test gave every gate entry 180 seconds, but the complete 181-case rejection census requires about 339 seconds on the supported native Windows environment; the test therefore rejected a healthy gate and prevented release certification.",
+      "statement": "The v5 meta-test retained a 420-second child ceiling after the rejection census expanded to 194 cases; the canonical Windows release suite exceeded that inherited budget after the same census had passed as a standalone gate.",
       "disposition": "resolved",
-      "resolution": "Measure the complete entry with no competing verifier, preserve every rejection case, and enforce a 420-second child ceiling inside a distinct 480-second pytest ceiling. The exact proof then passed in 338.60 seconds.",
-      "evidence": "enforce/fitness/test_meta.py::test_every_gate_entry_is_runnable[discrimination]",
+      "resolution": "Preserve every rejection case and raise the finite child ceiling to 540 seconds inside a distinct 600-second pytest ceiling. The exact nested proof then passed in the non-skipped Windows release command and in the unchanged Linux gate.",
+      "evidence": "roadmap/from-4.1-to-5.0/evidence/release-qualification.json",
       "owner": "gate_entry_budget_maintainer",
       "review_trigger": "Review again whenever the discrimination census, process-launch strategy, supported Windows environment, or gate-entry timeout policy changes."
     },
@@ -341,18 +341,51 @@
       "review_trigger": "Review again whenever mount ownership, user namespaces, entry-point behavior, init handling, or stop semantics change."
     },
     {
+      "id": "generated_comment_ceremony_survived_lexical_checks",
+      "category": "documentation_truth",
+      "severity": "critical",
+      "statement": "The initial source-wide v5 migration satisfied association and vocabulary checks while retaining thousands of repeated comments that merely renamed syntax or narrated generic checker mechanics; a green lexical gate therefore overstated semantic completion.",
+      "disposition": "resolved",
+      "resolution": "Audit repeated prose across the complete governed source, rewrite confirmed families by their actual owner and invariant, reject the closed generated families plus the generic callable-effects clause, and retain L-0116 so later mass migrations repeat the content census before qualification. The residual for novel plausible-but-empty prose remains human review.",
+      "evidence": "enforce/checks/test_v5_documentation.py::test_known_scaffolding_prose_fails_doc_019",
+      "owner": "documentation_content_maintainer",
+      "review_trigger": "Repeat the repetition census after any mass documentation migration, classifier broadening, or generated prose transformation."
+    },
+    {
+      "id": "behavioral_mutation_depended_on_comment_prose",
+      "category": "test_oracles",
+      "severity": "high",
+      "statement": "The LEARN-006 behavioral mutation included two generated comments in its replacement preimage, so making those comments truthful caused the rejection table to drift without changing the behavior the mutation was meant to damage.",
+      "disposition": "resolved",
+      "resolution": "Anchor the mutation only on the two executable sync statements and add a regression assertion that its preimage contains no narration. Both platform censuses then observed LEARN-006 and all other declared mutations provoke their exact rules.",
+      "evidence": "tools/test_discrimination_gate.py::test_reconstruction_mutation_does_not_anchor_on_narration",
+      "owner": "discrimination_matrix_maintainer",
+      "review_trigger": "Review again whenever a repository-based mutation uses comments, documentation strings, generated prose, or other non-behavioral text as its preimage."
+    },
+    {
+      "id": "shared_conda_environment_cross_version_race",
+      "category": "failure_containment",
+      "severity": "high",
+      "statement": "Windows packages default to the shared Conda environment name claude. Two already-running legacy launchers rewrote that prefix to an older exact lock after v5 preflight, making an otherwise conformant discrimination control fail until v5 repaired the environment again.",
+      "disposition": "accepted_risk",
+      "resolution": "Retain fail-closed execution checking before every v5 command and record the observed legacy transactions and repairs. Qualification ran both final legs without a concurrent legacy writer, but v5 does not claim it can prevent an older launcher that does not participate in a shared lock protocol from mutating the same named prefix mid-command.",
+      "evidence": "roadmap/from-4.1-to-5.0/evidence/release-qualification.json",
+      "owner": "development_environment_maintainer",
+      "review_trigger": "Replace this acceptance with a versioned environment identity or cross-version command-lifetime lock, or review whenever the default environment name and launcher concurrency model change."
+    },
+    {
       "id": "exact_versions_are_not_artifact_hashes",
       "category": "supply_chain",
       "severity": "medium",
       "statement": "The shared environment pins direct versions but does not hash Conda packages, wheels, or transitive Python resolutions; a repository diff therefore cannot alone prove the exact downloaded artifact bytes.",
       "disposition": "accepted_risk",
       "resolution": "State the limitation in the executable declaration and release notes, execution-check every native tool and direct Python distribution, pin both remote container roots by digest, and keep byte-exact reproducibility claims confined to the discipline archive. A hash-locked cross-platform wheelhouse remains future supply-chain work.",
-      "evidence": "RELEASE-NOTES-v4.1.0.md",
+      "evidence": "RELEASE-NOTES-v5.0.0.md",
       "owner": "release_dependency_maintainer",
       "review_trigger": "Replace this acceptance when Conda explicit locks and hash-checked Python artifacts exist for both supported legs, or review whenever channels and dependency resolution change."
     }
   ],
   "verdict": "accepted",
-  "conclusion": "The v4.1 development environment and combined Claude/Codex package are acceptable for the final release gate. The Windows Conda and Linux Docker legs share one checked declaration, both packaged paths executed, and no unresolved blocker, critical, or high-severity objection remains.",
-  "residual": "Structured fields and local evidence cannot authenticate reviewer identity, establish intellectual independence, prove oracle sufficiency, hash every resolved dependency artifact, reproduce BuildKit provenance attestations byte-for-byte, supply undeclared project dependencies, or establish behavior outside one governed repository. v4.1 does not refresh or broaden the frozen v4.0 adopter and component certification. Later bytes, field evidence, composition evidence, and independent review may refute this judgment."
+  "conclusion": "The v5 documentation discipline and combined Claude Code/Codex package are acceptable for release. The final hostile pass rejected the initial mechanically conforming comment ceremony, the repaired 180-file source is clean under all four documentation checks, both development legs passed the same eleven-stage gate, and independently staged archives are byte-identical. No unresolved blocker remains; the two high or medium operational limitations are explicitly accepted rather than presented as solved.",
+  "residual": "Structured fields, closed filler patterns, local evidence, and this same-session review cannot authenticate reviewer identity, establish intellectual independence, prove arbitrary prose truth, prove oracle sufficiency, hash every resolved dependency artifact, prevent a concurrently running older launcher from rewriting the shared Conda prefix, supply undeclared project dependencies, or establish behavior beyond one application repository or one independently developed component repository. The authorized python-doctrine-test exercise observed conservative migration and expected authorship debt; it is not a certification of that adopter. Later bytes, field evidence, composition evidence, and independent review may refute this judgment."
 }
